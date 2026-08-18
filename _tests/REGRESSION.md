@@ -13744,3 +13744,15 @@ when the investigation ends.
    assertion that (correctly, per the 2026-08-17 decision) expects a flat 96 at
    every tier. The code was right and the comment above it described the rule it
    replaced. Reworded to date the change instead of contradicting it.
+
+#### #177 CLOSED — USER-CONFIRMED at 1.5x, 2026-08-18
+
+Both named checks passed: the small dialog buttons (the GZWinBtn 4-state strips
+in 54/43/18 .UI scripts) and a non-helicopter dashboard. The second one also
+closes the gap #186 left open - {cbcb6e9f}, {cbcba952} and {ebcbb93f} are the
+boat/plane gauge sheets, and they took the largest height change in the set
+(60 -> 90 rather than the snapped 96).
+
+So the derivation and the screen agree: exact height matched the bound window in
+20 of 20 decidable cases, and the eyes-on found nothing wrong at either the
+2px-delta chrome or the 6px-delta gauges.
