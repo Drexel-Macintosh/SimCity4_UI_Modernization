@@ -52,6 +52,43 @@ that still hold: a ~200:1 excluded:shipped ratio makes a denylist unsafe, there
 is a nested `.git` clone under `tools/research/submenus-dll-src/`, and OneDrive
 locks `.git` objects mid-write.
 
+## PRESENCE IS NOT EXECUTION (2026-08-18, cost: 5 of 9 builders)
+
+An audit verified all the package builders were **present** in the repo and
+called the gap closed. A cold-clone test then **ran** them and five of nine
+refused - every one on a missing INPUT, not missing code:
+
+- `tools/dbpf/extracted-png-tgi.csv`, `tools/uiscripts/extracted/`,
+  `tools/dialog-static/thirdparty-src/`, `tools/dialog-static/thirdparty-art/`
+  - all four correctly absent (the player's own game and mod files), all four
+  derived by **nothing**, and each failing with a bare `FileNotFoundError`
+  naming a path a successor has never heard of.
+- A dependency ORDER nothing enforced: `selective-safe` emits what
+  `dialog-static` and `stage_icons` read, so running the set as a flat list
+  fails for the wrong reason.
+
+**How to apply:** a "the repo has everything" claim is only worth what you
+EXECUTED. Run the thing from a cold clone; do not check that the file exists.
+The audit's own verdict on the csv was "regenerable, does NOT affect the
+build" - and it was wrong, because the builder read it at a path extraction
+never creates. Cures now in-repo: `tools\Bootstrap-Corpus.ps1` derives every
+input, `_tests\Test-Builders.ps1` runs all nine in dependency order.
+
+⚠ **Our own installed packages are a confounder in any "what does the game
+load" computation.** With them present, `winning_corpus.py` reports
+*third party: 0* and the mod scripts are invisible. Exclude `z_SC4UIScale_*`
+and `zzz-SC4UIScale\` from any load-order scan - and remember ScaleTier
+renames disabled tiers to `.x1-disabled`, so a `*.dat`-only scan misses them.
+
+⭐ **A 2x package is an exact inverse of its 1x source.** Nearest-neighbour at
+an integer factor is losslessly invertible, so 1x art lost from Plugins can be
+recovered from our own shipped 2x dat by taking every other pixel. PROVEN, not
+assumed: 30 of the 129 ItemIconsSub sources exist nowhere on this machine but
+inside our own packages; the inversion was verified 99/99 exact on the ones
+that DID survive before being trusted on the 30, and the result is 129/129
+pixel-exact. Byte-compare fails there (PIL re-encodes the PNG) - compare
+PIXELS. See [[feedback-sc4-scaling-laws]].
+
 Related: [[feedback-a-package-is-not-done-until-its-in-the-manifest]] — same
 failure shape one level up. A package absent from the manifest does not ship;
 a file absent from the repo does not survive.
