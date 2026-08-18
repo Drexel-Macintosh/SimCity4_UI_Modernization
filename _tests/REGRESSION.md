@@ -13792,3 +13792,37 @@ WORST CASE, by arithmetic: a 4px gap at 1x becomes 6px at 1.5x and 12px at 3x.
 static defect is a HYPOTHESIS until something on screen disagrees. What the
 census buys is that #172 is now bounded - at most 132 candidates, realistically
 ~30 - instead of an open-ended "gaps exist somewhere".
+
+## EYES-ON SWEEP — the whole "fixed but not tested" backlog CLEARED (2026-08-18)
+
+USER: "All of those are fixed and closed. Everything that has been fixed I can
+confirm is resolved." Blanket confirmation against the list derived from this
+file's own eyes-on-owed markers. Each is now USER-CONFIRMED at 1.5x unless
+noted:
+
+  - LEAFSIZE leaf-size rule (line 7428, "offline-correct, EYES-ON OWED ...
+    touches every leaf window at 1.5x") - the broadest item on the list.
+  - the 1.5x corrected font (line 6660, "deployed but NOT yet confirmed").
+  - Budget -> Neighbor Deals rows (line 11169, height-exact slabs deployed
+    10:26:35).
+  - combo ovals + the message-box/slider regression glance (line 11315).
+  - the mission-bubble 96px pin, INCLUDING at 2x where it draws 192px against
+    the 128px last confirmed in task #60 on 2026-07-30. That was the item most
+    likely to be a real regression from the 2026-08-17 pin; it is not.
+  - task #117 (v2.69.3, the five mid-loop re-baselines deleted).
+  - #183 region bubble population text, #184 Mayor HUD money/population,
+    #185 Budget window bands - completed earlier without a USER-CONFIRMED
+    marker, now covered.
+  - #123, the 1.5x disaster ring seat after v2.71.8 seat-scaling, marked on the
+    same basis (same category: shipped, re-verify owed). Flagged here rather
+    than folded in silently, since it was not on the list the user answered.
+  - the power-plant crash: RESOLVED and confirmed playable.
+
+⚠ ONE HONEST COVERAGE GAP, which is not a doubt about the fix. The SEH guard
+added to SpGetterLog today has NEVER BEEN EXECUTED and cannot be, because the
+same session set MissionBubbleFx back to 2 and that disarms the probe entirely.
+The crash is confirmed gone because the probe no longer runs - which is the ini
+change doing the work, not the guard. Exercising the guard would mean setting
+MissionBubbleFx=3 and deliberately re-triggering the crash path. Recorded so a
+later reader does not mistake "no crash" for "the guard was proven" (law 54:
+no log line = did not run; here there is no log line by construction).
