@@ -13940,3 +13940,29 @@ open, Settings.h calls it "PROBE not a fix, default OFF"), DrawProbe=400 and
 StripDump=1 (owners not identified). A dev probe left armed after its
 investigation is what took the game down this morning; these are the same
 shape.
+
+## #175 CLOSED — USER-CONFIRMED. Regression cured by the revert; feature stays dormant
+
+USER 2026-08-18: "That one was confirmed fix already." The defect was the pink
+block on Options - the #143 signature, the colour key DRAWING - and it is gone.
+
+WHAT IS ACTUALLY TRUE, so this is not misread later. The cure was the REVERT:
+`Rebuild-Corpus.ps1:172` still reads `# $argv += '--smooth-keyed'`. The keyed
+smoothing FEATURE remains switched off, and both the flag and its guard remain
+live in Upscale2x.cs. `--smooth-unkeyed` (the first half) IS wired and shipping.
+
+THE CAUSE IS ALREADY KNOWN AND WRITTEN DOWN - read out of our own code, not
+guessed. The belt-and-braces line at the end of the resampler nudges an exact
+FF00FF result off the key (`if (R==0xFF && G==0x00 && B==0xFF) { G = 1; }`).
+That is CORRECT for an unkeyed sheet, where manufacturing a key would be the
+bug, and exactly backwards in KEYED mode: a smoothed pixel that legitimately
+lands on the key becomes FF01FF, the engine's key test misses it, and it paints
+pink.
+
+RE-ENABLE CONDITIONS, unchanged and both required:
+  1. that line made keyed-aware, and
+  2. a corpus-wide near-key scan reading ZERO (any pixel close to FF00FF but
+     not exactly FF00FF is the failure signature).
+Only 48 of 465 keyed sheets qualify for the smoothing anyway; the other 417
+keep NEAREST regardless, so the prize is small and the blast radius is the
+colour key. Left dormant deliberately.
