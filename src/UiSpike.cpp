@@ -7342,13 +7342,19 @@ namespace
 	// No new hook, no vtable work - the file header warns off the SetArea
 	// overload pair, and this needs neither.
 	struct BudgetTick { uint32_t id; int32_t w, h, l, t; bool seen; };
-	BudgetTick gBudgetTick[4] = {
+	BudgetTick gBudgetTick[5] = {
+		// THE ONE THAT ACTUALLY OPENS. Shared exe-built department transient,
+		// rebuilt per department, no .UI script, main-window child. This is
+		// the window the user watches resize; the four below are the panel
+		// furniture that was already on screen when they clicked.
+		{ 0x0423278F, 0, 0, 0, 0, false },
 		{ 0xAA3AC000, 0, 0, 0, 0, false },
 		{ 0xAA3AC001, 0, 0, 0, 0, false },
 		{ 0xAA3AC002, 0, 0, 0, 0, false },
 		{ 0xCA4C332D, 0, 0, 0, 0, false },
 	};
 	int       gBudgetTickLog = 0;
+	bool      gBudgetTickAnnounced = false;
 	int       gBudgetShowOpens = 0;
 	bool      gShowHookInstalled = false;
 
@@ -7435,8 +7441,22 @@ namespace
 		// visibility transition - so a resize that lands and is corrected
 		// within a single sweep tick still gets recorded. Costs one compare on
 		// every other window in the game.
-		if (self && gTierF > 1.01f && gBudgetTickLog < 60)
+		if (self && gTierF > 1.01f && gBudgetTickLog < 120)
 		{
+			// ARMED-AND-COVERING line. A probe that prints nothing is
+			// ambiguous between "nothing happened" and "not watching the
+			// right thing" - which is exactly how today went. This makes the
+			// covered set appear in the log whether or not anything fires.
+			if (!gBudgetTickAnnounced)
+			{
+				gBudgetTickAnnounced = true;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: BUDGETTICK armed, watching 0x0423278F (department "
+					"transient - the window a department click BUILDS), plus "
+					"0xAA3AC000/01/02 and 0xCA4C332D. Silence on 0x0423278F now "
+					"means no flag-adjacent geometry change, not an unwatched "
+					"window.");
+			}
 			cIGZWin* wt = static_cast<cIGZWin*>(self);
 			const uint32_t tid = wt->GetID();
 			for (BudgetTick& bt : gBudgetTick)
@@ -8039,6 +8059,7 @@ void UiSpike::Disarm()
 	for (BudgetWatch& bw : gBudgetWatch) { bw.seen = false; }  // per city
 	gBudgetKidsLog = 0;
 	gBudgetTickLog = 0;
+	gBudgetTickAnnounced = false;
 	for (BudgetTick& bt : gBudgetTick) { bt.seen = false; }
 	for (int& c : gBudgetKidsCount) { c = -1; }   // no baseline carries
 	for (uint32_t& d : gBudgetKidsDigest) { d = 0; }  // across a city

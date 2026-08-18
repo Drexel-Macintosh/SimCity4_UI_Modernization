@@ -14699,3 +14699,63 @@ WHAT IT MEANS NEXT TIME:
     anything here to fix at all (#91 precedent).
 
 No procedure required to collect this. Ordinary play produces it.
+
+## EVERY BUDGET PROBE I BUILT TODAY WATCHED THE WRONG WINDOW (2026-08-18)
+
+A 5-lens workflow with adversarial verification found it, and it is not a
+subtle finding - it is in a file WE wrote on 2026-07-30:
+
+  tools/research/BUDGET-DETAIL-ANATOMY.md:17
+    "One shared transient 0x0423278F (exe-built; NO .UI script exists - all
+     271 layout scripts checked, none reference it), rebuilt per department by
+     per-department builder functions."
+  :27
+    "The dialog frame W/H = the art sums (SetSize at the stacker tail +
+     recentre). Dialog size is ART-derived, not font-derived."
+
+The window a department click OPENS is 0x0423278F. Not one of the four ids
+every probe today was pointed at. 0xAA3AC001 is the MAIN Monthly Budget
+panel's frame - already on screen before the click - and the label
+"department frame" at src/UiSpike.cpp:7490 is where the scoping error came
+from. BUDGETSHOW reporting it BORN CORRECT was TRUE AND IRRELEVANT.
+
+So "GEOMETRY IS CONCLUSIVELY ELIMINATED" was wrong, and wrong in the exact
+shape memory/feedback-instrument-scoped-to-the-wrong-channel warns about: a
+TRUE null proves nothing if the thing never routes through your hook. Three
+silent instruments were silent because the window they watch does not open.
+I then quoted that silence as the strongest evidence in the session.
+
+⚠ THE WORKFLOW WAS ALSO WRONG ABOUT SOMETHING, and it matters because its
+verdict opened with it: it claimed BUDGETTICK/BUDGETKIDS "never ran" because
+the newest file in _tests/captures/ predates their deploy. FALSE - the agents
+read the captures directory; the run is in the LIVE log. Checked: the deployed
+DLL contains both strings, and the live session began 19:16:57, after the
+19:16:08 deploy. The instruments ran. They were aimed wrong. Findings from
+reviewers get verified against the code, always.
+
+RE-AIMED (deployed 19:56:53): 0x0423278F added to gBudgetTick, cap 60 -> 120.
+
+WHY BUDGETTICK AND NOT THE OTHER TWO - both would be guaranteed nulls again:
+  * BUDGETWATCH reads ScalePanelsUnder's panel list, and that is only ever
+    called on pView and pRegion (:8426, :15175, :17558). 0x0423278F is a
+    MAIN-WINDOW child (measured: MWKID at (975,736 450x127)), so that loop
+    structurally cannot enumerate it.
+  * BUDGETSHOW keys on a hidden->visible transition, and tools/uimap/emu/
+    SHOW-PATH.md:19 reads out of the exe that cGZWin constructors set
+    [this+0xC8] = 0x8903 - every window is BORN VISIBLE - so a freshly built
+    subtree never produces a false->true transition.
+  * BUDGETTICK samples inside the SetFlag detour on any flag change, for
+    whatever window the game hands it, with no parentage assumption.
+
+Also added: an ARMED line naming the covered ids, printed whether or not
+anything fires. A probe that prints nothing is ambiguous between "nothing
+happened" and "not watching the right thing" - which is precisely how this
+session went wrong, and the ambiguity is now removed from the log itself.
+
+PREDICTION, recorded before the run: historic settled sizes for this id in
+_tests/captures/2026-08-03-104-run10-budgetbutton-only.log are 900x754,
+1000x554 and 1000x538 - DIFFERENT PER DEPARTMENT, which is what "size = the
+art sums" means. If the frame is built born-visible and SetSize'd at the
+stacker tail, BUDGETTICK prints at least one transition per open. If it is
+STILL silent on this id, the size is set before any flag traffic and the next
+instrument goes on the builder itself (sub_77A6F0), not on the window.
