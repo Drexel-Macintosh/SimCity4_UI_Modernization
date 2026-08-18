@@ -13863,3 +13863,48 @@ than 4px and are tiled/9-slice/atlas art wrong BY DESIGN (law 86); 132 sit withi
 gap <= 2px) only TWO sheets qualify for any general art-resize rule. That is the
 useful negative result: there is no broad #172 family to fix. The defect really
 was the two-button pair, and it really is fixed.
+
+## #162 — THE 54-WIDE SHEET EXISTS, AND IT IS OURS (2026-08-18)
+
+The investigation stalled at :11040 on a stated premise: "NO 54-wide sheet
+exists in the stock extract, so the sheet is third-party, another archive, or
+itself runtime-composed", with the supporting reasoning "src x 18..36 is the
+middle third of a 54-wide sheet - 1x NINE-SLICE geometry (our #157 1.5x
+nine-slice sheets are thirds-of-81)".
+
+THAT PREMISE IS FALSE, and it was sending the search outward when the answer was
+inward. Measured today by walking DBPF indices directly:
+
+    stock extract, whole dbpf tree   : 2217 PNGs, 54-wide = 0   (premise holds)
+    third-party plugins, BOTH trees  :   93 DBPF, 127 PNG entries, 54-wide = 0
+    OUR OWN deployed SelectiveArt-15x:  566 PNGs, 54-wide = 1   <-- HERE
+    OUR OWN deployed SelectiveArt-3x :  566 PNGs, 54-wide = 26
+
+    {46a006b0,14015558}   1x 36x36  ->  1.5x 54x54   nine-slice-listed = YES
+
+Thirds of 54 = 18, so its middle third is EXACTLY x 18..36 - the observed
+src(18,36,36,38) x-range, to the pixel. "Our 1.5x nine-slice sheets are
+thirds-of-81" is true only of the sheets whose 1x is 27; this one's 1x is 36,
+so its 1.5x is thirds-of-54. The 340x155 buffer is 1.5x of ~227x103, which the
+ledger already noted.
+
+WHAT THIS CHANGES. The working theory was "a 9-slice frame drawn from
+1x-GEOMETRY art paints hairline-thin borders". If the sheet is 14015558 then
+the art is CORRECTLY 1.5x-sized and thirds cleanly, and the defect moves to the
+DRAWER: it took an 18x2 band where the bottom-edge patch of a 54x54 nine-slice
+is 18x18. A 2-row band tiled 19x across the bottom edge IS the hairline. Why 2:
+not established.
+
+⚠ NOT PROVEN, and the gap is named. The consumer is still unidentified: the only
+.UI windows bound to 14015558 are two GZWinBMPs at 500x293 (I-6bc9065a,
+I-ea2871aa), neither of which is ~227x103, so the 340x155 buffer's owner remains
+code-created exactly as :11040 said. The sheet identification rests on a
+geometric coincidence that is exact but singular. THINBLT already prints the
+source image's own WxH as of v3.0.2 - one armed 1.5x session reading `img
+54x54` would convert this from candidate to confirmed, and any other size
+refutes it outright.
+
+Also corrected: the task list carried "#162 hairlines OPEN, mechanism NOT known
+(kill test was run: NEGATIVE)", which predates :11040's decoded signal. This
+file warned at :10594 that #162's status is stated three ways; that is now four.
+Later dated passage wins - this one.
