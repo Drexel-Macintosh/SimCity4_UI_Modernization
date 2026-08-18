@@ -4892,15 +4892,6 @@ namespace
 		// never checked the parentage of. Anything the static dat serves
 		// that lives in the swept tree MUST be listed here.
 		0x10000006, // U-Drive-It status panel (all 11 vehicle scripts)
-		// BUDGET DEPARTMENT + TAXES EDITOR POPUPS (2026-08-18). Shared root
-		// id, two scripts: I-aa3acdfe (empty-ledger message, 500x202) and
-		// I-cbc3c2b9 (Taxes editor, 500x464). Both now ship pre-doubled in
-		// DialogStatic, so this entry is the OTHER HALF of that change and
-		// must land with it: the popups are created on demand, so the old
-		// kAlwaysScaleCityIds membership could never fire (nothing exists to
-		// pre-scale) and the sweep resized them after first paint instead -
-		// the flash the user reported at 1.5x, 2x and 3x alike.
-		0xAA3AC002, // budget department + taxes editor popups
 		// STATIC-DAT DIALOGS added v2.22.2 (Sim picker, U-Drive-It vehicle +
 		// pedestrian pickers, missing-plugin-pack warning). Evidence says all
 		// are main-window transients the sweep never reaches, in which case
@@ -5317,11 +5308,7 @@ namespace
 		// to 2x. Same vis-gate intermittency as the news reader. Their 2x
 		// art ships in SelectiveArt (scripts I-aa3acdfe/I-cbc3c2b9), so a
 		// 1x window would draw quarter-art + black fill.
-		// 0xAA3AC002 REMOVED 2026-08-18: both its scripts (I-aa3acdfe,
-		// I-cbc3c2b9) now ship PRE-DOUBLED in DialogStatic, so the window
-		// is born correct and the sweep must not touch it. It moved to
-		// kNeverScaleIds. Leaving it here as well would scale the already-
-		// doubled window to 4x - the Establish City failure verbatim.
+		0xAA3AC002, // Taxes editor popup
 		0xCA4C332D, // Take Out A Loan popup
 		// Advisors (2026-07-29 late): the console strip's 2x face art in
 		// 1x buttons showed quarter-zoomed faces on FIRST open (user
@@ -5545,6 +5532,7 @@ namespace
 		// checkbox+label button pairs (0xAA3AC400..40F / 0xAA3AC500..50F)
 		// filled with department names at runtime. The "(Taxes etc.)" that
 		// used to sit on that line put the Taxes dialog on the wrong id.
+		0xAA3AC002, // Taxes editor popup (LIVE I-cbc3c2b9, 500x464 design)
 		0xCA4C332D, // "Take Out A Loan" popup (500x353) - see NOTE below
 		0xAA3AC001, // budget expanded / department detail frame (558x505)
 		0xAA3AC000, // budget balance bar (833x137)
@@ -7298,6 +7286,19 @@ namespace
 	int       gShowHookMode = 0;
 	bool      gInShowHook = false;
 	int       gShowHookLogged = 0;
+	// BUDGETSHOW census (2026-08-18). NOT a treatment - it changes no
+	// geometry and runs at any ShowHook setting. It exists because the
+	// budget path is SILENT BY DESIGN: the four composed roots are scaled
+	// once by the city sweep (kDataScaledSubtreeIds) and never revisited,
+	// and the sweep does not descend into them, so after city open the log
+	// says nothing at all about them. A 2026-08-18 session with LogLevel=3
+	// produced ZERO 'incremental panel' lines for any budget root across a
+	// whole session of play - which is consistent BOTH with 'born correct'
+	// and with 'nobody is looking', and cannot tell them apart. That is the
+	// gap this closes, and it is the one the user's question needs:
+	// does the FIRST open after a city load differ from later opens?
+	int       gBudgetShowLog = 0;
+	int       gBudgetShowOpens = 0;
 	bool      gShowHookInstalled = false;
 
 	// EARLYDOCK (v2.41.17, task #89). State for scaling the dock from inside
@@ -7375,6 +7376,58 @@ namespace
 					gSpikeForHook->ApplyPanelDocks(
 						scope ? scope : w0, gTierF, true);
 					gInShowHook = false;
+				}
+			}
+		}
+
+		// BUDGETSHOW. Four ids, tested only on a real hidden->visible
+		// transition, capped - the cost on every other window is one compare.
+		// The line is SELF-ADJUDICATING: it prints the live size next to
+		// RoundHalfUp(design * f), which is the same convention the sweep and
+		// every builder use (law 89). Born correct reads live == expect on
+		// open #1; a jump reads the design size on open #1 and the expected
+		// size on opens #2+ - the uninitialised-latch signature, and exactly
+		// what the flyout family turned out to be at v2.36.2.
+		if (flag == 1u && value && self && !gInShowHook && !gInEarlyDock
+			&& gTierF > 1.01f && gBudgetShowLog < 24)
+		{
+			const uint32_t bitsB =
+				*reinterpret_cast<const uint32_t*>(
+					reinterpret_cast<const char*>(self) + 0xC8);
+			if ((bitsB & 1u) == 0u)
+			{
+				// Design sizes are the MEASURED ones already carried by
+				// kDataScaledSubtreeIds / kCityDialogIds, not fresh guesses:
+				// 0xAA3AC000 833x137, 0xAA3AC001 558x505, 0xAA3AC002 500x464
+				// (the LIVE copy is I-cbc3c2b9 - #102 settled that against 14
+				// captures), 0xCA4C332D 500x353.
+				struct BudgetRoot { uint32_t id; int32_t w, h; const char* name; };
+				static const BudgetRoot kBudgetRoots[] = {
+					{ 0xAA3AC000, 833, 137, "balance bar"          },
+					{ 0xAA3AC001, 558, 505, "department frame"     },
+					{ 0xAA3AC002, 500, 464, "taxes editor popup"   },
+					{ 0xCA4C332D, 500, 353, "take-out-a-loan popup" },
+				};
+				cIGZWin* wb = static_cast<cIGZWin*>(self);
+				const uint32_t bid = wb->GetID();
+				for (const BudgetRoot& br : kBudgetRoots)
+				{
+					if (br.id != bid) { continue; }
+					gBudgetShowLog++;
+					gBudgetShowOpens++;
+					const int32_t ew = RoundHalfUp(br.w * gTierF);
+					const int32_t eh = RoundHalfUp(br.h * gTierF);
+					const int32_t lw = wb->GetW(), lh = wb->GetH();
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: BUDGETSHOW #%d 0x%08X (%s) becoming visible "
+						"%dx%d, expect %dx%d, design %dx%d, %d children -> %s.",
+						gBudgetShowOpens, bid, br.name, lw, lh, ew, eh,
+						br.w, br.h, wb->GetChildCount(),
+						(lw == ew && lh == eh) ? "BORN CORRECT"
+							: (lw == br.w && lh == br.h)
+								? "STILL 1x - WILL JUMP when the sweep catches it"
+								: "NEITHER design nor expected - read the numbers");
+					break;
 				}
 			}
 		}
@@ -7898,6 +7951,8 @@ void UiSpike::Disarm()
 	gInEarlyDock = false;
 	gDlgAnchorCount = 0;      // v2.37.4: dialog anchors re-learn per city
 	gDlgBornCount = 0;        // v2.38.0: DLGBORN reports once per city too
+	gBudgetShowLog = 0;       // BUDGETSHOW re-arms per city - the whole
+	gBudgetShowOpens = 0;     // question is about the FIRST open of a city
 	gMDockLoggedN = 0;        // v2.43.3: MDOCK re-reports per city
 	FlushBmpOpenCensus();     // v2.42.3: report the city's last open
 	gBmpDrawLog = 0;          // v2.42.1: BMPX draw budget re-arms per city

@@ -14387,3 +14387,81 @@ scaling it - the regression this pairing exists to prevent.
 MEASURED: DialogStatic 261 -> 280 entries at every tier; both scripts present in
 the DEPLOYED 1.5x/2x/3x packages. Builders 12/12 clean at all three tiers, DLL
 builds clean, deployed == built. Eyes-on owed.
+
+## The 2026-08-18 budget popup "fix" was REVERTED the same day - it was half
+## inert and half harmful (2026-08-18, deployed 18:47:43 / census 18:50:28)
+
+MEASURED FIRST, by tools\dbpf\who_owns_tgi.py --group 96a006b0 aa3acdfe cbc3c2b9:
+
+    PLUGINS ROOT (loads before every subfolder)
+      z_SC4UIScale_DialogStatic-15x.dat   I=AA3ACDFE  area=(237,60,987,363)
+      z_SC4UIScale_SelectiveArt-15x.dat   I=AA3ACDFE  area=(158,40,658,242)
+    WINNER (last loaded): z_SC4UIScale_SelectiveArt-15x.dat
+
+SelectiveArt sorts after DialogStatic in the SAME directory, so **the doubled
+copies never loaded at all**. The half of the change that was supposed to cure
+the flash was shadowed from the moment it shipped, and the deployment log,
+the entry counts (261 -> 280) and the "both scripts present in the DEPLOYED
+package" check I wrote were all TRUE AND ALL IRRELEVANT - presence is not
+execution, and for a DBPF the question is never "is it in a file", it is
+"does OUR file load last for this resource" (docs\BUILDING.md says this in
+those words).
+
+The OTHER half did execute, and it was a removal: 0xAA3AC002 left
+kAlwaysScaleCityIds AND kDataScaledSubtreeIds for kNeverScaleIds, which
+deleted the runtime root scale that 14 capture runs across 2 dates had
+recorded working ("panel 0xAA3AC002 (158,40 500x464) -> (316,80 1000x928)").
+Net effect of the whole change: no cure, one treatment removed. The 18:32
+session log confirms it - every other budget root has its "city panel 0x... -
+1 windows scaled" line and 0xAA3AC002 has none.
+
+WHY IT WAS WRONG, and this is the part worth keeping: the budget UI is a
+MULTI-ROOT COMPOSED PANEL. Both scripts carry FOUR top-level roots
+(0xAA3AC002, 0xCA4C332D, 0xAA3AC001, 0xAA3AC000) that the game composes and
+anchors at runtime. The settled architecture (v2.25.24) is children-only data
+doubling in selective-safe + kDataScaledSubtreeIds in the DLL, and
+build_dialog_static.py carries a tombstone saying so:
+
+    # BUDGET SCRIPTS FULLY REMOVED (v2.25.24, final architecture) ...
+    # Full static doubling of ANY of them breaks the composition (the
+    # "undocked budget window").
+
+I added the two scripts back into TARGETS **in that same file, about 100 lines
+below that paragraph**. CHECK OUR PREVIOUS WORK FIRST is not satisfied by
+checking the ledger; the answer was in the file I was editing.
+
+REVERTED AND VERIFIED: git revert of a6dc980 (ledger kept), DialogStatic
+rebuilt 261 entries at 1.5x/2x/3x, DLL rebuilt, deployed 18:47:43.
+who_owns_tgi now reports 4 files carrying those TGIs instead of 6, with
+SelectiveArt the sole Plugins owner and the 1x roots intact. Removing the
+shadowed duplicates matters beyond tidiness: had load order ever changed, the
+broken composition would have shipped silently.
+
+## BUDGETSHOW census (2026-08-18, deployed 18:50:28) - the budget path was
+## SILENT BY DESIGN, and silence is what made the flash unfalsifiable
+
+The user asked whether the popup jumps on the FIRST open after a city load.
+The 18:32 log cannot answer it, and the reason is structural: roots in
+kDataScaledSubtreeIds are scaled ONCE by the city sweep and the sweep never
+descends into them, so after city open nothing about the budget is ever
+logged again. That session recorded **zero** "incremental panel" lines for any
+budget root across a whole session of play - which is equally consistent with
+"born correct" and with "nobody is looking". Two hypotheses, one observation,
+no discrimination.
+
+So the census, not another guess. In SetFlagDetour, on a real hidden->visible
+transition only, for four ids, capped at 24 and re-armed per city:
+
+  BUDGETSHOW #n 0xAA3AC001 (department frame) becoming visible 837x758,
+    expect 837x758, design 558x505, 41 children -> BORN CORRECT
+
+It prints the live size beside RoundHalfUp(design * f) - the same rounding
+convention as the sweep and every builder (law 89) - so the line adjudicates
+itself. Born correct reads live == expect on open #1. A jump reads the DESIGN
+size on open #1 and the expected size on opens #2+, which is the
+uninitialised-latch signature the flyout family turned out to have at v2.36.2.
+It is a census, not a treatment: it changes no geometry, and it runs at the
+shipped ShowHook=0 because it has its own gate rather than borrowing one
+(law: gate on the condition you depend on).
+
+Cost on every other window in the game is one integer compare.
