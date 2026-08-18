@@ -13676,3 +13676,54 @@ right answer, so that decompilation is no longer BLOCKING for #177.
 Three of the largest-delta sheets (60 -> 90 not 96) are {cbcb6e9f}, {cbcba952}
 and {ebcbb93f} - gauge strips for vehicles other than the helicopter, so
 today's user-confirmed dashboard does NOT cover them. Not claimed as verified.
+
+## CRASH placing a power plant — a DIAGNOSTIC PROBE killed the game (2026-08-18)
+
+USER: "Building a powerplant is crashing the game." Two exception reports,
+15:43:51 and 15:44:35, both with the SAME faulting address and register set -
+deterministic, not corruption.
+
+    Exception module : SC4UIScale.dll        <- OURS, not the game's
+    Exception code   : 0xC0000005 ACCESS_VIOLATION
+    Section:Offset   : 0x01:0x00028a29
+    ECX=0x38  EDX=0x00400000  ESI=0  EDI=0x006ed089
+
+Read the game's OWN exception report first, as the standing law says: it named
+our DLL in one line and handed over the exact RVA. Windows WER would not have.
+
+Decoded the bytes at .text RVA 0x29a29 straight out of the PE:
+
+    8d 0c cd 30 00 00 00   lea  ecx,[ecx*8+0x30]   ; 0x30 or 0x38, report says 0x38
+    8b 1c 01               mov  ebx,[ecx+eax]      ; EBX = *(self + 0x38)
+    85 db / 74 0a          test ebx,ebx / jz       ; null-checked, PASSED
+    8b 33                  mov  esi,[ebx]          ; <-- FAULT
+    2b f2 / 81 c6 00004000 sub/add                 ; rebase vtable to 0x400000
+
+That rebase-to-image-base is the signature of SpGetterLog in CodePatches.cpp,
+which the last log lines confirm ("PROXYGET30 caller 0x004933B4 linked=...").
+
+CAUSE. `if (linked)` proves the field is NON-ZERO. It proves nothing about
+whether it is a valid POINTER. Placing a power plant reached the getter with a
+self whose +0x38 held 0xC9FBC2CD, and the deref took the process down. Both
+reads are speculative - `self` is whatever ECX held at a swapped vtable slot,
+and +0x30/+0x38 is a GUESS about that object's layout.
+
+WHY IT WAS ARMED AT ALL. `MissionBubbleFx=3` in the live ini - documented in
+Settings.h as "2 + live SPPROBE draw-path diagnosis (dev only)". Level 2 is the
+default and is the actual #188 fix; level 3 adds the research probe. The ini had
+been left at 3 from the #188 investigation.
+
+FIXED TWO WAYS, because either alone would be wrong:
+  1. Live ini set to MissionBubbleFx=2 (byte-level edit, BOM re-verified
+     absent). Unblocks play immediately with no rebuild.
+  2. Both dereferences in SpGetterLog now sit under __try/__except, and a
+     failure REPORTS rather than silently returning - "layout guess at +0x38 is
+     wrong for this object" - so the probe stays informative when it misses
+     (law 54). A probe that can kill the process destroys the very session it
+     exists to observe.
+
+⭐ THE LESSON, worth generalising: a research probe is not free. It ships in the
+same binary as the fix, and an unguarded speculative read inside one is a crash
+in OUR module that looks exactly like a mod incompatibility. Every speculative
+deref in a probe gets SEH, and every dev-only level gets returned to its default
+when the investigation ends.

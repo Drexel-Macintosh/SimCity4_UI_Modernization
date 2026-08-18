@@ -5016,13 +5016,48 @@ namespace CodePatches
 			tab[*n].ret = retVa;
 			tab[*n].cnt = 1;
 			++*n;
-			void* linked = *reinterpret_cast<void**>(
-				static_cast<uint8_t*>(self) + (which ? 0x38 : 0x30));
+			// CRASH FIX 2026-08-18. Both reads below are speculative: `self`
+			// is whatever ECX held at a swapped vtable slot, and the field at
+			// +0x30/+0x38 is a GUESS about that object's layout. `if (linked)`
+			// only proves the field is non-zero; it says nothing about whether
+			// it is a valid pointer. Placing a power plant reached this getter
+			// with a self whose +0x38 held 0xC9FBC2CD, and the deref took the
+			// game down with an ACCESS_VIOLATION inside our own DLL (two
+			// exception reports, identical EIP 0x01:0x00028a29, ECX=0x38,
+			// ESI=0). A probe that can kill the process is worse than no
+			// probe: it destroys the very session it was meant to observe.
+			// Both dereferences are now guarded, and a failure is REPORTED
+			// rather than swallowed (law 54: a silent probe cannot be told
+			// apart from one that never ran).
+			void* linked = nullptr;
 			uint32_t linkVt = 0;
-			if (linked)
+			bool selfBad = false;
+			bool linkBad = false;
+			__try
 			{
-				linkVt = static_cast<uint32_t>(
-					*reinterpret_cast<uintptr_t*>(linked) - base + kImageBase);
+				linked = *reinterpret_cast<void**>(
+					static_cast<uint8_t*>(self) + (which ? 0x38 : 0x30));
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER) { selfBad = true; }
+			if (linked && !selfBad)
+			{
+				__try
+				{
+					linkVt = static_cast<uint32_t>(
+						*reinterpret_cast<uintptr_t*>(linked) - base + kImageBase);
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER) { linkBad = true; }
+			}
+			if (selfBad || linkBad)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: PROXYGET%s caller 0x%08X - %s NOT READABLE "
+					"(self=%p linked=%p). Probe survived; the layout guess at "
+					"+0x%02X is wrong for this object.",
+					which ? "38" : "30", retVa,
+					selfBad ? "self field" : "linked vtable",
+					self, linked, which ? 0x38 : 0x30);
+				return;
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: PROXYGET%s caller 0x%08X linked=%p linkVt=0x%08X.",
