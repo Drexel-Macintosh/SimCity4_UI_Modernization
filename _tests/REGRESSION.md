@@ -13625,3 +13625,11 @@ relative to absolute, so 1x art whose cell overflows its own stock window by
 5-25% would flip from stretch-to-fit to pure copy. Nothing in the repo has
 that shape - measured reality is the window ~4-5% LARGER than the cell
 (107/102 = 1.049, 213/204 = 1.044) - and such art would clip at stock.
+
+#### #186 CLOSED — USER-CONFIRMED at 1.5x, 2026-08-18
+
+"Fixed!" after the second deploy. Two independent defects on one symptom:
+a drifting strip PITCH in the art (law 107) and a tier-relative suppression
+threshold in the DLL (law 106). Either alone left the dial wrong. 2x and 3x
+were never touched - proven by 0 pixel diffs on all 16 sheets and 655
+entries / 0 differing payloads against the already-deployed packages.

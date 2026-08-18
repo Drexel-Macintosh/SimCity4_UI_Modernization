@@ -1411,3 +1411,34 @@ around it". That is a gift when true (art and tap target cannot drift apart)
 and a trap when false. For any in-world element the player CLICKS, find out
 which it is: scaling art without the hit box ships a lie, and scaling the hit
 box without the art ships an invisible button.
+
+
+**106. ⭐ A THRESHOLD EXPRESSED AS A FRACTION OF THE SCALE FACTOR COLLAPSES
+AT A FRACTIONAL TIER.** (#186, 2026-08-18.) The gauge draw suppressed its
+dst-stretch when `m < 0.75f * scaleFactor`. Calibrated at 2x that reads 1.50 -
+an enormous margin over the m ~= 1.0 that already-scaled art produces. At 1.5x
+the SAME expression reads 1.125, which sits INSIDE the band of legitimate
+rounding disagreement between cell-first art (cell 77) and an edge-derived
+window (87). One gauge landed on 1.1299 and missed the snap by 0.005. This is
+law 95 wearing different clothes: a tier-relative threshold MEASURES ITSELF.
+Ask the absolute question instead - here "is this source still 1x?", which
+1x art answers by construction (`R(cell*f) <= win`) while scaled art overshoots
+by nearly the whole factor (want 116 vs win 87). Any guard whose constant is
+multiplied by the factor is a candidate; check what it evaluates to at 1.5x
+before trusting that it works because it works at 2x.
+
+**107. A FRAME STRIP'S PITCH MUST DIVIDE EXACTLY, AND ONLY A FRACTIONAL TIER
+CAN BREAK IT.** (#186.) The dial draw does `cell = img->Width() / count` with
+an INTEGER divide. A 2805px 55-frame sheet (cell 51) sized total-first becomes
+R(2805*1.5) = 4208; 4208/55 = 76 against a true pitch of 76.5, so the source
+window slips half a pixel PER FRAME and is 27.5px - a third of a cell - into
+the neighbouring frame by frame 54. On screen a dial "wraps around". Integer
+tiers cannot show it: k*W is divisible by N whenever W is. So a strip defect
+that appears at 1.5x and nowhere else is a PITCH defect, not a rendering one -
+and the cure is law 86's cell-first sizing, `N * R(cell, f)`. The corollary
+that cost this one weeks of invisibility: a derivation keyed on `.UI`
+`image=` references is BLIND BY CONSTRUCTION to code-bound art (these strips
+come from vehicle exemplar 0x2BE8E6CB), so the right rule sat in the codebase
+at the wrong SCOPE (law 94). When a divisor is DATA rather than an immediate
+it cannot be disassembled - MEASURE it (a needle strip is periodic with period
+= cell) and gate the measurement on an independent control.
