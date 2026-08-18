@@ -32,13 +32,47 @@ packages are built from *your own* installed game files. A fresh clone has the
 build recipe but not the inputs, so nothing art-related will work until you
 extract them.
 
+**One command does all of it:**
+
 ```powershell
-# Extract every DBPF archive the game ships.
-# ⛔ The count is DISCOVERED, not listed - SC4 ships NINE archives and a
-# hand-written inventory has silently missed one before.
-tools\dbpf\DbpfExtract.exe "<game>\SimCity_1.dat" tools\dbpf\extracted\SimCity_1
-# ...repeat for every .dat found under the install
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\Bootstrap-Corpus.ps1
 ```
+
+It builds `DbpfExtract.exe` if needed, then derives every input the builders
+read but the repo cannot carry:
+
+| It produces | Because |
+|---|---|
+| `tools\dbpf\extracted\<archive>\` | every DBPF the install has — **discovered, never listed** |
+| `tools\dbpf\extracted-png-tgi.csv` | the PNG-store TGI list; the archive it copies is chosen by measuring PngMagic rows, not by name |
+| `tools\uiscripts\extracted\` | the ~330 type-0 `.UI` layouts, renamed `.png` → `.ui` |
+| `tools\dialog-static\thirdparty-src\` | the mod-owned `.UI` scripts, from **both** Plugins trees, our own packages excluded |
+| `tools\dialog-static\thirdparty-art\` | the mod-owned bitmaps the builder asks for by `--emit-inputs` |
+
+Add `-Force` to redo work already on disk, `-GameDir` / `-PluginsDir` if they
+are not where it looks.
+
+⚠ **This step did not exist until 2026-08-18.** A cold-clone test ran the
+builders from a fresh checkout and five of nine failed — every one of them on a
+missing input, not missing code. The audit before it had verified that all the
+builders were *present* and called that done. Presence is not execution.
+
+The one input the bootstrap cannot always finish is the ItemIconsSub 1x source
+set: 129 icons owned by other mods. Run
+
+```powershell
+python tools\itemicons\recover_sub_sources.py
+```
+
+It pulls what your Plugins tree still has and, for anything gone, inverts our
+own shipped 2x package — nearest-neighbour at an integer factor is exactly
+invertible, and the script *proves* that on every icon it did find before
+trusting it on one it did not. On this machine 99 came from Plugins and 30 only
+existed inside our own package; the control ran 99/99 exact.
+
+If you build `DbpfExtract.exe` by hand, note that **`csc` treats a leading `/`
+as an option prefix** — pass Windows backslash paths or it reports the source
+file as missing.
 
 Then rebuild the scaled corpus for the tiers you want:
 
@@ -75,6 +109,18 @@ python tools\selective-safe\build_selective_safe.py --factor 3     # -> tools\pa
 Integer tiers are the control: a rebuild at 2x or 3x must produce **byte-identical
 entry payloads** to what shipped. Compare payloads per TGI, never the file hash —
 a DBPF header carries a timestamp that changes on every single build.
+
+**Run the whole set as a gate rather than by hand:**
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File _tests\Test-Builders.ps1
+```
+
+It runs all nine in dependency order and exits non-zero if any refuses. The
+order is part of the test: `selective-safe` emits the refmap and the
+SelectiveArt dat that `dialog-static` and `stage_icons` both read, so running
+them as a flat list passes or fails for the wrong reason. Add `-Factor 1.5`
+or `-Factor 3` for a tagged tier.
 
 ---
 

@@ -88,6 +88,16 @@ from collections import Counter, defaultdict
 TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UI_DIR = os.path.join(TOOLS, "uiscripts", "extracted")
 PNG_TGI_CSV = os.path.join(TOOLS, "dbpf", "extracted-png-tgi.csv")
+
+# Both of the above are DERIVED from the player's own game install and are
+# deliberately not committed. A cold-clone test (2026-08-18) found this file
+# dying on a bare FileNotFoundError naming a path the reader had never heard
+# of. corpus_inputs derives the csv if it can and otherwise names the exact
+# command to run. Import BEFORE any module-level read of either path.
+sys.path.insert(0, TOOLS)
+import corpus_inputs  # noqa: E402
+corpus_inputs.ensure_png_tgi_csv()
+corpus_inputs.require_ui_corpus()
 FONT_INI = os.path.join(TOOLS, "fonts", "FontStyle.candidate.ini")
 PACKER = os.path.join(TOOLS, "dbpf", "DbpfPack.exe")
 
@@ -256,6 +266,28 @@ TP_ART_PACKAGE = {
     (0xBE484AC7, 0x7AEB8E7D): "CamUI",   # 20x20   surplus/deficit marker
     (0xC3E123BD, 0xCFE4E42F): "CamUI",   # 48x48   MZ badge, bottom left
 }
+
+
+def _emit_inputs():
+    r"""Print the derived-input filenames this build needs, then exit.
+
+    WHY: thirdparty-art\ holds ANOTHER MOD'S bitmaps. They are not in the repo
+    (policy) and cannot be, so a cold clone must re-extract them from the
+    player's own Plugins tree - and something has to say WHICH ones. Reading
+    that list out of THIS dict is a derivation; writing the thirteen names into
+    the bootstrap script would be a hand-maintained inventory, and those rot
+    silently (the whole reason for law 94).
+
+    Consumed by tools\Bootstrap-Corpus.ps1. One filename per line, no header,
+    so the caller can treat stdout as data.
+    """
+    for (g, i) in sorted(TP_ART_PACKAGE):
+        print("T-856ddbac_G-%08x_I-%08x.png" % (g, i))
+    raise SystemExit(0)
+
+
+if "--emit-inputs" in sys.argv:
+    _emit_inputs()
 
 # ART THAT DOES NOT EXIST ANYWHERE - proven, not assumed (task #154).
 # ⛔ THE BAR FOR ADDING TO THIS SET IS DELIBERATELY HIGH, because v2.38.3 put

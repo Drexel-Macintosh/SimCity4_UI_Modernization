@@ -100,7 +100,7 @@ __pycache__/
 /_archive/
 /_HANDOFF-SimCity4-Complete/
 /_vanilla-reference/
-/tools/dialog-static/thirdparty-src/
+
 
 # ---- 7. noisy directories: allowlist per FILE, not per tree ---------
 # Measured 2026-08-18: a bare `!/tools/` admitted 4,662 files from
@@ -113,10 +113,25 @@ __pycache__/
 !/tools/itemicons/_work/
 /tools/itemicons/_work/*
 !/tools/itemicons/_work/item_icons_distinct.txt
+# The 130 canonical names of the user-confirmed 2x Sub package. It is OUR
+# derived list, not anyone's art, and build_itemicons_sub.py checks the tier
+# set against it. Without this a cold clone has no reference and cannot tell a
+# correct package from one silently short an icon.
+!/tools/itemicons/_work/pack-sub-manifest.txt
 
 /tools/dialog-static/*
 !/tools/dialog-static/*.py
 !/tools/dialog-static/*.md
+# thirdparty-src\ holds another mod's .UI scripts - never committed. The
+# README beside them is OURS and is the only record of why that folder exists,
+# what each script is, and how to re-derive it. Exclude the CONTENTS, not the
+# directory: git cannot re-include a file whose parent directory is excluded,
+# and `/tools/dialog-static/*` above already excluded this one - so re-admit
+# the DIRECTORY first, then shut its contents, then name the one exception.
+!/tools/dialog-static/thirdparty-src/
+/tools/dialog-static/thirdparty-src/*
+!/tools/dialog-static/thirdparty-src/README.md
+/tools/dialog-static/thirdparty-art/
 
 /tools/oddballs/*
 !/tools/oddballs/*.cs

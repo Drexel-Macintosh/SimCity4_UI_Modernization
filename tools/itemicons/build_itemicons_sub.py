@@ -56,6 +56,32 @@ UPSCALER = os.path.join(ROOT, 'tools', 'upscale', 'Upscale2x.exe')
 PACKER = os.path.join(ROOT, 'tools', 'dbpf', 'DbpfPack.exe')
 SRC_1X = [os.path.join(WORK, d) for d in ('submenus-1x', 'plugins-1x', 'lots-icons-1x')]
 REFERENCE = os.path.join(WORK, 'pack-sub')   # the shipped, user-confirmed 2x set
+# ...but only its NAME SET is ever read, and a directory of 130 upscaled mod
+# bitmaps cannot live in the repo. The manifest is that name set as text - our
+# derivation, not anyone's art - so a cold clone still gets the divergence
+# check. Regenerate with:  ls _work/pack-sub > _work/pack-sub-manifest.txt
+REFERENCE_MANIFEST = os.path.join(WORK, 'pack-sub-manifest.txt')
+
+
+def reference_names():
+    """The shipped 2x name set: the directory if present, else the manifest.
+
+    Either source is fine because the check is on NAMES. Refusing when both are
+    missing is deliberate - without a reference this build cannot tell a
+    correct tier package from one silently missing an icon, and shipping that
+    unnoticed is exactly the failure this check was added for.
+    """
+    if os.path.isdir(REFERENCE):
+        return sorted(fn.lower() for fn in os.listdir(REFERENCE)
+                      if fn.lower().endswith('.png'))
+    if os.path.isfile(REFERENCE_MANIFEST):
+        with open(REFERENCE_MANIFEST, 'r', encoding='utf-8') as f:
+            return sorted(ln.strip().lower() for ln in f
+                          if ln.strip().lower().endswith('.png'))
+    sys.exit("FATAL: no shipped-2x reference. Need either %s\n"
+             "  or %s\n"
+             "  Run tools\\itemicons\\recover_sub_sources.py, or see REPORT.md."
+             % (REFERENCE, REFERENCE_MANIFEST))
 
 
 def fresh_dir(path):
@@ -83,9 +109,14 @@ def main():
         stage = os.path.join(WORK, 'pack-sub-2x-verify')
         out_dat = None
 
-    for d in SRC_1X + [preview_dir, REFERENCE]:
+    ref = reference_names()      # resolves dir-or-manifest, or exits saying so
+
+    for d in SRC_1X + [preview_dir]:
         if not os.path.isdir(d):
-            sys.exit("FATAL: missing input dir: %s" % d)
+            sys.exit("FATAL: missing input dir: %s\n"
+                     "  The 1x sources are another mod's icons and are not in the\n"
+                     "  repo. Run tools\\itemicons\\recover_sub_sources.py to\n"
+                     "  re-extract them from your own Plugins tree." % d)
 
     # gather + upscale the 1x sources (three dirs -> one temp input set)
     merged_1x = os.path.join(WORK, 'pack-sub-src-merged')
@@ -115,7 +146,6 @@ def main():
     shutil.copy2(mt_src, os.path.join(stage, MISSING_THUMB))
 
     got = sorted(fn.lower() for fn in os.listdir(stage) if fn.lower().endswith('.png'))
-    ref = sorted(fn.lower() for fn in os.listdir(REFERENCE) if fn.lower().endswith('.png'))
     only_new = [f for f in got if f not in ref]
     only_ref = [f for f in ref if f not in got]
     print("staged: %d   shipped-2x reference: %d" % (len(got), len(ref)))

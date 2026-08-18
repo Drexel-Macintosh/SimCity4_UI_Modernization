@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 r"""
 Selective-safe 2x UI art override builder for SC4 UI scaling.
 
@@ -39,6 +39,16 @@ from collections import defaultdict
 TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UI_DIR = os.path.join(TOOLS, "uiscripts", "extracted")
 PNG_TGI_CSV = os.path.join(TOOLS, "dbpf", "extracted-png-tgi.csv")
+
+# Both of the above are DERIVED from the player's own game install and are
+# deliberately not committed. A cold-clone test (2026-08-18) found this file
+# dying on a bare FileNotFoundError naming a path the reader had never heard
+# of. corpus_inputs derives the csv if it can and otherwise names the exact
+# command to run. Import BEFORE any module-level read of either path.
+sys.path.insert(0, TOOLS)
+import corpus_inputs  # noqa: E402
+corpus_inputs.ensure_png_tgi_csv()
+corpus_inputs.require_ui_corpus()
 PACKER = os.path.join(TOOLS, "dbpf", "DbpfPack.exe")
 OUT_DIR = os.path.join(TOOLS, "selective-safe")
 
