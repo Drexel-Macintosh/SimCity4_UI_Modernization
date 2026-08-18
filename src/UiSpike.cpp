@@ -7326,6 +7326,29 @@ namespace
 	uint32_t  gBudgetKidsDigest[4] = { 0, 0, 0, 0 };
 	int       gBudgetKidsCount[4] = { -1, -1, -1, -1 };
 	int       gBudgetKidsLog = 0;
+	// BUDGETTICK (2026-08-18). BUDGETWATCH samples from the sweep, ~16 ms,
+	// so it can only see a change that OUTLIVES a tick. The reported symptom
+	// is 'a split second' - a few frames - which is exactly the duration that
+	// can open wrong and be corrected between two samples, leaving a null
+	// that means 'too slow to see it', not 'it did not happen'. Treating that
+	// null as proof would be the same error as a probe scoped to the wrong
+	// channel, so it is named in the ledger and closed here instead.
+	//
+	// This samples from inside the cGZWin::SetFlag detour, which fires for
+	// EVERY flag change on EVERY window - orders of magnitude more often than
+	// the sweep, and during the exact layout/invalidate traffic a resize
+	// generates. It uses ONLY the pointer the game just handed us and caches
+	// NO window pointers, so it cannot outlive an object (the #117 lesson).
+	// No new hook, no vtable work - the file header warns off the SetArea
+	// overload pair, and this needs neither.
+	struct BudgetTick { uint32_t id; int32_t w, h, l, t; bool seen; };
+	BudgetTick gBudgetTick[4] = {
+		{ 0xAA3AC000, 0, 0, 0, 0, false },
+		{ 0xAA3AC001, 0, 0, 0, 0, false },
+		{ 0xAA3AC002, 0, 0, 0, 0, false },
+		{ 0xCA4C332D, 0, 0, 0, 0, false },
+	};
+	int       gBudgetTickLog = 0;
 	int       gBudgetShowOpens = 0;
 	bool      gShowHookInstalled = false;
 
@@ -7405,6 +7428,38 @@ namespace
 						scope ? scope : w0, gTierF, true);
 					gInShowHook = false;
 				}
+			}
+		}
+
+		// BUDGETTICK. EVERY flag change on one of the four roots, not just the
+		// visibility transition - so a resize that lands and is corrected
+		// within a single sweep tick still gets recorded. Costs one compare on
+		// every other window in the game.
+		if (self && gTierF > 1.01f && gBudgetTickLog < 60)
+		{
+			cIGZWin* wt = static_cast<cIGZWin*>(self);
+			const uint32_t tid = wt->GetID();
+			for (BudgetTick& bt : gBudgetTick)
+			{
+				if (bt.id != tid) { continue; }
+				const int32_t cw = wt->GetW(), ch = wt->GetH();
+				const int32_t cl = wt->GetL(), ct = wt->GetT();
+				if (bt.seen && (cw != bt.w || ch != bt.h
+						|| cl != bt.l || ct != bt.t))
+				{
+					gBudgetTickLog++;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: BUDGETTICK 0x%08X (%d,%d %dx%d) -> "
+						"(%d,%d %dx%d)  [%s]  vis=%d flag=%u val=%d - seen "
+						"INSIDE SetFlag, i.e. between sweep samples.",
+						tid, bt.l, bt.t, bt.w, bt.h, cl, ct, cw, ch,
+						(cw == bt.w && ch == bt.h) ? "MOVED only"
+							: (cl == bt.l && ct == bt.t) ? "RESIZED only"
+								: "moved AND resized",
+						wt->IsVisible() ? 1 : 0, flag, value ? 1 : 0);
+				}
+				bt.w = cw; bt.h = ch; bt.l = cl; bt.t = ct; bt.seen = true;
+				break;
 			}
 		}
 
@@ -7983,6 +8038,8 @@ void UiSpike::Disarm()
 	gBudgetWatchLog = 0;      // and so does BUDGETWATCH; its baselines are
 	for (BudgetWatch& bw : gBudgetWatch) { bw.seen = false; }  // per city
 	gBudgetKidsLog = 0;
+	gBudgetTickLog = 0;
+	for (BudgetTick& bt : gBudgetTick) { bt.seen = false; }
 	for (int& c : gBudgetKidsCount) { c = -1; }   // no baseline carries
 	for (uint32_t& d : gBudgetKidsDigest) { d = 0; }  // across a city
 	gBudgetShowOpens = 0;     // question is about the FIRST open of a city

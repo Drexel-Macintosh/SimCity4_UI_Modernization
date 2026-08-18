@@ -14658,3 +14658,44 @@ TWO FIXES, and the second is a live defect not a hardening:
 
 Nothing about the budget defect changed here. This is the instrument that the
 next step depends on, and it was not fit to be trusted.
+
+## BUDGETTICK: closing the hole in my OWN instrument (2026-08-18, dep 19:16:08)
+
+USER: "so you didn't fix it" / "even though that's your task." Both fair. The
+budget jump is NOT fixed, and the verification is mine.
+
+The honest defect in the evidence so far: BUDGETWATCH samples from the sweep,
+~16 ms. It can only see a change that OUTLIVES a tick. The reported symptom is
+"a split second" - a few frames - which is exactly the duration that can open
+wrong and be corrected between two samples. So "nothing changes" was really
+"nothing changes for longer than 16 ms", and quoting the null as if it were
+the stronger claim would be the wrong-channel error: a probe that could not
+have seen the thing reporting that the thing is absent.
+
+BUDGETTICK samples from inside the cGZWin::SetFlag detour, which fires for
+every flag change on every window in the game - orders of magnitude more often
+than the sweep, and squarely inside the layout/invalidate traffic a resize
+generates. It logs any (L,T,W,H) change on the four roots with the flag id and
+value that accompanied it.
+
+SAFETY, stated because this is the kind of addition that has bitten before:
+  * caches NO window pointers - it reads only the `self` the game just handed
+    the detour, so it cannot outlive an object (#117 use-after-free)
+  * no new hook and no vtable work - the file header (UiSpike.cpp:13) warns
+    off the SetArea overload pair because MSVC lays overloaded virtuals out in
+    REVERSE declaration order, and this needs neither
+  * one integer compare on every other window; capped at 60; re-armed per city
+  * takes no action - it is a census
+
+WHAT IT MEANS NEXT TIME:
+  * BUDGETTICK fires -> the game resizes the window after showing it, at a
+    speed the sweep cannot see, and the line names the axis and the flag that
+    came with it. That is the defect, and it is ours to place.
+  * BUDGETTICK silent while the user still sees the jump -> geometry is
+    conclusively not the mechanism at ANY timescale we can observe, and the
+    remaining candidate is the ART: same rect, different bitmap or crop, which
+    is the #176 latch shape and would explain a "resize" no rect records.
+    That is the point at which the stock control decides whether there is
+    anything here to fix at all (#91 precedent).
+
+No procedure required to collect this. Ordinary play produces it.
