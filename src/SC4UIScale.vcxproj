@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{8F2C3B5E-0D74-4A6B-C2F9-63E51B8D4A02}</ProjectGuid>
+    <RootNamespace>SC4UIScale</RootNamespace>
+    <ProjectName>SC4UIScale</ProjectName>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <PropertyGroup>
+    <OutDir>$(MSBuildThisFileDirectory)..\build\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\build\obj-uiscale\$(Configuration)\</IntDir>
+    <TargetName>SC4UIScale</TargetName>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Repo root, fully resolved (no "src\..\" segment): /d1trimfile matches
+         the prefix literally, so an unnormalised path would trim nothing and
+         fail silently - the worst outcome for a privacy control. -->
+    <RepoRootFull>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</RepoRootFull>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;WINVER=0x0A00;_WIN32_WINNT=0x0A00;NOMINMAX;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(MSBuildThisFileDirectory)..\vendor\gzcom-dll\gzcom-dll\include;$(MSBuildThisFileDirectory)..\vendor\minhook\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary Condition="'$(Configuration)'=='Release'">MultiThreaded</RuntimeLibrary>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
+      <FunctionLevelLinking Condition="'$(Configuration)'=='Release'">true</FunctionLevelLinking>
+      <IntrinsicFunctions Condition="'$(Configuration)'=='Release'">true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <!-- v2.93.1 (#108): /PDBALTPATH fixed the ASCII PDB path in the debug
+           directory, and everyone assumed that was the whole problem. A BYTE
+           SCAN of the release bundle found ONE surviving absolute path -
+           UTF-16LE, in .rdata:
+
+             C:\Users\<user>\...\vendor\gzcom-dll\...\cRZCOMDllDirector.cpp
+
+           Source: `assert()` in the vendored SDK. Without NDEBUG, MSVC's
+           assert expands to _wassert(..., _CRT_WIDE(__FILE__), __LINE__), and
+           _CRT_WIDE(__FILE__) puts the compiler's ABSOLUTE source path into
+           the binary as a wide string. A text scanner never sees it; a scanner
+           that strips NULs does.
+
+           /d1trimfile: strips that prefix from __FILE__ at compile time, so
+           the string becomes relative. Chosen over defining NDEBUG because it
+           changes NO behaviour - the asserts still fire, which is worth
+           keeping in a DLL that hooks a 2003 binary.
+           ⚠ /d1 options are undocumented. If a future toolset rejects it the
+           build FAILS LOUDLY, which is the right failure - never silently drop
+           it, or the path comes back. _tests\Test-BinaryPii.py is the check.
+           ⚠ THE TRAILING BACKSLASH MUST BE DOUBLED. `...\"` makes MSVC read
+           the quote as ESCAPED, it swallows the closing quote, and the build
+           dies with `D8003: missing source filename` - which looks like a
+           broken project file, not a quoting bug. -->
+      <AdditionalOptions>/d1trimfile:"$(RepoRootFull)\\" %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>user32.lib;comctl32.lib;version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <EnableCOMDATFolding Condition="'$(Configuration)'=='Release'">true</EnableCOMDATFolding>
+      <OptimizeReferences Condition="'$(Configuration)'=='Release'">true</OptimizeReferences>
+      <ManifestFile></ManifestFile>
+      <!-- v2.66.0 (#112, release hygiene): /PDBALTPATH:%_PDB% writes only the
+           PDB's FILE NAME into the DLL's debug directory instead of its full
+           build path. Without it every shipped binary carried
+           C:\Users\<user>\OneDrive\Projects\...\SC4UIScale.pdb - verified by a
+           byte scan of the artifact we were about to publish. Local debugging
+           is unaffected: the PDB still sits beside the DLL in build\Release,
+           which is where the debugger looks first. -->
+      <AdditionalOptions>/MANIFEST:NO /PDBALTPATH:%_PDB% %(AdditionalOptions)</AdditionalOptions>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="SC4UIScaleDllDirector.cpp" />
+    <ClCompile Include="UiSpike.cpp" />
+    <ClCompile Include="ScaleRemap.cpp" />
+    <ClCompile Include="CodePatches.cpp" />
+    <ClCompile Include="ScaleTier.cpp" />
+    <ClCompile Include="WebRedirect.cpp" />
+    <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="SC4VersionDetection.cpp" />
+    <ClCompile Include="SpinProbe.cpp" />
+    <ClCompile Include="..\vendor\gzcom-dll\gzcom-dll\src\cRZCOMDllDirector.cpp" />
+    <ClCompile Include="..\vendor\gzcom-dll\gzcom-dll\src\cRZBaseString.cpp" />
+    <ClCompile Include="..\vendor\gzcom-dll\gzcom-dll\src\cRZBaseUnknown.cpp" />
+    <ClCompile Include="..\vendor\minhook\src\buffer.c" />
+    <ClCompile Include="..\vendor\minhook\src\hook.c" />
+    <ClCompile Include="..\vendor\minhook\src\trampoline.c" />
+    <ClCompile Include="..\vendor\minhook\src\hde\hde32.c" />
+    <ClCompile Include="..\vendor\minhook\src\hde\hde64.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="UiSpike.h" />
+    <ClInclude Include="ScaleRemap.h" />
+    <ClInclude Include="CodePatches.h" />
+    <ClInclude Include="Settings.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="SC4VersionDetection.h" />
+    <ClInclude Include="SpinProbe.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

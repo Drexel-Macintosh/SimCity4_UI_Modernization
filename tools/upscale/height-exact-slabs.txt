@@ -1,0 +1,73 @@
+# #185: CODE-BOUND height-exact SLABS - the budget window band backgrounds.
+# HAND-AUTHORED ON PURPOSE, and that is the doctrine, not a shortcut: these
+# sheets have ZERO .UI binds (their consumers are exe code), so
+# find_cell_strips.py's strip derivation is blind to them BY CONSTRUCTION -
+# they are not state strips at all, no script ever binds them, and no
+# derivable list can carry them. Same doctrine as find_cell_strips.py's
+# CODE_BOUND table and find_no_snap.py's exclusion bias: a sheet nobody
+# PROVED needs a rule keeps the sizing it has today, so a sheet the engine's
+# own bytes prove needs an exact height must be declared here, WITH those
+# bytes. Add nothing without a disassembled consumer and a disassembled
+# height rule.
+#
+# DO NOT merge these entries into height-exact-strips.txt: that file is
+# GENERATED (find_cell_strips.py overwrites it wholesale on every run), so a
+# hand entry there dies silently at the next regeneration. Rebuild-Corpus.ps1
+# passes this file as a SECOND --height-exact-strips occurrence instead -
+# Upscale2x.cs's parser APPENDS every occurrence into one set
+# (sHeightExactStrips.Add, arg loop ~line 146), so two files, one rule.
+#
+# THE BYTE EVIDENCE (#185, 4-lane refereed workflow, 2026-08-17):
+#   Consumer sub_77A390 builds the budget band blocks (dispatch 0x787D04,
+#   call 0x787D5D; uimap b_0x77E600.json "BUDGET / Neighbor Deals detail
+#   dialog, 13 static row blocks"). At 0x788209-0x78822E the engine computes
+#   rowPitch = artHeight / 2 - the sheet is two stacked rows (band + band
+#   highlight) and the HALF-HEIGHT is consumed directly as the row pitch.
+#   Therefore the scaled height must be EXACT (the pitch must scale with the
+#   art: round(36*f)) and EVEN (the /2 must not truncate). 54/72/108 are all
+#   even, so the even requirement is automatic at every shipping tier.
+#
+#   THE DEFECT: all five are 36 tall at 1x. ScaleDim's CellUnit(36)=12 snap
+#   turns round(36*1.5)=54 into 60 (54%12=6, exact tie, ties go UP - the
+#   same worked case as #177), so the 1.5x corpus ships 60-tall slabs and
+#   the engine's pitch reads 30 where the art was painted for 27. 2x/3x are
+#   arithmetic no-ops (floor(36*2+0.5)=72 and floor(36*3+0.5)=108 equal
+#   ScaleDim's own results - the snap only diverges at fractional factors),
+#   which is the open question against the user's "at 2x AND 3x" report;
+#   the eyes-on adjudicates.
+#
+# CONFLICT CHECK (the 14015584 lesson - one sheet in two lists means the
+# other list's rule silently wins): verified 2026-08-17 that all five
+# instances appear in NO other derived list - cell-strips.txt, nine-slice.txt,
+# no-snap.txt, height-exact-strips.txt, no-smooth.txt all clean.
+#
+# All five are type 856DDBAC, group 46A006B0 (shipped by
+# build_selective_safe.py's CODE_BOUND_TGIS: the 0x140155B4..F7 news/advisor
+# span and the 2BFEB0Cx master-band family, "CC=slab 650x36").
+#
+# <group> <instance>
+# 140155d2: budget dept band slab, 500x36 at 1x (shipped 752x60 at 1.5x; needs h=54)
+46a006b0 140155d2
+# 140155d5: budget dept band slab (highlight twin), 500x36 at 1x (shipped 752x60; needs h=54)
+46a006b0 140155d5
+# 140155f2: budget band slab, 450x36 at 1x (shipped 675x60 at 1.5x; needs h=54)
+46a006b0 140155f2
+# 140155f5: budget band slab (highlight twin), 450x36 at 1x (shipped 675x60; needs h=54)
+46a006b0 140155f5
+# 2bfeb0cc: master budget band slab, 650x36 at 1x (shipped 975x60 at 1.5x; needs h=54)
+46a006b0 2bfeb0cc
+# --- ADDED 2026-08-17 after the first eyes-on ("boxes are colliding"):
+# the original five fixed their dialogs' pitch to 27 while these three still
+# drew at 30 - MIXED pitches in one window is exactly the collision the user
+# photographed. Now they have the on-screen disagreement the doctrine
+# demands (static defect = hypothesis, until the screen disagrees).
+# 140155c2: budget band slab (C family), 400x36 at 1x (shipped 600x60; needs h=54).
+#   Flagged by the batch review's family-profile census (C0-C7 byte-identical
+#   height shape to the D/F families); consumer undiscovered offline.
+46a006b0 140155c2
+# 140155c5: budget band slab (C family, highlight twin), 400x36 at 1x (shipped 600x60; needs h=54)
+46a006b0 140155c5
+# 144162a5: small 36-tall band element, 43x36 at 1x (shipped 65x60; needs h=54).
+#   OUTSIDE the review's census span (0x140155B4..F7 + 0x2BFEB0Cx) - found by
+#   the deployed-dat census of every 46a006b0 sheet at h=60 with a 36-tall 1x.
+46a006b0 144162a5

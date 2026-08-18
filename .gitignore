@@ -1,0 +1,30 @@
+# Build output
+/build/
+*.obj
+*.pdb
+*.ilk
+*.exp
+*.lib
+*.tlog
+*.iobj
+*.ipdb
+
+# Generated packages - built locally from YOUR OWN game installation.
+# They are enlarged copies of Maxis (and other modders') artwork and are not
+# redistributed from this repository. See docs/BUILDING.md.
+*.dat
+*.ui
+*.png
+
+# Compiled helper tools (build them with csc - see docs/BUILDING.md)
+*.exe
+*.dll
+
+# Python
+__pycache__/
+*.pyc
+
+# Local
+*.log
+Thumbs.db
+desktop.ini
