@@ -13908,3 +13908,35 @@ Also corrected: the task list carried "#162 hairlines OPEN, mechanism NOT known
 (kill test was run: NEGATIVE)", which predates :11040's decoded signal. This
 file warned at :10594 that #162's status is stated three ways; that is now four.
 Later dated passage wins - this one.
+
+## #162 CLOSED — SYMPTOM NOT REPRODUCING, mechanism never established (2026-08-18)
+
+USER: "I haven't seen any this is fixed." Closing on that, with the distinction
+recorded because it matters if the hairlines ever return.
+
+WHAT THIS IS: the user previously SAW the hairlines - that is why #162 exists -
+and no longer does. Same observer, before and after, which is real evidence and
+not the bare null the earlier kill test produced.
+
+WHAT THIS IS NOT: a fix. No change was ever deliberately shipped for #162. The
+mechanism was never established, and today's advance (the 54-wide sheet is ours,
+{46a006b0,14015558} 1x 36x36 -> 1.5x 54x54, middle third exactly x 18..36
+matching the observed src) identified a CANDIDATE sheet whose consumer is still
+unknown. Whatever cured the symptom did so incidentally - most plausibly one of
+the many nine-slice and height rules that landed since (#157 CellUnit{3}
+sizing, #177's 41 exact heights), but that is a guess and is labelled one.
+
+IF IT RETURNS, start from :11040 and this entry, not from the top. The decoded
+signal - an 18x2 band tiled 19x across the bottom edge of a 340x155 buffer,
+src(18,36,36,38) - plus the candidate sheet is a live lead, and the ONE test
+that converts it is a THINBLT capture reading the source image's own WxH
+(printed since v3.0.2): img 54x54 confirms 14015558, anything else refutes it.
+
+PROBE HYGIENE, applying this morning's crash lesson. ThinBlt was left armed
+specifically to catch #162 (":11040 ThinBlt=40 stays armed"); with the issue
+closed it is returned to 0 in the live ini. THREE OTHERS REMAIN ARMED and are
+flagged rather than silently changed: SpinProbe=10 (belongs to #104, still
+open, Settings.h calls it "PROBE not a fix, default OFF"), DrawProbe=400 and
+StripDump=1 (owners not identified). A dev probe left armed after its
+investigation is what took the game down this morning; these are the same
+shape.
