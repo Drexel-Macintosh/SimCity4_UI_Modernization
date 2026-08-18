@@ -13966,3 +13966,25 @@ RE-ENABLE CONDITIONS, unchanged and both required:
 Only 48 of 465 keyed sheets qualify for the smoothing anyway; the other 417
 keep NEAREST regardless, so the prize is small and the blast radius is the
 colour key. Left dormant deliberately.
+
+## #188 FULLY CLOSED — the shared pin path is clear (2026-08-18)
+
+The one blast radius left unverified when #188 shipped: the eight pin immediates
+`0x0046EABD..0x0046EB6F` are NOT category-guarded. At `0x0046E852`,
+`cmp [esi+4],4 ; je 0x46E38E` sends CSI down its own branch which REJOINS common
+code, so other dispatch-indicator categories reach the same quad. Neither of the
+two eyes-on passes had a fire or police dispatch marker on screen, so it was
+untested rather than cleared, and the ledger said so.
+
+USER-CONFIRMED 2026-08-18: a dispatch marker was observed and renders correctly.
+The contingency (split `kCsiQuad` so the disc scales alone, never the reverse
+since pin-without-disc is the broken state) is NOT needed and stays unbuilt.
+
+#188 is now verified on both the CSI balloon (3x, 3840x2160) and the shared
+dispatch path (1.5x). Cost for the record: ~17 launches over two days, and both
+levers turned out to be inline `imm32` inside instructions rather than `.rdata`
+constants - law 99, which is why a data-section sweep found nothing.
+
+⇒ WITH THIS, EVERY DEFECT ON THE BOARD IS CLOSED. What remains is release work
+(#146 content audit, #148 near-vanilla verify, #147 bundle, cut v3.0.0), three
+research/refactor items (#124, #125, #178) and the long-running #104.
