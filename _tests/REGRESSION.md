@@ -14523,3 +14523,102 @@ cannot drift to fit whatever comes back:
     children. A null here is only informative because BUDGETSHOW already
     proved the watcher's ids are the ids that appear on screen (the positive
     control - law: null is not evidence without one).
+
+## BUDGETWATCH capture: the ROOTS ARE NOT WHAT MOVES (2026-08-18, log 19:04)
+
+Four lines, all of them at city open, all vis=0:
+
+    BUDGETWATCH 0xAA3AC002 (158,40  500x464) -> (237,60  750x696)
+    BUDGETWATCH 0xAA3AC000 (210,1414 833x137) -> (315,1320 1250x206)
+    BUDGETWATCH 0xAA3AC001 (483,1044 558x505) -> (725,765  837x758)
+    BUDGETWATCH 0xCA4C332D (3,252   500x353) -> (5,378    750x530)
+
+Every one is design -> RoundHalfUp(design * 1.5). **Then nothing.** The user
+opened three departments and not one further line appeared, with 36 of the 40
+allowed lines unspent - so this is a TRUE null, not a saturated instrument,
+and its positive control is the four lines above: the watcher fires, on these
+exact ids, in this exact session.
+
+CONCLUSION, and it is the one the pre-registered reading called: the root is
+not the thing that resizes. Root geometry after show is CONSTANT.
+
+## MY OWN INSTRUMENT LIED IN ITS FIRST VERSION, AND THE CAPTURE CAUGHT IT
+
+Those four lines shipped with the text "NOT by us, this loop has not run yet
+this tick." That claim is FALSE. The watcher baselines a panel BEFORE the loop
+scales it, so our own sweep's scaling surfaces on the following tick and reads
+as an external change. The give-away is in the numbers it printed: every ratio
+is exactly the tier factor, which nothing but our own scaler produces.
+
+Had the roots actually been moved by the game, that sentence would have been
+read as confirmation. FIXED: the line now TESTS the attribution
+(cw == RoundHalfUp(bw.w * f)) and says "this is OUR sweep, surfaced one tick
+late" or "NOT a tier-factor change, so not our scaling". An instrument may
+report an observation; it may not assert a conclusion it cannot compute.
+Third entry in METHOD.md's "your own instruments can lie" - after
+SUBHOOK-installed-vs-executed and DCBUF-request-vs-result.
+
+## BUDGETKIDS (2026-08-18, deployed 19:06:35)
+
+One level down, which the 19:04 null selects. While a budget root is VISIBLE,
+FNV-1a over every direct child's (id, L, T, W, H) each sweep tick; on any
+change of digest or count, log the transition and dump the first 10 children
+with their rects. Capped at 30, re-armed per city, takes no action.
+
+A digest rather than 36x4 retained rects because the tick question is yes/no;
+the numbers only need printing once the answer is yes. Gated on IsVisible
+because a hidden template re-laying itself is not what the user is watching -
+gate on the condition you depend on.
+
+WHAT IT DECIDES:
+  * children change while the root holds still -> the frame is re-laying its
+    contents after the show, and the dump names which children and by how
+    much. That is the resize the user sees, and the fix belongs wherever
+    those child rects come from.
+  * NOTHING changes at either level -> geometry is not the mechanism at all
+    and the next instrument is the ART: same rect, different bitmap or crop,
+    which is the #176 latch shape (content bound at 1x, window later correct)
+    and would explain a "resize" that no rect ever records.
+
+## OFFLINE: the budget department frame is CORRECT in the shipped data
+## (2026-08-18) - and the user was right that this was already scaled
+
+USER: "we scaled this before i have no idea why we're doing in game tests."
+Correct, and the right pushback. v2.19.2 (2026-07-29) already established for
+these two scripts that the GEOMETRY was exact ("expanded root 0xAA3AC001 at
+1116x1010 = exact 2x, rows 938x36") and that the visible defect then was the
+ART layer, cured by adding 0xAA3AC001/0xAA3AC002/0xCA4C332D to
+SCALED_WINDOW_IDS. Everything needed to re-check that is on disk.
+
+MEASURED ON THE SHIPPED PACKAGE, no game required (law: measure the SHIPPED
+file). Stock I-cbc3c2b9 from SimCity_1.dat vs our deployed
+z_SC4UIScale_SelectiveArt-15x.dat, restricted to the 0xAA3AC001 subtree, all
+three numbers of every blit (law 73: source, CROP, destination):
+
+    stock blits: 41   shipped blits: 41
+    39 of 41 scale exactly x1.5 in BOTH area= and imagerect=
+    2 of 41 differ only by a clone-retarget of image= to a scaled instance
+      (144161e2 -> 470261e3, e2b66db8 -> b1f56db9); their area= scales
+      correctly, which is the intended SelectiveArt clone mechanism
+
+The crops looked alarming at first glance - three sibling blits sharing
+imagerect right/bottom (819,756) while their areas differ - and they are
+IDENTICAL in stock modulo the factor. A shape that looks wrong but matches
+stock is not a defect (law 88).
+
+And the six backgrounds the v2.19.2 fix added (140155b5/b6/c9/ca/cb/cc) are
+all present in the deployed SelectiveArt and WIN the load order.
+
+SO EVERY MEASURABLE THING IS CORRECT:
+  * root born at RoundHalfUp(design * f) - BUDGETSHOW, twice
+  * root never moves or resizes after being shown - BUDGETWATCH, true null
+    with a working positive control
+  * children doubled exactly, crops doubled exactly - this comparison
+  * art present and winning - who_owns_tgi
+
+THE ONE THING NEVER RUN: the stock control. #91 is the precedent and it is
+the same shape - the dashboard minimap "blanks then jumps", which turned out
+to do exactly that at STOCK too, and closed NOT-A-BUG on a user-confirmed
+control. _tests\Set-StockCompare.ps1 -Mode Stock exists for this. Nothing
+else should be built for this defect until that control has been run, because
+every model we have now would have to condemn stock to explain the symptom.

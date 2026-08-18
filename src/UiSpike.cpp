@@ -7314,6 +7314,18 @@ namespace
 		{ 0xCA4C332D, 0, 0, 0, 0, false },
 	};
 	int       gBudgetWatchLog = 0;
+	// BUDGETKIDS (2026-08-18). Pre-registered as the next step BEFORE the
+	// 19:04 capture, and the capture is what selects it: BUDGETSHOW proved
+	// both roots are born at RoundHalfUp(design*f), and BUDGETWATCH then
+	// logged FOUR changes - all at city open, all vis=0, all our own sweep -
+	// and NOTHING at either department open, with 36 of its 40 lines still
+	// unspent. That is a TRUE null with a working positive control: the
+	// instrument fires, on these ids, and the roots simply do not move or
+	// resize after they are shown. So the thing the user watches resize is
+	// not the root. One level down is the only place left.
+	uint32_t  gBudgetKidsDigest[4] = { 0, 0, 0, 0 };
+	int       gBudgetKidsCount[4] = { -1, -1, -1, -1 };
+	int       gBudgetKidsLog = 0;
 	int       gBudgetShowOpens = 0;
 	bool      gShowHookInstalled = false;
 
@@ -7970,6 +7982,9 @@ void UiSpike::Disarm()
 	gBudgetShowLog = 0;       // BUDGETSHOW re-arms per city - the whole
 	gBudgetWatchLog = 0;      // and so does BUDGETWATCH; its baselines are
 	for (BudgetWatch& bw : gBudgetWatch) { bw.seen = false; }  // per city
+	gBudgetKidsLog = 0;
+	for (int& c : gBudgetKidsCount) { c = -1; }   // no baseline carries
+	for (uint32_t& d : gBudgetKidsDigest) { d = 0; }  // across a city
 	gBudgetShowOpens = 0;     // question is about the FIRST open of a city
 	gMDockLoggedN = 0;        // v2.43.3: MDOCK re-reports per city
 	FlushBmpOpenCensus();     // v2.42.3: report the city's last open
@@ -10463,17 +10478,93 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 						|| cl != bw.l || ct != bw.t))
 				{
 					gBudgetWatchLog++;
+					// ATTRIBUTION IS TESTED, NOT ASSERTED. The first
+					// version of this line claimed "NOT by us"; the 19:04
+					// capture showed all four roots going design ->
+					// RoundHalfUp(design*f) at city open with vis=0, which is
+					// our OWN sweep one tick late - the watcher baselines a
+					// panel before this loop scales it, so the change lands on
+					// the next tick. Only the arithmetic can tell the two
+					// apart, so the arithmetic decides the wording.
+					const bool wasDesign =
+						(bw.w == RoundHalfUp(cw / gTierF)
+							|| cw == RoundHalfUp(bw.w * gTierF));
 					Logger::Get().WriteLine(LogLevel::Info,
 						"UiSpike: BUDGETWATCH 0x%08X CHANGED (%d,%d %dx%d) -> "
-						"(%d,%d %dx%d)  [%s]  vis=%d - NOT by us, this loop has "
-						"not run yet this tick.",
+						"(%d,%d %dx%d)  [%s]  vis=%d  %s",
 						wid, bw.l, bw.t, bw.w, bw.h, cl, ct, cw, ch,
 						(cw == bw.w && ch == bw.h) ? "MOVED only"
 							: (cl == bw.l && ct == bw.t) ? "RESIZED only"
 								: "moved AND resized",
-						p.win->IsVisible() ? 1 : 0);
+						p.win->IsVisible() ? 1 : 0,
+						wasDesign
+							? "- size ratio is the tier factor: this is OUR "
+							  "sweep, surfaced one tick late."
+							: "- NOT a tier-factor change, so not our scaling.");
 				}
 				bw.w = cw; bw.h = ch; bw.l = cl; bw.t = ct; bw.seen = true;
+
+				// BUDGETKIDS: the same question one level down, and only
+				// while the root is actually on screen - a hidden template
+				// re-laying itself is not what the user is watching.
+				if (p.win->IsVisible() && gBudgetKidsLog < 30)
+				{
+					const int slot =
+						static_cast<int>(&bw - &gBudgetWatch[0]);
+					ChildSnapshot kids = {};
+					p.win->EnumChildren(GZIID_cIGZWin,
+						ChildSnapshot::Callback, &kids);
+					// FNV-1a over every child's (id, L, T, W, H). A digest,
+					// not a comparison of stored rects: 36 children x 4 roots
+					// of retained state would be the expensive way to answer
+					// a yes/no question, and the follow-up dump below prints
+					// the actual numbers once something has changed.
+					uint32_t dg = 2166136261u;
+					for (int k = 0; k < kids.count; k++)
+					{
+						cIGZWin* kw = kids.wins[k];
+						if (!kw) { continue; }
+						const uint32_t f5[5] = {
+							kw->GetID(),
+							static_cast<uint32_t>(kw->GetL()),
+							static_cast<uint32_t>(kw->GetT()),
+							static_cast<uint32_t>(kw->GetW()),
+							static_cast<uint32_t>(kw->GetH()) };
+						for (uint32_t v : f5)
+						{
+							dg = (dg ^ (v & 0xFFu)) * 16777619u;
+							dg = (dg ^ ((v >> 8) & 0xFFu)) * 16777619u;
+							dg = (dg ^ ((v >> 16) & 0xFFu)) * 16777619u;
+							dg = (dg ^ ((v >> 24) & 0xFFu)) * 16777619u;
+						}
+					}
+					if (gBudgetKidsCount[slot] >= 0
+						&& (dg != gBudgetKidsDigest[slot]
+							|| kids.count != gBudgetKidsCount[slot]))
+					{
+						gBudgetKidsLog++;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: BUDGETKIDS 0x%08X children CHANGED "
+							"(%d -> %d children) while the root held "
+							"(%d,%d %dx%d) - dumping first 10:",
+							wid, gBudgetKidsCount[slot], kids.count,
+							cl, ct, cw, ch);
+						const int dumpN = kids.count < 10 ? kids.count : 10;
+						for (int k = 0; k < dumpN; k++)
+						{
+							cIGZWin* kw = kids.wins[k];
+							if (!kw) { continue; }
+							Logger::Get().WriteLine(LogLevel::Info,
+								"UiSpike: BUDGETKIDS   [%d] 0x%08X "
+								"(%d,%d %dx%d) vis=%d",
+								k, kw->GetID(), kw->GetL(), kw->GetT(),
+								kw->GetW(), kw->GetH(),
+								kw->IsVisible() ? 1 : 0);
+						}
+					}
+					gBudgetKidsDigest[slot] = dg;
+					gBudgetKidsCount[slot] = kids.count;
+				}
 				break;
 			}
 		}
