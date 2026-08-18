@@ -430,7 +430,11 @@ foreach ($pair in $BUILT_PAIRS) {
 #
 # So this asserts the pixels, per tier, out of the SHIPPED package: the entry
 # must decode as a PNG whose width and height are both exactly 32 * factor.
-# Measured 2026-08-16 and currently correct - 15x 48x48, 2x 64x64, 3x 96x96.
+# ⚠ SUPERSEDED, kept only to date the change: the 2026-08-16 measurement
+# below read 15x 48x48 / 2x 64x64 / 3x 96x96, i.e. 32*factor. The 2026-08-17
+# USER DECISION replaced that with the flat 96 pin the assertion now uses.
+# A stale comment that contradicts the assertion under it is how a correct
+# gate gets 'fixed' back into a wrong one.
 #
 # ⚠ It reads the DBPF INDEX and hashes nothing: a dat FILE hash is useless here
 # because two builds of identical content differ in 2 bytes at offsets 25/29

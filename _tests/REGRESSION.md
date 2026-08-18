@@ -13727,3 +13727,20 @@ same binary as the fix, and an unguarded speculative read inside one is a crash
 in OUR module that looks exactly like a mod incompatibility. Every speculative
 deref in a probe gets SEH, and every dev-only level gets returned to its default
 when the investigation ends.
+
+### Two doc corrections found while auditing the bubble pin (2026-08-18)
+
+1. The 1x bubble art {46a006b0,094ac89a} is described in this file and in
+   SC4-WORLD-OVERLAYS.md as "a solid white 32x32". DECODED: 32x32 RGBA, 164 of
+   1024 pixels have alpha > 0, all of them pure white, forming a hollow
+   anti-aliased RING about 22px across (centre row alpha reads
+   .....######.........######......). Flattening alpha onto a white page
+   produces the "solid square" misreading. The distinction matters because the
+   "it is a featureless square, so it cannot be the marker" argument in
+   TWO DEAD LEADS rests on it.
+
+2. Test-DatIntegrity.ps1 carried a stale comment - "Measured 2026-08-16 and
+   currently correct - 15x 48x48, 2x 64x64, 3x 96x96" - directly above an
+   assertion that (correctly, per the 2026-08-17 decision) expects a flat 96 at
+   every tier. The code was right and the comment above it described the rule it
+   replaced. Reworded to date the change instead of contradicting it.
