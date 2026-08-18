@@ -13,7 +13,7 @@ resolution/display change — this is the thing that got overcomplicated on 2026
 
 ## The ONE knob: SC4GraphicsOptions.ini
 
-`C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\SC4GraphicsOptions.ini`
+`<HOME>\OneDrive\Documents\SimCity 4\Plugins\SC4GraphicsOptions.ini`
 is read by the community mod **SC4GraphicsOptions.dll** (NOT our code). It forces:
 ```
 Driver=Software        <- or DirectX. Software = CPU render, no GPU, no dgVoodoo, no 2048 cap.

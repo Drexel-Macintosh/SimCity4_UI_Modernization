@@ -564,4 +564,4 @@ here must never be quoted as "#104 cannot happen again".
 * `...\_tests\captures\2026-08-03-104-run{6..13,15}*.log` — every log measurement above; run15 is the one that refutes the pair
 * `...\tools\uimap\{common.py, fn.py, crosscheck.py, _work\edges.json, _work\funcs.json}` — all disassembly and call closures
 
-*(Full path prefix: `C:\Users\<user>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\`)*
+*(Full path prefix: `<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\`)*

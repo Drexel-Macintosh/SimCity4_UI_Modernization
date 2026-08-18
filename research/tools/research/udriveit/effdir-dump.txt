@@ -1,5 +1,5 @@
 EFFDIR visual-effects dump - 1154 parents, map 1148 names
-source: C:\Users\<user>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4UIScale\tools\research\effdir\T-ea5118b0_G-ea5118b1_I-00000001.png
+source: <PROJECT-ROOT>\tools\research\effdir\T-ea5118b0_G-ea5118b1_I-00000001.png
 section header @0x9C274 (ver 2, count 0x482)
 
 [   0 @file:0x09c27a] camera_collision  (X=0 A=1 children=2)

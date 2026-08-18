@@ -180,7 +180,7 @@ See REGRESSION.md "ONE BUG CLASS" addendum + DYNAMIC-CONTROLS.md addendum.
   `build\Release\SC4UIScale.dll` 296,448 bytes, banner string verified
   `2.23.2-gauges`, 5 `GAUGE` log strings present.
 - `SimCity 4.exe` absent from tasklist -> **DEPLOYED** to
-  `C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\SC4UIScale.dll`.
+  `<HOME>\OneDrive\Documents\SimCity 4\Plugins\SC4UIScale.dll`.
 - `_tests\Test-DatIntegrity.ps1`:
   `ALL PASS (11 dats + 3 font sources + 2 DLLs + frozen-bundle hash)`
 - `_tests\Test-ScaleTierDecide.ps1`:

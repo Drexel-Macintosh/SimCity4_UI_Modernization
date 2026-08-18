@@ -74,7 +74,7 @@ Do not move or resize the Graphs window between the two clicks.
 
 ### 2a. TIER 1.5 — AutoScale does all of it. One ini, three keys.
 
-`C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\SC4GraphicsOptions.ini`
+`<HOME>\OneDrive\Documents\SimCity 4\Plugins\SC4GraphicsOptions.ini`
 
 ```
 WindowMode=Windowed

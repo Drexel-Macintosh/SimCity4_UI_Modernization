@@ -427,110 +427,110 @@ archives discovered: 532
    C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Sku_Data\Sku1_US\Plugin_002_TheLivingMall.dat
    C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Sku_Data\Sku2_European\Plugin_002_TheLivingMall.dat
    C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Sound.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.colossus-addon-mod.yes-current.3.1.1.sc4pac\CAM_Main_Controller.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.colossus-addon-mod.yes-current.3.1.1.sc4pac\CAM_PlayStyle_Extended.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM Locale\CAM_Locale_en.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Essentials.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Graph.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Patch.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Intro.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_LUA_Controller.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Submenu_Extended.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Buildings.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_DLC_Landmark_Building.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Education_Buildings.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Health_Buildings.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Landmark_Patch.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Maxis_Building_Extended.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Maxis_Buildings_Blocker.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Park_Buildings.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Police_Fire_Buildings.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Power_Garbage_Buildings.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Rewards_Building.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Water_Buildings.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\4 CAM Legacy Files\CAM_Education_Buildings.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\140-ordinances\cam.ordinances.3.3.0-2.sc4pac\CAM Ordinance Locale\CAM_Ordinance_Locale_en.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\140-ordinances\cam.ordinances.3.3.0-2.sc4pac\CAM_Ordinance.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\cam.universal-commercial-cap-fix.radical.2.0.0-1.sc4pac\CAM_Universal_CAP_Fix._Radical.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\cyclone-boom.save-warning.1.0.sc4pac\SaveWarning_Disable_Exit_Quit.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.i-r-fix.1.0.0-2.sc4pac\memo.I-R-fix.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CO$$$-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CO$$-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$$$-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$$-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\college-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\elementary-school-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\high-school-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\library-museum-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-large-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-medium-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-small-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\highway\signage-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Ia-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Id-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Iht-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Im-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\entertainment-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\government-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\religion-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\bus-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\ElRail-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\GLR-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\multimodal-stations-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\parking-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\subway-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\embankment-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\fillers-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\green-spaces-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\modular-parks-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\plaza-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\sports-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\military-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-deluxe-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-large-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-small-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\clean-energy-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\dirty-energy-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\misc-power-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\freight-rail-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\hybrid-railway-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\monorail-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\passenger-rail-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\yards-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$$$-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$$-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\submenu-essentials.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\canal-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\ports-ferries-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\seawall-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\watercraft-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\waterfront-submenu.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.allow-more-building-styles-dll.3.6.1-1.sc4pac\CoriBoom's 36 Slot Building Styles UI - v0.46 Beta HA250411.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.allow-more-building-styles-dll.3.6.1-1.sc4pac\SC4MoreBuildingStyles.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.bulldoze-extensions.2.0.0-1.sc4pac\BulldozeExtensions.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.city-lottery-ordinance.1.0.0.sc4pac\CityLotteryOrdinanceText_English.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.lua-extensions-dll.1.5.sc4pac\SC4LuaExtensions.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.query-tool-ui-extensions-dll.2.7.sc4pac\SC4QueryUIHooks.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\scoty.zoning-mod-maxis.2.0.0.sc4pac\scoty_ZManag_maxis.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\t-wrecks.maxis-prop-names-and-query-fix.2.0.sc4pac\z_All Maxis building props with proper names.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_2025 93 Lot_d6482a2c.SC4Lot
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_V2025_93-0x5ad0e817_0x98d755a7_0x30000.SC4Model
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_V2025_93-0x6534284a-0x15c0abe4-0x964829e0.SC4Desc
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\ND_Verja_Completa-0x5ad0e817_0xf8d8a550_0x30000.SC4Model
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\ND_Verja_Completa-0x6534284a-0x15c0abe4-0x36496c48.SC4Desc
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_DialogStatic-15x.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_ItemIcons-15x.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_SelectiveArt-15x.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_WebText.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_CamUI-15x.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-15x.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_MenuFix.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-15x.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-15x.dat
-   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_UncoveredIcons-15x.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.colossus-addon-mod.yes-current.3.1.1.sc4pac\CAM_Main_Controller.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.colossus-addon-mod.yes-current.3.1.1.sc4pac\CAM_PlayStyle_Extended.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM Locale\CAM_Locale_en.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Essentials.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Graph.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Patch.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Intro.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_LUA_Controller.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Submenu_Extended.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Buildings.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_DLC_Landmark_Building.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Education_Buildings.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Health_Buildings.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Landmark_Patch.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Maxis_Building_Extended.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Maxis_Buildings_Blocker.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Park_Buildings.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Police_Fire_Buildings.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Power_Garbage_Buildings.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Rewards_Building.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Water_Buildings.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\4 CAM Legacy Files\CAM_Education_Buildings.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\140-ordinances\cam.ordinances.3.3.0-2.sc4pac\CAM Ordinance Locale\CAM_Ordinance_Locale_en.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\140-ordinances\cam.ordinances.3.3.0-2.sc4pac\CAM_Ordinance.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\cam.universal-commercial-cap-fix.radical.2.0.0-1.sc4pac\CAM_Universal_CAP_Fix._Radical.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\cyclone-boom.save-warning.1.0.sc4pac\SaveWarning_Disable_Exit_Quit.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.i-r-fix.1.0.0-2.sc4pac\memo.I-R-fix.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CO$$$-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CO$$-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$$$-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$$-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\college-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\elementary-school-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\high-school-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\library-museum-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-large-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-medium-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-small-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\highway\signage-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Ia-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Id-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Iht-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Im-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\entertainment-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\government-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\religion-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\bus-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\ElRail-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\GLR-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\multimodal-stations-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\parking-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\subway-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\embankment-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\fillers-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\green-spaces-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\modular-parks-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\plaza-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\sports-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\military-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-deluxe-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-large-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-small-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\clean-energy-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\dirty-energy-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\misc-power-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\freight-rail-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\hybrid-railway-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\monorail-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\passenger-rail-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\yards-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$$$-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$$-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\submenu-essentials.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\canal-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\ports-ferries-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\seawall-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\watercraft-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\waterfront-submenu.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.allow-more-building-styles-dll.3.6.1-1.sc4pac\CoriBoom's 36 Slot Building Styles UI - v0.46 Beta HA250411.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.allow-more-building-styles-dll.3.6.1-1.sc4pac\SC4MoreBuildingStyles.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.bulldoze-extensions.2.0.0-1.sc4pac\BulldozeExtensions.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.city-lottery-ordinance.1.0.0.sc4pac\CityLotteryOrdinanceText_English.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.lua-extensions-dll.1.5.sc4pac\SC4LuaExtensions.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.query-tool-ui-extensions-dll.2.7.sc4pac\SC4QueryUIHooks.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\scoty.zoning-mod-maxis.2.0.0.sc4pac\scoty_ZManag_maxis.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\150-mods\t-wrecks.maxis-prop-names-and-query-fix.2.0.sc4pac\z_All Maxis building props with proper names.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_2025 93 Lot_d6482a2c.SC4Lot
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_V2025_93-0x5ad0e817_0x98d755a7_0x30000.SC4Model
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_V2025_93-0x6534284a-0x15c0abe4-0x964829e0.SC4Desc
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\ND_Verja_Completa-0x5ad0e817_0xf8d8a550_0x30000.SC4Model
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\ND_Verja_Completa-0x6534284a-0x15c0abe4-0x36496c48.SC4Desc
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_DialogStatic-15x.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_ItemIcons-15x.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_SelectiveArt-15x.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_WebText.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_CamUI-15x.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-15x.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_MenuFix.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-15x.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-15x.dat
+   <HOME>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_UncoveredIcons-15x.dat
 
 exemplars/cohorts walked: 11952
 
@@ -747,7 +747,7 @@ exemplars/cohorts walked: 11952
         table = [0x00000000, 0xEA123BE1, 0x00000001, 0xEA123BE1]
   {T=0x6534284A, G=0xC977C536, I=0x1EF30000} [SimCity_1.dat] 'AR8x8x2_$DogOnAChain_1ef3'
         table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
-  {T=0x6534284A, G=0xC977C536, I=0x1EC00000} [SimCity_1.dat] 'RW1x1x1_café-tables-sims-eating_1EC00000'
+  {T=0x6534284A, G=0xC977C536, I=0x1EC00000} [SimCity_1.dat] 'RW1x1x1_cafï¿½-tables-sims-eating_1EC00000'
         table = [0xAA123BF9]
   {T=0x6534284A, G=0xC977C536, I=0x1EBA0000} [SimCity_1.dat] 'ARW4x3x4_small-table-crowd-farmers-market_1EBA'
         table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
@@ -1359,7 +1359,7 @@ exemplars/cohorts walked: 11952
   {T=0x6534284A, G=0xC977C536, I=0x1F050000} [SimCity_1.dat] 'Abase3x8x4_base-pitcher-drk_1F05'
   {T=0x6534284A, G=0xC977C536, I=0x1EFC0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim4_1EFC0005'
   {T=0x6534284A, G=0xC977C536, I=0x1EF30000} [SimCity_1.dat] 'AR8x8x2_$DogOnAChain_1ef3'
-  {T=0x6534284A, G=0xC977C536, I=0x1EC00000} [SimCity_1.dat] 'RW1x1x1_café-tables-sims-eating_1EC00000'
+  {T=0x6534284A, G=0xC977C536, I=0x1EC00000} [SimCity_1.dat] 'RW1x1x1_cafï¿½-tables-sims-eating_1EC00000'
   {T=0x6534284A, G=0xC977C536, I=0x1EBA0000} [SimCity_1.dat] 'ARW4x3x4_small-table-crowd-farmers-market_1EBA'
   {T=0x6534284A, G=0xC977C536, I=0x1EB40000} [SimCity_1.dat] 'RW1x1x1_Pool-slide_1EB40000'
   {T=0x6534284A, G=0xC977C536, I=0x1EA50000} [SimCity_1.dat] 'RW1x1x1_army-truck_1EA50000'

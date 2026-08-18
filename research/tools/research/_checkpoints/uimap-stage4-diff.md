@@ -297,8 +297,8 @@ Stated plainly so it is not mistaken for a clean bill of health.
    in the repo (the `stock-budget` PNGs cannot give rects). Caveats in
    finding 8.2.
 4. **`Documents` is OneDrive-redirected on this box.** The log lives at
-   `C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\`;
-   `C:\Users\<user>\Documents` does not exist. Resolve, never hardcode.
+   `<HOME>\OneDrive\Documents\SimCity 4\Plugins\`;
+   `<HOME>\Documents` does not exist. Resolve, never hardcode.
 5. **OneDrive breaks `os.replace`** with `WinError 5` intermittently — the
    whole repo is inside OneDrive, so this is normal. `write_json()` retries
    then falls back to a direct write.

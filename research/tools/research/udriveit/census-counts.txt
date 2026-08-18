@@ -1,5 +1,5 @@
 GAME DIR    : C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe
-PLUGINS DIR : C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins
+PLUGINS DIR : <HOME>\OneDrive\Documents\SimCity 4\Plugins
 
 === DBPF FILES SCANNED (recursive) ===
   GAME     EP1.dat                                                          4099 entries       0 type-6534284A

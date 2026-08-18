@@ -195,7 +195,7 @@ transform identically - which is what this file's own comment has promised since
 does not deliver. Two constants, **both from one window**, so `python tools\sdk\lookup.py
 0xE9889775` verifies the whole table.
 
-**File:** `C:\Users\<user>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\src\UiSpike.cpp`
+**File:** `<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\src\UiSpike.cpp`
 All three anchors verified **unique** (`count == 1`) against the current file. Match on text.
 
 ### HUNK 1 of 3

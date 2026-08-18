@@ -21,7 +21,7 @@ Jobs: (1) BATCH A static dialogs 6b704690 / ca539343 / ebd0d36d → v2.24.1-batc
 - kNeverScaleIds currently does NOT contain 0x8A8DFCF5, 0x0A551C53 or 0x000A0000 → all three
   get ADDED (verified against the full array, UiSpike.cpp:2107-2178).
 - Test-DatIntegrity.ps1 DialogStatic entries = 255 at all 3 tiers (lines 73/118/120 pre-merge).
-- Deploy layout (Plugins = C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins):
+- Deploy layout (Plugins = <HOME>\OneDrive\Documents\SimCity 4\Plugins):
   root holds z_SC4UIScale_DialogStatic-2x.dat (live) + -15x/-3x as .dat.x1-disabled + SC4UIScale.dll.
 - Build: MSBuild = VS18 Community, project src\SC4UIScale.vcxproj → build\Release\SC4UIScale.dll.
 - Python 3.12 at %LOCALAPPDATA%\Programs\Python\Python312.

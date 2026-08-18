@@ -174,7 +174,7 @@ reachability instead of another static argument.
 
 ### THE PATCH
 
-**File:** `C:\Users\<user>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\src\UiSpike.cpp`
+**File:** `<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\src\UiSpike.cpp`
 
 **Anchor TEXT** (exact, tabs; currently at ~12144 — match on text, not the number):
 

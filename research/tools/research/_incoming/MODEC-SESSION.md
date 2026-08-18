@@ -19,7 +19,7 @@ already closed offline and are listed at the bottom, not here.
 
 ## Before you launch (orchestrator does this, ~10 seconds)
 
-Edit `C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\SC4UIScale.ini`:
+Edit `<HOME>\OneDrive\Documents\SimCity 4\Plugins\SC4UIScale.ini`:
 
 ```
 [UiSpike]
@@ -41,7 +41,7 @@ different failure modes). Do not treat the two as one witness; read both.
 **Capture command the orchestrator runs on each "go":**
 
 ```
-"C:\Users\<user>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\tools\capture\CaptureWindow.exe" "C:\Users\<user>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\tools\research\_incoming\modec-captures\<STEP>.png"
+"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\tools\capture\CaptureWindow.exe" "<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\tools\research\_incoming\modec-captures\<STEP>.png"
 ```
 
 It uses `SetProcessDPIAware` + `PrintWindow(PW_RENDERFULLCONTENT)`. **It does not steal

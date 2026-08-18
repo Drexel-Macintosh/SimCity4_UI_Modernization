@@ -46,7 +46,7 @@ was already restored to 2400x1600 FullScreen.
 
 ```
 Workflow({
-  scriptPath: "C:\\Users\\<user>\\.claude\\projects\\C--Users-<user>-OneDrive-Claude-Macintosh\\f1160943-a698-434b-a6bf-d3c3e2971cea\\workflows\\scripts\\sc4-104-spin-mechanism-wf_4995dc88-f39.js",
+  scriptPath: "<HOME>\\.claude\\projects\\<SESSION-DIR>\\f1160943-a698-434b-a6bf-d3c3e2971cea\\workflows\\scripts\\sc4-104-spin-mechanism-wf_4995dc88-f39.js",
   resumeFromRunId: "wf_4995dc88-f39"
 })
 ```

@@ -10,7 +10,7 @@ metadata:
 
 **The game writes its own crash artefact. Read it before anything else.**
 
-`C:\Users\<user>\OneDrive\Documents\SimCity 4\Exception Reports\`
+`<HOME>\OneDrive\Documents\SimCity 4\Exception Reports\`
 → `SimCity Exception Report YYYY.MM.DD HH.MM.SS.txt`
 
 Each one carries: exception code, **`CS:EIP` = the faulting instruction**, the full
