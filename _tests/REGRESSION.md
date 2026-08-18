@@ -14305,3 +14305,36 @@ corpus reported itself as the old algorithm; and the first apparently-successful
 run was against a STALE exe after a silent C# build failure. Both fixed: the
 line now names the resampler actually in use, and a separate counter proves the
 path ran (law 54).
+
+## Budget DEPARTMENT popup opens 1x then resizes - ALL TIERS (2026-08-18, OPEN)
+
+USER: opening City Beautification (and siblings) shows the popup at the wrong
+size for a split second, then it resizes. Reported at 1.5x AND at 2x and 3x, so
+this is a TIMING defect, not arithmetic. The reactive-sweep flash family.
+
+THE CAPTURE IS INFORMATIVE BY BEING EMPTY. With LogLevel=3 the user opened
+several department popups and the log recorded ZERO scaling lines after the
+city-open sweep - nothing but SpinProbe output. Law 54 in reverse: no log line
+means it did not run THROUGH THAT PATH. So these popups are NOT handled by the
+sweep that kAlwaysScaleCityIds feeds, and adding their ids there would have been
+a fix aimed at a path they never take: plausible-looking and completely inert.
+That is the trap this entry exists to stop the next session walking into.
+
+CANDIDATE IDS, found in the repo rather than by asking for another capture. The
+.UI carrying the popup text "no entries in the budget ledger" is
+tools/uiscripts/extracted/T-00000000_G-96a006b0_I-aa3acdfe.ui: root id
+0x89E1567C, area (158,40,658,242) = 500x202, child 0xAA3AC002 at (0,0,500,202).
+Note that 0xAA3AC000 - the budget compact bar - is ALREADY in
+kAlwaysScaleCityIds, so 0xAA3AC002 is a SIBLING in the same id family and the
+popup looks like the member that never got added. Second candidate .UI:
+I-cbc3c2b9, same root 0x89E1567C, child 0xCA4C332D.
+
+NEXT STEP, and it is NOT another capture:
+  1. Establish which code path actually resizes these. kCityDialogIds / the
+     DialogStatic route is the likely owner, NOT kAlwaysScaleCityIds.
+  2. Apply the proven cure at src/UiSpike.cpp:5303 - born correct while hidden,
+     never resize on screen - to THAT path.
+  3. Give that path a log line. Producing silence during a scaling event is
+     itself a gap, and it is why this took a capture to even localise.
+
+Cosmetic, and pre-existing at every tier. Nothing shipped today caused it.
