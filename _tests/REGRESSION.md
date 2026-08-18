@@ -14338,3 +14338,26 @@ NEXT STEP, and it is NOT another capture:
      itself a gap, and it is why this took a capture to even localise.
 
 Cosmetic, and pre-existing at every tier. Nothing shipped today caused it.
+
+### Budget popup flash - ROOT CAUSE FOUND (2026-08-18)
+
+Root of the department popup is id=0xAA3AC002, clsid 0x89e1567c, area 500x202
+(script T-00000000_G-96a006b0_I-aa3acdfe.ui). That id is ALREADY in
+kAlwaysScaleCityIds - twice, lines 5311 and 5535. So the obvious fix was already
+in place and is not the answer.
+
+WHY PRE-SCALE CANNOT REACH IT: the list works on windows that exist while
+HIDDEN. This popup is CREATED ON DEMAND when a department is clicked. There is
+nothing to pre-scale - it is constructed at 1x, painted, then swept. That is
+also exactly why the user sees it at 2x and 3x identically.
+
+CURE, data-side, the Establish City / U-Drive-It precedent: ship the script
+pre-doubled in DialogStatic so it is BORN correct. Confirmed absent today - the
+deployed DialogStatic-15x has 261 entries and does not contain I-aa3acdfe, and
+the script does not carry id=0x10000005, which is the key
+discover_query_family() adopts on.
+
+⛔ TWO HALVES, BOTH REQUIRED IN ONE CHANGE. Add the script to
+build_dialog_static.py AND add 0xAA3AC002 to the never-scale list. Ship only the
+first and the sweep scales the already-doubled window to 4x - the Establish City
+failure verbatim, and strictly worse than the flash it replaces.
