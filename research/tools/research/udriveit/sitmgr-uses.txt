@@ -1,0 +1,211 @@
+call GetCitySituationManager @0x00414383 -> (no vcall within 56B)
+call GetCitySituationManager @0x00414626 -> (no vcall within 56B)
+call GetCitySituationManager @0x00417BAE -> +0x40 GetCurrentTargetName @0x00417BC9, +0x34 GetCurrentTimeLimitSeconds @0x00417BCF
+call GetCitySituationManager @0x00417C08 -> +0x2C GetNumTargets @0x00417C20, +0x6C GetMaxCSI @0x00417C2A
+call GetCitySituationManager @0x00417C5A -> +0x28 GetCurrentTargetIndex @0x00417C72, +0x6C GetMaxCSI @0x00417C7D
+call GetCitySituationManager @0x00417CAD -> +0x30 GetNumTargetsRemaining @0x00417CC5, +0x6C GetMaxCSI @0x00417CCF
+call GetCitySituationManager @0x00417CFF -> +0x44 GetSituationAura @0x00417D1B, +0x6C GetMaxCSI @0x00417D34
+call GetCitySituationManager @0x00417D67 -> +0x18 GetActiveSituation @0x00417D79
+call GetCitySituationManager @0x00417D92 -> +0x6C GetMaxCSI @0x00417DAE
+call GetCitySituationManager @0x00417DE1 -> +0x48 GetSituationMoney @0x00417DF8, +0x6C GetMaxCSI @0x00417E11
+call GetCitySituationManager @0x00417E44 -> +0x18 GetActiveSituation @0x00417E56
+call GetCitySituationManager @0x0041A4CC -> (no vcall within 56B)
+call GetCitySituationManager @0x0041A6D0 -> (no vcall within 56B)
+call GetCitySituationManager @0x0041B624 -> (no vcall within 56B)
+call GetCitySituationManager @0x0041B683 -> +0x04 ? @0x0041B69E, +0x08 ? @0x0041B6AC, +0x1C GetCurrentStatus @0x0041B6BC
+call GetCitySituationManager @0x0042A28B -> +0x58 InitiateSituationForOccupant @0x0042A2C0
+call GetCitySituationManager @0x0042E85E -> (no vcall within 56B)
+call GetCitySituationManager @0x004373B0 -> +0x4C IsSituationAvailable(occupant) @0x004373C5, +0x64 TreatAutomatonAsGroup @0x004373DA, +0x14 GetMissionSuccessCount @0x004373E7
+call GetCitySituationManager @0x0043F0F0 -> +0x08 ? @0x0043F125
+call GetCitySituationManager @0x0043F14B -> (no vcall within 56B)
+call GetCitySituationManager @0x0043F1E2 -> +0x14 GetMissionSuccessCount @0x0043F204
+call GetCitySituationManager @0x0043F30A -> +0x48 GetSituationMoney @0x0043F31D
+call GetCitySituationManager @0x00440235 -> +0x74 SetCSIVisible @0x00440256, +0x10 Shutdown @0x00440267
+call GetCitySituationManager @0x004406FA -> +0x78 GetCSIVisible @0x0044070A, +0x74 SetCSIVisible @0x00440720
+call GetCitySituationManager @0x004424D8 -> (no vcall within 56B)
+call GetCitySituationManager @0x00443B4E -> (no vcall within 56B)
+call GetCitySituationManager @0x00443C29 -> +0x2C GetNumTargets @0x00443C50
+call GetCitySituationManager @0x00443F45 -> +0x30 GetNumTargetsRemaining @0x00443F51, +0x2C GetNumTargets @0x00443F64
+call GetCitySituationManager @0x0045D80C -> +0x1C GetCurrentStatus @0x0045D82B
+call GetCitySituationManager @0x00467AB0 -> +0x0C Init @0x00467AC9
+call GetCitySituationManager @0x00468172 -> (no vcall within 56B)
+call GetCitySituationManager @0x004689E1 -> +0x08 ? @0x00468A05
+call GetCitySituationManager @0x004987E3 -> +0x1C GetCurrentStatus @0x004987F3
+call GetCitySituationManager @0x00498D2D -> (no vcall within 56B)
+call GetCitySituationManager @0x0049B1EE -> +0x24 GetCurrentTarget @0x0049B214, +0x08 ? @0x0049B21D
+call GetCitySituationManager @0x0049C978 -> +0x74 SetCSIVisible @0x0049C98F
+call GetCitySituationManager @0x0049D558 -> +0x78 GetCSIVisible @0x0049D568, +0x74 SetCSIVisible @0x0049D576
+call GetCitySituationManager @0x0049DFED -> +0x04 ? @0x0049E00C, +0x58 InitiateSituationForOccupant @0x0049E020
+call GetCitySituationManager @0x004A558E -> (no vcall within 56B)
+call GetCitySituationManager @0x004AC7E8 -> +0x24 GetCurrentTarget @0x004AC801
+call GetCitySituationManager @0x004ADFAE -> +0x80 CountdownIsInProgress @0x004ADFCD, +0x08 ? @0x004ADFD7
+call GetCitySituationManager @0x004AE00D -> +0x38 GetCurrentSituationTime @0x004AE045
+call GetCitySituationManager @0x004AEA6F -> +0x88 ? @0x004AEA89, +0x58 InitiateSituationForOccupant @0x004AEAA5
+call GetCitySituationManager @0x004AF747 -> +0x50 IsSituationAvailable(guid) @0x004AF75E
+call GetCitySituationManager @0x004AFC4A -> +0x3C GetCurrentTimeRemainingSeconds @0x004AFC84
+call GetCitySituationManager @0x004B0E24 -> +0x08 ? @0x004B0E30, +0x0C Init @0x004B0E54
+call GetCitySituationManager @0x004B431F -> +0x34 GetCurrentTimeLimitSeconds @0x004B4335, +0x34 GetCurrentTimeLimitSeconds @0x004B4342
+call GetCitySituationManager @0x004B4518 -> +0x08 ? @0x004B4528
+call GetCitySituationManager @0x004B4A8B -> +0x08 ? @0x004B4AAA
+call GetCitySituationManager @0x004B84D4 -> +0x04 ? @0x004B84EB, +0x08 ? @0x004B84FA
+call GetCitySituationManager @0x004BDBCA -> (no vcall within 56B)
+call GetCitySituationManager @0x004BE0B0 -> (no vcall within 56B)
+call GetCitySituationManager @0x004C0328 -> +0x14 GetMissionSuccessCount @0x004C034D
+call GetCitySituationManager @0x004C0372 -> +0x08 ? @0x004C03AC
+call GetCitySituationManager @0x004C0384 -> +0x08 ? @0x004C03AC, +0x08 ? @0x004C03BB
+call GetCitySituationManager @0x004C0BB0 -> +0x58 InitiateSituationForOccupant @0x004C0BD8
+call GetCitySituationManager @0x004C0BC2 -> +0x58 InitiateSituationForOccupant @0x004C0BD8, +0x58 InitiateSituationForOccupant @0x004C0BF4
+call GetCitySituationManager @0x004C2FA8 -> +0x14 GetMissionSuccessCount @0x004C2FD9
+call GetCitySituationManager @0x004C6328 -> +0x14 GetMissionSuccessCount @0x004C635C
+call GetCitySituationManager @0x004C87B2 -> (no vcall within 56B)
+call GetCitySituationManager @0x004CAD56 -> +0x18 GetActiveSituation @0x004CAD7E
+call GetCitySituationManager @0x004D1143 -> (no vcall within 56B)
+call GetCitySituationManager @0x004D3CA1 -> (no vcall within 56B)
+call GetCitySituationManager @0x004D3CB3 -> (no vcall within 56B)
+call GetCitySituationManager @0x004D3CD8 -> (no vcall within 56B)
+call GetCitySituationManager @0x004D3CE9 -> +0x5C InitiateSituationByAutomataGroup @0x004D3D1A
+call GetCitySituationManager @0x004D3EE5 -> +0x08 ? @0x004D3F16, +0x08 ? @0x004D3F1D
+call GetCitySituationManager @0x004D3EF6 -> +0x08 ? @0x004D3F16, +0x08 ? @0x004D3F1D
+call GetCitySituationManager @0x004D71B2 -> (no vcall within 56B)
+call GetCitySituationManager @0x004E9E2E -> +0x00 ? @0x004E9E69
+call GetCitySituationManager @0x004FC540 -> (no vcall within 56B)
+call GetCitySituationManager @0x0050DEDC -> +0x84 ResetTutorials @0x0050DEEA
+call GetCitySituationManager @0x005106BA -> +0x4C IsSituationAvailable(occupant) @0x005106CF, +0x6C GetMaxCSI @0x005106DA, +0x70 GetTrackedAutomataCount @0x005106E4
+call GetCitySituationManager @0x00517301 -> +0x08 ? @0x0051732F
+call GetCitySituationManager @0x00517312 -> +0x08 ? @0x0051732F
+call GetCitySituationManager @0x0051853A -> (no vcall within 56B)
+call GetCitySituationManager @0x00524B95 -> (no vcall within 56B)
+call GetCitySituationManager @0x005268BB -> +0x1C GetCurrentStatus @0x005268E5
+call GetCitySituationManager @0x0053337A -> +0x54 InitiateSituationByGuid @0x0053339F
+call GetCitySituationManager @0x005339D0 -> +0x24 GetCurrentTarget @0x005339DE, +0x14 GetMissionSuccessCount @0x005339E8
+call GetCitySituationManager @0x0053FDEE -> (no vcall within 56B)
+call GetCitySituationManager @0x0054307C -> +0x78 GetCSIVisible @0x00543092
+call GetCitySituationManager @0x0054511C -> (no vcall within 56B)
+call GetCitySituationManager @0x0054521F -> +0x14 GetMissionSuccessCount @0x00545244
+call GetCitySituationManager @0x0054D873 -> +0x24 GetCurrentTarget @0x0054D8A4
+call GetCitySituationManager @0x0054E92F -> (no vcall within 56B)
+call GetCitySituationManager @0x0054EC12 -> +0x90 ? @0x0054EC3F
+call GetCitySituationManager @0x0054EF13 -> (no vcall within 56B)
+call GetCitySituationManager @0x0054F1B1 -> +0x0C Init @0x0054F1C3
+call GetCitySituationManager @0x0054F3CF -> (no vcall within 56B)
+call GetCitySituationManager @0x0054F7EF -> +0x04 ? @0x0054F809, +0x08 ? @0x0054F81A
+call GetCitySituationManager @0x0054F8C1 -> +0x24 GetCurrentTarget @0x0054F8F8
+call GetCitySituationManager @0x0054FAC5 -> +0x24 GetCurrentTarget @0x0054FAF5
+call GetCitySituationManager @0x005507CD -> +0x04 ? @0x005507DD, +0x0C Init @0x005507F2
+call GetCitySituationManager @0x00550C39 -> (no vcall within 56B)
+call GetCitySituationManager @0x00550FDF -> (no vcall within 56B)
+call GetCitySituationManager @0x005524C5 -> +0x54 InitiateSituationByGuid @0x005524FC
+call GetCitySituationManager @0x00552555 -> +0x7C HandleTuningParametersChanged @0x00552567
+call GetCitySituationManager @0x00553C1C -> +0x0C Init @0x00553C31
+call GetCitySituationManager @0x00554BD0 -> +0x24 GetCurrentTarget @0x00554C04
+call GetCitySituationManager @0x0055681F -> +0x0C Init @0x00556837
+call GetCitySituationManager @0x00556B9D -> +0x3C GetCurrentTimeRemainingSeconds @0x00556BC3, +0x40 GetCurrentTargetName @0x00556BD6
+call GetCitySituationManager @0x0055952A -> (no vcall within 56B)
+call GetCitySituationManager @0x00559C95 -> +0x0C Init @0x00559CC7
+call GetCitySituationManager @0x0055A42D -> +0x0C Init @0x0055A441
+call GetCitySituationManager @0x0055A854 -> (no vcall within 56B)
+call GetCitySituationManager @0x0055AA2D -> +0x40 GetCurrentTargetName @0x0055AA3E
+call GetCitySituationManager @0x0055AD60 -> +0x58 InitiateSituationForOccupant @0x0055AD96
+call GetCitySituationManager @0x0055C18A -> +0x14 GetMissionSuccessCount @0x0055C1B6
+call GetCitySituationManager @0x0055CA4C -> (no vcall within 56B)
+call GetCitySituationManager @0x0055D60D -> +0x04 ? @0x0055D61D, +0x0C Init @0x0055D632
+call GetCitySituationManager @0x0055F989 -> (no vcall within 56B)
+call GetCitySituationManager @0x005600A2 -> +0x0C Init @0x005600B6
+call GetCitySituationManager @0x00560872 -> (no vcall within 56B)
+call GetCitySituationManager @0x005615F1 -> +0x70 GetTrackedAutomataCount @0x00561601, +0x18 GetActiveSituation @0x00561622, +0x70 GetTrackedAutomataCount @0x00561628
+call GetCitySituationManager @0x005628A5 -> +0x7C HandleTuningParametersChanged @0x005628C1, +0x14 GetMissionSuccessCount @0x005628D2
+call GetCitySituationManager @0x005628B7 -> +0x7C HandleTuningParametersChanged @0x005628C1, +0x14 GetMissionSuccessCount @0x005628D2
+call GetCitySituationManager @0x00563A11 -> +0x78 GetCSIVisible @0x00563A1F, +0x08 ? @0x00563A49
+call GetCitySituationManager @0x0056434D -> +0x80 CountdownIsInProgress @0x00564357, +0x18 GetActiveSituation @0x00564386
+call GetCitySituationManager @0x005643BE -> +0x80 CountdownIsInProgress @0x005643C8
+call GetCitySituationManager @0x0056441E -> +0x80 CountdownIsInProgress @0x00564428
+call GetCitySituationManager @0x00564BF5 -> (no vcall within 56B)
+call GetCitySituationManager @0x005656FA -> +0x80 CountdownIsInProgress @0x00565704, +0x14 GetMissionSuccessCount @0x00565713, +0x58 InitiateSituationForOccupant @0x0056571F
+call GetCitySituationManager @0x00566C93 -> +0x80 CountdownIsInProgress @0x00566C9D, +0x38 GetCurrentSituationTime @0x00566CB4
+call GetCitySituationManager @0x00566CFB -> +0x80 CountdownIsInProgress @0x00566D05, +0x38 GetCurrentSituationTime @0x00566D27
+call GetCitySituationManager @0x0058EC20 -> (no vcall within 56B)
+call GetCitySituationManager @0x005D1CB4 -> +0x0C Init @0x005D1CEE
+call GetCitySituationManager @0x00605568 -> (no vcall within 56B)
+call GetCitySituationManager @0x00605D53 -> +0x7C HandleTuningParametersChanged @0x00605D74
+call GetCitySituationManager @0x00607327 -> +0x78 GetCSIVisible @0x0060733D
+call GetCitySituationManager @0x006196B5 -> (no vcall within 56B)
+call GetCitySituationManager @0x00628B13 -> +0x80 CountdownIsInProgress @0x00628B2B
+call GetCitySituationManager @0x00628B37 -> +0x80 CountdownIsInProgress @0x00628B4F, +0x08 ? @0x00628B5F, +0x08 ? @0x00628B6C
+call GetCitySituationManager @0x00645544 -> +0x14 GetMissionSuccessCount @0x0064554F
+call GetCitySituationManager @0x006800AF -> (no vcall within 56B)
+call GetCitySituationManager @0x00680150 -> +0x08 ? @0x0068015E, +0x74 SetCSIVisible @0x0068016D, +0x14 GetMissionSuccessCount @0x0068017C
+call GetCitySituationManager @0x006805AA -> (no vcall within 56B)
+call GetCitySituationManager @0x00680643 -> +0x08 ? @0x00680651, +0x74 SetCSIVisible @0x00680660, +0x14 GetMissionSuccessCount @0x00680670
+call GetCitySituationManager @0x00691784 -> (no vcall within 56B)
+call GetCitySituationManager @0x006BA74D -> +0x04 ? @0x006BA766, +0x90 ? @0x006BA76D, +0x04 ? @0x006BA779
+call GetCitySituationManager @0x006C3E97 -> (no vcall within 56B)
+call GetCitySituationManager @0x006C3EC8 -> +0x0C Init @0x006C3ED6, +0x04 ? @0x006C3EDF, +0x54 InitiateSituationByGuid @0x006C3EEC, +0x08 ? @0x006C3EF3
+call GetCitySituationManager @0x006C9263 -> +0x1C GetCurrentStatus @0x006C9288
+call GetCitySituationManager @0x006E31EB -> +0x1C GetCurrentStatus @0x006E3200, +0x1C GetCurrentStatus @0x006E321C
+call GetCitySituationManager @0x00715B0C -> (no vcall within 56B)
+call GetCitySituationManager @0x0071AB88 -> (no vcall within 56B)
+call GetCitySituationManager @0x0071ABCF -> +0x10 Shutdown @0x0071ABF6
+call GetCitySituationManager @0x0074A879 -> +0x28 GetCurrentTargetIndex @0x0074A896, +0x74 SetCSIVisible @0x0074A8AE
+call GetCitySituationManager @0x00768EC9 -> (no vcall within 56B)
+call GetCitySituationManager @0x0076E20A -> (no vcall within 56B)
+call GetCitySituationManager @0x00785BA3 -> (no vcall within 56B)
+call GetCitySituationManager @0x0078E1EC -> +0x08 ? @0x0078E1F8
+call GetCitySituationManager @0x0078E227 -> +0x08 ? @0x0078E233, +0x28 GetCurrentTargetIndex @0x0078E241, +0x18 GetActiveSituation @0x0078E25E
+call GetCitySituationManager @0x0079C132 -> (no vcall within 56B)
+call GetCitySituationManager @0x0079C52C -> (no vcall within 56B)
+call GetCitySituationManager @0x007A1BC1 -> (no vcall within 56B)
+call GetCitySituationManager @0x007A7E77 -> +0x24 GetCurrentTarget @0x007A7E81, +0x20 GetActiveAuto @0x007A7EA9
+call GetCitySituationManager @0x007A9038 -> +0x18 GetActiveSituation @0x007A9042
+call GetCitySituationManager @0x007B317A -> (no vcall within 56B)
+call GetCitySituationManager @0x007B461D -> (no vcall within 56B)
+call GetCitySituationManager @0x007B59EE -> +0x88 ? @0x007B59FE, +0x20 GetActiveAuto @0x007B5A08
+call GetCitySituationManager @0x007C405F -> (no vcall within 56B)
+call GetCitySituationManager @0x007C44C9 -> (no vcall within 56B)
+call GetCitySituationManager @0x007C4542 -> (no vcall within 56B)
+call GetCitySituationManager @0x007C4885 -> (no vcall within 56B)
+call GetCitySituationManager @0x007D2438 -> (no vcall within 56B)
+call GetCitySituationManager @0x007E8AD7 -> +0x28 GetCurrentTargetIndex @0x007E8AED, +0x18 GetActiveSituation @0x007E8B03
+call GetCitySituationManager @0x007EA0BC -> +0x5C InitiateSituationByAutomataGroup @0x007EA0D3
+call GetCitySituationManager @0x007EB9D8 -> +0x18 GetActiveSituation @0x007EB9E4, +0x3C GetCurrentTimeRemainingSeconds @0x007EB9F7, +0x34 GetCurrentTimeLimitSeconds @0x007EBA05
+call GetCitySituationManager @0x007EBB3D -> +0x18 GetActiveSituation @0x007EBB54, +0x88 ? @0x007EBB68, +0x04 ? @0x007EBB78
+call GetCitySituationManager @0x007EC993 -> +0x70 GetTrackedAutomataCount @0x007EC9B9
+call GetCitySituationManager @0x007ED0B9 -> +0x18 GetActiveSituation @0x007ED0C8, +0x08 ? @0x007ED0DD, +0x08 ? @0x007ED0E4
+call GetCitySituationManager @0x007EF6F4 -> +0x78 GetCSIVisible @0x007EF6FE
+call GetCitySituationManager @0x007EF751 -> +0x74 SetCSIVisible @0x007EF772
+call GetCitySituationManager @0x00876587 -> +0x2C GetNumTargets @0x008765B3
+call GetCitySituationManager @0x00877AE7 -> +0x10 Shutdown @0x00877B11
+call GetCitySituationManager @0x00881179 -> +0x24 GetCurrentTarget @0x0088118F
+call GetCitySituationManager @0x0088153C -> +0x24 GetCurrentTarget @0x00881564
+call GetCitySituationManager @0x00899DF6 -> (no vcall within 56B)
+call GetCitySituationManager @0x008B258A -> +0x14 GetMissionSuccessCount @0x008B2598
+call GetCitySituationManager @0x008B27AC -> (no vcall within 56B)
+call GetCitySituationManager @0x008B2863 -> (no vcall within 56B)
+call GetCitySituationManager @0x008B5D34 -> +0x34 GetCurrentTimeLimitSeconds @0x008B5D51
+call GetCitySituationManager @0x008B5DAE -> +0x24 GetCurrentTarget @0x008B5DE5
+call GetCitySituationManager @0x008B5E50 -> (no vcall within 56B)
+call GetCitySituationManager @0x008B6B66 -> (no vcall within 56B)
+call GetCitySituationManager @0x009156F0 -> (no vcall within 56B)
+call GetCitySituationManager @0x0093FB50 -> (no vcall within 56B)
+call GetCitySituationManager @0x00949721 -> +0x28 GetCurrentTargetIndex @0x0094973F
+call GetCitySituationManager @0x00949D2E -> (no vcall within 56B)
+call GetCitySituationManager @0x0095DA50 -> (no vcall within 56B)
+call GetCitySituationManager @0x00962276 -> +0x90 ? @0x00962280
+call GetCitySituationManager @0x009622D6 -> +0x90 ? @0x009622E0
+call GetCitySituationManager @0x00962336 -> +0x90 ? @0x00962340
+call GetCitySituationManager @0x00962396 -> +0x90 ? @0x009623A0
+call GetCitySituationManager @0x009623F5 -> +0x90 ? @0x009623FE
+call GetCitySituationManager @0x00962449 -> +0x90 ? @0x00962452
+call GetCitySituationManager @0x00994EAD -> (no vcall within 56B)
+call GetCitySituationManager @0x009A3744 -> (no vcall within 56B)
+call GetCitySituationManager @0x009AE945 -> +0x08 ? @0x009AE950
+call GetCitySituationManager @0x009AE99E -> +0x00 ? @0x009AE9B5
+call GetCitySituationManager @0x009B0022 -> (no vcall within 56B)
+call GetCitySituationManager @0x009B6F0D -> (no vcall within 56B)
+call GetCitySituationManager @0x009B730A -> (no vcall within 56B)
+call GetCitySituationManager @0x009C29A2 -> +0x38 GetCurrentSituationTime @0x009C29B4, +0x28 GetCurrentTargetIndex @0x009C29DD
+call GetCitySituationManager @0x009C833E -> +0x4C IsSituationAvailable(occupant) @0x009C834C, +0x14 GetMissionSuccessCount @0x009C8362, +0x0C Init @0x009C836C, +0x38 GetCurrentSituationTime @0x009C8372
+call GetCitySituationManager @0x009C9DA2 -> (no vcall within 56B)
+call GetCitySituationManager @0x009CF936 -> (no vcall within 56B)
+call GetCitySituationManager @0x009D44DB -> +0x70 GetTrackedAutomataCount @0x009D4509, +0x78 GetCSIVisible @0x009D4515
+
+209 call sites

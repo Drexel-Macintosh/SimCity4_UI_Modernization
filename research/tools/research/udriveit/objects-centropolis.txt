@@ -1,0 +1,205 @@
+2415 exemplar names loaded from idx-section1.txt
+
+==== objects whose exemplar instance appears EXACTLY TWICE ====
+  <unnamed I=0x00A11000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x00BF1000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x02400000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x02600000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x02700000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x02800000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x05000405 G=0x088E1962>                          x2   owner=cSC4PowerPoleOccupant
+  <unnamed I=0x06D01600 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x07101600 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x09A00000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x10730000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  <unnamed I=0x10BA0000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  <unnamed I=0x10C30000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  <unnamed I=0x115A0000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  <unnamed I=0x19421000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x1A3A1000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x1A401000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x210B0000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x2BFD0000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  A4x9x4_tail-gaiters_1E9C                                     x2   owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidPants_28f6                             x2   owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidSuit_28F9                              x2   owner=cSC4PropOccupant
+  AGolf1x1x3_putterGreenShorts_28FC                            x2   owner=cSC4PropOccupant
+  AR6x3x2_$$PoolModest-swim_1D56                               x2   owner=cSC4PropOccupant
+  AR8x8x2_$DogOnAChain_1ef3                                    x2   owner=cSC4PropOccupant
+  ARW4x4x4_tv-camera-crew_1EB2                                 x2   owner=cSC4PropOccupant
+  ARWStateFair4x7x4_small-medium_1E9B                          x2   owner=cSC4PropOccupant
+  Abase2x2x4_base-infield-drk_1E9E                             x2   owner=cSC4PropOccupant
+  Abase2x2x4_base-infield2-lgt_1E9D                            x2   owner=cSC4PropOccupant
+  Abase2x2x4_base-outfield-drk_1F2A                            x2   owner=cSC4PropOccupant
+  Abase2x2x4_base-outfield-lgt_1F2B                            x2   owner=cSC4PropOccupant
+  Aper2x2x4_Baseballcoach                                      x2   owner=cSC4PropOccupant
+  Aper2x2x4_child-F-drk01-negative-tantrum_2896                x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-P-drk01-negative-tantrum_285F               x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-P-lgt01-negative-booer_2865                 x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-P-lgt01-negative-phooee_2868                x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-S-med01-negative-booer_284F                 x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-S-med01-positive-clap_2856                  x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-drk01-negative-booer_2870                     x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-drk01-positive-booyah_2876                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-drk01-positive-clap_2877                      x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-drk01-positive-woohoo_287A                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-lgt01-negative-phooee_287E                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-med02-negative-kissmy_2887                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-med02-negative-tantrum_288B                   x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-med02-positive-booyah_288C                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-med02-positive-clap_288D                      x2   owner=cSC4PropOccupant
+  C16x7x3_$$$1LotCarCluster-00010_1E95                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$1LotCarCluster-10000_283B                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$2LotCarCluster-00110_1E2B                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$3LotCarCluster-11001_28A8                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$5LotCarCluster-11111_2846                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$5LotCarCluster-11111_2848                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$5LotCarCluster-11111_2849                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$1LotCarCluster-10000_1E8E                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$2LotCarCluster-10010_1E28                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$3LotCarCluster-10011_1E2E                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$3LotCarCluster-11001_28AB                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$4LotCarCluster-01111_28B0                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$4LotCarCluster-10111_28AF                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$4LotCarCluster-11011_1E30                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$4LotCarCluster-11110_28B1                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$5LotCarCluster-11111_28B2                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$5LotCarCluster-11111_28B4                          x2   owner=cSC4PropOccupant
+  C16x7x3_$1LotCarCluster-00001_1E48                           x2   owner=cSC4PropOccupant
+  C16x7x3_$1LotCarCluster-01000_1E8D                           x2   owner=cSC4PropOccupant
+  C16x7x3_$4LotCarCluster-01111_1E5A                           x2   owner=cSC4PropOccupant
+  C8x8x2_$$$fountain_1DFF                                      x2   owner=cSC4PropOccupant
+  CV10x24_SmallLibrary_0319                                    x2   owner=cSC4BuildingOccupant
+  CV32x28_36carLocalPrecinct_030F                              x2   owner=cSC4BuildingOccupant
+  CV32x32_4engineStationHouse_030B                             x2   owner=cSC4BuildingOccupant
+  Effect_blue_blinking_light_slow_292A0000                     x2   owner=cSC4PropOccupantVisualEffect
+  Effect_fireworks_MayorsHouse                                 x2   owner=cSC4PropOccupantVisualEffect
+  Effect_natural_gas_smoke                                     x2   owner=cSC4PropOccupantVisualEffect
+  Effect_pigeons                                               x2   owner=cSC4PropOccupantVisualEffect
+  Flora4x2x5_$$Planter-Wood3_1E0C                              x2   owner=cSC4PropOccupant
+  I2x6x3_IndustTruck3_1D4B0000                                 x2   owner=cSC4PropOccupant
+  I8x8_1DirtyOut1_07F2                                         x2   owner=cSC4PropOccupant
+  R$$$16x20_123NYMansion9_00E2                                 x2   owner=cSC4BuildingOccupant
+  R$$$20x20_123HouMansion2_00E7                                x2   owner=cSC4BuildingOccupant
+  R$$$20x20_123NYMansion2_00DB                                 x2   owner=cSC4BuildingOccupant
+  R$$$24x14_123NYMansion5_00DE                                 x2   owner=cSC4BuildingOccupant
+  R$$$24x28_5NYUrbanPalazzo3_0142                              x2   owner=cSC4BuildingOccupant
+  R$$$36x26_5HouLuxCondos4_0165                                x2   owner=cSC4BuildingOccupant
+  R$$$36x26_6ChiLuxCondos4_008C                                x2   owner=cSC4BuildingOccupant
+  R$$$36x36_5HouLuxCondos7_0168                                x2   owner=cSC4BuildingOccupant
+  R$$$60x60_7ChiHiriseLuxCondos1_007C                          x2   owner=cSC4BuildingOccupant
+  R$$10x14_123NYStdHouse3_00C2                                 x2   owner=cSC4BuildingOccupant
+  R$$12x10_123HouStdHouse4_00CC                                x2   owner=cSC4BuildingOccupant
+  R$$12x14_123ChiStdHouse9_00BF                                x2   owner=cSC4BuildingOccupant
+  R$$12x14_123NYStdHouse7_00C6                                 x2   owner=cSC4BuildingOccupant
+  R$$16x16_5HouRowHouse1_0124                                  x2   owner=cSC4BuildingOccupant
+  R$$24x30_5NYSmCondos7_0136                                   x2   owner=cSC4BuildingOccupant
+  R$$28x26_6ChiSmCondos1_0089                                  x2   owner=cSC4BuildingOccupant
+  R$$44x24_7ChiHiriseApts11_018C                               x2   owner=cSC4BuildingOccupant
+  R$$54x24_7ChiHiriseApts4_008D                                x2   owner=cSC4BuildingOccupant
+  R$$58x54_7NYHiriseApts7_0194                                 x2   owner=cSC4BuildingOccupant
+  R$16x8_123HouTinyHouse8_00B6                                 x2   owner=cSC4BuildingOccupant
+  R$28x24_5NYTenemtApt1_0109                                   x2   owner=cSC4BuildingOccupant
+  R$30x28_5ChiTenemtApt6_0106                                  x2   owner=cSC4BuildingOccupant
+  R$40x44_7HouHiriseTenemts5_0181                              x2   owner=cSC4BuildingOccupant
+  R$44x24_7NYHiriseTenemts7_017D                               x2   owner=cSC4BuildingOccupant
+  R$4x10_123ChiTinyHouse5_00A1                                 x2   owner=cSC4BuildingOccupant
+  R$8x10_123ChiTinyHouse8_00A3                                 x2   owner=cSC4BuildingOccupant
+  R$8x10_123HouTinyHouse6_00B4                                 x2   owner=cSC4BuildingOccupant
+  R$8x10_123NYTinyHouse6_00AB                                  x2   owner=cSC4BuildingOccupant
+  R11x9x11_$$$Gazebo_1DDE                                      x2   owner=cSC4PropOccupant
+  R12x12x3_$$$stoneterracechaisefurniture2_1D0D                x2   owner=cSC4PropOccupant
+  R16x7x3_$$$1LotCarCluster-00100_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$$2LotCarCluster-00101_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$$4LotCarCluster-01111_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$$4LotCarCluster-10111_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$$5LotCarCluster-11111_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$3LotCarCluster-11010_1E3F                          x2   owner=cSC4PropOccupant
+  R16x7x3_$4LotCarCluster-11011_1E58                           x2   owner=cSC4PropOccupant
+  R16x8x7_$123HouTinyHouse10                                   x2   owner=cSC4PropOccupant
+  R2x1x2_$$Grill_2919                                          x2   owner=cSC4PropOccupant
+  R6x6x3_$$patiofurniturebbq1_1CC7                             x2   owner=cSC4PropOccupant
+  R6x6x5_$$satellitedish_1CCD                                  x2   owner=cSC4PropOccupant
+  RW21x29x2_LargePool_2a04                                     x2   owner=cSC4PropOccupant
+  RW2x8_MnrLgStadium-Goal_296B                                 x2   owner=cSC4PropOccupant
+  RW32x28_UnivLibrary_034A                                     x2   owner=cSC4PropOccupant
+  RW37x52x11_CommencementStage_2832                            x2   owner=cSC4PropOccupant
+  Street1x1x1_$silverTrashCan_1D2F                             x2   owner=cSC4PropOccupant
+  Streetlight1x1x11_$$Streetlightdiagonal_89f0                 x2   owner=cSC4PropOccupant
+  Up64x64_OilPowerPlant_1F42                                   x2   owner=cSC4BuildingOccupant
+  Uw14x14_WaterPumpingStationPlatform_2A71                     x2   owner=cSC4FoundationOccupant
+  Uw14x14_WaterPumpingStation_1F49                             x2   owner=cSC4BuildingOccupant
+
+==== all U-Drive-It / marker family objects present ====
+  AGolf1x1x3_driverBlackShirt_28F8                             x1     owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidPants_28f6                             x2     owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidShirt_28F7                             x3     owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidSuit_28F9                              x2     owner=cSC4PropOccupant
+  ARW14x10x4_Commencement-audience_29C1                        x6     owner=cSC4PropOccupant
+  Construction0x0x2_MarkerPost_03060000                        x21    owner=cSC4PropOccupant
+  RW12x6_MovieStudio-Security_29A9                             x10    owner=cSC4PropOccupant
+  Tag1x1x3_AttackHelicopter_2BF60000                           x1     owner=cSC4PropOccupant
+  Tag1x1x3_Helipad_Medical                                     x6     owner=cSC4PropOccupant
+
+==== per-class object totals with resolved keys ====
+  0x2977AA47 cSC4PropOccupant                       15059 keyed records, 550 distinct exemplars
+  0xA9C05C85 cSC4FloraOccupant                      5817 keyed records, 20 distinct exemplars
+  0x896E75AF cSC4Pedestrian                         746 keyed records, 52 distinct exemplars
+  0x49C1A034 cSC4NetworkOccupantWithPreBuiltModel   671 keyed records, 128 distinct exemplars
+  0xA9BD882D cSC4BuildingOccupant                   582 keyed records, 142 distinct exemplars
+  0x49C05C8F cSC4FoundationOccupant                 569 keyed records, 20 distinct exemplars
+  0x49C05C9F cSC4LotRetainingWallOccupant           480 keyed records, 3 distinct exemplars
+  0x2977AA49 cSC4PropOccupantVisualEffect           91 keyed records, 20 distinct exemplars
+  0x896E714A cSC4Vehicle                            46 keyed records, 32 distinct exemplars
+  0x8A22BEBE cSC4LandfillOccupant                   43 keyed records, 4 distinct exemplars
+  0x09C05C6A cSC4PowerPoleOccupant                  22 keyed records, 3 distinct exemplars
+  0x8BA98EDA cSC4Helicopter                         7 keyed records, 2 distinct exemplars
+  0x4A222B98 cSC4PatrolCar                          4 keyed records, 1 distinct exemplars
+  0x00D0723D <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x02BF1DFA <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x22F6E80C <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x22F6E81B <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x40D07236 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x42BF1E18 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x62BF1DAA <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x62BF1DB9 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x62F6E7CF <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x815B4CEF <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x82B9999B <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x97D76F6E <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xA0D07129 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xA2BF1DDC <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xA2BF1DE5 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xA2BF1E43 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xC2BF1DC5 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xC2BF1E04 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xC2F6E81F <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xE0D0722E <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xE0D07233 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+
+unresolved exemplar instances: 264 distinct, 8147 records
+   G=0xE83E0437 I=0x16800000  x3143
+   G=0xE83E0437 I=0x2A0C8416  x468
+   G=0xE83E0437 I=0x2A0C8316  x424
+   G=0xE83E0437 I=0x2A0C8216  x294
+   G=0xA8434037 I=0x02001500  x280
+   G=0xC977C536 I=0x890B7314  x240
+   G=0xE83E0437 I=0x2A0C8312  x210
+   G=0xC977C536 I=0xC96D2135  x203
+   G=0xC977C536 I=0xC96D2136  x197
+   G=0xE83E0437 I=0x16A00000  x168
+   G=0xC977C536 I=0x890B7315  x160
+   G=0xE83E0437 I=0x2A0C8313  x139
+   G=0xE83E0437 I=0x2A0C8412  x133
+   G=0xE83E0437 I=0x2A0C8212  x125
+   G=0xE83E0437 I=0x16600000  x108
+   G=0xE83E0437 I=0x2A0C8314  x106
+   G=0xE83E0437 I=0x2A0C8413  x87
+   G=0xC977C536 I=0x890B7313  x80
+   G=0xC977C536 I=0xC96D2137  x80
+   G=0xE83E0437 I=0x2A0C8414  x64
+   G=0xE83E0437 I=0x2A0C8315  x60
+   G=0xC96E6806 I=0x00300000  x59
+   G=0xC96E6806 I=0x00400000  x59
+   G=0xE83E0437 I=0x16900000  x59
+   G=0xE83E0437 I=0x16700000  x59

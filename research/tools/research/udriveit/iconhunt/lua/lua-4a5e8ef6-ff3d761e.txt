@@ -1,0 +1,7 @@
+--#-package:00005000# -- package signature
+
+--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--~~  Advice and advisors package 
+--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dofile("plugin_002_adv_const.lua")
+dofile("plugin_002_adv_fluffnews.lua")

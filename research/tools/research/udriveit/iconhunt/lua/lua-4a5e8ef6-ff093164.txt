@@ -1,0 +1,8 @@
+--#-package:00000005# -- package signature 
+-- This is a system package used by all LUA scripts 
+--
+dofile("package_sys.lua")
+
+_sys.debug = 0 -- set to 1 for enabling debug features
+_sys.test = 0 -- set to 1 for enabling test features
+_sys.config_run = 1 -- set this to 0 when debugging 

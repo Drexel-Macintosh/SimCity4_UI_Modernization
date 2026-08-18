@@ -1,0 +1,25 @@
+CENTER-IN-SLOT blast radius under 0xAA32BCE6 (CenterLeafMaxPx=48)
+========================================================================================
+id           clsid          stock     frozen? art (classification -> action)
+----------------------------------------------------------------------------------------
+0x0000AAAA GZWinCustom      17x14   YES     (no art)
+0xA32CACD4 GZWinBtn         22x20   YES     46a006b0/144161e2 SHARED->clone+retarget
+0xEA2871E9 GZWinBtn         24x24   YES     46a006b0/14015543 EXCLUSIVE->2x-in-place
+0x00000000 GZWinBMP         24x24   YES     46a006b0/140155ec EXCLUSIVE->2x-in-place
+0x0A32CAC3 GZWinBtn         22x20   YES     46a006b0/144161e2 SHARED->clone+retarget
+0xEA2871E9 GZWinBtn         24x24   YES     46a006b0/14015543 EXCLUSIVE->2x-in-place
+0x00000000 GZWinBMP         24x24   YES     46a006b0/140155ec EXCLUSIVE->2x-in-place
+0x4A32CA92 GZWinBtn         22x20   YES     46a006b0/144161e0 SHARED->clone+retarget
+0xEA2871D9 GZWinBtn         25x25   YES     46a006b0/14015543 EXCLUSIVE->2x-in-place
+0x00000000 GZWinBMP         24x24   YES     46a006b0/140155ec EXCLUSIVE->2x-in-place
+0x8A909E10 GZWinFlatRect    13x10   YES     (no art)
+0x8A909E11 GZWinFlatRect    13x10   YES     (no art)
+0x8A909E12 GZWinFlatRect    13x10   YES     (no art)
+0x8A909E13 GZWinFlatRect    13x10   YES     (no art)
+0x8A909E14 GZWinFlatRect    13x10   YES     (no art)
+0x8A909E15 GZWinFlatRect    13x10   YES     (no art)
+0x8A909E16 GZWinFlatRect    13x10   YES     (no art)
+0x8A909E17 GZWinFlatRect    13x10   YES     (no art)
+0x8A909E18 GZWinFlatRect    13x10   YES     (no art)
+----------------------------------------------------------------------------------------
+leaves the rule can freeze at 1x: 19   of which carry art we ship at 2x: 9

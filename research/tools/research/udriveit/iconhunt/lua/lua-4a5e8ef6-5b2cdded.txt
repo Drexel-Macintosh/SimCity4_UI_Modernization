@@ -1,0 +1,217 @@
+--#-package:5b2cdded# -- package signature
+-- Written by Ulisse Wolf July 2025 --
+-------------------------BUILDING IID LIST-------------------------------------------------------
+casino_id = {
+   Maxis_Casino                                  = "6D0F1CD1",
+   The_Sterling_Spire_Casino                     = "56030CAB",
+   Galaxy_Casino                                 = "46179CA5",
+   Treasure_Island_Hotel_and_Casino              = "B61CD576",
+   Stardust_Resort_and_Casino                    = "661CEBA5"
+}
+
+-------------------------ALGORITHMS-------------------------------------------------------
+-------------------------TOTAL INCOME-------------------------------------------------------
+function game.cam_get_total_gambling_income()
+    local total = 0
+    local gamingDepartmentID = hex2dec('9CF71EA3')
+    if gamingDepartmentID then
+        local income = tonumber(sc4game.budget.get_department_total_income(gamingDepartmentID), 10) or 0
+        local expense = tonumber(sc4game.budget.get_department_total_expense(gamingDepartmentID), 10) or 0
+        local departmentProfit = income - expense
+        if game.ordinance_is_on(ordinance_ids.ORDINANCE_GAMBLING) then
+            local gamblingOrdinanceIncome = game.ordinance_monthly_cost(ordinance_ids.ORDINANCE_GAMBLING) or 0
+            total = departmentProfit + gamblingOrdinanceIncome
+        end
+    else
+        print("WARNING: Invalid or void gambling department ID")
+    end
+    return total
+end
+-------------------------REWARD CHAIN-------------------------------------------------------
+------------ Reward record Maxis_Casino----
+a = create_reward_cityplanning('6D0F1CD1')
+function a.condition()
+
+    if (not missions_completed( { 'ac1715fa'} ) and (not game.ordinance_is_on(ordinance_ids.ORDINANCE_GAMBLING))
+       or game.g_population < 3000
+       or game.ordinance_monthly_cost(ordinance_ids.ORDINANCE_GAMBLING) < 300
+       or game.reward_instance_count('6D0F1CD1') == 1) then 
+          return [[text@569CCB9D]]
+    else
+        return reward_state.AVAILABLE
+    end
+end
+a.timeout = tuning_constants.ADVICE_TIMEOUT_LONG
+a.title   = [[text@7301461C]]
+a.message   = [[text@0f6489DA]]
+a.priority  = tuning_constants.ADVICE_PRIORITY_URGENT
+a.mood = advice_moods.GREAT_JOB
+a.persist = 1
+
+------------ Reward record The Sterling Spire Casino----
+a = create_reward_cityplanning('56030CAB')
+function a.condition()
+
+    if (not game.ordinance_is_on(ordinance_ids.ORDINANCE_GAMBLING)
+       or game.g_population < 10000
+       or game.cam_get_total_gambling_income() < 1000
+       or game.reward_instance_count('56030CAB') == 1 
+       or game.reward_instance_count('6D0F1CD1') == 0) then           
+          return [[text@398CE4d9]]
+    else
+        return reward_state.AVAILABLE
+    end
+end
+a.timeout = tuning_constants.ADVICE_TIMEOUT_LONG
+a.title   = [[text@D4999938]]
+a.message   = [[text@416A4069]]
+a.priority  = tuning_constants.ADVICE_PRIORITY_URGENT
+a.mood = advice_moods.GREAT_JOB
+a.persist = 1
+
+------------ Reward record Galaxy Casino----
+a = create_reward_cityplanning('46179CA5')
+function a.condition()
+
+    if (not game.ordinance_is_on(ordinance_ids.ORDINANCE_GAMBLING)
+       or game.g_population < 25000
+       or game.cam_get_total_gambling_income() < 2500
+       or game.reward_instance_count('46179CA5') == 1 
+       or game.reward_instance_count('56030CAB') == 0) then
+          return [[text@9c9e44cb]]
+    else
+        return reward_state.AVAILABLE
+    end
+end
+a.timeout = tuning_constants.ADVICE_TIMEOUT_LONG
+a.title   = [[text@dfb96dd0]]
+a.message   = [[text@b888ec97]]
+a.priority  = tuning_constants.ADVICE_PRIORITY_URGENT
+a.mood = advice_moods.GREAT_JOB
+a.persist = 1
+
+------------ Reward record Treasure Island Hotel and Casino----
+a = create_reward_cityplanning('b61cd576')
+function a.condition()
+
+    if (not game.ordinance_is_on(ordinance_ids.ORDINANCE_GAMBLING)
+       or game.g_population < 50000
+       or game.cam_get_total_gambling_income() < 5000
+       or game.reward_instance_count('b61cd576') == 1 
+       or game.reward_instance_count('46179CA5') == 0) then 
+          return [[text@37d23aa1]]
+    else
+        return reward_state.AVAILABLE
+    end
+end
+a.timeout = tuning_constants.ADVICE_TIMEOUT_LONG
+a.title   = [[text@ed41a83e]]
+a.message   = [[text@647678a9]]
+a.priority  = tuning_constants.ADVICE_PRIORITY_URGENT
+a.mood = advice_moods.GREAT_JOB
+a.persist = 1
+
+------------ Reward record Stardust Resort and Casino----
+a = create_reward_cityplanning('661ceba5')
+function a.condition()
+
+    if (not game.ordinance_is_on(ordinance_ids.ORDINANCE_GAMBLING)
+       or game.g_population < 100000
+       or game.cam_get_total_gambling_income() < 10000
+       or game.reward_instance_count('661ceba5') == 1 
+       or game.reward_instance_count('b61cd576') == 0) then 
+          return [[text@2a1a58ab]]
+    else
+        return reward_state.AVAILABLE
+    end
+end
+a.timeout = tuning_constants.ADVICE_TIMEOUT_LONG
+a.title   = [[text@4ca585b8]]
+a.message   = [[text@64174302]]
+a.priority  = tuning_constants.ADVICE_PRIORITY_URGENT
+a.mood = advice_moods.GREAT_JOB
+a.persist = 1
+
+------------ Reward record CSI Lab----
+a = create_reward_cityplanning('862CC32D')
+function a.condition()
+
+    if (not game.ordinance_is_on(ordinance_ids.ORDINANCE_GAMBLING)
+       or game.g_population < 110000
+       or game.reward_instance_count('5e93f33a') == 0 
+       or game.reward_instance_count('661ceba5') == 0) then 
+          return [[text@bc2f743d]]
+    else
+        return reward_state.AVAILABLE
+    end
+end
+a.timeout = tuning_constants.ADVICE_TIMEOUT_LONG
+a.title   = [[text@a511cc62]]
+a.message   = [[text@10202365]]
+a.priority  = tuning_constants.ADVICE_PRIORITY_URGENT
+a.mood = advice_moods.GREAT_JOB
+a.persist = 1
+
+-------------------------UDIMISSION-------------------------------------------------------
+-------------------------------------------------
+--Mayor mission - High Roller in Town -evil
+-------------------------------------------------
+delete_advice('ac1715fa')
+s = create_advice_citysituation('ac1715fa')
+s.title = "text@6C15442B"
+--
+s.message = [[text@06C15411]]
+--
+s.priority=tuning_constants.ADVICE_PRIORITY_LOW
+s.automata_list = automata_groups.mayor_limo -- sit_constants.lua
+s.condition = sit_conditions.CELL_COVERAGE
+--s.service_mission = true
+--
+s.success_text = [[text@EC15452D]]
+s.reward_unlocked_text    = [[text@EC193CDC]]
+s.reward_guid  = hex2dec('6D0F1CD1') --casino
+s.failure_text = [[text@2C154536]]
+--
+s.frequency = sit_constants.FREQUENCY_SHORT
+s.trigger="(game.reward_instance_count(special_buildings.MayorHouse) > 0) and (sc4game.sitmgr.get_success_count('8c151efd') > 0)" -- adv_game_data.lua
+s.image = sit_constants.SITUATION_IMAGE_CITY_PLANNING 
+s.success_image = sit_constants.SITUATION_Reward_Casino
+s.failure_image = sit_constants.SITUATION_IMAGE_CITY_PLANNING 
+s.mood = advice_moods.NEUTRAL --was great_job
+s.failure_mood = advice_moods.BAD_JOB --was bad job
+s.coverage_cells_min   = 10
+s.coverage_cells_max   = 10
+s.coverage_type = sit_coverage_type.UNZONED_LAND
+s.min_target_distance = sit_constants.MIN_TARGET_DISTANCE_SHORT 
+s.max_target_distance = sit_constants.MAX_TARGET_DISTANCE_SHORT
+--s.time_limit = sit_constants.TIME_LIMIT_SHORT
+s.active_radius = 4
+--s.coverage_lot = building_groups.CEMETARY
+--s.coverage_zone = zone_tool_types.INDUSTRIAL_RES     
+--s.coverage_network = network_types.OVER_GROUND
+--s.coverage_rect = { 30, 30, 35, 35, }
+s.evil_twin = hex2dec('4c224c4a') --Mayor #mayor# Visits Landmark
+--easy
+s.success_aura_radius  = sit_constants.EVIL_SUCCESS_AURA_RADIUS
+s.success_aura_magnitude = sit_constants.EVIL_SUCCESS_AURA_MAG
+s.failure_aura_radius = sit_constants.EVIL_FAILURE_AURA_RADIUS
+s.failure_aura_magnitude = sit_constants.EVIL_FAILURE_AURA_MAG
+s.success_money = sit_constants.EVIL_SUCCESS_MONEY
+s.failure_money = sit_constants.EVIL_FAILURE_MONEY
+s.success_effect = sit_constants.SUCCESS_EFFECTMONEY
+s.failure_effect = sit_constants.FAILURE_EFFECTDARKMONEY
+--
+function s:get_time_limit(distToTarget, maxSpeed)
+   local result
+
+   result = 15 + (distToTarget / maxSpeed) * 4.5
+
+   -- limit to min/max
+   if (result < 15) then
+      result = 15
+   --elseif (result > 600) then       -- 600 seconds == ten minutes
+      --result = 600
+   end
+
+   return result
+end

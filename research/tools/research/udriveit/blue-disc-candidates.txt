@@ -1,0 +1,270 @@
+BLUE-DISC CANDIDATES  -  266 of 1529 marker-family sprites survived blue>=0.15 AND white>=0.02
+exemplar type 0x6534284A, group 0xC977C536
+tile order = rank order in the sheet, left-to-right
+
+  1  Street1x1x2_$$$bluepostbox_ae34                I=0xAE340000  model=0xAE340400  FSH=0x1C750420  12x20  blue=0.871 white=0.052 red=0.000  SimCity_1.dat
+  2  PZBaseball8x1x5_Scoreboard_1DDA                I=0x1DDA0000  model=0x1DDA0400  FSH=0x1E050420  29x54  blue=0.853 white=0.071 red=0.000  SimCity_1.dat
+  3  R12x12x2_$PoolDboy_AE07                        I=0xAE070000  model=0xAE070400  FSH=0x00A20420  85x107  blue=0.801 white=0.057 red=0.000  SimCity_1.dat
+  4  PZBaseball1x17x2_StraightFence_28EC            I=0x28EC0000  model=0x28EC0400  FSH=0x1ED20400  47x86  blue=0.815 white=0.024 red=0.000  SimCity_1.dat
+  5  C2x2x0_handicaplacard_1DFD                     I=0x1DFD0000  model=0x1DFD0400  FSH=0x1C4A0430  14x22  blue=0.683 white=0.237 red=0.000  SimCity_1.dat
+  6  CO$$$12x28_1EuroOfficeBldg1_4c8423ff           I=0x4C8423FF  model=0x06080400  FSH=0x061E0433  178x217  blue=0.747 white=0.021 red=0.000  z_All Maxis building props with proper names.dat
+  7  CS$$$12x28_1EuroLuxuryStore1_4C84241B          I=0x4C84241B  model=0x06080400  FSH=0x061E0433  178x217  blue=0.747 white=0.021 red=0.000  z_All Maxis building props with proper names.dat
+  8  CBill12x2x8_$$sign2_2A21                       I=0x2A210000  model=0x2A210400  FSH=0x05F10404  65x80  blue=0.708 white=0.065 red=0.000  SimCity_1.dat
+  9  R8x8x2_$$trampoline_1CD8                       I=0x1CD80000  model=0x1CD80400  FSH=0x018B0400  40x47  blue=0.676 white=0.073 red=0.000  SimCity_1.dat
+ 10  PZBaseball5x15x2_CurvedFence_28E9              I=0x28E90000  model=0x28E90400  FSH=0x1EE00430  69x72  blue=0.672 white=0.031 red=0.000  SimCity_1.dat
+ 11  Lm58x77_PalaceofFineArts4b_29D5                I=0x29D50000  model=0x29D50400  FSH=0x1ECB0400  228x255  blue=0.665 white=0.022 red=0.001  SimCity_1.dat
+ 12  CO$$$40x24_3ChiOfficeBldg10_CC073F39           I=0xCC073F39  model=0x04F20400  FSH=0x05AB0436  255x255  blue=0.642 white=0.023 red=0.000  z_All Maxis building props with proper names.dat
+ 13  CS$$$40x24_3ChiLuxuryStore3_CC073FB1           I=0xCC073FB1  model=0x04F20400  FSH=0x05AB0436  255x255  blue=0.642 white=0.023 red=0.000  z_All Maxis building props with proper names.dat
+ 14  CO$$24x24_3HouOfficeBldg10_CC073F74            I=0xCC073F74  model=0x053C0400  FSH=0x04FB0421  255x254  blue=0.476 white=0.352 red=0.000  z_All Maxis building props with proper names.dat
+ 15  CO$$40x24_2ChiOfficeBldg8_CC073F7B             I=0xCC073F7B  model=0x04FA0400  FSH=0x04FB0421  255x255  blue=0.476 white=0.351 red=0.000  z_All Maxis building props with proper names.dat
+ 16  CBill12x2x8_$$$sign2_2A23                      I=0x2A230000  model=0x2A230400  FSH=0x05290400  65x80  blue=0.627 white=0.043 red=0.104  SimCity_1.dat
+ 17  R16x16x2_$$Boats_1CAA                          I=0x1CAA0000  model=0x1CAA0400  FSH=0x018B0402  43x67  blue=0.509 white=0.177 red=0.001  SimCity_1.dat
+ 18  R$$$60x44_7HouHiriseLuxCondos5_0C0745CA        I=0x0C0745CA  model=0x01C70400  FSH=0x008F0413  256x256  blue=0.489 white=0.205 red=0.000  z_All Maxis building props with proper names.dat
+ 19  Lm58x80_PalaceofFineArts4a_29D5                I=0x29D60000  model=0x29D60400  FSH=0x1ECF0400  255x255  blue=0.549 white=0.074 red=0.014  SimCity_1.dat
+ 20  R12x12x4_$$$PoolPatio2_2A64                    I=0x2A640000  model=0x2A640400  FSH=0x007F0420  97x113  blue=0.482 white=0.197 red=0.222  SimCity_1.dat
+ 21  CO$$56x56_8HouOfficeBldg7_CC073F96             I=0xCC073F96  model=0x059D0400  FSH=0x05390432  256x256  blue=0.521 white=0.092 red=0.000  z_All Maxis building props with proper names.dat
+ 22  R12x12x2_$$PoolPatio_2A62                      I=0x2A620000  model=0x2A620400  FSH=0x018D0403  81x111  blue=0.480 white=0.155 red=0.000  SimCity_1.dat
+ 23  Lm60x70_SeafirstTower_EC8423FB                 I=0xEC8423FB  model=0x04B00400  FSH=0x04B00404  256x256  blue=0.545 white=0.023 red=0.000  z_All Maxis building props with proper names.dat
+ 24  R12x12x2_$$$PoolGrand_AE09                     I=0xAE090000  model=0xAE090400  FSH=0x007F0420  93x111  blue=0.463 white=0.182 red=0.000  SimCity_1.dat
+ 25  CO$$$44x26_7ChiOfficeBldg2_CC073F46            I=0xCC073F46  model=0x059F0400  FSH=0x05AE0432  254x256  blue=0.537 white=0.030 red=0.001  z_All Maxis building props with proper names.dat
+ 26  CUSign1x2x6_Usedcar_1C4A                       I=0x1C4A0000  model=0x1C4A0400  FSH=0x1C4A0410  14x41  blue=0.472 white=0.156 red=0.000  SimCity_1.dat
+ 27  R$$$36x36_5EuroLuxCondos7_0C842413             I=0x0C842413  model=0x020F0400  FSH=0x021C0423  255x256  blue=0.497 white=0.089 red=0.000  z_All Maxis building props with proper names.dat
+ 28  R$$$60x44_7EuroHiriseLuxCondos5_0C842418       I=0x0C842418  model=0x021C0400  FSH=0x021C0423  255x256  blue=0.497 white=0.089 red=0.000  z_All Maxis building props with proper names.dat
+ 29  RW43x30_Cruise_Ship_Building_AC8423F6          I=0xAC8423F6  model=0x03BC0400  FSH=0x03BC0402  254x254  blue=0.343 white=0.391 red=0.001  z_All Maxis building props with proper names.dat
+ 30  R12x12x3_$$$PoolPatio1_2A63                    I=0x2A630000  model=0x2A630400  FSH=0x01CB0423  82x111  blue=0.283 white=0.485 red=0.008  SimCity_1.dat
+ 31  C8x8x2_$$$fountain_1DFF                        I=0x1DFF0000  model=0x1DFF0400  FSH=0x05270423  61x74  blue=0.446 white=0.158 red=0.000  SimCity_1.dat
+ 32  PZBaseball5x5x2_CurvedFence_28EA               I=0x28EA0000  model=0x28EA0400  FSH=0x1EDA0400  43x103  blue=0.503 white=0.041 red=0.000  SimCity_1.dat
+ 33  Ave16X16X1_lowdensityI$_2BBA                   I=0x2BBA0000  model=0x2BBA0400  FSH=0x29390430  84x89  blue=0.402 white=0.232 red=0.000  SimCity_1.dat
+ 34  Ave16X16X1_Industrialdumby                     I=0x2C340000  model=0x2BBA0400  FSH=0x29390430  84x89  blue=0.402 white=0.232 red=0.000  SimCity_1.dat
+ 35  Ave16X16X1_Industrialdumby                     I=0x2C350000  model=0x2BBA0400  FSH=0x29390430  84x89  blue=0.402 white=0.232 red=0.000  SimCity_1.dat
+ 36  Ave16X16X1_Industrialdumby                     I=0x2C360000  model=0x2BBA0400  FSH=0x29390430  84x89  blue=0.402 white=0.232 red=0.000  SimCity_1.dat
+ 37  Ave16X16X1_Industrialdumby                     I=0x2C370000  model=0x2BBA0400  FSH=0x29390430  84x89  blue=0.402 white=0.232 red=0.000  SimCity_1.dat
+ 38  Ave16X16X1_Industrialdumby                     I=0x2C380000  model=0x2BBA0400  FSH=0x29390430  84x89  blue=0.402 white=0.232 red=0.000  SimCity_1.dat
+ 39  CBill12x4x8_$$sign1_2A26                       I=0x2A260000  model=0x2A260400  FSH=0x05110400  80x89  blue=0.377 white=0.275 red=0.002  SimCity_1.dat
+ 40  I3x13x4_SemiTrailer_1D550000                   I=0x1D550000  model=0x1D550400  FSH=0x1E030430  52x86  blue=0.224 white=0.573 red=0.030  SimCity_1.dat
+ 41  CO$$44x26_7NYOfficeBldg3_CC073F8C              I=0xCC073F8C  model=0x05910400  FSH=0x058F0401  255x256  blue=0.410 white=0.175 red=0.002  z_All Maxis building props with proper names.dat
+ 42  CS$$44x26_7NYMediumStore8_CC073FE2             I=0xCC073FE2  model=0x05910400  FSH=0x058F0401  255x256  blue=0.410 white=0.175 red=0.002  z_All Maxis building props with proper names.dat
+ 43  Street1x1x12_TstreetlightDiag_28E6             I=0x28E60000  model=0x28E60400  FSH=0x1C740420  21x68  blue=0.248 white=0.483 red=0.000  SimCity_1.dat
+ 44  CSign6x1x10_$$Freestanding-sign-06_1EE9        I=0x1EE90000  model=0x1EE90400  FSH=0x05280413  42x66  blue=0.390 white=0.172 red=0.005  SimCity_1.dat
+ 45  CO$$56x56_8EuroOfficeBldg7_4C84241A            I=0x4C84241A  model=0x06180400  FSH=0x06120400  256x256  blue=0.407 white=0.137 red=0.000  z_All Maxis building props with proper names.dat
+ 46  CV9X7_PoliceKiosk_8C8423E7                     I=0x8C8423E7  model=0x03880400  FSH=0x03880400  67x79  blue=0.346 white=0.253 red=0.000  z_All Maxis building props with proper names.dat
+ 47  PZBaseball21x3x23_Lightandbleachers_1DDB       I=0x1DDB0000  model=0x1DDB0400  FSH=0x29390400  139x155  blue=0.262 white=0.417 red=0.000  SimCity_1.dat
+ 48  CSign11x1x4_$$$sign2_2A2F                      I=0x2A2F0000  model=0x2A2F0400  FSH=0x05210431  47x76  blue=0.395 white=0.148 red=0.000  SimCity_1.dat
+ 49  CSign2x4x11_$$sign2_2A3F                       I=0x2A3F0000  model=0x2A3F0400  FSH=0x05200412  25x78  blue=0.424 white=0.089 red=0.000  SimCity_1.dat
+ 50  Ut6x15_seaportStorageElevatorProp_1F51         I=0x1F510000  model=0x1F510400  FSH=0x1E0C0420  79x173  blue=0.385 white=0.150 red=0.000  SimCity_1.dat
+ 51  RW96x128_State Fair_0336                       I=0xF33600FC  model=0x03360400  FSH=0x03360400  255x255  blue=0.345 white=0.221 red=0.000  z_All Maxis building props with proper names.dat
+ 52  CR11x1x4_Sign_1D770000                         I=0x1D770000  model=0x1D770400  FSH=0x293B0400  46x75  blue=0.407 white=0.094 red=0.106  SimCity_1.dat
+ 53  Pzskate16x16x7_skateboardpark1_1E1C            I=0x1E1C0000  model=0x1E1C0400  FSH=0x29370410  114x147  blue=0.286 white=0.335 red=0.000  SimCity_1.dat
+ 54  CSF16x2x6_$$$ConsumableGrocery_1DA6            I=0x1DA60000  model=0x1DA60400  FSH=0x051D0431  70x109  blue=0.384 white=0.115 red=0.062  SimCity_1.dat
+ 55  R$$44x24_7ChiHiriseApts12_0C074604             I=0x0C074604  model=0x018D0400  FSH=0x01A30421  255x256  blue=0.352 white=0.175 red=0.001  z_All Maxis building props with proper names.dat
+ 56  I12x2x2_WaterTroughFull_2A6F                   I=0x2A6F0000  model=0x2A6F0400  FSH=0x1E0B0400  40x84  blue=0.379 white=0.120 red=0.000  SimCity_1.dat
+ 57  (unnamed)                                      I=0x19431000  model=0x19431400  FSH=0x01810403  54x103  blue=0.283 white=0.312 red=0.000  SimCity_1.dat
+ 58  ElevRail1X6_PowerBox_2BF7                      I=0x2BF70000  model=0x2BF70400  FSH=0x1C740420  21x33  blue=0.191 white=0.495 red=0.000  SimCity_1.dat
+ 59  R12x12x2_$$PoolModest_AE08                     I=0xAE080000  model=0xAE080400  FSH=0x01A30420  93x111  blue=0.289 white=0.283 red=0.012  SimCity_1.dat
+ 60  CO$$$44x26_6ChiOfficeBldg10_CC073F40           I=0xCC073F40  model=0x05760400  FSH=0x05A30415  254x254  blue=0.331 white=0.199 red=0.000  z_All Maxis building props with proper names.dat
+ 61  R$$52x56_7ChiHiriseApts7_0C07460C              I=0x0C07460C  model=0x009C0400  FSH=0x01330411  255x256  blue=0.327 white=0.201 red=0.018  z_All Maxis building props with proper names.dat
+ 62  CSF6x2x6_$$$Restaurant5star_1C520000           I=0x1C520000  model=0x1C520400  FSH=0x05270400  45x51  blue=0.391 white=0.072 red=0.134  SimCity_1.dat
+ 63  CO$$40x24_2EuroOfficeBldg7_4C842415            I=0x4C842415  model=0x06060400  FSH=0x061B0413  255x255  blue=0.406 white=0.030 red=0.000  z_All Maxis building props with proper names.dat
+ 64  CS$$40x24_2EuroMediumStore3_4C842424           I=0x4C842424  model=0x06060400  FSH=0x061B0413  255x255  blue=0.406 white=0.030 red=0.000  z_All Maxis building props with proper names.dat
+ 65  CO$$$14x14_5HouOfficeBldg5_CC073F25            I=0xCC073F25  model=0x05850400  FSH=0x05AE0433  254x255  blue=0.377 white=0.086 red=0.001  z_All Maxis building props with proper names.dat
+ 66  R$$54x24_7NYHiriseApts4_0C074610               I=0x0C074610  model=0x01910400  FSH=0x01A30416  255x256  blue=0.305 white=0.229 red=0.000  z_All Maxis building props with proper names.dat
+ 67  .p_Lm38x22_ArcTriomphe_04C1                    I=0xF19100FC  model=0x01910400  FSH=0x01A30416  255x256  blue=0.305 white=0.229 red=0.000  z_All Maxis building props with proper names.dat
+ 68  CSF8x2x6_$$$ConsumableGrocery_1C600000         I=0x1C600000  model=0x1C600400  FSH=0x051D0402  55x58  blue=0.341 white=0.154 red=0.073  SimCity_1.dat
+ 69  R4x5x4_$clotheslinerectangular_1EFF            I=0x1EFF0000  model=0x1EFF0400  FSH=0x01730421  36x48  blue=0.303 white=0.219 red=0.000  SimCity_1.dat
+ 70  ElevRail3X8_PowerBoxes_2BFB                    I=0x2BFB0000  model=0x2BFB0400  FSH=0x1C720410  27x48  blue=0.235 white=0.355 red=0.000  SimCity_1.dat
+ 71  CO$$$24x24_2HouOfficeBldg7_CC073F33            I=0xCC073F33  model=0x05550400  FSH=0x059F0422  218x227  blue=0.224 white=0.377 red=0.000  z_All Maxis building props with proper names.dat
+ 72  CO$$$48x32_7EuroOfficeBldg2_4C84240B           I=0x4C84240B  model=0x061A0400  FSH=0x061F0425  255x256  blue=0.324 white=0.177 red=0.000  z_All Maxis building props with proper names.dat
+ 73  R$$24x30_5HouSmCondos7_0C0745F7                I=0x0C0745F7  model=0x013D0400  FSH=0x019A0407  254x255  blue=0.327 white=0.168 red=0.003  z_All Maxis building props with proper names.dat
+ 74  R4x8x3_$$$hottub_AE01                          I=0xAE010000  model=0xAE010400  FSH=0x01500403  43x43  blue=0.255 white=0.314 red=0.097  SimCity_1.dat
+ 75  R$$44x44_8HouHiriseApts1_0C07460B              I=0x0C07460B  model=0x019A0400  FSH=0x00880421  248x256  blue=0.379 white=0.058 red=0.022  z_All Maxis building props with proper names.dat
+ 76  CO$$$56x56_8EuroOfficeBldg8_4C84240E           I=0x4C84240E  model=0x061F0400  FSH=0x06110430  256x256  blue=0.394 white=0.027 red=0.000  z_All Maxis building props with proper names.dat
+ 77  R$$28x20_5NYSmCondos4_0C0745FD                 I=0x0C0745FD  model=0x01330400  FSH=0x00890400  240x255  blue=0.209 white=0.380 red=0.000  z_All Maxis building props with proper names.dat
+ 78  CO$$$40x24_3HouOfficeBldg10_CC073F3C           I=0xCC073F3C  model=0x05580400  FSH=0x05AC0422  255x255  blue=0.157 white=0.484 red=0.000  z_All Maxis building props with proper names.dat
+ 79  CS$$$40x24_3HouLuxuryStore3_CC073FB3           I=0xCC073FB3  model=0x05580400  FSH=0x05AC0422  255x255  blue=0.157 white=0.484 red=0.000  z_All Maxis building props with proper names.dat
+ 80  CSign11x1x4_$$$sign1_2A2E                      I=0x2A2E0000  model=0x2A2E0400  FSH=0x05210430  47x76  blue=0.242 white=0.311 red=0.010  SimCity_1.dat
+ 81  Street1x1x3_$PhoneBooth_1D20                   I=0x1D200000  model=0x1D200400  FSH=0x1C750430  10x23  blue=0.365 white=0.057 red=0.000  SimCity_1.dat
+ 82  CS$14x26_6HouSmallShop5_CC073FF9               I=0xCC073FF9  model=0x05DD0400  FSH=0x05D30430  253x255  blue=0.292 white=0.196 red=0.011  z_All Maxis building props with proper names.dat
+ 83  R$$$20x24_4HouUrbanPalazzo1_0C07459A           I=0x0C07459A  model=0x01440400  FSH=0x008F0424  194x242  blue=0.249 white=0.278 red=0.002  z_All Maxis building props with proper names.dat
+ 84  Ut12X32_TollBooth                              I=0x2C860000  model=0x1F5E0400  FSH=0x1F440436  108x155  blue=0.302 white=0.166 red=0.002  SimCity_1.dat
+ 85  Ut12X32_TollBoothAve_EC8423EF                  I=0xEC8423EF  model=0x1F5E0400  FSH=0x1F440436  108x155  blue=0.302 white=0.166 red=0.002  z_All Maxis building props with proper names.dat
+ 86  R$$54x24_7ChiHiriseApts4_0C07460D              I=0x0C07460D  model=0x008D0400  FSH=0x01970403  255x256  blue=0.175 white=0.418 red=0.006  z_All Maxis building props with proper names.dat
+ 87  PZPark3x6x5_Lifeguardtower_AC0734CB            I=0xAC0734CB  model=0x1DDD0400  FSH=0x1DDD0400  36x51  blue=0.334 white=0.082 red=0.060  z_All Maxis building props with proper names.dat
+ 88  R$$44x24_7NYHiriseApts10_0C074607              I=0x0C074607  model=0x01970400  FSH=0x01A30431  255x256  blue=0.233 white=0.280 red=0.000  z_All Maxis building props with proper names.dat
+ 89  PZPark10x6x6_Playstructure_1DD9                I=0x1DD90000  model=0x1DD90400  FSH=0x29380430  77x82  blue=0.342 white=0.056 red=0.049  SimCity_1.dat
+ 90  CO$$$44x26_6ChiOfficeBldg9_CC073F41            I=0xCC073F41  model=0x05070400  FSH=0x05A50410  254x255  blue=0.290 white=0.155 red=0.001  z_All Maxis building props with proper names.dat
+ 91  CO$$$44x26_7NYOfficeBldg1_CC073F4B             I=0xCC073F4B  model=0x05A30400  FSH=0x05A50422  255x256  blue=0.260 white=0.205 red=0.002  z_All Maxis building props with proper names.dat
+ 92  Ut20x20_LgControlTower_8C0749D6                I=0x8C0749D6  model=0x03500400  FSH=0x1F460407  182x254  blue=0.239 white=0.244 red=0.000  z_All Maxis building props with proper names.dat
+ 93  Ut20x20_LgControlTower                         I=0xCA3D9725  model=0x03500400  FSH=0x1F460407  182x254  blue=0.239 white=0.244 red=0.000  SimCity_1.dat
+ 94  IM42x42_2ManuAnchor8_0C0741A3                  I=0x0C0741A3  model=0x08650400  FSH=0x081B0420  255x255  blue=0.224 white=0.270 red=0.000  z_All Maxis building props with proper names.dat
+ 95  Ut1x1_TollBooth_road_EC8423F3                  I=0xEC8423F3  model=0x1F5C0400  FSH=0x1F440430  115x152  blue=0.277 white=0.160 red=0.002  z_All Maxis building props with proper names.dat
+ 96  R$$$24x28_4ChiUrbanPalazzo1_0C0745A3           I=0x0C0745A3  model=0x00930400  FSH=0x01530410  255x254  blue=0.212 white=0.283 red=0.036  z_All Maxis building props with proper names.dat
+ 97  GA4x8x3_boxes_1DF5                             I=0x1DF50000  model=0x1DF50400  FSH=0x29810410  44x56  blue=0.288 white=0.131 red=0.000  SimCity_1.dat
+ 98  R8x8x7_$$$fountainv4_1CEA                      I=0x1CEA0000  model=0x1CEA0400  FSH=0x01BF0430  74x86  blue=0.319 white=0.064 red=0.000  SimCity_1.dat
+ 99  RW80x60_launchpad_AC8423F7                     I=0xAC8423F7  model=0x03840400  FSH=0x03840404  256x256  blue=0.266 white=0.163 red=0.003  z_All Maxis building props with proper names.dat
+100  (unnamed)                                      I=0x1A3B1000  model=0x1A3B1400  FSH=0x01750421  255x254  blue=0.177 white=0.335 red=0.000  SimCity_1.dat
+101  CSF8x2x6_$$RetailPartsAndCrafts_1C690000       I=0x1C690000  model=0x1C690400  FSH=0x01000000  55x58  blue=0.267 white=0.152 red=0.013  SimCity_1.dat
+102  CO$$56x56_8ChiOfficeBldg7_CC073F94             I=0xCC073F94  model=0x04E40400  FSH=0x05030414  256x256  blue=0.253 white=0.170 red=0.000  z_All Maxis building props with proper names.dat
+103  Street1x1x11_StoplightArmPole_2C41             I=0x2C410000  model=0x2C410400  FSH=0x1EDE0400  38x74  blue=0.270 white=0.135 red=0.000  SimCity_1.dat
+104  ACR8x0x12_Grafiti_1dc3                         I=0x1DC30000  model=0x1DC30000  FSH=0x1DC30001  256x256  blue=0.213 white=0.243 red=0.201  SimCity_1.dat
+105  Lm128x60_EmpireStateBuilding_0C0743EB          I=0x0C0743EB  model=0x04D40400  FSH=0x04D40449  256x256  blue=0.316 white=0.034 red=0.000  z_All Maxis building props with proper names.dat
+106  CSF8x2x6_$RetailPawn Shop_1C6E0000             I=0x1C6E0000  model=0x1C6E0400  FSH=0x01000000  55x58  blue=0.248 white=0.166 red=0.015  SimCity_1.dat
+107  R$56x28_7NYHiriseTenemts1_0C074651             I=0x0C074651  model=0x01770400  FSH=0x01750422  255x256  blue=0.186 white=0.290 red=0.000  z_All Maxis building props with proper names.dat
+108  CO$$12x28_1EuroOfficeBldg1_4C84240F            I=0x4C84240F  model=0x05FE0400  FSH=0x061F0406  161x238  blue=0.271 white=0.103 red=0.001  z_All Maxis building props with proper names.dat
+109  CS$$12x28_1EuroMediumStore1_4C842420           I=0x4C842420  model=0x05FE0400  FSH=0x061F0406  161x238  blue=0.271 white=0.103 red=0.001  z_All Maxis building props with proper names.dat
+110  PzGolf9x13x1_sandtrap-03_1e20                  I=0x1E200000  model=0x1E200400  FSH=0x01000000  82x94  blue=0.261 white=0.117 red=0.006  SimCity_1.dat
+111  CS$14x14_4HouSmallShop4_CC073FF1               I=0xCC073FF1  model=0x05DC0400  FSH=0x05DD0421  129x172  blue=0.297 white=0.037 red=0.001  z_All Maxis building props with proper names.dat
+112  Lm160x72_USCapitol_0C0743ED                    I=0x0C0743ED  model=0x04DF0400  FSH=0x04DF0405  256x256  blue=0.152 white=0.325 red=0.000  z_All Maxis building props with proper names.dat
+113  RW7x48x32_StateFairFerrisWheelBase_298D        I=0x298D0000  model=0x298D0400  FSH=0x29330430  255x254  blue=0.250 white=0.125 red=0.009  SimCity_1.dat
+114  R$$58x54_7HouHiriseApts7_0C074612              I=0x0C074612  model=0x01A00400  FSH=0x018B0401  254x256  blue=0.266 white=0.087 red=0.000  z_All Maxis building props with proper names.dat
+115  GA4x8x3_boxes_1DF6                             I=0x1DF60000  model=0x1DF60400  FSH=0x293B0420  44x61  blue=0.200 white=0.220 red=0.000  SimCity_1.dat
+116  RW12x26_StateFair-Cow_298B                     I=0x298B0000  model=0x298B0400  FSH=0x298B0400  147x241  blue=0.221 white=0.177 red=0.000  SimCity_1.dat
+117  CS$$$24x30_1ChiDinnerTheater_CC073FA8          I=0xCC073FA8  model=0x050F0400  FSH=0x05290402  248x255  blue=0.222 white=0.172 red=0.049  z_All Maxis building props with proper names.dat
+118  CUSign14x4x6_ChiServiceStationIsland_1C770000  I=0x1C770000  model=0x1C770400  FSH=0x01000000  73x102  blue=0.248 white=0.115 red=0.007  SimCity_1.dat
+119  CSign11x1x4_$sign1_2A2A                        I=0x2A2A0000  model=0x2A2A0400  FSH=0x05130420  47x76  blue=0.290 white=0.028 red=0.000  SimCity_1.dat
+120  IM40x44_2ManuAnchor9_0C0741A1                  I=0x0C0741A1  model=0x08110400  FSH=0x08250431  253x255  blue=0.291 white=0.024 red=0.000  z_All Maxis building props with proper names.dat
+121  RW15x25_AdvResCenter-side2_29FE                I=0x29FE0000  model=0x29FE0400  FSH=0x29FE0400  163x196  blue=0.164 white=0.274 red=0.000  SimCity_1.dat
+122  PzGolf12x12x1_sandtrap-02_1e1f                 I=0x1E1F0000  model=0x1E1F0400  FSH=0x01000000  84x111  blue=0.243 white=0.113 red=0.007  SimCity_1.dat
+123  Street8x8x7_HighwaySignDiag_28E8               I=0x28E80000  model=0x28E80400  FSH=0x1EDA0420  37x92  blue=0.158 white=0.281 red=0.000  SimCity_1.dat
+124  RW3x35x30_statefairsignbase_2949               I=0x29490000  model=0x29490400  FSH=0x29300410  194x230  blue=0.262 white=0.070 red=0.012  SimCity_1.dat
+125  CBill12x2x8_$$billboard_1D5A                   I=0x1D5A0000  model=0x1D5A0400  FSH=0x05280434  71x82  blue=0.277 white=0.038 red=0.333  SimCity_1.dat
+126  R$$$36x36_5HouLuxCondos7_0C0745B5              I=0x0C0745B5  model=0x01680400  FSH=0x016E0424  255x255  blue=0.218 white=0.149 red=0.005  z_All Maxis building props with proper names.dat
+127  RW36x50_DiseaseCtr_2989                        I=0x2C840000  model=0x033F0400  FSH=0x033F0402  243x255  blue=0.228 white=0.126 red=0.000  SimCity_1.dat
+128  RW36x50_DiseaseCtr_CC0746F4                    I=0xCC0746F4  model=0x033F0400  FSH=0x033F0402  243x255  blue=0.228 white=0.126 red=0.000  z_All Maxis building props with proper names.dat
+129  CO$$$44x36_8NYOfficeBldg3_CC073F51             I=0xCC073F51  model=0x05A50400  FSH=0x05AD0404  255x256  blue=0.226 white=0.125 red=0.000  z_All Maxis building props with proper names.dat
+130  Up64x64_NaturalGasPowerPlant_8C0749C5          I=0x8C0749C5  model=0x1F430400  FSH=0x1F440411  256x256  blue=0.195 white=0.181 red=0.000  z_All Maxis building props with proper names.dat
+131  CSF6x2x6_$$RetailPartsAndCrafts_1C580000       I=0x1C580000  model=0x1C580400  FSH=0x01000000  55x58  blue=0.230 white=0.109 red=0.000  SimCity_1.dat
+132  CUSign4x1x3_ChiTacoStandSignMain_1C710000      I=0x1C710000  model=0x1C710400  FSH=0x01000000  24x31  blue=0.248 white=0.073 red=0.000  SimCity_1.dat
+133  RW12x24_ZooBears_281C                          I=0x281C0000  model=0x281C0400  FSH=0x281C0400  147x169  blue=0.198 white=0.172 red=0.000  SimCity_1.dat
+134  R$$$60x28_7ChiHiriseLuxCondos9_0C0745C2        I=0x0C0745C2  model=0x008E0400  FSH=0x00970425  255x256  blue=0.182 white=0.201 red=0.006  z_All Maxis building props with proper names.dat
+135  UtMarina16x64_MarinaFoundation_194C            I=0x194C0000  model=0x194C0400  FSH=0x29390400  255x256  blue=0.200 white=0.165 red=0.000  SimCity_1.dat
+136  R$$$54x24_5HouLuxCondos13_0C0745BA             I=0x0C0745BA  model=0x016E0400  FSH=0x008E0410  255x256  blue=0.190 white=0.185 red=0.033  z_All Maxis building props with proper names.dat
+137  ElevRail8X3_ConstructionWide_2BF9              I=0x2BF90000  model=0x2BF90400  FSH=0x1E100410  58x67  blue=0.179 white=0.206 red=0.005  SimCity_1.dat
+138  CS$14x22_1HouSmallShop3_CC073FF5               I=0xCC073FF5  model=0x05DB0400  FSH=0x05DC0400  155x175  blue=0.183 white=0.197 red=0.000  z_All Maxis building props with proper names.dat
+139  Lm48x48_Fernsehturm_0C0743F8                   I=0x0C0743F8  model=0x04C60400  FSH=0x04C60404  254x256  blue=0.186 white=0.190 red=0.000  z_All Maxis building props with proper names.dat
+140  I9x6x6_StockyardShedProp_1C400000              I=0x1C400000  model=0x1C400400  FSH=0x01000000  58x69  blue=0.247 white=0.068 red=0.000  SimCity_1.dat
+141  Construction4x11x7_Digger_030A0000             I=0x030A0000  model=0x030A0400  FSH=0x01000000  54x94  blue=0.230 white=0.101 red=0.011  SimCity_1.dat
+142  CSF8x2x6_$ClothingUsed_1C6B0000                I=0x1C6B0000  model=0x1C6B0400  FSH=0x01000000  55x58  blue=0.227 white=0.107 red=0.000  SimCity_1.dat
+143  CSF8x2x6_$ConsumablePackage_1C6C0000           I=0x1C6C0000  model=0x1C6C0400  FSH=0x01000000  55x58  blue=0.227 white=0.107 red=0.000  SimCity_1.dat
+144  CSF6x2x6_$$$ServiceSalon_1C540000              I=0x1C540000  model=0x1C540400  FSH=0x01000000  45x51  blue=0.207 white=0.146 red=0.000  SimCity_1.dat
+145  RW42x38_MajorArtMuseum_CC0746F6                I=0xCC0746F6  model=0x033C0400  FSH=0x033C0401  248x254  blue=0.160 white=0.237 red=0.024  z_All Maxis building props with proper names.dat
+146  CSF8x2x6_$$$ServiceSalon_1C650000              I=0x1C650000  model=0x1C650400  FSH=0x01000000  55x58  blue=0.218 white=0.119 red=0.000  SimCity_1.dat
+147  ACR16x0x10_Grafiti_1dce                        I=0x1DCE0000  model=0x1DCE0000  FSH=0x1DCE0001  256x256  blue=0.218 white=0.115 red=0.005  SimCity_1.dat
+148  Ut6x6_NavTower_0358                            I=0x03580000  model=0x03580400  FSH=0x03980410  77x144  blue=0.194 white=0.163 red=0.016  SimCity_1.dat
+149  ACR16x0x10_Grafiti_1dcc                        I=0x1DCC0000  model=0x1DCC0000  FSH=0x1DCC0001  256x256  blue=0.183 white=0.185 red=0.059  SimCity_1.dat
+150  CO$$$30x22_4HouOfficeBldg1_CC073F37            I=0xCC073F37  model=0x05810400  FSH=0x04F60421  255x256  blue=0.156 white=0.238 red=0.002  z_All Maxis building props with proper names.dat
+151  CS$$$30x22_4HouLuxuryStore6_CC073FAD           I=0xCC073FAD  model=0x05810400  FSH=0x04F60421  255x256  blue=0.156 white=0.238 red=0.002  z_All Maxis building props with proper names.dat
+152  CSF6x2x6_$$$Restaurant5star_1C520000           I=0x1C520000  model=0x1C520400  FSH=0x01000000  45x51  blue=0.234 white=0.082 red=0.000  SimCity_1.dat
+153  RW6x2x6_Prizebooth_2910                        I=0x29100000  model=0x29100400  FSH=0x1E090400  45x51  blue=0.222 white=0.103 red=0.011  SimCity_1.dat
+154  CS$$40x54_7ChiCinema_CC073FD9                  I=0xCC073FD9  model=0x05260400  FSH=0x051D0402  254x255  blue=0.207 white=0.131 red=0.017  z_All Maxis building props with proper names.dat
+155  CO$$$56x56_8HouOfficeBldg7_CC073F59            I=0xCC073F59  model=0x05B10400  FSH=0x05A50416  256x256  blue=0.212 white=0.120 red=0.002  z_All Maxis building props with proper names.dat
+156  CSF16x2x6_$$$RetailGallery_1DA5                I=0x1DA50000  model=0x1DA50400  FSH=0x051D0431  70x109  blue=0.218 white=0.100 red=0.000  SimCity_1.dat
+157  R$44x24_7EuroHiriseTenemts7_0C842435           I=0x0C842435  model=0x02160400  FSH=0x021B0403  255x256  blue=0.237 white=0.062 red=0.004  z_All Maxis building props with proper names.dat
+158  R8x8x3_$$ModestBigDogKennel_1CC4               I=0x1CC40000  model=0x1CC40400  FSH=0x01000000  63x71  blue=0.211 white=0.112 red=0.000  SimCity_1.dat
+159  IH28x28_3HTMech7_0C074180                      I=0x0C074180  model=0x083C0400  FSH=0x08460410  255x255  blue=0.250 white=0.033 red=0.000  z_All Maxis building props with proper names.dat
+160  IH28x40_2HTOut8_0C074183                       I=0x0C074183  model=0x08450400  FSH=0x08460410  255x254  blue=0.250 white=0.033 red=0.000  z_All Maxis building props with proper names.dat
+161  R$$$60x28_8HouHiriseLuxCondos11_0C0745C7       I=0x0C0745C7  model=0x007F0400  FSH=0x01AF0422  255x256  blue=0.162 white=0.210 red=0.012  z_All Maxis building props with proper names.dat
+162  (unnamed)                                      I=0x1A3A1000  model=0x1A3A1400  FSH=0x01830433  130x249  blue=0.196 white=0.142 red=0.000  SimCity_1.dat
+163  (unnamed)                                      I=0x007D1000  model=0x007D1400  FSH=0x01000000  60x87  blue=0.212 white=0.107 red=0.011  SimCity_1.dat
+164  CSF6x2x6_$$$RetailGallery_1C530000             I=0x1C530000  model=0x1C530400  FSH=0x01000000  45x51  blue=0.216 white=0.100 red=0.000  SimCity_1.dat
+165  CSF12x2x6_$$RetailPartsAndCrafts_1D9B          I=0x1D9B0000  model=0x1D9B0400  FSH=0x01000000  61x84  blue=0.212 white=0.107 red=0.010  SimCity_1.dat
+166  R6x12x2_$$$shuffleboard_AE20                   I=0xAE200000  model=0xAE200400  FSH=0x01000000  72x74  blue=0.199 white=0.130 red=0.008  SimCity_1.dat
+167  Ut48x16_LightRailStation_EC8423F5              I=0xEC8423F5  model=0x03830400  FSH=0x1F420438  251x255  blue=0.196 white=0.134 red=0.006  z_All Maxis building props with proper names.dat
+168  R$$$36x26_5HouLuxCondos4_0C0745B1              I=0x0C0745B1  model=0x01650400  FSH=0x007F0425  255x254  blue=0.167 white=0.190 red=0.024  z_All Maxis building props with proper names.dat
+169  C2x2x2_$$containers_2A6C                       I=0x2A6C0000  model=0x2A6C0400  FSH=0x051E0431  14x22  blue=0.229 white=0.064 red=0.000  SimCity_1.dat
+170  Up44x32_RecyclingCenter_8C0749C3               I=0x8C0749C3  model=0x03680400  FSH=0x1F420429  255x255  blue=0.227 white=0.069 red=0.004  z_All Maxis building props with proper names.dat
+171  R$$12x14_123EuroStdHouse8_0C84241F             I=0x0C84241F  model=0x01F10400  FSH=0x02170430  119x124  blue=0.195 white=0.132 red=0.000  z_All Maxis building props with proper names.dat
+172  (unnamed)                                      I=0x00911000  model=0x00911400  FSH=0x01000000  60x89  blue=0.206 white=0.107 red=0.011  SimCity_1.dat
+173  R$$$16x20_123NYMansion10_0C074585              I=0x0C074585  model=0x00E30400  FSH=0x007F0405  162x182  blue=0.209 white=0.100 red=0.000  z_All Maxis building props with proper names.dat
+174  R$$$28x26_5ChiLuxCondos1_0C0745A8              I=0x0C0745A8  model=0x00720400  FSH=0x01650430  254x255  blue=0.248 white=0.020 red=0.003  z_All Maxis building props with proper names.dat
+175  PZBaseball16x16x11_Backstop_AC0734CA           I=0xAC0734CA  model=0x1DBE0400  FSH=0x1DBE0400  142x123  blue=0.245 white=0.025 red=0.000  z_All Maxis building props with proper names.dat
+176  CSF14x2x6_$$$RetailGallery_1DA0                I=0x1DA00000  model=0x1DA00400  FSH=0x051D0430  66x96  blue=0.200 white=0.111 red=0.000  SimCity_1.dat
+177  RW9x11_lighthouse_AC8423F8                     I=0xAC8423F8  model=0x03950400  FSH=0x03950400  73x201  blue=0.154 white=0.201 red=0.065  z_All Maxis building props with proper names.dat
+178  CSF8x2_$$$ConsumableGrocery2_1C610000          I=0x1C610000  model=0x1C610400  FSH=0x01000000  55x58  blue=0.191 white=0.127 red=0.000  SimCity_1.dat
+179  IH28x74_3HTOut14_0C074186                      I=0x0C074186  model=0x084B0400  FSH=0x08360430  255x256  blue=0.217 white=0.074 red=0.000  z_All Maxis building props with proper names.dat
+180  I11x10x3_ChickenCoop_1C3D0000                  I=0x1C3D0000  model=0x1C3D0400  FSH=0x01000000  80x96  blue=0.184 white=0.138 red=0.000  SimCity_1.dat
+181  CSF8x2x6_$$$RetailGallery2_1C640000            I=0x1C640000  model=0x1C640400  FSH=0x01000000  55x58  blue=0.212 white=0.078 red=0.000  SimCity_1.dat
+182  CSF6x2x6_$$ConsumableConvienence_1C560000      I=0x1C560000  model=0x1C560400  FSH=0x052A0432  45x51  blue=0.230 white=0.042 red=0.017  SimCity_1.dat
+183  CSF8x2x6_$$ClothingChain_1C660000              I=0x1C660000  model=0x1C660400  FSH=0x01000000  55x58  blue=0.238 white=0.021 red=0.000  SimCity_1.dat
+184  CSF12x2x6_$RetailPawnShopandServiceBarber_1D9D I=0x1D9D0000  model=0x1D9D0400  FSH=0x01000000  61x84  blue=0.198 white=0.099 red=0.000  SimCity_1.dat
+185  PzGolf9x9x1_sandtrap-04_1e21                   I=0x1E210000  model=0x1E210400  FSH=0x01000000  61x79  blue=0.185 white=0.125 red=0.001  SimCity_1.dat
+186  R12x12x5_$$$bbqchimneydiningpatio_1CDD         I=0x1CDD0000  model=0x1CDD0400  FSH=0x01000000  87x102  blue=0.183 white=0.126 red=0.007  SimCity_1.dat
+187  CSF6x2x6_$RetailPawnShop_1C5D0000              I=0x1C5D0000  model=0x1C5D0400  FSH=0x01000000  45x51  blue=0.190 white=0.113 red=0.000  SimCity_1.dat
+188  CSF8x2x6_$$ServiceHairCut_1C6A0000             I=0x1C6A0000  model=0x1C6A0400  FSH=0x01000000  55x58  blue=0.187 white=0.117 red=0.000  SimCity_1.dat
+189  CSF8x2_$$Restaurant3star_1C680000              I=0x1C680000  model=0x1C680400  FSH=0x01000000  55x58  blue=0.190 white=0.110 red=0.000  SimCity_1.dat
+190  R$10x24_4EuroBoxyApt5_0C84242B                 I=0x0C84242B  model=0x01FF0400  FSH=0x02170412  139x211  blue=0.234 white=0.021 red=0.000  z_All Maxis building props with proper names.dat
+191  Street1x1x5_GenericStreetSign_2993             I=0x29930000  model=0x29930400  FSH=0x1ED80430  14x30  blue=0.195 white=0.098 red=0.000  SimCity_1.dat
+192  RW21x29x2_LargePool_2a04                       I=0x2A040000  model=0x2A040400  FSH=0x28330400  183x212  blue=0.226 white=0.035 red=0.223  SimCity_1.dat
+193  I15x7x6_Toolshed2_07D50000                     I=0x07D50000  model=0x07D50400  FSH=0x01000000  89x113  blue=0.194 white=0.099 red=0.001  SimCity_1.dat
+194  I12x7x5_tracktor_1C3F0000                      I=0x1C3F0000  model=0x1C3F0400  FSH=0x01000000  70x92  blue=0.198 white=0.089 red=0.000  SimCity_1.dat
+195  (unnamed)                                      I=0x00991000  model=0x00991400  FSH=0x019A0413  91x150  blue=0.186 white=0.109 red=0.003  SimCity_1.dat
+196  CO$$14x14_4EuroOfficeBldg1_4C842410            I=0x4C842410  model=0x060C0400  FSH=0x060D0430  130x159  blue=0.166 white=0.146 red=0.000  z_All Maxis building props with proper names.dat
+197  CS$$14x14_4EuroMediumStore4_4C842421           I=0x4C842421  model=0x060C0400  FSH=0x060D0430  130x159  blue=0.166 white=0.146 red=0.000  z_All Maxis building props with proper names.dat
+198  Construction7x4x2_DirtMound_03050000           I=0x03050000  model=0x03050400  FSH=0x01000000  45x60  blue=0.184 white=0.110 red=0.000  SimCity_1.dat
+199  CO$$12x28_1HouOfficeBldg1_CC073F60             I=0xCC073F60  model=0x05330400  FSH=0x05990430  159x192  blue=0.151 white=0.173 red=0.001  z_All Maxis building props with proper names.dat
+200  CS$$12x28_1HouMediumStore1_CC073FC2            I=0xCC073FC2  model=0x05330400  FSH=0x05990430  159x192  blue=0.151 white=0.173 red=0.001  z_All Maxis building props with proper names.dat
+201  R$$$60x28_7EuroHiriseLuxCondos9_0C842416       I=0x0C842416  model=0x021D0400  FSH=0x021B041F  255x256  blue=0.206 white=0.063 red=0.000  z_All Maxis building props with proper names.dat
+202  IH42x58_3HTOut12_0C07418B                      I=0x0C07418B  model=0x08490400  FSH=0x08470401  223x255  blue=0.212 white=0.047 red=0.000  z_All Maxis building props with proper names.dat
+203  CO$$$44x26_6HouOfficeBldg9_CC073F43            I=0xCC073F43  model=0x05890400  FSH=0x05A30430  255x256  blue=0.211 white=0.049 red=0.001  z_All Maxis building props with proper names.dat
+204  CS$$$44x26_5HouLuxuryStore5_CC073FB8           I=0xCC073FB8  model=0x05890400  FSH=0x05A30430  255x256  blue=0.211 white=0.049 red=0.001  z_All Maxis building props with proper names.dat
+205  Uw14x14_WaterPumpingStationPlatform_2A71       I=0x2A711000  model=0x2A711400  FSH=0x293A0420  145x174  blue=0.159 white=0.151 red=0.000  SimCity_1.dat
+206  R$$16x16_5EuroRowHouse1_0C842421               I=0x0C842421  model=0x02200400  FSH=0x021A0432  147x163  blue=0.152 white=0.164 red=0.000  z_All Maxis building props with proper names.dat
+207  CSF12x2x6_$$$RetailGallery_1D9A                I=0x1D9A0000  model=0x1D9A0400  FSH=0x05270423  61x84  blue=0.179 white=0.106 red=0.000  SimCity_1.dat
+208  ACR8x0x12_Grafiti_1dc7                         I=0x1DC70000  model=0x1DC70000  FSH=0x1DC70001  256x256  blue=0.208 white=0.046 red=0.155  SimCity_1.dat
+209  CSF6x2x6_$Consumablepackage_1C5B0000           I=0x1C5B0000  model=0x1C5B0400  FSH=0x01000000  45x51  blue=0.179 white=0.105 red=0.000  SimCity_1.dat
+210  Construction5x7x5_Dozer_03070000               I=0x03070000  model=0x03070400  FSH=0x01000000  256x256  blue=0.176 white=0.108 red=0.004  SimCity_1.dat
+211  Construction3x9x4_loader_03080000              I=0x03080000  model=0x03080400  FSH=0x01000000  256x256  blue=0.176 white=0.108 red=0.004  SimCity_1.dat
+212  Ut48x78_ferry-terminal-foundation_194D         I=0x194D0000  model=0x194D0400  FSH=0x01000000  256x256  blue=0.176 white=0.108 red=0.004  SimCity_1.dat
+213  Ut32x78_passenger-ferry-building-foundation_19 I=0x194E0000  model=0x194E0400  FSH=0x01000000  255x255  blue=0.176 white=0.108 red=0.004  SimCity_1.dat
+214  C14x30x18_$$5StoryPG_CE020000                  I=0xCE020000  model=0xCE020400  FSH=0x01000000  255x255  blue=0.176 white=0.108 red=0.004  SimCity_1.dat
+215  C14x30x18_$$$5StoryPG_CE030000                 I=0xCE030000  model=0xCE030400  FSH=0x01000000  255x255  blue=0.176 white=0.108 red=0.004  SimCity_1.dat
+216  R$$$20x20_123EuroMansion1_0C842409             I=0x0C842409  model=0x01F30400  FSH=0x02080411  169x194  blue=0.162 white=0.136 red=0.000  z_All Maxis building props with proper names.dat
+217  R$8x10_123EuroTinyHouse7_0C84243F              I=0x0C84243F  model=0x01E80400  FSH=0x021A0410  89x103  blue=0.218 white=0.022 red=0.000  z_All Maxis building props with proper names.dat
+218  PzGolf24x24x1_green-03_1e24                    I=0x1E240000  model=0x1E240400  FSH=0x01000000  161x220  blue=0.175 white=0.107 red=0.004  SimCity_1.dat
+219  IH28x28_1HTAnchor3_0C07417F                    I=0x0C07417F  model=0x082D0400  FSH=0x08470401  254x255  blue=0.205 white=0.045 red=0.000  z_All Maxis building props with proper names.dat
+220  Construction7x9x5_Workyard_03030000            I=0x03030000  model=0x03030400  FSH=0x01000000  63x74  blue=0.168 white=0.120 red=0.000  SimCity_1.dat
+221  CSF8x2x6_$Restaurant1star_1C6D0000             I=0x1C6D0000  model=0x1C6D0400  FSH=0x01000000  55x58  blue=0.160 white=0.135 red=0.000  SimCity_1.dat
+222  C14x30x6_$$2StoryPG_CE000000                   I=0xCE000000  model=0xCE000400  FSH=0x01000000  176x202  blue=0.174 white=0.106 red=0.003  SimCity_1.dat
+223  IM14x28_2ManuMech4_0C074191                    I=0x0C074191  model=0x08170400  FSH=0x08230430  166x233  blue=0.187 white=0.080 red=0.000  z_All Maxis building props with proper names.dat
+224  C14x30x6_$$$2StoryPG_CE010000                  I=0xCE010000  model=0xCE010400  FSH=0x01000000  176x219  blue=0.174 white=0.106 red=0.003  SimCity_1.dat
+225  CO$$$14x22_5ChiOfficeBldg7_CC073F27            I=0xCC073F27  model=0x04FE0400  FSH=0x05A50416  212x255  blue=0.157 white=0.137 red=0.002  z_All Maxis building props with proper names.dat
+226  PzGolf25x30x1_water-hazard_1e25                I=0x1E250000  model=0x1E250400  FSH=0x01000000  190x243  blue=0.172 white=0.106 red=0.003  SimCity_1.dat
+227  C10x1x5_com-forsalesign_1ee5                   I=0x1EE50000  model=0x1EE50400  FSH=0x01000000  45x66  blue=0.180 white=0.086 red=0.002  SimCity_1.dat
+228  R12x12x3_$$$marbleterraceumbrella2_1D01        I=0x1D010000  model=0x1D010400  FSH=0x01000000  99x111  blue=0.166 white=0.114 red=0.006  SimCity_1.dat
+229  I12x2x3_WaterTroughEmpty_2A4C                  I=0x2A4C0000  model=0x2A4C0400  FSH=0x1E120420  40x84  blue=0.172 white=0.103 red=0.000  SimCity_1.dat
+230  RW23x5x12_$$$JumbotronMultiscreen_1F04         I=0x1F040000  model=0x1F040400  FSH=0x01000000  121x161  blue=0.163 white=0.120 red=0.005  SimCity_1.dat
+231  RW12x12_FemaleMayorStatueMediumHigh_CC0746DD   I=0xCC0746DD  model=0x037F0400  FSH=0x01000000  220x186  blue=0.164 white=0.117 red=0.004  z_All Maxis building props with proper names.dat
+232  PzGolf22x20x1_green-01_1e22                    I=0x1E220000  model=0x1E220400  FSH=0x01000000  139x196  blue=0.165 white=0.114 red=0.004  SimCity_1.dat
+233  PzGolf22x20x1_sandtrap-01_1e1e                 I=0x1E1E0000  model=0x1E1E0400  FSH=0x01000000  103x138  blue=0.168 white=0.107 red=0.003  SimCity_1.dat
+234  CUSign4x4x9_ChiTacoStandTree_1C700000          I=0x1C700000  model=0x1C700400  FSH=0x01000000  42x65  blue=0.178 white=0.085 red=0.004  SimCity_1.dat
+235  (unnamed)                                      I=0x1DDD1000  model=0x1DDD1400  FSH=0x01000000  106x255  blue=0.164 white=0.110 red=0.004  SimCity_1.dat
+236  IM14x28_1ManuAnchor1_0C07418E                  I=0x0C07418E  model=0x08090400  FSH=0x08230400  183x191  blue=0.189 white=0.059 red=0.000  z_All Maxis building props with proper names.dat
+237  PzGolf21x21x1_green-02_1e23                    I=0x1E230000  model=0x1E230400  FSH=0x01000000  141x193  blue=0.159 white=0.116 red=0.004  SimCity_1.dat
+238  R$10x24_4HouBoxyApt4_0C074618                  I=0x0C074618  model=0x007E0400  FSH=0x017D0405  130x201  blue=0.167 white=0.099 red=0.000  z_All Maxis building props with proper names.dat
+239  R$30x28_6EuroTenemtApt4_0C842433               I=0x0C842433  model=0x02040400  FSH=0x02110400  255x255  blue=0.186 white=0.057 red=0.000  z_All Maxis building props with proper names.dat
+240  CO$$40x24_2ChiOfficeBldg9_CC073F7C             I=0xCC073F7C  model=0x04FB0400  FSH=0x05620411  254x255  blue=0.171 white=0.086 red=0.013  z_All Maxis building props with proper names.dat
+241  I5x5x10_Apple-tree_1663                        I=0x16630000  model=0x16630400  FSH=0x01000000  47x82  blue=0.161 white=0.108 red=0.000  SimCity_1.dat
+242  RW44x28_CountryClub_CC0746F8                   I=0xCC0746F8  model=0x03270400  FSH=0x03270401  254x255  blue=0.166 white=0.096 red=0.025  z_All Maxis building props with proper names.dat
+243  (unnamed)                                      I=0x00731000  model=0x00731400  FSH=0x01000000  60x89  blue=0.153 white=0.122 red=0.003  SimCity_1.dat
+244  IH26x26_1HTOut5_0C07417D                       I=0x0C07417D  model=0x08420400  FSH=0x082B0410  255x255  blue=0.175 white=0.074 red=0.000  z_All Maxis building props with proper names.dat
+245  R$$$20x20_123EuroMansion4_0C84240C             I=0x0C84240C  model=0x01F60400  FSH=0x021C0431  222x247  blue=0.196 white=0.027 red=0.006  z_All Maxis building props with proper names.dat
+246  (unnamed)                                      I=0x00BF1000  model=0x00BF1400  FSH=0x019A0415  91x150  blue=0.166 white=0.086 red=0.002  SimCity_1.dat
+247  Lm45x35_SmithTower_0C0743F5                    I=0x0C0743F5  model=0x04D80400  FSH=0x04D80402  255x256  blue=0.193 white=0.029 red=0.000  z_All Maxis building props with proper names.dat
+248  Construction5x18x6_Scraper_03090000            I=0x03090000  model=0x03090400  FSH=0x01000000  85x124  blue=0.155 white=0.105 red=0.002  SimCity_1.dat
+249  CSF14x2x6_$$RetailPartsAndCrafts_1DA1          I=0x1DA10000  model=0x1DA10400  FSH=0x01000000  66x96  blue=0.154 white=0.100 red=0.002  SimCity_1.dat
+250  R$8x10_123NYTinyHouse6_0C07466B                I=0x0C07466B  model=0x00AB0400  FSH=0x00B20420  79x103  blue=0.163 white=0.082 red=0.000  z_All Maxis building props with proper names.dat
+251  CS$$40x28_7ChiSimcys_CC073FD8                  I=0xCC073FD8  model=0x052A0400  FSH=0x05F10404  255x255  blue=0.185 white=0.033 red=0.067  z_All Maxis building props with proper names.dat
+252  R$$$58x48_7ChiHiriseLuxCondos16_0C0745BE       I=0x0C0745BE  model=0x01B10400  FSH=0x01C70412  256x256  blue=0.150 white=0.093 red=0.000  z_All Maxis building props with proper names.dat
+253  Ut14x30_ParkingGarage                          I=0x2CA00000  model=0x2C9B0400  FSH=0x1F3F0415  255x254  blue=0.156 white=0.082 red=0.003  SimCity_1.dat
+254  Ut14x30_ParkingGarage_EC8423F2                 I=0xEC8423F2  model=0x2C9B0400  FSH=0x1F3F0415  255x254  blue=0.156 white=0.082 red=0.003  z_All Maxis building props with proper names.dat
+255  (unnamed)                                      I=0x004D1000  model=0x004D1400  FSH=0x01AF0411  192x204  blue=0.155 white=0.081 red=0.015  SimCity_1.dat
+256  R$60x60_8HouHiriseTenemts4_0C074659            I=0x0C074659  model=0x00700400  FSH=0x00A20420  256x256  blue=0.156 white=0.075 red=0.002  z_All Maxis building props with proper names.dat
+257  Ut12x32_TollBoothGRHwaypiece_2CAC              I=0x2CAC0000  model=0x2CAC0400  FSH=0x1F44041A  111x116  blue=0.180 white=0.027 red=0.000  SimCity_1.dat
+258  R$$12x14_123ChiStdHouse7_0C0745E0              I=0x0C0745E0  model=0x00990400  FSH=0x00880434  116x133  blue=0.158 white=0.068 red=0.028  z_All Maxis building props with proper names.dat
+259  CO$$44x26_5ChiOfficeBldg9_CC073F83             I=0xCC073F83  model=0x04F50400  FSH=0x04E50433  255x255  blue=0.167 white=0.050 red=0.003  z_All Maxis building props with proper names.dat
+260  CS$$44x26_5ChiMediumStore7_CC073FDB            I=0xCC073FDB  model=0x04F50400  FSH=0x04E50433  255x255  blue=0.167 white=0.050 red=0.003  z_All Maxis building props with proper names.dat
+261  CSF6x2x6_$ServiceBarber_1C5E0000               I=0x1C5E0000  model=0x1C5E0400  FSH=0x01000000  45x51  blue=0.167 white=0.038 red=0.000  SimCity_1.dat
+262  Ut44x28_LgHanger_8C0749DC                      I=0x8C0749DC  model=0x03520400  FSH=0x1F420439  255x255  blue=0.163 white=0.026 red=0.000  z_All Maxis building props with proper names.dat
+263  Ut44x28_LgHanger                               I=0xCA3D9724  model=0x03520400  FSH=0x1F420439  255x255  blue=0.163 white=0.026 red=0.000  SimCity_1.dat
+264  PZ3x2_DarkRock_2BA3                            I=0x2BA30000  model=0x2BA30400  FSH=0x1E120430  23x25  blue=0.162 white=0.028 red=0.000  SimCity_1.dat
+265  ID64x46_3DirtyAnchor11_0C074170                I=0x0C074170  model=0x07E40400  FSH=0x07F30430  256x256  blue=0.159 white=0.028 red=0.000  z_All Maxis building props with proper names.dat
+266  CR12x1x8_Billboard_1D800000                    I=0x1D800000  model=0x1D800400  FSH=0x1E0F0410  71x82  blue=0.159 white=0.027 red=0.018  SimCity_1.dat

@@ -1,0 +1,21 @@
+indexed image resources: 49343
+     25/247 chunks     6395 decoded      26 fails    2659 rows  232s (eta 2058s)
+     50/247 chunks    13050 decoded      26 fails    3448 rows  232s (eta 913s)
+     75/247 chunks    19687 decoded      48 fails    4000 rows  245s (eta 561s)
+    100/247 chunks    24787 decoded      50 fails    5199 rows  247s (eta 363s)
+    125/247 chunks    29788 decoded      50 fails    6568 rows  298s (eta 291s)
+    150/247 chunks    34788 decoded      50 fails    7865 rows  356s (eta 230s)
+    175/247 chunks    39788 decoded      50 fails    9436 rows  399s (eta 164s)
+    200/247 chunks    44788 decoded      50 fails   10520 rows  430s (eta 101s)
+    225/247 chunks    49797 decoded      50 fails   12387 rows  499s (eta 49s)
+
+resources indexed        : 49343
+images DECODED           : 54140  (2330408387 total pixels)
+decode FAILURES          : 50
+failure rate             : 0.09%
+rows kept (score floor)  : 14974
+elapsed                  : 555s
+
+failure reasons:
+   png-UnidentifiedImageError               26
+   indexed-without-palette                  24

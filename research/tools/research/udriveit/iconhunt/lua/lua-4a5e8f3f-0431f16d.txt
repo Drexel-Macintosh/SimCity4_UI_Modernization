@@ -1,0 +1,82 @@
+--#-package:0431f16d# -- package signature --
+-- For Lua file entry IID ca63e2a3-4a5e8f3f-0431f16d
+-- Note: The GID 0x4a5e8f3f loads before the C++ part of the game.
+-------------------------LUA COMMON FRAMEWORK-------------------------------------------------------------------
+dofile("_constants.lua")                   -- For the track_buildings table  
+
+-- Education Counter
+table.insert(track_buildings, hex2dec("0x1909")) -- Cori added 2025.11.17 (per Null 45) -- 0x1909 is the OG for the Opera House
+
+-- Advanced Water Management Counter
+
+table.insert(track_buildings, hex2dec("0x090F367A")) -- AWM: Fresh Water Pump
+table.insert(track_buildings, hex2dec("0x04D53CEE")) -- AWM: Aquifer Water Tower
+table.insert(track_buildings, hex2dec("0x1E50150D")) -- AWM: Aquifer Water Pump
+table.insert(track_buildings, hex2dec("0x714F13AC")) -- AWM: Large Aquifer Pump
+table.insert(track_buildings, hex2dec("0xFAD01ECF")) -- AWM: Desalination Plant
+table.insert(track_buildings, hex2dec("0x16A71A32")) -- AWM: Treatment Plant
+table.insert(track_buildings, hex2dec("0x280C60E3")) -- AWM: Sewage Sanitizer
+
+-- Advanced Energy Management Counter (AMPS 2.0)
+
+table.insert(track_buildings, hex2dec("0x1946409F")) -- AMPS: Coal
+table.insert(track_buildings, hex2dec("0xD6B169D9")) -- AMPS: Oil
+table.insert(track_buildings, hex2dec("0x36CA5093")) -- AMPS: Biomass
+table.insert(track_buildings, hex2dec("0x5512235E")) -- AMPS: Natural Gas
+table.insert(track_buildings, hex2dec("0xA945A10D")) -- AMPS: Nuclear Fission
+table.insert(track_buildings, hex2dec("0xB680D7E0")) -- AMPS: Nuclear Fusion
+table.insert(track_buildings, hex2dec("0x1F221780")) -- AMPS: Geothermal
+table.insert(track_buildings, hex2dec("0x7134683C")) -- AMPS: Solar
+table.insert(track_buildings, hex2dec("0x0CED62DC")) -- AMPS: Microwave
+table.insert(track_buildings, hex2dec("0xF0D606AC")) -- AMPS: Tidal and Wave
+table.insert(track_buildings, hex2dec("0xEC9175AA")) -- AMPS: Waste To Energy
+table.insert(track_buildings, hex2dec("0x8765D979")) -- AMPS: Hydroelectric
+table.insert(track_buildings, hex2dec("0xC78E0054")) -- AMPS: Wind
+table.insert(track_buildings, hex2dec("0xB075C142")) -- AMPS: Generators
+table.insert(track_buildings, hex2dec("0x861A7248")) -- AMPS: Power Storage
+table.insert(track_buildings, hex2dec("0xED378A8E")) -- AMPS: Transmission Station
+table.insert(track_buildings, hex2dec("0x215395E9")) -- AMPS: Distribution Substation
+table.insert(track_buildings, hex2dec("0x0badb9ac")) -- AMPS: Intermediate Plants
+table.insert(track_buildings, hex2dec("0x18e64ea5")) -- AMPS: Base Load Plants
+table.insert(track_buildings, hex2dec("0x7283dcd7")) -- AMPS: Peak Plants
+
+-- Advanced Waste Management Counter
+
+table.insert(track_buildings, hex2dec("0x0C56201B")) -- AGM: Landfill
+table.insert(track_buildings, hex2dec("0x56B2F397")) -- AGM: Incinerator
+table.insert(track_buildings, hex2dec("0x7A9bFD20")) -- AGM: Waste To Energy
+table.insert(track_buildings, hex2dec("0x73788D43")) -- AGM: Recycle
+table.insert(track_buildings, hex2dec("0x7DAB4EF6")) -- AGM: Ground Scrubber
+table.insert(track_buildings, hex2dec("0xBE72CCDF")) -- AGM: Air Scrubber
+
+-- Parks Counter
+
+table.insert(track_buildings, hex2dec("0x38b2414d")) -- Park: Sports Court
+table.insert(track_buildings, hex2dec("0x9ba2a232")) -- Park: Plaza with Statue
+table.insert(track_buildings, hex2dec("0xb212b998")) -- Park: Open Plaza
+table.insert(track_buildings, hex2dec("0xecb66959")) -- Park: Community Garden
+table.insert(track_buildings, hex2dec("0x8d415070")) -- Park: Playground
+table.insert(track_buildings, hex2dec("0xdae344bd")) -- Park: Park
+table.insert(track_buildings, hex2dec("0xeebca738")) -- Park: Neutral Park
+table.insert(track_buildings, hex2dec("0x0e2800ec")) -- Park: Beaches
+table.insert(track_buildings, hex2dec("0x08bbb542")) -- Park: Canal
+table.insert(track_buildings, hex2dec("0xac4a6915")) -- Park: Watercrafts
+
+-- Amusement Parks Counter
+
+table.insert(track_buildings, hex2dec("0x3CDB7AB9")) -- AMP: Park Entrance - Administration
+table.insert(track_buildings, hex2dec("0x90AB05B8")) -- AMP: Transport Rides
+table.insert(track_buildings, hex2dec("0x9E838AE6")) -- AMP: Gentle Rides
+table.insert(track_buildings, hex2dec("0x23F67A38")) -- AMP: Roller Coasters
+table.insert(track_buildings, hex2dec("0x67FFD436")) -- AMP: Thrill Rides
+table.insert(track_buildings, hex2dec("0x03E5B341")) -- AMP: Water Rides
+table.insert(track_buildings, hex2dec("0xEE8802E6")) -- AMP: Shops - Stalls
+table.insert(track_buildings, hex2dec("0x7519C219")) -- AMP: Scenery
+
+-- Casino Counter
+
+table.insert(track_buildings, hex2dec("0x49571f53")) -- Casino: Normal
+table.insert(track_buildings, hex2dec("0x61c8038c")) -- Casino: Landmark
+table.insert(track_buildings, hex2dec("0x1d44f421")) -- Casino: CSI
+
+-- EOF

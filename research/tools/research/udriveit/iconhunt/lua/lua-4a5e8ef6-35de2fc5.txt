@@ -1,0 +1,169 @@
+--#-package:35de2fc5# -- package signature
+-- Written by Ulisse Wolf July 2025 --
+-------------------------LUA COMMON FRAMEWORK-------------------------------------------------------------------
+---These are basic algorithms that enable the random calculation of certain properties and can be used as substitutes for statistical data.--- 
+---They are part of the LUA Common Framework---
+-------------------------ALGORITHMS-------------------------------------------------------------------
+-------------------------ALGORITHMS CASINO EXPANSION--------------------------------------------------
+-------------------------PROSTITUTE CALCULATION-------------------------------------------------------
+function game.cam_get_prostitute()
+    local mean = game.g_city_r_population / 100
+    local std_dev = mean * 0.15
+    local u1 = math.random()
+    local u2 = math.random()
+    local z = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
+    local civilian_count = math.floor(math.max(0, z * std_dev + mean) + 0.5)
+    return civilian_count
+end
+-------------------------CRIMINAL-------------------------------------------------------
+function game.cam_get_criminalcasino()
+    local mean2 = game.g_criminal_count / 100
+    local std_dev2 = mean2 * 0.25
+    local t1 = math.random()
+    local t2 = math.random()
+    local z2 = math.sqrt(-2 * math.log(t1)) * math.cos(2 * math.pi * t2)
+    local criminal_count = math.floor(math.max(0, z2 * std_dev2 + mean2) + 0.5)
+    return criminal_count
+end
+-------------------------JACKPOT CALCULATION-------------------------------------------------------
+function game.cam_get_jackpot()
+    local mean3 = game.g_city_r_population / 100
+    local std_dev3 = mean3 * 0.01
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.1)
+    return random_count
+end
+-------------------------RANDOM CALCULATION-------------------------------------------------------
+function game.cam_get_random()
+    local mean3 = game.g_city_r_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return random_count
+end
+-------------------------ALGORITHMS NEON EXPANSION----------------------------------------------------
+-------------------------FUEL SPILLS CLEANED UP-------------------------------------------------------
+function game.cam_get_fuelspills()
+    local mean3 = game.g_city_id_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return fuelspills_count
+end
+-------------------------NUMBER OF BATTERY MELTDOWNS-------------------------------------------------------
+function game.cam_get_batterymeltdown()
+    local mean3 = game.g_city_im_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return batterymeltdown
+end
+-------------------------DAYS SINCE LAST ACCIDENTS-------------------------------------------------------
+function game.cam_get_daysaccidents()
+    local mean3 = game.g_city_id_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return daysaccidents_count
+end
+-------------------------LATE FUEL DELIVERIES PER MONTH-------------------------------------------------------
+function game.cam_get_latefuel()
+    local mean3 = game.g_city_i_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return latefuel_count
+end
+-------------------------SULFUR SMELL COMPLAINTS-------------------------------------------------------
+function game.cam_get_sulfursmell()
+    local mean3 = game.g_city_r_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return sulfursmell_count
+end
+-------------------------NUMBER OF BIRDS ON THE LINES-------------------------------------------------------
+function game.cam_get_birdslines()
+    local mean3 = game.g_power_pole_count / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return birdslines_count
+end
+-------------------------NUMBER OF FUSES BLOWN-------------------------------------------------------
+function game.cam_get_fusesblown()
+    local mean3 = game.g_city_r_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return fusesblown_count
+end
+-------------------------BARRELS OF WASTE MISPLACED-------------------------------------------------------
+function game.cam_get_nuclearwaste()
+    local mean3 = game.g_city_iht_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return nuclearwaste_count
+end
+-------------------------CTDS LOGGED BY IT-------------------------------------------------------
+function game.cam_get_ctdlogged()
+    local mean3 = game.g_city_iht_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return ctdlogged_count
+end
+-------------------------STUCK MIRROR MOTORS-------------------------------------------------------
+function game.cam_get_stuckmirror()
+    local mean3 = game.g_city_im_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return stuckmirror_count
+end
+-------------------------BODY PARTS DISCOVERED-------------------------------------------------------
+function game.cam_get_bodyparts()
+    local mean3 = game.g_city_r_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return bodyparts_count
+end
+-------------------------BIRD CARCASSES REMOVED-------------------------------------------------------
+function game.cam_get_birdcarcasses()
+    local mean3 = game.g_city_im_population / 100
+    local std_dev3 = mean3 * 0.25
+    local c1 = math.random()
+    local c2 = math.random()
+    local z3 = math.sqrt(-2 * math.log(c1)) * math.cos(2 * math.pi * c2)
+    local random_count = math.floor(math.max(0, z3 * std_dev3 + mean3) + 0.5)
+    return birdcarcasses_count
+end
+-- EOF

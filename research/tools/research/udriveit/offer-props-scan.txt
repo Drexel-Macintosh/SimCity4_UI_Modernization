@@ -1,0 +1,1623 @@
+archives discovered: 532
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\EP1.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Intro.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - Konradshohe.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (10).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (11).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (12).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (13).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (14).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (15).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (16).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (17).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (18).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (19).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (2).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (20).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (21).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (22).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (23).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (24).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (25).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (26).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (27).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (28).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (3).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (30).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (31).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (32).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (33).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (34).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (35).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (36).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (37).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (38).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (4).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (40).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (41).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (42).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (43).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (44).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (45).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (46).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (47).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (48).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (49).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (5).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (50).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (51).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (52).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (53).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (54).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (55).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (56).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (57).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (58).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (59).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (6).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (60).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (62).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (63).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (66).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (67).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (68).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (69).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (7).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (70).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (71).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (72).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (73).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (74).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (75).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (76).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (77).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (78).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (79).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (8).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (80).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (81).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (82).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (83).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (84).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (85).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City (9).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - New City.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - Schonerlinde.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - Spandau.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - Tegel.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Berlin\City - Tempelhof.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (10).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (11).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (12).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (13).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (14).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (15).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (16).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (17).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (18).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (19).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (2).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (20).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (21).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (22).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (23).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (24).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (25).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (26).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (27).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (28).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (29).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (3).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (30).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (31).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (32).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (33).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (34).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (35).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (36).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (37).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (38).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (39).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (4).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (40).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (41).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (42).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (43).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (44).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (45).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (46).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (47).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (48).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (49).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (5).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (6).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (7).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (8).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City (9).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Fairview\City - New City.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - Fulham.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - Kensington.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (10).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (11).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (12).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (13).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (14).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (15).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (16).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (17).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (18).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (19).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (2).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (20).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (21).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (22).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (25).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (26).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (27).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (28).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (29).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (3).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (30).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (31).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (32).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (33).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (34).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (35).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (36).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (37).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (38).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (39).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (4).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (40).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (41).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (42).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (43).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (44).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (45).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (46).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (47).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (48).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (49).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (50).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (51).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (52).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (53).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (54).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (55).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (56).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (57).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (58).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (59).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (6).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (60).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (61).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (62).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (63).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (64).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (65).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (66).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (67).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (68).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (69).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (7).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (71).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (72).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (73).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (8).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City (9).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - New City.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - Sydenham.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\London\City - Woolwich.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (10).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (11).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (12).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (13).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (14).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (15).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (16).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (17).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (18).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (19).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (2).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (20).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (21).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (22).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (23).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (24).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (25).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (26).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (27).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (28).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (29).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (3).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (30).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (31).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (32).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (33).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (34).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (35).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (36).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (37).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (38).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (39).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (4).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (40).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (41).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (42).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (43).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (44).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (45).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (46).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (47).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (48).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (49).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (5).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (6).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (7).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (8).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City (9).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\New York\City - New City.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (10).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (11).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (12).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (13).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (14).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (15).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (16).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (17).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (18).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (19).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (2).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (20).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (21).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (22).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (23).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (24).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (25).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (26).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (27).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (28).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (29).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (3).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (30).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (31).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (32).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (33).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (34).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (35).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (36).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (37).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (38).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (39).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (4).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (40).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (41).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (42).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (43).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (44).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (45).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (46).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (47).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (48).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (49).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (5).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (50).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (51).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (52).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (53).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (54).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (55).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (56).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (57).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (58).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (59).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (6).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (60).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (61).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (62).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (63).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (64).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (65).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (66).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (67).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (68).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (69).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (7).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (8).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City (9).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\San Francisco\City - New City.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - Big City Tutorial.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - Getting Started Tutorial.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - Making Money Tutorial.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (10).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (11).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (12).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (13).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (14).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (15).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (16).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (17).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (18).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (19).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (2).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (20).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (21).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (22).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (23).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (24).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (25).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (26).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (27).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (28).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (29).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (3).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (30).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (32).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (33).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (34).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (35).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (36).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (37).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (38).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (39).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (40).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (41).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (42).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (43).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (44).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (46).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (47).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (48).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (49).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (50).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (51).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (52).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (53).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (54).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (55).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (56).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (57).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (58).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (59).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (6).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (60).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (61).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (62).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (63).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (64).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (65).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (66).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (67).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (68).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (69).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (7).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (70).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (71).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (72).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (73).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (74).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (75).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (76).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (77).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (78).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (79).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (8).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (80).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (81).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (82).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (83).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (84).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (85).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (86).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (87).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (88).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (89).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (9).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (90).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City (91).sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - New City.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - Rush Hour Tutorial.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Regions\Timbuktu\City - Terraforming Tutorial.sc4
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\SimCity_1.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\SimCity_2.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\SimCity_3.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\SimCity_4.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\SimCity_5.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\SimCityLocale.DAT
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Sku_Data\Sku1_US\Plugin_002_TheLivingMall.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Sku_Data\Sku2_European\Plugin_002_TheLivingMall.dat
+   C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Sound.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.colossus-addon-mod.yes-current.3.1.1.sc4pac\CAM_Main_Controller.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.colossus-addon-mod.yes-current.3.1.1.sc4pac\CAM_PlayStyle_Extended.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM Locale\CAM_Locale_en.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Essentials.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Graph.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Extended_Patch.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Intro.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_LUA_Controller.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\1 CAM Core\CAM_Submenu_Extended.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Buildings.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_DLC_Landmark_Building.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Education_Buildings.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Health_Buildings.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Landmark_Patch.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Maxis_Building_Extended.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Maxis_Buildings_Blocker.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Park_Buildings.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Police_Fire_Buildings.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Power_Garbage_Buildings.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Rewards_Building.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\2 CAM Building\CAM_Water_Buildings.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\050-load-first\cam.sc4-system-integration-module.4.0.1.sc4pac\4 CAM Legacy Files\CAM_Education_Buildings.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\140-ordinances\cam.ordinances.3.3.0-2.sc4pac\CAM Ordinance Locale\CAM_Ordinance_Locale_en.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\140-ordinances\cam.ordinances.3.3.0-2.sc4pac\CAM_Ordinance.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\cam.universal-commercial-cap-fix.radical.2.0.0-1.sc4pac\CAM_Universal_CAP_Fix._Radical.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\cyclone-boom.save-warning.1.0.sc4pac\SaveWarning_Disable_Exit_Quit.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.i-r-fix.1.0.0-2.sc4pac\memo.I-R-fix.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CO$$$-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CO$$-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$$$-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$$-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\commercial\ploppable-CS$-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\college-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\elementary-school-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\high-school-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\education\library-museum-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-large-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-medium-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\health\health-small-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\highway\signage-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Ia-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Id-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Iht-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\industrial\ploppable-Im-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\entertainment-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\government-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\landmark\religion-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\bus-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\ElRail-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\GLR-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\multimodal-stations-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\parking-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\misc-transit\subway-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\embankment-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\fillers-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\green-spaces-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\modular-parks-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\plaza-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\park\sports-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\military-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-deluxe-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-large-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\police\police-small-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\clean-energy-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\dirty-energy-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\power\misc-power-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\freight-rail-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\hybrid-railway-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\monorail-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\passenger-rail-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\rail\yards-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$$$-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$$-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\residential\ploppable-R$-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\submenu-essentials.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\canal-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\ports-ferries-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\seawall-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\watercraft-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\memo.submenus-dll.2.1.0.sc4pac\submenus\water-transit\waterfront-submenu.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.allow-more-building-styles-dll.3.6.1-1.sc4pac\CoriBoom's 36 Slot Building Styles UI - v0.46 Beta HA250411.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.allow-more-building-styles-dll.3.6.1-1.sc4pac\SC4MoreBuildingStyles.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.bulldoze-extensions.2.0.0-1.sc4pac\BulldozeExtensions.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.city-lottery-ordinance.1.0.0.sc4pac\CityLotteryOrdinanceText_English.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.lua-extensions-dll.1.5.sc4pac\SC4LuaExtensions.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\null-45.query-tool-ui-extensions-dll.2.7.sc4pac\SC4QueryUIHooks.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\scoty.zoning-mod-maxis.2.0.0.sc4pac\scoty_ZManag_maxis.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\150-mods\t-wrecks.maxis-prop-names-and-query-fix.2.0.sc4pac\z_All Maxis building props with proper names.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_2025 93 Lot_d6482a2c.SC4Lot
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_V2025_93-0x5ad0e817_0x98d755a7_0x30000.SC4Model
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\DBSSY_Notre_Dame_de_Paris_V2025_93-0x6534284a-0x15c0abe4-0x964829e0.SC4Desc
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\ND_Verja_Completa-0x5ad0e817_0xf8d8a550_0x30000.SC4Model
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\900-custom-lots\DBSSY Notre-Dame de Paris\ND_Verja_Completa-0x6534284a-0x15c0abe4-0x36496c48.SC4Desc
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_DialogStatic-15x.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_ItemIcons-15x.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_SelectiveArt-15x.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\z_SC4UIScale_WebText.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_CamUI-15x.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-15x.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_MenuFix.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-15x.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-15x.dat
+   C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\zzz-SC4UIScale\z_SC4UIScale_UncoveredIcons-15x.dat
+
+exemplars/cohorts walked: 11952
+
+== carriers of 0xEA123CEF (the offer LOOKUP TABLE): 358 ==
+  {T=0x6534284A, G=0xC977C536, I=0x2C3A0000} [SimCity_1.dat] 'AStreet1x1x11_AveConsole_2C3A'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1D560000} [SimCity_1.dat] 'AR6x3x2_$$PoolModest-swim_1D56'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B830000} [SimCity_1.dat] 'ARW4x4x4_tv-camera-crew-MjrBaseball'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B5C0000} [SimCity_1.dat] 'Aper2x2x4_police_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B590000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B560000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B530000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B500000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B4D0000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B4A0000} [SimCity_1.dat] 'Aper2x2x4_police_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B3B0000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerPlayers'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B380000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerCoach'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B170000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2953'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B140000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2958'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B110000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2953'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B0B0000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2958'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B080000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2955'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B050000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2953'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF90000} [SimCity_1.dat] 'Aper2x2x4_child-M-Basekids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF60000} [SimCity_1.dat] 'Aper2x2x4_child-Basekids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF30000} [SimCity_1.dat] 'Aper2x2x4_male-BaseballCoach_288D'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF00000} [SimCity_1.dat] 'Aper2x2x4_child-M-Sockids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AED0000} [SimCity_1.dat] 'Aper2x2x4_child-Sockids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AEA0000} [SimCity_1.dat] 'Aper2x2x4_child-F-Sockids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2ADB0000} [SimCity_1.dat] 'ACR6x3x2_PoolModest-swim_1D56'
+        table = [0x00000001, 0xAA123BF9, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2AD50000} [SimCity_1.dat] 'ARR16x2x16_CrossingArms_2AD5'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0xAA123BF9, 0x00000002, 0x00000000, 0x00000003, 0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AB70000} [SimCity_1.dat] 'Aper2x2x4_businessPeople_femaleIdle'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AB40000} [SimCity_1.dat] 'Aper2x2x4_police_med-female-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AB10000} [SimCity_1.dat] 'Aper2x2x4_male-med03-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AAE0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt03-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AAB0000} [SimCity_1.dat] 'Aper2x2x4_male-drk03-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA80000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA50000} [SimCity_1.dat] 'Aper2x2x4_female-P-med01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA20000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt03-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A9F0000} [SimCity_1.dat] 'Aper2x2x4_child-M-drk03-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A9C0000} [SimCity_1.dat] 'Aper2x2x4_child-F-med01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A810000} [SimCity_1.dat] 'AR6x12x5_$KidstoyTiresAnim_2A81'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A720000} [SimCity_1.dat] 'Abase2x2x4_catcher_2A72'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A060000} [SimCity_1.dat] 'AI3x8x4_field-grape-picking-anim_2A06'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A030000} [SimCity_1.dat] 'AR2x2x3_sit-lean-forward-idle_2A03'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A000000} [SimCity_1.dat] 'AR2x2x3_sit-backwardchair-idle_2A00'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29EE0000} [SimCity_1.dat] 'APZPark8x8x10_PicnincAreaAnimated_29EE'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29E80000} [SimCity_1.dat] 'APZPark10x6x6_Playstructure_29E8'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29E20000} [SimCity_1.dat] 'AStreet1x1x11_stoplightPoleDiag_29E2'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x29D90000} [SimCity_1.dat] 'APzskate16x16x7_skateboardpark2-anim_29D90000'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29D00000} [SimCity_1.dat] 'ARW6x5x4_CommencementStageLeft_29D0'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29CD0000} [SimCity_1.dat] 'AR2x7x3_PoolCleaner_29CD'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29C10000} [SimCity_1.dat] 'ARW14x10x4_Commencement-audience_29C1'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29A00000} [SimCity_1.dat] 'ARWZoo1x1x3_giraffe_29A0'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x299D0000} [SimCity_1.dat] 'ARWZoo1x1x3_Buck_299D'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x299A0000} [SimCity_1.dat] 'ARWZoo1x1x3_Monkeys_299A'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29970000} [SimCity_1.dat] 'ARW1x1x1_spotlight_prison3_29970000'
+        table = [0x00000001, 0xEA123BE1, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29940000} [SimCity_1.dat] 'AGolf1x1x3_putterGreenPants_2994'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29910000} [SimCity_1.dat] 'AR8x8x4_$$patiofurniturebbq2-anim_2991'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x298E0000} [SimCity_1.dat] 'ARW22x20_StateFair-TiltaWhirl_298E0000'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x29880005} [SimCity_1.dat] 'ARW3x55x52_ferriswheel_29880005'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x29700000} [SimCity_1.dat] 'ARWStateFair4x7x4_small-medium_1E9B'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29580000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2958'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29550000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2955'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29520000} [SimCity_1.dat] 'ARW4x3x3_photoGroup_2952'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29430000} [SimCity_1.dat] 'ACSign7x7x1_pizza_29430000'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x29400000} [SimCity_1.dat] 'ACSign3x3x12_coffee_29400000'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28FB0000} [SimCity_1.dat] 'AGolf1x1x3_putterBlueJeans_28FB'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28F80000} [SimCity_1.dat] 'AGolf1x1x3_driverBlackShirt_28F8'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28F50000} [SimCity_1.dat] 'AStreet1x1x11_stoplightPole_28F5'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28A40000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-hop-clap_28A4'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28A10000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-tantrum_28A1'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x289E0000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-noway_289E'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x289B0000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-woohoo_289B'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28980000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-clap_2898'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28950000} [SimCity_1.dat] 'Aper3x2x4_child-F-drk01-negative-reject_2895'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28920000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-kissmy_2892'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x288F0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-whoop_288F'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x288C0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-booyah_288C'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28890000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-phooee_2889'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28860000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-booer_2886'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28830000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-hop-clap_2883'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28800000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-tantrum_2880'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x287D0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-noway_287D'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x287A0000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-woohoo_287A'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28770000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-clap_2877'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28740000} [SimCity_1.dat] 'Aper3x2x4_male-drk01-negative-reject_2874'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28710000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-kissmy_2871'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x286B0000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-tantrum_286A'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28680000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-phooee_2868'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28650000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-booer_2865'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28620000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-hop-clap_2862'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x285F0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-tantrum_285F'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x285C0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-noway_285C'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28590000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-positive-woohoo_2859'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28560000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-positive-clap_2856'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28530000} [SimCity_1.dat] 'Aper3x2x4_female-S-med01-negative-reject_2853'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28350000} [SimCity_1.dat] 'ARW10x4x20_radardish_2835'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x282C0000} [SimCity_1.dat] 'ACBill12x2x8_$$$billboard_282C'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1F380000} [SimCity_1.dat] 'ARW2x2x8_$$$JumbotronMultiscreenAnimatedScreen3_1F38'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F350000} [SimCity_1.dat] 'ARW8x0X6_$$$JumbotronTimesSquareAnimated_1F35'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F2C0000} [SimCity_1.dat] 'Abase4x4x4_child-batter_1F2C'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F290000} [SimCity_1.dat] 'Abase2x2x4_base-child-infield-drk_1F29'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F260000} [SimCity_1.dat] 'Abase2x2x4_base-child-outfield-lgt_1F26'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F230000} [SimCity_1.dat] 'Asoc3x2x4_soc-lgt-pro-blu-goalie_1F23'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F200005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim5_1F200005'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1F1D0000} [SimCity_1.dat] 'AR12x12x5_$$$bbqchimneydiningpatio-anim_1F1D'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F080000} [SimCity_1.dat] 'Asoc5x3x4_Pzsocchild-M-grn-lgt-goalie_1F08'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F050000} [SimCity_1.dat] 'Abase3x8x4_base-pitcher-drk_1F05'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1EFC0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim4_1EFC0005'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1EF30000} [SimCity_1.dat] 'AR8x8x2_$DogOnAChain_1ef3'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1EC00000} [SimCity_1.dat] 'RW1x1x1_café-tables-sims-eating_1EC00000'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1EBA0000} [SimCity_1.dat] 'ARW4x3x4_small-table-crowd-farmers-market_1EBA'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1EB40000} [SimCity_1.dat] 'RW1x1x1_Pool-slide_1EB40000'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1EA50000} [SimCity_1.dat] 'RW1x1x1_army-truck_1EA50000'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1E9C0000} [SimCity_1.dat] 'A4x9x4_tail-gaiters_1E9C'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1E990000} [SimCity_1.dat] 'Amill5x7x4_medium_1E99'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1E960000} [SimCity_1.dat] 'Apark2x6x3_ball-toss_1E96'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1E750000} [SimCity_1.dat] 'AR12x12x2_$packeddirtpatio1-anim_1E75'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x67CC0000} [SimCity_1.dat] 'AStreet1x1x11_Oldconsoleremoved_67cc'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1DCD0000} [SimCity_1.dat] 'ACR16x0x10_Grafiti_1dcd'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DCA0000} [SimCity_1.dat] 'ACR12x0x12_Grafiti_1dca'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DC70000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc7'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DC40000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc4'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x2C7B0000} [SimCity_1.dat] 'ARW1x1x1_lightbeam_2C7B0000'
+        table = [0x00000001, 0xEA123BE1, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2C3C0000} [SimCity_1.dat] 'AStreet1x1x11_AveConsoleDiag_2C3C'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1D520000} [SimCity_1.dat] 'AR8x6x2_$$$PoolGrand-swim_1D52'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1D460000} [SimCity_1.dat] 'ACV6x2x4_keep-awayanimate_1D46'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B5B0000} [SimCity_1.dat] 'Aper2x2x4_military_male-nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B580000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B550000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B520000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B4F0000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B4C0000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B3A0000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerPlayers'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B190000} [SimCity_1.dat] 'Aper2x2x4_male-Chuck'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B160000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2956'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B130000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2957'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B100000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2956'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B0D0000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2954'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B0A0000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2958'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B070000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2954'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2AFB0000} [SimCity_1.dat] 'Aper2x2x4_child-F-Basekids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF80000} [SimCity_1.dat] 'Aper2x2x4_child-Basekids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF50000} [SimCity_1.dat] 'Aper2x2x4_child-F-Basekids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF20000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerCoach'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AEF0000} [SimCity_1.dat] 'Aper2x2x4_child-Sockids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AEC0000} [SimCity_1.dat] 'Aper2x2x4_child-F-Sockids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2ADA0000} [SimCity_1.dat] 'ACR12x12x2_PoolDboy-anim_1E76'
+        table = [0x00000001, 0xAA123BF9, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2AD40000} [SimCity_1.dat] 'AR6x12x5_$$$paddlecourtanim_2AD4'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2AB60000} [SimCity_1.dat] 'Aper2x2x4_businessPeople_maleIdle'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AB30000} [SimCity_1.dat] 'Aper2x2x4_military_male-lgt01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AB00000} [SimCity_1.dat] 'Aper2x2x4_male-med02-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AAD0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt02-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AAA0000} [SimCity_1.dat] 'Aper2x2x4_male-drk02-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA70000} [SimCity_1.dat] 'Aper2x2x4_female-S-lgt01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA40000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA10000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt02-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A9E0000} [SimCity_1.dat] 'Aper2x2x4_child-M-drk02-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A9B0000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk02-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A800000} [SimCity_1.dat] 'Abase2x2x4_umpire'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A740000} [SimCity_1.dat] 'Abase2x2x4_child-catcher_2A74'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A080000} [SimCity_1.dat] 'AI2x2x4_field-picking-anim_2A08'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A050000} [SimCity_1.dat] 'AI5x4x9_tree-fruit-picking-anim_2A05'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A020000} [SimCity_1.dat] 'AR2x2x3_sit-idle_2A02'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29F00000} [SimCity_1.dat] 'ARW2x2x5_animatedBallons_29F0'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x29ED0000} [SimCity_1.dat] 'ARW2x2x5_animatedBallons_29ED'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x29EA0000} [SimCity_1.dat] 'APZPark15x15x3_SandPitSwing_29EA'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29DE0000} [SimCity_1.dat] 'APz4x8x2_cementpatiofurniture2-anim_29DE'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29D80000} [SimCity_1.dat] 'APzskate16x16x7_skateboardpark1-anim_29D80000'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29CF0000} [SimCity_1.dat] 'ARW6x4x4_CommencementBackAudience_29CF'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29C00000} [SimCity_1.dat] 'ARW10x8x6_CommencementCenterStage_29C0'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29B40000} [SimCity_1.dat] 'AR6x12x4_$$kidstoySlide_29B4'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29A50000} [SimCity_1.dat] 'AR8x8x1_$woodlogschips_29A5'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x299C0000} [SimCity_1.dat] 'ARWZoo1x1x3_lion_299C'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29990000} [SimCity_1.dat] 'ARWZoo1x1x3_Bear_2999'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29960000} [SimCity_1.dat] 'ARW1x1x1_spotlight_prison2_29960000'
+        table = [0x00000001, 0xEA123BE1, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29900000} [SimCity_1.dat] 'APZ2x2x4_tenniscourt-anim01_2990'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29720000} [SimCity_1.dat] 'ARWStateFair7x11x4_large_1E98'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x296F0000} [SimCity_1.dat] 'ARWStateFair4x4x4_smallmilling_1E9A'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x296C0000} [SimCity_1.dat] 'AR8x8x2_$$trampoline_296C0000'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29570000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2957'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29540000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2954'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x294B0000} [SimCity_1.dat] 'AR16x16x1_$$$stableridingpen_294B0000'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29420000} [SimCity_1.dat] 'ACSign6x2x10_weenie_2942'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x293F0000} [SimCity_1.dat] 'ACSign3x3x11_paint_293F0000'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28FA0000} [SimCity_1.dat] 'AGolf1x1x3_putterPlaidPants_28FA'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28F70000} [SimCity_1.dat] 'AGolf1x1x3_driverPlaidShirt_28F7'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28DC0000} [SimCity_1.dat] 'Abase3x8x4_base-drk-child-pitch_28DC'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28A60000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-woohoo_28A6'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28A30000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-clap_28A3'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28A00000} [SimCity_1.dat] 'Aper3x2x4_child-M-lgt01-negative-reject_28A0'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x289D0000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-kissmy_289D'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x289A0000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-whoop_289A'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28970000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-booyah_2897'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28940000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-phooee_2894'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28910000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-booer_2891'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x288E0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-hop-clap_288E'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x288B0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-tantrum_288B'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28880000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-noway_2888'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28850000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-woohoo_2885'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28820000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-clap_2882'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x287F0000} [SimCity_1.dat] 'Aper3x2x4_male-lgt01-negative-reject_287F'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x287C0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-kissmy_287C'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28790000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-whoop_2879'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28760000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-booyah_2876'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28730000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-phooee_2873'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28700000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-booer_2870'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x286A0000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-tantrum_286A'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28670000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-noway_2867'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28640000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-woohoo_2864'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28610000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-clap_2861'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x285E0000} [SimCity_1.dat] 'Aper3x2x4_female-P-drk01-negative-reject_285E'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x285B0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-kissmy_285B'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28580000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-positive-whoop_2858'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x284F0000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-negative-booer_284F'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x29CC0D00} [SimCity_1.dat] 'ARW1x1x3_StuntSim_onFire_29CC0d00'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x282B0000} [SimCity_1.dat] 'ACBill12x4x8_$$$billboard_282B'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28250000} [SimCity_1.dat] 'ARW10x40x5_marquee_2825'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x6A6651DE} [SimCity_1.dat] 'ACBill12x4x8_billboard_arm_6a6651de'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x13DA0000} [SimCity_1.dat] 'ACV4x4x4_Schooltetherballanimate_13DA'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x213B0000} [SimCity_1.dat] 'ACR1x1x3_Graffitiartist_generic_213b'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x11100000} [SimCity_1.dat] 'RW5x5x22_Vehicle_SmallCrane_11100000'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1F3A0000} [SimCity_1.dat] 'AR16x16x5_$$$grandpoolhouse3-anim_1F3A'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F370000} [SimCity_1.dat] 'ARW2x2x8_$$$JumbotronMultiscreenAnimatedScreen2_1F37'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F2E0000} [SimCity_1.dat] 'Amill7x11x4_large-nightclub_Casino'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F2B0000} [SimCity_1.dat] 'Abase2x2x4_base-outfield-lgt_1F2B'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F280000} [SimCity_1.dat] 'Abase2x2x4_base-child-infield-lgt_1F28'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F220000} [SimCity_1.dat] 'Asoc3x2x4_soc-drk-pro-gry-goalie_1F22'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F1C0000} [SimCity_1.dat] 'AR12x12x3_$$$stoneterracechaisefurniture2-anim_1F1C'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F0A0000} [SimCity_1.dat] 'ARW3x3x5_lix-sculpture_1F0A'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F070000} [SimCity_1.dat] 'Apark8x8x4_picnic-on-blanket2_1F07'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1EFB0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim3_1EFB0005'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1EF50000} [SimCity_1.dat] 'ACU32x1x24_DriveInMovie_1ef5'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1EE30005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim1_1EE30005'
+        table = [0x00000001, 0xEA123BE1, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1EBC0000} [SimCity_1.dat] 'RW1x1x1_taxi_1EBC0000'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1EB30000} [SimCity_1.dat] 'RW1x1x1_Sun-bathers_1EB30000'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1EA40000} [SimCity_1.dat] 'RW1x1x1_Tacky-roadside-sign_1EA40000'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1E9E0000} [SimCity_1.dat] 'Abase2x2x4_base-infield-drk_1E9E'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1E9B0000} [SimCity_1.dat] 'Amill4x7x4_small-medium_1E9B'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1E980000} [SimCity_1.dat] 'Amill7x11x4_large_1E98'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1E740000} [SimCity_1.dat] 'AR12x12x2_$$swingsetsandbox-anim_1E74'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1DE70000} [SimCity_1.dat] 'ACV6x4x4_jump-ropeanimate_1DE7'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1DCC0000} [SimCity_1.dat] 'ACR16x0x10_Grafiti_1dcc'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DC90000} [SimCity_1.dat] 'ACR12x0x12_Grafiti_1dc9'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DC60000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc6'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DC30000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc3'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1D600000} [SimCity_1.dat] 'ACSign11x1x4_$$$Sign_1D60'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1D3C0000} [SimCity_1.dat] 'ACV7x3x3_School4squareanimate_1D3C'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B930000} [SimCity_1.dat] 'AR12x12x3_Fire_Hydrant_Kids_Playing1-anim_2B93'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B840000} [SimCity_1.dat] 'ARW4x4x4_tv-camera-crew-Soccer'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B5D0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanimnightclub'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x2B5A0000} [SimCity_1.dat] 'Aper2x2x4_military_female-nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B570000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B540000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B510000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B4E0000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B4B0000} [SimCity_1.dat] 'Aper2x2x4_female-nighclub'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B390000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerCoach'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B180000} [SimCity_1.dat] 'Aper2x2x4_Baseballcoach'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2B150000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2955'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B120000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2954'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B0F0000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2955'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B0C0000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2957'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B090000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2956'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2B060000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2957'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2AFA0000} [SimCity_1.dat] 'Aper2x2x4_male-BaseballCoach'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF70000} [SimCity_1.dat] 'Aper2x2x4_child-M-Basekids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF40000} [SimCity_1.dat] 'Aper2x2x4_child-F-Basekids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AF10000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerCoach'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AEE0000} [SimCity_1.dat] 'Aper2x2x4_child-M-Sockids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AEB0000} [SimCity_1.dat] 'Aper2x2x4_child-F-Sockids'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AE80000} [SimCity_1.dat] 'Aper2x2x4_male-drk02-night'
+        table = [0x00000001, 0xAA123BF9, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2ADC0000} [SimCity_1.dat] 'ACR8x6x2_PoolGrand-swim_1D52'
+        table = [0x00000001, 0xAA123BF9, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2AD60000} [SimCity_1.dat] 'ARR16x2x16_CrossingArmsdiagonal_2AD6'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0xAA123BF9, 0x00000002, 0x00000000, 0x00000003, 0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AB50000} [SimCity_1.dat] 'Aper2x2x4_police_med-male-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AB20000} [SimCity_1.dat] 'Aper2x2x4_military_female-drk-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AAF0000} [SimCity_1.dat] 'Aper2x2x4_male-med01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AAC0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA90000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA60000} [SimCity_1.dat] 'Aper2x2x4_female-S-drk01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA30000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2AA00000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A9D0000} [SimCity_1.dat] 'Aper2x2x4_child-M-drk01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A9A0000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-wait'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x2A730000} [SimCity_1.dat] 'Abase2x2x4_umpire_2A73'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A070000} [SimCity_1.dat] 'AI8x5x3_ChickenCoop-anim_2A07'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x2A010000} [SimCity_1.dat] 'AR2x2x3_sit-cross-leg-arm-idle_2A01'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29F80000} [SimCity_1.dat] 'AR8x8x2_$goatpenAnimated_29F8'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29EF0000} [SimCity_1.dat] 'ARW2x2x5_animatedBallons_29EF'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x29EC0000} [SimCity_1.dat] 'ACRFlora21x22x15_tp-tree-anim_29EC0000'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x29E90000} [SimCity_1.dat] 'APZPark15x15x3_SandPitSlide_29E9'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29D10000} [SimCity_1.dat] 'ARW6x5x4_CommencementStageRigth_29D1'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29CB0000} [SimCity_1.dat] 'ARW44x01x07_AnimatedCasinoSign_29cb0000'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29C20000} [SimCity_1.dat] 'Amill4x2x4_exploritorium_29C2'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29B60000} [SimCity_1.dat] 'AR8x8x4_$$$fountain3_29B6'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29B30000} [SimCity_1.dat] 'AR6x6x3_$$patiofurniturebbq1_29B3'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x299E0000} [SimCity_1.dat] 'ARWZoo1x1x3_doe_299E'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x299B0000} [SimCity_1.dat] 'ARWZoo1x1x3_polarBear_299B'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29980000} [SimCity_1.dat] 'ARW1x1x1_spotlight_prison4_29980000'
+        table = [0x00000001, 0xEA123BE1, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29950000} [SimCity_1.dat] 'ARW1x1x1_spotlight_prison1_29950000'
+        table = [0x00000001, 0xEA123BE1, 0x00000000, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29920000} [SimCity_1.dat] 'APZ2x2x4_tenniscourt-anim02_2992'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29710000} [SimCity_1.dat] 'ARWStateFair5x7x4_medium_1E99'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29560000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2956'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29530000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2953'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x294A0000} [SimCity_1.dat] 'ARW15x1x38_statefairsign_294A0000'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x29470000} [SimCity_1.dat] 'ACSign7x6x14_touristtrap_2947'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x29440000} [SimCity_1.dat] 'ACSign2x2x2_burgerbuddh_2944'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x293E0000} [SimCity_1.dat] 'ACSign4x2x11_frenchfry_293E'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28FC0000} [SimCity_1.dat] 'AGolf1x1x3_putterGreenShorts_28FC'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28F90000} [SimCity_1.dat] 'AGolf1x1x3_driverPlaidSuit_28F9'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28F60000} [SimCity_1.dat] 'AGolf1x1x3_driverPlaidPants_28f6'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28ED0000} [SimCity_1.dat] 'Apark6x8x4_PZPark-Swing-anim_28ED'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x28A50000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-whoop_28A5'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28A20000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-booyah_28A2'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x289F0000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-phooee_289F'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x289C0000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-booer_289C'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28990000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-hop-clap_2899'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28960000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-tantrum_2896'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28930000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-noway_2893'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28900000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-woohoo_2890'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x288D0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-clap_288D'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x288A0000} [SimCity_1.dat] 'Aper3x2x4_male-med02-negative-reject_288A'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28870000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-kissmy_2887'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28840000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-whoop_2884'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28810000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-booyah_2881'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x287E0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-phooee_287E'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x287B0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-booer_287B'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28780000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-hop-clap_2878'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28750000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-tantrum_2875'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28720000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-noway_2872'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28690000} [SimCity_1.dat] 'Aper3x2x4_female-P-lgt01-negative-reject_2869'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28660000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-kissmy_2866'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28630000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-whoop_2863'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28600000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-booyah_2860'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x285D0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-phooee_285D'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x285A0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-booer_285A'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28570000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-positive-hop-clap_2857'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28510000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-negative-noway_2851'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x28300000} [SimCity_1.dat] 'ACBill12x2x8_$$$billboard_2830'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x282D0000} [SimCity_1.dat] 'ACBill12x4x8_$$$billboard_282D'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x110F0000} [SimCity_1.dat] 'RW12x12x26_Vehicle_LargeCrane_110F0000'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1F360000} [SimCity_1.dat] 'ARW7x0x4_$$$JumbotronMultiscreenAnimatedScreen1_1F36'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F2D0000} [SimCity_1.dat] 'Abase4x4x4_batter_1F2D'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F2A0000} [SimCity_1.dat] 'Abase2x2x4_base-outfield-drk_1F2A'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F270000} [SimCity_1.dat] 'Abase2x2x4_base-child-outfield-drk_1F27'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F1B0000} [SimCity_1.dat] 'AR12x12x3_$$$marbleterraceumbrella2-anim_1F1B'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F090000} [SimCity_1.dat] 'Asoc5x3x4_Pzchild-M-red-lgt-goalie_1F09'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1F060000} [SimCity_1.dat] 'Apark3x3x2_picnic-on-blanket_1F06'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1EFA0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim2_1EFA0005'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1EBB0000} [SimCity_1.dat] 'RW1x1x1_RVs_1EBB0000'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1EB20000} [SimCity_1.dat] 'ARW4x4x4_tv-camera-crew_1EB2'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1EAC0000} [SimCity_1.dat] 'ARW3x3x4_kinetic-sculpture_1EAC'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1EA60000} [SimCity_1.dat] 'RW1x1x1_army-jeep_1EA60000'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1E9D0000} [SimCity_1.dat] 'Abase2x2x4_base-infield2-lgt_1E9D'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1E9A0000} [SimCity_1.dat] 'Amill4x4x4_small_1E9A'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1E970000} [SimCity_1.dat] 'Apark3x18x17_kite_1E97'
+        table = [0x00000000, 0xEA123BE1, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x1E760000} [SimCity_1.dat] 'AR12x12x2_$PoolDboy-anim_1E76'
+        table = [0x00000000, 0xAA123BF9, 0x00000001, 0x00000000]
+  {T=0x6534284A, G=0xC977C536, I=0x67CD0000} [SimCity_1.dat] 'AStreet1x1x11_Oldconsoleremoved_67CD'
+        table = [0xAA123BF9]
+  {T=0x6534284A, G=0xC977C536, I=0x1DCE0000} [SimCity_1.dat] 'ACR16x0x10_Grafiti_1dce'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DCB0000} [SimCity_1.dat] 'ACR12x0x12_Grafiti_1dcb'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DC80000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc8'
+        table = [0xEA123BE1]
+  {T=0x6534284A, G=0xC977C536, I=0x1DC50000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc5'
+        table = [0xEA123BE1]
+
+== of those, tables naming an OFFER id: 358 ==
+  {T=0x6534284A, G=0xC977C536, I=0x2C3A0000} [SimCity_1.dat] 'AStreet1x1x11_AveConsole_2C3A'
+  {T=0x6534284A, G=0xC977C536, I=0x1D560000} [SimCity_1.dat] 'AR6x3x2_$$PoolModest-swim_1D56'
+  {T=0x6534284A, G=0xC977C536, I=0x2B830000} [SimCity_1.dat] 'ARW4x4x4_tv-camera-crew-MjrBaseball'
+  {T=0x6534284A, G=0xC977C536, I=0x2B5C0000} [SimCity_1.dat] 'Aper2x2x4_police_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B590000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B560000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B530000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B500000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B4D0000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B4A0000} [SimCity_1.dat] 'Aper2x2x4_police_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B3B0000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerPlayers'
+  {T=0x6534284A, G=0xC977C536, I=0x2B380000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerCoach'
+  {T=0x6534284A, G=0xC977C536, I=0x2B170000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2953'
+  {T=0x6534284A, G=0xC977C536, I=0x2B140000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2958'
+  {T=0x6534284A, G=0xC977C536, I=0x2B110000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2953'
+  {T=0x6534284A, G=0xC977C536, I=0x2B0B0000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2958'
+  {T=0x6534284A, G=0xC977C536, I=0x2B080000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2955'
+  {T=0x6534284A, G=0xC977C536, I=0x2B050000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2953'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF90000} [SimCity_1.dat] 'Aper2x2x4_child-M-Basekids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF60000} [SimCity_1.dat] 'Aper2x2x4_child-Basekids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF30000} [SimCity_1.dat] 'Aper2x2x4_male-BaseballCoach_288D'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF00000} [SimCity_1.dat] 'Aper2x2x4_child-M-Sockids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AED0000} [SimCity_1.dat] 'Aper2x2x4_child-Sockids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AEA0000} [SimCity_1.dat] 'Aper2x2x4_child-F-Sockids'
+  {T=0x6534284A, G=0xC977C536, I=0x2ADB0000} [SimCity_1.dat] 'ACR6x3x2_PoolModest-swim_1D56'
+  {T=0x6534284A, G=0xC977C536, I=0x2AD50000} [SimCity_1.dat] 'ARR16x2x16_CrossingArms_2AD5'
+  {T=0x6534284A, G=0xC977C536, I=0x2AB70000} [SimCity_1.dat] 'Aper2x2x4_businessPeople_femaleIdle'
+  {T=0x6534284A, G=0xC977C536, I=0x2AB40000} [SimCity_1.dat] 'Aper2x2x4_police_med-female-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AB10000} [SimCity_1.dat] 'Aper2x2x4_male-med03-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AAE0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt03-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AAB0000} [SimCity_1.dat] 'Aper2x2x4_male-drk03-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA80000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA50000} [SimCity_1.dat] 'Aper2x2x4_female-P-med01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA20000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt03-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A9F0000} [SimCity_1.dat] 'Aper2x2x4_child-M-drk03-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A9C0000} [SimCity_1.dat] 'Aper2x2x4_child-F-med01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A810000} [SimCity_1.dat] 'AR6x12x5_$KidstoyTiresAnim_2A81'
+  {T=0x6534284A, G=0xC977C536, I=0x2A720000} [SimCity_1.dat] 'Abase2x2x4_catcher_2A72'
+  {T=0x6534284A, G=0xC977C536, I=0x2A060000} [SimCity_1.dat] 'AI3x8x4_field-grape-picking-anim_2A06'
+  {T=0x6534284A, G=0xC977C536, I=0x2A030000} [SimCity_1.dat] 'AR2x2x3_sit-lean-forward-idle_2A03'
+  {T=0x6534284A, G=0xC977C536, I=0x2A000000} [SimCity_1.dat] 'AR2x2x3_sit-backwardchair-idle_2A00'
+  {T=0x6534284A, G=0xC977C536, I=0x29EE0000} [SimCity_1.dat] 'APZPark8x8x10_PicnincAreaAnimated_29EE'
+  {T=0x6534284A, G=0xC977C536, I=0x29E80000} [SimCity_1.dat] 'APZPark10x6x6_Playstructure_29E8'
+  {T=0x6534284A, G=0xC977C536, I=0x29E20000} [SimCity_1.dat] 'AStreet1x1x11_stoplightPoleDiag_29E2'
+  {T=0x6534284A, G=0xC977C536, I=0x29D90000} [SimCity_1.dat] 'APzskate16x16x7_skateboardpark2-anim_29D90000'
+  {T=0x6534284A, G=0xC977C536, I=0x29D00000} [SimCity_1.dat] 'ARW6x5x4_CommencementStageLeft_29D0'
+  {T=0x6534284A, G=0xC977C536, I=0x29CD0000} [SimCity_1.dat] 'AR2x7x3_PoolCleaner_29CD'
+  {T=0x6534284A, G=0xC977C536, I=0x29C10000} [SimCity_1.dat] 'ARW14x10x4_Commencement-audience_29C1'
+  {T=0x6534284A, G=0xC977C536, I=0x29A00000} [SimCity_1.dat] 'ARWZoo1x1x3_giraffe_29A0'
+  {T=0x6534284A, G=0xC977C536, I=0x299D0000} [SimCity_1.dat] 'ARWZoo1x1x3_Buck_299D'
+  {T=0x6534284A, G=0xC977C536, I=0x299A0000} [SimCity_1.dat] 'ARWZoo1x1x3_Monkeys_299A'
+  {T=0x6534284A, G=0xC977C536, I=0x29970000} [SimCity_1.dat] 'ARW1x1x1_spotlight_prison3_29970000'
+  {T=0x6534284A, G=0xC977C536, I=0x29940000} [SimCity_1.dat] 'AGolf1x1x3_putterGreenPants_2994'
+  {T=0x6534284A, G=0xC977C536, I=0x29910000} [SimCity_1.dat] 'AR8x8x4_$$patiofurniturebbq2-anim_2991'
+  {T=0x6534284A, G=0xC977C536, I=0x298E0000} [SimCity_1.dat] 'ARW22x20_StateFair-TiltaWhirl_298E0000'
+  {T=0x6534284A, G=0xC977C536, I=0x29880005} [SimCity_1.dat] 'ARW3x55x52_ferriswheel_29880005'
+  {T=0x6534284A, G=0xC977C536, I=0x29700000} [SimCity_1.dat] 'ARWStateFair4x7x4_small-medium_1E9B'
+  {T=0x6534284A, G=0xC977C536, I=0x29580000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2958'
+  {T=0x6534284A, G=0xC977C536, I=0x29550000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2955'
+  {T=0x6534284A, G=0xC977C536, I=0x29520000} [SimCity_1.dat] 'ARW4x3x3_photoGroup_2952'
+  {T=0x6534284A, G=0xC977C536, I=0x29430000} [SimCity_1.dat] 'ACSign7x7x1_pizza_29430000'
+  {T=0x6534284A, G=0xC977C536, I=0x29400000} [SimCity_1.dat] 'ACSign3x3x12_coffee_29400000'
+  {T=0x6534284A, G=0xC977C536, I=0x28FB0000} [SimCity_1.dat] 'AGolf1x1x3_putterBlueJeans_28FB'
+  {T=0x6534284A, G=0xC977C536, I=0x28F80000} [SimCity_1.dat] 'AGolf1x1x3_driverBlackShirt_28F8'
+  {T=0x6534284A, G=0xC977C536, I=0x28F50000} [SimCity_1.dat] 'AStreet1x1x11_stoplightPole_28F5'
+  {T=0x6534284A, G=0xC977C536, I=0x28A40000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-hop-clap_28A4'
+  {T=0x6534284A, G=0xC977C536, I=0x28A10000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-tantrum_28A1'
+  {T=0x6534284A, G=0xC977C536, I=0x289E0000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-noway_289E'
+  {T=0x6534284A, G=0xC977C536, I=0x289B0000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-woohoo_289B'
+  {T=0x6534284A, G=0xC977C536, I=0x28980000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-clap_2898'
+  {T=0x6534284A, G=0xC977C536, I=0x28950000} [SimCity_1.dat] 'Aper3x2x4_child-F-drk01-negative-reject_2895'
+  {T=0x6534284A, G=0xC977C536, I=0x28920000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-kissmy_2892'
+  {T=0x6534284A, G=0xC977C536, I=0x288F0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-whoop_288F'
+  {T=0x6534284A, G=0xC977C536, I=0x288C0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-booyah_288C'
+  {T=0x6534284A, G=0xC977C536, I=0x28890000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-phooee_2889'
+  {T=0x6534284A, G=0xC977C536, I=0x28860000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-booer_2886'
+  {T=0x6534284A, G=0xC977C536, I=0x28830000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-hop-clap_2883'
+  {T=0x6534284A, G=0xC977C536, I=0x28800000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-tantrum_2880'
+  {T=0x6534284A, G=0xC977C536, I=0x287D0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-noway_287D'
+  {T=0x6534284A, G=0xC977C536, I=0x287A0000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-woohoo_287A'
+  {T=0x6534284A, G=0xC977C536, I=0x28770000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-clap_2877'
+  {T=0x6534284A, G=0xC977C536, I=0x28740000} [SimCity_1.dat] 'Aper3x2x4_male-drk01-negative-reject_2874'
+  {T=0x6534284A, G=0xC977C536, I=0x28710000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-kissmy_2871'
+  {T=0x6534284A, G=0xC977C536, I=0x286B0000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-tantrum_286A'
+  {T=0x6534284A, G=0xC977C536, I=0x28680000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-phooee_2868'
+  {T=0x6534284A, G=0xC977C536, I=0x28650000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-booer_2865'
+  {T=0x6534284A, G=0xC977C536, I=0x28620000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-hop-clap_2862'
+  {T=0x6534284A, G=0xC977C536, I=0x285F0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-tantrum_285F'
+  {T=0x6534284A, G=0xC977C536, I=0x285C0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-noway_285C'
+  {T=0x6534284A, G=0xC977C536, I=0x28590000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-positive-woohoo_2859'
+  {T=0x6534284A, G=0xC977C536, I=0x28560000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-positive-clap_2856'
+  {T=0x6534284A, G=0xC977C536, I=0x28530000} [SimCity_1.dat] 'Aper3x2x4_female-S-med01-negative-reject_2853'
+  {T=0x6534284A, G=0xC977C536, I=0x28350000} [SimCity_1.dat] 'ARW10x4x20_radardish_2835'
+  {T=0x6534284A, G=0xC977C536, I=0x282C0000} [SimCity_1.dat] 'ACBill12x2x8_$$$billboard_282C'
+  {T=0x6534284A, G=0xC977C536, I=0x1F380000} [SimCity_1.dat] 'ARW2x2x8_$$$JumbotronMultiscreenAnimatedScreen3_1F38'
+  {T=0x6534284A, G=0xC977C536, I=0x1F350000} [SimCity_1.dat] 'ARW8x0X6_$$$JumbotronTimesSquareAnimated_1F35'
+  {T=0x6534284A, G=0xC977C536, I=0x1F2C0000} [SimCity_1.dat] 'Abase4x4x4_child-batter_1F2C'
+  {T=0x6534284A, G=0xC977C536, I=0x1F290000} [SimCity_1.dat] 'Abase2x2x4_base-child-infield-drk_1F29'
+  {T=0x6534284A, G=0xC977C536, I=0x1F260000} [SimCity_1.dat] 'Abase2x2x4_base-child-outfield-lgt_1F26'
+  {T=0x6534284A, G=0xC977C536, I=0x1F230000} [SimCity_1.dat] 'Asoc3x2x4_soc-lgt-pro-blu-goalie_1F23'
+  {T=0x6534284A, G=0xC977C536, I=0x1F200005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim5_1F200005'
+  {T=0x6534284A, G=0xC977C536, I=0x1F1D0000} [SimCity_1.dat] 'AR12x12x5_$$$bbqchimneydiningpatio-anim_1F1D'
+  {T=0x6534284A, G=0xC977C536, I=0x1F080000} [SimCity_1.dat] 'Asoc5x3x4_Pzsocchild-M-grn-lgt-goalie_1F08'
+  {T=0x6534284A, G=0xC977C536, I=0x1F050000} [SimCity_1.dat] 'Abase3x8x4_base-pitcher-drk_1F05'
+  {T=0x6534284A, G=0xC977C536, I=0x1EFC0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim4_1EFC0005'
+  {T=0x6534284A, G=0xC977C536, I=0x1EF30000} [SimCity_1.dat] 'AR8x8x2_$DogOnAChain_1ef3'
+  {T=0x6534284A, G=0xC977C536, I=0x1EC00000} [SimCity_1.dat] 'RW1x1x1_café-tables-sims-eating_1EC00000'
+  {T=0x6534284A, G=0xC977C536, I=0x1EBA0000} [SimCity_1.dat] 'ARW4x3x4_small-table-crowd-farmers-market_1EBA'
+  {T=0x6534284A, G=0xC977C536, I=0x1EB40000} [SimCity_1.dat] 'RW1x1x1_Pool-slide_1EB40000'
+  {T=0x6534284A, G=0xC977C536, I=0x1EA50000} [SimCity_1.dat] 'RW1x1x1_army-truck_1EA50000'
+  {T=0x6534284A, G=0xC977C536, I=0x1E9C0000} [SimCity_1.dat] 'A4x9x4_tail-gaiters_1E9C'
+  {T=0x6534284A, G=0xC977C536, I=0x1E990000} [SimCity_1.dat] 'Amill5x7x4_medium_1E99'
+  {T=0x6534284A, G=0xC977C536, I=0x1E960000} [SimCity_1.dat] 'Apark2x6x3_ball-toss_1E96'
+  {T=0x6534284A, G=0xC977C536, I=0x1E750000} [SimCity_1.dat] 'AR12x12x2_$packeddirtpatio1-anim_1E75'
+  {T=0x6534284A, G=0xC977C536, I=0x67CC0000} [SimCity_1.dat] 'AStreet1x1x11_Oldconsoleremoved_67cc'
+  {T=0x6534284A, G=0xC977C536, I=0x1DCD0000} [SimCity_1.dat] 'ACR16x0x10_Grafiti_1dcd'
+  {T=0x6534284A, G=0xC977C536, I=0x1DCA0000} [SimCity_1.dat] 'ACR12x0x12_Grafiti_1dca'
+  {T=0x6534284A, G=0xC977C536, I=0x1DC70000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc7'
+  {T=0x6534284A, G=0xC977C536, I=0x1DC40000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc4'
+  {T=0x6534284A, G=0xC977C536, I=0x2C7B0000} [SimCity_1.dat] 'ARW1x1x1_lightbeam_2C7B0000'
+  {T=0x6534284A, G=0xC977C536, I=0x2C3C0000} [SimCity_1.dat] 'AStreet1x1x11_AveConsoleDiag_2C3C'
+  {T=0x6534284A, G=0xC977C536, I=0x1D520000} [SimCity_1.dat] 'AR8x6x2_$$$PoolGrand-swim_1D52'
+  {T=0x6534284A, G=0xC977C536, I=0x1D460000} [SimCity_1.dat] 'ACV6x2x4_keep-awayanimate_1D46'
+  {T=0x6534284A, G=0xC977C536, I=0x2B5B0000} [SimCity_1.dat] 'Aper2x2x4_military_male-nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B580000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B550000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B520000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B4F0000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B4C0000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B3A0000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerPlayers'
+  {T=0x6534284A, G=0xC977C536, I=0x2B190000} [SimCity_1.dat] 'Aper2x2x4_male-Chuck'
+  {T=0x6534284A, G=0xC977C536, I=0x2B160000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2956'
+  {T=0x6534284A, G=0xC977C536, I=0x2B130000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2957'
+  {T=0x6534284A, G=0xC977C536, I=0x2B100000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2956'
+  {T=0x6534284A, G=0xC977C536, I=0x2B0D0000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2954'
+  {T=0x6534284A, G=0xC977C536, I=0x2B0A0000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2958'
+  {T=0x6534284A, G=0xC977C536, I=0x2B070000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2954'
+  {T=0x6534284A, G=0xC977C536, I=0x2AFB0000} [SimCity_1.dat] 'Aper2x2x4_child-F-Basekids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF80000} [SimCity_1.dat] 'Aper2x2x4_child-Basekids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF50000} [SimCity_1.dat] 'Aper2x2x4_child-F-Basekids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF20000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerCoach'
+  {T=0x6534284A, G=0xC977C536, I=0x2AEF0000} [SimCity_1.dat] 'Aper2x2x4_child-Sockids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AEC0000} [SimCity_1.dat] 'Aper2x2x4_child-F-Sockids'
+  {T=0x6534284A, G=0xC977C536, I=0x2ADA0000} [SimCity_1.dat] 'ACR12x12x2_PoolDboy-anim_1E76'
+  {T=0x6534284A, G=0xC977C536, I=0x2AD40000} [SimCity_1.dat] 'AR6x12x5_$$$paddlecourtanim_2AD4'
+  {T=0x6534284A, G=0xC977C536, I=0x2AB60000} [SimCity_1.dat] 'Aper2x2x4_businessPeople_maleIdle'
+  {T=0x6534284A, G=0xC977C536, I=0x2AB30000} [SimCity_1.dat] 'Aper2x2x4_military_male-lgt01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AB00000} [SimCity_1.dat] 'Aper2x2x4_male-med02-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AAD0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt02-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AAA0000} [SimCity_1.dat] 'Aper2x2x4_male-drk02-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA70000} [SimCity_1.dat] 'Aper2x2x4_female-S-lgt01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA40000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA10000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt02-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A9E0000} [SimCity_1.dat] 'Aper2x2x4_child-M-drk02-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A9B0000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk02-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A800000} [SimCity_1.dat] 'Abase2x2x4_umpire'
+  {T=0x6534284A, G=0xC977C536, I=0x2A740000} [SimCity_1.dat] 'Abase2x2x4_child-catcher_2A74'
+  {T=0x6534284A, G=0xC977C536, I=0x2A080000} [SimCity_1.dat] 'AI2x2x4_field-picking-anim_2A08'
+  {T=0x6534284A, G=0xC977C536, I=0x2A050000} [SimCity_1.dat] 'AI5x4x9_tree-fruit-picking-anim_2A05'
+  {T=0x6534284A, G=0xC977C536, I=0x2A020000} [SimCity_1.dat] 'AR2x2x3_sit-idle_2A02'
+  {T=0x6534284A, G=0xC977C536, I=0x29F00000} [SimCity_1.dat] 'ARW2x2x5_animatedBallons_29F0'
+  {T=0x6534284A, G=0xC977C536, I=0x29ED0000} [SimCity_1.dat] 'ARW2x2x5_animatedBallons_29ED'
+  {T=0x6534284A, G=0xC977C536, I=0x29EA0000} [SimCity_1.dat] 'APZPark15x15x3_SandPitSwing_29EA'
+  {T=0x6534284A, G=0xC977C536, I=0x29DE0000} [SimCity_1.dat] 'APz4x8x2_cementpatiofurniture2-anim_29DE'
+  {T=0x6534284A, G=0xC977C536, I=0x29D80000} [SimCity_1.dat] 'APzskate16x16x7_skateboardpark1-anim_29D80000'
+  {T=0x6534284A, G=0xC977C536, I=0x29CF0000} [SimCity_1.dat] 'ARW6x4x4_CommencementBackAudience_29CF'
+  {T=0x6534284A, G=0xC977C536, I=0x29C00000} [SimCity_1.dat] 'ARW10x8x6_CommencementCenterStage_29C0'
+  {T=0x6534284A, G=0xC977C536, I=0x29B40000} [SimCity_1.dat] 'AR6x12x4_$$kidstoySlide_29B4'
+  {T=0x6534284A, G=0xC977C536, I=0x29A50000} [SimCity_1.dat] 'AR8x8x1_$woodlogschips_29A5'
+  {T=0x6534284A, G=0xC977C536, I=0x299C0000} [SimCity_1.dat] 'ARWZoo1x1x3_lion_299C'
+  {T=0x6534284A, G=0xC977C536, I=0x29990000} [SimCity_1.dat] 'ARWZoo1x1x3_Bear_2999'
+  {T=0x6534284A, G=0xC977C536, I=0x29960000} [SimCity_1.dat] 'ARW1x1x1_spotlight_prison2_29960000'
+  {T=0x6534284A, G=0xC977C536, I=0x29900000} [SimCity_1.dat] 'APZ2x2x4_tenniscourt-anim01_2990'
+  {T=0x6534284A, G=0xC977C536, I=0x29720000} [SimCity_1.dat] 'ARWStateFair7x11x4_large_1E98'
+  {T=0x6534284A, G=0xC977C536, I=0x296F0000} [SimCity_1.dat] 'ARWStateFair4x4x4_smallmilling_1E9A'
+  {T=0x6534284A, G=0xC977C536, I=0x296C0000} [SimCity_1.dat] 'AR8x8x2_$$trampoline_296C0000'
+  {T=0x6534284A, G=0xC977C536, I=0x29570000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2957'
+  {T=0x6534284A, G=0xC977C536, I=0x29540000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2954'
+  {T=0x6534284A, G=0xC977C536, I=0x294B0000} [SimCity_1.dat] 'AR16x16x1_$$$stableridingpen_294B0000'
+  {T=0x6534284A, G=0xC977C536, I=0x29420000} [SimCity_1.dat] 'ACSign6x2x10_weenie_2942'
+  {T=0x6534284A, G=0xC977C536, I=0x293F0000} [SimCity_1.dat] 'ACSign3x3x11_paint_293F0000'
+  {T=0x6534284A, G=0xC977C536, I=0x28FA0000} [SimCity_1.dat] 'AGolf1x1x3_putterPlaidPants_28FA'
+  {T=0x6534284A, G=0xC977C536, I=0x28F70000} [SimCity_1.dat] 'AGolf1x1x3_driverPlaidShirt_28F7'
+  {T=0x6534284A, G=0xC977C536, I=0x28DC0000} [SimCity_1.dat] 'Abase3x8x4_base-drk-child-pitch_28DC'
+  {T=0x6534284A, G=0xC977C536, I=0x28A60000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-woohoo_28A6'
+  {T=0x6534284A, G=0xC977C536, I=0x28A30000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-clap_28A3'
+  {T=0x6534284A, G=0xC977C536, I=0x28A00000} [SimCity_1.dat] 'Aper3x2x4_child-M-lgt01-negative-reject_28A0'
+  {T=0x6534284A, G=0xC977C536, I=0x289D0000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-kissmy_289D'
+  {T=0x6534284A, G=0xC977C536, I=0x289A0000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-whoop_289A'
+  {T=0x6534284A, G=0xC977C536, I=0x28970000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-booyah_2897'
+  {T=0x6534284A, G=0xC977C536, I=0x28940000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-phooee_2894'
+  {T=0x6534284A, G=0xC977C536, I=0x28910000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-booer_2891'
+  {T=0x6534284A, G=0xC977C536, I=0x288E0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-hop-clap_288E'
+  {T=0x6534284A, G=0xC977C536, I=0x288B0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-tantrum_288B'
+  {T=0x6534284A, G=0xC977C536, I=0x28880000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-noway_2888'
+  {T=0x6534284A, G=0xC977C536, I=0x28850000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-woohoo_2885'
+  {T=0x6534284A, G=0xC977C536, I=0x28820000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-clap_2882'
+  {T=0x6534284A, G=0xC977C536, I=0x287F0000} [SimCity_1.dat] 'Aper3x2x4_male-lgt01-negative-reject_287F'
+  {T=0x6534284A, G=0xC977C536, I=0x287C0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-kissmy_287C'
+  {T=0x6534284A, G=0xC977C536, I=0x28790000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-whoop_2879'
+  {T=0x6534284A, G=0xC977C536, I=0x28760000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-booyah_2876'
+  {T=0x6534284A, G=0xC977C536, I=0x28730000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-phooee_2873'
+  {T=0x6534284A, G=0xC977C536, I=0x28700000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-booer_2870'
+  {T=0x6534284A, G=0xC977C536, I=0x286A0000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-tantrum_286A'
+  {T=0x6534284A, G=0xC977C536, I=0x28670000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-noway_2867'
+  {T=0x6534284A, G=0xC977C536, I=0x28640000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-woohoo_2864'
+  {T=0x6534284A, G=0xC977C536, I=0x28610000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-clap_2861'
+  {T=0x6534284A, G=0xC977C536, I=0x285E0000} [SimCity_1.dat] 'Aper3x2x4_female-P-drk01-negative-reject_285E'
+  {T=0x6534284A, G=0xC977C536, I=0x285B0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-kissmy_285B'
+  {T=0x6534284A, G=0xC977C536, I=0x28580000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-positive-whoop_2858'
+  {T=0x6534284A, G=0xC977C536, I=0x284F0000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-negative-booer_284F'
+  {T=0x6534284A, G=0xC977C536, I=0x29CC0D00} [SimCity_1.dat] 'ARW1x1x3_StuntSim_onFire_29CC0d00'
+  {T=0x6534284A, G=0xC977C536, I=0x282B0000} [SimCity_1.dat] 'ACBill12x4x8_$$$billboard_282B'
+  {T=0x6534284A, G=0xC977C536, I=0x28250000} [SimCity_1.dat] 'ARW10x40x5_marquee_2825'
+  {T=0x6534284A, G=0xC977C536, I=0x6A6651DE} [SimCity_1.dat] 'ACBill12x4x8_billboard_arm_6a6651de'
+  {T=0x6534284A, G=0xC977C536, I=0x13DA0000} [SimCity_1.dat] 'ACV4x4x4_Schooltetherballanimate_13DA'
+  {T=0x6534284A, G=0xC977C536, I=0x213B0000} [SimCity_1.dat] 'ACR1x1x3_Graffitiartist_generic_213b'
+  {T=0x6534284A, G=0xC977C536, I=0x11100000} [SimCity_1.dat] 'RW5x5x22_Vehicle_SmallCrane_11100000'
+  {T=0x6534284A, G=0xC977C536, I=0x1F3A0000} [SimCity_1.dat] 'AR16x16x5_$$$grandpoolhouse3-anim_1F3A'
+  {T=0x6534284A, G=0xC977C536, I=0x1F370000} [SimCity_1.dat] 'ARW2x2x8_$$$JumbotronMultiscreenAnimatedScreen2_1F37'
+  {T=0x6534284A, G=0xC977C536, I=0x1F2E0000} [SimCity_1.dat] 'Amill7x11x4_large-nightclub_Casino'
+  {T=0x6534284A, G=0xC977C536, I=0x1F2B0000} [SimCity_1.dat] 'Abase2x2x4_base-outfield-lgt_1F2B'
+  {T=0x6534284A, G=0xC977C536, I=0x1F280000} [SimCity_1.dat] 'Abase2x2x4_base-child-infield-lgt_1F28'
+  {T=0x6534284A, G=0xC977C536, I=0x1F220000} [SimCity_1.dat] 'Asoc3x2x4_soc-drk-pro-gry-goalie_1F22'
+  {T=0x6534284A, G=0xC977C536, I=0x1F1C0000} [SimCity_1.dat] 'AR12x12x3_$$$stoneterracechaisefurniture2-anim_1F1C'
+  {T=0x6534284A, G=0xC977C536, I=0x1F0A0000} [SimCity_1.dat] 'ARW3x3x5_lix-sculpture_1F0A'
+  {T=0x6534284A, G=0xC977C536, I=0x1F070000} [SimCity_1.dat] 'Apark8x8x4_picnic-on-blanket2_1F07'
+  {T=0x6534284A, G=0xC977C536, I=0x1EFB0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim3_1EFB0005'
+  {T=0x6534284A, G=0xC977C536, I=0x1EF50000} [SimCity_1.dat] 'ACU32x1x24_DriveInMovie_1ef5'
+  {T=0x6534284A, G=0xC977C536, I=0x1EE30005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim1_1EE30005'
+  {T=0x6534284A, G=0xC977C536, I=0x1EBC0000} [SimCity_1.dat] 'RW1x1x1_taxi_1EBC0000'
+  {T=0x6534284A, G=0xC977C536, I=0x1EB30000} [SimCity_1.dat] 'RW1x1x1_Sun-bathers_1EB30000'
+  {T=0x6534284A, G=0xC977C536, I=0x1EA40000} [SimCity_1.dat] 'RW1x1x1_Tacky-roadside-sign_1EA40000'
+  {T=0x6534284A, G=0xC977C536, I=0x1E9E0000} [SimCity_1.dat] 'Abase2x2x4_base-infield-drk_1E9E'
+  {T=0x6534284A, G=0xC977C536, I=0x1E9B0000} [SimCity_1.dat] 'Amill4x7x4_small-medium_1E9B'
+  {T=0x6534284A, G=0xC977C536, I=0x1E980000} [SimCity_1.dat] 'Amill7x11x4_large_1E98'
+  {T=0x6534284A, G=0xC977C536, I=0x1E740000} [SimCity_1.dat] 'AR12x12x2_$$swingsetsandbox-anim_1E74'
+  {T=0x6534284A, G=0xC977C536, I=0x1DE70000} [SimCity_1.dat] 'ACV6x4x4_jump-ropeanimate_1DE7'
+  {T=0x6534284A, G=0xC977C536, I=0x1DCC0000} [SimCity_1.dat] 'ACR16x0x10_Grafiti_1dcc'
+  {T=0x6534284A, G=0xC977C536, I=0x1DC90000} [SimCity_1.dat] 'ACR12x0x12_Grafiti_1dc9'
+  {T=0x6534284A, G=0xC977C536, I=0x1DC60000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc6'
+  {T=0x6534284A, G=0xC977C536, I=0x1DC30000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc3'
+  {T=0x6534284A, G=0xC977C536, I=0x1D600000} [SimCity_1.dat] 'ACSign11x1x4_$$$Sign_1D60'
+  {T=0x6534284A, G=0xC977C536, I=0x1D3C0000} [SimCity_1.dat] 'ACV7x3x3_School4squareanimate_1D3C'
+  {T=0x6534284A, G=0xC977C536, I=0x2B930000} [SimCity_1.dat] 'AR12x12x3_Fire_Hydrant_Kids_Playing1-anim_2B93'
+  {T=0x6534284A, G=0xC977C536, I=0x2B840000} [SimCity_1.dat] 'ARW4x4x4_tv-camera-crew-Soccer'
+  {T=0x6534284A, G=0xC977C536, I=0x2B5D0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanimnightclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B5A0000} [SimCity_1.dat] 'Aper2x2x4_military_female-nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B570000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B540000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B510000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B4E0000} [SimCity_1.dat] 'Aper2x2x4_nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B4B0000} [SimCity_1.dat] 'Aper2x2x4_female-nighclub'
+  {T=0x6534284A, G=0xC977C536, I=0x2B390000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerCoach'
+  {T=0x6534284A, G=0xC977C536, I=0x2B180000} [SimCity_1.dat] 'Aper2x2x4_Baseballcoach'
+  {T=0x6534284A, G=0xC977C536, I=0x2B150000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2955'
+  {T=0x6534284A, G=0xC977C536, I=0x2B120000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2954'
+  {T=0x6534284A, G=0xC977C536, I=0x2B0F0000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2955'
+  {T=0x6534284A, G=0xC977C536, I=0x2B0C0000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2957'
+  {T=0x6534284A, G=0xC977C536, I=0x2B090000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2956'
+  {T=0x6534284A, G=0xC977C536, I=0x2B060000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2957'
+  {T=0x6534284A, G=0xC977C536, I=0x2AFA0000} [SimCity_1.dat] 'Aper2x2x4_male-BaseballCoach'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF70000} [SimCity_1.dat] 'Aper2x2x4_child-M-Basekids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF40000} [SimCity_1.dat] 'Aper2x2x4_child-F-Basekids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AF10000} [SimCity_1.dat] 'Aper2x2x4_male-SoccerCoach'
+  {T=0x6534284A, G=0xC977C536, I=0x2AEE0000} [SimCity_1.dat] 'Aper2x2x4_child-M-Sockids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AEB0000} [SimCity_1.dat] 'Aper2x2x4_child-F-Sockids'
+  {T=0x6534284A, G=0xC977C536, I=0x2AE80000} [SimCity_1.dat] 'Aper2x2x4_male-drk02-night'
+  {T=0x6534284A, G=0xC977C536, I=0x2ADC0000} [SimCity_1.dat] 'ACR8x6x2_PoolGrand-swim_1D52'
+  {T=0x6534284A, G=0xC977C536, I=0x2AD60000} [SimCity_1.dat] 'ARR16x2x16_CrossingArmsdiagonal_2AD6'
+  {T=0x6534284A, G=0xC977C536, I=0x2AB50000} [SimCity_1.dat] 'Aper2x2x4_police_med-male-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AB20000} [SimCity_1.dat] 'Aper2x2x4_military_female-drk-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AAF0000} [SimCity_1.dat] 'Aper2x2x4_male-med01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AAC0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA90000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA60000} [SimCity_1.dat] 'Aper2x2x4_female-S-drk01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA30000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2AA00000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A9D0000} [SimCity_1.dat] 'Aper2x2x4_child-M-drk01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A9A0000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-wait'
+  {T=0x6534284A, G=0xC977C536, I=0x2A730000} [SimCity_1.dat] 'Abase2x2x4_umpire_2A73'
+  {T=0x6534284A, G=0xC977C536, I=0x2A070000} [SimCity_1.dat] 'AI8x5x3_ChickenCoop-anim_2A07'
+  {T=0x6534284A, G=0xC977C536, I=0x2A010000} [SimCity_1.dat] 'AR2x2x3_sit-cross-leg-arm-idle_2A01'
+  {T=0x6534284A, G=0xC977C536, I=0x29F80000} [SimCity_1.dat] 'AR8x8x2_$goatpenAnimated_29F8'
+  {T=0x6534284A, G=0xC977C536, I=0x29EF0000} [SimCity_1.dat] 'ARW2x2x5_animatedBallons_29EF'
+  {T=0x6534284A, G=0xC977C536, I=0x29EC0000} [SimCity_1.dat] 'ACRFlora21x22x15_tp-tree-anim_29EC0000'
+  {T=0x6534284A, G=0xC977C536, I=0x29E90000} [SimCity_1.dat] 'APZPark15x15x3_SandPitSlide_29E9'
+  {T=0x6534284A, G=0xC977C536, I=0x29D10000} [SimCity_1.dat] 'ARW6x5x4_CommencementStageRigth_29D1'
+  {T=0x6534284A, G=0xC977C536, I=0x29CB0000} [SimCity_1.dat] 'ARW44x01x07_AnimatedCasinoSign_29cb0000'
+  {T=0x6534284A, G=0xC977C536, I=0x29C20000} [SimCity_1.dat] 'Amill4x2x4_exploritorium_29C2'
+  {T=0x6534284A, G=0xC977C536, I=0x29B60000} [SimCity_1.dat] 'AR8x8x4_$$$fountain3_29B6'
+  {T=0x6534284A, G=0xC977C536, I=0x29B30000} [SimCity_1.dat] 'AR6x6x3_$$patiofurniturebbq1_29B3'
+  {T=0x6534284A, G=0xC977C536, I=0x299E0000} [SimCity_1.dat] 'ARWZoo1x1x3_doe_299E'
+  {T=0x6534284A, G=0xC977C536, I=0x299B0000} [SimCity_1.dat] 'ARWZoo1x1x3_polarBear_299B'
+  {T=0x6534284A, G=0xC977C536, I=0x29980000} [SimCity_1.dat] 'ARW1x1x1_spotlight_prison4_29980000'
+  {T=0x6534284A, G=0xC977C536, I=0x29950000} [SimCity_1.dat] 'ARW1x1x1_spotlight_prison1_29950000'
+  {T=0x6534284A, G=0xC977C536, I=0x29920000} [SimCity_1.dat] 'APZ2x2x4_tenniscourt-anim02_2992'
+  {T=0x6534284A, G=0xC977C536, I=0x29710000} [SimCity_1.dat] 'ARWStateFair5x7x4_medium_1E99'
+  {T=0x6534284A, G=0xC977C536, I=0x29560000} [SimCity_1.dat] 'AbasketBall1x1x3_guard_2956'
+  {T=0x6534284A, G=0xC977C536, I=0x29530000} [SimCity_1.dat] 'AbasketBall1x1x3_dribble_2953'
+  {T=0x6534284A, G=0xC977C536, I=0x294A0000} [SimCity_1.dat] 'ARW15x1x38_statefairsign_294A0000'
+  {T=0x6534284A, G=0xC977C536, I=0x29470000} [SimCity_1.dat] 'ACSign7x6x14_touristtrap_2947'
+  {T=0x6534284A, G=0xC977C536, I=0x29440000} [SimCity_1.dat] 'ACSign2x2x2_burgerbuddh_2944'
+  {T=0x6534284A, G=0xC977C536, I=0x293E0000} [SimCity_1.dat] 'ACSign4x2x11_frenchfry_293E'
+  {T=0x6534284A, G=0xC977C536, I=0x28FC0000} [SimCity_1.dat] 'AGolf1x1x3_putterGreenShorts_28FC'
+  {T=0x6534284A, G=0xC977C536, I=0x28F90000} [SimCity_1.dat] 'AGolf1x1x3_driverPlaidSuit_28F9'
+  {T=0x6534284A, G=0xC977C536, I=0x28F60000} [SimCity_1.dat] 'AGolf1x1x3_driverPlaidPants_28f6'
+  {T=0x6534284A, G=0xC977C536, I=0x28ED0000} [SimCity_1.dat] 'Apark6x8x4_PZPark-Swing-anim_28ED'
+  {T=0x6534284A, G=0xC977C536, I=0x28A50000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-whoop_28A5'
+  {T=0x6534284A, G=0xC977C536, I=0x28A20000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-positive-booyah_28A2'
+  {T=0x6534284A, G=0xC977C536, I=0x289F0000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-phooee_289F'
+  {T=0x6534284A, G=0xC977C536, I=0x289C0000} [SimCity_1.dat] 'Aper2x2x4_child-M-lgt01-negative-booer_289C'
+  {T=0x6534284A, G=0xC977C536, I=0x28990000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-positive-hop-clap_2899'
+  {T=0x6534284A, G=0xC977C536, I=0x28960000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-tantrum_2896'
+  {T=0x6534284A, G=0xC977C536, I=0x28930000} [SimCity_1.dat] 'Aper2x2x4_child-F-drk01-negative-noway_2893'
+  {T=0x6534284A, G=0xC977C536, I=0x28900000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-woohoo_2890'
+  {T=0x6534284A, G=0xC977C536, I=0x288D0000} [SimCity_1.dat] 'Aper2x2x4_male-med02-positive-clap_288D'
+  {T=0x6534284A, G=0xC977C536, I=0x288A0000} [SimCity_1.dat] 'Aper3x2x4_male-med02-negative-reject_288A'
+  {T=0x6534284A, G=0xC977C536, I=0x28870000} [SimCity_1.dat] 'Aper2x2x4_male-med02-negative-kissmy_2887'
+  {T=0x6534284A, G=0xC977C536, I=0x28840000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-whoop_2884'
+  {T=0x6534284A, G=0xC977C536, I=0x28810000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-positive-booyah_2881'
+  {T=0x6534284A, G=0xC977C536, I=0x287E0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-phooee_287E'
+  {T=0x6534284A, G=0xC977C536, I=0x287B0000} [SimCity_1.dat] 'Aper2x2x4_male-lgt01-negative-booer_287B'
+  {T=0x6534284A, G=0xC977C536, I=0x28780000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-positive-hop-clap_2878'
+  {T=0x6534284A, G=0xC977C536, I=0x28750000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-tantrum_2875'
+  {T=0x6534284A, G=0xC977C536, I=0x28720000} [SimCity_1.dat] 'Aper2x2x4_male-drk01-negative-noway_2872'
+  {T=0x6534284A, G=0xC977C536, I=0x28690000} [SimCity_1.dat] 'Aper3x2x4_female-P-lgt01-negative-reject_2869'
+  {T=0x6534284A, G=0xC977C536, I=0x28660000} [SimCity_1.dat] 'Aper2x2x4_female-P-lgt01-negative-kissmy_2866'
+  {T=0x6534284A, G=0xC977C536, I=0x28630000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-whoop_2863'
+  {T=0x6534284A, G=0xC977C536, I=0x28600000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-positive-booyah_2860'
+  {T=0x6534284A, G=0xC977C536, I=0x285D0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-phooee_285D'
+  {T=0x6534284A, G=0xC977C536, I=0x285A0000} [SimCity_1.dat] 'Aper2x2x4_female-P-drk01-negative-booer_285A'
+  {T=0x6534284A, G=0xC977C536, I=0x28570000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-positive-hop-clap_2857'
+  {T=0x6534284A, G=0xC977C536, I=0x28510000} [SimCity_1.dat] 'Aper2x2x4_female-S-med01-negative-noway_2851'
+  {T=0x6534284A, G=0xC977C536, I=0x28300000} [SimCity_1.dat] 'ACBill12x2x8_$$$billboard_2830'
+  {T=0x6534284A, G=0xC977C536, I=0x282D0000} [SimCity_1.dat] 'ACBill12x4x8_$$$billboard_282D'
+  {T=0x6534284A, G=0xC977C536, I=0x110F0000} [SimCity_1.dat] 'RW12x12x26_Vehicle_LargeCrane_110F0000'
+  {T=0x6534284A, G=0xC977C536, I=0x1F360000} [SimCity_1.dat] 'ARW7x0x4_$$$JumbotronMultiscreenAnimatedScreen1_1F36'
+  {T=0x6534284A, G=0xC977C536, I=0x1F2D0000} [SimCity_1.dat] 'Abase4x4x4_batter_1F2D'
+  {T=0x6534284A, G=0xC977C536, I=0x1F2A0000} [SimCity_1.dat] 'Abase2x2x4_base-outfield-drk_1F2A'
+  {T=0x6534284A, G=0xC977C536, I=0x1F270000} [SimCity_1.dat] 'Abase2x2x4_base-child-outfield-drk_1F27'
+  {T=0x6534284A, G=0xC977C536, I=0x1F1B0000} [SimCity_1.dat] 'AR12x12x3_$$$marbleterraceumbrella2-anim_1F1B'
+  {T=0x6534284A, G=0xC977C536, I=0x1F090000} [SimCity_1.dat] 'Asoc5x3x4_Pzchild-M-red-lgt-goalie_1F09'
+  {T=0x6534284A, G=0xC977C536, I=0x1F060000} [SimCity_1.dat] 'Apark3x3x2_picnic-on-blanket_1F06'
+  {T=0x6534284A, G=0xC977C536, I=0x1EFA0005} [SimCity_1.dat] 'Aspotlight4x8x4_spotlightanim2_1EFA0005'
+  {T=0x6534284A, G=0xC977C536, I=0x1EBB0000} [SimCity_1.dat] 'RW1x1x1_RVs_1EBB0000'
+  {T=0x6534284A, G=0xC977C536, I=0x1EB20000} [SimCity_1.dat] 'ARW4x4x4_tv-camera-crew_1EB2'
+  {T=0x6534284A, G=0xC977C536, I=0x1EAC0000} [SimCity_1.dat] 'ARW3x3x4_kinetic-sculpture_1EAC'
+  {T=0x6534284A, G=0xC977C536, I=0x1EA60000} [SimCity_1.dat] 'RW1x1x1_army-jeep_1EA60000'
+  {T=0x6534284A, G=0xC977C536, I=0x1E9D0000} [SimCity_1.dat] 'Abase2x2x4_base-infield2-lgt_1E9D'
+  {T=0x6534284A, G=0xC977C536, I=0x1E9A0000} [SimCity_1.dat] 'Amill4x4x4_small_1E9A'
+  {T=0x6534284A, G=0xC977C536, I=0x1E970000} [SimCity_1.dat] 'Apark3x18x17_kite_1E97'
+  {T=0x6534284A, G=0xC977C536, I=0x1E760000} [SimCity_1.dat] 'AR12x12x2_$PoolDboy-anim_1E76'
+  {T=0x6534284A, G=0xC977C536, I=0x67CD0000} [SimCity_1.dat] 'AStreet1x1x11_Oldconsoleremoved_67CD'
+  {T=0x6534284A, G=0xC977C536, I=0x1DCE0000} [SimCity_1.dat] 'ACR16x0x10_Grafiti_1dce'
+  {T=0x6534284A, G=0xC977C536, I=0x1DCB0000} [SimCity_1.dat] 'ACR12x0x12_Grafiti_1dcb'
+  {T=0x6534284A, G=0xC977C536, I=0x1DC80000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc8'
+  {T=0x6534284A, G=0xC977C536, I=0x1DC50000} [SimCity_1.dat] 'ACR8x0x12_Grafiti_1dc5'
+
+== carriers of 0x2977AA47 (the lookup KEY): 0 exemplars, 0 distinct values ==
+
+== carriers of 0x4A70D491 (the VETO property): 6 ==
+  {T=0x6534284A, G=0xC977C536, I=0x2C3A0000} [SimCity_1.dat] 'AStreet1x1x11_AveConsole_2C3A'
+  {T=0x6534284A, G=0xC977C536, I=0x29E20000} [SimCity_1.dat] 'AStreet1x1x11_stoplightPoleDiag_29E2'
+  {T=0x6534284A, G=0xC977C536, I=0x28F50000} [SimCity_1.dat] 'AStreet1x1x11_stoplightPole_28F5'
+  {T=0x6534284A, G=0xC977C536, I=0x67CC0000} [SimCity_1.dat] 'AStreet1x1x11_Oldconsoleremoved_67cc'
+  {T=0x6534284A, G=0xC977C536, I=0x2C3C0000} [SimCity_1.dat] 'AStreet1x1x11_AveConsoleDiag_2C3C'
+  {T=0x6534284A, G=0xC977C536, I=0x67CD0000} [SimCity_1.dat] 'AStreet1x1x11_Oldconsoleremoved_67CD'

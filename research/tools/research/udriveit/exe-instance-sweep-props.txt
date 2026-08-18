@@ -1,0 +1,503 @@
+census instance ids in scope: 2371 (group 0xC977C536)
+dword hits: 543  (immediate-operand filtered in .text)
+
+0x00580000  Pz4x4x6_Nicefountain_0058                      [SimCity_1.dat]
+            @ 0x00AC6FCA (.rdata)
+            @ 0x00B0AA44 (.data)
+            @ 0x00B0AAC3 (.data)
+            @ 0x00B0AB42 (.data)
+            @ 0x00B0ABEF (.data)
+            @ 0x00B0ACF7 (.data)
+            @ 0x00B0AE4B (.data)
+            @ 0x00B0B15B (.data)
+            ... 35 more
+0x00590000  I6x12x4_Propane_0059                           [SimCity_1.dat]
+            @ 0x00AC6FC6 (.rdata)
+            @ 0x00B04FEE (.rdata)
+            @ 0x00B1384E (.data)
+            @ 0x00B18DD6 (.data)
+            @ 0x00B198BE (.data)
+            @ 0x00B1BDDA (.data)
+            @ 0x00B1BF5A (.data)
+            @ 0x00B1C3B6 (.data)
+            ... 4 more
+0x005B0000  Effect_OilSmoke_005B0000                       [SimCity_1.dat]
+            @ 0x00AA1B8A (.rdata)
+            @ 0x00ACEA0E (.rdata)
+            @ 0x00B1A6DE (.data)
+            @ 0x00B1BE1A (.data)
+            @ 0x00B1BF9A (.data)
+            @ 0x00B1C3D6 (.data)
+            @ 0x00B1C8DA (.data)
+            @ 0x00B1CACA (.data)
+            ... 2 more
+0x005C0000  Effect_big_industrial_smoke_1_005C0000         [SimCity_1.dat]
+            @ 0x00AF1D56 (.rdata)
+            @ 0x00B0ABF3 (.data)
+            @ 0x00B0ACFB (.data)
+            @ 0x00B0E593 (.data)
+            @ 0x00B0E69B (.data)
+            @ 0x00B0F9AB (.data)
+            @ 0x00B12493 (.data)
+            @ 0x00B1259B (.data)
+            ... 11 more
+0x00690000  C12x13x4_$$$HeliPad_0069                       [SimCity_1.dat]
+            @ 0x00AC6F72 (.rdata)
+            @ 0x00B143F6 (.data)
+            @ 0x00B1BECA (.data)
+            @ 0x00B1C04A (.data)
+            @ 0x00B1C3E6 (.data)
+            @ 0x00B1C8A2 (.data)
+            @ 0x00B1CAB2 (.data)
+            @ 0x00B1F78A (.data)
+            ... 1 more
+0x00831000                                                 [SimCity_1.dat]
+            @ 0x00AC1824 (.rdata)
+0x02060000  Construction2x6x4_Scaffold_02060000            [SimCity_1.dat]
+            @ 0x00AA1E50 (.rdata)
+            @ 0x00B05D4E (.rdata)
+            @ 0x00B12086 (.data)
+0x03010000  Construction3x3x2_CementMixer_03010000         [SimCity_1.dat]
+            @ 0x0061A90A (.text)
+            @ 0x0061ACE3 (.text)
+            @ 0x00623DD1 (.text)
+            @ 0x00659278 (.text)
+            @ 0x006593D0 (.text)
+            @ 0x00A829BE (.rdata)
+            @ 0x00AA7650 (.rdata)
+            @ 0x00AA768C (.rdata)
+            ... 9 more
+0x03020000  Construction3x1x1_Sandpile_03020000            [SimCity_1.dat]
+            @ 0x00B1209E (.data)
+            @ 0x00B1D4A6 (.data)
+0x03030000  Construction7x9x5_Workyard_03030000            [SimCity_1.dat]
+            @ 0x00AA1E48 (.rdata)
+            @ 0x00B120A2 (.data)
+            @ 0x00B1D4AA (.data)
+0x03040000  Construction3x6x4_PortoPotty_03040000          [SimCity_1.dat]
+            @ 0x00AA1E60 (.rdata)
+            @ 0x00B120A6 (.data)
+0x03050000  Construction7x4x2_DirtMound_03050000           [SimCity_1.dat]
+            @ 0x00AA1E64 (.rdata)
+            @ 0x00B120AA (.data)
+0x03060000  Construction0x0x2_MarkerPost_03060000          [SimCity_1.dat]
+            @ 0x00B05D78 (.rdata)
+            @ 0x00B120AE (.data)
+0x03070000  Construction5x7x5_Dozer_03070000               [SimCity_1.dat]
+            @ 0x00B120B2 (.data)
+0x03080000  Construction3x9x4_loader_03080000              [SimCity_1.dat]
+            @ 0x00B120B6 (.data)
+0x03090000  Construction5x18x6_Scraper_03090000            [SimCity_1.dat]
+            @ 0x00623DAF (.text)
+0x03490000  RW40x22_UnivScienceHall_0349                   [SimCity_1.dat]
+            @ 0x00B05F72 (.rdata)
+0x03580000  Ut6x6_NavTower_0358                            [SimCity_1.dat]
+            @ 0x00B0CF1A (.data)
+            @ 0x00B0CF2E (.data)
+            @ 0x00B0CF42 (.data)
+0x0FD10000  Zot_NoPower_0fd1                               [SimCity_1.dat]
+            @ 0x006CADAB (.text)
+            @ 0x006CC11E (.text)
+0x107A0000  Zot_NoCar_107A                                 [SimCity_1.dat]
+            @ 0x006BB52B (.text)
+            @ 0x006CB196 (.text)
+0x11100000  RW5x5x22_Vehicle_SmallCrane_11100000           [SimCity_1.dat]
+            @ 0x00B1E5FA (.data)
+            @ 0x00B1E820 (.data)
+0x16680000  Pz8x8x13_soccertree_1668                       [SimCity_1.dat]
+            @ 0x00B0167E (.rdata)
+0x1C400000  I9x6x6_StockyardShedProp_1C400000              [SimCity_1.dat]
+            @ 0x00B01C7A (.rdata)
+            @ 0x00B0A173 (.data)
+            @ 0x00B0DC0F (.data)
+0x1C430000  Zot_NoWater_1c43                               [SimCity_1.dat]
+            @ 0x006CAF3F (.text)
+0x1C440000  Zot_NoWork_1c44                                [SimCity_1.dat]
+            @ 0x006CB1C7 (.text)
+            @ 0x006CB1E9 (.text)
+0x1C460000  Burnt8x8x8_BrntProp_1c460000                   [SimCity_1.dat]
+            @ 0x00AB1AF8 (.rdata)
+0x1C470000  Burnt4x4x4_brntprop_1c470000                   [SimCity_1.dat]
+            @ 0x00AB1AEC (.rdata)
+0x1C480000  Burnt6x4x4_burntprop_1c480000                  [SimCity_1.dat]
+            @ 0x00AB1AF4 (.rdata)
+            @ 0x00B169F6 (.data)
+0x1C490000  Burnt4x6x4_brntprop4_1c490000                  [SimCity_1.dat]
+            @ 0x00AB1AF0 (.rdata)
+0x1C500000  CSF6x2x6_$$$ClothingBoutique_1C500000          [SimCity_1.dat]
+            @ 0x00B01C6E (.rdata)
+0x1C570000  CSF6x2x6_$$Restaurant3star_1C570000            [SimCity_1.dat]
+            @ 0x00AD528A (.rdata)
+0x1C600000  CSF8x2x6_$$$ConsumableGrocery_1C600000         [SimCity_1.dat]
+            @ 0x00B01C82 (.rdata)
+0x1C610000  CSF8x2_$$$ConsumableGrocery2_1C610000          [SimCity_1.dat]
+            @ 0x00AE8DC1 (.rdata)
+0x1C640000  CSF8x2x6_$$$RetailGallery2_1C640000            [SimCity_1.dat]
+            @ 0x00ACAFC6 (.rdata)
+0x1C710000  CUSign4x1x3_ChiTacoStandSignMain_1C710000      [SimCity_1.dat]
+            @ 0x00AF3206 (.rdata)
+            @ 0x00AF3312 (.rdata)
+            @ 0x00AF341E (.rdata)
+0x1C720000  CUSign3x2x2_ChiTacoStandSignSide_1C720000      [SimCity_1.dat]
+            @ 0x00AF3176 (.rdata)
+0x1C800000  R6x6x4_$ChickenCoop_1C80                       [SimCity_1.dat]
+            @ 0x00B0FE7A (.data)
+0x1D010000  R12x12x3_$$$marbleterraceumbrella2_1D01        [SimCity_1.dat]
+            @ 0x00B120D6 (.data)
+0x1D300000  I1x1x2_55GallonDrum_1D300000                   [SimCity_1.dat]
+            @ 0x00B01D6A (.rdata)
+0x1D400000  Street2x5x2_$Pickup_1D40                       [SimCity_1.dat]
+            @ 0x00B01D5E (.rdata)
+0x1D4A0000  I3x7x3_IndustTruck2_1D4A0000                   [SimCity_1.dat]
+            @ 0x00B0BF6E (.data)
+0x1D4C0000  Street2x6x2_$$Minivan_1D4C                     [SimCity_1.dat]
+            @ 0x00B16F3E (.data)
+0x1D5E0000  CBill12x4x8_$billboard_1D5E                    [SimCity_1.dat]
+            @ 0x00AE8DD1 (.rdata)
+0x1D700000  Street2x5x2_$$Sedan2_1D70                      [SimCity_1.dat]
+            @ 0x00A8F6D6 (.rdata)
+            @ 0x00A92CA6 (.rdata)
+0x1D720000  Street2x6x2_$$$LuxerySedan_1D72                [SimCity_1.dat]
+            @ 0x00AE8CE1 (.rdata)
+0x1D800000  CR12x1x8_Billboard_1D800000                    [SimCity_1.dat]
+            @ 0x00AE8379 (.rdata)
+            @ 0x00B01DBA (.rdata)
+            @ 0x00B0FE5A (.data)
+0x1DA00000  CSF14x2x6_$$$RetailGallery_1DA0                [SimCity_1.dat]
+            @ 0x00B01DC2 (.rdata)
+0x1DB00000  GA2x1x1_streetgarbage_1DB0                     [SimCity_1.dat]
+            @ 0x00A8F6C2 (.rdata)
+            @ 0x00A92C92 (.rdata)
+            @ 0x00AE8190 (.rdata)
+0x1DCF0000  Rubble4x4x4_DemoPile_1DCF                      [SimCity_1.dat]
+            @ 0x00AB1AD4 (.rdata)
+0x1DD00000  Rubble4x4x4_DemoPile_1DD0                      [SimCity_1.dat]
+            @ 0x00AB1AD8 (.rdata)
+            @ 0x00B01E0A (.rdata)
+0x1DD10000  Rubble4x4x4_DemoPile_1DD1                      [SimCity_1.dat]
+            @ 0x00AB1ADC (.rdata)
+0x1DD20000  Rubble4x4x4_DemoPile_1DD2                      [SimCity_1.dat]
+            @ 0x00AB1AE0 (.rdata)
+0x1DD30000  Rubble4x4x4_DemoPile_1DD3                      [SimCity_1.dat]
+            @ 0x00AB1AE4 (.rdata)
+            @ 0x00AB1AE8 (.rdata)
+0x1DDC0000  PZPark15x15x3_SandPit_1DDC                     [SimCity_1.dat]
+            @ 0x005B96F6 (.text)
+            @ 0x007BF056 (.text)
+            @ 0x007CBC44 (.text)
+            @ 0x007CE0B9 (.text)
+            @ 0x007CE107 (.text)
+0x1DE00000  I8x8x4_garage_1de0                             [SimCity_1.dat]
+            @ 0x00B01DFE (.rdata)
+0x1DE40000  R8x8x7_$$$garage_1de4                          [SimCity_1.dat]
+            @ 0x00AB2BA2 (.rdata)
+0x1DF00000  CU6x16x10_iCarWash_1DF0                        [SimCity_1.dat]
+            @ 0x00B01E12 (.rdata)
+0x1E000000  Flora2x2x1_$$$planter-concrete1_1E00           [SimCity_1.dat]
+            @ 0x0070245F (.text)
+            @ 0x007B8DD9 (.text)
+            @ 0x00A9AE36 (.rdata)
+            @ 0x00AC51F9 (.rdata)
+            @ 0x00AE6A92 (.rdata)
+            @ 0x00AE9270 (.rdata)
+            @ 0x00AE9590 (.rdata)
+            @ 0x00AEC532 (.rdata)
+            ... 46 more
+0x1E010000  Flora2x2x5_$$$Planter-concrete3_1E01           [SimCity_1.dat]
+            @ 0x00B120C2 (.data)
+            @ 0x00B1213E (.data)
+            @ 0x00B121BA (.data)
+0x1E020000  Flora2x2x1_$$Planter-Wood1_1E02                [SimCity_1.dat]
+            @ 0x00B120C6 (.data)
+0x1E030000  Flora2x2x1_$$Planter-Wood2_1E03                [SimCity_1.dat]
+            @ 0x00B120CA (.data)
+0x1E1F0000  PzGolf12x12x1_sandtrap-02_1e1f                 [SimCity_1.dat]
+            @ 0x00AC528E (.rdata)
+0x1E200000  PzGolf9x13x1_sandtrap-03_1e20                  [SimCity_1.dat]
+            @ 0x00B01E5A (.rdata)
+0x1E300000  C16x7x3_$$4LotCarCluster-11011_1E30            [SimCity_1.dat]
+            @ 0x00B01E4E (.rdata)
+0x1E400000  R16x7x3_$$4LotCarCluster-11011_1E40            [SimCity_1.dat]
+            @ 0x00B01E62 (.rdata)
+0x1E700000  R16x7x3_$4LotCarCluster-11110_1E59             [SimCity_1.dat]
+            @ 0x00B01EAA (.rdata)
+0x1E8B0000  C16x7x3_$$$5CarDealerExpensiveLuxurySedan_1E8B [SimCity_1.dat]
+            @ 0x0042F517 (.text)
+            @ 0x0099C380 (.text)
+0x1E900000  C16x7x3_$1LotCarCluster-10000_1E90             [SimCity_1.dat]
+            @ 0x00B01EB2 (.rdata)
+0x1E940000  C16x7x3_$$$1LotCarCluster-01000_1E94           [SimCity_1.dat]
+            @ 0x00AE8DE1 (.rdata)
+0x1EBA0000  ARW4x3x4_small-table-crowd-farmers-market_1EBA [SimCity_1.dat]
+            @ 0x009F59E5 (.text)
+0x1EC00000  RW1x1x1_café-tables-sims-eating_1EC00000       [SimCity_1.dat]
+            @ 0x00AE8371 (.rdata)
+            @ 0x00B01EFA (.rdata)
+0x1ED00000  Flora2x2x3_Yucca_1ED0                          [SimCity_1.dat]
+            @ 0x00B01EEE (.rdata)
+0x1EE00000  Flora2x2x2_Flowersyellow_1EE0                  [SimCity_1.dat]
+            @ 0x00B01F02 (.rdata)
+0x1F000000  C5x5x2_$$cafetable_1F00                        [SimCity_1.dat]
+            @ 0x00A81496 (.rdata)
+            @ 0x00ABF8A5 (.rdata)
+            @ 0x00AC50A5 (.rdata)
+            @ 0x00AC528D (.rdata)
+            @ 0x00ACC129 (.rdata)
+            @ 0x00AF3571 (.rdata)
+            @ 0x00AF5075 (.rdata)
+            @ 0x00B0AE19 (.data)
+            ... 37 more
+0x1F2A0000  Abase2x2x4_base-outfield-drk_1F2A              [SimCity_1.dat]
+            @ 0x00AE8CF1 (.rdata)
+0x1F300000  GA2x1x2_twoCansPiled_1F30                      [SimCity_1.dat]
+            @ 0x00B01F52 (.rdata)
+0x28200000  RW36x34_ZooSavannah_2820                       [SimCity_1.dat]
+            @ 0x00A8708A (.rdata)
+            @ 0x00A8E00E (.rdata)
+            @ 0x00A8E016 (.rdata)
+            @ 0x00A911E6 (.rdata)
+            @ 0x00A917B6 (.rdata)
+            @ 0x00A95722 (.rdata)
+            @ 0x00A95732 (.rdata)
+            @ 0x00A95742 (.rdata)
+            ... 13 more
+0x28240000  Ut10x28_SeaportWarehouse1prop                  [SimCity_1.dat]
+            @ 0x00B0285E (.rdata)
+0x28340000  Flora2x4x2_LongScrub_2834                      [SimCity_1.dat]
+            @ 0x00B02852 (.rdata)
+0x283D0000  C16x7x3_$$$2LotCarCluster-11000_283D           [SimCity_1.dat]
+            @ 0x00A81396 (.rdata)
+            @ 0x00AC92AA (.rdata)
+0x28440000  C16x7x3_$$$4LotCarCluster-10111_2844           [SimCity_1.dat]
+            @ 0x00B02866 (.rdata)
+0x28510000  Aper2x2x4_female-S-med01-negative-noway_2851   [SimCity_1.dat]
+            @ 0x00AF277E (.rdata)
+0x28530000  Aper3x2x4_female-S-med01-negative-reject_2853  [SimCity_1.dat]
+            @ 0x00AF2596 (.rdata)
+0x28560000  Aper2x2x4_female-S-med01-positive-clap_2856    [SimCity_1.dat]
+            @ 0x00AF24A2 (.rdata)
+0x28580000  Aper2x2x4_female-S-med01-positive-whoop_2858   [SimCity_1.dat]
+            @ 0x00B0D006 (.data)
+0x285B0000  Aper2x2x4_female-P-drk01-negative-kissmy_285B  [SimCity_1.dat]
+            @ 0x00A9F362 (.rdata)
+            @ 0x00AF23AE (.rdata)
+0x28650000  Aper2x2x4_female-P-lgt01-negative-booer_2865   [SimCity_1.dat]
+            @ 0x00AF22BA (.rdata)
+0x28670000  Aper2x2x4_female-P-lgt01-negative-noway_2867   [SimCity_1.dat]
+            @ 0x00B07C2A (.data)
+0x28740000  Aper3x2x4_male-drk01-negative-reject_2874      [SimCity_1.dat]
+            @ 0x00B028AE (.rdata)
+0x28790000  Aper2x2x4_male-drk01-positive-whoop_2879       [SimCity_1.dat]
+            @ 0x00AF21C6 (.rdata)
+0x28840000  Aper2x2x4_male-lgt01-positive-whoop_2884       [SimCity_1.dat]
+            @ 0x00B028A2 (.rdata)
+0x288B0000  Aper2x2x4_male-med02-negative-tantrum_288B     [SimCity_1.dat]
+            @ 0x006A918D (.text)
+            @ 0x006DAB72 (.text)
+0x28940000  Aper2x2x4_child-F-drk01-negative-phooee_2894   [SimCity_1.dat]
+            @ 0x00B028B6 (.rdata)
+0x28A10000  Aper2x2x4_child-M-lgt01-negative-tantrum_28A1  [SimCity_1.dat]
+            @ 0x0046FCA3 (.text)
+0x28A20000  Aper2x2x4_child-M-lgt01-positive-booyah_28A2   [SimCity_1.dat]
+            @ 0x00AF20D2 (.rdata)
+0x28A30000  Aper2x2x4_child-M-lgt01-positive-clap_28A3     [SimCity_1.dat]
+            @ 0x00AF2D0A (.rdata)
+            @ 0x00AF2E16 (.rdata)
+0x28A70000  C16x7x3_$$$3LotCarCluster-10110_28A7           [SimCity_1.dat]
+            @ 0x00AE8E61 (.rdata)
+0x28C40000  R16x7x3_$$$4LotCarCluster-11101_               [SimCity_1.dat]
+            @ 0x00B028FE (.rdata)
+0x28CE0000  R16x7x3_$$3LotCarCluster-01101_                [SimCity_1.dat]
+            @ 0x00AB4D06 (.rdata)
+            @ 0x00ADF2E6 (.rdata)
+0x28D40000  R16x7x3_$$5LotCarCluster-11111_                [SimCity_1.dat]
+            @ 0x00B028F2 (.rdata)
+0x28E40000  RW1x3_FarmersMarket-Lampost_28E4               [SimCity_1.dat]
+            @ 0x00B02906 (.rdata)
+0x28E70000  Street6x1x7_HighwaySign_28E7                   [SimCity_1.dat]
+            @ 0x00ACEA36 (.rdata)
+0x28F50000  AStreet1x1x11_stoplightPole_28F5               [SimCity_1.dat]
+            @ 0x00AF1FDE (.rdata)
+0x28F60000  AGolf1x1x3_driverPlaidPants_28f6               [SimCity_1.dat]
+            @ 0x00B0BADE (.data)
+            @ 0x00B0BB0E (.data)
+            @ 0x00B0BCFE (.data)
+            @ 0x00B0BD2E (.data)
+0x29000000  R2x3x2_$$Beachumbrella_2900                    [SimCity_1.dat]
+            @ 0x00876D97 (.text)
+            @ 0x00A809F1 (.rdata)
+            @ 0x00AD159D (.rdata)
+            @ 0x00AE2395 (.rdata)
+            @ 0x00AE8339 (.rdata)
+            @ 0x00AE9390 (.rdata)
+            @ 0x00AF1F49 (.rdata)
+            @ 0x00B0329D (.rdata)
+            ... 12 more
+0x29010000  APzPark3x1x2_StoneBench_2901                   [SimCity_1.dat]
+            @ 0x00B12172 (.data)
+0x29140000  C2x2x3_Sodamachine_2914                        [SimCity_1.dat]
+            @ 0x00B0294E (.rdata)
+0x29240000  Effect_green_blinking_light_fast_29240000      [SimCity_1.dat]
+            @ 0x00B02942 (.rdata)
+0x29430000  ACSign7x7x1_pizza_29430000                     [SimCity_1.dat]
+            @ 0x00ADE646 (.rdata)
+0x29740000  RW12x5_Cemetary-Crypts1_2974                   [SimCity_1.dat]
+            @ 0x00B02992 (.rdata)
+0x297E0000  RW12x1_Cemetary-TomeLine_297E                  [SimCity_1.dat]
+            @ 0x0079AEE9 (.text)
+0x29840000  R16x1x2_$PicketFence_2984                      [SimCity_1.dat]
+            @ 0x00B029A6 (.rdata)
+0x29890000  RW52x46_StateFair-Rodeo_2989                   [SimCity_1.dat]
+            @ 0x00A579E6 (.text)
+0x29940000  AGolf1x1x3_putterGreenPants_2994               [SimCity_1.dat]
+            @ 0x00ACC28E (.rdata)
+0x299A0000  ARWZoo1x1x3_Monkeys_299A                       [SimCity_1.dat]
+            @ 0x00AE64B6 (.rdata)
+0x299E0000  ARWZoo1x1x3_doe_299E                           [SimCity_1.dat]
+            @ 0x00AF1EEA (.rdata)
+0x29A00000  ARWZoo1x1x3_giraffe_29A0                       [SimCity_1.dat]
+            @ 0x00AA2FF6 (.rdata)
+0x29B40000  AR6x12x4_$$kidstoySlide_29B4                   [SimCity_1.dat]
+            @ 0x00B02A22 (.rdata)
+0x29B90000  I15x7_1Farm4-prop_29B9                         [SimCity_1.dat]
+            @ 0x00AECD7E (.rdata)
+0x29D40000  Lm67x58_PalaceofFineArts3a_29D4                [SimCity_1.dat]
+            @ 0x00AE8D51 (.rdata)
+            @ 0x00B02A02 (.rdata)
+0x29F10000  UI8x1x3_ConnectArrow_29F1                      [SimCity_1.dat]
+            @ 0x006D4A67 (.text)
+0x2A000000  AR2x2x3_sit-backwardchair-idle_2A00            [SimCity_1.dat]
+            @ 0x00A80A75 (.rdata)
+            @ 0x00A85C4D (.rdata)
+            @ 0x00A86EC5 (.rdata)
+            @ 0x00A86ECD (.rdata)
+            @ 0x00A870D1 (.rdata)
+            @ 0x00AA6771 (.rdata)
+            @ 0x00AB7DB9 (.rdata)
+            @ 0x00AB7DC9 (.rdata)
+            ... 36 more
+0x2A130000  Flora6x6x15_LargePines2                        [SimCity_1.dat]
+            @ 0x00AE8E71 (.rdata)
+0x2A200000  CBill12x2x8_$$sign1_2A20                       [SimCity_1.dat]
+            @ 0x00A8DCBE (.rdata)
+            @ 0x00AEB652 (.rdata)
+            @ 0x00AEB65A (.rdata)
+0x2A2A0000  CSign11x1x4_$sign1_2A2A                        [SimCity_1.dat]
+            @ 0x00A80A76 (.rdata)
+0x2A380000  CSign1x4x5_$$sign1_2A38                        [SimCity_1.dat]
+            @ 0x00ADEA8E (.rdata)
+            @ 0x00B02A72 (.rdata)
+0x2A480000  I4x8x7_Tractor_2A48                            [SimCity_1.dat]
+            @ 0x00B02A66 (.rdata)
+0x2A580000  Streetlight1x1x11_$Streetlight_2A58            [SimCity_1.dat]
+            @ 0x00B02A7A (.rdata)
+0x2A5B0000  Streetlight1x1x11_$$$StreetlightBanner2_2A5B   [SimCity_1.dat]
+            @ 0x007AFB6A (.text)
+0x2A6E0000  I12x2x2_FeedTroughFull_2A6E                    [SimCity_1.dat]
+            @ 0x00ACC3BE (.rdata)
+0x2A800000  Abase2x2x4_umpire                              [SimCity_1.dat]
+            @ 0x00AE8331 (.rdata)
+0x2AA00000  Aper2x2x4_child-M-lgt01-wait                   [SimCity_1.dat]
+            @ 0x00AAA186 (.rdata)
+0x2AA80000  Aper2x2x4_female-S-med01-wait                  [SimCity_1.dat]
+            @ 0x00B02ACA (.rdata)
+0x2AAA0000  Aper2x2x4_male-drk02-wait                      [SimCity_1.dat]
+            @ 0x00AF1C12 (.rdata)
+0x2AD20000  PzPz8x8x13_soccertree_2AD2                     [SimCity_1.dat]
+            @ 0x00B02CD2 (.rdata)
+0x2AE80000  Aper2x2x4_male-drk02-night                     [SimCity_1.dat]
+            @ 0x00B02B06 (.rdata)
+0x2AF00000  Aper2x2x4_child-M-Sockids                      [SimCity_1.dat]
+            @ 0x00AAA106 (.rdata)
+0x2AF80000  Aper2x2x4_child-Basekids                       [SimCity_1.dat]
+            @ 0x00B02B1A (.rdata)
+0x2B110000  AbasketBall1x1x3_dribble_2953                  [SimCity_1.dat]
+            @ 0x00AD4D2E (.rdata)
+            @ 0x00AF354E (.rdata)
+0x2B380000  Aper2x2x4_male-SoccerCoach                     [SimCity_1.dat]
+            @ 0x00B02B56 (.rdata)
+0x2B570000  Aper2x2x4_nighclub                             [SimCity_1.dat]
+            @ 0x007CC6A2 (.text)
+0x2B780000  R2x1x2_twoCans_1F2F                            [SimCity_1.dat]
+            @ 0x00B02BB2 (.rdata)
+0x2B840000  ARW4x4x4_tv-camera-crew-Soccer                 [SimCity_1.dat]
+            @ 0x00AE7D40 (.rdata)
+0x2B850000  Ut7x6_seaportOfficeProp                        [SimCity_1.dat]
+            @ 0x00AE8E81 (.rdata)
+0x2BC00000  Ave16X16X1_lowdensityC$_2BC0                   [SimCity_1.dat]
+            @ 0x00A8857E (.rdata)
+            @ 0x00AE8329 (.rdata)
+0x2BD80000  LM1x1x3_Gnome_Sphynx                           [SimCity_1.dat]
+            @ 0x00B02BF6 (.rdata)
+            @ 0x00B0964E (.data)
+0x2BDE0000  LM1x1x3_Gnome_StBasils                         [SimCity_1.dat]
+            @ 0x00AE8D61 (.rdata)
+0x2BE00000  LM1x1x3_Gnome_EmpireStateBuilding              [SimCity_1.dat]
+            @ 0x00A884FE (.rdata)
+            @ 0x00AE7AA1 (.rdata)
+0x2BE80000  LM1x1x3_Gnome_CoitTower                        [SimCity_1.dat]
+            @ 0x00B02C0A (.rdata)
+0x2BEF0000  LM1x1x3_Gnome_JeffersonMemorial                [SimCity_1.dat]
+            @ 0x00ADEEBE (.rdata)
+0x2BF00000  LM1x1x3_Gnome_Guggenhiem                       [SimCity_1.dat]
+            @ 0x00847DD3 (.text)
+0x2C0A0000  ElevRail1X6_PowerBoxLow_2BF8                   [SimCity_1.dat]
+            @ 0x00AEBF2E (.rdata)
+0x2C180000  ElevRail8X1_Construction_2BFA                  [SimCity_1.dat]
+            @ 0x00B02C52 (.rdata)
+0x2C280000  Ave16X16X1_highdensityI$$3_2C28                [SimCity_1.dat]
+            @ 0x00B02C46 (.rdata)
+0x2C380000  Ave16X16X1_Industrialdumby                     [SimCity_1.dat]
+            @ 0x00B02C5A (.rdata)
+0x2C520000  Tag1x1x3_ferrytermin_2C52                      [SimCity_1.dat]
+            @ 0x006C16BA (.text)
+            @ 0x007237E5 (.text)
+            @ 0x0072382C (.text)
+0x2C530000  Tag1x1x3_ferrytermout_2C53                     [SimCity_1.dat]
+            @ 0x006C16C1 (.text)
+            @ 0x007237ED (.text)
+            @ 0x00723838 (.text)
+0x2C540000  Tag1x1x3_ferryopp_2C54                         [SimCity_1.dat]
+            @ 0x007237F5 (.text)
+            @ 0x00723840 (.text)
+0x2CB60000  Street8x8x7_HighwaySignDiag_Ground_2CB6        [SimCity_1.dat]
+            @ 0x00B112DA (.data)
+            @ 0x00B1759A (.data)
+0x2D000000  LM1x1x3_Gnome_LincolnCenter                    [SimCity_1.dat]
+            @ 0x00887073 (.text)
+            @ 0x008DE653 (.text)
+            @ 0x00A84E5D (.rdata)
+            @ 0x00A8DE31 (.rdata)
+            @ 0x00A9F349 (.rdata)
+            @ 0x00A9F34D (.rdata)
+            @ 0x00AC53A9 (.rdata)
+            @ 0x00AC7311 (.rdata)
+            ... 18 more
+0x2D080000  Castle Out - Large 2 Story House               [z_All Maxis building props with proper names.dat]
+            @ 0x00B02D42 (.rdata)
+0x67CD0000  AStreet1x1x11_Oldconsoleremoved_67CD           [SimCity_1.dat]
+            @ 0x00AAF08F (.rdata)
+0x6A5FB141  MySimAtHomeDayF                                [SimCity_1.dat]
+            @ 0x00426F44 (.text)
+0x890B7312  Red Brick                                      [SimCity_1.dat]
+            @ 0x006C877C (.text)
+0x89F00000  Streetlight1x1x11_$$Streetlightdiagonal_89f0   [SimCity_1.dat]
+            @ 0x00A87236 (.rdata)
+            @ 0x00A92652 (.rdata)
+0xAE000000  R4x8x3_$$Rowboat_AE00                          [SimCity_1.dat]
+            @ 0x00AE6365 (.rdata)
+            @ 0x00AEC542 (.rdata)
+            @ 0x00AEC54A (.rdata)
+            @ 0x00B1C489 (.data)
+0xCE000000  C14x30x6_$$2StoryPG_CE000000                   [SimCity_1.dat]
+            @ 0x00AA5EF5 (.rdata)
+            @ 0x00AB4D05 (.rdata)
+            @ 0x00ADF2E5 (.rdata)
+            @ 0x00AE8531 (.rdata)
+            @ 0x00AE8FE0 (.rdata)
+            @ 0x00AE92B0 (.rdata)
+            @ 0x00AE93F0 (.rdata)
+            @ 0x00B18E5D (.data)
+            ... 1 more
+
+POSITIVE CONTROL 0x29F10000 (push @0x6D4A66, imm @0x6D4A67): PASS (1 site(s) total)
