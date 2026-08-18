@@ -151,3 +151,8 @@ __pycache__/
 *.jpeg
 *.bmp
 *.fsh
+
+# research/ holds ONLY the distilled laws + index. The full corpus lives
+# at its real paths (tools/research, _tests) now that the working tree IS
+# the repo - mirroring it under research/ would be two copies drifting.
+!/research/
