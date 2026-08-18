@@ -177,9 +177,20 @@ foreach ($f in $Factor) {
     # manufacture-guard nudge is !keyed-only, which is the asymmetry #175
     # had backwards. GATED: the corpus-wide near-key scan must read ZERO
     # and 2x/3x must stay byte-identical, both checked after this runs.
-    # GATED OFF 2026-08-18: gate_key_integrity.py REJECTED this build.
-    # $argv += '--supersample'
-    # $argv += '--smooth-keyed'
+    # GH5 2026-08-18, SCOPED TO UNKEYED SHEETS. --supersample replaces the
+    # Catmull-Rom fill with a LOSSLESS x3 then an area reduction - even by
+    # construction rather than even-by-blurring. It refuses itself at integer
+    # factors, so 2x and 3x stay byte-identical.
+    #
+    # ⛔ --smooth-keyed stays OFF and that is the whole point of this scoping.
+    # With it on, the 48 eligible KEYED sheets also supersampled and
+    # gate_key_integrity.py REJECTED the build (exit 1, 7+ sheets, both
+    # directions) because the gate predicts NEAREST key placement and the
+    # majority-vote moves the key BOUNDARY. Deciding that boundary policy - and
+    # whether the gate should predict the resampler in use - is its own piece of
+    # work with its own negative control. Amending a gate so your own change
+    # passes is not something to do as a side effect of a sharpness fix.
+    $argv += '--supersample'
 
     # Computed before the DryRun exit so the dry run can print the post-steps
     # with the real path (F13).

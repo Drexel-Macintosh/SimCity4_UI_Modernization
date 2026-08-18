@@ -611,10 +611,19 @@ internal static class Upscale2x
         {
             // ⚠ REPORT THE REFUSALS, NOT JUST THE WORK. A pass that prints only
             // what it did lets a silent skip read as coverage.
-            Console.WriteLine("smooth-unkeyed: " + sSmoothed + " sheet(s) Catmull-Rom resampled; "
+            // Law 54: the summary must name the resampler that actually ran.
+            // "Catmull-Rom" printed unconditionally would let a supersampled
+            // corpus report itself as the old algorithm - a log that cannot
+            // distinguish two builds is not evidence about either.
+            Console.WriteLine("smooth-unkeyed: " + sSmoothed + " sheet(s) "
+                + (sSupersample ? "SUPERSAMPLED (x3 lossless -> area reduce)"
+                                : "Catmull-Rom resampled") + "; "
                 + sSmoothSkippedKeyed + " refused (contain the FF00FF colour key); "
                 + sSmoothSkippedMeasured + " refused (edges measured downstream); "
                 + sSmoothSkippedInteger + " refused (integer factor - nearest is already exact)");
+            Console.WriteLine("supersample   : " + sSupersampled
+                + " sheet(s) took the x3-then-area path"
+                + (sSupersample ? "" : "  [--supersample not passed]"));
             Console.WriteLine("smooth-keyed  : " + sSmoothedKeyed + " KEYED sheet(s) resampled with the key excluded; "
                 + sSmoothSkippedFineKey + " refused (key is 1-2px STRUCTURE, not a region - nearest preserves it better)"
                 + (sSmoothKeyed ? "" : "  [--smooth-keyed not passed; keyed sheets stay NEAREST]"));

@@ -14257,3 +14257,51 @@ sharpness improvement. It needs its own decision, with the negative control
 
 ⭐ THE GATE EARNED ITS KEEP. It caught a whole-corpus art change that eyes-on at
 one tier could easily have missed, and it caught it before deploy.
+
+## GH5 SHIPPED, scoped to UNKEYED sheets (2026-08-18, deployed 17:00:53)
+
+1.5x looked soft next to 2x for an ARITHMETIC reason, not a filter one: an
+integer factor maps one source pixel to an exact NxN block, while 1.5 must
+distribute one extra pixel per two and no arrangement of that is even. Nearest
+made it uneven (24 equal ticks -> 13 fours + 11 fives); Catmull-Rom made it even
+by BLURRING, which is the softness itself.
+
+--supersample resamples through a LOSSLESS x3 nearest intermediate (replication
+introduces no colour the source lacks, so the key is bit-exact by construction)
+then an AREA reduction onto the final grid, via the same ScaleDim path
+everything else uses - so cell-first widths (#171), height-exact (#177) and
+no-snap (#160) all still govern the size. Only the FILL changed, never the
+count.
+
+    1.5x : 1732 sheets SUPERSAMPLED, 465 keyed refused, 9 measured-edge refused
+    2x   : 0 supersampled, 2206 refused (integer factor)
+    3x   : 0 supersampled, 2206 refused (integer factor)
+
+GATES, all green and all MEASURED rather than assumed:
+  * gate_key_integrity.py PASS at 1.5x
+  * INTEGER CONTROL: 655 entries / 0 differing PAYLOADS at BOTH 2x and 3x
+    against the already-deployed packages - byte-identical, which is what
+    "refuses itself at integer factors" has to mean in practice
+  * CORPUS-WIDE NEAR-KEY SCAN on the SHIPPED 1.5x package: 566 PNGs, 86 of them
+    keyed, ZERO near-key pixels. That is the scan that would have caught both
+    historical pink bugs (#143 FF00FF->FE01FE, #175 FF00FF->FF01FF - one defect,
+    a pixel that is ALMOST the key)
+  * builders 12/12 clean at all three tiers
+
+KEYED SHEETS DELIBERATELY EXCLUDED, and this is the scoping decision, not an
+oversight. With --smooth-keyed also on, the 48 eligible keyed sheets
+supersampled too and gate_key_integrity.py REJECTED the build (exit 1, 7+
+sheets, both directions) because the gate predicts NEAREST key placement and the
+majority-vote moves the key BOUNDARY. Ties-to-key erodes art half a pixel at
+every keyed edge; ties-to-colour grows it; neither matches NN. Whether the gate
+should predict the RESAMPLER IN USE is a real question and its own piece of work
+- with its own negative control - because amending a gate so your own change
+passes is the most dangerous move available here. The 465 keyed sheets keep
+NEAREST exactly as they did yesterday, so nothing about them regressed.
+
+A LOG THAT CANNOT TELL TWO BUILDS APART IS NOT EVIDENCE ABOUT EITHER. The
+summary printed "Catmull-Rom resampled" unconditionally, so a supersampled
+corpus reported itself as the old algorithm; and the first apparently-successful
+run was against a STALE exe after a silent C# build failure. Both fixed: the
+line now names the resampler actually in use, and a separate counter proves the
+path ran (law 54).
