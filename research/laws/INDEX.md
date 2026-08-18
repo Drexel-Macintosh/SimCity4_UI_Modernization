@@ -1,4 +1,5 @@
 **Standing orders**
+- [⭐ NORTHSTAR: GITHUB IS THE SOURCE OF TRUTH](feedback-github-is-the-source-of-truth.md) — USER ORDER. The `sc4uiscale` private repo is canonical; EVERY session ends with a commit+push. Ledger entry and commit are ONE action. An audit found the repo held 2.8% of files and was missing 3 of 8 package builders — measure, don't assume
 - [⭐ NORTHSTAR: CHECK OUR PREVIOUS WORK FIRST](feedback-check-our-previous-work-first.md) — USER ORDER. Two questions: have we hit this before, and is that cure VIABLE HERE (if so PORT it). Cost 4 defects in one day
 - [⭐ NORTHSTAR: no progress recaps](feedback-no-progress-recaps.md) — USER ORDER. No ledgers, no "what's shipped", no lists of confirmed fixes. Report the CURRENT problem only
 - [⭐ NORTHSTAR: NEVER STOP TO REPORT](feedback-never-stop-to-report.md) — USER ORDER. In auto mode KEEP EXECUTING. A turn ends only when DONE or blocked on the user. Never end on "next I will…"; chain reads/builds/deploys, ledger in the same turn
