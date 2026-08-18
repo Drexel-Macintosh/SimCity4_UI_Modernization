@@ -14166,3 +14166,55 @@ constants - law 99, which is why a data-section sweep found nothing.
 ⇒ WITH THIS, EVERY DEFECT ON THE BOARD IS CLOSED. What remains is release work
 (#146 content audit, #148 near-vanilla verify, #147 bundle, cut v3.0.0), three
 research/refactor items (#124, #125, #178) and the long-running #104.
+
+## GH5 — x3-NN-then-2:1-BOX supersampler: FIRST MEASUREMENT (2026-08-18)
+
+Prototyped OFFLINE in tools/upscale/proto15/ss_proto.py. Nothing shipped, no
+builder touched, the pipeline is untouched. Five real 1x sheets, including the
+issue's own named symptom case.
+
+RESULT 1 - THE SAFETY GATE PASSES. Near-key pixels emitted: ZERO, on all five
+sheets including the keyed {1abe787d,14015549}. That is the single measurement
+that would have caught BOTH historical pink bugs - #143 (--hq averaged an exact
+FF00FF into 0xFE01FE, key test missed it, key DREW) and #175's second half (a
+belt-and-braces line nudged a legitimately-key result to FF01FF, same outcome).
+Both are the same defect wearing different clothes: a pixel that is ALMOST the
+key. The prototype keeps key pixels out of every average, divides by actual
+coverage, and re-emits sub-half-coverage as an EXACT key with nothing nudging it
+afterwards.
+
+RESULT 2 - MY SHARPNESS METRIC WAS WRONG, and it condemned the good output.
+I scored "run-length standard deviation, lower is more even" and it read WORSE
+for the supersampler on the ladder sheet (NN 1.547 -> SS 2.027). Reading the
+distributions instead of the summary statistic inverts the verdict:
+
+    1x source   24 runs of 3px, 22 runs of 1px
+    NN 1.5x     13 runs of 4px, 11 of 5px, 12 of 2px, 10 of 1px
+    SS 1.5x     24 runs of 5px, 22 of 1px
+
+NN SPLIT the 24 equal ticks into 13 fours and 11 fives - which IS the reported
+symptom, "the red half renders bolder than the green half". The supersampler
+kept all 24 equal and preserved the source's exact 24/22 structure. Its sd is
+higher only because 5-and-1 are further apart than 4-and-5-and-2-and-1, so the
+statistic rewards MUSH. The metric must be PATTERN PRESERVATION (do equal source
+runs stay equal to each other), not variance. Recorded because a wrong
+instrument that agrees with your prior is the expensive kind (law 88's cousin:
+mine would have condemned the fix).
+
+On the two GZWinBtn sheets the improvement shows even under the bad metric:
+{46a006b0,cbcb9a74} NN 38x1 + 37x2 (bimodal - the defect) vs SS 113x1;
+{00000001,144161e0} NN 32x1 + 30x2 vs SS 98x1.
+
+RESULT 3 - AN OPEN DESIGN QUESTION, not a defect. Key pixel counts on the
+ladder: 1x 676, NN 1560 (= 676 x 2.25, proportional), SS 1014. The supersampler
+SHRINKS the keyed region by about a third, because a 2x2 block with exactly two
+key pixels currently resolves to COLOUR (the rule is "re-key below HALF
+coverage", and half is not below half). At every transparency boundary that
+grows the art by half a pixel. Harmless-looking and still a decision: it must be
+made deliberately and stated, not left to a comparison operator. Options are
+re-key at <= half, or weight the key as alpha rather than as a veto.
+
+STILL OWED before this can ship: the integer-tier control (2x and 3x output must
+stay BYTE-IDENTICAL - the supersampler must refuse itself there, exactly as
+--smooth-unkeyed does), a corpus-wide near-key scan rather than five sheets, and
+the pattern-preservation metric above run over the whole corpus.
