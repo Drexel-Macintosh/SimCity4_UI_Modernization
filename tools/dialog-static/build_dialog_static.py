@@ -562,6 +562,29 @@ def discover_query_family():
     return found
 
 
+# BUDGET DEPARTMENT POPUPS (2026-08-18). Root id 0xAA3AC002, clsid 0x89e1567c.
+# discover_query_family() does NOT adopt these - it keys on id=0x10000005 and
+# these scripts do not carry it (checked) - so they were shipping at 1x and the
+# sweep resized them AFTER first paint. That is the flash: "opens for a split
+# second then resizes", reported at 1.5x, 2x AND 3x, which is the signature of a
+# TIMING defect rather than an arithmetic one.
+#
+# Pre-scale-while-hidden (kAlwaysScaleCityIds) cannot fix it and already did not:
+# 0xAA3AC002 was in that list TWICE. That list only reaches windows that exist
+# while hidden, and these popups are CREATED ON DEMAND when a department is
+# clicked - there is nothing there to pre-scale. The cure for a transient is
+# data-side: ship it already doubled so it is BORN correct. Same precedent as
+# Establish City and the U-Drive-It status panel.
+#
+# BOTH scripts are listed deliberately. They share root id 0xAA3AC002, and the
+# matching UiSpike change moves that id to kNeverScaleIds - which is id-keyed,
+# so it silences the sweep for BOTH. Ship only one here and the other would be
+# left at 1x permanently with nothing scaling it.
+TARGETS += [
+    ("aa3acdfe", "Budget department popup (empty-ledger message, 500x202)"),
+    ("cbc3c2b9", "Budget Taxes editor popup (500x464)"),
+]
+
 TARGETS += discover_query_family()
 
 TARGET_FNS = {target_fn(i) for (i, _) in TARGETS}

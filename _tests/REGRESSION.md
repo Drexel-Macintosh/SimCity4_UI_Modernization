@@ -14361,3 +14361,29 @@ discover_query_family() adopts on.
 build_dialog_static.py AND add 0xAA3AC002 to the never-scale list. Ship only the
 first and the sweep scales the already-doubled window to 4x - the Establish City
 failure verbatim, and strictly worse than the flash it replaces.
+
+## Budget popup flash FIXED - born correct from data (2026-08-18, deployed 18:28:41)
+
+Root id 0xAA3AC002, clsid 0x89e1567c, two scripts: I-aa3acdfe (department
+empty-ledger message, 500x202) and I-cbc3c2b9 (Taxes editor, 500x464).
+
+WHY THE OBVIOUS FIX WAS ALREADY THERE AND ALREADY USELESS: 0xAA3AC002 was in
+kAlwaysScaleCityIds TWICE. That list pre-scales while HIDDEN, which only reaches
+windows that already exist. These popups are CREATED ON DEMAND when a department
+is clicked - there is nothing to pre-scale, so they were constructed at 1x,
+painted, then swept. Hence the flash, and hence it reproducing identically at
+1.5x, 2x and 3x: a TIMING defect, not arithmetic.
+
+CURE, the Establish City / U-Drive-It precedent: ship the scripts PRE-DOUBLED in
+DialogStatic so the window is born correct, and take the id off the sweep.
+BOTH HALVES IN ONE CHANGE - builder entry AND kNeverScaleIds - because shipping
+only the first scales the already-doubled window to 4x.
+
+Both scripts listed deliberately: they share root id 0xAA3AC002, and
+kNeverScaleIds is ID-keyed, so it silences the sweep for both. Shipping only
+I-aa3acdfe would have left the Taxes editor at 1x permanently with nothing
+scaling it - the regression this pairing exists to prevent.
+
+MEASURED: DialogStatic 261 -> 280 entries at every tier; both scripts present in
+the DEPLOYED 1.5x/2x/3x packages. Builders 12/12 clean at all three tiers, DLL
+builds clean, deployed == built. Eyes-on owed.

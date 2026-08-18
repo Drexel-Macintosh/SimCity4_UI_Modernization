@@ -4892,6 +4892,15 @@ namespace
 		// never checked the parentage of. Anything the static dat serves
 		// that lives in the swept tree MUST be listed here.
 		0x10000006, // U-Drive-It status panel (all 11 vehicle scripts)
+		// BUDGET DEPARTMENT + TAXES EDITOR POPUPS (2026-08-18). Shared root
+		// id, two scripts: I-aa3acdfe (empty-ledger message, 500x202) and
+		// I-cbc3c2b9 (Taxes editor, 500x464). Both now ship pre-doubled in
+		// DialogStatic, so this entry is the OTHER HALF of that change and
+		// must land with it: the popups are created on demand, so the old
+		// kAlwaysScaleCityIds membership could never fire (nothing exists to
+		// pre-scale) and the sweep resized them after first paint instead -
+		// the flash the user reported at 1.5x, 2x and 3x alike.
+		0xAA3AC002, // budget department + taxes editor popups
 		// STATIC-DAT DIALOGS added v2.22.2 (Sim picker, U-Drive-It vehicle +
 		// pedestrian pickers, missing-plugin-pack warning). Evidence says all
 		// are main-window transients the sweep never reaches, in which case
@@ -5308,7 +5317,11 @@ namespace
 		// to 2x. Same vis-gate intermittency as the news reader. Their 2x
 		// art ships in SelectiveArt (scripts I-aa3acdfe/I-cbc3c2b9), so a
 		// 1x window would draw quarter-art + black fill.
-		0xAA3AC002, // Taxes editor popup
+		// 0xAA3AC002 REMOVED 2026-08-18: both its scripts (I-aa3acdfe,
+		// I-cbc3c2b9) now ship PRE-DOUBLED in DialogStatic, so the window
+		// is born correct and the sweep must not touch it. It moved to
+		// kNeverScaleIds. Leaving it here as well would scale the already-
+		// doubled window to 4x - the Establish City failure verbatim.
 		0xCA4C332D, // Take Out A Loan popup
 		// Advisors (2026-07-29 late): the console strip's 2x face art in
 		// 1x buttons showed quarter-zoomed faces on FIRST open (user
@@ -5532,7 +5545,6 @@ namespace
 		// checkbox+label button pairs (0xAA3AC400..40F / 0xAA3AC500..50F)
 		// filled with department names at runtime. The "(Taxes etc.)" that
 		// used to sit on that line put the Taxes dialog on the wrong id.
-		0xAA3AC002, // Taxes editor popup (LIVE I-cbc3c2b9, 500x464 design)
 		0xCA4C332D, // "Take Out A Loan" popup (500x353) - see NOTE below
 		0xAA3AC001, // budget expanded / department detail frame (558x505)
 		0xAA3AC000, // budget balance bar (833x137)

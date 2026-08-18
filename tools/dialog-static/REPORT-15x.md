@@ -1,7 +1,7 @@
 # Region-screen dialogs -- static 1.5x (`z_SC4UIScale_DialogStatic-15x.dat`)
 
 Built 2026-08-18 by `build_dialog_static.py`. STANDALONE package: the game creates each
-of the 163 region-screen dialogs/popups already doubled from an edited copy of its
+of the 165 region-screen dialogs/popups already doubled from an edited copy of its
 .UI script and lays out the children itself. No runtime scaling involved; runtime
 docking of the region-dialog roots must stay disabled while testing. The recipe is
 the one user-VALIDATED in-game on the Load Region dialog (2026-07-21) and then on
@@ -60,6 +60,8 @@ dat of the same name.
 | Select A Bridge sibling button | `0x00000000 / 0x96A006B0 / 0xEBD0D36D` | GZWinGen id=0x000a0000, 1x 89x58 |
 | Text Entry prompt (Save City confirm) | `0x00000000 / 0x96A006B0 / 0xE9263D4C` | GZWinGen id=0xc9264be2, 1x 319x113 |
 | Set Lot Size | `0x00000000 / 0x96A006B0 / 0xE9263DE5` | GZWinGen id=0x8926eebe, 1x 249x92 |
+| Budget department popup (empty-ledger message, 500x202) | `0x00000000 / 0x96A006B0 / 0xAA3ACDFE` | 0x89e1567c id=0xaa3ac002, 1x 500x202 |
+| Budget Taxes editor popup (500x464) | `0x00000000 / 0x96A006B0 / 0xCBC3C2B9` | 0x89e1567c id=0xca4c332d, 1x 500x353 |
 | Query panel 0a562a05 | `0x00000000 / 0x96A006B0 / 0x0A562A05` | GZWinGen id=0x10000005, 1x 292x120 |
 | Query panel 0a8b819e | `0x00000000 / 0x96A006B0 / 0x0A8B819E` | GZWinGen id=0x10000005, 1x 292x203 |
 | Query panel 0a8b98fe | `0x00000000 / 0x96A006B0 / 0x0A8B98FE` | GZWinGen id=0x10000005, 1x 292x134 |
@@ -197,9 +199,9 @@ dat of the same name.
   same script). EXCLUDED per instruction: `I-49889894` -- a 476x43 bottom
   strip, not a dialog.
 
-## Package contents (261 entries, 2883406 bytes)
+## Package contents (280 entries, 3246104 bytes)
 
-163 edited .UI scripts at their ORIGINAL TGIs (same-TGI overrides) + 97 PNGs:
+165 edited .UI scripts at their ORIGINAL TGIs (same-TGI overrides) + 114 PNGs:
 
 | TGI | What |
 |---|---|
@@ -252,6 +254,8 @@ dat of the same name.
 | `0x00000000 / 0x96A006B0 / 0xEBD0D36D` | edited Select A Bridge sibling button .UI script |
 | `0x00000000 / 0x96A006B0 / 0xE9263D4C` | edited Text Entry prompt (Save City confirm) .UI script |
 | `0x00000000 / 0x96A006B0 / 0xE9263DE5` | edited Set Lot Size .UI script |
+| `0x00000000 / 0x96A006B0 / 0xAA3ACDFE` | edited Budget department popup (empty-ledger message, 500x202) .UI script |
+| `0x00000000 / 0x96A006B0 / 0xCBC3C2B9` | edited Budget Taxes editor popup (500x464) .UI script |
 | `0x00000000 / 0x96A006B0 / 0x0A562A05` | edited Query panel 0a562a05 .UI script |
 | `0x00000000 / 0x96A006B0 / 0x0A8B819E` | edited Query panel 0a8b819e .UI script |
 | `0x00000000 / 0x96A006B0 / 0x0A8B98FE` | edited Query panel 0a8b98fe .UI script |
@@ -390,7 +394,18 @@ dat of the same name.
 | `0x856DDBAC / 0x46A006B0 / 0x13F15259` | 2x IN-PLACE override of `{46a006b0,13f15259}` (60x20 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x13F1525E` | 2x IN-PLACE override of `{46a006b0,13f1525e}` (300x74 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x13F1525F` | 2x IN-PLACE override of `{46a006b0,13f1525f}` (180x45 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x1401557C` | 2x IN-PLACE override of `{46a006b0,1401557c}` (528x143 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14015586` | 2x IN-PLACE override of `{46a006b0,14015586}` (128x33 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155B0` | 2x IN-PLACE override of `{46a006b0,140155b0}` (819x195 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155B1` | 2x IN-PLACE override of `{46a006b0,140155b1}` (819x756 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155B3` | 2x IN-PLACE override of `{46a006b0,140155b3}` (180x24 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155B5` | 2x IN-PLACE override of `{46a006b0,140155b5}` (720x27 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155B6` | 2x IN-PLACE override of `{46a006b0,140155b6}` (720x81 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155C9` | 2x IN-PLACE override of `{46a006b0,140155c9}` (750x530 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155CA` | 2x IN-PLACE override of `{46a006b0,140155ca}` (750x303 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155CB` | 2x IN-PLACE override of `{46a006b0,140155cb}` (96x15 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155CC` | 2x IN-PLACE override of `{46a006b0,140155cc}` (96x15 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x140155EB` | 2x IN-PLACE override of `{46a006b0,140155eb}` (36x36 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x144161E0` | 2x IN-PLACE override of `{46a006b0,144161e0}` (132x30 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x144161E2` | 2x IN-PLACE override of `{46a006b0,144161e2}` (132x32 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x144161E4` | 2x IN-PLACE override of `{46a006b0,144161e4}` (117x117 px) |
@@ -431,10 +446,12 @@ dat of the same name.
 | `0x856DDBAC / 0x46A006B0 / 0x1441622C` | 2x IN-PLACE override of `{46a006b0,1441622c}` (63x72 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416231` | 2x IN-PLACE override of `{46a006b0,14416231}` (63x98 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416240` | 2x IN-PLACE override of `{46a006b0,14416240}` (270x270 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x14416241` | 2x IN-PLACE override of `{46a006b0,14416241}` (36x9 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416243` | 2x IN-PLACE override of `{46a006b0,14416243}` (66x56 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416245` | 2x IN-PLACE override of `{46a006b0,14416245}` (192x24 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416264` | 2x IN-PLACE override of `{46a006b0,14416264}` (24x24 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416280` | 2x IN-PLACE override of `{46a006b0,14416280}` (710x462 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x14416316` | 2x IN-PLACE override of `{46a006b0,14416316}` (204x26 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416321` | 2x IN-PLACE override of `{46a006b0,14416321}` (324x233 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416322` | 2x IN-PLACE override of `{46a006b0,14416322}` (387x359 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x14416323` | 2x IN-PLACE override of `{46a006b0,14416323}` (80x20 px) |
@@ -452,127 +469,148 @@ dat of the same name.
 | `0x856DDBAC / 0x46A006B0 / 0x4BFC52C2` | 2x IN-PLACE override of `{46a006b0,4bfc52c2}` (324x74 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x4C02B518` | 2x IN-PLACE override of `{46a006b0,4c02b518}` (236x174 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x4C0F0D31` | 2x IN-PLACE override of `{46a006b0,4c0f0d31}` (290x69 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x82B99D9D` | 2x IN-PLACE override of `{46a006b0,82b99d9d}` (96x27 px) |
 | `0x856DDBAC / 0x46A006B0 / 0x8BC38238` | 2x IN-PLACE override of `{46a006b0,8bc38238}` (540x216 px) |
+| `0x856DDBAC / 0x46A006B0 / 0x8BC5F104` | 2x IN-PLACE override of `{46a006b0,8bc5f104}` (774x195 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xCBBAB0AE` | 2x IN-PLACE override of `{46a006b0,cbbab0ae}` (576x542 px) |
+| `0x856DDBAC / 0x46A006B0 / 0xCBC5F115` | 2x IN-PLACE override of `{46a006b0,cbc5f115}` (774x756 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xCBEC3DB2` | 2x IN-PLACE override of `{46a006b0,cbec3db2}` (540x375 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xCBFB3730` | 2x IN-PLACE override of `{46a006b0,cbfb3730}` (17x17 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xCBFB3731` | 2x IN-PLACE override of `{46a006b0,cbfb3731}` (33x17 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xCBFB3732` | 2x IN-PLACE override of `{46a006b0,cbfb3732}` (50x17 px) |
+| `0x856DDBAC / 0x46A006B0 / 0xCC05A721` | 2x IN-PLACE override of `{46a006b0,cc05a721}` (750x690 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xCC1980EB` | 2x IN-PLACE override of `{46a006b0,cc1980eb}` (21x44 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xCC1980EC` | 2x IN-PLACE override of `{46a006b0,cc1980ec}` (21x44 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xCC1A735D` | 2x IN-PLACE override of `{46a006b0,cc1a735d}` (132x32 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xB1F56DBA` | 2x CLONE of `{46a006b0,e2b66db8}` (180x45 px) |
 | `0x856DDBAC / 0x46A006B0 / 0xEA7F0EAF` | 2x IN-PLACE override of `{46a006b0,ea7f0eaf}` (1200x900 px) |
 
-## Global art plan (113 distinct TGIs; ONE decision per TGI across all 163 targets)
+## Global art plan (130 distinct TGIs; ONE decision per TGI across all 165 targets)
 
 | image={gid,iid} | Used by | Decision | Detail |
 |---|---|---|---|
 | `{00237ee7,0ea08a4a}` |  | LEFT 1x | no 2x asset in upscale preview set |
-| `{1abe787d,0c0e0f3c}` | ebd0d36c | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,144161e4}` | 0a7df315, 8a7e052f, 8a5ab1cb, 8a5ab1cc, 4a8cc5ea, 8a5ab1cd, ea8cc3c6, ea89b6c3, ca8cbf0f, 6b704690 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,144161ee}` | 0a7df315, 8a7e052f, 8a5ab1cb, 8a5ab1cc, 8a5ab1cf, 4a8cc5ea, 8a5ab1cd, ea8cc3c6, 0a4d0c43, ca4d0b22, ea89b6c3, ca8cbf0f, 6b704690 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416220}` | aa561f93 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416224}` | 0a562a05 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416240}` | 0a7df315, 8a7e052f, 8a5ab1ce, 8a5ab1cf, 8a5ab1d0, 4a89b3f2, 0a243d80 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416245}` | 0a7df315 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416246}` | 8a7e052f, 8a5ab1cb, 2a41436b | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416270}` | 4a8cc5ea | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416271}` | 4a8cc5ea | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416272}` | 4a8cc5ea | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,14416273}` | 4a8cc5ea | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{1abe787d,8c0e0f2d}` | ebd0d36c | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
+| `{1abe787d,0c0e0f3c}` | ebd0d36c | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,144161e4}` | 0a7df315, 8a7e052f, 8a5ab1cb, 8a5ab1cc, 4a8cc5ea, 8a5ab1cd, ea8cc3c6, ea89b6c3, ca8cbf0f, 6b704690 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,144161ee}` | 0a7df315, 8a7e052f, 8a5ab1cb, 8a5ab1cc, 8a5ab1cf, 4a8cc5ea, 8a5ab1cd, ea8cc3c6, 0a4d0c43, ca4d0b22, ea89b6c3, ca8cbf0f, 6b704690 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416220}` | aa561f93 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416224}` | 0a562a05 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416240}` | 0a7df315, 8a7e052f, 8a5ab1ce, 8a5ab1cf, 8a5ab1d0, 4a89b3f2, 0a243d80 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416245}` | 0a7df315 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416246}` | 8a7e052f, 8a5ab1cb, 2a41436b | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416270}` | 4a8cc5ea | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416271}` | 4a8cc5ea | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416272}` | 4a8cc5ea | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,14416273}` | 4a8cc5ea | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{1abe787d,8c0e0f2d}` | ebd0d36c | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
 | `{3e53026e,274ddedd}` |  | LEFT 1x | no 2x asset in upscale preview set |
 | `{40ddc72b,e740ca77}` |  | LEFT 1x | no 2x asset in upscale preview set |
-| `{46a006b0,13e14fb7}` | ca551016 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f15250}` | 0a243d80 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f15251}` | 0a243d80 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f15253}` | 0a243d80 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f15254}` | 0a243d80 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f15255}` | 0a243d80 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f15257}` | 0a243d80 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f15258}` | 0a243d80, 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f15259}` | 0a243d80, 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f1525e}` | 0a243d80 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,13f1525f}` | 0a243d80, 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14015586}` | ca539340, 4a8cc5ea | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161e0}` | 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c02ba84, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161e2}` | 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c02ba84, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161e4}` | ca53f06e, 4a551b4c, 6a553aa4, 0a55161d, eaaeec1b, 2a41436b, 0a5cf71d, 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161e7}` | aa5e60d1 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161eb}` | 0a7df315, ca53f06e, 8a7e052f, 8a5ab1cb, 8a5ab1ce, 8a5ab1cc, 4a551b4c, 8a5ab1cf, 4a8cc5ea, 8a5ab1d0, 8a5ab1cd, ea8cc3c6, ca551016, ca56783a, 4a5672bf, 2a567dc1, 0a4d0c43, ca4d0b22, 8a4d0a17, 6a553aa4, 0a55161d, eaaeec1b, 4a89b3f2, 0a243d80, ea89b6c3, ca8cbf0f, ebd0d36c, 0a2dd355, 6a5e73c0, 6b704690, 0a562a05, 0a8b819e, 0a8b98fe, 0a8b9a67, 0a8b9c43, 0a8b9c6a, 2a554f6d, 2a5621ee, 2a564884, 2a56675c, 2a5e7490, 2a8b7e1c, 2a8b97c1, 2a8b99d0, 2a8b9df2, 2c096de6, 4a562da5, 4a565d13, 4a5665eb, 4a566c14, 4a566d6e, 4a5e7ed3, 4a8b7fe7, 4a8b9396, 4a8b9936, 4a8b9c92, 4a8b9dab, 4c0969e2, 4c47800e, 6a51506f, 6a555a84, 6a561b3a, 6a562f56, 6a566151, 6a8b9875, 6a8b9acc, 6a8b9af3, 8a554483, 8a5e7bd2, 8a8b95b0, 8a8b9811, 8a8b98a7, 8a8b9d12, 8a948d49, aa554aea, aa555346, aa561f93, aa565036, aa565f5b, aa5661eb, aa5bef41, aa5e14cc, aa8b9755, aa8b9971, aa8b999e, ac096ac7, ac3b72f6, ca566f94, ca8b8408, ca8b8564, ca8b96c2, ca8b9845, ca8b9aa2, ca8b9ce7, ca8b9d40, cc097fc0, cc313f17, ea5655e4, ea565970, ea566a49, ea8b82db, ec096e72 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161ee}` | 0a7df315, ca53f06e, 8a7e052f, 8a5ab1cb, 8a5ab1cc, 8a5ab1cd, 2a41436c, 2a41436b, ea89b6c3, 0a5cf71d | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161f1}` | 4a5a89d4, 4bbc080f | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161f2}` | 4a5a89d5, 0bbc06b6 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161f3}` | 4a5a89d4, 4bbc080f | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161f4}` | 4a5a89d5, 0bbc06b6 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161f5}` | 4a5a89d4, 4bbc080f | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161f6}` | 4a5a89d5, 0bbc06b6 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,144161f9}` | 4bf325e8, abfaef15, 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c02ba84, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,1441620e}` | ca56783a, 4a5672bf, 2a567dc1 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,1441620f}` | 4c47800e | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416210}` | 2a564884, 2a8b7e1c, 4a8b7fe7, 6a555a84, 8a554483, aa565036, ca8b8564, ea8b82db | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416211}` | 6a51506f | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416212}` | 0a8b819e, 2a554f6d, aa555346 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416214}` | 6a561b3a | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416215}` | 4a562da5, cc313f17 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416216}` | aa554aea, ca8b8408 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416217}` | 2a5621ee, aa561f93, aa5bef41 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416218}` | 6a562f56, ea5655e4 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416219}` | 8a948d49, ea565970 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,1441621a}` | 6a566151, ac3b72f6 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,1441621b}` | 4a565d13 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,1441621c}` | aa5661eb | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416220}` | 2a5e7490, 4a566c14, 4a566d6e, 4a5e7ed3, 8a5e7bd2, aa5e14cc, ca566f94, ea566a49 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416221}` | 2a564884, 2a56675c, 6a555a84, 8a554483, aa554aea, aa565036 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416222}` | ca56783a | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416223}` | 6a51506f | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416225}` | 0a8b819e, 0a8b98fe, 0a8b9a67, 0a8b9c43, 0a8b9c6a, 2a8b7e1c, 2a8b97c1, 2a8b99d0, 2a8b9df2, 2c096de6, 4a8b7fe7, 4a8b9396, 4a8b9936, 4a8b9c92, 4a8b9dab, 4c0969e2, 6a8b9875, 6a8b9acc, 6a8b9af3, 8a8b95b0, 8a8b9811, 8a8b98a7, 8a8b9d12, aa8b9755, aa8b9971, aa8b999e, ac096ac7, ca8b8408, ca8b8564, ca8b96c2, ca8b9845, ca8b9aa2, ca8b9ce7, ca8b9d40, cc097fc0, ea8b82db, ec096e72 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416226}` | 2a567dc1 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416227}` | 2a554f6d, aa555346 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416228}` | 4a5672bf | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416229}` | 4a562da5, 4a565d13, 4a5665eb, 4c47800e, 6a561b3a, 6a566151, aa565f5b, aa5661eb, ac3b72f6, cc313f17 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,1441622a}` | 2a5621ee, 6a562f56, 8a948d49, aa5bef41, ea5655e4, ea565970 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,1441622c}` | 4a5672bf | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416231}` | ca539343 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416240}` | 0a4d0c43, ca4d0b22, 8a4d0a17, 4a89b3f2, 6a5e73c0 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416243}` | 2a41436b | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416245}` | ca53f06e, 8a7e052f, ca56783a, 4a5672bf, 2a567dc1, 8a4d0a17 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416264}` | ca53f06e | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416280}` | 0a2dd355 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416321}` | 0a8cd184 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416322}` | ca539340 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416323}` | ca539340 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416324}` | 0a8cd184, ca539340 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416325}` | 0a8cd184, ca539340 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,14416326}` | 0a8cd184, ca539340 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,2bc3ac85}` | 2bb16d50 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,2c201cb0}` | 4bf325e8 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,2c201cb1}` | 4bf325e8 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,2c201cb2}` | 4bf325e8 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,46a006a4}` | aa5e60d1 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,46a006a6}` | ebd0d36c | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,46a006a7}` | ca53f06e, ebd0d36c, 2a554f6d, 2a564884, 2a8b7e1c, 4a8b7fe7, 6a51506f, 6a555a84, 6a562f56, 8a554483, aa554aea, aa565036, ca8b8408, ea5655e4, ea8b82db | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,4bc3a5ae}` | 2bb16d50 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,4bfc52c2}` | 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,4c02b518}` | 2c02ba84 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,4c0f0d31}` | 2c02ba84 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
+| `{46a006b0,13e14fb7}` | ca551016 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f15250}` | 0a243d80 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f15251}` | 0a243d80 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f15253}` | 0a243d80 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f15254}` | 0a243d80 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f15255}` | 0a243d80 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f15257}` | 0a243d80 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f15258}` | 0a243d80, 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f15259}` | 0a243d80, 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f1525e}` | 0a243d80 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,13f1525f}` | 0a243d80, 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,1401557c}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14015586}` | ca539340, 4a8cc5ea | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155b0}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155b1}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155b3}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155b5}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155b6}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155c9}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155ca}` | aa3acdfe | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155cb}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155cc}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,140155eb}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161e0}` | aa3acdfe, cbc3c2b9, 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c02ba84, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161e2}` | aa3acdfe, cbc3c2b9, 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c02ba84, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161e4}` | ca53f06e, 4a551b4c, 6a553aa4, 0a55161d, eaaeec1b, 2a41436b, 0a5cf71d, 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161e7}` | aa5e60d1 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161eb}` | 0a7df315, ca53f06e, 8a7e052f, 8a5ab1cb, 8a5ab1ce, 8a5ab1cc, 4a551b4c, 8a5ab1cf, 4a8cc5ea, 8a5ab1d0, 8a5ab1cd, ea8cc3c6, ca551016, ca56783a, 4a5672bf, 2a567dc1, 0a4d0c43, ca4d0b22, 8a4d0a17, 6a553aa4, 0a55161d, eaaeec1b, 4a89b3f2, 0a243d80, ea89b6c3, ca8cbf0f, ebd0d36c, 0a2dd355, 6a5e73c0, 6b704690, aa3acdfe, cbc3c2b9, 0a562a05, 0a8b819e, 0a8b98fe, 0a8b9a67, 0a8b9c43, 0a8b9c6a, 2a554f6d, 2a5621ee, 2a564884, 2a56675c, 2a5e7490, 2a8b7e1c, 2a8b97c1, 2a8b99d0, 2a8b9df2, 2c096de6, 4a562da5, 4a565d13, 4a5665eb, 4a566c14, 4a566d6e, 4a5e7ed3, 4a8b7fe7, 4a8b9396, 4a8b9936, 4a8b9c92, 4a8b9dab, 4c0969e2, 4c47800e, 6a51506f, 6a555a84, 6a561b3a, 6a562f56, 6a566151, 6a8b9875, 6a8b9acc, 6a8b9af3, 8a554483, 8a5e7bd2, 8a8b95b0, 8a8b9811, 8a8b98a7, 8a8b9d12, 8a948d49, aa554aea, aa555346, aa561f93, aa565036, aa565f5b, aa5661eb, aa5bef41, aa5e14cc, aa8b9755, aa8b9971, aa8b999e, ac096ac7, ac3b72f6, ca566f94, ca8b8408, ca8b8564, ca8b96c2, ca8b9845, ca8b9aa2, ca8b9ce7, ca8b9d40, cc097fc0, cc313f17, ea5655e4, ea565970, ea566a49, ea8b82db, ec096e72 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161ee}` | 0a7df315, ca53f06e, 8a7e052f, 8a5ab1cb, 8a5ab1cc, 8a5ab1cd, 2a41436c, 2a41436b, ea89b6c3, 0a5cf71d | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161f1}` | 4a5a89d4, 4bbc080f | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161f2}` | 4a5a89d5, 0bbc06b6 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161f3}` | 4a5a89d4, 4bbc080f | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161f4}` | 4a5a89d5, 0bbc06b6 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161f5}` | 4a5a89d4, 4bbc080f | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161f6}` | 4a5a89d5, 0bbc06b6 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,144161f9}` | 4bf325e8, abfaef15, 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c02ba84, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,1441620e}` | ca56783a, 4a5672bf, 2a567dc1 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,1441620f}` | 4c47800e | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416210}` | 2a564884, 2a8b7e1c, 4a8b7fe7, 6a555a84, 8a554483, aa565036, ca8b8564, ea8b82db | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416211}` | 6a51506f | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416212}` | 0a8b819e, 2a554f6d, aa555346 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416214}` | 6a561b3a | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416215}` | 4a562da5, cc313f17 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416216}` | aa554aea, ca8b8408 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416217}` | 2a5621ee, aa561f93, aa5bef41 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416218}` | 6a562f56, ea5655e4 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416219}` | 8a948d49, ea565970 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,1441621a}` | 6a566151, ac3b72f6 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,1441621b}` | 4a565d13 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,1441621c}` | aa5661eb | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416220}` | 2a5e7490, 4a566c14, 4a566d6e, 4a5e7ed3, 8a5e7bd2, aa5e14cc, ca566f94, ea566a49 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416221}` | 2a564884, 2a56675c, 6a555a84, 8a554483, aa554aea, aa565036 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416222}` | ca56783a | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416223}` | 6a51506f | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416225}` | 0a8b819e, 0a8b98fe, 0a8b9a67, 0a8b9c43, 0a8b9c6a, 2a8b7e1c, 2a8b97c1, 2a8b99d0, 2a8b9df2, 2c096de6, 4a8b7fe7, 4a8b9396, 4a8b9936, 4a8b9c92, 4a8b9dab, 4c0969e2, 6a8b9875, 6a8b9acc, 6a8b9af3, 8a8b95b0, 8a8b9811, 8a8b98a7, 8a8b9d12, aa8b9755, aa8b9971, aa8b999e, ac096ac7, ca8b8408, ca8b8564, ca8b96c2, ca8b9845, ca8b9aa2, ca8b9ce7, ca8b9d40, cc097fc0, ea8b82db, ec096e72 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416226}` | 2a567dc1 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416227}` | 2a554f6d, aa555346 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416228}` | 4a5672bf | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416229}` | 4a562da5, 4a565d13, 4a5665eb, 4c47800e, 6a561b3a, 6a566151, aa565f5b, aa5661eb, ac3b72f6, cc313f17 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,1441622a}` | 2a5621ee, 6a562f56, 8a948d49, aa5bef41, ea5655e4, ea565970 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,1441622c}` | 4a5672bf | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416231}` | ca539343 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416240}` | 0a4d0c43, ca4d0b22, 8a4d0a17, 4a89b3f2, 6a5e73c0 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416241}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416243}` | 2a41436b | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416245}` | ca53f06e, 8a7e052f, ca56783a, 4a5672bf, 2a567dc1, 8a4d0a17 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416264}` | ca53f06e | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416280}` | 0a2dd355 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416316}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416321}` | 0a8cd184 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416322}` | ca539340 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416323}` | ca539340 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416324}` | 0a8cd184, ca539340 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416325}` | 0a8cd184, ca539340 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,14416326}` | 0a8cd184, ca539340 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,2bc3ac85}` | 2bb16d50 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,2c201cb0}` | 4bf325e8 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,2c201cb1}` | 4bf325e8 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,2c201cb2}` | 4bf325e8 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,46a006a4}` | aa5e60d1 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,46a006a6}` | ebd0d36c | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,46a006a7}` | ca53f06e, ebd0d36c, 2a554f6d, 2a564884, 2a8b7e1c, 4a8b7fe7, 6a51506f, 6a555a84, 6a562f56, 8a554483, aa554aea, aa565036, ca8b8408, ea5655e4, ea8b82db | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,4bc3a5ae}` | 2bb16d50 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,4bfc52c2}` | 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,4c02b518}` | 2c02ba84 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,4c0f0d31}` | 2c02ba84 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
 | `{46a006b0,6b998f30}` | 4bf325e8, abfaef15 | LEFT 1x | no 2x asset in upscale preview set |
-| `{46a006b0,8bc38238}` | 2bb16d50 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
+| `{46a006b0,82b99d9d}` | aa3acdfe, cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,8bc38238}` | 2bb16d50 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,8bc5f104}` | cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
 | `{46a006b0,b5cfffff}` |  | LEFT 1x | no 2x asset in upscale preview set |
-| `{46a006b0,cbbab0ae}` | 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,cbec3db2}` | 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,cbfb3730}` | ca539340 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,cbfb3731}` | ca539340 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,cbfb3732}` | ca539340 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,cc1980eb}` | 0c1d56e4, 4c1d7c65, ec1a73ba | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,cc1980ec}` | 0c1d730b, 0c1d7974, 0c1d81fc, 4c1d78f7, 4c1d7c65, 6c1d7f5c, ac1d7a81, ec1a73ba, ec1d75e2, ec1d77dd | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
-| `{46a006b0,cc1a735d}` | 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
+| `{46a006b0,cbbab0ae}` | 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cbc5f115}` | cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cbec3db2}` | 4bf325e8, abfaef15 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cbfb3730}` | ca539340 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cbfb3731}` | ca539340 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cbfb3732}` | ca539340 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cc05a721}` | cbc3c2b9 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cc1980eb}` | 0c1d56e4, 4c1d7c65, ec1a73ba | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cc1980ec}` | 0c1d730b, 0c1d7974, 0c1d81fc, 4c1d78f7, 4c1d7c65, 6c1d7f5c, ac1d7a81, ec1a73ba, ec1d75e2, ec1d77dd | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
+| `{46a006b0,cc1a735d}` | 0c1d56e4, 0c1d730b, 0c1d7737, 0c1d7974, 0c1d79ac, 0c1d7b60, 0c1d7e71, 0c1d81fc, 2c1d73cb, 2c1d784b, 2c1d8024, 4c1a68d2, 4c1d78f7, 4c1d7c0c, 4c1d7c65, 4c1d7d40, 6c1d789a, 6c1d7ac3, 6c1d7f5c, 6c1d8057, 8c1d7423, 8c1d76d5, 8c3bd047, ac1d544d, ac1d7548, ac1d7a81, cc1d71d3, cc1d72a2, cc1d778b, cc1d7a1f, cc1d824f, cc44f885, ec1a73ba, ec1d74d5, ec1d7599, ec1d75e2, ec1d77dd, ec1d79d7, ec1d7a56, ec1d7efe, ec1d8125 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
 | `{46a006b0,d685c764}` |  | LEFT 1x | no 2x asset in upscale preview set |
-| `{46a006b0,e2b66db8}` | 4a8cc5ea, 2a41436c, 2a41436b, 0a243d80, 4bf325e8, abfaef15, 0a5cf71d, e9263d4c, e9263de5 | CLONED -> `{46a006b0,b1f56dba}` | shared with 15 other .UI file(s) not 2x-handled [0xB1F56DB9 collision: selective-safe planned clone; XOR 0x53430001 collided, fell back to 0x53430002] |
+| `{46a006b0,e2b66db8}` | 4a8cc5ea, 2a41436c, 2a41436b, 0a243d80, 4bf325e8, abfaef15, 0a5cf71d, e9263d4c, e9263de5, aa3acdfe, cbc3c2b9 | CLONED -> `{46a006b0,b1f56dba}` | shared with 15 other .UI file(s) not 2x-handled [0xB1F56DB9 collision: selective-safe planned clone; XOR 0x53430001 collided, fell back to 0x53430002] |
 | `{46a006b0,ea32f104}` | 0a243d80, 4bf325e8, abfaef15 | LEFT 1x | no 2x asset in upscale preview set |
 | `{46a006b0,ea7f0eae}` | 8aa9aa14 | LEFT 1x | no 2x asset in upscale preview set |
-| `{46a006b0,ea7f0eaf}` | aaaaf3d1 | 2x IN PLACE | exclusive to the 163 target scripts (no other unhandled referrer) |
+| `{46a006b0,ea7f0eaf}` | aaaaf3d1 | 2x IN PLACE | exclusive to the 165 target scripts (no other unhandled referrer) |
 | `{968b9ea5,df7a1654}` |  | LEFT 1x | no 2x asset in upscale preview set |
 | `{bd85e83a,a6122c8d}` |  | LEFT 1x | no 2x asset in upscale preview set |
 | `{be484ac7,7aeb8e7d}` |  | LEFT 1x | no 2x asset in upscale preview set |
@@ -1261,6 +1299,55 @@ GUID form) before packing.
   button state strips -- the engine fits cells to the control area;
   self-adapting, eyeball frame thickness in-game).
 - Fonts converted: `main9` x2 -> `0x00006e4f` (24 px ini, was 12).
+
+### Budget department popup (empty-ledger message, 500x202) (`I-aa3acdfe`, source `T-00000000_G-96a006b0_I-aa3acdfe.ui`)
+
+- Root 0x89e1567c id=0xaa3ac002: area `(158,40,658,242)` -> `(237,60,987,363)` (500x202 -> 750x303).
+- `area=` rects doubled: 217 (every one in the script; 217 controls total).
+- Art refs: `{46a006b0,1401557c}` x2 2x in place; `{46a006b0,140155b0}` x6 2x in place; `{46a006b0,140155b1}` x4 2x in place; `{46a006b0,140155b3}` x14 2x in place; `{46a006b0,140155b5}` x13 2x in place; `{46a006b0,140155b6}` x1 2x in place; `{46a006b0,140155c9}` x1 2x in place; `{46a006b0,140155ca}` x1 2x in place; `{46a006b0,140155cb}` x1 2x in place; `{46a006b0,140155cc}` x1 2x in place; `{46a006b0,140155eb}` x2 2x in place; `{46a006b0,144161e0}` x1 2x in place; `{46a006b0,144161e2}` x1 2x in place; `{46a006b0,144161eb}` x4 2x in place; `{46a006b0,14416241}` x2 2x in place; `{46a006b0,14416316}` x4 2x in place; `{46a006b0,82b99d9d}` x10 2x in place; `{46a006b0,e2b66db8}` x2 -> clone.
+- `imagerect=` doubled (14):
+  - GZWinBMP `(0,0,500,202)` -> `(0,0,750,303)`
+  - GZWinBMP `(0,0,500,353)` -> `(0,0,750,530)`
+  - GZWinBMP `(0,0,546,504)` -> `(0,0,819,756)`
+  - GZWinBMP `(70,421,546,504)` -> `(105,632,819,756)`
+  - GZWinBMP `(46,30,546,504)` -> `(69,45,819,756)`
+  - GZWinBMP `(194,404,546,504)` -> `(291,606,819,756)`
+  - GZWinBMP `(41,47,546,130)` -> `(62,71,819,195)`
+  - GZWinBMP `(41,47,546,130)` -> `(62,71,819,195)`
+  - GZWinBMP `(0,0,24,24)` -> `(0,0,36,36)`
+  - GZWinBMP `(0,0,546,130)` -> `(0,0,819,195)`
+  - GZWinBMP `(194,30,546,130)` -> `(291,45,819,195)`
+  - GZWinBMP `(41,47,546,130)` -> `(62,71,819,195)`
+  - GZWinBMP `(41,47,546,130)` -> `(62,71,819,195)`
+  - GZWinBMP `(0,0,24,24)` -> `(0,0,36,36)`
+- 56 control(s) with 2x art but no `imagerect` (edge-slice frames /
+  button state strips -- the engine fits cells to the control area;
+  self-adapting, eyeball frame thickness in-game).
+- Fonts converted: `BdgtLedgerHeader` x10 -> `0xea85d304` (28 px ini, was 14); `BdgtLedgerLineHeavy` x21 -> `0xea85d306` (28 px ini, was 14); `BdgtLedgerLineLite` x84 -> `0xea85d305` (28 px ini, was 14); `BdgtSummaryCurrentBal` x4 -> `0xea85d300` (34 px ini, was 17); `BdgtSummaryIO` x8 -> `0xea85d301` (28 px ini, was 14); `BdgtSummaryMoEndCash` x4 -> `0xea85d302` (32 px ini, was 16); `BdgtSummaryMoYrly` x6 -> `0xea85d303` (30 px ini, was 15); `GenButton` x4 -> `0x4a809919` (32 px ini, was 16); `GenHeader` x4 -> `0x4a809916` (36 px ini, was 18).
+
+### Budget Taxes editor popup (500x464) (`I-cbc3c2b9`, source `T-00000000_G-96a006b0_I-cbc3c2b9.ui`)
+
+- Root 0x89e1567c id=0xca4c332d: area `(3,252,503,605)` -> `(5,378,755,908)` (500x353 -> 750x530).
+- `area=` rects doubled: 234 (every one in the script; 234 controls total).
+- Art refs: `{46a006b0,1401557c}` x2 2x in place; `{46a006b0,140155b0}` x5 2x in place; `{46a006b0,140155b1}` x3 2x in place; `{46a006b0,140155b3}` x14 2x in place; `{46a006b0,140155b5}` x13 2x in place; `{46a006b0,140155b6}` x1 2x in place; `{46a006b0,140155c9}` x1 2x in place; `{46a006b0,140155cb}` x1 2x in place; `{46a006b0,140155cc}` x1 2x in place; `{46a006b0,140155eb}` x2 2x in place; `{46a006b0,144161e0}` x1 2x in place; `{46a006b0,144161e2}` x1 2x in place; `{46a006b0,144161eb}` x4 2x in place; `{46a006b0,14416241}` x2 2x in place; `{46a006b0,14416316}` x4 2x in place; `{46a006b0,82b99d9d}` x13 2x in place; `{46a006b0,8bc5f104}` x1 2x in place; `{46a006b0,cbc5f115}` x1 2x in place; `{46a006b0,cc05a721}` x1 2x in place; `{46a006b0,e2b66db8}` x2 -> clone.
+- `imagerect=` doubled (13):
+  - GZWinBMP `(0,0,500,353)` -> `(0,0,750,530)`
+  - GZWinBMP `(0,0,516,504)` -> `(0,0,774,756)`
+  - GZWinBMP `(70,421,546,504)` -> `(105,632,819,756)`
+  - GZWinBMP `(46,30,546,504)` -> `(69,45,819,756)`
+  - GZWinBMP `(194,404,546,504)` -> `(291,606,819,756)`
+  - GZWinBMP `(41,47,546,130)` -> `(62,71,819,195)`
+  - GZWinBMP `(41,47,546,130)` -> `(62,71,819,195)`
+  - GZWinBMP `(0,0,24,24)` -> `(0,0,36,36)`
+  - GZWinBMP `(0,0,516,130)` -> `(0,0,774,195)`
+  - GZWinBMP `(194,30,546,130)` -> `(291,45,819,195)`
+  - GZWinBMP `(41,47,546,130)` -> `(62,71,819,195)`
+  - GZWinBMP `(41,47,546,130)` -> `(62,71,819,195)`
+  - GZWinBMP `(0,0,24,24)` -> `(0,0,36,36)`
+- 60 control(s) with 2x art but no `imagerect` (edge-slice frames /
+  button state strips -- the engine fits cells to the control area;
+  self-adapting, eyeball frame thickness in-game).
+- Fonts converted: `BdgtLedgerHeader` x16 -> `0xea85d304` (28 px ini, was 14); `BdgtLedgerLineHeavy` x16 -> `0xea85d306` (28 px ini, was 14); `BdgtLedgerLineLite` x99 -> `0xea85d305` (28 px ini, was 14); `BdgtSummaryCurrentBal` x4 -> `0xea85d300` (34 px ini, was 17); `BdgtSummaryIO` x8 -> `0xea85d301` (28 px ini, was 14); `BdgtSummaryMoEndCash` x4 -> `0xea85d302` (32 px ini, was 16); `BdgtSummaryMoYrly` x6 -> `0xea85d303` (30 px ini, was 15); `GenButton` x4 -> `0x4a809919` (32 px ini, was 16); `GenHeader` x4 -> `0x4a809916` (36 px ini, was 18).
 
 ### Query panel 0a562a05 (`I-0a562a05`, source `T-00000000_G-96a006b0_I-0a562a05.ui`)
 
@@ -2611,6 +2698,8 @@ GUID form) before packing.
 | Select A Bridge sibling button | 89x58 at (22,18) | **134x87** at (33,27) |  |
 | Text Entry prompt (Save City confirm) | 319x113 at (240,79) | **479x169** at (360,119) |  |
 | Set Lot Size | 249x92 at (254,81) | **374x138** at (381,122) |  |
+| Budget department popup (empty-ledger message, 500x202) | 500x202 at (158,40) | **750x303** at (237,60) |  |
+| Budget Taxes editor popup (500x464) | 500x353 at (3,252) | **750x530** at (5,378) |  |
 | Query panel 0a562a05 | 292x120 at (246,202) | **438x180** at (369,303) |  |
 | Query panel 0a8b819e | 292x203 at (246,202) | **438x305** at (369,303) |  |
 | Query panel 0a8b98fe | 292x134 at (246,202) | **438x201** at (369,303) |  |
@@ -2741,11 +2830,11 @@ GUID form) before packing.
 ## Interop / preconditions
 
 - No TGI overlap with `z_SC4UIScale_SelectiveArt.dat`: selective-safe ships none
-  of these 163 .UI scripts (checked against its stage + refmap scaled sets), and
+  of these 165 .UI scripts (checked against its stage + refmap scaled sets), and
   every clone IID here was collision-checked against its planned clones (1 fell
   back to `^ 0x53430002` for exactly that reason). The two dats coexist.
 - Runtime scaling/docking of the region-dialog roots (UiSpike kRegionDialogDocks:
-  0x000a0000, 0x0a551c50, 0x0a551c53, 0x0a592004, 0x0a5ba192, 0x0a8cd3ee, 0x0c525b9e, 0x10000005, 0x10000006, 0x27df05be, 0x2a57cb82, 0x2a57db82, 0x2a5cfb2c, 0x2a96ed21, 0x4a35b0f2, 0x4a5ba0e7, 0x4a9db60c, 0x6a243d9e, 0x6a414973, 0x6a4d0a59, 0x6a5ba20c, 0x6aaeec4a, 0x8926eebe, 0x8a5ab1d0, 0x8a8dfcf5, 0xaa8def97, 0xaa921f4f, 0xaaa9c9d9, 0xc9264be2, 0xca5e6261, 0xcbf32603, 0xea53f5db, 0xea5ba0d1, 0xea5e748c, 0xebb16d71, 0xebbc081e)
+  0x000a0000, 0x0a551c50, 0x0a551c53, 0x0a592004, 0x0a5ba192, 0x0a8cd3ee, 0x0c525b9e, 0x10000005, 0x10000006, 0x27df05be, 0x2a57cb82, 0x2a57db82, 0x2a5cfb2c, 0x2a96ed21, 0x4a35b0f2, 0x4a5ba0e7, 0x4a9db60c, 0x6a243d9e, 0x6a414973, 0x6a4d0a59, 0x6a5ba20c, 0x6aaeec4a, 0x8926eebe, 0x8a5ab1d0, 0x8a8dfcf5, 0xaa3ac002, 0xaa8def97, 0xaa921f4f, 0xaaa9c9d9, 0xc9264be2, 0xca4c332d, 0xca5e6261, 0xcbf32603, 0xea53f5db, 0xea5ba0d1, 0xea5e748c, 0xebb16d71, 0xebbc081e)
   must remain disabled, or the dialogs get doubled twice.
 - The doubled FontStyle.ini must be deployed (it is) for the font step to show.
 
