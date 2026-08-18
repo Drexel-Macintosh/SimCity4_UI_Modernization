@@ -121,3 +121,23 @@ in `THIRD-PARTY-NOTICES.md`.
 No game assets are redistributed. The art packages are generated at build time
 from the player's own installed game files, which is why the build tooling needs
 a real SimCity 4 installation present.
+
+---
+
+## 7. Where to go next
+
+`RUNBOOK.md` is how you operate this. Read it in order; §1 is not optional and
+nothing art-related works until it is done.
+
+The first two commands on a machine that has never built this:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\Bootstrap-Corpus.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File _tests\Test-Builders.ps1
+```
+
+The first derives every input the repo deliberately does not carry. The second
+proves all nine package builders actually run, which is the only check that
+distinguishes a repo that *contains* the project from one that can *continue*
+it — on 2026-08-18 an audit confirmed the first and a cold-clone test found
+five of the nine could not run at all.

@@ -487,6 +487,16 @@ against a root that does not exist.)*
 the pristine 1x font table is `fonts\FontStyle.default.ini` (byte-verified
 identical to a fresh extraction of TGI `0x00000000,0x4A87BFE8,0x2A87BFFC`).
 
+⚠ **From a cold clone, run `tools\Bootstrap-Corpus.ps1` before step 0.** None
+of the builders' *inputs* are in the repo — the extracted archives, the PNG-TGI
+csv, the `.UI` corpus, and the mod-owned scripts and bitmaps are all derived
+from the player's own install, and until 2026-08-18 nothing derived them. Five
+of nine builders refused on a fresh checkout for exactly that reason, every one
+with a bare `FileNotFoundError`. `tools\itemicons\recover_sub_sources.py`
+covers the ItemIconsSub 1x sources separately. Then check the whole set with
+`_tests\Test-Builders.ps1`, which runs all nine **in dependency order** —
+`selective-safe` emits what `dialog-static` and `stage_icons` read.
+
 ```
 # 0. (one-time) compile the parameterized upscaler
 powershell -NoProfile -ExecutionPolicy Bypass -File upscale\Build.ps1
