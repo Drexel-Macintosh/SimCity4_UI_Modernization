@@ -8405,17 +8405,66 @@ namespace
 				if (dst[0] == 0 && dst[1] == 0 && cw > 0 && ch > 0
 					&& gGaugeWinW > 0 && gGaugeWinH > 0)
 				{
-					float m = gGaugeScale;
-					if (cw * m > static_cast<float>(gGaugeWinW))
-						m = static_cast<float>(gGaugeWinW) / cw;
-					if (ch * m > static_cast<float>(gGaugeWinH))
-						m = static_cast<float>(gGaugeWinH) / ch;
-					// v2.25.15: SNAP to 1.0 when the strip is already scaled
-					// (staged 2x -> cell ~= window; a residual 1.04x stretch
-					// of a WIDE tiled texture is what split the dials). A
-					// clamped m below 3/4 of the tier means the source is
-					// scaled data: draw it as a pure copy, never a stretch.
-					if (m < 0.75f * gGaugeScale) m = 1.0f;
+					// #186: ask whether the SOURCE is still 1x art, and ask it
+					// ABSOLUTELY - the old test was `m < 0.75f * gGaugeScale`,
+					// which is relative to the tier and therefore measured
+					// itself at a fractional one (law 95). At 2x that threshold
+					// is 1.50 and any already-scaled strip (cell ~= window,
+					// m ~= 1.0) cleared it by a mile. At 1.5x it collapses to
+					// 1.125 - INSIDE the band of legitimate rounding
+					// disagreement between cell-first art (#171: cell 77) and
+					// an edge-derived window (87) - so 0xEBCB9403 came out at
+					// min(87/77, 93/75) = 1.1299 and missed the snap by 0.005.
+					// A 1.13x stretch of a 4235px-wide tiled source is exactly
+					// the residual that split the dials in v2.25.12.
+					//
+					// The honest question is "is this source 1x?", which the
+					// tier cannot answer. 1x art in a scaled window satisfies
+					// R(cell*f) <= win BY CONSTRUCTION - that is what 1x art
+					// means here. Already-scaled art overshoots by about the
+					// whole factor. kFitSlack absorbs the 1-2px cell-first vs
+					// edge-derived disagreement that only exists at q > 1.
+					//
+					// INTEGER-TIER NO-OP, by cases and not by hope:
+					//   2x, 1x art  (cell 58x62, win 116x124): want 116x124
+					//               <= win -> stretch at the full 2.00, which
+					//               is the original #47 cure, unchanged.
+					//   2x, 2x art  (cell ~= win): want ~2*win >> win -> pure
+					//               copy, which is what 0.75*2 = 1.50 already
+					//               gave. Unchanged.
+					//   3x: same two cases, same answers.
+					// It also keeps the original self-limiting property: a
+					// window the sweep never scaled has win ~= cell, so want
+					// overshoots and the draw stays at stock size.
+					constexpr int32_t kFitSlack = 2;
+					const int32_t wantW =
+						static_cast<int32_t>(cw * gGaugeScale + 0.5f);
+					const int32_t wantH =
+						static_cast<int32_t>(ch * gGaugeScale + 0.5f);
+					const bool sourceIsOneX = (wantW <= gGaugeWinW + kFitSlack)
+						&& (wantH <= gGaugeWinH + kFitSlack);
+					float m = 1.0f;
+					if (sourceIsOneX)
+					{
+						m = gGaugeScale;
+						if (cw * m > static_cast<float>(gGaugeWinW))
+							m = static_cast<float>(gGaugeWinW) / cw;
+						if (ch * m > static_cast<float>(gGaugeWinH))
+							m = static_cast<float>(gGaugeWinH) / ch;
+					}
+					else if (gGaugeDrawLog < 12)
+					{
+						// Law 54: no log line = did not run. The suppressed
+						// path used to be silent, so "the stretch is off" and
+						// "the hook never fired" read identically in a capture.
+						gGaugeDrawLog++;
+						Logger::Get().WriteLine(LogLevel::Debug,
+							"UiSpike: GAUGE copy id=0x%08X cell %dx%d win %dx%d "
+							"- source already tier-scaled (want %dx%d), pure "
+							"copy, no stretch",
+							gGaugeCurId, cw, ch, gGaugeWinW, gGaugeWinH,
+							wantW, wantH);
+					}
 					if (m > 1.001f)
 					{
 						dst[2] = static_cast<int32_t>(cw * m + 0.5f);

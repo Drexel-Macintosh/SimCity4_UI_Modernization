@@ -13548,3 +13548,41 @@ entries / 0 differing PAYLOADS against the copies already deployed. 2x and
 
 Builders 12/12 at 1.5x, 2x and 3x. Deployed 14:45; all 16 deployed pitches
 divide exactly. Eyes-on at 1.5x owed.
+
+### #186 part 2 — the residual 1.13x stretch (same session)
+
+Exact art pitch was necessary but not sufficient. With the strips fixed the
+live capture showed three of four gauges taking the pure-copy path and ONE
+still stretching:
+
+    GAUGE draw id=0xEBCB9403 cell 77x75 win 87x93 -> dst 87x85 (x1.13)
+
+The v2.25.15 guard snapped m to 1.0 when `m < 0.75f * gGaugeScale`. That
+threshold is TIER-RELATIVE, which is law 95's failure shape: at 2x it is 1.50
+and every already-scaled strip (cell ~= window, m ~= 1.0) cleared it by a mile,
+but at 1.5x it collapses to 1.125 - INSIDE the band of legitimate rounding
+disagreement between cell-first art (77) and an edge-derived window (87).
+0xEBCB9403 came out at min(87/77, 93/75) = 1.1299 and missed the snap by 0.005,
+so already-tier-scaled art was stretched 1.13x out of a 4235px-wide tiled
+source. That residual is precisely what split the dials in v2.25.12.
+
+The question "is this source already scaled?" has nothing to do with the tier.
+Replaced with an ABSOLUTE test: 1x art in a scaled window satisfies
+R(cell*f) <= win by construction - that is what 1x art MEANS here - while
+already-scaled art overshoots by about the whole factor (want 116 vs win 87,
+a 29px overshoot, nowhere near the 2px slack).
+
+Simulated old vs new over 14 cases. Exactly two disagree:
+  - 0xEBCB9403 at 1.5x: (87,85) -> pure copy. The fix.
+  - a synthetic "want == win+3" at 2x: (113,121) -> pure copy. Stated
+    honestly rather than hidden: at an integer tier 1x art in a scaled window
+    gives want == win EXACTLY (both are the same design number times f), so a
+    3px overshoot cannot arise from the tier math. Where it did arise the art
+    would not be 1x, and a pure copy is the more correct answer anyway.
+Every other case - the #47 cure at 2x and 3x, the v2.25.15 already-scaled
+snap, the unscaled-window self-limit, and want == win / win+1 / win+2 - is
+bit-identical.
+
+The suppressed path also used to be silent, so "the stretch is off" and "the
+hook never fired" read identically in a capture (law 54). It now logs
+`GAUGE copy ... source already tier-scaled`.
