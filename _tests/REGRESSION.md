@@ -13586,3 +13586,42 @@ bit-identical.
 The suppressed path also used to be silent, so "the stretch is off" and "the
 hook never fired" read identically in a capture (law 54). It now logs
 `GAUGE copy ... source already tier-scaled`.
+
+#### Adversarial review of part 2 (10 agents, 3 lenses + judges) — CLEAN
+
+Zero confirmed defects. Three "major" claims were raised and all three were
+refuted against the repo, but the refutations produced two things worth
+keeping.
+
+REAL INTEGER-TIER DATA, which part 2 had been arguing without. The captures
+in _tests/captures hold 72 GBLT lines at 3x: cell 204x180 in win 213x213
+(hook line says x3.00), and 1.5x lines with cell 102x96 in win 106x107 and
+107x107. Worked through both guards: 3x OLD m = min(3, 213/204, 213/180)
+= 1.0441 < 2.25 -> snap; NEW want 612x540 >> 215 -> copy. Identical. 1.5x
+OLD m = 1.0392 / 1.0490 < 1.125 -> snap; NEW copy. Identical. Across every
+captured gauge geometry the ONLY divergence is 0xEBCB9403, which is the fix.
+That is a much better control than the synthetic table, because it was
+measured rather than constructed.
+
+A PROVENANCE ERROR IN MY OWN COMMENT, caught by the review and corrected.
+The comment cited "cell 58x62, win 116x124 -> x2.00" as the measured #47
+case. It is not measured: task47-gauges.md puts that block under the heading
+"WHAT TO LOOK FOR ON THE NEXT IN-GAME RUN" - a PREDICTED log line - and
+grepping every capture for "116x124" or "58x62" returns ZERO hits. The
+arithmetic on it is still right (want == win exactly -> full 2.00 -> the #47
+cure unchanged), but presenting a prediction as a capture is precisely the
+failure the evidence laws exist to stop. The comment now says which it is.
+
+The three refuted claims all shared one defect: internally correct arithmetic
+on FABRICATED inputs - a window taken from one line and a cell substituted
+from an unrelated strip, or a "real 1x strip" premise that is false because
+all sixteen gauge strips ship upscaled (they are in cell-strips.txt and in
+package-list*.txt at line 510). Reviewers produce confident nonsense as well
+as real findings; each was checked against the current code before being
+rejected, and the judges' rejections are recorded in the workflow journal.
+
+RESIDUAL, recorded rather than hidden: the guard's SHAPE changed from
+relative to absolute, so 1x art whose cell overflows its own stock window by
+5-25% would flip from stretch-to-fit to pure copy. Nothing in the repo has
+that shape - measured reality is the window ~4-5% LARGER than the cell
+(107/102 = 1.049, 213/204 = 1.044) - and such art would clip at stock.

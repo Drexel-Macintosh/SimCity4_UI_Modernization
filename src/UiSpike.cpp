@@ -8425,14 +8425,38 @@ namespace
 					// whole factor. kFitSlack absorbs the 1-2px cell-first vs
 					// edge-derived disagreement that only exists at q > 1.
 					//
-					// INTEGER-TIER NO-OP, by cases and not by hope:
-					//   2x, 1x art  (cell 58x62, win 116x124): want 116x124
-					//               <= win -> stretch at the full 2.00, which
-					//               is the original #47 cure, unchanged.
-					//   2x, 2x art  (cell ~= win): want ~2*win >> win -> pure
-					//               copy, which is what 0.75*2 = 1.50 already
-					//               gave. Unchanged.
-					//   3x: same two cases, same answers.
+					// INTEGER-TIER NO-OP, checked against CAPTURES and not
+					// against the numbers this comment would have liked:
+					//   3x, cell 204x180 in win 213x213 (72 GBLT lines in
+					//       _tests/captures, the only 3x gauge geometry we
+					//       have ever measured): OLD m = min(3, 213/204,
+					//       213/180) = 1.0441 < 0.75*3 = 2.25 -> snap to 1.0.
+					//       NEW want = 612x540 >> 215 -> pure copy. IDENTICAL.
+					//   1.5x, cell 102x96 in win 106x107 and 107x107: OLD
+					//       m = 1.0392 / 1.0490, both < 1.125 -> snap. NEW
+					//       want = 153x144 -> pure copy. IDENTICAL.
+					// Across every captured gauge geometry the ONLY divergence
+					// is 0xEBCB9403 (cell 77x75, win 87x93 at 1.5x), which is
+					// the defect this exists to fix.
+					//
+					// The 1x-art branch is reasoned, NOT measured, and says so:
+					// task47-gauges.md's "cell 58x62 win 116x124 -> x2.00" is
+					// under its "WHAT TO LOOK FOR ON THE NEXT IN-GAME RUN"
+					// heading - a PREDICTED log line, and it appears in zero
+					// captures. Worked through anyway: want = 116x124 <= win,
+					// so sourceIsOneX holds, neither clamp trips, and the
+					// result is dst 116x124 at the full 2.00 - the #47 cure
+					// unchanged. Believe the arithmetic, not the provenance.
+					//
+					// KNOWN, BOUNDED BEHAVIOUR CHANGE (adversarial review,
+					// 2026-08-18): the guard's SHAPE went from relative to
+					// absolute, so 1x art whose cell OVERFLOWS its own stock
+					// window by 5-25% would flip from stretch-to-fit to pure
+					// copy. Nothing in the repo has that shape - captures,
+					// cell-strips.txt and the shipped packages all show the
+					// window ~4-5% LARGER than the cell - and such art would
+					// already clip at stock. Recorded rather than hidden.
+					//
 					// It also keeps the original self-limiting property: a
 					// window the sweep never scaled has win ~= cell, so want
 					// overshoots and the draw stays at stock size.
