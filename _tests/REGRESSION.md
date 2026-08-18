@@ -13756,3 +13756,39 @@ boat/plane gauge sheets, and they took the largest height change in the set
 So the derivation and the screen agree: exact height matched the bound window in
 20 of 20 decidable cases, and the eyes-on found nothing wrong at either the
 2px-delta chrome or the 6px-delta gauges.
+
+## #172 SCOPED — the design-vs-art gap is 132 pairs, not one button (2026-08-18)
+
+#172 is filed as "Route Query button: a stock 1px/2px design-vs-art gap that the
+scale factor multiplies". Closing #177 surfaced 6 sheets whose art is 1px taller
+than its window AT 1x, which is the same mechanism, so the family was censused.
+
+⚠ FIRST ATTEMPT WAS INVALID AND IS RECORDED AS SUCH. A hand-rolled regex pairing
+`area=` with a following `image={}` reported 50.8% of the UI mismatched, with
+gaps up to +838px. That is law 88: a model that would condemn half of stock is
+broken. Two faults - the regex paired an `area=` from one element with an
+`image=` from another, and it ignored `imagerect` entirely, which is the CROP
+and the number that actually draws (law 73: a blit has THREE numbers).
+
+CORRECTED using build_selective_safe.py's own quote-aware parse_ui(), reading
+`area=` only from WITHIN a single tag's [tag_start, tag_end) span so cross-
+element pairing is structurally impossible, and preferring the node's imagerect
+over the sheet size wherever one exists:
+
+    art <-> window pairs resolved     : 2895
+    art != window                     : 1461 (50.5%)
+      of which LARGE (> 4px at 1x)    : 1329  <- tiled / 9-slice / atlas art,
+                                                mismatched BY DESIGN (law 86)
+      of which SMALL (<= 4px at 1x)   :  132  <- #172's actual family, 4.6%
+
+The small-gap distribution is dominated by +3x+3 (45 pairs), -3x-4 (20), -3x-3
+(11) and +4x+4 (8) - 84 of the 132. Those look like deliberate border insets
+rather than defects. The genuinely suspicious tail is the +/-1 and +/-2 rows
+(about 30 pairs), which is the shape #172 describes.
+
+WORST CASE, by arithmetic: a 4px gap at 1x becomes 6px at 1.5x and 12px at 3x.
+
+⛔ THIS IS A SCOPE, NOT A DEFECT LIST. Every row here is a static finding, and a
+static defect is a HYPOTHESIS until something on screen disagrees. What the
+census buys is that #172 is now bounded - at most 132 candidates, realistically
+~30 - instead of an open-ended "gaps exist somewhere".
