@@ -3,7 +3,23 @@
 # Derived, not guessed: a .UI binds the sheet to a window
 # whose HEIGHT equals the sheet's and whose WIDTH divides it.
 # Code-bound entries (zero .UI refs; byte evidence - F10):
+#   {46a006b0,0beb3dbf} states=16 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,0c0729aa} states=60 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,0c0729ab} states=14 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
 #   {46a006b0,14015584} states=6 height=exact: cSC4WinTrendBar /6 fill strip, draw 0x7BF0A0 (0x7BF0E4 imul 0xAAAAAAAB + shr edi,2); height full-height-centred in the same draw
+#   {46a006b0,abec941c} states=15 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,ac0da30b} states=25 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,ac0da30c} states=59 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,ac0da30d} states=9 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,ac0da30e} states=37 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,cbcb6e9f} states=55 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,cbcba947} states=37 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,cbcba948} states=55 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,cbcba949} states=55 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,cbcba950} states=55 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,cbcba952} states=55 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,cbe99a5e} states=60 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
+#   {46a006b0,ebcbb93f} states=59 height=exact: U-Drive-It gauge needle strip, draw 0x00762830 (cellW = img->Width()/[this+0xe8], count from vehicle exemplar 0x2BE8E6CB); frame count measured by strip periodicity, controlled against the live 1.5x GBLT cell; height is the full sheet, no vertical divide in that draw
 # <group> <instance> <states>
 00000001 14416315 4
 1abe787d 14416242 4
@@ -24,6 +40,9 @@
 22dec92d 00003002 4
 22dec92d 00003003 4
 22dec92d 00003004 4
+46a006b0 0beb3dbf 16
+46a006b0 0c0729aa 60
+46a006b0 0c0729ab 14
 46a006b0 0c0d45f9 4
 46a006b0 0c3a2e71 4
 46a006b0 13d14c10 4
@@ -181,6 +200,11 @@
 46a006b0 ab9e7552 4
 46a006b0 abb172fa 4
 46a006b0 abb172fb 4
+46a006b0 abec941c 15
+46a006b0 ac0da30b 25
+46a006b0 ac0da30c 59
+46a006b0 ac0da30d 9
+46a006b0 ac0da30e 37
 46a006b0 ac101989 4
 46a006b0 c2d6e93a 4
 46a006b0 cbb16e5c 4
@@ -190,8 +214,15 @@
 46a006b0 cbc26c9b 4
 46a006b0 cbcb6e9c 4
 46a006b0 cbcb6e9e 4
+46a006b0 cbcb6e9f 55
 46a006b0 cbcb9a73 4
 46a006b0 cbcb9a74 4
+46a006b0 cbcba947 37
+46a006b0 cbcba948 55
+46a006b0 cbcba949 55
+46a006b0 cbcba950 55
+46a006b0 cbcba952 55
+46a006b0 cbe99a5e 60
 46a006b0 cc1a735d 4
 46a006b0 cc39214d 4
 46a006b0 cc39214e 4
@@ -199,3 +230,4 @@
 46a006b0 eb68c1b2 4
 46a006b0 eb68c1b3 4
 46a006b0 eb7c4bd6 4
+46a006b0 ebcbb93f 59

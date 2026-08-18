@@ -225,6 +225,48 @@ def main():
             "0xAAAAAAAB + shr edi,2); height full-height-centred in the same "
             "draw"),
     }
+
+    # ---- U-Drive-It GAUGE NEEDLE STRIPS (#186) -------------------------------
+    # DERIVED, not hand-listed. The dashboard dials (class 0xCBCBF1E0) are bound
+    # from VEHICLE EXEMPLAR property 0x2BE8E6CB, so they carry ZERO .UI image=
+    # references and the derivation above is blind to them BY CONSTRUCTION.
+    # Their divisor is DATA, not an immediate, so it cannot be disassembled the
+    # way the TrendBar's /6 was; find_gauge_strip_counts.py MEASURES it from the
+    # art (a needle strip is periodic with period = cell) and refuses to emit
+    # anything unless the scan reproduces the six counts a live 1.5x capture
+    # pinned independently. Read that script's docstring for the full argument.
+    #
+    # Height rule 'exact' for every entry: the draw at 0x00762830 takes
+    # H = img->Height() whole and blits src={fx,0,fx+cellW,H} -> dst={0,0,cellW,H}.
+    # The full sheet height IS one cell; there is no vertical divide to preserve.
+    gauge_tbl = os.path.join(HERE, "gauge-strip-counts.txt")
+    if not os.path.exists(gauge_tbl):
+        print("FATAL: %s is missing. Run tools/upscale/find_gauge_strip_"
+              "counts.py first - without it the U-Drive-It gauge strips take "
+              "the total-first rule again and the 1.5x dials wrap (#186)."
+              % gauge_tbl)
+        sys.exit(1)
+    GAUGE_WHY = ("U-Drive-It gauge needle strip, draw 0x00762830 "
+                 "(cellW = img->Width()/[this+0xe8], count from vehicle "
+                 "exemplar 0x2BE8E6CB); frame count measured by strip "
+                 "periodicity, controlled against the live 1.5x GBLT cell; "
+                 "height is the full sheet, no vertical divide in that draw")
+    ngauge = 0
+    with open(gauge_tbl, encoding="ascii") as gf:
+        for line in gf:
+            line = line.split("#")[0].strip()
+            if not line:
+                continue
+            g, i, n = line.split()
+            CODE_BOUND[(int(g, 16), int(i, 16))] = (int(n), 'exact', GAUGE_WHY)
+            ngauge += 1
+    if ngauge == 0:
+        print("FATAL: %s parsed to ZERO gauge strips (law 54: no entries = did "
+              "not run). Refusing to write a list that would un-ship #186."
+              % gauge_tbl)
+        sys.exit(1)
+    print("gauge strips merged : %d (from gauge-strip-counts.txt)" % ngauge)
+
     for k, (n, hx_rule, why) in CODE_BOUND.items():
         if k in strips and strips[k] != n:
             conflict.append((k, sorted({strips[k], n})))

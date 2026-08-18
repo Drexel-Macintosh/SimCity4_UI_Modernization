@@ -13497,3 +13497,54 @@ drawer, a 3x exaggeration to separate two overlapping quads, and a hollow
 magenta ruler to measure the art's extent without hiding what sits behind it.
 Everything before that was `.rdata` sweeps that could not, by construction, see
 an inline immediate.
+
+
+## #186 — U-Drive-It dashboard gauges WRAP at 1.5x only (2026-08-18)
+
+USER: "1.5X is wrapping the 2 gauges in the top middle" / "It's working at
+1x, 2x and 3x just not 1.5x". Diagnosed from design data, not screenshots.
+
+MECHANISM. The dial draw at 0x00762830 does `cellW = img->Width() / count`
+with an INTEGER divide, count coming from the vehicle exemplar (0x2BE8E6CB).
+Sized total-first, a 2805px strip of 55 frames (cell 51) becomes
+R(2805*1.5) = 4208 at the 1.5x tier. The game then divides 4208/55 = 76
+against a true pitch of 76.5 - half a pixel of slip per frame, compounding
+to 27.5px by frame 54. Over a THIRD of the neighbouring needle frame bleeds
+into the cell, which on screen reads as the dial wrapping around.
+
+WHY 1.5x ONLY, predicted before anything was rebuilt: 2*2805 and 3*2805 are
+both divisible by 55, so at an integer tier the pitch is exact by
+construction. The defect cannot exist at 2x or 3x. The two gauges the user
+saw wrap are exactly the two whose 1x cell WIDTH is ODD (51) - the same
+q | d divisibility condition as the OFFSET-PARITY LAW, applied to the cell
+rather than the offset.
+
+CURE. The cell-first rule (#171/#165) already existed and already had the
+right shape - width = N * R(cell, f) - it just never reached these sheets.
+find_cell_strips.py derives its list from .UI image= bindings, and these
+strips are CODE-BOUND from the vehicle exemplars, so it was blind to them
+BY CONSTRUCTION (law 94: the right rule at the wrong SCOPE).
+
+Their divisor is DATA, not an immediate, so it cannot be disassembled the
+way the TrendBar's /6 was. New instrument tools/upscale/find_gauge_strip_
+counts.py MEASURES it: a needle strip is periodic with period = cell, so
+the shift-by-one-cell mean-absolute-difference collapses at the true frame
+count. POSITIVE CONTROL: a live 1.5x GBLT capture prints the cell the game
+itself computed, and requiring both R(W*1.5)//N == cell and N | W pins one
+N per sheet uniquely (2805 -> N=55, 1998 -> N=37). The scan reproduces all
+five it can be checked against, or the script refuses to write anything.
+Two genuinely independent failure modes, so the agreement is corroboration.
+
+RESULT. 4 of 16 gauge strips were drifting: cbcba948/949/950 (4208 -> 4235,
+cell 76 -> 77) and 0beb3dbf (984 -> 992, cell 61 -> 62). The other 12 were
+already exact and are listed so the entry does not imply they were
+unexamined.
+
+INTEGER-TIER CONTROL (measured, not assumed): Upscale2x reports cell-first
+fired 0 times at 2x and 3x, corpus rebuild gave 0 pixel diffs across all 16
+sheets at both tiers, and the rebuilt SelectiveArt packages compare 655
+entries / 0 differing PAYLOADS against the copies already deployed. 2x and
+3x are byte-identical to what shipped before this change.
+
+Builders 12/12 at 1.5x, 2x and 3x. Deployed 14:45; all 16 deployed pitches
+divide exactly. Eyes-on at 1.5x owed.

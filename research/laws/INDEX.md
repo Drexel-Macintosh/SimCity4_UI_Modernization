@@ -1,19 +1,11 @@
 **Standing orders**
 - [⭐ NORTHSTAR: GITHUB IS THE SOURCE OF TRUTH](feedback-github-is-the-source-of-truth.md) — USER ORDER. The `sc4uiscale` private repo is canonical; EVERY session ends with a commit+push. Ledger entry and commit are ONE action. An audit found the repo held 2.8% of files and was missing 3 of 8 package builders. ⭐ PRESENCE IS NOT EXECUTION: a later audit passed all builders as *present*, then a cold-clone test RAN them and 5 of 9 refused on inputs nothing derived. Run it, don't check the file exists
 - [⭐ NORTHSTAR: CHECK OUR PREVIOUS WORK FIRST](feedback-check-our-previous-work-first.md) — USER ORDER. Two questions: have we hit this before, and is that cure VIABLE HERE (if so PORT it). Cost 4 defects in one day
-- [⭐ NORTHSTAR: no progress recaps](feedback-no-progress-recaps.md) — USER ORDER. No ledgers, no "what's shipped", no lists of confirmed fixes. Report the CURRENT problem only
-- [⭐ NORTHSTAR: NEVER STOP TO REPORT](feedback-never-stop-to-report.md) — USER ORDER. In auto mode KEEP EXECUTING. A turn ends only when DONE or blocked on the user. Never end on "next I will…"; chain reads/builds/deploys, ledger in the same turn
-- [NORTHSTAR: never offer to stop](feedback-never-offer-to-stop.md) — never propose banking wins or accepting a fixable defect; measured-safe + scoped = BUILD IT
 - [NORTHSTAR METHOD: the docs are the SDK](feedback-docs-are-the-sdk.md) — our docs → vendor headers → live instruments → disassembler → shipped experiment. Document novelties the SAME session
 - [NORTHSTAR: scratchpad is volatile](feedback-scratchpad-volatile.md) — wiped without warning; durable work goes in `<Project>\_tests\` / `_packaging\`
-- [Instructions go at the BOTTOM](feedback-instructions-at-the-bottom.md) — anything the user must DO ends the message in one block
-- [Keep pace — brief thinking](feedback-keep-pace-brief-thinking.md) — decide and move; rigor = fast instruments, not long thinking
-- [No project/mission talk](feedback-no-project-mission-talk.md) — stay on the concrete task until lifted
 - [Don't raise intro-video scaling](feedback-dont-raise-intro-video-scaling.md) — SC4 #138; never mention unless asked about the backlog
-- [Don't raise MeetSurface](feedback-meetsurface-not-installing.md) — never being installed; don't mention it unless the user does
-- [FROZEN: Simulator Workstation X64](feedback-simulator-workstation-x64-frozen.md) — never change that package without explicit approval
 
-**Evidence laws (cross-project)**
+**Evidence laws**
 - [NULL IS NOT EVIDENCE](feedback-null-is-not-evidence.md) — a probe finding nothing isn't a fact until you prove it COULD have seen the thing; state the positive control
 - [Instrument scoped to the wrong CHANNEL](feedback-instrument-scoped-to-the-wrong-channel.md) — a TRUE null proves nothing if the API never routes through your hook. When a feature is INERT, find the GUARD, not the handler
 - [⭐ SIMULATE THE CONSUMER, not the build](feedback-simulate-the-consumer-not-the-build.md) — 6 straight "fixed" claims were wrong on screen; each described what the BUILD did. Model the consumer, measure the SHIPPED file
@@ -25,17 +17,10 @@
 - [SC4 measure, don't infer](feedback-sc4-measure-dont-infer.md) — measured values land first try; inferred ones cost 2-3 builds
 - [⛔ SC4 ships NINE archives, not 7](reference-sc4-intro-dat-is-the-eighth-archive.md) — a written-down inventory fails silently, and only in the case you needed. DISCOVER, don't list
 - [Never re-pin a fingerprint without reading the bytes](feedback-never-repin-a-fingerprint-without-reading-the-bytes.md) — bypass → run every byte-level assertion → re-pin only if all pass
-- [Verify without stealing foreground](feedback-verify-without-stealing-foreground.md) — PrintWindow + UIA InvokePattern, never full-screen capture or synth-clicks
 
 **Packaging / delivery laws**
 - [A package isn't done until it's in the MANIFEST](feedback-a-package-is-not-done-until-its-in-the-manifest.md) — three packages rotted identically: hand-placed, absent from deploy+integrity scripts, everything green
-- [USB bundles self-contained](feedback-usb-bundle-self-contained-readmes.md) — target machines can't run Claude Code; every dist bundle carries a README, RE-SYNCed each rebuild
 - [Batch files need CRLF](feedback-batch-files-need-crlf.md) — Write emits LF; cmd.exe then jumps to the WRONG byte offset on call:/goto, silently
-- [Production version history](reference-production-version-history.md) — three VERSION-HISTORY.txt files; keep all updated per release
-- [Deployment-ready structure](reference-deployment-ready-structure.md) — START-HERE.txt, install order, `_not-for-deployment\`, Install-Apps.ps1
-- [Original source files & Vista packages](reference-original-source-files.md) — pristine SDK/driver/prereq installers
-- [Qwen thinking-proxy](reference-qwen-code-desktop-thinking-proxy.md) — 127.0.0.1:8787 Scheduled Task; Alibaba 5MB body cap
-- [Agent-roles delegation](project-agent-roles-setup.md) — lane table + escalation ladder (currently SUSPENDED — work in Claude)
 
 **SC4 — status + process**
 - [⭐ #176 CLOSED v3.0.1 — the LATCH LAW](project-sc4-15x-three-open-defects.md) — a SetImage-latched crop is a hidden consumer of bind-time geometry; resizes never refresh it; ask WHEN content was BOUND. RELATCH armed per staged root. #149 also closed (auto custom lots)
@@ -50,7 +35,7 @@
 - [SC4 founded-city invalidates old notes](feedback-sc4-founded-city-invalidates-notes.md) — run Set-StockCompare FIRST
 - [SC4 deploy = wait-for-close](feedback-sc4-deploy-on-close.md) — the game runs ELEVATED and holds the DLL/dats open; NEVER kill it
 - [⛔ SC4 Plugins scan is RECURSIVE](feedback-sc4-plugins-scan-is-recursive.md) — a stash INSIDE `Plugins\` disables NOTHING; enumerate BOTH trees before believing any "stock" claim
-- [⛔ SC4 "zoomed in" = Windows DPI virtualization](reference-sc4-zoom-is-windows-dpi-virtualization.md) — HKCU shim, survives reinstalls; cure = HIGHDPIAWARE. Check the shim BEFORE the mod
+- [⛔ SC4 "zoomed in" = Windows DPI virtualization](reference-sc4-zoom-is-windows-dpi-virtualization.md) — HKCU shim, survives reinstalls; cure = HIGHDPIAWARE. Check the shim BEFORE the mod. A non-DPI-aware resolution query reports the SCALED-DOWN logical size, not true native pixels — GetDeviceCaps(DESKTOPHORZRES/VERTRES) after SetProcessDPIAware() is the only reliable read
 
 **SC4 — engine references**
 - [SC4 hooking: never guess a calling convention](reference-sc4-thiscall-hook-rule.md) — 2 crashes in one session; __thiscall detour = __fastcall(self,edx), unknown arity = naked tail jmp, and slot 87 is NOT GZPaint
@@ -84,51 +69,3 @@
 - [SC4 Touch Controls](project-sc4-touch-controls.md) — SHIPPED v1.0.4/v1.0.5; **dist\ FROZEN**
 - [⛔ SC4 dialogs live under the MAIN WINDOW](reference-sc4-dialogs-live-under-main-window.md) — not the 3D view, and drawn INSIDE the DirectX hwnd. Touch only holds view3d ⇒ blind to every dialog/popup; ids 0xAA921F4F / 0x6AAEEC4A
 - [SC4TouchControls — RE-QUARANTINED 2026-08-13](project-sc4touchcontrols-independence.md) — flag has flipped twice; **check the quarantine folder, don't assume**. Never reinstall to `Plugins\` without asking
-
-**Surface 1.0 platform + driver**
-- [Hydra/Milan driver port status](project_hydra_milan_driver_port.md) — Surface 1.0 vision-card Win11 x64 port; phase, HW facts, next step
-- [HydraX64Beta driver](project-hydra-beta-driver.md) — side-by-side beta with WPP tracing; USB kit in dist\beta-kit
-- [Hydra delta mask forbidden](feedback-hydra-delta-mask-forbidden.md) — NEVER re-enable the changed-cells mask; keep all-0xFF
-- [Hydra parity frozen categories](feedback-hydra-parity-frozen-categories.md) — never change delta mask, identity/naming, signature+DriverVer+x64
-- [Bump DriverVer per build](feedback-bump-driverver-per-build.md) — before restaging
-- [Touch-injection safety](feedback-touch-injection-safety.md) — opt-in + 30s expire + flood cap + ESC kill (a flood forced a Windows reinstall)
-- [PixelSenseToTouch bridge](project-pixelsensetouch-bridge.md) — the REQUIRED Surface-contacts→Windows-touch bridge
-- [Integrated touch (Mode B)](project-hydra-touch-integrated-mode.md) — CUT 2026-07-15; shipping touch = Mode A only
-- [Surface WiFi ZD1211B fix](project-surface-wifi-zd1211b-fix.md) — RETIRED; use a USB dongle
-- [Launch the Simulator correctly](project-simulator-launch.md) — Start-Menu .lnk as admin, not the exe directly
-- [Simulator on Win11 dev tools](project-simulator-win11-devtools.md) — Win11 Fix MSI: HKLM DPI shims + IL clean-exit patch
-- [Surface SDK docs](reference-surface-sdk-docs.md) — ported-app layout wins on conflict
-- [Surface Admin Guide + Mgmt Pack](reference-surface-admin-guide.md) — deployment CHM + SCOM .mp
-- [Surface Shell registration](feedback-surface-shell-registration.md) — Shell empties the WHOLE launcher if one preview file is missing
-- [Surface shell UX rules](feedback-surface-shell-ux-rules.md) — no scroll bars, no external windows, edge-anchored overlays
-- [HP V14 brightness buttons](project-hp-v14-brightness.md) — dead buttons = monitor firmware; DDC/CI preset persists
-
-**Surface apps (ports + originals)**
-- [Community MSI fixes live in the binary](feedback-community-msi-fixes-live-in-binary.md) — ildasm the shipped binary before rebuilding; CLR2 via MSBuild v3.5
-- [Base Defense .NET4→CLR2 fix](project-base-defense-net4-fix.md) — v4 exe vs XNA 3.1 CLR2 = won't launch
-- [G-nome Surfer render-crash fix](project-gnome-surfer-render-fix.md) — unguarded worker + 3 dead menu genomes
-- [Ribbons+Tiles MSAA fix](project-ribbons-tiles-msaa-fix.md) — check multisample first on any XNA CLR20r3 crash
-- [MeetSurface restoration](project-meetsurface-config-path-fix.md) — rebuilt from decompiled source with original BAML re-embedded
-- [Radial Panel port](project-radialpanel-port.md) — built from source + MSI; v1.0.1.0 carousel tile art
-- [XPCardsHost Solitaire port](project-xpcardshost-solitaire.md) — **the ONE non-MSI app in Apps-x64**; any audit globbing `*.msi` misses it
-- [Surface Tetris HD](project-surface-tetris-hd.md) — from-scratch 2P Surface Tetris; separate tile
-- [Surface Casino / Milan Room](project-surface-casino.md) — NINE games (Sic Bo LOCKED); v1.1.0.0 packaged, NOT Simulator-tested; 21 audit bugs
-- [Surface Arcade suite](project-surface-arcade-suite.md) — six LIVE table games + three SHELVED on SurfaceArcade.Common
-- [Surface Arcade design laws](feedback-surface-arcade-design-principles.md) — symmetry (except Risk), one-studio branding
-- [Contact state must be derived](feedback-contact-state-must-be-derived.md) — NEVER hand-track contact ids
-- [SurfaceButton min size overflows](feedback-surfacebutton-min-size-overflows.md) — silently REASSIGNS which bet a finger places; audit with Audit-Layout.ps1
-- [WPF 3.5 software-render limits](feedback-wpf35-software-render-limits.md) — no CacheMode; RenderCapability.Tier lies under forced software render
-- [Vista has no symbol font → use vectors](feedback-vista-no-symbol-font-use-vectors.md) — Common\GlyphIcons; build Common FIRST
-- [Image magic not extension](feedback-image-magic-not-extension.md) — a WebP named .png throws XamlParseException on Vista
-- [Surface Suite / Concierge](project-surface-suite-concierge.md) — Suite.msi = Concierge+Music+Photos; Concierge SHELVED
-- [Touch Pack on Win11](project-touch-pack-win11.md) — the web-installer WRAPPER is the problem; extract RCDATA\MSI03
-- [Touch Pack install "hang"](project-touch-pack-install-hang.md) — kill ngen.exe not msiexec
-- [Vista Games Pack](project-vista-games-pack.md) — slc.dll edition gate + missing CardGames.dll; 9/9 launch
-- [Win16 games via otvdm](project-win16-via-otvdm.md) — 16-bit apps run as the real exe through winevdm/otvdm
-
-**Other**
-- [✅ SimCity Deluxe PLAYS on the Pixel Fold](project-simcity-deluxe-apk-64bit.md) — ours runs at 60fps under dynarmic; the original apk can't even install. Three of four blocking bugs were INVISIBLE OFFLINE — get on the hardware. Text entry goes through an EDK extension, not the keyboard API. `python port/tools/ship.py` is the one command
-- [SimCity J2ME trio in KEmulator ✅](project-simcity-j2me-kemulator.md) — 3 jars + launchers; nojre asset = 32-bit trap, use kemnnx64
-- [GM nav DVD (KIWI) rebuild](project-gm-nav-dvd-kiwi.md) — 2008 Avalanche Denso GE20 nav disc; workspace + Phase 0/1 status
-- [Always run behavioral sim](feedback-always-run-behavioral-sim.md) — on any rebuilt GM-nav cell/disc
-- [IntelliPoint+MKC coexist](project-intellipoint-mkc-coexist.md) — IP 8.2 patched MSI installs beside Mouse and Keyboard Center
