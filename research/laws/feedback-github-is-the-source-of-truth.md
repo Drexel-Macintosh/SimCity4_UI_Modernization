@@ -89,6 +89,39 @@ that DID survive before being trusted on the 30, and the result is 129/129
 pixel-exact. Byte-compare fails there (PIL re-encodes the PNG) - compare
 PIXELS. See [[feedback-sc4-scaling-laws]].
 
+## THE MANIFEST FINDS THINGS THE AUDIT DIDN'T (2026-08-18, same day)
+
+Cross-checking builders against `_tests/Deploy-OnGameClose.ps1` (the
+authoritative deploy manifest, per its own header) instead of trusting a
+remembered inventory turned up THREE more real, live-deployed packages that
+had never been counted anywhere: MenuFix, CsiIcons, NamIcons. The lesson isn't
+"count better" - it's that a manifest is the only list that can't silently
+drift, because the game reads it.
+
+⭐ **A cold clone that builds does not mean the LIVE install matches it.** A
+full per-entry payload comparison (direct DBPF index reads - see
+`dbpf_direct.py` shape: parse the header at 0x24/0x28/0x2C, don't trust a
+packer's own `--extract` naming, it was non-deterministic) between a fresh
+cold-clone build and this machine's actual deployed packages found real
+differences at every turn, and every one of them meant the DEPLOYED copy was
+STALE relative to current source (a leftover credits LTEXT, pre-fix
+`imagerect` values, a 1.5x corpus that predates a producer-sentinel
+correction) - never the reverse. **The DLL being freshly rebuilt today says
+nothing about whether the ART packages were rebuilt at the same time**; they
+are a separate, more expensive step and drift out of sync easily. Byte
+differences alone are not evidence of a real defect either: PNG
+re-compression changes bytes without changing pixels - decode and compare
+PIXELS before calling something a content difference.
+
+Also confirmed: `Test-NoForeignContent.py` has PRIVATE vs PUBLIC modes for a
+reason. In private mode, cross-project name hits are advisory; in `--public`
+mode they correctly fail the build. `research/laws/INDEX.md` (this project's
+mirror of the whole cross-project MEMORY.md) currently trips the public gate
+on Surface-hardware and other sibling-project entries - that is the gate
+working as designed, not broken, and it is exactly what "audit before public
+release" (already a tracked pending item) exists to clean up. Don't mistake a
+correct FAIL on `--public` for a bug.
+
 Related: [[feedback-a-package-is-not-done-until-its-in-the-manifest]] — same
 failure shape one level up. A package absent from the manifest does not ship;
 a file absent from the repo does not survive.
