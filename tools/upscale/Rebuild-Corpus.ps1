@@ -169,6 +169,16 @@ foreach ($f in $Factor) {
     # becomes FF01FF, the engine's key test misses it, and it PAINTS PINK.
     # Re-enable only with that line made keyed-aware AND a corpus-wide near-key
     # scan reading zero. The flag and its guard stay in Upscale2x.cs.
+    # GH5 2026-08-18: --supersample replaces the Catmull-Rom fill with a
+    # LOSSLESS x3 then an area reduction, which is even by construction
+    # rather than even-by-blurring. It reuses this dispatch, so it needs
+    # --smooth-unkeyed above; and --smooth-keyed is re-enabled WITH it
+    # because the #175 pink cause does not exist on this path - the
+    # manufacture-guard nudge is !keyed-only, which is the asymmetry #175
+    # had backwards. GATED: the corpus-wide near-key scan must read ZERO
+    # and 2x/3x must stay byte-identical, both checked after this runs.
+    # GATED OFF 2026-08-18: gate_key_integrity.py REJECTED this build.
+    # $argv += '--supersample'
     # $argv += '--smooth-keyed'
 
     # Computed before the DryRun exit so the dry run can print the post-steps

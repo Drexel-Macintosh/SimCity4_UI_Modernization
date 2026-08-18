@@ -193,6 +193,31 @@ internal static class Upscale2x
                 // colour-keyed sheet outright rather than trying to survive one.
                 sSmoothUnkeyed = true;
             }
+            else if (string.Equals(a, "--supersample", StringComparison.OrdinalIgnoreCase))
+            {
+                // GH5. The 1.5x tier looks soft next to 2x for an ARITHMETIC
+                // reason, not a filter-quality one: an integer factor maps one
+                // source pixel to an exact NxN block, while 1.5 must distribute
+                // one extra pixel per two and NO arrangement of that is even.
+                // Nearest splits a run of equal 3px ticks into fours and fives
+                // (MEASURED on {1abe787d,14015549}: 24 equal ticks became 13
+                // fours + 11 fives - that IS "the red half renders bolder"),
+                // and Catmull-Rom cures the unevenness by blurring, which is
+                // the softness itself.
+                //
+                // This resamples through a LOSSLESS x3 intermediate instead.
+                // Nearest at an integer factor only COPIES pixels, so the x3
+                // blow-up introduces nothing and the FF00FF key survives
+                // byte-perfect; the reduction that follows is a pure AREA
+                // average onto the final grid, which weights every output pixel
+                // evenly. The same 24 ticks come out 24 fives.
+                //
+                // Requires --smooth-unkeyed: it reuses that dispatch, its
+                // refusals and its counters. Refuses itself at integer factors,
+                // where nearest is already an exact block replicate and the
+                // output MUST stay byte-identical.
+                sSupersample = true;
+            }
             else if (string.Equals(a, "--smooth-keyed", StringComparison.OrdinalIgnoreCase))
             {
                 // #175 SECOND HALF (2026-08-16). Extends --smooth-unkeyed to the
@@ -558,9 +583,13 @@ internal static class Upscale2x
                         }
                         else { smoothThis = true; sSmoothed++; }
                     }
+                    if (smoothThis && sSupersample) { sSupersampled++; }
                     using (Bitmap dst = hq ? UpscaleHq(src, factor)
-                                           : (smoothThis ? UpscaleSmoothUnkeyed(src, factor, keyedThis)
-                                                         : UpscaleNearest(src, factor)))
+                                           : (smoothThis
+                                                ? (sSupersample
+                                                     ? UpscaleSupersample(src, factor, keyedThis)
+                                                     : UpscaleSmoothUnkeyed(src, factor, keyedThis))
+                                                : UpscaleNearest(src, factor)))
                     using (var outMs = new MemoryStream())
                     {
                         dst.Save(outMs, ImageFormat.Png);
@@ -991,6 +1020,9 @@ internal static class Upscale2x
 
     // #175: --smooth-unkeyed. See UpscaleSmoothUnkeyed for the full rationale.
     private static bool sSmoothUnkeyed = false;
+    // GH5: x3-lossless then area-reduce. See the --supersample arg for why.
+    private static bool sSupersample = false;
+    private static int sSupersampled = 0;
     private static int sSmoothed = 0;        // counters for the run summary
     private static int sSmoothSkippedKeyed = 0;
     private static int sSmoothSkippedInteger = 0;
@@ -1327,6 +1359,103 @@ internal static class Upscale2x
     // ⚠ INTEGER FACTORS ARE UNAFFECTED: the caller refuses smoothing outright at
     // an integer factor (nearest is already an exact NxN replicate), so this
     // cannot move 2x or 3x by a single byte.
+    // GH5: LOSSLESS x3, then an AREA reduction onto the final grid.
+    //
+    // Output geometry comes from the SAME ScaleDim path every other resampler
+    // uses, so every sizing rule already established still governs it -
+    // cell-first strip widths (#171), the height-exact subset (#177), no-snap
+    // sheets (#160). This changes only HOW the pixels are filled, never how
+    // many there are.
+    //
+    // KEY HANDLING, with both historical pink bugs designed out. #143 came from
+    // an exact FF00FF being AVERAGED into 0xFE01FE - the engine's key test then
+    // missed it and the key DREW. #175's second half came from the mirror case:
+    // a belt-and-braces line nudged a legitimately-key result to FF01FF, same
+    // outcome. Both are ONE defect - a pixel that is ALMOST the key. So the key
+    // never enters an average here, a block the key majority-owns is emitted as
+    // an exact FF00FF, and nothing nudges it afterwards. Ties go to the key,
+    // which preserves the transparent region rather than eroding it.
+    private static Bitmap UpscaleSupersample(Bitmap src, double factor, bool keyed = false)
+    {
+        int w = src.Width, h = src.Height;
+        int ow = ScaleDim(w, factor, true);
+        int oh = sNoHeightSnap ? (int)Math.Floor(h * factor + 0.5) : ScaleDim(h, factor);
+
+        // Stage 1: read the source once. The x3 grid is NOT materialised - a
+        // replicated pixel is just src[y/3][x/3], so the intermediate is indexed
+        // rather than allocated. Same arithmetic, none of the 9x memory.
+        var s0 = new int[h][];
+        BitmapData sd = src.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+        try
+        {
+            for (int y = 0; y < h; y++)
+            {
+                s0[y] = new int[w];
+                Marshal.Copy(Ofs(sd.Scan0, (long)y * sd.Stride), s0[y], 0, w);
+            }
+        }
+        finally { src.UnlockBits(sd); }
+
+        int bw = w * 3, bh = h * 3;
+        var dst = new Bitmap(ow, oh, PixelFormat.Format32bppArgb);
+        BitmapData dd = dst.LockBits(new Rectangle(0, 0, ow, oh), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+        try
+        {
+            var drow = new int[ow];
+            for (int oy = 0; oy < oh; oy++)
+            {
+                int y0 = (int)((long)oy * bh / oh);
+                int y1 = (int)((long)(oy + 1) * bh / oh);
+                if (y1 <= y0) { y1 = y0 + 1; }
+                if (y1 > bh) { y1 = bh; }
+                for (int ox = 0; ox < ow; ox++)
+                {
+                    int x0 = (int)((long)ox * bw / ow);
+                    int x1 = (int)((long)(ox + 1) * bw / ow);
+                    if (x1 <= x0) { x1 = x0 + 1; }
+                    if (x1 > bw) { x1 = bw; }
+
+                    long a = 0, r = 0, g = 0, b = 0;
+                    int n = 0, keyN = 0, total = 0;
+                    for (int y = y0; y < y1; y++)
+                    {
+                        int[] row = s0[y / 3];
+                        for (int x = x0; x < x1; x++)
+                        {
+                            int px = row[x / 3];
+                            total++;
+                            int pr = (px >> 16) & 0xFF, pg = (px >> 8) & 0xFF, pb = px & 0xFF;
+                            if (keyed && pr == 0xFF && pg == 0x00 && pb == 0xFF)
+                            {
+                                keyN++;              // contributes NOTHING
+                                continue;
+                            }
+                            a += (px >> 24) & 0xFF; r += pr; g += pg; b += pb;
+                            n++;
+                        }
+                    }
+                    if (n == 0 || (keyed && keyN * 2 >= total))
+                    {
+                        drow[ox] = unchecked((int)0xFFFF00FF);   // EXACT key
+                    }
+                    else
+                    {
+                        int oa = (int)(a / n), orr = (int)(r / n), og = (int)(g / n), ob = (int)(b / n);
+                        // An UNKEYED sheet must never manufacture the key. A
+                        // KEYED one must never have a colour nudged onto it
+                        // either - so only the unkeyed side nudges. That
+                        // asymmetry is precisely what #175 got backwards.
+                        if (!keyed && orr == 0xFF && og == 0x00 && ob == 0xFF) { og = 1; }
+                        drow[ox] = (oa << 24) | (orr << 16) | (og << 8) | ob;
+                    }
+                }
+                Marshal.Copy(drow, 0, Ofs(dd.Scan0, (long)oy * dd.Stride), ow);
+            }
+        }
+        finally { dst.UnlockBits(dd); }
+        return dst;
+    }
+
     private static Bitmap UpscaleSmoothUnkeyed(Bitmap src, double factor, bool keyed = false)
     {
         int w = src.Width, h = src.Height;

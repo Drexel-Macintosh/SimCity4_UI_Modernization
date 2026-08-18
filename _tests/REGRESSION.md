@@ -14218,3 +14218,42 @@ STILL OWED before this can ship: the integer-tier control (2x and 3x output must
 stay BYTE-IDENTICAL - the supersampler must refuse itself there, exactly as
 --smooth-unkeyed does), a corpus-wide near-key scan rather than five sheets, and
 the pattern-preservation metric above run over the whole corpus.
+
+## GH5 — SUPERSAMPLER IMPLEMENTED, AND THE KEY GATE REJECTED IT (2026-08-18)
+
+Built into the real pipeline as Upscale2x.cs --supersample: a LOSSLESS x3
+nearest intermediate (replication introduces no colour the source lacks, so the
+key is bit-exact by construction) then an AREA reduction onto the final grid via
+the same ScaleDim path everything else uses, so every sizing rule already
+established still governs the output. Compiles clean, and it ran the whole 1.5x
+corpus: 1732 unkeyed sheets resampled, and for the first time 48 KEYED sheets
+too (417 refused, key is 1-2px structure).
+
+⛔ gate_key_integrity.py FAILED IT. Exit 1, FAIL [R2] on at least seven sheets,
+and in BOTH directions - e.g. {1abe787d,1401554a} 128 predicted key px NOT key
+AND 651 key px NOT predicted; {1abe787d,14416271} 228 key px not predicted.
+The gate models NEAREST key placement, and the supersamplers majority-vote
+moves the key BOUNDARY: a 2x2 block that is half key resolves to key under my
+ties-to-key rule, and blocks that were key under NN can resolve to colour.
+
+I reverted the wiring and rebuilt; the corpus is back to PASS. NOTHING SHIPPED.
+The flag and the method stay in the file, gated off, exactly as --smooth-keyed
+does.
+
+WHAT THIS IS NOT: a refutation of the approach. The pixels are demonstrably
+better - on the ladder sheet the 24 equal ticks that NN splits into 13 fours and
+11 fives come out 24 fives. What is unresolved is the KEY BOUNDARY POLICY, and
+the gate is right to refuse until someone decides it rather than discovers it:
+  * ties-to-key   (what I shipped into the build) EXPANDS transparency, eroding
+    art by up to half a pixel at every keyed edge;
+  * ties-to-colour SHRINKS transparency, growing art the same amount - measured
+    earlier on the prototype as a key-fraction drop from ~25% to ~17%;
+  * neither matches NN, so the gate fails either way while it predicts NN.
+The real question is whether the gate should predict the RESAMPLER IN USE rather
+than nearest - and changing a gate so your change passes is the single most
+dangerous move available here, so it is NOT being done as a side effect of a
+sharpness improvement. It needs its own decision, with the negative control
+(does the amended gate still catch a genuinely wrong key placement?) run first.
+
+⭐ THE GATE EARNED ITS KEEP. It caught a whole-corpus art change that eyes-on at
+one tier could easily have missed, and it caught it before deploy.
