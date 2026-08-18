@@ -12,9 +12,9 @@ import shutil
 import subprocess
 import sys
 
-TOOLS = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\tools"
+TOOLS = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls\tools"
 BUILDER = os.path.join(TOOLS, "selective-safe", "build_selective_safe.py")
-SCRATCH = (r"<HOME>\AppData\Local\Temp\claude"
+SCRATCH = (r"<PROJECT-ROOT>"
            r"\<SESSION-DIR>"
            r"\f1160943-a698-434b-a6bf-d3c3e2971cea\scratchpad")
 WORK = os.path.join(SCRATCH, "dockpatch")

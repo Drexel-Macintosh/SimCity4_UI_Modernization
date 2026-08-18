@@ -3,7 +3,7 @@
 """Adversarial verify: does every oldText in the LANE 4 spec occur EXACTLY ONCE?"""
 import os, sys
 
-SRC = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\src"
+SRC = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls\src"
 
 PATCHES = [
  ("CodePatches.h",

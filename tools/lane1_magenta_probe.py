@@ -8,7 +8,7 @@ import os
 from collections import Counter
 from PIL import Image
 
-PROJ = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls"
+PROJ = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls"
 P3 = os.path.join(PROJ, "tools", "selective-safe", "stage-3x",
                   "T-0x856ddbac_G-0x46a006b0_I-0x13d14ca0.png")
 P1 = os.path.join(PROJ, "tools", "dbpf", "extracted", "SimCity_1",

@@ -6,7 +6,7 @@ import struct
 import sys
 import zlib
 
-TOOLS = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\tools"
+TOOLS = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls\tools"
 SIG = bytes([137, 80, 78, 71, 13, 10, 26, 10])
 
 

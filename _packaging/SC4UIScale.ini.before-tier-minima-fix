@@ -1,0 +1,91 @@
+; ============================================================================
+;  SC4UIScale.ini  -  SimCity 4 Deluxe UI scaling
+; ============================================================================
+;
+;  You do not need to edit this file. Every setting below is already at its
+;  recommended value.
+;
+;  DO NOT DELETE ScaleAll OR ScaleRegion. Both are OFF in the DLL's built-in
+;  defaults, so those two are the only keys here that do NOT fall back to
+;  something useful - remove either one and that half of the mod simply does
+;  nothing, with no error and no complaint in the log. Every other key may be
+;  deleted and will fall back to exactly the value shown.
+;
+;  This file lists ONLY the settings a player would ever change. The DLL reads
+;  many more keys than these - they are development levers, they are documented
+;  in the project's notes rather than here, and leaving them absent is the
+;  supported configuration.
+;
+;  Location: this file must sit next to SC4UIScale.dll in your Plugins folder.
+;
+;  IMPORTANT: save this file as plain UTF-8 or ANSI, WITHOUT a byte-order mark.
+;  Some editors add a BOM silently; if that happens the game reads the file as
+;  unreadable and falls back to defaults.
+; ============================================================================
+
+[UiSpike]
+
+; ---------------------------------------------------------------------------
+; THE TWO MASTER SWITCHES. Without these the mod loads and does nothing.
+; ---------------------------------------------------------------------------
+
+; Scale the in-city UI panels. 1 = on (this is the mod).
+ScaleAll=1
+
+; Scale the region screen too - the region map itself plus its nine panels.
+; 1 = on. Independent of ScaleAll so either half can be turned off alone.
+ScaleRegion=1
+
+; Region map size. -1 = follow the automatic tier (recommended), 0 = leave
+; the region map stock, or an explicit multiplier such as 2.0. The region
+; terrain draws at a fixed 128 px per region cell no matter what resolution
+; you run, which is why it needs a lever of its own at all.
+RegionMapScale=-1
+
+; Mouse wheel zoom on the region screen. 1 = on.
+RegionZoom=1
+
+; Zoom steps each way from the default size, and the ratio per step. A step
+; that would need more memory than the budget allows is refused as a whole
+; and noted in the log, so on a very large region - or at the 3x tier, where
+; the tiles are already big - the range simply ends earlier.
+RegionZoomLevels=5
+RegionZoomStepRatio=1.25
+
+; Keep region tiles as sharp as the source art allows. 1 = on. Set 0 only if
+; you ever see a hairline seam where two cities meet.
+RegionTileSharp=1
+
+; Pick the scaling factor automatically from the resolution the game actually
+; renders at. 1 = automatic (recommended). Set 0 only if you want to force a
+; specific factor with ScaleFactor below.
+;   Requires roughly 1760x1116 for 2x and 2640x1674 for 3x. Below the 1.5x
+;   threshold the mod stays completely inert and the game is stock.
+AutoScale=1
+
+; The factor used when AutoScale=0. Supported values: 1.5, 2.0, 3.0.
+; Ignored entirely while AutoScale=1.
+ScaleFactor=2.00
+
+; The region screen's website button points at http://simcity.ea.com/, which
+; EA retired years ago. 1 = send it to the Simtropolis community hub instead.
+; Set 0 if you would rather this mod did nothing but scaling - the button then
+; keeps its original dead link.
+WebRedirect=1
+
+; Workaround for a stock-game hang that can occur while quitting after opening
+; the Budget window. Leave at 1. It does nothing unless the hang is actually
+; detected, and it calls no game code.
+SpinFix=1
+
+; Development lever: re-read the tuning keys from this file a few times a
+; second so offsets can be adjusted without restarting. Leave at 0 - it costs
+; ~144 file reads per second and changes nothing for a normal install.
+LiveTune=0
+
+[Logging]
+
+; 0 = errors only, 1 = normal (recommended), 2 = diagnostics, 3 = trace.
+; Level 2 turns on the per-window instrument dumps. They are large and only
+; useful when reporting a problem, so raise this only if you are asked to.
+LogLevel=1

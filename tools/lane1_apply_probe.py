@@ -12,9 +12,9 @@ import shutil
 import subprocess
 import sys
 
-PROJ = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls"
+PROJ = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls"
 SRC = os.path.join(PROJ, "tools", "selective-safe", "build_selective_safe.py")
-SCR = r"<HOME>\AppData\Local\Temp\claude\<SESSION-DIR>\f1160943-a698-434b-a6bf-d3c3e2971cea\scratchpad\lane1"
+SCR = r"<PROJECT-ROOT>"
 os.makedirs(SCR, exist_ok=True)
 
 OLD1 = "import shutil\nimport subprocess\nimport sys\nfrom collections import defaultdict"

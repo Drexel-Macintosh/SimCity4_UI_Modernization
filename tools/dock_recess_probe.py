@@ -12,7 +12,7 @@ import struct
 import sys
 import zlib
 
-TOOLS = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\tools"
+TOOLS = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls\tools"
 SRC_1X = os.path.join(TOOLS, "dbpf", "extracted", "SimCity_1",
                       "T-856ddbac_G-46a006b0_I-13d14ca0.png")
 UP_3X = os.path.join(TOOLS, "upscale", "preview-3x", "SimCity_1",
@@ -21,7 +21,7 @@ UP_2X = os.path.join(TOOLS, "upscale", "preview", "SimCity_1",
                      "T-0x856ddbac_G-0x46a006b0_I-0x13d14ca0.png")
 UP_15X = os.path.join(TOOLS, "upscale", "preview-15x", "SimCity_1",
                       "T-0x856ddbac_G-0x46a006b0_I-0x13d14ca0.png")
-SCRATCH = (r"<HOME>\AppData\Local\Temp\claude"
+SCRATCH = (r"<PROJECT-ROOT>"
            r"\<SESSION-DIR>"
            r"\f1160943-a698-434b-a6bf-d3c3e2971cea\scratchpad")
 

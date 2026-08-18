@@ -9,7 +9,7 @@ its nulls mean nothing.
 """
 import io, os, sys
 
-ROOT = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls"
+ROOT = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls"
 
 def load(rel):
     p = os.path.join(ROOT, rel.replace("/", os.sep))

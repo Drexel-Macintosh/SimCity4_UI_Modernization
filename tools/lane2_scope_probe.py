@@ -11,7 +11,7 @@ disagrees with the header it is broken and its verdicts are void.
 """
 import io, re, sys
 
-P = (r"<HOME>\OneDrive\Projects\Surface 1 Project"
+P = (r"<PROJECT-ROOT> 1 Project"
      r"\1 Completed Projects\SC4TouchControls\src\CodePatches.cpp")
 
 src = io.open(P, encoding="utf-8").read()

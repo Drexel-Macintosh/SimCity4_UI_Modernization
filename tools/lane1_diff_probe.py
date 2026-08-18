@@ -9,8 +9,8 @@ import struct
 import sys
 import zlib
 
-TOOLS = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls\tools"
-SCRATCH = r"<HOME>\AppData\Local\Temp\claude\<SESSION-DIR>\f1160943-a698-434b-a6bf-d3c3e2971cea\scratchpad"
+TOOLS = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls\tools"
+SCRATCH = r"<PROJECT-ROOT>"
 SIG = bytes([137, 80, 78, 71, 13, 10, 26, 10])
 
 

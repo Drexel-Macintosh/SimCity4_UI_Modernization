@@ -9,7 +9,7 @@ export const meta = {
   ],
 }
 
-const ROOT = "<PROJECT-ROOT>"
+const ROOT = "<PROJECT-ROOT> 1 Project\\1 Completed Projects\\SC4UIScale"
 
 const RULES = `
 PROJECT ROOT: ${ROOT}

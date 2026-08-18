@@ -12,7 +12,7 @@ import struct, sys, re, io, os, glob
 from capstone import Cs, CS_ARCH_X86, CS_MODE_32
 
 EXE = r"C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe"
-ROOT = r"<HOME>\OneDrive\Projects\Surface 1 Project\1 Completed Projects\SC4TouchControls"
+ROOT = r"<PROJECT-ROOT> 1 Project\1 Completed Projects\SC4TouchControls"
 IMAGE_BASE = 0x400000
 FN = 0x00779660
 

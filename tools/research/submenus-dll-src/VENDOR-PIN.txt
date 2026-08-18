@@ -1,0 +1,14 @@
+submenus-dll — third-party vendored source, pinned.
+
+upstream : https://github.com/memo33/submenus-dll.git
+commit   : b226f13d61f3a1f8bf125226b27fc0996a538af9
+branch   : main
+pinned   : 2026-08-18
+
+The .git directory was REMOVED so this tree can live inside the SC4UIScale
+repository without a nested clone (task #108 named the nested clone as one of
+three reasons git-init-in-place was rejected).
+
+To restore full history:  git clone <upstream> && git checkout <commit>
+This is the exact version the mod's menu reasoning was developed against —
+do not bump it without re-checking the menu id assumptions.
