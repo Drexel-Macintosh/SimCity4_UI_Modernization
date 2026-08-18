@@ -13826,3 +13826,40 @@ change doing the work, not the guard. Exercising the guard would mean setting
 MissionBubbleFx=3 and deliberately re-triggering the crash path. Recorded so a
 later reader does not mistake "no crash" for "the guard was proven" (law 54:
 no log line = did not run; here there is no log line by construction).
+
+## #172 CLOSED — the fix had shipped 2026-08-16; I said otherwise and was wrong
+
+CORRECTION, recorded because it changed what the user asked for. Earlier today I
+told the user "#172 is reopened - neither is fixed", and set out to build a new
+general gap-preserving rule. That was WRONG. `clamp_query_pair_cells` was
+implemented 2026-08-16 and shipped the same evening (ledger 10907, batch line
+10985), and #172 appears in this file's own eyes-on-owed list at line 10997 -
+the very category the user cleared. I omitted it from the list I handed them,
+then contradicted the ledger. The lesson is the project's own first northstar:
+CHECK OUR PREVIOUS WORK FIRST. I ran a fresh 2895-pair census before reading
+`grep -n '#172' REGRESSION.md`, which would have answered it in one line.
+
+VERIFIED IN THE DEPLOYED PACKAGES (measure the shipped file, not the build):
+
+    1x stock : {46a006b0,14015547} Query       148x21  (cell 37x21)
+               {46a006b0,4b8da4a4} Route Query 148x23  (cell 37x23)
+               against a 36x21 design window - the overhang is Maxis's
+
+    tier   sheet     cell        target R(36f)xR(21f)
+    1.5x   216x32    54x32       54x32    CLAMPED
+    2x     288x42    72x42       72x42    CLAMPED
+    3x     432x63    108x63      108x63   CLAMPED
+
+Both TGIs, all three tiers, cell exactly the scaled window. The +1/+2 stock
+overhang that became +3/+6 at 3x is gone at every factor.
+
+USER-CONFIRMED 2026-08-18 under "everything that has been fixed I can confirm is
+resolved" - the clamp has been deployed and played against since 2026-08-16.
+
+WHAT THE NEW CENSUS IS STILL WORTH. The 2895-pair sweep was aimed at the wrong
+target but the instrument is sound and now recorded: 1329 pairs mismatch by more
+than 4px and are tiled/9-slice/atlas art wrong BY DESIGN (law 86); 132 sit within
+4px; and under a strict gate (single bound window size, uncropped, non-strip,
+gap <= 2px) only TWO sheets qualify for any general art-resize rule. That is the
+useful negative result: there is no broad #172 family to fix. The defect really
+was the two-button pair, and it really is fixed.
