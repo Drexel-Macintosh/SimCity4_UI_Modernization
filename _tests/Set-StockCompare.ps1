@@ -38,6 +38,16 @@ $GfxIni      = Join-Path $DocPlugins "SC4GraphicsOptions.ini"
 $StateFile   = Join-Path $DocPlugins "SC4UIScale.compare-state.txt"
 $OffSuffix   = ".compare-off"
 
+# EVERY directory this script may rename a file in. Both directions read this
+# list, so they cannot drift apart again.
+$TouchedDirs = @(
+    $DocPlugins
+    (Join-Path $DocPlugins "zzz-SC4UIScale")
+    $InstPlugins
+    $InstallRoot
+    (Join-Path $InstallRoot "Apps")
+)
+
 # Our scaling layer. NOTE: SC4TouchControls.dll is deliberately NOT here.
 # Only files WITHOUT an existing gating suffix (.x1-disabled) are touched.
 function Get-OurLiveFiles {
@@ -112,12 +122,67 @@ function Get-IniValue {
     return $null
 }
 
+# POSITIVE CONTROL for a "stock" claim - a MEASUREMENT, not bookkeeping.
+# RECURSIVE, because SC4 scans Plugins recursively at any depth: a copy of ours
+# in a subfolder nobody remembered keeps loading, and a non-recursive listing
+# is a probe that could not have seen it (2026-08-05: 132 dats "stashed" inside
+# Plugins\ went on loading through an entire stock investigation AND a game
+# reinstall, while the user said so repeatedly and was right every time).
+# Also covers <install>\Plugins and the two loose-font probe sites, because the
+# game's FontStyle order is <install>\Plugins -> <install> -> DBPF.
+function Get-OurLiveArtifacts {
+    $hits = @()
+    foreach ($dir in @($DocPlugins, $InstPlugins)) {
+        if (-not (Test-Path $dir)) { continue }
+        $hits += Get-ChildItem -Path $dir -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object {
+                $_.Name -eq "SC4UIScale.dll" -or
+                $_.Name -like "z_SC4UIScale_*.dat" -or
+                $_.Name -eq "FontStyle.ini"
+            }
+    }
+    foreach ($dir in @($InstallRoot, (Join-Path $InstallRoot "Apps"))) {
+        if (-not (Test-Path $dir)) { continue }
+        $hits += Get-ChildItem -Path $dir -File -Filter "FontStyle.ini" -ErrorAction SilentlyContinue
+    }
+    return $hits
+}
+
+# Called after -Mode Stock. A claim of "stock" that this refuses is a FALSE
+# claim, and any capture taken under it is a Franken-capture - so it fails
+# loudly rather than printing a warning nobody reads.
+function Assert-StockClean {
+    $live = @(Get-OurLiveArtifacts)
+    if ($live.Count -eq 0) {
+        Write-Host "STOCK VERIFIED: recursive scan of both Plugins trees + the two"
+        Write-Host "  loose-font probe sites found 0 live SC4UIScale artifacts."
+        return
+    }
+    Write-Host ""
+    Write-Host "!! NOT STOCK. $($live.Count) of our artifact(s) are STILL LIVE:"
+    $live | ForEach-Object { Write-Host "     $($_.FullName)" }
+    Write-Host ""
+    throw ("Refusing to report STOCK. SC4 loads Plugins recursively, so these " +
+           "would load and any comparison taken now would be a Franken-capture. " +
+           "Disable them (rename the extension or move them OUT of the Plugins " +
+           "tree - a subfolder disables nothing) and re-run.")
+}
+
 function Show-Status {
     $off = @(Get-ChildItem -Path $DocPlugins -Filter "*$OffSuffix" -ErrorAction SilentlyContinue)
     $off += @(Get-ChildItem -Path $InstPlugins -Filter "*$OffSuffix" -ErrorAction SilentlyContinue)
     $off += @(Get-ChildItem -Path (Join-Path $DocPlugins "zzz-SC4UIScale") -Filter "*$OffSuffix" -ErrorAction SilentlyContinue)
-    $mode = if ($off.Count -gt 0) { "STOCK (our scaling disabled)" } else { "OURS (2x scaling active)" }
+    # MEASURED, not inferred from how many files this script renamed. Those
+    # two answers disagreed for months in the sibling script, and the renamed
+    # count is the one that cannot see a copy it never knew about.
+    $live = @(Get-OurLiveArtifacts)
+    $mode = if ($live.Count -eq 0) { "STOCK (verified: 0 live artifacts)" }
+            elseif ($off.Count -gt 0) { "MIXED - $($live.Count) still live, see below" }
+            else { "OURS (2x scaling active)" }
     Write-Host "Mode      : $mode"
+    if ($live.Count -gt 0 -and $off.Count -gt 0) {
+        $live | ForEach-Object { Write-Host "    STILL LIVE: $($_.FullName)" }
+    }
     Write-Host "Resolution: $(Get-IniValue $GfxIni 'WindowWidth')x$(Get-IniValue $GfxIni 'WindowHeight') $(Get-IniValue $GfxIni 'WindowMode') / $(Get-IniValue $GfxIni 'Driver')"
     if ($off.Count -gt 0) {
         Write-Host "Disabled  : $($off.Count) file(s)"
@@ -152,12 +217,15 @@ if ($Mode -eq "Stock") {
     Set-IniValue $GfxIni "WindowMode"   "Windowed"
 
     Write-Host "STOCK MODE: disabled $n of our files; ${Width}x${Height} Windowed."
-    Write-Host "dgVoodoo + SC4TouchControls untouched. Launch and compare."
+    Write-Host "dgVoodoo + SC4TouchControls untouched."
+    Assert-StockClean
+    Write-Host "Launch and compare."
     Write-Host "Restore with:  .\Set-StockCompare.ps1 -Mode Ours"
 }
 else {
     $n = 0
-    foreach ($dir in @($DocPlugins, $InstPlugins, (Join-Path $DocPlugins "zzz-SC4UIScale"))) {
+    foreach ($dir in $TouchedDirs) {
+        if (-not (Test-Path $dir)) { continue }
         Get-ChildItem -Path $dir -Filter "*$OffSuffix" -ErrorAction SilentlyContinue | ForEach-Object {
             $orig = $_.Name.Substring(0, $_.Name.Length - $OffSuffix.Length)
             Move-Item -Path $_.FullName -Destination (Join-Path $dir $orig) -Force

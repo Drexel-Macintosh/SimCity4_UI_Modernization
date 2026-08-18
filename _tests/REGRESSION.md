@@ -14622,3 +14622,39 @@ to do exactly that at STOCK too, and closed NOT-A-BUG on a user-confirmed
 control. _tests\Set-StockCompare.ps1 -Mode Stock exists for this. Nothing
 else should be built for this defect until that control has been run, because
 every model we have now would have to condemn stock to explain the symptom.
+
+## The stock toggle could not prove its own claim, and did not restore what it
+## disabled (2026-08-18)
+
+USER: "you always do toggles check your memory." The memory in question is
+feedback-sc4-plugins-scan-is-recursive, and it is explicit: before believing
+ANY "stock" claim, enumerate .dat/.dll RECURSIVELY under BOTH Plugins trees and
+require the list to be EMPTY - "a top-level Get-ChildItem is not that check."
+Cost the last time: an entire stock-baseline investigation plus a game
+reinstall, on a premise that was false, while the user said so repeatedly.
+
+Set-StockCompare.ps1 had the SAME shape. Show-Status decided the mode by
+counting the files IT had renamed - bookkeeping about its own actions, which by
+construction cannot see a copy it never knew about. It never scanned.
+
+TWO FIXES, and the second is a live defect not a hardening:
+
+1. Get-OurLiveArtifacts + Assert-StockClean. RECURSIVE over both Plugins trees
+   plus the two loose-font probe sites (the game probes <install>\Plugins ->
+   <install> -> DBPF). -Mode Stock now calls it BEFORE printing the word
+   "stock", and it THROWS rather than warning, because a capture taken under a
+   false stock claim is a Franken-capture and a warning nobody reads is how
+   that happens. Show-Status reports the MEASURED state and can now say MIXED.
+   POSITIVE CONTROL RUN: the scanner reports 15 live artifacts while in OURS
+   mode (6 root, 8 zzz-SC4UIScale, 1 install Plugins), so a later empty result
+   means empty rather than blind.
+
+2. -Mode Stock renamed FontStyle.ini in FIVE directories; -Mode Ours restored
+   from THREE. <install>\FontStyle.ini and <install>\Apps\FontStyle.ini would
+   have stayed .compare-off permanently - our 2x font gone, 1x text in 2x
+   frames, which is the third-copy symptom of 2026-08-05 arrived at from the
+   opposite direction. Both directions now iterate ONE shared $TouchedDirs, so
+   they cannot drift apart again.
+
+Nothing about the budget defect changed here. This is the instrument that the
+next step depends on, and it was not fit to be trusted.
