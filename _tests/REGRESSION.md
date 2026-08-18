@@ -14465,3 +14465,61 @@ shipped ShowHook=0 because it has its own gate rather than borrowing one
 (law: gate on the condition you depend on).
 
 Cost on every other window in the game is one integer compare.
+
+## BUDGETSHOW capture: the roots are BORN CORRECT, so the resize is NOT ours
+## arriving late (2026-08-18, log 18:53)
+
+    BUDGETSHOW #1 0xAA3AC000 (balance bar)      becoming visible 1250x206,
+        expect 1250x206, design 833x137,  8 children -> BORN CORRECT
+    BUDGETSHOW #2 0xAA3AC001 (department frame) becoming visible  837x758,
+        expect  837x758, design 558x505, 36 children -> BORN CORRECT
+
+Both are exactly RoundHalfUp(design * 1.5) at the hidden->visible transition,
+and the VWKID dump 60 ms later shows the same rect at the same origin
+(0xAA3AC001 at 725,765 837x758). The session again logged ZERO "incremental
+panel" lines. USER: the jump happens on EVERY open, not just the first - so
+the uninitialised-latch hypothesis is refuted too (a latch cures itself after
+open #1 by definition).
+
+WHAT THIS ELIMINATES, which is the value of it:
+  * not a late arrival - the window is already at final size when shown
+  * not the sweep re-scaling - nothing re-scales these roots after city open
+  * not a first-use latch - the user reports it every time
+  * not a tier arithmetic error - the numbers are exact at 1.5x
+
+So something changes the geometry AFTER the show, and it is not the mod. That
+is a category the log had no instrument for: every existing budget line
+reports what WE did, and by construction we do nothing here.
+
+## BUDGETWATCH (2026-08-18, deployed 18:56:34)
+
+A read-only watcher placed FIRST in ScalePanelsUnder's per-panel loop -
+deliberately before the region filter, before IsNeverScaleId, before every
+skip - because the entire point is to see changes on windows this loop does
+NOT touch. It keeps last (L,T,W,H) per budget root and prints on any change:
+
+    BUDGETWATCH 0xAA3AC001 CHANGED (725,765 837x758) -> (725,765 837x612)
+      [RESIZED only] vis=1 - NOT by us, this loop has not run yet this tick.
+
+It classifies MOVED only / RESIZED only / moved AND resized, so the next
+capture names the axis instead of leaving it to be inferred. Capped at 40
+lines, baselines re-armed per city, and it takes no action - a census, not a
+treatment.
+
+WHAT THE ANSWER WILL MEAN, written down BEFORE the capture so the reading
+cannot drift to fit whatever comes back:
+  * RESIZED only, height shrinking -> the game is content-fitting the frame
+    after populating rows, and the open frame is the script height. Then the
+    question is whether stock does the same thing (law 88: a model that would
+    condemn stock is broken) - the department frame is content-fit on HEIGHT
+    only, which is already recorded in the kCityDialogIds notes.
+  * MOVED only -> a re-anchor after show; the composition places the root
+    from a 1x-derived origin and our city-open anchor is being overwritten.
+  * moved AND resized -> the game is re-laying the root wholesale from
+    script-cached geometry, which is the one shape that would justify
+    revisiting the v2.25.24 architecture decision.
+  * NOTHING logged while the user still sees the jump -> the root is not
+    what moves, and the next instrument goes one level down, onto the 36
+    children. A null here is only informative because BUDGETSHOW already
+    proved the watcher's ids are the ids that appear on screen (the positive
+    control - law: null is not evidence without one).

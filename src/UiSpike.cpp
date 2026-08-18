@@ -7298,6 +7298,22 @@ namespace
 	// gap this closes, and it is the one the user's question needs:
 	// does the FIRST open after a city load differ from later opens?
 	int       gBudgetShowLog = 0;
+	// BUDGETWATCH state (2026-08-18). BUDGETSHOW proved the roots are BORN
+	// CORRECT - 0xAA3AC000 1250x206 and 0xAA3AC001 837x758, both exactly
+	// RoundHalfUp(design * 1.5), at the hidden->visible transition, and the
+	// VWKID line 60ms later shows the same rect at the same origin. So the
+	// user's resize is NOT us arriving late, and it is not the sweep: the
+	// whole session logged ZERO 'incremental panel' lines. Something moves
+	// or resizes these windows AFTER they are shown, and nothing in the mod
+	// currently looks. This watches for exactly that and takes no action.
+	struct BudgetWatch { uint32_t id; int32_t w, h, l, t; bool seen; };
+	BudgetWatch gBudgetWatch[4] = {
+		{ 0xAA3AC000, 0, 0, 0, 0, false },
+		{ 0xAA3AC001, 0, 0, 0, 0, false },
+		{ 0xAA3AC002, 0, 0, 0, 0, false },
+		{ 0xCA4C332D, 0, 0, 0, 0, false },
+	};
+	int       gBudgetWatchLog = 0;
 	int       gBudgetShowOpens = 0;
 	bool      gShowHookInstalled = false;
 
@@ -7952,6 +7968,8 @@ void UiSpike::Disarm()
 	gDlgAnchorCount = 0;      // v2.37.4: dialog anchors re-learn per city
 	gDlgBornCount = 0;        // v2.38.0: DLGBORN reports once per city too
 	gBudgetShowLog = 0;       // BUDGETSHOW re-arms per city - the whole
+	gBudgetWatchLog = 0;      // and so does BUDGETWATCH; its baselines are
+	for (BudgetWatch& bw : gBudgetWatch) { bw.seen = false; }  // per city
 	gBudgetShowOpens = 0;     // question is about the FIRST open of a city
 	gMDockLoggedN = 0;        // v2.43.3: MDOCK re-reports per city
 	FlushBmpOpenCensus();     // v2.42.3: report the city's last open
@@ -10427,6 +10445,38 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 	for (int i = 0; i < ctx.count; i++)
 	{
 		PanelInfo& p = panels[i];
+
+		// BUDGETWATCH. FIRST in the loop, deliberately - before the region
+		// filter, before never-scale, before every skip - because the whole
+		// point is to see changes on windows this loop deliberately does NOT
+		// touch. Read-only: it compares and logs, and continues into the
+		// normal path unchanged.
+		if (p.win && gBudgetWatchLog < 40)
+		{
+			const uint32_t wid = p.win->GetID();
+			for (BudgetWatch& bw : gBudgetWatch)
+			{
+				if (bw.id != wid) { continue; }
+				const int32_t cw = p.win->GetW(), ch = p.win->GetH();
+				const int32_t cl = p.win->GetL(), ct = p.win->GetT();
+				if (bw.seen && (cw != bw.w || ch != bw.h
+						|| cl != bw.l || ct != bw.t))
+				{
+					gBudgetWatchLog++;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: BUDGETWATCH 0x%08X CHANGED (%d,%d %dx%d) -> "
+						"(%d,%d %dx%d)  [%s]  vis=%d - NOT by us, this loop has "
+						"not run yet this tick.",
+						wid, bw.l, bw.t, bw.w, bw.h, cl, ct, cw, ch,
+						(cw == bw.w && ch == bw.h) ? "MOVED only"
+							: (cl == bw.l && ct == bw.t) ? "RESIZED only"
+								: "moved AND resized",
+						p.win->IsVisible() ? 1 : 0);
+				}
+				bw.w = cw; bw.h = ch; bw.l = cl; bw.t = ct; bw.seen = true;
+				break;
+			}
+		}
 
 		if (i > 0 && mutatedSinceVerify)
 		{
