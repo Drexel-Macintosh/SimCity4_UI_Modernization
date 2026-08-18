@@ -13633,3 +13633,46 @@ a drifting strip PITCH in the art (law 107) and a tier-relative suppression
 threshold in the DLL (law 106). Either alone left the dial wrong. 2x and 3x
 were never touched - proven by 0 pixel diffs on all 16 sheets and 655
 entries / 0 differing payloads against the already-deployed packages.
+
+## #177 — strip height snapped with no vertical divide: VERIFIED CORRECT (2026-08-18)
+
+The issue said the derived height-exact subset was implemented and wired but
+"Predicted 21 sheet heights change; never confirmed on screen." Confirmed here
+by DERIVATION instead, which turns out to be stronger than an eyes-on glance.
+
+MEASURED on the deployed 1.5x SelectiveArt package: 554 art entries match a 1x
+source; 529 ship height == round(h*1.5) EXACT and 25 keep a snap (the
+deliberate set the issue already documents). The height-exact list has grown
+174 entries, of which 41 have a height the snap would have moved.
+
+THE DECISIVE TEST, which needs no screenshot. A sheet that fills a window
+should be the window's height. So compare, for each moved sheet, the exact and
+snapped heights against the EDGE-DERIVED height of the window the .UI actually
+binds it to (round(b*1.5) - round(t*1.5) from the design `area=`):
+
+    exact matches the bound window, snap does not : 20 sheets
+    snap matches, exact does not                  :  0 sheets
+    neither                                       :  6 sheets
+
+Zero counterexamples. In the 6 "neither" cases the art is 1px TALLER than its
+window at 1x already - stock's own design-vs-art gap, #172's family, not this
+defect - and even there exact (1px over) is strictly closer than snap (2px
+over). The snap was making art 1 to 6px taller than the window it fills, in
+every single case examined.
+
+BLAST RADIUS, worth stating because the issue did not: the 41 moved sheets are
+consumed by 103 distinct .UI scripts. The three highest-traffic ones are
+GZWinBtn 4-state button strips - {46a006b0,144161e0} 88x20 in 54 scripts,
+{46a006b0,cbcb9a74} 88x21 in 43, {46a006b0,ac101989} 132x21 in 18 - i.e. the
+ordinary small dialog buttons, everywhere. That is why this reads as "nothing
+in particular looks wrong": the change is 2px on very common chrome, in the
+direction of matching the window rather than overhanging it.
+
+Note the relationship to open issue "does GZWinBtn stretch a state cell
+vertically?" - if it stretches to the window the change is invisible; if it
+draws at art size the change removes a 2px overhang. Either way exact is the
+right answer, so that decompilation is no longer BLOCKING for #177.
+
+Three of the largest-delta sheets (60 -> 90 not 96) are {cbcb6e9f}, {cbcba952}
+and {ebcbb93f} - gauge strips for vehicles other than the helicopter, so
+today's user-confirmed dashboard does NOT cover them. Not claimed as verified.
