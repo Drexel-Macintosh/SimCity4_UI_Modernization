@@ -429,7 +429,7 @@ user-confirmed. Still open at 1.5× and invisible at 2×/3× by construction:
 | | |
 |---|---|
 | **#162** | mayor's-hat and people-button hairlines in `I-c973b411`. **NOT fixed, and the mechanism is NOT known.** The even-row / `floor(oy/1.5)` duplication theory was killed by the user's press-and-hold test — do not re-quote it (`REGRESSION.md:10007`). What IS proven: the 1.5× art is a bit-exact floor-NN copy of the 1× source (0/24840, 0/20412), and these two widths already agree under BOTH the edge- and size-derived rules (90 and 81). So it is not a tiled seam and not #170's window-vs-cell defect. Every offline explanation is exhausted; the next instrument must observe the live composited surface. `REGRESSION.md:10310-10314` |
-| **#165** | the 8-state sheet `{46a006b0,14416315}`: 204/8 = 25.5, the engine reads a 25px cell, the strip loses 4px. **OPEN AND LIVE IN `z_SC4UIScale_SelectiveArt-15x.dat` right now.** ⛔ Do NOT implement HARDENING-PROPOSALS C5 — its `lcm(CellUnit, states)` cure is precisely what #157's law forbids, and its worked example is arithmetically impossible. `REGRESSION.md:9976-10005` |
+| ~~**#165**~~ | ⚠ **SUPERSEDED — #165 IS CLOSED. Do not read this row as current status.** Kept as the record of the defect as it stood on **2026-08-16**, before the fix: the 8-state sheet `{46a006b0,14416315}` shipped 204/8 = 25.5, the engine read a 25px cell, and the strip lost 4px. **CLOSED 2026-08-16 by the #171 cell-first rule, USER-CONFIRMED the same day** — see the `~~#165~~` row in the **Open** list below, which is the authoritative status, and `_tests\REGRESSION.md` § *"#171 — WIDTH AXIS CLOSED: build strips CELL-FIRST"* (line 10520 as of 2026-08-18; the user-confirmation sentence naming the 8-state radiocheck row is at :10550). ⛔ Still binding: do NOT implement HARDENING-PROPOSALS C5 — its `lcm(CellUnit, states)` cure is precisely what #157's law forbids, and its worked example is arithmetically impossible. The ORIGINAL OPEN report is `_tests\REGRESSION.md` § *"#165 OPEN, LIVE IN THE SHIPPED 1.5x PACKAGE"* (line 10065 as of 2026-08-18), superseded by the #171 block above. |
 | **#171** | 132 pre-scaled buttons where the **window is right and the SHEET is wrong**, over-snapped by `ScaleDim`'s `CellUnit`. Zoom Out is 21px at 1×; `R(21*1.5) = 32`, but the 84px sheet divides by both 3 and 4, snaps on LCM 12, lands at 132 → cell **33**. Law 70's over-approximation. 0 at 2× and 3× (`ScaleDim` returns before `CellUnit` at an integer factor). The cure is an ART-dimension change, reverted and game-wide in scope — **reported, not fixed**. `REGRESSION.md:10300-10308` |
 
 *(⚠ 2026-08-17: this three-row table is itself now partly stale — #165 closed
@@ -441,6 +441,9 @@ open with the mechanism unknown. The Open list below carries the current state.)
 owes a broad 1.5× eyes-on sweep, and #123 is a 1.5× item — so read "closed" as applying to
 the #142–#153 family and nothing wider. Add #162, #165 and #171 to that list, which names
 none of them.
+
+*(⚠ 2026-08-18: that has since been done — the Open list below now names all three, and its
+#165 and #171 rows are struck through as closed. Status lives in the Open list, not here.)*
 
 ⚠ **A green gate is not zero defects here.** `tools\uimap\emu\gate_btn_undercover.py`
 **exits 0** on #171: it prints `PASS - integer tiers exact. Fractional residual ... is the
@@ -530,14 +533,27 @@ eye, and finally a **working sibling to compare against** found these.
 > **Corrected 2026-08-16.** This heading read "THE 1.5× FAMILY IS CLOSED", which is
 > false. Three **1.5×-only** defects are open right now, and one of them is shipping:
 >
+> ⚠ **UPDATE 2026-08-18 — the "three open" count below is SUPERSEDED, and #165 in
+> particular is CLOSED.** The 2026-08-16 correction is kept verbatim because it is the
+> record of what was believed that morning. For current status read the **Open** list
+> further down this file — that list, and only that list, is the status of record.
+>
 > * **#162** — mayor's-hat and people-button hairlines in `I-c973b411`. Mechanism found,
 >   **not yet fixed**; the even-row-parity theory was killed by the user's kill test.
 >   `_tests\REGRESSION.md:9809` (and `:9585`, where the report is scoped by the user's own
 >   *"The lines don't exist at 2x"*).
-> * **#165** — the 8-state `{46a006b0,14416315}` strip loses 4px: `204/8 = 25.5` is
->   fractional where 2× and 3× are integer. **OPEN and LIVE in the shipped
->   `z_SC4UIScale_SelectiveArt-15x.dat`.** `_tests\REGRESSION.md:9976`.
->   (⛔ the HARDENING-PROPOSALS C5 cure is wrong — do not implement it.)
+> * ~~**#165**~~ — ⚠ **SUPERSEDED: #165 was CLOSED 2026-08-16**, the same day this
+>   correction was written, by the #171 cell-first rule, and USER-CONFIRMED that day.
+>   Ledger: `_tests\REGRESSION.md` § *"#171 — WIDTH AXIS CLOSED: build strips
+>   CELL-FIRST"*, line 10520 as of 2026-08-18 — the sentence naming the 8-state
+>   radiocheck row is at `:10550`. Status of record is the `~~#165~~` row in the **Open**
+>   list further down, not this bullet.
+>   The original report, kept for the record: the 8-state `{46a006b0,14416315}` strip lost
+>   4px because `204/8 = 25.5` is fractional where 2× and 3× are integer, and it was
+>   LIVE in the shipped `z_SC4UIScale_SelectiveArt-15x.dat` at the time —
+>   `_tests\REGRESSION.md` § *"#165 OPEN, LIVE IN THE SHIPPED 1.5x PACKAGE"*, line
+>   10065 as of 2026-08-18.
+>   (⛔ the HARDENING-PROPOSALS C5 cure is wrong — do not implement it. That still stands.)
 > * **#171** — 132 pre-scaled buttons whose ART cell is over-snapped by `ScaleDim`'s
 >   `CellUnit`; **0 at 2× and 3×**. `_tests\REGRESSION.md:10300`.
 >
@@ -572,7 +588,7 @@ backspace byte and produced a *true* error message with a *false* implication
 
 | | |
 |---|---|
-| ~~#165~~ | **CLOSED 2026-08-16 by the #171 cell-first rule.** `{46a006b0,14416315}` now ships `8 × R(17×1.5) = 208`, cell 26 exactly, instead of 204/8 = 25.5. No `kCellCounts` change was needed — sizing the sheet from its CELL makes the state count irrelevant. USER-CONFIRMED. `_tests\REGRESSION.md:10449` |
+| ~~#165~~ | ✅ **CLOSED 2026-08-16 by the #171 cell-first rule — USER-CONFIRMED 2026-08-16. THIS ROW IS THE STATUS OF RECORD FOR #165;** the two earlier "OPEN AND LIVE" passages higher up this file are dated 2026-08-16 as well but were written before the fix landed, and are marked superseded there. `{46a006b0,14416315}` now ships `8 × R(17×1.5) = 208`, cell 26 exactly, instead of 204/8 = 25.5. No `kCellCounts` change was needed — sizing the sheet from its CELL makes the state count irrelevant. **Re-verified by MEASUREMENT 2026-08-18** (the shipped width had never been re-read): `tools\selective-safe\stage-15x\T-0x856ddbac_G-0x46a006b0_I-0x14416315.png` is **208×26, cell 26.000 exact**; the integer controls are unchanged at 1× 136×17, 2× 272×34, 3× 408×51. Ledger: `_tests\REGRESSION.md` § *"#171 — WIDTH AXIS CLOSED: build strips CELL-FIRST"* (line 10520 as of 2026-08-18; the user-confirmation sentence naming the 8-state radiocheck row is at :10550). The OPEN report it supersedes is `_tests\REGRESSION.md` § *"#165 OPEN, LIVE IN THE SHIPPED 1.5x PACKAGE"* (line 10065 as of 2026-08-18) — that heading still reads "OPEN" and must not be quoted as current. |
 | ~~#171~~ | **WIDTH AXIS CLOSED 2026-08-16.** `ScaleDim` now sizes a `cell-strips.txt` sheet as `states × R(cell1x, f)` and skips `CellUnit`. Art-snapped 132 → 84, runtime residual 34 → 28, and 2206/2206 entry payloads byte-identical at 2× and 3× (control proven by hash). ⚠ This is **not** the reverted `fit_state_strips_to_windows` — it never consults a window, only the sheet and its state count. `_tests\REGRESSION.md:10449` |
 | ~~**#177**~~ | **SHIPPED in the 2026-08-16 22:31 batch (eyes-on owed).** The cure is the existing `--height-exact-strips` flag fed a **DERIVED subset** (`find_cell_strips.py` emits `height-exact-strips.txt`: 194 strips → 150 exact, 44 keep the snap with named reasons); 21 sheet heights changed, every one toward `R(h*f)`, 0 at 2×/3×. The old revert is EXPLAINED, not overridden — the real hazard was a rule-(b) consumer in `c973b411`, excluded by construction; the historical note blamed the wrong sheet (`14415860`, a provable no-op). `gate_btn_undercover` now reads **fractional residual 15x=0** — the #171/#177 art-cell population is EMPTY. `_tests\REGRESSION.md:10749` |
 | ~~**#176**~~ | **CLOSED v3.0.1, USER-CONFIRMED 2026-08-16 21:04 ("extends all the way").** Root cause was neither widget's art: the HUD groove's `imagerect` is a **SetImage bind-time LATCH** that raced our sweep (⭐ the LATCH LAW), healed only by a sim rating tick — the tier split was never real. Cure = RELATCH at the resize site, latch-signature keyed, armed per root. The six polls bars are `cSC4WinTrendBar` and **immune** (every geometric input read live per frame; their real residue was the six-cell fill strip, now in `find_cell_strips.py`'s CODE_BOUND). `tools\research\SC4-UI-ENGINE.md` §2.6; `_tests\REGRESSION.md:10650` |

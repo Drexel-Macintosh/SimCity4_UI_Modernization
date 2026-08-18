@@ -1033,7 +1033,12 @@ nothing) · `LCM{2,3,4}` 98 · **`LCM{3,4}` 34 (chosen)** · `{4}` 19 (rejected:
 drops the NineSlice `/3`) · no snap 104.
 
 `{3,4}` keeps the two divides that are load-bearing (NineSlice `img->Width()/3`
-at VA 0x00794100, and the four-state `width/4`); `/12` for the scrollbar still
+at ~~VA 0x00794100~~ — **VA corrected 2026-08-18: that is `cSC4WinAlertBorder`'s
+own draw. For `.UI`-bound sheets the drawer is `GZWinBMP 0x009BC325`'s EDGE
+branch (or `GZWinBtn 0x009B05E0`), which divides its own source rect and then
+calls the blitter `0x008D8800`. The `/3` arithmetic is unchanged — see
+`REGRESSION.md` §"RESOLVED 2026-08-18 — three addresses, three different
+JOBS"** — and the four-state `width/4`); `/12` for the scrollbar still
 falls out as their LCM. **LCM-of-everything is safe against CUTTING and unsafe
 against FITTING — measure the overshoot before choosing a wider constraint.**
 

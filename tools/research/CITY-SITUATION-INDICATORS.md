@@ -22,6 +22,15 @@ dispatch/emergency markers. The category test is:
 0046DD6C   cmp ecx, 4          ; 4 == CSI
 ```
 
+> **This sentence settled a conflict.** `SC4-WORLD-OVERLAYS.md` census row 5
+> attributed the police/fire dispatch markers to the marker-strip builder
+> `0x5F5FB0` (§2.5, the v3.0.7 "shared builder" claim). That row was corrected
+> **2026-08-18** to point here, with its old text kept and marked superseded:
+> the marker-strip inference rested on the offer balloon drawing through
+> `0x5F5FB0`, which was refuted on screen, and the dispatch markers were then
+> user-confirmed at 1.5x through the SHARED pin quad below
+> (`_tests\REGRESSION.md:13970–13984`).
+
 The indicator is keyed on the **automaton** (the vehicle), not on a lot or a
 building — `QueryInterface` for iid `0xA9B40F05` at `0x0046DDBD`. That is why
 the balloon tracks a moving vehicle instead of sitting on a tile.

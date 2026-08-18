@@ -36,6 +36,21 @@ provenance grades appear here and are never mixed silently:
 - **UNKNOWN** — a work item, deliberately left blank. An UNKNOWN entry is
   worth more than an invented one.
 
+**⛔ READ FIRST — the U-Drive-It offer balloon is RESOLVED (2026-08-18).**
+§1, §2.3, §2.4, §2.5, §3 (rows 1, 5, 15 + the tally) and §4 below were written
+on **2026-08-17** and attribute the balloon to a **marker strip** built by
+`0x5F5FB0` under occupant marker type `0xCB79919B`.
+**That attribution was REFUTED on screen.**
+The balloon is a **City Situation Indicator, category 4**, drawn by
+`cSC4DispatchVehicleView::Draw` = **`0x0046D990`** and sized by **nine inline
+`.text` immediates** — shipped as `ApplyCsiIndicatorScale` in v3.0.38 and
+**USER-CONFIRMED at 3x on 2026-08-18**; the shared dispatch path was
+user-confirmed the same day. The account is at the END of this file
+("RESOLVED 2026-08-18") and in `tools\research\CITY-SITUATION-INDICATORS.md`.
+Where a passage below disagrees with that, **the 2026-08-18 reading wins**.
+Every superseded passage is left in place and marked: a wrong earlier finding
+is evidence about how the investigation went.
+
 ---
 
 ## 1. THE TWO-WORLDS LAW — decide which side owns a defect in ONE observation
@@ -100,6 +115,23 @@ identification, not a patch — and the acceptance test for an identification
 is a PREDICTED number matching a MEASURED one, not a plausible mechanism**
 (static analysis alone mis-aimed four byte-true patches in a row on this one
 visual).
+
+> ⛔ **SUPERSEDED 2026-08-18 — the paragraph above is dated 2026-08-17 and
+> its punchline is wrong.** "The third disassembly pass found it — a code-built
+> MARKER STRIP" did NOT find it: that attribution was refuted on screen, and
+> #188 ran to **~17 launches over two days**, not five builds in one. The real
+> drawer is `cSC4DispatchVehicleView::Draw` **`0x0046D990`** (CSI, category 4)
+> — see "RESOLVED 2026-08-18" at the end of this file.
+>
+> ⚠ **And the acceptance test stated above needs one more clause.** The
+> marker-strip model DID predict a measured number (zoomTable[2] 0.75 × 64px =
+> 48px ≈ the measured 45–48px) **and was still wrong**. A prediction that
+> matches is NECESSARY, not sufficient — two systems can size a visual alike.
+> What actually settled #188 was **SUPPRESSION**: killing one function and
+> watching the balloons vanish identified the drawer in a single launch (law
+> 100), after which a **3x** exaggeration separated the two overlapping quads
+> that 1.5x could not (law 101). The catalog rule itself stands: find the row
+> before aiming.
 
 ---
 
@@ -235,6 +267,20 @@ billboard idea, zero observed calls in every capture so far. A sibling
 sub-visual draws the **8x8 route dots** (the dotted path line). ⛔ NOT the
 UDI offer balloon — that was this session's fourth mis-aim (`[R:11562]`).
 
+⛔ **PARTLY SUPERSEDED 2026-08-18** (the paragraph above is dated 2026-08-17).
+The "⛔ NOT the UDI offer balloon" verdict **stands and was vindicated** — the
+dormant-builder null was a TRUE null, the balloon was never a signpost. But
+"v3.0.7 byte-proved that **dispatch markers draw through the MARKER-STRIP
+builder instead**" rests on the same v3.0.7 attribution that §2.5 refutes. The
+dispatch / emergency markers are now known to be **other categories of the CSI
+dispatch-indicator system** (`cSC4DispatchVehicleView`; CSI is category 4),
+reaching the **same pin quad** as the balloon — at `0x0046E852`,
+`cmp [esi+4],4 ; je 0x46E38E` sends category 4 down its own branch which
+REJOINS the common code — and they were seen scaling correctly with the CSI
+patch, user-confirmed 2026-08-18. **What, if anything, still draws through
+`0x5F5FB0` is UNKNOWN** and was never re-tested; the owed SPTEX kind census is
+still owed.
+
 **MECHANISM (byte-verified `[R:11507–11560]`, `CodePatches.cpp:4108–4130`).**
 
 - Occupant class clsid **`0xAB72FBB3`** (`cSC4SignpostOccupant`).
@@ -295,6 +341,12 @@ the click target with it `[R:11346–11352]`.
 - The UDI offer control's hit test is a **renderer ray-pick**: `cISC43DRender`
   **vt+0x104, slot 65**, called at `0x4B8A38` (byte-verified;
   `CodePatches.cpp:4082`). No radius constant exists anywhere on the path.
+  ⛔ **SUPERSEDED FOR THE OFFER BALLOON, 2026-08-18** (this bullet is dated
+  2026-08-17): the CSI's clickable area is the **icon quad's own `+0xD0`/`+0xD4`
+  rectangle** (35×35, halved to ±17.5 by `Draw`), user-confirmed as "only the
+  inner glyph is clickable, not the grey around it". Whatever this ray-pick
+  serves, it is not what bounds the balloon. The byte facts in this bullet were
+  not re-tested and are left as recorded.
 - Pick results are filtered by an **occupant-type whitelist** — `Accept` fn
   **`0x4B8880`**, accepting **5 automata families** (byte-verified count;
   **the five family ids are UNKNOWN** — carried only in the volatile session
@@ -311,6 +363,10 @@ the click target with it `[R:11346–11352]`.
 - The pick tests **the very verts the marker-strip builder writes**
   (§2.5), which is why v3.0.7's table scale grows the click target with the
   visual — no pick-side change needed `[R:11597]`.
+  ⛔ **SUPERSEDED 2026-08-18** — rests on the refuted §2.5 attribution. The
+  conclusion survives for the balloon but for a different reason: the CSI's
+  click box IS the drawn icon rect (`+0xD0`/`+0xD4`), so scaling the icon
+  immediate grows the hit box automatically. Still no pick-side patch.
 - ⚠ CARRIED (unverified): the offer view-input-control's vtable at
   **`0xA901A0`**, and the `cISC43DRender` service pointer slot at
   **`[0xB43DD0]`**. Both from the session click-trace notes only. Re-verify
@@ -331,7 +387,40 @@ world-anchored.
 **STATUS: PARTIAL** — architecture proven, whitelist membership + control
 vtable unverified.
 
-### 2.5 Marker strips — the OFFER BALLOONS + dispatch markers (FOUND, v3.0.7)
+### 2.5 Marker strips — ⛔ REFUTED as the offer-balloon attribution (2026-08-18)
+
+*(Original heading, 2026-08-17: "Marker strips — the OFFER BALLOONS +
+dispatch markers (FOUND, v3.0.7)".)*
+
+> ⛔ **SUPERSEDED 2026-08-18 — this section's HEADLINE CLAIM is wrong.**
+> Everything below is dated **2026-08-17** (v3.0.7) and is kept verbatim
+> because a wrong finding is evidence about how the hunt went.
+>
+> **The U-Drive-It offer balloon is NOT a marker strip.** It is a **City
+> Situation Indicator, category 4**, drawn by `cSC4DispatchVehicleView::Draw`
+> **`0x0046D990`** and keyed on the AUTOMATON (QI iid `0xA9B40F05`) — which is
+> why it tracks a moving vehicle. It is **TWO quads**, and every attempt
+> recorded here assumed one: pin/backing 64×64 from eight ±32.0f inline
+> immediates at `0x0046EABD..0x0046EB6F`, and icon + **click box** 35×35 from
+> `mov eax,0x420C0000` at `0x0046CC47` (imm at `0x0046CC48`). Identified by
+> **suppression on screen**, shipped `ApplyCsiIndicatorScale` in v3.0.38,
+> **USER-CONFIRMED at 3x, 2026-08-18**. Full write-up:
+> `tools\research\CITY-SITUATION-INDICATORS.md`; summary at the end of this file.
+>
+> **Refuted specifically:** the occupant-marker-type `0xCB79919B` attribution,
+> the builder `0x5F5FB0` as the balloon's drawer, the "model predicts the
+> measurement" proof (it predicted 48px and was still wrong), and the claim
+> that the balloon and the dispatch markers share `0x5F5FB0` (they share the
+> CSI **pin quad** instead — §2.3's note, user-confirmed 2026-08-18).
+>
+> **NOT refuted:** that `0x5F5FB0` exists, that `.rdata 0xAA523C` is its
+> per-zoom table with a single `.text` consumer, and that the shipped
+> MARKERZOOM patch therefore reaches that builder's output and nothing else.
+> **WHAT that output is on screen is now UNKNOWN and untested** — the one
+> visual it was ever claimed to draw was the balloon, and that claim fell
+> (§3 row 16 asserts it also reaches the route/dispatch family; nothing
+> screen-side has tested that). Only the balloon attribution falls here; the
+> builder's own byte facts stand.
 
 **WHAT IT DRAWS.** The **U-Drive-It offer balloon** (blue disc + vehicle
 glyph, idle mayor view — the #188 target) and the **dispatch markers**,
@@ -369,7 +458,16 @@ prologue `[R:11595]`; `CodePatches.cpp:4212–4231`, VERSION-HISTORY v3.0.7).**
   construction props by exemplar name; "balloon" S3Ds = tourist props); the
   TrainSwitch pair at `0x563572` was rail levers `[R:11573]`; the sheet
   `{46a006b0, 094ac89a}` ("mission bubble base") is a solid white 32x32
-  square, its label #60-era guesswork `[R:11326]`; and the earlier
+  square, its label #60-era guesswork `[R:11326]`
+  ⛔ **[CORRECTED 2026-08-18 — it is NOT a solid square.** Decoded: 32x32
+  RGBA, **164 of 1024 pixels carry alpha > 0, all of them pure white**,
+  forming a **hollow anti-aliased RING about 22px across** (centre row alpha
+  reads `.....######.........######......`). Flattening the alpha onto a white
+  page is what produced the "solid white square" misreading, and the
+  "featureless square ⇒ it cannot be the marker" argument rested on it
+  `[R:13734]`. The "bubble base" NAME remains #60-era guesswork, and this TGI
+  is still not the CSI's art — the CSI draws eight 152×38 PNG strips, see the
+  RESOLVED section**]**; and the earlier
   model-instance/automaton deduction is RETIRED — the pick's search space
   simply includes marker verts (the ⚠ CARRIED `[mgr+0xAC4]` offer-population
   slot stays recorded for the next offer-machinery question).
@@ -382,6 +480,9 @@ balloon read ~45–48px at every resolution (tier-shrunk on high-DPI rigs).
 multiplies all 5 table floats by the tier factor (1.5x →
 {0.75, 1.125, 1.5, 2.25, 3.0}), verify-before-write against the stock bit
 patterns, single VirtualProtect span, "MARKERZOOM table x1.50" log line.
+⛔ **THE EYES-ON RAN AND FAILED (2026-08-17).** The balloons did not move; the
+v3.0.23 follow-up moved the MAYOR-HAT pole balloon instead and was reverted in
+v3.0.24. The line below is the 2026-08-17 expectation, kept as written.
 ⚠ **Eyes-on pending** at write time; expected on next launch: the MARKERZOOM
 line + SPSTRIP `table=1.125` at zoom 2 + balloons 1.5x at every zoom
 `[R:11608]`. Watch: mission-type icons inside the bubble may stretch (crisp
@@ -391,8 +492,15 @@ eyes-on decides) `[R:11611]`.
 **INSTRUMENT.** `SPSTRIP` (§4) — the strip-builder hook added to SPPROBE
 mode 3, the positive control the signpost hooks lacked.
 
-**STATUS: DOCUMENTED** (mechanism byte-verified, model-predicts-measurement;
-eyes-on pending).
+**STATUS: ⛔ REFUTED as the balloon's attribution (2026-08-18).** The
+2026-08-17 line read: *"STATUS: DOCUMENTED (mechanism byte-verified,
+model-predicts-measurement; eyes-on pending)"* — but **that eyes-on RAN and
+FAILED** the next day, and the balloon was resolved elsewhere (CSI,
+`0x0046D990`). ⚠ The grading law this file minted on 2026-08-17 applies to its
+own author: **a row graded DOCUMENTED on a static model is not documented** —
+only screen- or live-capture-proven attributions earn the grade. What this
+section still documents honestly is builder `0x5F5FB0` and table `0xAA523C`
+themselves; what draws through them is UNKNOWN and untested.
 
 ### 2.6 The terrain / region bake family (already conquered — window-owned surfaces)
 
@@ -427,6 +535,13 @@ initially mistaken for it.
   `0x7AC651`; zero `.UI` refs) `[R:1088]`. ⛔ #188 correction: the family's
   base TGI `{46a006b0,094ac89a}` renders as a solid white square — the pin is
   harmless but the "bubble base" NAME is #60-era guesswork `[R:11326]`.
+  ⛔ **"solid white square" CORRECTED 2026-08-18** (that clause is dated
+  2026-08-17): decoded, it is **32x32 RGBA with 164 of 1024 pixels at alpha >
+  0, all pure white — a hollow anti-aliased RING about 22px across** (centre
+  row `.....######.........######......`); flattening the alpha onto a white
+  page produced the "solid square" reading `[R:13734]`. The pin is still
+  harmless and the NAME is still guesswork; only the shape description was
+  wrong.
 - Covered by `kBmpxCityRoots` + the BMPX fit rule (dst follows source,
   reduced to fit — overshoot structurally impossible) `[R:1912–1917]`.
 
@@ -447,11 +562,11 @@ rows the moment a new in-world visual is reported.
 
 | # | visual (player's words) | owning system | tier scaling | doc |
 |---|---|---|---|---|
-| 1 | **UDI offer balloon** (blue disc + glyph, idle mayor view) | **UNKNOWN — every named system now ELIMINATED live** (⛔ the v3.0.7 marker-strip/`0xAA523C` attribution was REFUTED on screen, as were signpost quad, composer cells + 2x art [the v3.0.23 pair moved the MAYOR-HAT pole balloon instead — regression, reverted v3.0.24], effect-instance scale, windows, EFFDIR overrides. 15 eliminations, REGRESSION.md 2026-08-17. ⛔ the `0xE4FDA3D4`/`0x90E00D` "per-frame draw" lead is REFUTED — the header names that iid `cIGZSerializable` and that caller is `GetClassObject`, i.e. save + object creation. Live suspect now: the marker's own per-object size, vt0 `0xAA4900` slot 13/14 `SetSize`/`GetSize` @ `0x5ED400`/`0x5ECA10`, two bytes in tenths at `+0x5E/+0x5F`, capped at 25.5 — armed in v3.0.25) | **broken at scaled tiers (#188 OPEN)** | PARTIAL |
+| 1 | **UDI offer balloon** (blue disc + glyph, idle mayor view) | ⭐ **RESOLVED 2026-08-18 — CITY SITUATION INDICATOR, category 4** of the dispatch-indicator system: drawn by `cSC4DispatchVehicleView::Draw` **`0x0046D990`**, keyed on the AUTOMATON (QI iid `0xA9B40F05`), identified by SUPPRESSION on screen. **TWO quads** (every attempt above assumed one), both sized by **inline `.text` immediates**: icon + **click box** 35×35 (`mov eax,0x420C0000` at `0x0046CC47`, imm at `0x0046CC48`, stored to record `+0xD0`/`+0xD4`, halved to ±17.5 by `Draw`) and pin/backing 64×64 (eight ±32.0f at `0x0046EABD..0x0046EB6F`). Art = eight 152×38 PNG strips (type `0x856DDBAC`), each present TWICE, in groups `0x46A006B0` (drawn) and `0x1ABE787D`. Full write-up: `tools\research\CITY-SITUATION-INDICATORS.md`; summary at the end of this file. ⛔ **SUPERSEDED, kept as history (2026-08-17 text):** *"**UNKNOWN — every named system now ELIMINATED live** (⛔ the v3.0.7 marker-strip/`0xAA523C` attribution was REFUTED on screen, as were signpost quad, composer cells + 2x art [the v3.0.23 pair moved the MAYOR-HAT pole balloon instead — regression, reverted v3.0.24], effect-instance scale, windows, EFFDIR overrides. 15 eliminations, REGRESSION.md 2026-08-17. ⛔ the `0xE4FDA3D4`/`0x90E00D` "per-frame draw" lead is REFUTED — the header names that iid `cIGZSerializable` and that caller is `GetClassObject`, i.e. save + object creation. Live suspect now: the marker's own per-object size, vt0 `0xAA4900` slot 13/14 `SetSize`/`GetSize` @ `0x5ED400`/`0x5ECA10`, two bytes in tenths at `+0x5E/+0x5F`, capped at 25.5 — armed in v3.0.25)"* — every ELIMINATION in that list stands; the LIVE SUSPECT named at its end (the marker's own per-object size) was wrong too | **CLOSED — `ApplyCsiIndicatorScale`, shipped v3.0.38; USER-CONFIRMED at 3x, 3840×2160, 2026-08-18.** ⛔ the 2026-08-17 cell read *"broken at scaled tiers (#188 OPEN)"* | **DOCUMENTED** (screen-proven; ⛔ was PARTIAL on 2026-08-17) |
 | 2 | UDI during-mission map marker (edge bubble) | window `0x48E945B4` (§2.7) | correct (fixed-96, v3.0.3; eyes-on owed) | DOCUMENTED |
 | 3 | UDI in-mission target glow (`mission_selection_*`, incl. the red engaged-target click halo `[R:11613]`) | effects manager (§2.1) | scaled v3.0.4 (eyes-on owed in select mode) | DOCUMENTED |
 | 4 | UDI route dots (dotted path) | signpost-occupant module (row 16). ⛔ `0x5F7400` is a PHANTOM VA — it decodes mid-instruction; the real enclosing fn is `0x5F73A0`. **Sizing FOUND:** dot size = `[this+0x80]` sizeParam (ctor default **1.0f** @`0x5F838D`; SetSize `0x5F7B10` = iface `0xAA5680` slot 6, clamped (0,8]; serialized, load `0x5F7E50`) × **16.0f** (`.rdata 0xA8D45C`, read `0x5F78CA` = one cell) × texture aspect. No literal-size call site exists in the exe (control: all 7 iid-`0x2B3B7D86` and 42 iid-`0xE9793A65` refs scanned) | world-derived ⇒ n-a | PARTIAL |
-| 5 | police/fire dispatch markers | marker strips (§2.5, shared builder `[R:11610]`; the v3.0.5 signpost-lollipop attribution is superseded — that quad is the dormant twin) | co-scaled v3.0.7 (intended) — eyes-on pending | PARTIAL |
+| 5 | police/fire dispatch markers | **`cSC4DispatchVehicleView` — the dispatch-indicator system** (see RESOLVED 2026-08-18 below; full write-up `tools\research\CITY-SITUATION-INDICATORS.md` §1). These markers are the OTHER categories of the same drawer whose **category 4** is row 1's UDI offer balloon (category test `cmp ecx, 4` @`0x0046DD6C`); `cSC4DispatchVehicleView::Draw` = **`0x0046D990`**. Byte-proof they reach the same pin quad: the eight ±32.0f inline immediates `0x0046EABD..0x0046EB6F` are **NOT category-guarded** — `cmp [esi+4],4 ; je 0x46E38E` @`0x0046E852` sends CSI down its own branch which **rejoins the common code** `[R:13970–13984]`. ⛔ **SUPERSEDED 2026-08-18** — prior text kept verbatim as evidence of how the hunt went: *"marker strips (§2.5, shared builder `[R:11610]`; the v3.0.5 signpost-lollipop attribution is superseded — that quad is the dormant twin)"*. Why it fell: the v3.0.7 "shared builder" inference rested on the balloon drawing through marker-strip builder `0x5F5FB0`, and that premise was REFUTED on screen (row 1, `[R]` 2026-08-17) — the shared path is the DISPATCH-VIEW drawer, not the strip builder. The v3.0.5 signpost-lollipop attribution stays superseded either way (§2.3). ⚠ Still unproven: whether MARKERZOOM (`0xAA523C`) ALSO reaches these markers — row 16 asserts it does; nothing screen-side has tested it | pin quad co-scaled by **`ApplyCsiIndicatorScale`** (v3.0.38, `src\CodePatches.cpp:4352`, shared uncategorised path) — **USER-CONFIRMED 2026-08-18 at 1.5x**: a dispatch marker was observed and renders correctly `[R:13979]`. ⛔ superseded 2026-08-18: *"co-scaled v3.0.7 (intended) — eyes-on pending"* (the MARKERZOOM route, per the refuted attribution above) | PARTIAL |
 | 6 | one-cell cursor hover quad (ground highlight) | UDI control hover quad (§2.4, 16.0f world) | n-a (world-anchored) — ⛔ never patch | DOCUMENTED |
 | 7 | zoom-gated grid decals (zone/cell grid at zoom 4/5) | effects manager records (§2.2) | n-a (world-anchored, zoom-ramped) | PARTIAL |
 | 8 | orange/green guidance arrows (UDI drive mode) | **UDI DRIVING view-input control** singleton `.bss [0xB21D74]` — arrow drawer at owner+0x9C (ctor `0x5649D0`, vt `0xA9D974`/`0xA9D95C`), one-shot texture init **`0x5633C0`** holds the ONLY refs to all six sheets (`0x563587`–`0x563631`), registered via `[vt+0x80](drawer,5,0x3E8)` @`0x565D98`. Art re-located durably: six 128×128 FSH `{7AB50E44,1ABE787D,0x6BE09921–26}` — orange 21/23/25, green 22/24/26 (⛔ "bubblefsh" was volatile shorthand; that literal string exists in NO archive — 9-archive raw+QFS scan, control: same scanner found `4bb0ecf3_driving_bubble`). Same loader owns the TrainSwitch S3D pair [R:11573]. Notes: `overlays\row-08-guidance-arrows.md` | n-a (world units: 8.0/16.0 template `0x56340E`–`0x563481`; never calls px→world `0x7F6690`, control: signpost builder does) | PARTIAL |
@@ -461,7 +576,7 @@ rows the moment a new in-world visual is reported.
 | 12 | plop direction arrow on a held lot | **Effects manager (§2.1) + EFFDIR (§2.2)** — named effect `Lot_Direction_Arrow`, spawned by the Lot Plop tool's preview refresh; zoom-gated to close zooms by three per-zoom child copies. NOT an S3D prop (control: `s3d-name-sweep.txt` has 1,957 rows, zero arrow/direction/compass names) | n-a (world-anchored, zoom-ramped) | PARTIAL |
 | 13 | zone drag rectangle + zone color decals | **Lot-display CELL-QUAD BUILDER** (renderer world, code-generated — not effects, not a window): per-lot quads built by `0x6CC970` (vt slot 43 = +0xAC of vtable `0xAB1B98`; QI `0x6C3B80`) | n-a — world-anchoring now DERIVED from the builder, no longer "by observation" | PARTIAL |
 | 14 | god-mode terraform brush ring (in-world cursor circle) | **Effects manager (§2.1) — the cursor/brushEffect family, EFFDIR-defined (§2.2)**: named terrain-decal effects `mountain_tool_active` / `valley_tool_active` / `level_tool_active` / `smooth_tool_active` (+`_inactive` twins), each a parent with `_normal`/`_invert` decal children; `mayorlandscape_tool_*` = the mayor-mode landscape brush. ⚠ distinct from the WarriorUI terraform ring and the disaster-flyout ring sprite | n-a (world-anchored decal) | PARTIAL |
-| 15 | neighbor-connection arrows at city edges | **THE MARKER-OCCUPANT FAMILY (§2.5) — and the family's Rosetta stone.** Exemplar **`UI8x1x3_ConnectArrow_29F1` {0x6534284A, 0xC977C536, 0x29F10000}** carrying **OccupantSize {8,3,1} m** at exemplar bytes 0x58/0x5C/0x60, read by the marker factory via property **`0x27812810` @`0x4A25D3`**; binds its own S3D `{0x5AD0E817,0xBADB57F1,0x29F10000}`; created by `0x6D4860` (push `0x29F10000` @`0x6D4A66`, +15.5f nudge `.rdata 0xAB1CA8`). **The name encodes the size**, and the exemplar type+group are the SAME pair our live PROPSUB dump shows inside every offer-balloon marker — so row 1's size is data of this shape | n-a (world units, no px imm, no zoom table on the path) | PARTIAL |
+| 15 | neighbor-connection arrows at city edges | **THE MARKER-OCCUPANT FAMILY (§2.5) — and the family's Rosetta stone.** Exemplar **`UI8x1x3_ConnectArrow_29F1` {0x6534284A, 0xC977C536, 0x29F10000}** carrying **OccupantSize {8,3,1} m** at exemplar bytes 0x58/0x5C/0x60, read by the marker factory via property **`0x27812810` @`0x4A25D3`**; binds its own S3D `{0x5AD0E817,0xBADB57F1,0x29F10000}`; created by `0x6D4860` (push `0x29F10000` @`0x6D4A66`, +15.5f nudge `.rdata 0xAB1CA8`). **The name encodes the size**, and the exemplar type+group are the SAME pair our live PROPSUB dump shows inside every offer-balloon marker — so row 1's size is data of this shape [⛔ **the extrapolation to row 1 is SUPERSEDED 2026-08-18**: row 1's size is NINE inline `imm32` floats inside `.text`, not exemplar data — see row 1. The `OccupantSize`/exemplar finding may still hold FOR THIS ROW; it was never re-tested] | n-a (world units, no px imm, no zoom table on the path) | PARTIAL |
 | 16 | traffic/commute route overlay (query route trace) | **Signpost-occupant module** — GZCOM clsid `0xAB72FBB3`, ONE 0x590-byte class (ctor `0x5F5510`); no separate route-dot subsystem exists. **Sizing:** quad px = per-item pixel size (item vt+0x14, read `0x5F69CB`) → px→world `0x7F6690` on live view `[0xB43DD8]` (call `0x5F69E8`) → × **`0xAA523C[zoom]`** (`fmul` `0x5F69ED`; table read `fld [ecx*4+0xAA523C]` @`0x5F6064`). ⇒ our shipped MARKERZOOM patch DOES scale this family (and rows 4/5), just never row 1 | pixel-derived ⇒ SHOULD scale; co-scaled by MARKERZOOM since v3.0.7 — eyes-on owed | PARTIAL |
 | 17 | in-world lot signs (casino/highway/user signs) | S3D lot props (see `s3d-name-sweep.txt`) — world objects, not UI | n-a | DOCUMENTED |
 | 18 | ambient shadows (windmill, helicopter) | effects manager child transforms (§2.2) | n-a (world-anchored) | DOCUMENTED |
@@ -478,6 +593,15 @@ byte-level attribution (4, 8, 10, 11, 12, 13, 14, 15, 16); none was graded
 DOCUMENTED, because none is screen-proven and the grading law minted today
 forbids it. Per-row working notes: `tools\research\overlays\`.
 
+> ⛔ **TALLY SUPERSEDED 2026-08-18.** Row 1's owning system is no longer
+> UNKNOWN — it is the CSI drawer `0x0046D990` — so the count is now **22 rows
+> · 0 UNKNOWN owning-system rows**. Row 1 is the first row in this table to
+> earn **DOCUMENTED** the way the grading law demands: identified by
+> SUPPRESSION on screen, then user-confirmed at 3x after the fix shipped
+> (v3.0.38). Row 5's drawer is settled the same way, but its cell is
+> deliberately still PARTIAL — whether MARKERZOOM (`0xAA523C`) ALSO reaches
+> those markers has never been tested on screen.
+
 ⭐ THE PASS'S BIGGEST FINDING is row 15's, and it is about row 1: the marker
 family instantiates from **exemplars in {type 0x6534284A, group 0xC977C536}**
 whose **`OccupantSize` property (0x27812810, read at 0x4A25D3) carries the
@@ -486,6 +610,16 @@ type+group pair is exactly what the live PROPSUB dump shows inside every
 offer-balloon marker — so the balloon's size is very likely DATA of this
 shape, reachable without a code patch.
 
+> ⛔ **SUPERSEDED 2026-08-18 — this extrapolation was wrong.** The balloon's
+> size is **nine inline `imm32` floats inside `.text`** (35.0f at `0x0046CC48`;
+> eight ±32.0f at `0x0046EABD..0x0046EB6F`), and the cure IS a code patch
+> (`ApplyCsiIndicatorScale`, v3.0.38). Row 15's own `OccupantSize` finding is
+> untouched by this — only its reach into row 1 falls.
+> ⚠ This is **law 99** in its purest form: every sweep that reported "the
+> constant is inert" or "no size data exists" searched `.rdata`, while both
+> levers were immediates inside instructions. If a sweep did not scan `.text`
+> immediates, it did not look.
+
 Row 1 — the
 defect this file was born from — was moved UNKNOWN→DOCUMENTED with v3.0.7
 and then moved BACK 2026-08-17: the eyes-on it was pending FAILED, and the
@@ -493,6 +627,13 @@ v3.0.23 follow-up regressed the mayor-hat balloon instead (reverted
 v3.0.24). ⚠ Law learned: a row graded DOCUMENTED on a static model is not
 documented — only screen- or live-capture-proven attributions earn the
 grade. Rows 8 and 10–16 have never been looked at by anyone.
+
+> **2026-08-18 outcome (the paragraph above is dated 2026-08-17).** Row 1 was
+> moved to DOCUMENTED a THIRD time — and this time it earned the grade the way
+> the law demands: the drawer was identified by **suppression on screen**
+> (killing `0x0046D990` made the balloons vanish), and the fix was
+> **USER-CONFIRMED at 3x, 3840×2160**. #188 is CLOSED; the shared pin path
+> (row 5) was confirmed on screen the same day.
 
 ---
 
@@ -520,6 +661,21 @@ instead of guessing), and the identification only stuck because the model
 predicted a measured number (§1). Keep the pattern: **every future lever on
 this side ships with its own positive-control probe in the same build.**
 
+> ⛔ **SUPERSEDED IN PART, 2026-08-18** (the paragraph above is dated
+> 2026-08-17). "The gap it listed is CLOSED" and "the identification only
+> stuck" are both wrong: the SPSTRIP-era identification did NOT stick (§2.5),
+> and the balloon still had no probe pointed at its real drawer. **The pattern
+> is kept — ship the probe with the lever — but the claim that it settled #188
+> is withdrawn.** What settled #188 was a SUPPRESSION probe on `0x0046D990`
+> plus a 3x exaggeration to separate two overlapping quads.
+>
+> ⚠ Two scope limits this table did not list, both learned 2026-08-18:
+> **(a)** none of these probes can see an **inline `.text` immediate** — every
+> "constant is inert" verdict here was a filtered null (law 99); **(b)** a
+> research probe is not free — SPPROBE mode 3's `SpGetterLog` crashed the game
+> on an unguarded speculative deref, and a dev-only level must be returned to
+> its default when the investigation ends `[R:13680]`.
+
 ---
 
 ## OPEN QUESTIONS — the three the census says are worth the most
@@ -528,12 +684,29 @@ this side ships with its own positive-control probe in the same build.**
 minutes after it was written: marker strips, §2.5, scaled v3.0.7. The
 promotion below is the census doing its job.)*
 
+> ⛔ **SUPERSEDED 2026-08-18 — it was not answered.** The marker-strip answer
+> was wrong (§2.5), and the question stayed open for another day and roughly
+> another dozen launches (~17 in total, over two days). It **is** answered now:
+> **CSI category 4, `cSC4DispatchVehicleView::Draw` `0x0046D990`** — see the
+> end of this file. The self-congratulation above is left standing deliberately,
+> as the record of how confidently a wrong attribution reads while it is fresh.
+
 1. **One live capture in a scene with dispatched units** (census rows 4–5;
    §§2.3, 2.5). It adjudicates three things at once: SPSTRIP proving
    dispatch markers really co-scale through `0x5F5FB0` (v3.0.7's shared-
    consumer claim), SPTEX naming whatever kinds the dormant signpost quad
    still owns (rebuilding the lost kinds table for free), and the fate of
    the v3.0.5 44px patch — promote it or retire it on measurement.
+   ⛔ **PARTLY ANSWERED 2026-08-18 (census row 5): the question above asks the
+   wrong thing about the dispatch markers.** They are drawn by
+   `cSC4DispatchVehicleView` (the row-1 CSI drawer's other categories), and
+   they were seen on screen scaling correctly at 1.5x through the SHARED pin
+   quad `0x0046EABD..0x0046EB6F`, not through `0x5F5FB0` `[R:13970–13984]`.
+   The `0x5F5FB0` "shared-consumer claim" fell with the marker-strip
+   attribution it rested on (row 1). The SPTEX kind census and the v3.0.5
+   44px patch's fate are still OPEN — and the capture is now worth MORE, not
+   less: `0x5F5FB0` and the signpost quad both ended the hunt with **no
+   confirmed on-screen consumer at all**.
 2. **The pick whitelist's five automata families** (§2.4, `0x4B8880`).
    Reading one compare chain turns "can the player click it?" into a table
    lookup for every future in-world visual — and settles which census
@@ -586,6 +759,37 @@ Art: 8 PNG strips (type 0x856DDBAC), 152x38 = four 38x38 states, each present
   is superseded for the CSI: the clickable area is the icon quad's own
   `+0xD0`/`+0xD4` rectangle, user-confirmed ("only the inner glyph is clickable,
   not the grey around it"). Whatever ray-pick exists is not what bounds it.
+* ⛔ **§2.5 in full** — the "marker strips = the OFFER BALLOONS" section — is
+  refuted: not occupant marker `0xCB79919B`, not builder `0x5F5FB0`. It is
+  marked in place, not deleted, along with §1's case history, §2.3's
+  dispatch-marker sentence, §2.4's two pick bullets, §3 rows 1/5/15, the census
+  tally, and §4's instrument lesson. Its **eyes-on was not "pending" — it RAN
+  and FAILED** (2026-08-17; the v3.0.23 follow-up moved the mayor-hat pole
+  balloon and was reverted in v3.0.24).
+* ⛔ **The 1x bubble art `{46a006b0,094ac89a}` is NOT "a solid white 32x32"** —
+  that description appears twice above (§2.5's dead-ends, §2.7) and both are
+  corrected in place. Decoded 2026-08-18: **32x32 RGBA, 164 of 1024 pixels with
+  alpha > 0, all pure white, a hollow anti-aliased RING about 22px across**
+  (centre row `.....######.........######......`). Flattening the alpha onto a
+  white page produced the misreading, and the "featureless square ⇒ cannot be
+  the marker" argument rested on it `[R:13734]`. It is also not the CSI's art.
+
+### Status of this identification
+
+**Shipped:** `ApplyCsiIndicatorScale` (`src/CodePatches.cpp`), mode >= 2,
+both-or-neither over all nine immediates, tier-general — **v3.0.38**. Art
+generated at 1.5x/2x/3x and wired into `Deploy-OnGameClose.ps1`, so the dist
+bundle picks it up from the manifest.
+
+**Screen-proven:** the balloon **USER-CONFIRMED at 3x, 3840×2160, 2026-08-18**
+("disc, glyph, pin and pole all proportional"). The pin quad's shared path —
+the eight ±32 immediates are NOT category-guarded — shipped as a named
+UNVERIFIED blast radius and was **user-confirmed the same day**: a dispatch
+marker was observed rendering correctly, so the contingency of splitting
+`kCsiQuad` is not needed and stays unbuilt.
+
+**STATUS: DOCUMENTED** — and it earns the grade under this file's own law:
+identified by suppression on screen, then confirmed on screen after the fix.
 
 ### Why the census missed it for so long
 

@@ -59,6 +59,27 @@ the two records is wrong. The **cell rule itself** is measured independently and
 stands: at 1.5x a 9-slice sheet sized off `/3` renders clean and one sized off
 `LCM{3,4}` leaves the corner arc short (#157, 418 px → 4 px control, 0 at 2x).
 Do not re-assert the VA without disassembling it; do rely on `img->W()/3`.
+
+> ✅ **VA RE-ASSERTED 2026-08-18 — the disassembly this block asked for already
+> existed.** Both records were right and neither described the other's window.
+> **There are two 9-slice blitters and three drawers, and the drawer always
+> performs the `/3` itself:**
+>
+> | drawer (its own slot-88 draw) | divides | then calls |
+> |---|---|---|
+> | `cSC4WinAlertBorder` `0x00794100` | `img->W()/3`, `img->H()/3` | `0x008D9550` (one caller image-wide) |
+> | **`GZWinBMP` `0x009BC325`, EDGE branch** — entered on flag bit 8 of the holder at `[this+0xD8]` via its `vt[10]`. **This is the `blttype=edge` / `edgeimage=yes` row's real drawer** | the **source rect** by 3 (`idiv` at `0x9BC414`, `0x9BC422`) | `0x008D8800` |
+> | `GZWinBtn` `0x009B05E0` (nine-slice branch) | `srcW/3`, `srcH/3` (`0x009B05E9`, `0x009B0602`) | `0x008D8800` |
+>
+> Neither blitter contains a divide — each receives a cell its caller already
+> cut. Sources: `src\UiSpike.cpp` BMPX comment block (2026-07-30 disasm; the
+> shipped `edgeMode` skip depends on it, #47 user-confirmed) · `MAYOR-MODE.md`'s
+> 2026-07-29 callee list for `0x9BC325`, which contains `008d8800` and **not**
+> `008d9550` · `_incoming\sdkgaps-06.md` §4A.6 · `probe_btn_nineslice.py:25-42`.
+> `img->W()/3` remains correct for this row because a sheet with no `imagerect`
+> has `src` = its natural rect. Full write-up and the one residual open question
+> in `_tests\REGRESSION.md` §"RESOLVED 2026-08-18 — three addresses, three
+> different JOBS".
 | `blttype=tiled` | — | (script attribute, not a class) | **src-follows-dst — TILES** | **observed live 2026-07-31**: the CAM startup splash root `8aa9aa14` is `blttype=tiled` with a 768x600 background; doubling the root to 1536x1200 tiled it **exactly 2x2**. Cured by shipping the art at 1536x1200 |
 | `GZWinBtn` | — | `0x009B167D` | *not classified* | distinct address confirmed (TRIAGE §4) but the blit path has NOT been run |
 

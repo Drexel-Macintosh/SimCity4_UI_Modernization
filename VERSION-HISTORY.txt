@@ -1,3 +1,80 @@
+2026-08-18  v3.0.38  #188 CLOSED - THE OFFER BALLOON IS A CSI: TWO QUADS,
+                     BOTH SIZED BY INLINE .text IMMEDIATES
+                     (USER-CONFIRMED at 3x, 3840x2160)
+
+  DLL: the U-Drive-It offer balloon is a CITY SITUATION INDICATOR - category 4
+  of the dispatch-indicator system - drawn by cSC4DispatchVehicleView::Draw at
+  0x0046D990. The drawer was identified by SUPPRESSION, not by scaling:
+  v3.0.35 hooked it and returned without calling the original, and the user
+  reported "THEY'RE GONE". That is the first POSITIVE identification in the
+  whole hunt; the eleven subsystems before it were all closed by elimination.
+
+  TWO QUADS, and that is the trap - every single-number fix produced a
+  half-result for a day:
+    - PIN / BACKING, 64x64: eight +/-32.0f immediates at 0x0046EABD,
+      0x0046EACA, 0x0046EAF6, 0x0046EB01, 0x0046EB2D, 0x0046EB38, 0x0046EB64,
+      0x0046EB6F (C7 84 24 ..., imm at instruction+7).
+    - ICON + CLICK BOX, 35x35: mov eax,0x420C0000 at 0x0046CC47 (imm at
+      0x0046CC48), inside the CSI-only branch cmp [esi+4],4 at 0x0046CC41 in
+      the billboard builder 0x0046C8B0 (reached from AddIndicator 0x0046F240
+      at 0x0046F616). Stored to the indicator record's width AND height
+      (+0xD0/+0xD4), which Draw halves to +/-17.5 - so the tap target and the
+      art cannot drift apart, matching the user's own observation that "only
+      the inner glyph is clickable so it's the actual click box".
+  ⛔ 0x0046CCB9 is the SAME instruction shape holding 32.0f on the NON-CSI
+  branch (category 3). NEVER patch it - it would resize unrelated indicators.
+  It is deliberately absent from kCsiQuad.
+
+  WHY THIS COST ROUGHLY SEVENTEEN LAUNCHES OVER TWO DAYS. Both levers are
+  INLINE IMMEDIATES IN .text, so every .rdata constant sweep was a FILTERED
+  null by construction (law 99) - that is what made four earlier attributions
+  look plausible and every "no change" look like "wrong object". The 42.0f at
+  0x00A8819C is not a size at all: it reaches the quad TRANSLATION (drawn
+  centre = x0 + 42/2), so v3.0.34 scaled it 42->63, the log proved the write
+  landed, the balloon moved ~10px and nothing resized - a constant can be LIVE
+  and still be the WRONG constant (law 103).
+
+  SHIPPED IN CODE, not behind an ini knob: ApplyCsiIndicatorScale
+  (src\CodePatches.cpp), mode >= 2, tier-general, verify-before-write and
+  BOTH-OR-NEITHER across all nine immediates - the pin scaled with the icon
+  left at 1x is the exact broken state this task spent a day inside. The
+  CsiAim re-aim list stays alongside it and is inert unless [UiSpike]CsiAim is
+  set. Log at the confirming run: "CSI offer balloon x3.00 - icon+hitbox 35.0
+  -> 105.0 px, pin quad 64 -> 192 px (9 immediates, all in .text)".
+
+  ART: the eight icon strips (type 0x856DDBAC, 152x38 = four 38x38 states;
+  each exists twice, in groups 0x46A006B0 and 0x1ABE787D, 16 entries in all)
+  generated at 1.5x/2x/3x as z_SC4UIScale_CsiIcons-{15x,2x,3x}.dat and wired
+  into Deploy-OnGameClose.ps1, which Build-Dist parses - so the release bundle
+  picks them up. The hand-placed z_SC4UIScale_CsiIcons.dat was DELETED from
+  Plugins: an unmanaged file is the exact rot the manifest law exists to stop.
+
+  USER-CONFIRMED at 3x / 3840x2160 - "I think we got it!": disc, glyph, pin
+  and pole all proportional, with the car and helicopter icons crisp 3x art
+  rather than an upscaled 38px original.
+
+  THE SHARED-PATH BLAST RADIUS, closed the same day. The eight pin immediates
+  are NOT category-guarded: cmp [esi+4],4 ; je 0x46E38E at 0x0046E852 sends
+  CSI down its own branch, which rejoins the common code, so other
+  dispatch-indicator categories reach that quad. Neither the 1.5x nor the 3x
+  eyes-on had a fire or police marker on screen. The user then confirmed a
+  dispatch marker renders correctly at 1.5x, so the contingency - splitting
+  kCsiQuad so the disc scales alone - is not needed and stays unbuilt (and
+  must never be applied "to be safe": pin-without-disc is the broken state).
+
+  ⛔ THIS SUPERSEDES THE v3.0.7 ENTRY BELOW, which attributed the balloon to
+  an occupant marker (0xCB79919B) and a strip builder (0x5F5FB0). That entry
+  is marked in place, not rewritten.
+
+  v3.0.25-v3.0.37 are not individually ledgered: they are the elimination run
+  that got here - the marker's own per-object SetSize (which HUNG the game and
+  was disarmed in v3.0.26), the TagKind sprite spine closed with a control,
+  the renderer's view-object channel enumerated to 13 live objects with the
+  balloon in none of them, the 42.0f family, the suppression test that named
+  the drawer, and the two-colour art tracer that came back RED - proving our
+  DBPF override wins and the drawn size is computed in code, so art could
+  never carry it. Full detail in _tests\REGRESSION.md, 2026-08-17/18.
+
 2026-08-17  v3.0.24  #188 REGRESSION REVERTED + POSITIVE ATTRIBUTION BANKED
 
   DLL: v3.0.23's BALLOONCELL cell doubling deleted and the 2x balloon-art
@@ -21,6 +98,31 @@
   in _tests/REGRESSION.md 2026-08-17 entries.
 
 2026-08-17  v3.0.7  THE REAL BALLOON BUILDER: MARKER ZOOM TABLE SCALED (#188)
+  ############################################################################
+  ## ⛔ SUPERSEDED 2026-08-18 BY v3.0.38 - THIS ATTRIBUTION IS REFUTED.      ##
+  ## The offer balloon is NOT a marker attachment. Occupant marker type     ##
+  ## 0xCB79919B, its billboard-strip builder 0x5F5FB0 and the per-zoom      ##
+  ## float table at .rdata 0xAA523C are the WRONG subsystem. SPSTRIP,       ##
+  ## the strip-builder hook armed in THIS SAME BUILD, logged ZERO calls     ##
+  ## with balloons on screen; the v3.0.9 four-probe capture then found      ##
+  ## the ENTIRE marker-view module dormant through a full city load.        ##
+  ## The "0.75 x 64 = 48 predicts the measured balloon" match below was     ##
+  ## NUMERICAL COINCIDENCE - a prediction is evidence only when the         ##
+  ## predicting CODE is seen executing.                                     ##
+  ##                                                                        ##
+  ## What it really is: a CITY SITUATION INDICATOR (category 4), drawn      ##
+  ## by cSC4DispatchVehicleView::Draw at 0x0046D990 - identified by         ##
+  ## SUPPRESSION and sized by TWO INLINE .text immediates. See the          ##
+  ## v3.0.38 entry at the top of this file, and _tests\REGRESSION.md        ##
+  ## 2026-08-17 / 2026-08-18.                                               ##
+  ##                                                                        ##
+  ## The PATCHES this entry shipped were NOT reverted: MARKERZOOM (and      ##
+  ## SIGNPOST) stay as tier scaling for the pole/dispatch family, per       ##
+  ## v3.0.24. What is refuted is the ATTRIBUTION to the offer balloon.      ##
+  ##                                                                        ##
+  ## Kept in full rather than rewritten - the failure shape is the          ##
+  ## lesson, and it is the shape law 99 was written from.                   ##
+  ############################################################################
 
   DLL: the offer balloon is a MARKER attachment (occupant marker type
   0xCB79919B) whose billboard strip is CODE-GENERATED by builder 0x5F5FB0

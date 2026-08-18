@@ -9608,7 +9608,81 @@ cell rule is confirmed empirically here (2x/3x clean, the 270 control clean), so
 the rule is right whatever the VA is; the attribution is not re-asserted. Left
 flagged rather than silently "corrected" — see law 34.
 
+### RESOLVED 2026-08-18 — three addresses, three different JOBS; the `/3` belongs to the DRAWER, never to the helper
+
+⚠ **The block above stands as written** — it was correct on 2026-08-15 and the
+caution in it was the right call. What it could not name is now named, entirely
+from evidence that was already in this repo.
+
+| VA | What it actually is | Where that was established |
+|---|---|---|
+| `0x00794100` | `cSC4WinAlertBorder`'s **own** slot-88 draw. Computes `cell = (img->Width()/3, img->Height()/3)` at `0x79414D`/`0x794161`, then calls `0x008D9550` at `0x00794198` | this file, **§PAUSE / ALERT BORDER (v2.37.2, 2026-07-31, task #59)** — the resolution the later readers kept missing |
+| `0x008D9550` | the 9-slice **blitter** that one class uses. Exactly one caller image-wide, and that caller is `0x00794198` | same section |
+| `0x008D8800` | the **other** 9-slice blitter — the one `GZWinBMP` and `GZWinBtn` use. This is the function an earlier audit "cleared" as *not* the alert border's: true, and mistaken for *not relevant* | same section |
+
+**THE `edgeimage=yes` PATH, ANSWERED — nothing divides on `GZWinBMP`'s behalf.**
+`GZWinBMP`'s own slot-88 draw at `0x009BC325` takes its EDGE branch when flag
+bit 8 is set on the holder object at `[this+0xD8]` (tested through that holder's
+`vt[10]`), **divides the source rect by 3 inside the draw itself**, and only
+then calls `0x008D8800` to lay the 3×3 grid. Three sources, one of them
+structurally independent of the other two (law 34):
+
+- `src\UiSpike.cpp`, the BMPX comment block (grep `RUNTIME-SUPPLIED GZWinBMP`)
+  — *"MEASURED OFFLINE 2026-07-30 (disassembly of Plot 0x9BC325) … EDGE (flag
+  bit 8 …): src /= 3 then helper 0x8D8800 9-slices with MANY vt[38] calls."*
+  This one is **load-bearing in shipped code**, not just prose: the BMPX hook's
+  `edgeMode` test reads that same flag bit and deliberately SKIPS the edge path,
+  and task #47 is user-confirmed.
+- `tools\research\MAYOR-MODE.md` — the callee list of `0x9BC325` dumped out of
+  the exe **2026-07-29**: it contains `008d8800` and does **not** contain
+  `008d9550`. A call-graph fact, independent of anyone's reading of the branch.
+- `tools\research\_incoming\sdkgaps-06.md` §4A.6 (2026-07-31) — instruction
+  level: the `/3` is `idiv ecx` at `0x9BC414` and again at `0x9BC422`, then
+  `helper_0x8D8800(ctx, image, &src, &this[0x24], fillCentre=1)`.
+
+`GZWinBtn` is the same shape a third time: its own draw divides in the
+nine-slice branch (`cornerW = srcW/3` at `0x009B05E9`, `cornerH` at
+`0x009B0602`) and *then* calls `0x008D8800` — `probe_btn_nineslice.py:25-42`.
+
+⭐ **THE LAW — THE `/3` IS THE WIDGET CLASS'S OWN DRAW; THE HELPER ONLY BLITS AN
+ALREADY-DIVIDED CELL.** Three drawers (`0x00794100`, `0x009BC325`,
+`0x009B05E0`), two blitters (`0x008D9550`, `0x008D8800`), and **neither blitter
+contains a divide at all** — each takes a cell rect its caller already cut.
+"Which helper owns the `/3`" was the wrong question, which is exactly why one
+question had three answers.
+
+**Why the sizing rule was right the whole time regardless.** `0x009BC325`
+divides the **source rect**, not `img->Width()`. A `GZWinBMP` carrying no
+`imagerect` gets `src` = the image's natural rect, so `src.r/3` *is*
+`img->Width()/3` — the "snap to a multiple of 3" contract and
+`find_nine_slice.py`'s derivation are untouched by this correction. The
+attribution moved; the arithmetic did not. Do **not** re-open #157 over this.
+
+⛔ **STILL OPEN — WHICH OPERANDS, and it changes nothing shipped today.**
+`sdkgaps-06.md` §4A.6 reads the branch as dividing **only `src.r` and `src.b`**,
+leaving `l`/`t` alone, so the cell would be `(r/3 − l, b/3 − t)` and `imagerect`
+would never be an inset — contradicting `UI-ART-BINDING.md` §3. **Do not act on
+that yet.** It rests on a single `_incoming\` draft, and
+`tools\research\_incoming\README.md` declares that whole folder raw and "known
+to contain mistakes"; sdkgaps-06's own OPEN section reports that an offline
+recomposition under its own reading yields a flat, corner-less box where the
+game visibly renders decorated chrome. It can only matter for edge BMPs that
+actually declare an `imagerect`; the no-`imagerect` majority is settled either
+way. The probe that would close it is named in that draft's OPEN section (log
+`[win+0xF8] & 0x18` and `[win+0xE8..0xF4]` plus live W/H for one edge BMP).
+
 ## #162 — TWO PHANTOM HAIRLINES AT 1.5x, AND THE FIX WAS ALREADY IN THE FILE (2026-08-15)
+
+> ⛔ **SUPERSEDED 2026-08-18 — kept as the investigation's record, not as a
+> verdict.** #162's FINAL status is the entry `## #162 CLOSED — SYMPTOM NOT
+> REPRODUCING, mechanism never established (2026-08-18)` at the end of this
+> file: closed on the user's report that the symptom no longer reproduces,
+> mechanism NEVER established, candidate sheet `{46a006b0,14015558}` preserved
+> as a live lead. THIS entry's cause claim — `ScaleRound` rounding half AWAY
+> FROM ZERO — was already refuted by the entry immediately below, where the
+> user saw both lines still there after that fix shipped. The `ScaleRound` →
+> `RoundHalfUp` change itself was a real 1px defect and is KEPT; it simply was
+> not these hairlines.
 
 User report, verbatim: *"I found a phantom line under the mayor's hat"*, *"Also
 random lines under the advisor portraits"*, and — the sentence that decided it —
@@ -9682,6 +9756,13 @@ reached". `[Probe] ThinBlt` now installs the hook itself and announces it.
 **Installed≠executed (#47) was bad enough; this was never even installed.**
 
 ## #162 CLOSED (pending eyes-on) — the bright line was #143's cure applied to the WRONG AXIS
+
+> ⛔ **SUPERSEDED 2026-08-18 — kept as the investigation's record. This
+> "CLOSED" is NOT #162's status and must not be quoted as one.** It was
+> REOPENED one launch later by the sub-entry below ("#162 REOPENED
+> IMMEDIATELY"), and `--height-exact-strips` was reverted out of both
+> builders. #162's FINAL status is `## #162 CLOSED — SYMPTOM NOT REPRODUCING,
+> mechanism never established (2026-08-18)` at the end of this file.
 
 **⛔ THE CORRECTION THIS ENTRY EXISTS FOR.** The section above blames `ScaleRound`
 rounding half-away-from-zero. That was a real 1px defect and the fix is kept, but
@@ -9780,6 +9861,16 @@ it does, stop looking anywhere else.
 
 ### ⛔ #162 REOPENED IMMEDIATELY — the height fix was WRONG and it broke the "?" button
 
+> ⚠ **STATUS SUPERSEDED 2026-08-18 — the REOPEN is spent; everything else in
+> this entry stands.** #162 is now closed by `## #162 CLOSED — SYMPTOM NOT
+> REPRODUCING, mechanism never established (2026-08-18)` at the end of this
+> file. UNCHANGED and still binding: the revert of `--height-exact-strips`,
+> the exoneration of the `Upscale2x.exe` rebuild, and the law NEVER REBUILD A
+> TOOL BINARY AND ITS OUTPUT IN THE SAME CHANGE. One naming correction, made
+> later in this file under the #171–#178 ledger: `{46a006b0,14415860}` is NOT
+> the "?" button — it is `id=0x2988bc85`, the God Mode toolbar-expand (sun)
+> button.
+
 The entry above is wrong and is kept only as a record. User, one launch later:
 *"both are still broken and you broke the question mark icon some how."*
 
@@ -9833,6 +9924,16 @@ cost a working button. It stays reverted until something measures a defect it
 actually fixes.
 
 ## #162 MECHANISM FOUND (not yet fixed) — floor-NN over-weights EVEN source rows at 1.5x
+
+> ⛔ **SUPERSEDED — REFUTED 2026-08-16, and the issue CLOSED 2026-08-18. Do not
+> quote this as a mechanism.** The even-row / `floor(oy/1.5)` parity theory
+> was killed by the user's press-and-hold kill test ("#162 KILL TEST RESULT:
+> NEGATIVE", below): the line stayed while the button was held. #162's FINAL
+> status is `## #162 CLOSED — SYMPTOM NOT REPRODUCING, mechanism never
+> established (2026-08-18)` at the end of this file, and its "mechanism never
+> established" is deliberate — no mechanism proposed here survived. Kept
+> because the kill test's design, and the EVIDENCE-THAT-DOES-NOT-DISCRIMINATE
+> warning inside this entry, are the record.
 
 20-agent adversarial fan-out, 2026-08-15 night. Two independent lenses converged,
 and the second one found it while REFUTING its own agent's "NONE" verdict.
@@ -10032,6 +10133,14 @@ BEHAVIOURAL - changes shipped art. Needs eyes-on. NOT applied.
 
 ### #162 KILL TEST RESULT: NEGATIVE — the even-row parity theory is REFUTED
 
+> ✅ **THE REFUTATION STILL STANDS — only this entry's STATUS is superseded
+> (2026-08-18).** Row-duplication parity is dead and must not be resurrected.
+> What is superseded is the implied state, "#162 open, every offline
+> explanation exhausted": #162 was CLOSED 2026-08-18 on the symptom not
+> reproducing — `## #162 CLOSED — SYMPTOM NOT REPRODUCING, mechanism never
+> established (2026-08-18)` at the end of this file — with the mechanism still
+> never established.
+
 User, 2026-08-16: *"The line stays when I hold it down."*
 
 The prediction was explicit and falsifiable: the pressed cell carries the same
@@ -10128,6 +10237,13 @@ right for CHILDREN and wrong for a window against its OWN ART. The two rules
 have to be separated by ROLE, not swapped globally.
 
 ### #162/#166 SESSION HANDOFF — state, and three instruments that measured themselves
+
+> ⚠ **#162's HALF IS SUPERSEDED 2026-08-18.** "USER-CONFIRMED STILL BROKEN"
+> below was true on 2026-08-16; on 2026-08-18 the same user reported the
+> hairlines no longer appear and #162 was closed on that — `## #162 CLOSED —
+> SYMPTOM NOT REPRODUCING, mechanism never established (2026-08-18)` at the
+> end of this file. Nothing here about #166/#170, the three self-measuring
+> instruments or `ScalePanelRoot` is affected.
 
 USER-CONFIRMED STILL BROKEN: the mayor's-hat line, the people-button line, and
 "all the breaks under the advisors" (7 of them, one per portrait).
@@ -10444,6 +10560,13 @@ NOT bundled here.
 They live in `I-c973b411`, are runtime-swept, and their widths already agree
 under both rules (90 and 81). Separate defect.
 
+> ⚠ **SUPERSEDED 2026-08-18 — #162 is no longer open.** It was closed on the
+> symptom not reproducing; see `## #162 CLOSED — SYMPTOM NOT REPRODUCING,
+> mechanism never established (2026-08-18)` at the end of this file. The
+> statement above is not contradicted by that closure: the final entry
+> attributes the cure to nothing in particular — it records the mechanism as
+> never established and names #157/#177 only as a labelled guess.
+
 ---
 
 ## #171–#178 — THE 1.5x LEDGER, written down 2026-08-16
@@ -10591,12 +10714,32 @@ gate passes either way. Ties to the pre-release third-party content audit.
 
 ### THE DOC CONTRADICTIONS THIS PASS FOUND
 
-* **#162's status is stated three ways in this file.** `:9684` "CLOSED (pending
-  eyes-on)", `:9835` "MECHANISM FOUND (not yet fixed)", `:10033` "KILL TEST
+* **#162's status is stated three ways in this file.** `:9758` "CLOSED (pending
+  eyes-on)", `:9926` "MECHANISM FOUND (not yet fixed)", `:10134` "KILL TEST
   RESULT: NEGATIVE — the even-row parity theory is REFUTED". **The last one
   wins.** `START-HERE.md:417` adjudicates it correctly and then
   `START-HERE.md:558` re-asserts the refuted theory 141 lines later. Do not
-  quote `:9684` or `:9835`.
+  quote `:9758` or `:9926`.
+
+  ✅ **RESOLVED 2026-08-18 — this contradiction is now ADJUDICATED, not merely
+  observed.** It grew past three before it was settled: `:11189` "FIRST REAL
+  SIGNAL DECODED" and `:14028` "THE 54-WIDE SHEET EXISTS, AND IT IS OURS" added
+  two more, and the latter is where "that is now four" was recorded. The
+  single winner is **`## #162 CLOSED — SYMPTOM NOT REPRODUCING, mechanism
+  never established (2026-08-18)`** (`:14081`) — closed on the user's report that
+  the symptom no longer reproduces, mechanism NEVER established, candidate
+  sheet `{46a006b0,14015558}` preserved as a live lead. Every earlier #162
+  passage in this file now carries a SUPERSEDED marker pointing there. **None
+  was deleted** — the wrong turns are the record of how the investigation went
+  — and two of them are still load-bearing, marked as such in place: `:10134`'s
+  refutation of the even-row parity theory (do not resurrect it), and the
+  decoded 18x2-band signal plus candidate sheet at `:11189`/`:14028`.
+  ⚠ ADDRESSES, NOT CLAIMS: the `:NNNN` numbers in this bullet were re-pointed
+  when those markers were added; the wording is untouched. Line numbers in
+  this file drift every time an entry lands — the HEADING TEXT is the stable
+  handle. The two `START-HERE.md` numbers above are stale for the same reason
+  (`:417` and `:558` no longer hold those passages), and that file's own #162
+  rows still read "not fixed, mechanism NOT known": NOT updated by this pass.
 * **`PROBES-NEEDED.md` asks for two tests already answered.** L-A1 (`:138`) is
   the #162 kill test — ALREADY RUN, NEGATIVE. L-A3 (`:250`) asks whether the
   #160 tiled cure landed — #160 is closed and user-confirmed.
@@ -10997,6 +11140,12 @@ Known benign: gate_tiled_seam reports ONE +1px clip (1441587b, 437 vs 436,
 clip direction, exit 0). Eyes-on owed: #172 query pair, #177 spots, #173
 UNCOVERED=0 log line, #162 ThinBlt capture (armed, passive).
 
+> ⚠ **The #162 item in this list is spent (2026-08-18).** #162 is closed and
+> `ThinBlt` was returned to 0 in the live ini as probe hygiene — see `## #162
+> CLOSED — SYMPTOM NOT REPRODUCING, mechanism never established (2026-08-18)`
+> at the end of this file. Do not re-arm it from this line; re-arm it only to
+> run the one test that entry names, and only if the symptom returns.
+
 ### #182 — MANUAL TIER MODE NEVER SYNCS PACKAGES (found via the #173 regression)
 
 USER-REPORTED after the batch deploy: Notre-Dame menu icon shifted right, hover
@@ -11038,6 +11187,18 @@ vertical seat inside scaled boxes, at 1.5x AND 2x AND 3x.
 Mechanism investigation running (4-lane refereed workflow, docs-first).
 
 ### #162 — FIRST REAL SIGNAL DECODED (capture 2026-08-16-084246, 40 thin blits)
+
+> ⚠ **PARTLY SUPERSEDED — one premise is FALSE, the status is CLOSED, and the
+> decoded signal SURVIVES (all 2026-08-18).** The premise "NO 54-wide sheet
+> exists in the stock extract, so the sheet is third-party, another archive,
+> or itself runtime-composed" is FALSE: see `## #162 — THE 54-WIDE SHEET
+> EXISTS, AND IT IS OURS (2026-08-18)` further down — the sheet is OURS,
+> `{46a006b0,14015558}`, 1x 36x36 → 1.5x 54x54. "ThinBlt=40 stays armed" is
+> also spent; the probe was returned to 0 when #162 closed. KEEP: the 40-blit
+> decomposition, and the 18x2 band tiled 19x across the bottom edge of a
+> 340x155 buffer at `src(18,36,36,38)`. That signal plus the candidate sheet
+> is exactly the live lead the final entry preserves — `## #162 CLOSED —
+> SYMPTOM NOT REPRODUCING, mechanism never established (2026-08-18)`.
 
 The THINBLT capture thought lost SURVIVED (the 08:42 preservation; found by the
 documentation agent's verification pass). The 40 hits decompose into exactly two
@@ -12120,7 +12281,7 @@ route was NEVER tested).
 
 `vendor\gzcom-dll\...\include\cIGZSerializable.h:29` —
 `GZIID_cIGZSerializable = 0xe4fda3d4`. The "renderer QI 129x per frame"
-that was called THE per-frame draw interface (`[R:11997]`) is the
+that was called THE per-frame draw interface (`[R:12159]`) is the
 **savegame/serialization** interface. Corroborated three ways: the QI'd
 sub-object's table (vt3 = 0xAA484C) has exactly **6 slots** =
 cIGZSerializable's 3+3 (QI/AddRef/Release/Write/Read/GetCLSID), its impls
@@ -13866,7 +14027,15 @@ was the two-button pair, and it really is fixed.
 
 ## #162 — THE 54-WIDE SHEET EXISTS, AND IT IS OURS (2026-08-18)
 
-The investigation stalled at :11040 on a stated premise: "NO 54-wide sheet
+> ⚠ **STATUS SUPERSEDED LATER THE SAME DAY — this entry's FINDING stands, its
+> closing line "Later dated passage wins - this one" does NOT.** The winner is
+> the next #162 entry, `## #162 CLOSED — SYMPTOM NOT REPRODUCING, mechanism
+> never established (2026-08-18)`, which closes the issue and carries this
+> entry's `{46a006b0,14015558}` identification forward as the live lead. Its
+> count "that is now four" is settled too — see the RESOLVED note attached to
+> the "#162's status is stated three ways" bullet earlier in this file.
+
+The investigation stalled at :11189 on a stated premise: "NO 54-wide sheet
 exists in the stock extract, so the sheet is third-party, another archive, or
 itself runtime-composed", with the supporting reasoning "src x 18..36 is the
 middle third of a 54-wide sheet - 1x NINE-SLICE geometry (our #157 1.5x
@@ -13898,18 +14067,27 @@ not established.
 ⚠ NOT PROVEN, and the gap is named. The consumer is still unidentified: the only
 .UI windows bound to 14015558 are two GZWinBMPs at 500x293 (I-6bc9065a,
 I-ea2871aa), neither of which is ~227x103, so the 340x155 buffer's owner remains
-code-created exactly as :11040 said. The sheet identification rests on a
+code-created exactly as :11189 said. The sheet identification rests on a
 geometric coincidence that is exact but singular. THINBLT already prints the
 source image's own WxH as of v3.0.2 - one armed 1.5x session reading `img
 54x54` would convert this from candidate to confirmed, and any other size
 refutes it outright.
 
 Also corrected: the task list carried "#162 hairlines OPEN, mechanism NOT known
-(kill test was run: NEGATIVE)", which predates :11040's decoded signal. This
-file warned at :10594 that #162's status is stated three ways; that is now four.
+(kill test was run: NEGATIVE)", which predates :11189's decoded signal. This
+file warned at :10717 that #162's status is stated three ways; that is now four.
 Later dated passage wins - this one.
 
 ## #162 CLOSED — SYMPTOM NOT REPRODUCING, mechanism never established (2026-08-18)
+
+⭐ **THIS IS #162's FINAL VERDICT AND IT WINS.** Every earlier #162 passage in
+this file now carries a marker pointing here: the 2026-08-15 `ScaleRound`
+cause claim, "CLOSED (pending eyes-on)", "REOPENED IMMEDIATELY", "MECHANISM
+FOUND", "KILL TEST RESULT: NEGATIVE", the #162/#166 session handoff, "FIRST
+REAL SIGNAL DECODED", and "THE 54-WIDE SHEET EXISTS, AND IT IS OURS". None was
+deleted — the wrong turns are the record of how this investigation went, and
+two of them are still load-bearing: the kill test's refutation of the even-row
+parity theory, and the decoded 18x2-band signal plus the candidate sheet.
 
 USER: "I haven't seen any this is fixed." Closing on that, with the distinction
 recorded because it matters if the hairlines ever return.
@@ -13926,14 +14104,14 @@ unknown. Whatever cured the symptom did so incidentally - most plausibly one of
 the many nine-slice and height rules that landed since (#157 CellUnit{3}
 sizing, #177's 41 exact heights), but that is a guess and is labelled one.
 
-IF IT RETURNS, start from :11040 and this entry, not from the top. The decoded
+IF IT RETURNS, start from :11189 and this entry, not from the top. The decoded
 signal - an 18x2 band tiled 19x across the bottom edge of a 340x155 buffer,
 src(18,36,36,38) - plus the candidate sheet is a live lead, and the ONE test
 that converts it is a THINBLT capture reading the source image's own WxH
 (printed since v3.0.2): img 54x54 confirms 14015558, anything else refutes it.
 
 PROBE HYGIENE, applying this morning's crash lesson. ThinBlt was left armed
-specifically to catch #162 (":11040 ThinBlt=40 stays armed"); with the issue
+specifically to catch #162 (":11189 ThinBlt=40 stays armed"); with the issue
 closed it is returned to 0 in the live ini. THREE OTHERS REMAIN ARMED and are
 flagged rather than silently changed: SpinProbe=10 (belongs to #104, still
 open, Settings.h calls it "PROBE not a fix, default OFF"), DrawProbe=400 and
