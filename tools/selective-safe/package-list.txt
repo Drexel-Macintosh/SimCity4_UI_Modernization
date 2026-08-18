@@ -1,6 +1,6 @@
-archive : <PROJECT-ROOT> 1 Project\1 Completed Projects\SC4UIScale\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat  (11711301 bytes)
+archive : C:\dev\SC4UIScale\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat  (11711301 bytes)
 version : DBPF 1.0   index 7.0
-dates   : created 0x6A8330A7  modified 0x6A8330A7
+dates   : created 0x6A84969F  modified 0x6A84969F
 index   : 655 entries @ 0xB28019 (13100 bytes)
 holes   : 0 @ 0x0 (0 bytes)
 DIR     : compression directory absent (all uncompressed)

@@ -1,6 +1,6 @@
 # Region-screen dialogs -- static 2x (`z_SC4UIScale_DialogStatic.dat`)
 
-Built 2026-08-17 by `build_dialog_static.py`. STANDALONE package: the game creates each
+Built 2026-08-18 by `build_dialog_static.py`. STANDALONE package: the game creates each
 of the 163 region-screen dialogs/popups already doubled from an edited copy of its
 .UI script and lays out the children itself. No runtime scaling involved; runtime
 docking of the region-dialog roots must stay disabled while testing. The recipe is
