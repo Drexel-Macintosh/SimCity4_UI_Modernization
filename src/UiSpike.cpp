@@ -18725,7 +18725,9 @@ namespace
 	};
 	bool gSelResRowsHidden = false;
 	unsigned int gSelNoticeShownMs = 0;
-	unsigned int gSelClickMs = 0;      // last click seen by the winproc
+	unsigned int gSelClickMs = 0;      // last message seen by the winproc
+	int  gSelLastX = -1, gSelLastY = -1;  // last pointer position seen
+	int  gSelStagedRow = -1;          // chosen, not yet confirmed
 	// ACCEPT TRACE (2026-08-19). We cannot tell from a message WHICH
 	// control was clicked - no id is carried - so the rects of the two
 	// buttons that close this dialog are captured when it opens and every
@@ -19056,7 +19058,16 @@ namespace
 			// y in d2. We cannot tell WHICH control was hit - no id is
 			// present in any slot - but "a click happened" is enough for the
 			// restart notice's safety net below.
-			if (id == 0x0000000Du) { gSelClickMs = GetTickCount(); }
+			if (id == 0x0000000Du)
+			{
+				gSelClickMs = GetTickCount();
+				// The one thing the message layer gives us reliably: WHERE
+				// the pointer is. Accept itself cannot be seen, but the
+				// pointer's last position before the dialog vanishes says
+				// which button made it vanish - see the close handler.
+				gSelLastX = static_cast<int>(d1);
+				gSelLastY = static_cast<int>(d2);
+			}
 		}
 
 		uint32_t refCount;
@@ -19091,6 +19102,49 @@ void UiSpike::ServiceScaleSelector()
 			// the live settings and re-derives which tiers this resolution
 			// can carry - the player may have changed the resolution in the
 			// same visit.
+			// ⭐ ACCEPT vs CANCEL, DECIDED BY THE POINTER.
+			// Two mechanisms are already eliminated by measurement: no message
+			// carries a control id, and the game does not rewrite
+			// SC4GraphicsOptions.ini on Accept. What the message layer DOES
+			// give us is the pointer position, and the two closing buttons'
+			// absolute rects are captured when the dialog opens and were
+			// verified against a screenshot ([200,964 316x60] and
+			// [520,964 316x60] at 2x). Whichever the pointer is inside when
+			// the dialog vanishes is the button that closed it.
+			//
+			// COMMIT ONLY ON A CONFIRMED ACCEPT. Cancel, Escape and anything
+			// we cannot place all DISCARD: "Cancel left my change applied" is
+			// a broken button, while a missed commit costs one more visit to
+			// a dialog the player already has open.
+			if (gSelStagedRow >= 0)
+			{
+				const bool onAccept = gSelRectsOk
+					&& gSelLastX >= gSelAcceptRect[0]
+					&& gSelLastX < gSelAcceptRect[0] + gSelAcceptRect[2]
+					&& gSelLastY >= gSelAcceptRect[1]
+					&& gSelLastY < gSelAcceptRect[1] + gSelAcceptRect[3];
+				const bool onCancel = gSelRectsOk
+					&& gSelLastX >= gSelCancelRect[0]
+					&& gSelLastX < gSelCancelRect[0] + gSelCancelRect[2]
+					&& gSelLastY >= gSelCancelRect[1]
+					&& gSelLastY < gSelCancelRect[1] + gSelCancelRect[3];
+				if (onAccept)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELCLOSE pointer (%d,%d) was on ACCEPT - "
+						"committing the staged scale.", gSelLastX, gSelLastY);
+					SelCommit(gSelStagedRow);
+				}
+				else
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELCLOSE pointer (%d,%d) was %s - the staged "
+						"scale is DISCARDED and the ini is untouched.",
+						gSelLastX, gSelLastY,
+						onCancel ? "on CANCEL" : "on neither button");
+				}
+				gSelStagedRow = -1;
+			}
 			gSelDlgUp = false;
 			gSelPushed = -2;
 			gSelCommitted = -1;
@@ -19360,42 +19414,32 @@ void UiSpike::ServiceScaleSelector()
 	SelSetCaption(gfxDlg, kSelReadoutId, l1);
 	SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
 
-	// ---- 1b. HIDE THE STOCK RESOLUTION ROWS WHEN THEY DO NOTHING --------
-	// User-raised: with dgVoodoo overriding the resolution, those four rows
-	// are inert - the wrapper renders at the monitor's mode and the game's
-	// WindowWidth/Height are ignored. Worse, every value they offer (800x600
-	// through 1600x1200) is below the 1440x1080 the smallest tier needs, so on
-	// an install where they DO work, picking one silently drops the mod to
-	// stock. A control that either does nothing or breaks the mod should not
-	// be presented as a choice.
+	// ---- 1b. RESTORE THE STOCK RESOLUTION ROWS IF THEY STILL WORK -------
+	// They now ship HIDDEN (build_dialog_static), because at runtime the
+	// player watched them appear and then vanish - "it's jumping when I open
+	// options". A widget that will be absent has to be absent in the FIRST
+	// paint, and only data runs before the first paint.
 	//
-	// CONDITIONAL, never unconditional: gReqResIgnored is the director's own
-	// answer to "is the wrapper overriding", so a player running without it
-	// keeps the stock list exactly as the game shipped it. Done once per
-	// appearance - the rows do not come back while the dialog is open.
-	if (justOpened)
+	// So this is the INVERSE of what it was: the rows are gone by default and
+	// come back when the wrapper is NOT overriding the resolution, i.e. when
+	// picking one would actually do something. A player without dgVoodoo sees
+	// the stock list, one tick late; a player with it sees no flicker at all.
+	if (justOpened && !gReqResIgnored)
 	{
-		gSelResRowsHidden = false;
-		if (gReqResIgnored)
+		int shown = 0;
+		for (int k = 0; k < 4; k++)
 		{
-			int hidden = 0;
-			for (int k = 0; k < 4; k++)
-			{
-				cIGZWin* r = gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
-				if (r && r->IsVisible()) { r->HideWindow(); hidden++; }
-				cIGZWin* t = gfxDlg->GetChildWindowFromIDRecursive(kStockResLabels[k]);
-				if (t && t->IsVisible()) { t->HideWindow(); hidden++; }
-			}
-			gSelResRowsHidden = hidden > 0;
+			cIGZWin* r = gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
+			if (r && !r->IsVisible()) { r->ShowWindow(); shown++; }
+			cIGZWin* t = gfxDlg->GetChildWindowFromIDRecursive(kStockResLabels[k]);
+			if (t && !t->IsVisible()) { t->ShowWindow(); shown++; }
+		}
+		if (shown > 0)
+		{
 			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELRES hid %d node(s) of the stock resolution list - "
-				"the wrapper renders at the monitor's mode, so those rows "
-				"cannot change anything. %s",
-				hidden,
-				hidden == 8 ? "All four rows." :
-				"FEWER THAN THE EXPECTED 8: the labels are re-identified in "
-				"DATA, so a stale DialogStatic package would leave some "
-				"sharing 0xca57da80 and unreachable - rebuild it.");
+				"UiSpike: SELRES restored %d node(s) of the stock resolution "
+				"list - the wrapper is NOT overriding the resolution here, so "
+				"those rows can still change something.", shown);
 		}
 	}
 
@@ -19628,7 +19672,7 @@ void UiSpike::ServiceScaleSelector()
 						c->SetSelection(0, false);
 						gSelPushed = 0;
 						gSelCommitted = 0;
-						SelCommit(0);
+						gSelStagedRow = 0;
 						ShowRestartNotice(gfxDlg);
 					}
 					else
@@ -19670,7 +19714,10 @@ void UiSpike::ServiceScaleSelector()
 						// game (or another setting changed in the same
 						// visit) does move that file, the log will say
 						// so and the timing can move with it.
-						SelCommit(row);
+						// STAGED, not committed - see the close handler.
+						// The user hit Cancel and the change stuck anyway,
+						// which is the one thing a Cancel button must not do.
+						gSelStagedRow = row;
 						ShowRestartNotice(gfxDlg);
 					}
 				}

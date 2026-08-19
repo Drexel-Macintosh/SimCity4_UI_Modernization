@@ -724,14 +724,42 @@ def inject_res_readout(text, fn):
     # Re-identify the four stock resolution labels so the DLL can reach them
     # individually (they all ship with the shared id 0xca57da80, and
     # GetChildWindowFromIDRecursive returns the LAST match).
+    # ⭐ BORN HIDDEN, NOT HIDDEN ON SIGHT. The first version hid these at
+    # runtime, 250ms after the dialog opened, so the player watched the rows
+    # appear and then vanish - "it's jumping when I open options". A widget
+    # that is going to be absent must be absent in the FIRST paint, and the
+    # only thing that runs before the first paint is the data.
+    #
+    # The default is inverted rather than the decision moved: they ship
+    # winflag_visible=no, and the DLL SHOWS them again when the wrapper is not
+    # overriding the resolution. That way the common case (dgVoodoo present,
+    # rows meaningless) has no flicker at all, and the rare case pays a
+    # one-tick reveal instead.
     relabelled = 0
     for cap, newid in RES_LABEL_IDS.items():
         needle = 'id=0xca57da80 '
         for i, ln in enumerate(lines):
             if 'caption="%s"' % cap in ln and needle in ln:
-                lines[i] = ln.replace(needle, 'id=%s ' % newid, 1)
+                lines[i] = (ln.replace(needle, 'id=%s ' % newid, 1)
+                              .replace('winflag_visible=yes',
+                                       'winflag_visible=no', 1))
                 relabelled += 1
                 break
+    # The radios have unique ids already; hide them the same way.
+    STOCK_RES_RADIOS = ("0x6a57da5a", "0x6a57da5b", "0x6a57da5c", "0x6a57da5d")
+    radios_hidden = 0
+    for rid in STOCK_RES_RADIOS:
+        for i, ln in enumerate(lines):
+            if 'id=%s ' % rid in ln and 'winflag_visible=yes' in ln:
+                lines[i] = ln.replace('winflag_visible=yes',
+                                      'winflag_visible=no', 1)
+                radios_hidden += 1
+                break
+    if radios_hidden != len(STOCK_RES_RADIOS):
+        sys.exit("FATAL: hid %d of %d stock resolution radios in %s - one id "
+                 "did not match, so the dialog changed. Do not guess."
+                 % (radios_hidden, len(STOCK_RES_RADIOS), fn))
+
     if relabelled != len(RES_LABEL_IDS):
         sys.exit("FATAL: re-identified %d of %d stock resolution labels in %s. "
                  "The captions are the anchor and one did not match - the "
