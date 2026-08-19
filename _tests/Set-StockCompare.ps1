@@ -216,8 +216,34 @@ if ($Mode -eq "Stock") {
     Set-IniValue $GfxIni "WindowHeight" $Height
     Set-IniValue $GfxIni "WindowMode"   "Windowed"
 
-    Write-Host "STOCK MODE: disabled $n of our files; ${Width}x${Height} Windowed."
+    Write-Host "STOCK MODE: disabled $n of our files; ${Width}x${Height} requested."
     Write-Host "dgVoodoo + SC4TouchControls untouched."
+    # ⛔ THIS SCRIPT CANNOT DELIVER "Windowed" ON ITS OWN, and it used to SAY
+    # Windowed anyway. WindowMode in SC4GraphicsOptions.ini is overridden by the
+    # dgVoodoo wrapper: with FullScreenMode=true the game comes up borderless
+    # fullscreen at panel size, so the requested WxH is not what renders and
+    # there is no title bar to drag. Deliberately still not touching the
+    # wrapper (that is this script's stated contract) - but a banner that
+    # claims a mode it did not set is worse than no banner, so REPORT it.
+    $dgConf = Join-Path $InstallRoot "Apps\dgVoodoo.conf"
+    if (Test-Path $dgConf) {
+        $dgTxt = Get-Content $dgConf -Raw
+        $fsm = [regex]::Match($dgTxt, '(?mi)^\s*FullScreenMode\s*=\s*(\S+)')
+        $cap = [regex]::Match($dgTxt, '(?mi)^\s*CaptureMouse\s*=\s*(\S+)')
+        if ($fsm.Success -and $fsm.Groups[1].Value -match 'true') {
+            Write-Host ""
+            Write-Host "  WARNING: dgVoodoo.conf has FullScreenMode=true, which OVERRIDES" -ForegroundColor Yellow
+            Write-Host "  WindowMode=Windowed. The game will come up borderless-fullscreen at" -ForegroundColor Yellow
+            Write-Host "  panel size, NOT ${Width}x${Height}, so this is not a valid stock-resolution" -ForegroundColor Yellow
+            Write-Host "  reference. For a real window set BOTH in $dgConf :" -ForegroundColor Yellow
+            Write-Host "      FullScreenMode = false" -ForegroundColor Yellow
+            Write-Host "      CaptureMouse   = false   (true traps the cursor off the title bar)" -ForegroundColor Yellow
+            Write-Host "  Write it WITHOUT a BOM, and back it up - dgVoodooCpl.exe rewrites it." -ForegroundColor Yellow
+        } elseif ($fsm.Success) {
+            $capNote = if ($cap.Success -and $cap.Groups[1].Value -match 'true') { " (CaptureMouse=true - cursor is trapped)" } else { "" }
+            Write-Host "  dgVoodoo FullScreenMode=false - a real window WILL appear.$capNote"
+        }
+    }
     Assert-StockClean
     Write-Host "Launch and compare."
     Write-Host "Restore with:  .\Set-StockCompare.ps1 -Mode Ours"

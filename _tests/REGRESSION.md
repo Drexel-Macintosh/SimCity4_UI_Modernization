@@ -15779,3 +15779,37 @@ express it, because one of the two numbers is not a constant.
 ⭐ TWO LAYERS ELIMINATED ON SCREEN FOR #195 SO FAR - the icon size (patch ran,
 picture unchanged) and now the plate height. Both were recorded as eliminations
 rather than left ambiguous, which is what makes the remaining space small.
+
+## THE 1x REFERENCE IS ONE COMMAND NOW (2026-08-19)
+
+    .\_tests\Set-Tier.ps1 -Tier 1 -Windowed          # 1x, 1024x768, real window
+    .\_tests\Set-Tier.ps1 -Auto -FullScreen -Width 2400 -Height 1600
+
+It took three manual steps and a wrong turn to get a 1x reference up, on a
+transition that has been made many times. Three separate things were wrong:
+
+1. ⭐ THE SCREEN IS PART OF THE TIER. `-Tier 1` alone left the game at
+   3840x2160, where every stock widget is correct-but-TINY. That answers
+   nothing about FORMATTING, which is the only reason anyone asks for 1x. A
+   baseline at the wrong resolution is not a baseline.
+
+2. ⛔ `WindowMode=Windowed` DOES NOTHING while dgVoodoo has
+   FullScreenMode=true - and Set-StockCompare PRINTED "Windowed" anyway, from a
+   banner that named a mode it had not set and could not set (its stated
+   contract is not to touch the wrapper). It now REPORTS the override instead
+   of claiming the mode. A status line that is wrong in the reassuring
+   direction is worse than no status line - same defect shape as the -Status
+   bug already recorded in Set-Tier at 2026-08-06.
+
+3. ⛔ THE FIRST VERSION OF THE FIX WAS DEAD FOR THE ONE CASE IT WAS FOR. The
+   screen block was appended at the bottom of Set-Tier; the `-Tier 1` path
+   `exit 0`s at its own banner ~70 lines earlier, so the 1x baseline - the
+   transition most likely to want a window - was exactly the one that skipped
+   it. Moved above every tier branch. ⭐ WHEN ADDING A STEP TO A SCRIPT WITH
+   PER-MODE EARLY RETURNS, PLACE IT BEFORE THE BRANCHES OR VERIFY IT RUNS IN
+   THE MODE YOU CARE ABOUT - and verify by RUNNING it, not by reading it. This
+   was caught only because the run printed nothing.
+
+Both files are written without a BOM and dgVoodoo.conf is backed up once
+(dgVoodooCpl.exe rewrites it if launched). CaptureMouse goes to false with
+FullScreenMode, because true traps the cursor so the title bar is unreachable.

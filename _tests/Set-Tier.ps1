@@ -22,6 +22,25 @@
 #   .\_tests\Set-Tier.ps1 -Auto          hand control back to AutoScale
 #   .\_tests\Set-Tier.ps1 -Status        report only, change nothing
 #
+# THE WHOLE TRANSITION IN ONE CALL - tier AND the screen it is judged on:
+#
+#   .\_tests\Set-Tier.ps1 -Tier 1 -Windowed              1x in a 1024x768 window
+#   .\_tests\Set-Tier.ps1 -Tier 1 -Windowed -Width 1280 -Height 1024
+#   .\_tests\Set-Tier.ps1 -Auto -FullScreen -Width 2400 -Height 1600
+#
+# ⭐ WHY THE SCREEN IS PART OF THE TIER, and why this was three manual steps
+# and a wrong turn before it was one flag: a 1x baseline at 3840x2160 is NOT a
+# reference. Every stock widget is correct-but-tiny on a huge desktop, so it
+# answers nothing about FORMATTING - which is the only reason anyone asks for
+# 1x. The useful control is 1x at a resolution the stock UI was drawn for.
+#
+# ⛔ AND `WindowMode=Windowed` ALONE DOES NOTHING. dgVoodoo overrides it:
+# with FullScreenMode=true the game comes up borderless-fullscreen at panel
+# size, so the requested WxH never renders. -Windowed sets BOTH halves, plus
+# CaptureMouse=false (true traps the cursor so you cannot reach the title bar).
+# Both files are written WITHOUT a BOM and backed up once, because
+# dgVoodooCpl.exe rewrites the conf if it is ever launched.
+#
 # Waits for the game to close first - it runs ELEVATED and holds the dats open.
 # NEVER kills it (standing order).
 
@@ -29,7 +48,11 @@
 param(
     [ValidateSet("1", "1.5", "2", "3")] [string] $Tier,
     [switch] $Auto,
-    [switch] $Status
+    [switch] $Status,
+    [switch] $Windowed,
+    [switch] $FullScreen,
+    [int] $Width,
+    [int] $Height
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,6 +66,66 @@ $ini = Join-Path $plug "SC4UIScale.ini"
 # the scaled art and font live, which looks like stock but is not.
 $TAG = @{ "1" = $null; "1.5" = "15x"; "2" = "2x"; "3" = "3x" }
 $ALLTAGS = @("15x", "2x", "3x")
+
+# ⛔ THIS RUNS BEFORE ANY TIER BRANCH, ON PURPOSE. It used to sit at the
+# bottom and never executed for -Tier 1, because that path `exit 0`s at its
+# own banner - so the one transition most likely to want a window (the 1x
+# baseline) was the one that silently skipped the screen change. The screen
+# is independent of the tier; it must not live behind a tier's early return.
+# ---- THE SCREEN HALF (2026-08-19) ------------------------------------------
+# A tier is only meaningful against the resolution it is judged on, so setting
+# one without the other is half a transition. Both files are ini-shaped but
+# live in different places and one of them silently overrides the other.
+if ($Windowed -or $FullScreen -or $Width -or $Height) {
+    $gfx = Join-Path $plug "SC4GraphicsOptions.ini"
+    $dg  = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\dgVoodoo.conf"
+    if ($Windowed -and -not $Width)  { $Width  = 1024 }
+    if ($Windowed -and -not $Height) { $Height = 768  }
+
+    function Set-IniKeyNoBom([string] $path, [hashtable] $pairs) {
+        # ⚠ NEVER a BOM (standing order for every SC4 ini) and never
+        # Set-Content, whose default encoding is the ANSI codepage. Read bytes,
+        # assert, write UTF8 with no preamble.
+        $bytes = [IO.File]::ReadAllBytes($path)
+        if ($bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) {
+            throw "$path already has a BOM - refusing to rewrite it"
+        }
+        $txt = [Text.Encoding]::UTF8.GetString($bytes)
+        foreach ($k in $pairs.Keys) {
+            $rx = New-Object Text.RegularExpressions.Regex(
+                ('(?mi)^(\s*' + [Regex]::Escape($k) + '\s*=\s*).*$'))
+            $m = $rx.Matches($txt)
+            if ($m.Count -ne 1) { Write-Warning ("{0}: matched {1}x - not written" -f $k, $m.Count); continue }
+            $txt = $rx.Replace($txt, ('${1}' + $pairs[$k]), 1)
+            Write-Output ("  {0,-16} = {1}" -f $k, $pairs[$k])
+        }
+        [IO.File]::WriteAllBytes($path, (New-Object Text.UTF8Encoding $false).GetBytes($txt))
+    }
+
+    if ($Width -and $Height) {
+        Write-Output "screen: SC4GraphicsOptions.ini"
+        $mode = if ($FullScreen) { "FullScreen" } elseif ($Windowed) { "Windowed" } else { $null }
+        $kv = @{ "WindowWidth" = "$Width"; "WindowHeight" = "$Height" }
+        if ($mode) { $kv["WindowMode"] = $mode }
+        Set-IniKeyNoBom $gfx $kv
+    }
+
+    if (($Windowed -or $FullScreen) -and (Test-Path $dg)) {
+        $bak = "$dg.before-set-tier"
+        if (-not (Test-Path $bak)) { Copy-Item $dg $bak -Force; Write-Output "  backed up dgVoodoo.conf" }
+        Write-Output "screen: dgVoodoo.conf (the setting that ACTUALLY decides windowing)"
+        try {
+            Set-IniKeyNoBom $dg @{
+                "FullScreenMode" = $(if ($FullScreen) { "true" } else { "false" })
+                "CaptureMouse"   = $(if ($FullScreen) { "true" } else { "false" })
+            }
+        } catch {
+            Write-Warning ("could not write dgVoodoo.conf ({0}). It is under Program Files - " +
+                "run this shell as Administrator, or the window mode will NOT change." -f $_.Exception.Message)
+        }
+    }
+}
+
 
 function Get-Families {
     # A "family" is one package across its three tiers, in one folder.
