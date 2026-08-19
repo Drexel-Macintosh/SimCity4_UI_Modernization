@@ -16133,3 +16133,56 @@ TWO PRIOR RECORDS CORRECTED:
   * this file's #195 note lists the [esp+0x18] setters as
     "0x0046C8EA / 0x0046CA04 / 0x0046CC65" and MISSES 0x0046CCCA - the fourth,
     and the one that mattered.
+
+## #191: FOUR PATCHES RAN, NOTHING MOVED - STOPPING THE GUESSING (2026-08-19)
+
+MYSIMTEX applied and the marker is unchanged:
+
+    [10:37:02] CodePatches: MYSIMTEX x2.00 - My Sim marker icon UV divisor
+               64 -> 128 to match the staged 72x82 portrait's square texture
+               (category 3 only, imm32 at 0x0046CCCE). #191.
+    [10:37:02] CodePatches: CSI indicators x2.00 - ... 32.0 -> 64.0 px (type 3),
+               pin quad 64 -> 128 px.
+    (deployed sha == built sha; tier 2.00)
+
+⛔ AND THAT SECOND LINE IS THE PROOF THE IDENTIFICATION IS WRONG. If the My Sim
+marker were category 3, its icon QUAD was just doubled 32->64 AND the shared pin
+quad 64->128, by a patch that provably ran. The user reports NOTHING changed.
+Category 3 cannot be this widget, however good the call-site trace looked.
+
+FOUR patches for #191/#195 have now provably executed and moved zero pixels:
+    1. kCsiQuad 0x0046CCBA  (category-3 icon size)
+    2. kCsiQuad 0x0046CB09  (text-category plate height) - reverted
+    3. kNeverScaleIds 0x27DF05BF removal (the 46x97 plaque) - reverted
+    4. MYSIMTEX 0x0046CCCE  (category-3 UV divisor)
+
+⭐ THE PATTERN IS THE LESSON, AND IT IS MINE NOT THE CODEBASE'S. Every one of
+those had byte-level evidence behind it - real disassembly, real branch sweeps,
+real payload measurements - and every one described a widget ADJACENT to the
+reported one. Static evidence proves what an address DOES; it never proves that
+address is the thing on screen. The only test that does is changing it and
+looking, and that test costs one deploy.
+
+    ⭐ LAW: IDENTIFY THE WIDGET WITH AN INSTRUMENT BEFORE PATCHING IT, NOT WITH
+    A DISASSEMBLY THAT MERELY FITS. A trace that ends "and this is the MySim
+    marker" is a hypothesis; a probe that logs WHAT WAS FETCHED WHILE THE THING
+    WAS ON SCREEN, with a return address, is an identification. When three
+    attempts in a row run clean and change nothing, STOP PATCHING - the fault
+    is in the identification step, and more static analysis cannot fix it.
+
+NOW ARMED, instead of a fifth guess: the existing #188 ARTFETCH probe, which
+hooks the resource fetch at 0x00602B70 and already filters on g==0x46A006B0 -
+the portrait group - logging {T,G,I} AND THE RETURN ADDRESS of the caller.
+Enabled via [UiSpike] MissionBubbleFx=3 (was 2). One hover with a My Sim marker
+on screen names the exact instance fetched and the code that asked for it.
+
+⚠ POSITIVE CONTROL FOR THAT PROBE ALREADY EXISTS: the workflow measured 306
+group-0x46A006B0 fetches across previous captures, so the hook and the filter
+both demonstrably work. If a hover produces NO row, that is itself a finding -
+the face does not come through this fetch path at all.
+
+MYSIMTEX is left armed for one more launch rather than reverted: it is
+verify-before-write, derived from the art rather than the factor, inert at 1x
+and 1.5x, and it announces itself in the log - so it is auditable and cheap to
+carry while the probe settles what it actually serves. If ARTFETCH shows the
+face is not category 3, it comes out.
