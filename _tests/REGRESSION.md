@@ -15039,3 +15039,56 @@ harmless (two empty labels in empty space) but pointless. DLL half owed:
 find 0x5CA1E000/1 under the Graphic Options dialog when it is built and
 SetCaption from the live render res and tier - born correct at build, not a
 tick later (#189's lesson).
+
+## #195 THE 1x REFERENCE, AND WHAT IT DEFINES (2026-08-18, stock-verified)
+
+The user asked for 1x and it was worth every minute. Set-StockCompare -Mode
+Stock, VERIFIED (recursive scan of both Plugins trees + the two loose-font
+probe sites, 0 live artifacts - the control that only became trustworthy
+earlier today), 1024x768 windowed.
+
+⭐ AT 1x EACH DEPLOYMENT MARKER IS **ONE PIN**: helmet on TOP, count on the
+BOTTOM, stacked inside a single balloon on a single stem. User: "Hat on top
+number on bottom."
+
+AT 2x THE TWO HALVES CAME APART. In the scaled screenshot the bare helmet
+discs sit in one cluster and the counts 1/2/3/4 are drawn as SEPARATE pins in a
+different place entirely, over by the buildings. So the defect is not size and
+is not position - it is that a COMPOSED marker is being drawn as two
+independent markers.
+
+That reading is only available because there is a 1x reference. Without it the
+2x screenshot looks like "some pins with numbers and some pins with hats", which
+is not obviously wrong at all. THE CONTROL DEFINED THE TARGET.
+
+## #196 AND ITS RELATION TO #195 - FOUND BY THE TOGGLE, NOT BY LOOKING
+
+The same Set-StockCompare run enumerated what was actually live, and one package
+was on the wrong tier:
+
+    every package  -2x   ACTIVE
+    CsiIcons       -15x  ACTIVE   <- while CsiIcons-2x sat disabled beside it
+
+All three CsiIcons builds exist and carry the SAME 16 instances, so this is a
+SELECTION failure, not a build gap. AutoScale was turned back on this session
+and the resolved tier moved from a pinned 1.5x to 2x; if activation does not
+re-run for every package when the answer changes, one keeps the old tier.
+
+WHY THIS MAY BE #195's CAUSE: reference-sc4-csi-indicator records that the CSI
+balloon is TWO QUADS (pin + icon) sized by INLINE .text immediates, and that the
+icon's number is ALSO its click box. Our patch scales those immediates for the
+RESOLVED tier (2x) while the ART shipped was the 1.5x sheet - the two halves of
+one welded marker computed at different factors. That is precisely "the hat and
+the number stopped being one pin".
+
+⛔ HYPOTHESIS, NOT A FINDING. #195 stays open until the tier mismatch is
+corrected AND the marker is re-observed. If the composition is still broken with
+matched tiers, the immediates are the cause and the tier mismatch was a
+coincidence - and closing #195 on this reasoning would be the "two symptoms on
+similar widgets share a cause" error this project has paid for twice.
+
+⚠ ALSO A LIVE CONFOUND, MINE: I changed [UiSpike] MissionBubbleFx 3 -> 2 in the
+live ini earlier this session while disarming dev probes. The bubble families
+are adjacent (#188's start-bubble scale, #100's mission bubble). That edit must
+be ruled out before any bubble observation from tonight is trusted - rule out
+your own last change first.
