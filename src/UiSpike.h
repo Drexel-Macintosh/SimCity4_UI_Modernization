@@ -11,6 +11,11 @@ class UiSpike
 {
 public:
 	static void SetRenderResForReadout(int32_t w, int32_t h);   // #192
+	// True when the wrapper renders at the monitor's mode and the game's own
+	// WindowWidth/Height are ignored - i.e. the four stock resolution rows in
+	// Graphic Options do nothing at all. Set by the director, which is the
+	// one place that works this out.
+	static void SetRequestedResIgnored(bool ignored);
 	static void SetTierMirror(float f);   // resolved tier -> hook-visible mirror
 	// IN-GAME SCALE SELECTOR (2026-08-19, user request). Fills the readout,
 	// pushes the radio/combo state, and services the click filter on the

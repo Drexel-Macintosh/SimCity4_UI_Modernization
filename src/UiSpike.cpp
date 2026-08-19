@@ -7399,6 +7399,7 @@ namespace
 	int       gMayorRebirthLogs = 0;   // #194
 	int       gArtSizedRefusals = 0;     // #197
 	int32_t   gReadoutW = 0, gReadoutH = 0;   // #192, set by the director
+	bool      gReqResIgnored = false;   // wrapper overrides the resolution
 	int       gReadoutLogs = 0;
 	bool      gBudgetTickAnnounced = false;
 	int       gBudgetShowOpens = 0;
@@ -15083,6 +15084,11 @@ void UiSpike::SetRenderResForReadout(int32_t w, int32_t h)
 	gReadoutH = h;
 }
 
+void UiSpike::SetRequestedResIgnored(bool ignored)
+{
+	gReqResIgnored = ignored;
+}
+
 // Push the RESOLVED tier factor into the hook-visible mirror, from the one
 // place that knows it, at the moment it is known - and UNCONDITIONALLY,
 // including tier 1. gTierF is namespace-scope and invisible to `settings`,
@@ -18712,6 +18718,12 @@ namespace
 	// The game's OWN "takes effect next restart" popup, born hidden inside
 	// this dialog, and its Accept button.
 	const uint32_t kSelNoticeId  = 0x2A57CB83;
+	// The four stock resolution LABELS, re-identified in data because they
+	// all ship sharing 0xca57da80 (build_dialog_static RES_LABEL_IDS).
+	const uint32_t kStockResLabels[] = {
+		0x5CA1E010, 0x5CA1E011, 0x5CA1E012, 0x5CA1E013
+	};
+	bool gSelResRowsHidden = false;
 	unsigned int gSelNoticeShownMs = 0;
 	unsigned int gSelClickMs = 0;      // last click seen by the winproc
 	// ACCEPT TRACE (2026-08-19). We cannot tell from a message WHICH
@@ -19347,6 +19359,45 @@ void UiSpike::ServiceScaleSelector()
 	}
 	SelSetCaption(gfxDlg, kSelReadoutId, l1);
 	SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
+
+	// ---- 1b. HIDE THE STOCK RESOLUTION ROWS WHEN THEY DO NOTHING --------
+	// User-raised: with dgVoodoo overriding the resolution, those four rows
+	// are inert - the wrapper renders at the monitor's mode and the game's
+	// WindowWidth/Height are ignored. Worse, every value they offer (800x600
+	// through 1600x1200) is below the 1440x1080 the smallest tier needs, so on
+	// an install where they DO work, picking one silently drops the mod to
+	// stock. A control that either does nothing or breaks the mod should not
+	// be presented as a choice.
+	//
+	// CONDITIONAL, never unconditional: gReqResIgnored is the director's own
+	// answer to "is the wrapper overriding", so a player running without it
+	// keeps the stock list exactly as the game shipped it. Done once per
+	// appearance - the rows do not come back while the dialog is open.
+	if (justOpened)
+	{
+		gSelResRowsHidden = false;
+		if (gReqResIgnored)
+		{
+			int hidden = 0;
+			for (int k = 0; k < 4; k++)
+			{
+				cIGZWin* r = gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
+				if (r && r->IsVisible()) { r->HideWindow(); hidden++; }
+				cIGZWin* t = gfxDlg->GetChildWindowFromIDRecursive(kStockResLabels[k]);
+				if (t && t->IsVisible()) { t->HideWindow(); hidden++; }
+			}
+			gSelResRowsHidden = hidden > 0;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELRES hid %d node(s) of the stock resolution list - "
+				"the wrapper renders at the monitor's mode, so those rows "
+				"cannot change anything. %s",
+				hidden,
+				hidden == 8 ? "All four rows." :
+				"FEWER THAN THE EXPECTED 8: the labels are re-identified in "
+				"DATA, so a stale DialogStatic package would leave some "
+				"sharing 0xca57da80 and unreachable - rebuild it.");
+		}
+	}
 
 	// ---- 2. the radio: is the live resolution one of the stock four? ----
 	// DERIVED every service, never tracked: ask the four stock radios what

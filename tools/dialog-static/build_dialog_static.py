@@ -548,6 +548,28 @@ SEL_COMBO_ID = "0x5ca1e004"
 # the DROP-DOWN LIST, not the closed field).
 SEL_BORDER_ID = "0x5ca1e005"
 
+# THE FOUR STOCK RESOLUTION LABELS, MADE ADDRESSABLE.
+# Every text node in this dialog ships with id 0xca57da80, so the DLL cannot
+# reach one of them: GetChildWindowFromIDRecursive returns the LAST match.
+# These four are re-identified by their captions - which ARE unique - so the
+# code half can show or hide each row together with its radio.
+#
+# WHY: with dgVoodoo overriding the resolution (FullScreenMode), the game's
+# WindowWidth/Height are ignored entirely, so picking one of these does
+# nothing whatsoever. And every value offered - 800x600 through 1600x1200 - is
+# below the 1440x1080 the SMALLEST tier needs, so on an install where they DO
+# work, picking one silently drops the mod to stock. A control that either
+# does nothing or breaks the mod should not be offered as a choice.
+#
+# The DECISION stays in code, keyed on whether the wrapper is really
+# overriding; this only makes the rows reachable.
+RES_LABEL_IDS = {
+    "800x600":   "0x5ca1e010",
+    "1024x768":  "0x5ca1e011",
+    "1280x1024": "0x5ca1e012",
+    "1600x1200": "0x5ca1e013",
+}
+
 
 def inject_res_readout(text, fn):
     """Add the runtime-filled readout labels + the scale selector to
@@ -669,24 +691,53 @@ def inject_res_readout(text, fn):
     # The stock combos in the screenshot the user pointed at have a dark 1px
     # frame around the field; ours had none, because `outlinecolor` on a
     # GZWinCombo draws the DROP-DOWN LIST's outline, not the closed field's.
-    # The dialog draws its own separators with GZWinFlatRect (see the three
-    # 0x0a7e153d rules in this same script), so the frame is one of those with
-    # style=nofill - which paints the four edges and leaves the middle alone.
+    # The dialog draws its own separators with GZWinFlatRect (the three
+    # 0x0a7e153d rules in this same script), so the frame is one of those.
     #
-    # ignoremouse=yes is REQUIRED: this sits over the combo, and a decoration
+    # ⛔ NOT style=nofill. That was the first attempt and it drew NOTHING, so
+    # the border never appeared. In this script `style=nofill` marks INVISIBLE
+    # LAYOUT CONTAINERS - the (9,397,487,427) rect that groups the buttons is
+    # one - while the rects you can actually see (the 1px dividers) simply
+    # carry a fillcolor and no style at all. Read how the file uses an
+    # attribute before borrowing it.
+    #
+    # So this is a FILLED rect one pixel larger than the combo on every side,
+    # emitted first and therefore painted behind it. The combo is opaque, so
+    # what remains visible is a 1px frame - the classic way to outline a
+    # control without an outline property.
+    #
+    # ignoremouse=yes is REQUIRED: it overlaps the combo by a pixel, and a
+    # decoration
     # that eats the click meant for the control it decorates is worse than no
     # decoration. It is emitted BEFORE the combo so the combo paints on top
     # (.UI order is add order is paint order).
     border = ('<LEGACY clsid=GZWinFlatRect iid=IGZWinFlatRect id=%s '
-              'area=(292,324,466,347) fillcolor=(0,0,0) '
+              'area=(292,324,466,347) fillcolor=(63,73,103) '
               'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
               'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
-              'winflag_pbufftrans=yes winflag_pbufferase=yes '
+              'winflag_pbufftrans=no winflag_pbufferase=yes '
               'winflag_pbuffvid=no winflag_alphablend=no '
               'winflag_acceptfocus=no winflag_mousetrans=no '
               'winflag_ignoremouse=yes colorleft=(63,73,103) '
               'colortop=(63,73,103) colorright=(63,73,103) '
-              'colorbottom=(63,73,103) style=nofill >' % SEL_BORDER_ID)
+              'colorbottom=(63,73,103) >' % SEL_BORDER_ID)
+    # Re-identify the four stock resolution labels so the DLL can reach them
+    # individually (they all ship with the shared id 0xca57da80, and
+    # GetChildWindowFromIDRecursive returns the LAST match).
+    relabelled = 0
+    for cap, newid in RES_LABEL_IDS.items():
+        needle = 'id=0xca57da80 '
+        for i, ln in enumerate(lines):
+            if 'caption="%s"' % cap in ln and needle in ln:
+                lines[i] = ln.replace(needle, 'id=%s ' % newid, 1)
+                relabelled += 1
+                break
+    if relabelled != len(RES_LABEL_IDS):
+        sys.exit("FATAL: re-identified %d of %d stock resolution labels in %s. "
+                 "The captions are the anchor and one did not match - the "
+                 "dialog changed, so do NOT guess: re-measure it."
+                 % (relabelled, len(RES_LABEL_IDS), fn))
+
     new = [indent + radio, indent + border, indent + combo]
     lines[at + 1:at + 1] = new
     return "\n".join(lines), len(new)

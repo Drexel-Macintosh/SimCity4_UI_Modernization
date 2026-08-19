@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.3.4"
+#define UISCALE_VERSION_STR "3.4.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -228,6 +228,12 @@ public:
 			// after the wrapper has had its say - not the requested size the
 			// game's own resolution list shows.
 			UiSpike::SetRenderResForReadout(gfxW, gfxH);
+			// The same condition the branch above already decided on: when
+			// the wrapper renders at the monitor's mode, the game's own
+			// WindowWidth/Height are ignored, so Graphic Options' four
+			// resolution rows are inert controls. Told once, here, because
+			// this is the only place that works it out.
+			UiSpike::SetRequestedResIgnored(!software && !windowed);
 
 			// ⚠ CAPTURED BEFORE ANYTHING FORCES IT. spikeScaleAll is set to
 			// false in two places below (the auto-path's !tierActive block and
