@@ -4493,7 +4493,25 @@ namespace CodePatches
 			// Covers every non-type-4 indicator - including the U-Drive-It
 			// deployment marker, whose count was rendering at stock size under
 			// an already-scaled pin.
-			{ 0x0046CCBA, 32.0f, "icon+hitbox (else branch)" },
+			{ 0x0046CCBA, 32.0f, "icon+hitbox (category 3)" },
+			// #195 THE COUNT PIN. The TEXT indicator categories (everything
+			// that is not 3 or 4 - the dispatch at 0x0046C922 sends 3 and 4 to
+			// 0x0046CB52 and falls through for the rest) size themselves as:
+			//     0x0046CAF0  fild  [esp+0x48]        ; measured text width
+			//     0x0046CAFD  fstp  [esi+0xD0]        ; WIDTH  <- computed
+			//     0x0046CB03  mov   [esi+0xD4], 14.0f ; HEIGHT <- HARD-CODED
+			// So the width already follows the font (which our FontStyle
+			// scales) and the height never moves: 14px at 1x, 14px at 3x. That
+			// is the "1" pin sitting 1x-sized directly under a 3x hat in the
+			// user's screenshot - the two halves of one marker at two scales.
+			//
+			// ⭐ THE ASYMMETRY IS THE TELL. One of a width/height pair being
+			// COMPUTED while the other is an inline immediate is exactly how a
+			// widget half-scales: the computed half tracks the font for free
+			// and hides the fact that nothing scaled the other. Whenever a size
+			// is only half wrong, look for the pair where one member is derived
+			// and the other is a constant.
+			{ 0x0046CB09, 14.0f, "count pin height (text categories)" },
 			{ 0x0046EABD, -32.0f, "pin V0.x" },     // C7 84 24 ... imm at +7
 			{ 0x0046EACA, -32.0f, "pin V0.y" },
 			{ 0x0046EAF6, -32.0f, "pin V1.x" },
@@ -4544,10 +4562,11 @@ namespace CodePatches
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: CSI indicators x%.2f - icon+hitbox %.1f -> %.1f px "
-				"(type 4) and %.1f -> %.1f px (type 3, #195), pin quad "
-				"64 -> %.0f px. %d immediates, all inline in .text. #188/#195.",
+				"(type 4) and %.1f -> %.1f px (type 3), count-pin height "
+				"%.1f -> %.1f px (text types, #195), pin quad 64 -> %.0f px. "
+				"%d immediates, all inline in .text. #188/#195.",
 				factor, 35.0f, 35.0f * factor, 32.0f, 32.0f * factor,
-				64.0f * factor, n);
+				14.0f, 14.0f * factor, 64.0f * factor, n);
 		}
 
 		// ------------------------------------------------------------------

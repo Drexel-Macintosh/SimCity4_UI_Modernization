@@ -15605,3 +15605,39 @@ Two corrections to what was written here this morning:
 The count string is the LTEXT "%d available" T=2026960B G=6A231EAA I=4A54ED13,
 fetched at exactly ONE site, VA 0x004BA8CA, and placed relative to the marker's
 real position - which is why removing the marker's teleport is the cure.
+
+## #193 CLOSED, #195 IS A THIRD SIZE CONSTANT (2026-08-19, 3x, dep 08:26:35)
+
+#193 USER-CONFIRMED: "issue fixed it's the correct size". The right-drag ring
+was the ScalePanelRoot double-write; refusing that root geometry write cured it.
+
+#195 IS NOT THE HAT AND IT IS NOT A POSITION BUG. The user's screenshot shows a
+count pin WITH a "1" in it, sitting directly under the hat exactly where it
+belongs - at 1x while the hat above it is at 3x. Half a marker scaled.
+
+MEASURED. The dispatch at 0x0046C922 sends categories 3 and 4 to 0x0046CB52 and
+FALLS THROUGH for the rest (the TEXT indicators). That fall-through path sizes
+itself asymmetrically:
+
+    0x0046CAF0  fild  dword [esp+0x48]         ; measured text width -> float
+    0x0046CAFD  fstp  dword [esi+0xD0]         ; WIDTH  = computed
+    0x0046CB03  mov   dword [esi+0xD4], 14.0f  ; HEIGHT = hard-coded (imm 0x0046CB09)
+
+The width already follows the font, which our FontStyle table scales; the height
+is an inline immediate that never moves. 14px at 1x, 14px at 3x.
+
+    ⭐ LAW: WHEN A WIDGET IS ONLY HALF WRONG, LOOK FOR A WIDTH/HEIGHT PAIR WHERE
+    ONE MEMBER IS DERIVED AND THE OTHER IS A CONSTANT. The computed half tracks
+    the font for free and MASKS the fact that nothing scaled the other - so the
+    thing looks "sort of scaled", which is the hardest state to attribute. Three
+    separate hypotheses (icon constant, latched crop, anchor offset) all died on
+    a widget whose real defect was one immediate its sibling didn't need.
+
+kCsiQuad is now ELEVEN immediates; positive control run against the shipped exe
+before deploying - all eleven read stock, so the all-or-none verify writes
+rather than refuses.
+
+ALSO CORRECTED HERE: this file said 0x0046CCB9 was "every non-4 type". It is
+CATEGORY 3 ONLY - 0x0046C925/0x0046C92E are two separate `cmp`/`je` pairs into
+the SAME target 0x46CB52, so 3 and 4 merge and split later. Reading one branch
+tells you where it GOES, never who ARRIVES.
