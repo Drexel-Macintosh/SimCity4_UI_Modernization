@@ -18976,6 +18976,25 @@ namespace
 	int  gSelLastBtn = -1;        // index of the last button to get a message
 	int  gSelBtnLogs = 0;
 	bool gSelFiltersOn = false;
+	// ⭐ THE BUTTON PROTOCOL, DECODED FROM THE TRACE (2026-08-19):
+	//   0x13 / 0x14  pointer ENTER / LEAVE a button
+	//   0x0D         mouse move, in BUTTON-LOCAL coordinates (d1=0x10C d2=0x36
+	//                inside a 478x30 button) - which is exactly why every
+	//                absolute hit-test failed, three times
+	//   0x10         CLICK. Accept received one, 120ms before the dialog shut
+	//   0x16         broadcast to ALL buttons in the same millisecond - the
+	//                "the dialog just reset its controls" fanout
+	//
+	// Default Settings NEVER gets a 0x10, because it does not close the
+	// dialog - which is why deciding at close could never see it. What it does
+	// produce is the 0x16 fanout while the pointer is inside it, and that is
+	// the signal used below.
+	const uint32_t kSelMsgClick = 0x00000010u;
+	const uint32_t kSelMsgEnter = 0x00000013u;
+	const uint32_t kSelMsgLeave = 0x00000014u;
+	const uint32_t kSelMsgReset = 0x00000016u;
+	bool gSelInDefault = false;      // pointer currently inside Default
+	bool gSelDefaultHit = false;     // Default was pressed, act on it
 
 	class SelBtnFilter : public cIGZWinMessageFilter
 	{
@@ -19014,6 +19033,29 @@ namespace
 				if (gSelBtns[i].win != nullptr && gSelBtns[i].win == pWin)
 				{
 					gSelLastBtn = i;
+					// Default Settings, identified by its own protocol rather
+					// than by where a pixel landed.
+					if (i == 2)
+					{
+						if (msg.dwMessageType == kSelMsgEnter)
+						{
+							gSelInDefault = true;
+						}
+						else if (msg.dwMessageType == kSelMsgLeave)
+						{
+							gSelInDefault = false;
+						}
+						else if (msg.dwMessageType == kSelMsgReset
+							&& gSelInDefault)
+						{
+							// The reset fanout, while the pointer is inside
+							// this button. Gating on ENTER/LEAVE is what
+							// separates it from the same broadcast arriving
+							// later for unrelated reasons - the trace shows
+							// both, 60ms apart.
+							gSelDefaultHit = true;
+						}
+					}
 					if (gSelBtnLogs < 60)
 					{
 						gSelBtnLogs++;
@@ -19253,23 +19295,13 @@ void UiSpike::ServiceScaleSelector()
 				Logger::Get().WriteLine(LogLevel::Info,
 					"UiSpike: SELCLOSE the last button to receive a message "
 					"was %s. staged=%d", btn, gSelStagedRow);
-				// DEFAULT SETTINGS -> back to Auto (user instruction).
-				// The game's own Default restores ITS settings; ours is the
-				// scale, and "default" for the scale is Auto - the state that
-				// derives the tier from the screen instead of pinning one.
-				// Committed here rather than staged, because the button that
-				// closed the dialog IS the confirmation.
-				if (gSelLastBtn == 2)
-				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELCLOSE DEFAULT SETTINGS - restoring the "
-						"scale to Auto, which is what 'default' means for a "
-						"setting whose whole job is to derive itself from the "
-						"screen.");
-					SelCommit(0);
-					gSelStagedRow = -1;
-				}
-				else if (gSelStagedRow >= 0)
+				// ⛔ NO DEFAULT-SETTINGS BRANCH HERE ANY MORE. It was written
+				// on the assumption that every button closes the dialog, and
+				// the trace disproved it: Default Settings resets the controls
+				// IN PLACE and never sends the 0x10 click nor closes anything,
+				// so this branch could not fire. It is handled where it
+				// actually happens - see SELDEFAULT in the service above.
+				if (gSelStagedRow >= 0)
 				{
 					const bool cancelled = (gSelLastBtn == 1);
 					if (cancelled)
@@ -19558,6 +19590,55 @@ void UiSpike::ServiceScaleSelector()
 	}
 	SelSetCaption(gfxDlg, kSelReadoutId, l1);
 	SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
+
+	// ---- 1a. DEFAULT SETTINGS WAS PRESSED -------------------------------
+	// Handled HERE, not at close, because Default Settings does not close the
+	// dialog - it resets the controls in place. Deciding at close could never
+	// see it, which is exactly what happened: the radio came back unchecked
+	// and nothing was committed.
+	//
+	// "Default" for our setting is AUTO. The game's own Default restores ITS
+	// settings; ours is the scale, and the default state of a setting whose
+	// whole job is to derive itself from the screen is the deriving one.
+	//
+	// It also RE-ASSERTS our two controls, because the game's reset cleared
+	// our radio along with its own - the user watched it go dark. A reset
+	// that half-applies is worse than one that does not run.
+	if (gSelDefaultHit)
+	{
+		gSelDefaultHit = false;
+		gSelStagedRow = -1;          // any pending pick is superseded
+		SelCommit(0);                // Auto
+		gSelPushed = 0;
+		gSelCommitted = 0;
+		cIGZWin* cw = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
+		if (cw)
+		{
+			cIGZWinCombo* c2 = nullptr;
+			if (cw->QueryInterface(GZIID_cIGZWinCombo,
+					reinterpret_cast<void**>(&c2)) && c2)
+			{
+				c2->SetSelection(0, false);
+				c2->Release();
+			}
+		}
+		cIGZWin* rw3 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
+		if (rw3)
+		{
+			cIGZWinBtn* b3 = nullptr;
+			if (rw3->QueryInterface(GZIID_cIGZWinBtn,
+					reinterpret_cast<void**>(&b3)) && b3)
+			{
+				if (!b3->IsChecked()) { b3->SetChecked(true); }
+				b3->Release();
+			}
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELDEFAULT Default Settings pressed - scale restored to "
+			"Auto, our radio re-checked and the dropdown put back to Auto. "
+			"The game's reset clears our controls along with its own, so "
+			"re-asserting them is part of honouring the button.");
+	}
 
 	// ---- 1b. RESTORE THE STOCK RESOLUTION ROWS IF THEY STILL WORK -------
 	// They now ship HIDDEN (build_dialog_static), because at runtime the
