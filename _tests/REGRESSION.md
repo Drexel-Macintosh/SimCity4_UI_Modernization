@@ -15266,3 +15266,128 @@ properly against tools/uimap/emu, not guessed.
 ⛔ FOR THE NEXT SESSION: do not reach for kNeverScaleIds for anything that is
 not a DIRECT view child. Prove it appears in the panel loop (a VWKID line)
 first. That error cost two builds and one visible regression today.
+
+## #197 WIRED, AND #195's ACTUAL LEVER (2026-08-19, deployed 07:53:05)
+
+### #197 - the flag is live now
+
+The refusal from attempt 3 was left inert on purpose. It is now read, as a
+FUNCTION-LOCAL bool rather than the file-scope `gArtSizedSkipSelf`:
+
+    bool artSizedSelf = false;              // declared above the guard
+    ...
+    if (!artSizedSelf) { win->SetW(newW); win->SetH(newH); }
+
+⛔ WHY LOCAL AND NOT THE FILE-SCOPE FLAG. ScaleSubtree RECURSES. A file-scope
+bool raised for this node is still raised when the walk reaches its children,
+so it would suppress THEIR size writes too - the exact "numbers are gone"
+regression from attempt 2, arriving by a different road. One invocation, one
+bool.
+
+DOWNSTREAM FOLLOWS THE SIZE, NOT THE INTENT. Three consumers sit below the
+write and every one of them had to be told:
+  * `GZWinMoveTo`  KEPT - position still scales, only the size is art-carried
+  * `RelatchBmpSourceRect` SKIPPED - nothing was resized, so there is no stale
+    SetImage crop to refresh, and relatching w,h -> newW,newH would pin the
+    crop to a size the window never took (law 73: the CROP is the third number
+    and it does not follow intent)
+  * `ScaleRecord`  w,h,w,h - NOT newW,newH. A record carrying a size the window
+    does not have makes the next sweep's Classify read Unrecognized ("the game
+    resized it behind us") and ABANDON the window instead of protecting it.
+    Same w,h,w,h shape the font-sized path thirty lines up already uses, and
+    for the same reason. That path was the model for all of this; the only
+    thing that could not be copied from it was its `return`.
+
+### #195 - measured out of the exe, and the standing comment was wrong twice
+
+    0x0046CC41  83 7E 04 04    cmp  dword ptr [esi+4], 4
+    0x0046CC45  75 72          jne  0x0046CCB9
+    0x0046CC47  B8 00 00 0C 42 mov  eax, 35.0f      <- CSI branch (patched)
+    0x0046CC4D  89 86 D0/D4    mov  [esi+D0/D4], eax
+    0x0046CCB7  EB 29          jmp  0x0046CCE2
+    0x0046CCB9  B8 00 00 00 42 mov  eax, 32.0f      <- THE ELSE (was not)
+    0x0046CCBE  89 86 D0/D4    mov  [esi+D0/D4], eax
+
+⭐ IT IS NOT "CATEGORY 3". It is the else of a plain two-way branch, so it
+covers EVERY indicator whose type is not 4. The old note named a single
+category, which made the blast radius sound narrow and specific when it is
+broad - and broad in the direction that HELPS (below).
+
+⛔ 0x0046CCB9 IS THE OPCODE. THE IMMEDIATE IS AT 0x0046CCBA. kCsiQuad stores
+IMMEDIATE addresses (0x0046CC48 is the imm of the B8 at 0x0046CC47). Entering
+the commented address would have read `00 00 00 42 89` = 2.58e-43, missed the
+32.0f the all-or-none verify expects, and REFUSED THE ENTIRE TABLE - silently
+reverting the offer balloon that already worked. The failure would have
+presented as "the new fix did nothing AND the old one broke", which is the most
+expensive way to be wrong.
+
+⭐ THE CAUTION INVERTED WHEN A SECOND LEVER STARTED FIRING. The note said
+patching the else "would resize unrelated indicators". True when only the icon
+was being scaled. The pin verts live in cSC4DispatchVehicleView::Draw, which is
+SHARED by every indicator regardless of type - so once the pin scaled, the
+else-branch indicators were not being spared, they were being HALF-PATCHED:
+scaled plate, stock icon. That is the "hat on top, number stranded beside it"
+the user photographed. Scaling this constant puts them back in step with a pin
+they already inherited.
+
+    ⭐ LAW: A CAUTION WRITTEN ABOUT ONE LEVER GOES STALE THE MOMENT A SECOND
+    LEVER STARTS FIRING ON THE SAME OBJECT. Re-read every such note when the
+    set of patched sites grows.
+
+POSITIVE CONTROL, run before deploying (reads the shipped exe): all TEN entries
+read their stock values, so ApplyCsiIndicatorScale WRITES rather than refuses.
+Arithmetic at every tier: type-4 icon 1.50/2.00/3.00, other-type icon
+1.50/2.00/3.00, pin 1.50/2.00/3.00. Exactly the factor, no f-squared.
+
+### CsiIcons was armed at the WRONG TIER, and no gate could see it
+
+Found by listing the directory after a deploy, not by any suite:
+
+    z_SC4UIScale_CsiIcons-15x.dat              <- ARMED (plain name)
+    z_SC4UIScale_CsiIcons-15x.dat.x1-disabled  <- a duplicate of itself
+    z_SC4UIScale_CsiIcons-2x.dat.x1-disabled   <- the tier actually in use
+
+TWO defects, same shape - a condition inferred instead of asked:
+
+1. Deploy-OnGameClose.ps1 hard-copied 15x to the PLAIN name and 2x to
+   .x1-disabled, the inverse of every other family. The block's own comment
+   states the rule correctly; the code under it was written during a 1.5x test
+   session and never swapped back. Now the same tier-driven loop.
+
+2. The deploy inferred "this package is DEPENDENCY-gated" from the existence of
+   a `-2x.dat.x1-disabled` twin. True for the five packages conditioned on a
+   third-party mod; false for every other. ScaleTier.cpp:1872 says so in words
+   for this one - "No dependency gate ... tier-gated only". The inference
+   deleted the armed file and shipped CsiIcons DISARMED AT EVERY TIER. Now
+   membership in an explicit list derived from the DepOkByName call sites.
+   ⭐ GATE ON THE CONDITION YOU DEPEND ON - second time today.
+
+⭐ WHY IT SURVIVED EVERY GATE, which is the part worth keeping. Every assertion
+asked "is the package PRESENT?" and all three tiers were, at correct sizes. No
+presence test can see WHICH ONE IS ARMED. And the runtime SyncDat re-arms the
+right tier at launch with MOVEFILE_REPLACE_EXISTING, so the disk is corrected
+before anyone reads a log: a defect that self-heals before it can be observed
+still ships wrong art to anyone whose DLL does not run.
+
+    ⭐ LAW: PRESENCE IS NOT ARMING. Ask which one is LIVE, not whether the set
+    is complete. Corollary: a defect that a later stage repairs is still a
+    defect, and it is the hardest kind to see because the evidence is gone by
+    the time you look.
+
+TWO GATES ADDED to Test-DatIntegrity.ps1, both reporting positively (a silent
+gate proves nothing - law 54):
+  * armed-tier agreement - across every tier-managed family, is the SAME tier
+    armed? Keyed on AGREEMENT, not on a tier, so the gate does not have to be
+    right about ScaleFactor/AutoScale to be right about this.
+    Now prints: "armed-tier agreement: all 5 tier-managed families armed at 2x."
+  * dependency-gate list drift - the deploy's list must match ScaleTier.cpp's
+    DepOkByName call sites, failing in BOTH directions (a missing entry re-arms
+    a third-party package LOUDLY; an extra entry disarms a real one SILENTLY).
+    Parsing zero call sites is treated as a REFUSAL, not a pass - and it caught
+    itself on the first run, when four layers of backslash escaping made the
+    regex match nothing.
+    Now prints: "dependency-gate list matches ScaleTier.cpp (5 gated packages)."
+
+ALSO: SC4UIScale.ini carried ScaleFactor=1.5 under AutoScale=1. Inert while
+auto is on (it resolves 2.00 here) and a silent drop to 1.5x the moment anyone
+sets AutoScale=0. Set to 2.0 with a comment saying which one wins.
