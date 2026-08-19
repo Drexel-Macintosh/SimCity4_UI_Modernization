@@ -15382,18 +15382,46 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		}
 		else
 		{
+		// #191 WORLD-ANCHORED ROOTS: SIZE ONLY, NEVER MOVE.
+		// The Move In My Sim marker pair (0x27DF05BE green / 0x27DF05BF red)
+		// is positioned BY THE GAME every frame to track a world point - the
+		// candidate house, or the mouse. Its left/top are an OUTPUT of that
+		// tracking, not a design-space anchor, so the generic root-move
+		// multiplies a screen position that was already correct. MEASURED at
+		// tier 2.00, the moment the blit started following:
+		//     panel 0x27DF05BE (535,381 46x97) -> (1070,762 92x194)
+		// The SIZE is right and the POSITION is exactly doubled - which walks
+		// the marker off the house. User: "the alignment is off but it grew".
+		//
+		// Same treatment the god-mode tool flyouts already get (see the
+		// IsGodToolFlyoutId skip in the panel loop, whose comment records that
+		// "the generic root-move anchor here teleports them") - but those are
+		// skipped entirely, and this one still NEEDS the resize, so it takes a
+		// size-only path rather than an exclusion.
+		//
+		// ⭐ LAW: A ROOT WHOSE POSITION IS AN OUTPUT MUST NOT BE RE-ANCHORED.
+		// Ask whether the game rewrites left/top every frame. If it does, its
+		// position is already in final screen space and scaling it is a second
+		// application - the positional twin of the born-at-art-size trap.
+		const bool worldAnchored = (win->GetID() == 0x27DF05BE
+			|| win->GetID() == 0x27DF05BF);
+
 		// Proven call order preserved: move the root to its anchor first,
 		// then resize. The move is RELATIVE, so the delta comes from the
 		// CURRENT position even when the anchor came from the recorded one.
 		count++;
-		win->GZWinMoveTo(newX - curL, newY - curT);
+		if (!worldAnchored) { win->GZWinMoveTo(newX - curL, newY - curT); }
 		win->SetW(newW);
 		win->SetH(newH);
 
 		ScaleRecord rec = { win->GetID(), w, h, newW, newH, 0, false };
-		rec.origL = l;
-		rec.origT = t;
-		rec.hasOrigPos = true;
+		// #191: only claim an original position if we actually moved the root.
+		// A world-anchored root is re-placed by the game every frame, so a
+		// recorded origL/origT would be a stale screen position that the
+		// reset/re-anchor path could later restore on top of the game's own.
+		rec.origL = worldAnchored ? 0 : l;
+		rec.origT = worldAnchored ? 0 : t;
+		rec.hasOrigPos = !worldAnchored;
 		StoreScaleRecord(win, rec);
 		}
 

@@ -16416,3 +16416,45 @@ CURE: `0x27DF05BE, 0x27DF05BF` added to `kBmpxCityRoots`, so BmpCtxBltThunk
 runs on their children and the blit follows the window. Self-limiting by
 construction: a correct draw clamps to m=1.0, only content smaller than its
 window is stretched.
+
+## #191 GREW — and the alignment is the POSITION being scaled too (2026-08-19, dep 11:49:36)
+
+USER: "YOU GOT IT the alignment is off but it grew."
+
+The blit half is confirmed working, both children:
+
+    BMPX draw id=0xEA9457BA img 36x41 win 72x82 -> dst 72x82 (x2.00)
+    SEATPROBE parent=0x27DF05BE win 92x194 | src 46x97 -> dst 92x194 (x2.00)
+    BMPX 2 instance(s) hooked under 0x27DF05BE / 0x27DF05BF (city, x2.00)
+
+THE REMAINING FAULT, in one measured line:
+
+    panel 0x27DF05BE (535,381 46x97) -> (1070,762 92x194)
+
+Size correct; POSITION exactly doubled. This marker's left/top are written by
+the GAME every frame to track a world point (the candidate house for the green
+one, the mouse for the red one), so they are already final screen coordinates.
+Scaling them is a second application and walks the marker off the house.
+
+    ⭐ LAW: A ROOT WHOSE POSITION IS AN OUTPUT MUST NOT BE RE-ANCHORED. Ask
+    whether the game rewrites left/top every frame. If it does, the position is
+    already in final screen space and scaling it is a second application - the
+    POSITIONAL TWIN of the born-at-art-size trap, and it presents as "the right
+    size in the wrong place" rather than as a size error.
+
+CURE: a size-only path in ScalePanelRoot for world-anchored roots - keep
+SetW/SetH, skip GZWinMoveTo. Precedent in this same function: the god-mode tool
+flyouts are skipped from the panel loop precisely because "the generic root-move
+anchor here teleports them"; the difference is that those need no resize at all
+while this one does, so it takes a size-only branch rather than an exclusion.
+
+⛔ AND THE RECORD MUST NOT CLAIM THE MOVE. rec.origL/origT/hasOrigPos are now
+left unset for these roots: a recorded original position is a stale screen
+coordinate for a window the game re-places every frame, and the reset/re-anchor
+path would later restore it on top of the game's own placement.
+
+⚠ ALSO VISIBLE IN THAT LOG LINE, unresolved and NOT part of this fix: the
+portrait draws `img 36x41`, i.e. it binds the STOCK 1x face and BMPX stretches
+it to 72x82. #190's staged 72x82 portrait is NOT what this consumer loads. It
+looks correct because the stretch is exact, but it is resampled rather than
+sharp. Separate question, separate fix.
