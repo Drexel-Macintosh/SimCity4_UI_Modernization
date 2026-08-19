@@ -111,11 +111,11 @@ These live inside the primitives themselves, so they cannot be scoped to one dia
 
 | site | role | value | x2 | encoding | bytes | feeds | twins | note |
 |---|---|---|---|---|---|---|---|---|
-| `0x77C19E` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C1B0` `0x77C1D9` `0x77C2E0` `0x77C301` | push_imm8 cannot hold 200 (max 127) - clamp or use a runtime pin |
+| `0x77C19E` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C1B0` `0x77C1D9` `0x77C2E0` `0x77C301` | push_imm8 cannot hold 200 (max 127) - **WIDENED via a jmp-to-cave (#189, 2026-08-18); DO NOT CLAMP, a clamp here shipped a half-patched create size and was the department open-jump** |
 | `0x77C1A0` | w | 300 | 600 | `push_imm32` | `682c010000` | SetSize(arg1) | `0x77C1B2` `0x77C1DB` `0x77C2E2` `0x77C303` |  |
-| `0x77C1B0` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C19E` `0x77C1D9` `0x77C2E0` `0x77C301` | push_imm8 cannot hold 200 (max 127) - clamp or use a runtime pin |
+| `0x77C1B0` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C19E` `0x77C1D9` `0x77C2E0` `0x77C301` | push_imm8 cannot hold 200 (max 127) - **WIDENED via a jmp-to-cave (#189, 2026-08-18); DO NOT CLAMP, a clamp here shipped a half-patched create size and was the department open-jump** |
 | `0x77C1B2` | w | 300 | 600 | `push_imm32` | `682c010000` | SetSize(arg1) | `0x77C1A0` `0x77C1DB` `0x77C2E2` `0x77C303` |  |
-| `0x77C1D9` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C19E` `0x77C1B0` `0x77C2E0` `0x77C301` | push_imm8 cannot hold 200 (max 127) - clamp or use a runtime pin |
+| `0x77C1D9` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C19E` `0x77C1B0` `0x77C2E0` `0x77C301` | push_imm8 cannot hold 200 (max 127) - **WIDENED via a jmp-to-cave (#189, 2026-08-18); DO NOT CLAMP, a clamp here shipped a half-patched create size and was the department open-jump** |
 | `0x77C1DB` | w | 300 | 600 | `push_imm32` | `682c010000` | SetSize(arg1) | `0x77C1A0` `0x77C1B2` `0x77C2E2` `0x77C303` |  |
 | `0x77C260` | y | 5 | 10 | `push_imm8` | `6a05` | TextLabel(arg4) | - |  |
 | `0x77C262` | x | 10 | 20 | `push_imm8` | `6a0a` | TextLabel(arg3) | - |  |
@@ -123,9 +123,9 @@ These live inside the primitives themselves, so they cannot be scoped to one dia
 | `0x77C288` | x | 15 | 30 | `push_imm8` | `6a0f` | TextLabel(arg3) | - |  |
 | `0x77C2BA` | y | 11 | 22 | `push_imm8` | `6a0b` | Button(arg4) | - |  |
 | `0x77C2BC` | x | 269 | 538 | `push_imm32` | `680d010000` | Button(arg3) | - |  |
-| `0x77C2E0` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C19E` `0x77C1B0` `0x77C1D9` `0x77C301` | push_imm8 cannot hold 200 (max 127) - clamp or use a runtime pin |
+| `0x77C2E0` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C19E` `0x77C1B0` `0x77C1D9` `0x77C301` | push_imm8 cannot hold 200 (max 127) - **WIDENED via a jmp-to-cave (#189, 2026-08-18); DO NOT CLAMP, a clamp here shipped a half-patched create size and was the department open-jump** |
 | `0x77C2E2` | w | 300 | 600 | `push_imm32` | `682c010000` | SetSize(arg1) | `0x77C1A0` `0x77C1B2` `0x77C1DB` `0x77C303` |  |
-| `0x77C301` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C19E` `0x77C1B0` `0x77C1D9` `0x77C2E0` | push_imm8 cannot hold 200 (max 127) - clamp or use a runtime pin |
+| `0x77C301` | h | 100 | 200 | `push_imm8` | `6a64` | SetSize(arg2) | `0x77C19E` `0x77C1B0` `0x77C1D9` `0x77C2E0` | push_imm8 cannot hold 200 (max 127) - **WIDENED via a jmp-to-cave (#189, 2026-08-18); DO NOT CLAMP, a clamp here shipped a half-patched create size and was the department open-jump** |
 | `0x77C303` | w | 300 | 600 | `push_imm32` | `682c010000` | SetSize(arg1) | `0x77C1A0` `0x77C1B2` `0x77C1DB` `0x77C2E2` |  |
 
 ### `0x77C660` - BUDGET / City Ordinances detail dialog  [dispatch: [this+0x20]==1 at 0x787BEA, metric art 0x140155F2, call 0x787C42]

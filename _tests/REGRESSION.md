@@ -14809,3 +14809,46 @@ EYES-ON OWED: the popup should now open at full size with no resize, at every
 tier. If it still jumps, the remaining suspect is the SECOND code path for this
 shared window (law 16 - the same box is built by a different path for the
 Business Deals empty box, with its OWN copies of these constants).
+
+## #189 CLOSED - USER-CONFIRMED 2026-08-18 ("Good job")
+
+    CodePatches: budget family x1.50 (...), bizbox 450x150 (7 sites, 5 via the
+    #189 imm32 cave - the height is no longer clamped to 127, so the department
+    popup is BORN at its final size).
+
+450x150 on the shipped line, where it read 450x127 for the whole of its life
+before. Cause was one line of ours - a SILENT clamp of the create height to the
+push imm8 ceiling while the width took the full factor - and the cure is #159's
+cave: the 7-byte `push imm8 h; push imm32 w` becomes jmp+2 NOPs into a per-site
+cave that pushes both imm32 and returns to site+7.
+
+⚠ AND THE FIRST VERSION OF THAT VERY LOG LINE WAS BROKEN. It printed
+"1846814556 via the #189 imm32 cave" - I added a %d for the cave counter and
+did not add its argument, so the line read garbage off the stack (mismatched
+varargs, UB, in the one line whose whole job was to prove the fix ran). Caught
+by reading the number instead of the sentence. Fixed and redeployed 20:10:04.
+That is the third instrument to lie in this session, and every one of them lied
+in my favour - SUBHOOK-style "it ran", BUDGETWATCH's "NOT by us", and now a
+count that was never passed. READ THE NUMBER, NOT THE SENTENCE.
+
+WHAT THIS DEFECT COST, recorded so the next one is cheaper: a whole evening,
+because I instrumented four times around a value our own summary line had been
+printing at every launch since the patch shipped. The sequence was
+  1. shipped a "fix" that was shadowed by our own dat and never loaded
+  2. built BUDGETSHOW/BUDGETWATCH/BUDGETKIDS/BUDGETTICK
+  3. concluded "geometry is conclusively eliminated" from three nulls
+  4. every one of those probes was watching the WRONG WINDOW - 0xAA3AC001, the
+     panel already on screen, not 0x0423278F, the transient a click BUILDS
+  5. the answer was in `bizbox 450x127`, on line 59 of every log I opened.
+GREP YOUR OWN SUMMARY LINES FOR THE NUMBER YOU ARE HUNTING BEFORE BUILDING AN
+INSTRUMENT TO GO AND FIND IT.
+
+Still armed and deliberately kept: BUDGETTICK (now covering 0x0423278F), which
+is the probe that finally measured 450x127 -> 450x150 three times identically.
+It is capped and re-armed per city.
+
+RESIDUAL, not a regression and not observed: this shared window has a SECOND
+build path (law 16 - the Business Deals empty box reaches it through a
+different function with its OWN copies of these constants). The five sites
+patched are 0x77BEC0's. If the empty box ever shows the same jump, that is the
+other path and it needs the same treatment.

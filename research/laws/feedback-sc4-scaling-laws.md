@@ -1447,3 +1447,24 @@ come from vehicle exemplar 0x2BE8E6CB), so the right rule sat in the codebase
 at the wrong SCOPE (law 94). When a divisor is DATA rather than an immediate
 it cannot be disassembled - MEASURE it (a needle strip is periodic with period
 = cell) and gate the measurement on an independent control.
+
+
+**108. ⭐ A PATCH THAT CANNOT EXPRESS ITS VALUE MUST REFUSE OR WIDEN - NEVER
+SILENTLY TRUNCATE.** #189: the budget department popup "opened for a split
+second then resized" at every tier, for months. Cause was one line of ours -
+`if (bh > 127) bh = 127;` - clamping a create height to the `push imm8`
+ceiling while the width beside it took the full factor. The window was
+therefore BORN half-patched (450x127 instead of 450x150 at 1.5x) and something
+later set the true height: that correction IS the flash. The clamp is a
+constant while the target is not, so the jump GROWS with the tier - 23px at
+1.5x, 73px at 2x, 173px at 3x - which is why no tier-specific model ever fit
+and why "it happens at 2x and 3x as well" was the decisive clue, not a
+complication. Forty lines away in the same file, `ApplyCostBoxScale` meets the
+identical ceiling and REFUSES both sites rather than half-patch, saying so in
+the log; that is the correct behaviour, and this site simply did not follow it.
+Cure = the #159 cave (jmp + NOPs into a stub that pushes full-width imm32 and
+returns), never a runtime pin - a pin corrects AFTER creation by construction,
+which is the defect. Corollary, and the expensive half: **the value was in our
+own summary line at every launch** (`bizbox 450x127`), and four instruments got
+built to go and find it - three of them aimed at the wrong window entirely.
+GREP YOUR OWN LOG FOR THE NUMBER BEFORE BUILDING A PROBE TO MEASURE IT.

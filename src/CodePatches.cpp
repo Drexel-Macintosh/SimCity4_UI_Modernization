@@ -3596,7 +3596,7 @@ namespace CodePatches
 		Logger::Get().WriteLine(
 			LogLevel::Info,
 			"CodePatches: budget family x%.2f (%d imm8 + %d imm32 + %d sub-imm8 + %d lea-disp8 + %d notch sites), bizbox %ux%ld (%d sites, %d via the #189 imm32 cave - the height is no longer clamped to 127, so the department popup is BORN at its final size).",
-			factor, n8, n32, nSub, nLea, nRaw, bw, bh, nBox);
+			factor, n8, n32, nSub, nLea, nRaw, bw, bh, nBox, nBoxCave);
 	}
 
 	void ApplyHtmlSizeScale(float factor)

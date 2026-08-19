@@ -208,3 +208,24 @@ that logged a real number ended the argument in one launch.
 Stock capture of this popup: still never taken. It is no longer load-bearing
 (the fix reduces to stock at f=1 by construction) but remains the cheapest
 outstanding parity check — §5 procedure.
+
+## THE CREATE SIZE vs THE FINAL SIZE (#189, 2026-08-18)
+
+The frame is built BORN VISIBLE at a create size and only reaches its final
+size at the stacker tail, so the create size is on screen for real frames -
+it is not an internal detail. MEASURED live on 0x0423278F, three opens,
+identical (BUDGETTICK):
+
+    (0,0 0x0)         -> (975,736 450x127)    built
+    (975,736 450x127) -> (975,736 450x150)    final
+
+The create size comes from `0x77BEC0`'s five `push imm8 h; push imm32 w` sites
+(CONSTANT-MAP.md). Because the height is a **push imm8**, a naive patch cannot
+express 100*f for any shipped tier (150/200/300 all exceed 127) - and clamping
+it is what produced the visible open-jump for months. It is now widened through
+a per-site jmp-to-cave, so create == final and nothing corrects the window
+after it is shown.
+
+⚠ If you touch these constants, patch WIDTH AND HEIGHT TOGETHER or refuse
+both. A scaled width with a clamped height is worse than no patch at all: it
+looks like a working fix and jumps on every open.
