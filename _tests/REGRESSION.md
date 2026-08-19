@@ -15232,3 +15232,37 @@ TWO INSTRUMENTS CORRECTED IN THE SAME PASS:
 
 GATE GREEN: ALL PASS (24 dats + 3 font sources + DLL presence/quarantine +
 28 deployed==built hashes + 3/3 bubble payload sizes).
+
+## #197 HALF-DONE AND SAID SO (2026-08-18, deployed 22:01:59)
+
+I claimed this fixed TWICE before it was. The record:
+
+ATTEMPT 1 - INERT. Put 0x48E945B4 in kNeverScaleIds. That list is consulted at
+exactly two sites (dormant ShowHook + the sweep's DIRECT-view-child panel
+loop); this marker is reached RECURSIVELY and ScaleSubtree does not honour the
+list at all. USER: "udrive it is the same exact size". ⭐ SECOND TIME IN ONE
+SESSION - the budget popup (#189) was the identical mistake hours earlier.
+
+ATTEMPT 2 - A REGRESSION I SHIPPED. Moved the refusal into ScaleSubtree, where
+the size IS written, but used `return` - which skips the window AND ITS WHOLE
+SUBTREE. The deployment count is a child, so it stopped being scaled. USER:
+"the numbers are gone from the deploy icons". A working thing broken while
+chasing a size fix.
+
+NOW: the guard sets a flag that nothing reads, i.e. deliberately INERT, so the
+children scale and the numbers are back. Left as a flag rather than a third
+blind edit at the end of a long session.
+
+STATE, honestly:
+  * art ships RoundHalfUp(32*f) = 48/64/96 - CORRECT, verified in the
+    deployed bytes (2x reads 64x64)
+  * the sweep still multiplies it, so on-screen is not 32*f
+  * net at 2x: 128px where it was 192 - smaller than before, still wrong
+  * numbers present
+REMAINING: suppress the size write for THAT NODE ONLY while still walking its
+children. The flag exists; wiring it needs ScaleSubtree's write path traced
+properly against tools/uimap/emu, not guessed.
+
+⛔ FOR THE NEXT SESSION: do not reach for kNeverScaleIds for anything that is
+not a DIRECT view child. Prove it appears in the panel loop (a VWKID line)
+first. That error cost two builds and one visible regression today.

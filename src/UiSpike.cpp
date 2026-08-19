@@ -7370,6 +7370,8 @@ namespace
 	};
 	int       gBudgetTickLog = 0;
 	int       gMayorRebirthLogs = 0;   // #194
+	int       gArtSizedRefusals = 0;     // #197
+	bool      gArtSizedSkipSelf = false; // #197: suppress THIS node's size write only
 	int32_t   gReadoutW = 0, gReadoutH = 0;   // #192, set by the director
 	int       gReadoutLogs = 0;
 	bool      gBudgetTickAnnounced = false;
@@ -8078,6 +8080,7 @@ void UiSpike::Disarm()
 	gBudgetKidsLog = 0;
 	gBudgetTickLog = 0;
 	gMayorRebirthLogs = 0;    // #194: re-report per city
+	gArtSizedRefusals = 0;    // #197
 	gBudgetTickAnnounced = false;
 	for (BudgetTick& bt : gBudgetTick) { bt.seen = false; }
 	for (int& c : gBudgetKidsCount) { c = -1; }   // no baseline carries
@@ -18042,6 +18045,47 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 	if (!win || depth > kMaxDepth || *count >= kMaxWindows)
 	{
 		return;
+	}
+
+	// ============ #197: A WINDOW ALREADY SIZED BY ITS ART =================
+	// My first attempt at this was INERT and I shipped it as fixed. I put
+	// 0x48E945B4 in kNeverScaleIds - but that list is consulted at exactly two
+	// sites (the dormant ShowHook, and the sweep's DIRECT-view-child panel
+	// loop), and ScaleSubtree does not honour it at all (task #85 note). This
+	// marker is reached recursively, so the refusal never fired and the sweep
+	// kept multiplying. The user measured it: "same exact size".
+	//
+	// ⭐ SECOND TIME IN ONE SESSION: the budget popup (#189) had the identical
+	// shape hours earlier. ADDING AN ID TO kNeverScaleIds DOES NOTHING FOR A
+	// WINDOW THAT IS NOT A DIRECT VIEW CHILD - prove it appears in the panel
+	// loop (a VWKID line) before reaching for that list.
+	//
+	// The size is written HERE, so the refusal belongs HERE. With the art
+	// staged at RoundHalfUp(32*f), the window is BORN carrying f; scaling it
+	// again is the second application (on-screen = 32 * a * f).
+	if (win->GetID() == 0x48E945B4 && f > 1.01f)
+	{
+		const int32_t want = RoundHalfUp(32 * f);
+		const int32_t haveW = win->GetW(), haveH = win->GetH();
+		if (gArtSizedRefusals < 4)
+		{
+			gArtSizedRefusals++;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: ARTSIZED 0x48E945B4 %dx%d at f=%.2f - NOT scaling "
+				"(art is staged at f, so the window is already %d). %s",
+				haveW, haveH, f, want,
+				(haveW == want && haveH == want)
+					? "Matches - on-screen is exactly the factor."
+					: "DOES NOT MATCH: the art stage and this refusal have "
+					  "drifted; re-check MISSION_BUBBLE_FIXED96_MULT.");
+		}
+		// ⛔ DO NOT return HERE. The first version did, and `return` skips the
+		// WHOLE SUBTREE - so the deployment count child never got scaled and
+		// the numbers vanished off the markers (user, immediately). Only THIS
+		// window is already art-sized; its children are not, and they still
+		// need the factor. Fall through to the child walk with the size write
+		// suppressed for this node alone.
+		gArtSizedSkipSelf = true;
 	}
 
 	const ScaleState state = Classify(win);
