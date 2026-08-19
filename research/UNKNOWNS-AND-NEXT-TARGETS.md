@@ -119,7 +119,7 @@ Score = value to a modder (1–5) × tractability (1–5). Deduplicated: 35 raw 
 | 17 | Three named code-created windows with no known role | 2 | 4 | **8** | Read three builders |
 | 18 | The TagKind sprite's literal size constant | 2 | 4 | **8** | Continue `0x00510690` past `0x5106E7` |
 | 19 | Network drag preview + footprint ok/notok spawner | 2 | 4 | **8** | `find_imm` on `0xA90920`/`0xA9093D` |
-| 20 | MySim head bubble + aircraft landing ring | 2 | 4 | **8** | Free if #8 is done |
+| ~~20~~ | ~~MySim head bubble~~ **CLOSED 2026-08-19 (#191, user-confirmed)** - it is a GZWin pair 0x27DF05BE/BF, not renderer-side. Cure: kBmpxCityRoots + born-correct .UI. Aircraft landing ring still open. | | | | |
 | 21 | `cIGZWin` slots 95/96/97 (community names explicitly disowned) | 2 | 4 | **8** | Vtable diff across 23 classes |
 | 22 | In-world Data View tint of the 3D city | 3 | 3 | **9** | AddViewObject differential |
 | 23 | Underground / subway / pipe views + in-world traffic density | 3 | 3 | **9** | Same differential |
@@ -407,3 +407,19 @@ the observed pattern across four patches.
 ⚠ **DO NOT re-test by patching.** The identification test for this is reading
 which of the two draw paths a category-3 record takes — static, and it
 distinguishes the hypotheses without a build.
+
+
+### E.6 #191 CLOSED (2026-08-19, user-confirmed)
+
+Two halves, both required:
+  * `0x27DF05BE` / `0x27DF05BF` -> `kBmpxCityRoots`. The sweep always resized
+    the window (46x97 -> 92x194); both visible parts are GZWinBMPs, which draw
+    dst = src, and these roots were unhooked. The size was never wrong.
+  * `I-6a9455c9` -> DialogStatic TARGETS, so the marker is BORN scaled. The tool
+    latches `[ctrl+0x44]=GetH()` / `[ctrl+0x48]=GetW()/2` at init, never
+    refreshes them, and re-places the window every frame with those offsets - so
+    the only cure is to get the right number into the latch. Both roots in
+    `kNeverScaleIds` so the born-correct geometry is not doubled.
+
+Shipped bytes: root 69x145 / 92x194 / 138x291, portrait 54x61 / 72x82 /
+108x123 at 1.5x / 2x / 3x (stock 46x97 / 36x41).

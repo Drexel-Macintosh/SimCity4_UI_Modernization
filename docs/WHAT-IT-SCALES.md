@@ -69,3 +69,9 @@ from measured font extents rather than multiplied by the tier factor.
   applied; something downstream also decides the final presentation rect.
 - **The 3D world.** Deliberately — it already renders at your native
   resolution, and stretching it is the thing this mod exists to avoid.
+
+- **Move In My Sim marker** (#191) - the framed sim face, plate and
+  green/red arrow that float over a candidate house. Born at the scaled
+  size from a data-scaled `I-6a9455c9`, with both roots
+  (`0x27DF05BE`/`0x27DF05BF`) hooked for the BMPX blit so the bitmaps
+  follow the window.

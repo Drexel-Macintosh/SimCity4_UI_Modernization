@@ -1,3 +1,52 @@
+2026-08-19  v3.1.0   #191 CLOSED - THE MOVE IN MY SIM MARKER
+                     (USER-CONFIRMED at 2x, 2400x1600)
+            Also: #193 CLOSED, #190 CLOSED, the 1x baseline made genuinely
+            inert, and the tier/deploy tooling reduced to one command.
+
+  #191 - the framed sim face + green arrow that floats over a candidate house
+  when you click Move In a Sim. It rendered pixel-identical at every tier while
+  the rest of the UI scaled.
+
+  TWO HALVES, BOTH REQUIRED:
+    - It is a GZWin PAIR, 0x27DF05BE (green, on the house) and 0x27DF05BF (red,
+      follows the mouse), each with a 46x97 plate and a 36x41 portrait child.
+      The sweep was ALWAYS resizing them (46x97 -> 92x194) - but both visible
+      parts are GZWinBMPs, which draw dst = src, and neither root was in
+      kBmpxCityRoots. The size was never wrong; the BLIT was not following it.
+    - The tool latches [ctrl+0x44]=GetH() and [ctrl+0x48]=GetW()/2 AT INIT and
+      never refreshes them, then re-places the window every frame with those
+      offsets. So a post-hoc position fix is overwritten on the next tick, and
+      the only cure is to get the right number INTO the latch: I-6a9455c9 is
+      now data-scaled in DialogStatic so the marker is BORN at the tier size,
+      with both roots in kNeverScaleIds so the sweep cannot double it.
+
+  Shipped geometry, verified in the package bytes: root 69x145 / 92x194 /
+  138x291 and portrait 54x61 / 72x82 / 108x123 at 1.5x / 2x / 3x
+  (stock 46x97 / 36x41).
+
+  #193 - the right-drag anchor ring was 32*f*f. 0x48E945B4 had been added to
+  kAlwaysScaleCityIds (the FORCE-scale list) by an edit that meant to add it to
+  kNeverScaleIds; the anchor string was unique but sat in the wrong array. The
+  cure is a size-only refusal in ScalePanelRoot. That id is the right-drag ring,
+  NOT the "U-Drive-It mission marker" our own comment called it - the mislabel
+  is why earlier audits cleared the wrong widget.
+
+  #190 - the 19 runtime Sim portraits are code-bound (TGI composed at runtime),
+  so the .UI-derived ref-map was structurally blind to them. Staged in place at
+  36x41*f in every tier package, plus no-snap entries so the 1.5x tier does not
+  crop 6px off every face.
+
+  1x BASELINE - it was never inert. gTierF defaulted to 2.0f and was assigned at
+  only two sites (both scaling paths) while read at 97, so at tier 1 every
+  consumer behaved as if 2x; and the "Tier 1 = TRUE stock" block sat inside the
+  AutoScale branch, so a manual 1x ran the whole sweep. Both fixed - factor 1
+  now forces every subsystem off regardless of how the factor was chosen.
+
+  DEPLOY/TIER TOOLING - Set-Tier.ps1 now does tier AND screen in one call
+  (packages, font, SC4GraphicsOptions.ini and dgVoodoo.conf, no BOM). Two new
+  gates: armed-tier agreement across tier-managed families, and drift between
+  the deploy's dependency-gate list and ScaleTier.cpp.
+
 2026-08-18  v3.0.38  #188 CLOSED - THE OFFER BALLOON IS A CSI: TWO QUADS,
                      BOTH SIZED BY INLINE .text IMMEDIATES
                      (USER-CONFIRMED at 3x, 3840x2160)
