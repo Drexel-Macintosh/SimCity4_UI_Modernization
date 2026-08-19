@@ -1,3 +1,87 @@
+2026-08-19  v3.2.0   IN-GAME SCALE SELECTOR in Graphic Options (USER REQUEST)
+
+  The scale is now changeable from inside the game. Graphic Options gains a
+  radio next to our resolution/scale readout - lit whenever the resolution
+  came from SC4GraphicsOptions.ini rather than the game's own four-item list,
+  which is the state every scaled tier runs in - and a UI Scale picker
+  offering Auto / 1x / 1.5x / 2x / 3x.
+
+  IT APPLIES ON RESTART, and that is not a shortcut. Switching tier renames
+  nine dat packages AND the FontStyle.ini the game probes once at startup, so
+  nothing short of a relaunch can move it. This dialog already carries the
+  game's own notice that its settings take effect next launch, which is why
+  the control belongs here and nowhere else.
+
+  DATA HALF (build_dialog_static.py, inject_res_readout): three more nodes
+  beside the #192 readout - radio 0x5CA1E002, label 0x5CA1E003, combo
+  0x5CA1E004 - all with EMPTY captions, the same honest-blank contract as
+  #192: if the code half is missing the player sees blank space, never a
+  stale or invented number.
+
+  WHERE THEY FIT was measured, not chosen. The parent GZWinBMP is
+  (15,37,479,393), so children clip at height 356; the resolution list is
+  full (four rows ending y=351) and the readout row [325,346) is the last row
+  that fits below Software - which is why #192's second row was clipped. The
+  band x>=266, y=211..253 is the only free space left inside that clip. The
+  combo's drop list opens downward from y=253 and five ~20px rows reach ~353,
+  inside 356. All four nodes scale exactly by the factor at 1.5x / 2x / 3x
+  (verified out of the built dats).
+
+  CODE HALF (UiSpike::ServiceScaleSelector): fills the captions, derives the
+  radio state from the four stock resolution radios rather than tracking it,
+  pushes the live tier into the combo when the dialog opens, and chains a
+  cIGZWinProc onto the dialog root (a GZWinGen) to see the clicks. CHAINS,
+  never replaces: the game's own Accept/Cancel/radio logic lives behind
+  GetWinProc() and dropping it would break the dialog outright. Accept
+  commits, Cancel discards, and the commit writes the same two keys to the
+  same ini Set-Tier.ps1 writes, through WritePrivateProfileStringW - which
+  never emits a BOM, the one thing that must stay true of that file.
+
+  MOVED OUT OF IncrementalPass. The #192 readout lived there and could not
+  stay: that function needs a city view and `continuous`, so the dialog went
+  unserviced on the main menu and at the stock tier. The selector is driven
+  straight from the WM_TIMER instead, self-throttled to 250ms.
+
+  ⭐ 1x WAS A ONE-WAY DOOR. At the stock tier the DLL deliberately installs
+  nothing and stashes every package - correct, and it would also have stashed
+  the one control that lets a player leave 1x. Two changes make the tier
+  escapable: a new single-entry package z_SC4UIScale_SelectorUI-1x.dat
+  (Graphic Options at STOCK geometry with the four nodes, built by
+  tools\dialog-static\build_selector_1x.py, which asserts the rects are the
+  authored ones and that the package holds exactly one entry), and a tick
+  source at stock tier that runs the selector and nothing else.
+
+  The two ways of ARRIVING at 1x want opposite things, and now say so:
+  SelectorAtStock=1 (default) keeps the selector; Set-Tier.ps1 -Tier 1 - the
+  MEASUREMENT path, which exists to produce a true stock reference - writes 0
+  and restores the absolute isolation. Without that split, taking one
+  reference capture would have silently removed the control from every later
+  1x session.
+
+  ⭐ FIXED IN PASSING: DialogStatic COULD NOT BE REBUILT AT ALL. Adding
+  6a9455c9 to TARGETS for #191 put a script this builder doubles in front of
+  {1abe787d,ea32f100}, a code-bound TGI selective-safe leaves untouched - and
+  the cross-builder guard FATALed on every factor. The shipped dats predated
+  it, so every gate was green and nothing on screen was wrong; the next
+  rebuild would simply have failed.
+
+  The guard was refusing the wrong thing. Its own stated reason is about
+  OVERWRITING the payload the code binds - "a code consumer is invisible to a
+  .UI-only judgement" - which holds for an in-place override and collapses
+  for a CLONE: a clone emits a new TGI and retargets only the copies of
+  scripts this builder doubles, so the code binding and every referrer we do
+  not double keep the 1x art byte for byte. Narrowed to in-place, with the
+  permission MEASURED at the emit rather than assumed: an assertion over the
+  payloads actually staged FATALs if a TGI permitted as a clone is also
+  written in place. A per-occurrence exception entry was the alternative and
+  would have needed hand-adding every time a target is added.
+
+  Files: tools\dialog-static\build_dialog_static.py (injection + guard),
+  tools\dialog-static\build_selector_1x.py (new), src\UiSpike.cpp,
+  src\SC4UIScaleDllDirector.cpp, src\ScaleTier.cpp, src\Settings.{h,cpp},
+  _packaging\SC4UIScale.ini, _tests\Set-Tier.ps1,
+  _tests\Deploy-OnGameClose.ps1, _tests\Test-DatIntegrity.ps1.
+
 2026-08-19  v3.1.2   #195 CLOSED - the deployment counts, and a 1.5x-only
                      rounding fault behind them (USER-CONFIRMED)
 

@@ -232,6 +232,11 @@ $EXPECTED = @(
   @{ name = "z_SC4UIScale_DialogStatic-15x.dat"; entries = 265 }, # #178: see the -2x row note (2026-08-16)
   @{ name = "z_SC4UIScale_SelectiveArt-3x.dat";  entries = 696 },   # #136: was 651; #190: was 655
   @{ name = "z_SC4UIScale_DialogStatic-3x.dat";  entries = 265 }, # #178: see the -2x row note (2026-08-16)
+  # SelectorUI-1x (2026-08-19): the scale selector at the STOCK tier. ONE
+  # entry by design - Graphic Options and nothing else. If this count ever
+  # moves, the stock tier has started shipping scaled art, which is the
+  # one thing this package must never do.
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat"; entries = 1 },
   # TIER MATH PASS (2026-07-29, v2.24.0): ItemIcons + ItemIconsSub now exist at
   # every tier (audit finding A1 - they were -2x only, so ALL ~266+130 menu
   # icons silently reverted to 1x in scaled cells at 1.5x/3x). Built by
@@ -394,6 +399,7 @@ $BUILT_PAIRS = @(
   @{ b = "tools\dialog-static\z_SC4UIScale_DialogStatic.dat";         d = "z_SC4UIScale_DialogStatic-2x.dat" }
   @{ b = "tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat";      d = "z_SC4UIScale_DialogStatic-15x.dat" }
   @{ b = "tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat";        d = "z_SC4UIScale_DialogStatic-3x.dat" }
+  @{ b = "tools\packages\1x\z_SC4UIScale_SelectorUI-1x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat" }
   @{ b = "tools\dialog-static\z_SC4UIScale_SaveWarningUI.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-2x.dat" }
   @{ b = "tools\packages\15x\z_SC4UIScale_SaveWarningUI-15x.dat";     d = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-15x.dat" }
   @{ b = "tools\packages\3x\z_SC4UIScale_SaveWarningUI-3x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-3x.dat" }

@@ -1950,6 +1950,31 @@ namespace ScaleTier
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons", depOk));
 		}
+		// THE ONE PACKAGE ARMED BY THE ABSENCE OF A TIER (2026-08-19).
+		// z_SC4UIScale_SelectorUI-1x carries a single script: Graphic Options
+		// at STOCK geometry with the four scale-selector nodes injected. Its
+		// gate is the INVERSE of every package above - live only when NO tier
+		// is active - because that is the only state in which the selector
+		// would otherwise vanish, and 1x without the selector is a one-way
+		// door: every other package is stashed, so the only way back up would
+		// be editing the ini by hand.
+		//
+		// It is inside the tier loop's scope but deliberately OUTSIDE the
+		// loop: the loop asks "which tier is this package for", and the
+		// answer here is "none of them".
+		//
+		// The dialog is otherwise pixel-identical to stock - build_selector_1x
+		// asserts the four rects are the AUTHORED ones and that the package
+		// holds exactly one entry, so this can never quietly become a way to
+		// scale the stock tier.
+		{
+			const bool stock = (activeTag == nullptr);
+			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_SelectorUI",
+				L"-1x", stock);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: SelectorUI-1x %ls (stock tier %ls).",
+				stock ? L"ARMED" : L"stashed", stock ? L"active" : L"inactive");
+		}
 		// Install root FIRST (the copy the game reads); Documents mirror
 		// second (kept for inspectability + package consistency).
 		SyncFont(docPlugins, instPlugins, activeTag);

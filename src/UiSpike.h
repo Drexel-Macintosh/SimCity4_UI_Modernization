@@ -12,6 +12,16 @@ class UiSpike
 public:
 	static void SetRenderResForReadout(int32_t w, int32_t h);   // #192
 	static void SetTierMirror(float f);   // resolved tier -> hook-visible mirror
+	// IN-GAME SCALE SELECTOR (2026-08-19, user request). Fills the readout,
+	// pushes the radio/combo state, and services the click filter on the
+	// Graphic Options dialog.
+	//
+	// DRIVEN DIRECTLY FROM THE TIMER, not from IncrementalPass, and that is
+	// the whole point: IncrementalPass needs a city view and `continuous`,
+	// neither of which exists at the stock tier or on the main menu - and the
+	// stock tier is exactly where the player needs a way back UP. Cheap by
+	// construction: throttled internally, one id lookup per service.
+	void ServiceScaleSelector();
 	// v2.32.0 SHOWHOOK (task #50): scale a subtree at the instant the game
 	// makes it visible, BEFORE its first paint. PUBLIC because the SetFlag
 	// detour is a free function in the GAME's call stack.

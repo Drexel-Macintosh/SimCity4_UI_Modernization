@@ -136,6 +136,20 @@ struct Settings
 	                                  // function (and enable/stash the
 	                                  // static data layers to match); 0 =
 	                                  // manual ScaleFactor, layers untouched
+	// IN-GAME SCALE SELECTOR at the STOCK tier (2026-08-19). The selector
+	// itself always ships; this key decides whether the stock tier installs a
+	// tick source to service it.
+	//   1 (default) - 1x keeps the Graphic Options selector, so the player can
+	//                 climb back to a scaled tier without editing an ini. The
+	//                 subclass + WM_TIMER are the ONLY things installed, and
+	//                 the timer body services the dialog and nothing else.
+	//   0           - the pre-existing absolute isolation: no window attach,
+	//                 no subclass, no timer, indistinguishable from a no-DLL
+	//                 install. This is what a stock REFERENCE CAPTURE needs,
+	//                 and Set-Tier.ps1 -Tier 1 writes it.
+	// The two ways of arriving at 1x want opposite things; the key is how they
+	// say which one they are.
+	bool spikeSelectorAtStock = true;
 	bool spikeRatingArrowPatch = true; // byte-patch the Mayor-rating arrow
 	// v2.76.0: ARMED (2). The log-only run ADJUDICATED the model - the user's
 	// 3x capture shows the arrow at L/T=(294,174) while its cached seat is

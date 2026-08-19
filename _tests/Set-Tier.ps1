@@ -244,6 +244,25 @@ if ($Auto) {
     $txt = $txt -replace '(?m)^(ScaleFactor\s*=\s*).*$', ('${1}' + $Tier)
     Write-Output ("ini: AutoScale=0 ScaleFactor={0}" -f $Tier)
 }
+# SelectorAtStock - THE TWO WAYS OF BEING AT 1x WANT OPPOSITE THINGS.
+# This script is the MEASUREMENT path: -Tier 1 exists to produce a true stock
+# reference, so it asks for absolute isolation (no subclass, no timer, nothing
+# installed) and writes 0. Every other tier writes 1, so a player who later
+# picks 1x from the in-game selector still has the selector to climb back with.
+# Without this, taking one reference capture would silently remove the control
+# from every subsequent 1x session.
+$wantSel = if ($Tier -eq 1 -and -not $Auto) { "0" } else { "1" }
+if ($txt -match '(?m)^SelectorAtStock\s*=') {
+    $txt = $txt -replace '(?m)^(SelectorAtStock\s*=\s*).*$', ('${1}' + $wantSel)
+} else {
+    # Absent means the DLL is using its default (1). Add it under [UiSpike] so
+    # the state is visible rather than implied - a setting you cannot see is a
+    # setting nobody will think to check.
+    $txt = $txt -replace '(?m)^(\[UiSpike\]\s*)$', ("`${1}`r`nSelectorAtStock=" + $wantSel)
+}
+Write-Output ("ini: SelectorAtStock={0}{1}" -f $wantSel,
+    $(if ($wantSel -eq "0") { "  (stock reference: the DLL installs NOTHING)" }
+      else { "  (1x keeps the in-game scale selector)" }))
 [System.IO.File]::WriteAllText($ini, $txt, (New-Object System.Text.UTF8Encoding($false)))
 
 if ($Auto) {

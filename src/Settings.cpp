@@ -73,6 +73,7 @@ void Settings::Load(const wchar_t* iniPath)
 	spikeCenterLeafMaxPx = GetPrivateProfileIntW(kSpike, L"CenterLeafMaxPx", spikeCenterLeafMaxPx, iniPath);
 	spikeAutoScale = GetPrivateProfileIntW(kSpike, L"AutoScale", spikeAutoScale ? 1 : 0, iniPath) != 0;
 	useScaleRemap = GetPrivateProfileIntW(kScaling, L"UseScaleRemap", useScaleRemap ? 1 : 0, iniPath) != 0;
+	spikeSelectorAtStock = GetPrivateProfileIntW(kSpike, L"SelectorAtStock", spikeSelectorAtStock ? 1 : 0, iniPath) != 0;
 	spikeRatingArrowPatch = GetPrivateProfileIntW(kSpike, L"RatingArrowPatch", spikeRatingArrowPatch ? 1 : 0, iniPath) != 0;
 	spikeRatingArrowAnchor = GetPrivateProfileIntW(kSpike, L"RatingArrowAnchor", spikeRatingArrowAnchor, iniPath);
 	spikeMissionBubbleFx = GetPrivateProfileIntW(kSpike, L"MissionBubbleFx", spikeMissionBubbleFx, iniPath);

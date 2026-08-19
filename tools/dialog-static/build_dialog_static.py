@@ -523,9 +523,32 @@ RES_READOUT_IID = "8a7e052f"
 RES_READOUT_ANCHOR = 'caption="Software"'
 RES_READOUT_IDS = ("0x5ca1e000", "0x5ca1e001")
 
+# ---- IN-GAME SCALE SELECTOR (2026-08-19, user request) ---------------------
+# Three more nodes ride the same injection point, same rules (empty captions,
+# DLL fills; blank on screen = the DLL half is missing, never a stale value):
+#   0x5ca1e002  radio beside the readout row, lit when the custom resolution
+#               is the active one. Clone of the Software radio idiom
+#               (16x16 style=radiocheck at x=270; the readout text is x=293).
+#   0x5ca1e003  "UI Scale" caption row. The right column band y=211..253 is
+#               the ONLY free space inside the clipping parent (479x356): the
+#               resolution list is full (4 rows to y=351) and the readout row
+#               [325,346) is the last row that fits below Software.
+#   0x5ca1e004  GZWinCombo with the five tiers. Grammar cloned from the stock
+#               combos in I-e9263de5 (listelement= repeats). The drop list
+#               opens DOWNWARD from y=253: 5 items x ~20px = ~100px, reaching
+#               ~353 <= 356, so it stays inside the parent clip. Do not move
+#               this row lower - the #192 second-row clip is the proof.
+# The DLL maps the combo index to the ini: 0=Auto (AutoScale=1), 1..4 =
+# manual 1 / 1.5 / 2 / 3 (AutoScale=0 + ScaleFactor). initselection=0 is a
+# placeholder; the DLL sets the true selection every time the dialog appears.
+SEL_RADIO_ID = "0x5ca1e002"
+SEL_LABEL_ID = "0x5ca1e003"
+SEL_COMBO_ID = "0x5ca1e004"
+
 
 def inject_res_readout(text, fn):
-    """Add the two runtime-filled labels to Graphic Options.
+    """Add the runtime-filled readout labels + the scale selector to
+    Graphic Options.
 
     Returns (text, n_added). A no-op for every other script.
     """
@@ -562,6 +585,45 @@ def inject_res_readout(text, fn):
     # parent clips inside [346,366) and there is no room for a second 20px
     # row above it. Both numbers go on this row instead.
     new = [indent + tmpl % (RES_READOUT_IDS[0], 325, 346)]
+    # Radio: byte-for-byte the Software radio (0x6a57da58) attribute set with
+    # our id and row. It MUST take clicks (ignoremouse=no, unlike the labels).
+    radio = ('<LEGACY clsid=GZWinBtn iid=IGZWinBtn id=%s '
+             'area=(270,325,286,341) fillcolor=(204,204,204) '
+             'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
+             'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
+             'winflag_pbufftrans=yes winflag_pbufferase=yes '
+             'winflag_pbuffvid=no winflag_alphablend=no '
+             'winflag_acceptfocus=yes winflag_mousetrans=no '
+             'winflag_ignoremouse=no image={1abe787d,14416246} '
+             'colorfontnormal=(0,0,0) colorfontdisabled=(0,0,0) '
+             'colorfonthilited=(0,0,0) colorfontnormalbkg=(0,0,0) '
+             'colorfontdisabledbkg=(0,0,0) colorfonthilitedbkg=(0,0,0) '
+             'toggle=off triggerondown=off showcaption=no fill=yes '
+             'autosize=no wrapcaption=no shiftcaption=no tips=no '
+             'tipsdelay=no tipstimeout=no style=radiocheck '
+             'gutters=(0,0,0,0) tiptext="" tipoffsets=(0,0) '
+             'tipflag=0x01000000 align=center '
+             'btnclicksnd={ca4d1943,2a5c322b} >' % SEL_RADIO_ID)
+    # Caption row for the selector, same empty-caption contract as the
+    # readout labels (tmpl already carries ignoremouse=yes).
+    label = tmpl % (SEL_LABEL_ID, 211, 232)
+    label = label.replace('area=(293,211,465,232)', 'area=(266,211,463,232)')
+    # The combo: stock grammar from I-e9263de5, our items. editable=no makes
+    # it a pure picker; the class draws its own drop list.
+    combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
+             'area=(293,233,420,253) fillcolor=(255,255,255) transparent '
+             'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
+             'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
+             'winflag_pbufftrans=yes winflag_pbufferase=yes '
+             'winflag_pbuffvid=no winflag_mousetrans=no '
+             'winflag_ignoremouse=no colorfontnormal=(0,0,0) '
+             'colorfontdisabled=(164,164,164) colorfonthilited=(255,255,255) '
+             'highlightcolor=(24,32,106) editable=no outlinecolor=(0,0,0) '
+             'initselection=0 combodownarrowrect=(0,0,64,15) '
+             'combodowncolor=(197,197,197) buttongutter=1 gutters=(6,2) '
+             'listelement="Auto" listelement="1x" listelement="1.5x" '
+             'listelement="2x" listelement="3x" >' % SEL_COMBO_ID)
+    new += [indent + radio, indent + label, indent + combo]
     lines[at + 1:at + 1] = new
     return "\n".join(lines), len(new)
 
@@ -1417,11 +1479,45 @@ def main():
             "no clipping (content width already subtracts the LIVE scrollbar "
             "width, sub_9BCBC5).",
     }
+    # CLONE IS NOT THE ACTION THIS GUARD REFUSES (2026-08-19).
+    # The refusal above is stated precisely, and its whole force is about
+    # OVERWRITING THE PAYLOAD THE CODE BINDS: "a code consumer is invisible to
+    # a .UI-only judgement, so 'no scaled referrer' is not permission to
+    # double". That argument holds for `inplace` and collapses for `clone`:
+    # a clone emits a NEW TGI (iid ^ 0x53430001) and retargets ONLY the copies
+    # of scripts THIS builder doubles. The original TGI is never written - see
+    # the staged_pngs emit, which picks the clone TGI or the original by this
+    # same action - so the code binding, and every .UI referrer we do not
+    # double, keep the 1x art byte for byte.
+    #
+    # This is not an exception; it is the guard's own rule stated at the right
+    # granularity, so it needs no hand entry that would rot. The shape recurs
+    # by construction: it fires whenever a script joins TARGETS while a
+    # code-bound TGI it references has no other scaled referrer - which is
+    # what #191 (6a9455c9, the Move In My Sim marker) did to
+    # {1abe787d,ea32f100}, the default Sim face. A per-occurrence
+    # KNOWN_BUILDER_DISAGREEMENTS entry would have to be hand-added every time
+    # a target is added, which is exactly how hand-lists rot (law 94).
+    #
+    # PERMISSION IS MEASURED, NOT ASSUMED: `_cb_cloned` is carried down to the
+    # emit and asserted there against the TGIs actually staged. If a clone
+    # ever also wrote the original, that assertion FATALs - so this narrowing
+    # cannot be silently widened by a later change to the emit path.
     _bad = []
+    _cb_cloned = set()
     for (gid, iid) in sorted(cb_conflict):
         act = art_plan.get((gid, iid), (None,))[0]
-        if act in ("inplace", "clone") and (gid, iid) not in KNOWN_BUILDER_DISAGREEMENTS:
+        if (gid, iid) in KNOWN_BUILDER_DISAGREEMENTS:
+            continue
+        if act == "clone":
+            _cb_cloned.add((gid, iid))
+        elif act == "inplace":
             _bad.append((gid, iid, act))
+    if _cb_cloned:
+        print("   cross-builder guard: %d code-bound TGI(s) CLONED, original "
+              "left 1x for the code path: %s"
+              % (len(_cb_cloned),
+                 ", ".join("{%08x,%08x}" % k for k in sorted(_cb_cloned))))
     if _bad:
         sys.exit("FATAL: %d code-bound TGI(s) that build_selective_safe.py "
                  "REFUSED are being staged by this builder:\n%s\n"
@@ -2060,6 +2156,22 @@ def main():
     for d in per_dialog:
         a("| `0x00000000 / 0x%08X / 0x%s` | edited %s .UI script |"
           % (TARGET_GID, d["iid_s"].upper(), d["name"]))
+    # THE MEASURED HALF of the cross-builder clone permission above: prove, on
+    # the list of payloads this run actually stages, that no code-bound TGI we
+    # were allowed to clone is ALSO written in place. Checking the plan would
+    # only restate the plan; this checks the output.
+    _written_inplace = {(g, i) for (g, i), _n, _d in staged_pngs
+                        if art_plan[(g, i)][0] != "clone"}
+    _viol = sorted(_cb_cloned & _written_inplace)
+    if _viol:
+        _lines = ["  {%08x,%08x}" % v for v in _viol]
+        sys.exit("FATAL: %d code-bound TGI(s) were permitted as CLONES "
+                 "by the cross-builder guard but are being written IN "
+                 "PLACE:\n%s\n"
+                 "That permission rests on the original payload staying "
+                 "1x for the code consumer. Fix the emit, or refuse the "
+                 "TGI here."
+                 % (len(_viol), "\n".join(_lines)))
     for (gid, iid), out_name, dims in staged_pngs:
         action, clone, _ = art_plan[(gid, iid)]
         if action == "clone":

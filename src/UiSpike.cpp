@@ -35,6 +35,11 @@
 #include "cIGZWin.h"
 #include "cIGZString.h"
 #include "cIGZWinText.h"
+#include "cIGZWinBtn.h"     // in-game scale selector: radio state
+#include "cIGZWinCombo.h"   //   ... the tier picker
+#include "cIGZWinGen.h"     //   ... SetWinProc/GetWinProc on the dialog
+#include "cIGZWinProc.h"    //   ... the chained click handler
+#include "cGZMessage.h"
 #include "cRZBaseString.h"
 #include "cIGZBuffer.h"
 #include "cIGZFont.h"      // v2.28.0: measure + break the popup description
@@ -15827,74 +15832,13 @@ void UiSpike::IncrementalPass()
 				}
 			}
 		}
-		// ============ #192 RESOLUTION / SCALE READOUT ==================
-		// USER REQUEST: show the current resolution and scaling factor in the
-		// Graphic Options dialog, in the empty right column below Software.
-		//
-		// The two labels ship in DATA with our ids and EMPTY captions
-		// (build_dialog_static.py inject_res_readout), so the .UI carries the
-		// windows and this fills the text - a .UI cannot hold a runtime value.
-		// Empty-in-data is deliberate: if this code never runs the player sees
-		// blank space, never a stale or invented resolution.
-		//
-		// Set once per appearance, not every tick: GetCaption is compared
-		// first, so this is a string compare on a dialog that is almost never
-		// open, and the caption is written only when it actually differs.
-		{
-			cIGZWin* gfxDlg =
-				pMainWindow->GetChildWindowFromIDRecursive(0x2A57CB82);
-			if (gfxDlg != nullptr && gfxDlg->IsVisible())
-			{
-				// ONE line: the second row was clipped by this label's parent
-				// (user screenshot). Both numbers ride on the row that is
-				// proven to render, kept short so it fits the 172-design-px
-				// column at every tier.
-				char l1[96];
-				if (gReadoutW > 0 && gReadoutH > 0)
-				{
-					_snprintf_s(l1, sizeof(l1), _TRUNCATE, "%dx%d @ %.2fx %s",
-						gReadoutW, gReadoutH, settings.spikeScaleFactor,
-						settings.spikeAutoScale ? "auto" : "manual");
-				}
-				else
-				{
-					// Honest rather than blank-but-wrong: only claim a render
-					// size we were actually handed.
-					_snprintf_s(l1, sizeof(l1), _TRUNCATE, "res ? @ %.2fx %s",
-						settings.spikeScaleFactor,
-						settings.spikeAutoScale ? "auto" : "manual");
-				}
-
-				const uint32_t ids[1] = { 0x5CA1E000 };
-				const char* txt[1] = { l1 };
-				for (int k = 0; k < 1; k++)
-				{
-					cIGZWin* lab =
-						gfxDlg->GetChildWindowFromIDRecursive(ids[k]);
-					if (!lab) { continue; }
-					cIGZWinText* t = nullptr;
-					if (lab->QueryInterface(GZIID_cIGZWinText,
-							reinterpret_cast<void**>(&t)) && t)
-					{
-						cRZBaseString want(txt[k]);
-						cIGZString* cur = lab->GetCaption();
-						const bool same =
-							(cur != nullptr && cur->ToChar() != nullptr
-							 && strcmp(cur->ToChar(), txt[k]) == 0);
-						if (!same) { t->SetCaption(want); }
-						t->Release();
-					}
-				}
-				if (gReadoutLogs < 2)
-				{
-					gReadoutLogs++;
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: RESREADOUT filled Graphic Options - \"%s\". "
-						"Blank on screen instead means the DATA half is "
-						"missing: rebuild DialogStatic.", l1);
-				}
-			}
-		}
+		// #192 RESOLUTION / SCALE READOUT + the in-game scale selector
+		// MOVED OUT 2026-08-19 to UiSpike::ServiceScaleSelector, driven
+		// straight from the timer. It cannot live here: this function
+		// needs a city view and `continuous`, so the dialog was
+		// unserviced on the main menu and at the stock tier - and the
+		// stock tier is exactly where the player needs the control to
+		// climb back up. ONE owner writes those captions.
 
 		const float f = settings.spikeScaleFactor;
 		const int32_t scrW = pMainWindow->GetW();
@@ -18707,4 +18651,395 @@ void UiSpike::ScaleTarget(cIGZWin* pMainWindow)
 		LogLevel::Info,
 		"UiSpike: subtree scaled, %d windows; root now %dx%d",
 		count, target->GetW(), target->GetH());
+}
+
+// ============ IN-GAME SCALE SELECTOR (2026-08-19) ======================
+// USER REQUEST: a radio beside our resolution/scale readout in Graphic
+// Options, shown selected, plus a picker for Auto / 1x / 1.5x / 2x / 3x.
+//
+// SHAPE: the widgets ship in DATA with our ids and EMPTY captions
+// (build_dialog_static.py inject_res_readout); this code fills the text,
+// pushes the current state, and reads the player's choice back. Empty in
+// data is deliberate and unchanged from #192 - if this code never runs the
+// player sees blank space, never a stale or invented number.
+//
+//   0x5CA1E000  readout text  "<W>x<H> @ <f>x <auto|manual>"
+//   0x5CA1E002  radio         lit when NO stock resolution radio is lit
+//   0x5CA1E003  label         "UI Scale (applies on restart)"
+//   0x5CA1E004  combo         Auto / 1x / 1.5x / 2x / 3x
+//
+// THE TIER APPLIES ON RESTART, and that is not a shortcut. Switching tier
+// renames nine dat packages AND the FontStyle.ini the game probes once at
+// startup, so nothing short of a relaunch can move it. This dialog already
+// carries the game's OWN notice - "Resolution, UI translucency, color
+// quality and rendering mode changes will not take effect until the next
+// time you start..." - which is exactly why the control belongs here.
+namespace
+{
+	// Row order MUST match the listelement order the builder writes.
+	const float kSelFactors[] = { 0.0f, 1.0f, 1.5f, 2.0f, 3.0f }; // [0] = Auto
+	const int   kSelCount =
+		static_cast<int>(sizeof(kSelFactors) / sizeof(kSelFactors[0]));
+
+	// The four stock resolution radios. Our radio means "none of these" -
+	// i.e. the resolution came from SC4GraphicsOptions.ini rather than this
+	// list, which is the state every scaled tier runs in.
+	const uint32_t kStockResRadios[] = {
+		0x6A57DA5A, 0x6A57DA5B, 0x6A57DA5C, 0x6A57DA5D
+	};
+	const uint32_t kSelAcceptId = 0xEA57DA59;   // Accept (the 3-button row)
+	const uint32_t kSelCancelId = 0x6A57DA48;   // Cancel
+	const uint32_t kSelDlgId    = 0x2A57CB82;   // Graphic Options root (GZWinGen)
+	const uint32_t kSelReadoutId = 0x5CA1E000;
+	const uint32_t kSelRadioId   = 0x5CA1E002;
+	const uint32_t kSelLabelId   = 0x5CA1E003;
+	const uint32_t kSelComboId   = 0x5CA1E004;
+
+	int   gSelStaged = -1;          // combo row the player picked, -1 = none
+	int   gSelPushed = -2;          // last row we pushed or observed
+	bool  gSelDlgUp = false;        // dialog visible at the last service
+	int   gSelLogs = 0;
+	int   gSelMsgLogs = 0;          // bounded instrument budget
+	unsigned int gSelLastMs = 0;
+	void* gSelProcOn = nullptr;     // dialog our proc is currently chained on
+
+	int SelRowFromSettings(const Settings& s)
+	{
+		if (s.spikeAutoScale) { return 0; }
+		for (int k = 1; k < kSelCount; k++)
+		{
+			// Tier factors are exact halves/wholes; 0.01 sits far inside the
+			// smallest gap between any two of them.
+			if (s.spikeScaleFactor > kSelFactors[k] - 0.01f &&
+				s.spikeScaleFactor < kSelFactors[k] + 0.01f)
+			{
+				return k;
+			}
+		}
+		return -1;   // a factor no row can express: say nothing, claim nothing
+	}
+
+	void SelSetCaption(cIGZWin* parent, uint32_t id, const char* text)
+	{
+		cIGZWin* w = parent->GetChildWindowFromIDRecursive(id);
+		if (!w) { return; }
+		cIGZWinText* t = nullptr;
+		if (w->QueryInterface(GZIID_cIGZWinText,
+				reinterpret_cast<void**>(&t)) && t)
+		{
+			cIGZString* cur = w->GetCaption();
+			const bool same = (cur != nullptr && cur->ToChar() != nullptr
+				&& strcmp(cur->ToChar(), text) == 0);
+			if (!same)
+			{
+				cRZBaseString want(text);
+				t->SetCaption(want);
+			}
+			t->Release();
+		}
+	}
+
+	// COMMIT. One writer for the tier keys, and it writes the SAME two keys
+	// Set-Tier.ps1 writes, to the SAME ini Settings::Load reads. Win32 profile
+	// writes never emit a BOM, which is the one thing that must stay true of
+	// this file: a BOM makes the game's own ini parser miss every key.
+	// The ini beside THIS dll - the same file Settings::Load read at startup.
+	// Resolved here rather than reusing the director's helper because that one
+	// is file-static to the director; duplicating four lines beats exporting a
+	// path helper across the module boundary for one call.
+	void SelIniPath(wchar_t* out, size_t outLen)
+	{
+		wchar_t path[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
+		wchar_t* lastSlash = wcsrchr(path, L'\\');
+		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
+		swprintf_s(out, outLen, L"%sSC4UIScale.ini", path);
+	}
+
+	void SelCommit(int row)
+	{
+		if (row < 0 || row >= kSelCount) { return; }
+		wchar_t ini[MAX_PATH] = {};
+		SelIniPath(ini, MAX_PATH);
+		if (ini[0] == 0) { return; }
+		if (row == 0)
+		{
+			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1", ini);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR committed AutoScale=1 (Auto) to %ls. "
+				"Applies at the next launch.", ini);
+		}
+		else
+		{
+			// %g so 1.5 stays "1.5" and 2 stays "2" - the same literals the
+			// ini already carries and Set-Tier.ps1 writes.
+			wchar_t val[32] = {};
+			swprintf_s(val, L"%g", kSelFactors[row]);
+			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"0", ini);
+			WritePrivateProfileStringW(L"UiSpike", L"ScaleFactor", val, ini);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR committed AutoScale=0 ScaleFactor=%ls to "
+				"%ls. Applies at the next launch.", val, ini);
+		}
+	}
+
+	// Our WinProc CHAINS - it never replaces the dialog's own handler. The
+	// game's Accept/Cancel/radio logic lives behind GetWinProc(); dropping it
+	// would break the dialog outright, so every message is forwarded and our
+	// return value is whatever the game's proc said.
+	class SelectorWinProc : public cIGZWinProc
+	{
+	public:
+		SelectorWinProc() : refCount(0), next(nullptr) {}
+
+		void SetNext(cIGZWinProc* p) { next = p; }
+
+		bool QueryInterface(uint32_t riid, void** ppvObj) override
+		{
+			if (riid == GZIID_cIGZWinProc)
+			{
+				*ppvObj = static_cast<cIGZWinProc*>(this);
+				AddRef();
+				return true;
+			}
+			if (riid == GZIID_cIGZUnknown)
+			{
+				*ppvObj = static_cast<cIGZUnknown*>(this);
+				AddRef();
+				return true;
+			}
+			return false;
+		}
+		uint32_t AddRef() override { return ++refCount; }
+		uint32_t Release() override
+		{
+			// Deliberately NEVER self-deletes. This object is a singleton
+			// owned by the DLL for the process lifetime; the dialog can be
+			// created and destroyed many times, and a use-after-free here
+			// would be a crash inside the game's own message pump.
+			if (refCount > 0) { --refCount; }
+			return refCount;
+		}
+
+		bool DoWinProcMessage(cIGZWin* pWin, cGZMessage& pMsg) override
+		{
+			Observe(pMsg.dwMessageType, pMsg.dwData1, pMsg.dwData2,
+				pMsg.dwData3);
+			return next ? next->DoWinProcMessage(pWin, pMsg) : false;
+		}
+
+		bool DoWinMsg(cIGZWin* pWin, uint32_t id, uint32_t d1, uint32_t d2,
+			uint32_t d3) override
+		{
+			Observe(id, d1, d2, d3);
+			return next ? next->DoWinMsg(pWin, id, d1, d2, d3) : false;
+		}
+
+	private:
+		// INSTRUMENT AND ARM TOGETHER. We do not know which message id a
+		// button click arrives as, so the commit is keyed on the CONTROL ID
+		// appearing in either data slot rather than on a guessed message
+		// type - those ids are unique to this dialog, so it cannot fire on
+		// anything else, and it does not depend on which of the two message
+		// shapes the engine uses. The bounded log beside it is what proves
+		// which shape actually arrived.
+		void Observe(uint32_t id, uint32_t d1, uint32_t d2, uint32_t d3)
+		{
+			const bool accept = (d1 == kSelAcceptId || d2 == kSelAcceptId);
+			const bool cancel = (d1 == kSelCancelId || d2 == kSelCancelId);
+			if (gSelMsgLogs < 120)
+			{
+				gSelMsgLogs++;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELMSG type=0x%08X d1=0x%08X d2=0x%08X "
+					"d3=0x%08X%s", id, d1, d2, d3,
+					accept ? "  <- ACCEPT id" :
+					cancel ? "  <- CANCEL id" :
+					(d1 == kSelComboId || d2 == kSelComboId) ? "  <- our COMBO" :
+					(d1 == kSelRadioId || d2 == kSelRadioId) ? "  <- our RADIO" : "");
+			}
+			if (accept)
+			{
+				if (gSelStaged >= 0)
+				{
+					SelCommit(gSelStaged);
+					gSelStaged = -1;
+				}
+			}
+			else if (cancel)
+			{
+				if (gSelStaged >= 0)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELECTOR Cancel - staged row %d discarded.",
+						gSelStaged);
+					gSelStaged = -1;
+				}
+			}
+		}
+
+		uint32_t refCount;
+		cIGZWinProc* next;
+	};
+
+	SelectorWinProc gSelProc;
+}
+
+void UiSpike::ServiceScaleSelector()
+{
+	// Throttle. The dialog is almost never open, so a 250ms beat is
+	// imperceptible and turns a per-frame recursive id search into a rounding
+	// error against the ~16ms tick.
+	const unsigned int now = GetTickCount();
+	if (gSelLastMs != 0 && (now - gSelLastMs) < 250u) { return; }
+	gSelLastMs = now;
+
+	cISC4AppPtr pSC4App;
+	if (!pSC4App) { return; }
+	cIGZWin* pMainWindow = pSC4App->GetMainWindow();
+	if (!pMainWindow) { return; }
+
+	cIGZWin* gfxDlg = pMainWindow->GetChildWindowFromIDRecursive(kSelDlgId);
+	if (gfxDlg == nullptr || !gfxDlg->IsVisible())
+	{
+		// Closed. Forget the staged choice: a dialog dismissed without Accept
+		// must commit nothing, and the next open re-reads the live settings.
+		if (gSelDlgUp)
+		{
+			gSelDlgUp = false;
+			gSelStaged = -1;
+			gSelPushed = -2;
+		}
+		return;
+	}
+	const bool justOpened = !gSelDlgUp;
+	gSelDlgUp = true;
+
+	// ---- 0. chain our WinProc onto the dialog ---------------------------
+	// Re-checked whenever the dialog POINTER changes, not once ever: the
+	// dialog can be destroyed and rebuilt, and a rebuilt one carries none of
+	// our state.
+	if (gSelProcOn != gfxDlg)
+	{
+		cIGZWinGen* gen = nullptr;
+		if (gfxDlg->QueryInterface(GZIID_cIGZWinGen,
+				reinterpret_cast<void**>(&gen)) && gen)
+		{
+			cIGZWinProc* prev = gen->GetWinProc();
+			if (prev != static_cast<cIGZWinProc*>(&gSelProc))
+			{
+				gSelProc.SetNext(prev);
+				gen->SetWinProc(&gSelProc);
+				gSelProcOn = gfxDlg;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELECTOR winproc chained on Graphic Options "
+					"(previous proc %s).", prev ? "kept" : "was none");
+			}
+			gen->Release();
+		}
+		else
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR could not get cIGZWinGen on the dialog - "
+				"clicks will not be seen.");
+			gSelProcOn = gfxDlg;   // do not retry on every service
+		}
+	}
+
+	// ---- 1. the readout line (#192 behaviour, unchanged) ----------------
+	char l1[96];
+	if (gReadoutW > 0 && gReadoutH > 0)
+	{
+		_snprintf_s(l1, sizeof(l1), _TRUNCATE, "%dx%d @ %.2fx %s",
+			gReadoutW, gReadoutH, settings.spikeScaleFactor,
+			settings.spikeAutoScale ? "auto" : "manual");
+	}
+	else
+	{
+		// Honest rather than blank-but-wrong: only claim a render size we
+		// were actually handed.
+		_snprintf_s(l1, sizeof(l1), _TRUNCATE, "res ? @ %.2fx %s",
+			settings.spikeScaleFactor,
+			settings.spikeAutoScale ? "auto" : "manual");
+	}
+	SelSetCaption(gfxDlg, kSelReadoutId, l1);
+	SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
+
+	// ---- 2. the radio: is the live resolution one of the stock four? ----
+	// DERIVED every service, never tracked: ask the four stock radios what
+	// they are rather than remembering what we last saw.
+	{
+		bool anyStock = false;
+		for (int k = 0; k < 4; k++)
+		{
+			cIGZWin* w =
+				gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
+			if (!w) { continue; }
+			cIGZWinBtn* b = nullptr;
+			if (w->QueryInterface(GZIID_cIGZWinBtn,
+					reinterpret_cast<void**>(&b)) && b)
+			{
+				if (b->IsChecked()) { anyStock = true; }
+				b->Release();
+			}
+		}
+		cIGZWin* w = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
+		if (w)
+		{
+			cIGZWinBtn* b = nullptr;
+			if (w->QueryInterface(GZIID_cIGZWinBtn,
+					reinterpret_cast<void**>(&b)) && b)
+			{
+				const bool want = !anyStock;
+				if (b->IsChecked() != want) { b->SetChecked(want); }
+				b->Release();
+			}
+		}
+	}
+
+	// ---- 3. the combo ---------------------------------------------------
+	// On open: push the live setting. After that the COMBO owns the value -
+	// re-pushing every service would fight the player's own selection.
+	cIGZWin* comboWin = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
+	if (comboWin)
+	{
+		cIGZWinCombo* c = nullptr;
+		if (comboWin->QueryInterface(GZIID_cIGZWinCombo,
+				reinterpret_cast<void**>(&c)) && c)
+		{
+			if (justOpened)
+			{
+				const int row = SelRowFromSettings(settings);
+				if (row >= 0 && c->GetSelection() != row)
+				{
+					c->SetSelection(row, false);
+				}
+				gSelPushed = row;
+			}
+			else
+			{
+				const int row = c->GetSelection();
+				if (row >= 0 && row < kSelCount && row != gSelPushed)
+				{
+					gSelStaged = row;
+					gSelPushed = row;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELECTOR staged row %d (%s) - commits on "
+						"Accept, applies next launch.", row,
+						row == 0 ? "Auto" : "manual tier");
+				}
+			}
+			c->Release();
+		}
+	}
+
+	if (gSelLogs < 2)
+	{
+		gSelLogs++;
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELECTOR serviced Graphic Options - readout \"%s\", "
+			"combo %s. Absent means the DATA half is missing for this tier: "
+			"rebuild and deploy DialogStatic.", l1,
+			comboWin ? "present" : "ABSENT");
+	}
 }

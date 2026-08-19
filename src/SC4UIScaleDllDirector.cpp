@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.1.2"
+#define UISCALE_VERSION_STR "3.2.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -608,7 +608,51 @@ public:
 		// from a no-DLL install (isolation-proven requirement).
 		if (!tierActive)
 		{
-			logger.WriteLine(LogLevel::Info, "Stock tier: UI-scaling subsystems not installed.");
+			// ONE EXCEPTION, and it is the reason the tier is escapable: the
+			// scale selector in Graphic Options. Without a tick source here,
+			// 1x is a one-way door - every package is stashed, so the only
+			// way back up is editing the ini by hand, which is exactly what
+			// the selector exists to replace.
+			//
+			// What installs: the window subclass and the WM_TIMER, and the
+			// timer body runs ServiceScaleSelector ONLY (TickCheck returns
+			// immediately - nothing ever arms at this tier). No message
+			// subscriptions, no code patches, no sweeps, no hooks.
+			//
+			// SelectorAtStock=0 restores the absolute isolation this block
+			// used to have, and Set-Tier.ps1 -Tier 1 writes that 0 - so a
+			// STOCK REFERENCE CAPTURE is still a true no-DLL control, while a
+			// player who chose 1x in-game keeps a way back. The two paths to
+			// 1x want different things and now say so.
+			if (settings.spikeSelectorAtStock)
+			{
+				cIGZFrameWorkW32* pFwStock = nullptr;
+				if (RZGetFrameWork()->QueryInterface(
+					GZIID_cIGZFrameWorkW32, reinterpret_cast<void**>(&pFwStock)))
+				{
+					gameWindow = pFwStock->GetMainHWND();
+					pFwStock->Release();
+					if (gameWindow && SetWindowSubclass(gameWindow, SubclassProc,
+						kSubclassId, reinterpret_cast<DWORD_PTR>(this)))
+					{
+						subclassed = true;
+						SetTimer(gameWindow, kTimerId, kTimerPeriodMs, nullptr);
+						logger.WriteLine(LogLevel::Info,
+							"Stock tier: UI-scaling subsystems not installed; "
+							"the Graphic Options scale selector IS serviced "
+							"(SelectorAtStock=1) so 1x is not a one-way door.");
+						return true;
+					}
+				}
+				logger.WriteLine(LogLevel::Info,
+					"Stock tier: selector wanted but no tick source could be "
+					"installed - 1x has no in-game way back. Use "
+					"_tests\\Set-Tier.ps1.");
+				return true;
+			}
+			logger.WriteLine(LogLevel::Info,
+				"Stock tier: UI-scaling subsystems not installed, selector "
+				"declined by ini (SelectorAtStock=0) - fully inert.");
 			return true;
 		}
 
@@ -806,6 +850,12 @@ private:
 
 		if (msg == WM_TIMER && wParam == kTimerId)
 		{
+			// The in-game scale selector is serviced FIRST and
+			// UNCONDITIONALLY. TickCheck does nothing unless a city armed the
+			// sweep, and at the stock tier nothing ever arms it - which is
+			// precisely where the player needs this control, because 1x is
+			// the state you cannot leave without it. Self-throttled to 250ms.
+			self->uiSpike.ServiceScaleSelector();
 			self->uiSpike.TickCheck(GetTickCount());
 			return 0;
 		}

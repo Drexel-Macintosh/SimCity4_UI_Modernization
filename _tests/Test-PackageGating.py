@@ -52,6 +52,20 @@ UNGATED_BY_DESIGN = {
     "z_SC4UIScale_DialogStatic",
     "z_SC4UIScale_ItemIcons",
     "zzz-SC4UIScale\\z_SC4UIScale_ItemIconsSub",
+    # CsiIcons (#188/#196): built from the player's OWN Maxis archives, so
+    # there is no upstream mod whose presence it could be conditioned on.
+    # Tier-gated only - exactly the ItemIconsSub shape above.
+    "zzz-SC4UIScale\\z_SC4UIScale_CsiIcons",
+    # UncoveredIcons (#149): rediscovered from the player's own Plugins tree
+    # every build, so its CONTENT depends on third-party lots but its
+    # correctness does not depend on any one of them being present. A
+    # dependency gate would fail the whole package on a harmless upstream
+    # re-release; ScaleTier.cpp records that reasoning at the call site.
+    "zzz-SC4UIScale\\z_SC4UIScale_UncoveredIcons",
+    # SelectorUI-1x (2026-08-19): one script of OURS - Graphic Options at
+    # stock geometry with the scale-selector nodes. Nothing upstream to gate
+    # on, and it is armed by the ABSENCE of a tier rather than by one.
+    "zzz-SC4UIScale\\z_SC4UIScale_SelectorUI",
 }
 
 
@@ -82,9 +96,15 @@ def main():
     # ---- parse SyncDat call sites ---------------------------------------
     calls = {}
     for m in re.finditer(
-            r'SyncDat\(\s*docPlugins\s*,\s*L"([^"]+)"\s*,\s*pkg\.tag\s*,\s*([^;]+?)\);',
+            # ⚠ THE THIRD ARGUMENT IS NOT ALWAYS pkg.tag (2026-08-19). This
+            # pattern used to demand it literally, so SelectorUI-1x - which
+            # passes its own L"-1x" because it is armed by the ABSENCE of a
+            # tier - was INVISIBLE to this gate: a package that ships a
+            # script into the game and no gate could see it. Law 42, a gate
+            # is only as honest as its scope. Accept any tag expression.
+            r'SyncDat\(\s*docPlugins\s*,\s*L"([^"]+)"\s*,\s*([^,]+?)\s*,\s*([^;]+?)\);',
             src, re.S):
-        calls[norm(m.group(1))] = " ".join(m.group(2).split())
+        calls[norm(m.group(1))] = " ".join(m.group(3).split())
 
     print("  kThirdPartyDeps rows : %d" % len(dep_names))
     print("  SyncDat call sites   : %d" % len(calls))

@@ -213,6 +213,42 @@ foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
   if (Test-Path $srcU) { Copy-Item $srcU (Join-Path $zzz ("z_SC4UIScale_UncoveredIcons-" + $t[0] + ".dat" + $t[1])) -Force }
 }
 
+# SelectorUI-1x - ADDED 2026-08-19. The in-game scale selector at the STOCK
+# tier, and the ONLY package whose gate is the ABSENCE of a tier. It carries a
+# single script: Graphic Options at stock geometry with our four selector nodes
+# injected. Rebuild with:
+#     python tools\dialog-static\build_selector_1x.py
+#
+# WHY IT EXISTS: at 1x the DLL stashes every art package, which is right - and
+# it would also stash the one control that lets a player LEAVE 1x. Without this
+# package the stock tier is a one-way door out of the mod.
+#
+# ⚠ IT MUST NOT BE LIVE AT A SCALED TIER. It lives in zzz-SC4UIScale\, and
+# SUBFOLDERS load AFTER root files, so a live copy would beat the root
+# DialogStatic-<tier> and hand a 2x player a 1x Graphic Options. The DLL's
+# SyncDat corrects the state at PreAppInit - before any dat is read - but the
+# file is placed in the CORRECT state here anyway: deploying a package armed
+# and trusting a later repair is precisely the shape #196 shipped.
+$selSrc = Join-Path $proj ("tools\packages\1x\z_SC4UIScale_SelectorUI-1x.dat")
+if (Test-Path $selSrc) {
+  # ⛔ NOT $TIER_FROM_LOG. That variable is null whenever no log line matched,
+  # which is the common case - gating on it armed this package on a live 1.5x
+  # install (2026-08-19), and because it sits in zzz-SC4UIScale\ it would have
+  # beaten the root DialogStatic-15x and served a 1x Graphic Options at 1.5x.
+  # $ARMED_BEFORE is the variable that OWNS this question: it is the snapshot
+  # block's answer, log first and files as a documented fallback. Ask the thing
+  # that owns the question, not the nearest thing that looks like it.
+  $anyTierArmed = ($ARMED_BEFORE.Count -gt 0) -or $TIER_FROM_LOG
+  $selSuffix = if ($anyTierArmed) { ".x1-disabled" } else { "" }
+  Copy-Item $selSrc (Join-Path $zzz ("z_SC4UIScale_SelectorUI-1x.dat" + $selSuffix)) -Force
+  # Remove the opposite form so exactly one exists (PRESENCE IS NOT ARMING).
+  $selOther = Join-Path $zzz ("z_SC4UIScale_SelectorUI-1x.dat" + $(if ($selSuffix) { "" } else { ".x1-disabled" }))
+  if (Test-Path $selOther) { Remove-Item $selOther -Force }
+  Write-Output ("  SelectorUI-1x -> " + $(if ($selSuffix) { "stashed (scaled tier live)" } else { "ARMED (stock tier - 1x keeps the selector)" }))
+} else {
+  Write-Output "  SelectorUI-1x source MISSING - run tools\dialog-static\build_selector_1x.py"
+}
+
 # ⛔ THE COMMENT THAT USED TO SIT HERE WAS FALSE ON BOTH COUNTS (2026-08-05).
 # It said WebText and MenuFix were "hand-placed, no build source in the repo"
 # and could never be rebuilt. Both statements are wrong:
