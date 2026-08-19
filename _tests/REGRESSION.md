@@ -16303,3 +16303,63 @@ made four times today.
 ⚠ WHAT THIS TRACE DOES NOT DO is prove which code draws the marker. It proves
 where the FEATURE lives. Those are different claims and conflating them is how
 the category-3 identification survived three sessions.
+
+## #191 — WHERE IT STANDS, AND WHAT I GOT WRONG ABOUT HOW TO WORK IT (2026-08-19)
+
+FIVE patches have now provably executed and moved zero pixels. The fifth:
+
+    [11:36:02] CodePatches: MYSIMSCALE x2.00 - category-3 (MySim) indicator
+               scale 1.00 -> 2.00 at 0x0046F392.
+
+Reverted. The field is NOT a scale; its uniqueness to category 3 is real and its
+meaning is still unknown.
+
+⛔ **THE METHOD WAS WRONG, NOT JUST THE ADDRESSES.** Every one of the five was
+chosen the same way: find a constant that is plausibly a size, sits on the right
+category or the right module, and is unique in its neighbourhood — then patch it
+and look. That is pattern-matching against a symptom, and it is indistinguishable
+from guessing no matter how good the disassembly behind each candidate is. The
+ONE thing never done is the thing that would settle it: **follow the data from
+the pixels backwards**, rather than from a plausible constant forwards.
+
+WHAT IS SOLID, ALL MEASURED, NONE OF IT NEEDS REDOING:
+  * The marker is NOT a GZWin (37 dumps, 0 new ids, positive control present).
+  * It is SCREEN-SPACE, constant size at every zoom, exactly like the U-Drive-It
+    icons (user). So it is a billboard indicator, not world geometry.
+  * The Move In My Sim click chain: LTEXT {6a231eaa,4ACE23B5} -> button
+    0xCA243E0C (script I-0a243d80) -> dispatcher 0x00776B43 -> 0x00776B92 ->
+    action 0x007755A0. Two refs to the button id image-wide.
+  * The 19 portraits are preloaded together at 0x00775239 (0x0077xxxx owner) and
+    ARE staged 2x/3x correctly by #190.
+  * AddIndicator 0x0046F240 is __thiscall, category at [esp+0x280]; `push 3` at
+    0x004356F5 and 0x0043E711 are both MySim -> MySim IS category 3.
+  * A category-3 record is drawn from ITS OWN baked vertex arrays [esi+0x80]
+    (plate, texture [esi+0x2C]) and [esi+0x30] (icon, texture [esi+0x0C], gated
+    on bit1 of [esi+0xFC]) via DrawPrimitive 0x007D2990 at 0x0046E8CB/0x0046E8F6.
+  * The +/-32.0f verts kCsiQuad patches go to [esp+0x150..0x16C], A LOCAL STACK
+    BUFFER - a DIFFERENT quad from the record arrays. This is why the CSI hat
+    pins scale and this marker cannot.
+  * ZERO writes to [esi+0x30]/[esi+0x80] exist anywhere in the drawer
+    0x0046D990..0x0046EFA8, and zero in the builder 0x0046C8B0..0x0046D110.
+
+⭐ **THAT LAST LINE IS THE WHOLE REMAINING QUESTION, AND IT IS NOW SHARP:** the
+record's vertex arrays are filled by neither the builder nor the drawer.
+AddIndicator assembles the record in its own 0x268-byte stack frame and copies
+it out (0x0046F616 calls the builder 0x0046C8B0 with `lea eax,[esp+0x28]`, then
+0x0046F64A calls 0x0046D420 with the same buffer). **So the record's +0x30 and
++0x80 correspond to AddIndicator stack offsets, and the fill site is inside
+0x0046D420 or the builder writing through that pointer - not through ESI.**
+That is why an `[esi+0x??]` search found nothing: THE SEARCH WAS SCOPED TO THE
+WRONG BASE REGISTER. Redo it against the buffer pointer, not esi.
+
+    ⭐ LAW: WHEN A STRUCTURE FIELD HAS NO WRITER, THE SEARCH IS SCOPED TO THE
+    WRONG BASE. A record assembled on one function's stack and copied out is
+    written through a POINTER ARGUMENT, never through the register the consumer
+    happens to use. Search by OFFSET across plausible bases before concluding
+    "nothing writes it".
+
+NEXT, and it is one static step: disassemble 0x0046D420 (called with the record
+buffer at 0x0046F64A) and find the writes at +0x30 and +0x80. That names the
+quad builder, and its size inputs are the lever.
+
+⛔ NO further patch until that writer is READ. Five is enough.

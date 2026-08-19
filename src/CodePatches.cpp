@@ -4573,6 +4573,15 @@ namespace CodePatches
 				64.0f * factor, n);
 		}
 
+		// ⛔ ApplyMySimIndicatorScale WAS HERE AND IS REVERTED. The field
+		// 0x0046F392 (`mov [esp+0x120], 1.0f`, the ONLY category-3-specific
+		// literal in AddIndicator) is NOT a scale. Measured: the patch applied
+		// at 2.00 - log "MYSIMSCALE x2.00 - category-3 (MySim) indicator scale
+		// 1.00 -> 2.00" - and the marker was pixel-identical. Fifth patch to
+		// provably run and move nothing. Recorded so the same 1.0f is not
+		// re-discovered and re-tried: its uniqueness to category 3 is real, its
+		// meaning is still unknown, and it is NOT the size.
+
 		// ---- #191 MY SIM WORLD MARKER: the icon's UV divisor is a 64 -------
 		// The framed sim face floating over a house is CATEGORY 3 of THIS same
 		// dispatch-indicator system, not a window and not the signpost
