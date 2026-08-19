@@ -18736,6 +18736,9 @@ namespace
 	bool gSelOursWas = false;        // our radio last service
 	int  gSelStockWas = 0;           // stock radio mask last service
 	bool gSelResRescued = false;      // resolution mismatch handled once
+	unsigned long long gSelGfxStamp = 0;  // SC4GraphicsOptions.ini mtime
+	bool gSelNoticePending = false;   // a change is waiting for Accept
+	bool gSelAcceptSeen = false;      // this appearance
 	int  gSelTraceLogs = 0;
 
 	int   gSelPushed = -2;          // last row we pushed or observed
@@ -18819,6 +18822,29 @@ namespace
 		wchar_t* lastSlash = wcsrchr(path, L'\\');
 		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
 		swprintf_s(out, outLen, L"%sSC4UIScale.ini", path);
+	}
+
+	// SC4GraphicsOptions.ini sits beside the DLL, same as our own ini.
+	void SelGfxIniPath(wchar_t* out, size_t outLen)
+	{
+		wchar_t path[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
+		wchar_t* lastSlash = wcsrchr(path, L'\\');
+		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
+		swprintf_s(out, outLen, L"%sSC4GraphicsOptions.ini", path);
+	}
+
+	// Last-write time of that file, 0 if it cannot be read.
+	unsigned long long SelGfxIniStamp()
+	{
+		wchar_t p[MAX_PATH] = {};
+		SelGfxIniPath(p, MAX_PATH);
+		WIN32_FILE_ATTRIBUTE_DATA fad = {};
+		if (!GetFileAttributesExW(p, GetFileExInfoStandard, &fad)) { return 0ull; }
+		ULARGE_INTEGER u;
+		u.LowPart = fad.ftLastWriteTime.dwLowDateTime;
+		u.HighPart = fad.ftLastWriteTime.dwHighDateTime;
+		return u.QuadPart;
 	}
 
 	void SelCommit(int row)
@@ -19038,6 +19064,20 @@ void UiSpike::ServiceScaleSelector()
 			gSelDlgUp = false;
 			gSelPushed = -2;
 			gSelCommitted = -1;
+			if (gSelNoticePending)
+			{
+				// The change is committed and WILL apply; only the notice was
+				// missed. Say that plainly - a detector that silently never
+				// fires is indistinguishable from one that works.
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELACCEPT the dialog closed with a scale change "
+					"pending and NO write to SC4GraphicsOptions.ini was ever "
+					"seen. The change is committed and applies next launch; "
+					"the notice did not show because Accept could not be "
+					"detected this way either.");
+			}
+			gSelNoticePending = false;
+			gSelAcceptSeen = false;
 		}
 		return;
 	}
@@ -19112,6 +19152,19 @@ void UiSpike::ServiceScaleSelector()
 	// the sweep uses - so a bad pointer cannot take the game down.
 	if (justOpened)
 	{
+		// ⭐ ACCEPT IS DETECTED BY ITS SIDE EFFECT, NOT BY A MESSAGE.
+		// The notice belongs on Accept, and the message layer provably cannot
+		// deliver that: 36 traced messages, none touching the Accept rect,
+		// and none arriving at all at the moment it was pressed. So watch
+		// what Accept DOES instead - the game applies its graphics settings,
+		// which rewrites SC4GraphicsOptions.ini. A change to that file's
+		// timestamp while this dialog is open is Accept happening.
+		//
+		// Snapshotted per APPEARANCE: Set-Tier.ps1 writes the same file
+		// between sessions, and a stale baseline would read as an Accept the
+		// instant the dialog opened.
+		gSelGfxStamp = SelGfxIniStamp();
+		gSelAcceptSeen = false;
 		gSelRectsOk = false;
 		cIGZWin* acc = gfxDlg->GetChildWindowFromIDRecursive(kSelAcceptId);
 		cIGZWin* can = gfxDlg->GetChildWindowFromIDRecursive(kSelCancelId);
@@ -19188,6 +19241,31 @@ void UiSpike::ServiceScaleSelector()
 				"UiSpike: SELECTOR could not get cIGZWinGen on the dialog - "
 				"clicks will not be seen.");
 			gSelProcOn = gfxDlg;   // do not retry on every service
+		}
+	}
+
+	// ---- 0aa. DID ACCEPT JUST HAPPEN? -----------------------------------
+	// One file stat per 250ms, and only while a dialog nobody leaves open is
+	// up. If the game does NOT rewrite that file on Accept this simply never
+	// fires - and the close-time line below says so out loud, so a dead
+	// detector cannot pass for a working one.
+	if (!gSelAcceptSeen)
+	{
+		const unsigned long long nowStamp = SelGfxIniStamp();
+		if (nowStamp != 0 && gSelGfxStamp != 0 && nowStamp != gSelGfxStamp)
+		{
+			gSelAcceptSeen = true;
+			gSelGfxStamp = nowStamp;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELACCEPT SC4GraphicsOptions.ini was rewritten while "
+				"Graphic Options is open - that is the game applying its "
+				"settings, i.e. Accept. noticePending=%d",
+				gSelNoticePending ? 1 : 0);
+			if (gSelNoticePending)
+			{
+				gSelNoticePending = false;
+				ShowRestartNotice(gfxDlg);
+			}
 		}
 	}
 
@@ -19473,7 +19551,7 @@ void UiSpike::ServiceScaleSelector()
 						gSelPushed = 0;
 						gSelCommitted = 0;
 						SelCommit(0);
-						ShowRestartNotice(gfxDlg);
+						gSelNoticePending = true;
 					}
 					else
 					{
@@ -19497,7 +19575,9 @@ void UiSpike::ServiceScaleSelector()
 						gSelPushed = row;
 						gSelCommitted = row;
 						SelCommit(row);
-						ShowRestartNotice(gfxDlg);
+						// ARM, do not show: the notice belongs on
+						// Accept, exactly where the game puts its own.
+						gSelNoticePending = true;
 					}
 				}
 			}
