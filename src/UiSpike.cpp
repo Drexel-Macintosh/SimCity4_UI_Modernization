@@ -167,7 +167,26 @@ namespace
 	// first pass therefore sees the COMPILED DEFAULT, not the live tier -
 	// which is why EarlyDockTick deliberately uses settings.spikeScaleFactor
 	// and not gTierF. Consult the tier from settings in pre-sweep code.
-	float gTierF = 2.0f;
+	// ⛔ IDENTITY DEFAULT, NOT 2.0f. This was `= 2.0f` and that is a LIE
+	// whenever the tier is not 2x. gTierF is the hook-visible mirror of the tier
+	// factor, read at 97 sites, but it was ASSIGNED at only two - inside
+	// ScaleGodFlyouts and ScaleMenuFlyouts. So:
+	//   * at 1x those never scale, gTierF stayed 2.0 for the whole process, and
+	//     the DLL was NOT inert at the 1x baseline. MEASURED 2026-08-19:
+	//       Settings ... ScaleFactor=1.00 / AutoScale: ... window 1024x768
+	//       UiSpike: SUBBORN2 installed ... sub-flyouts are born x2.00, dock=1
+	//     Sub-flyouts born at 2x inside a 1x layout is the broken docking the
+	//     user photographed at 1x.
+	//   * at EVERY tier, any hook that fires BEFORE those two functions reads
+	//     2.0 regardless of the real factor. At 1.5x and 3x that is silently
+	//     wrong rather than visibly wrong, which is worse.
+	//
+	// ⭐ A DEFAULT THAT IS NOT THE IDENTITY TURNS "NOT YET KNOWN" INTO A
+	// CONFIDENT WRONG ANSWER. 1.0f means "no scaling" - the only safe thing to
+	// believe before the tier is decided. The real value is now pushed in
+	// UNCONDITIONALLY by SetTierMirror() at the moment the tier is resolved,
+	// so this initialiser should never be the value anything actually uses.
+	float gTierF = 1.0f;
 
 	// Round-half-up (floor(v + 0.5)) - the SAME rounding rule as the whole
 	// art pipeline (Upscale2x.exe dimensions, the .UI builders' scale_len),
@@ -14999,6 +15018,20 @@ void UiSpike::SetRenderResForReadout(int32_t w, int32_t h)
 {
 	gReadoutW = w;
 	gReadoutH = h;
+}
+
+// Push the RESOLVED tier factor into the hook-visible mirror, from the one
+// place that knows it, at the moment it is known - and UNCONDITIONALLY,
+// including tier 1. gTierF is namespace-scope and invisible to `settings`,
+// which is exactly why it drifted: the two functions that used to set it are
+// scaling paths, so they do not run when there is no scaling to do, and the
+// mirror kept its initialiser instead.
+//
+// ⛔ DO NOT GATE THIS ON factor > 1.01. That gate is what created the bug:
+// "no scaling" still has a correct factor (1.0), and 97 read sites need it.
+void UiSpike::SetTierMirror(float f)
+{
+	gTierF = f;
 }
 
 void UiSpike::PurgeSubtreeRecords(cIGZWin* win, int depth)

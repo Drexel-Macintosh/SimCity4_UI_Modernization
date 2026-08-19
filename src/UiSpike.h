@@ -11,6 +11,7 @@ class UiSpike
 {
 public:
 	static void SetRenderResForReadout(int32_t w, int32_t h);   // #192
+	static void SetTierMirror(float f);   // resolved tier -> hook-visible mirror
 	// v2.32.0 SHOWHOOK (task #50): scale a subtree at the instant the game
 	// makes it visible, BEFORE its first paint. PUBLIC because the SetFlag
 	// detour is a free function in the GAME's call stack.

@@ -261,6 +261,16 @@ public:
 					           : "untouched (ScaleAll=0)");
 			}
 
+			// The hook-visible tier mirror, pushed UNCONDITIONALLY and for
+			// BOTH branches (auto and manual), at the first moment the
+			// effective factor is known. It used to be set only inside
+			// ScaleGodFlyouts/ScaleMenuFlyouts, which are scaling paths - so
+			// at tier 1 it kept its initialiser and every one of its 97
+			// readers behaved as if the tier were 2x. That is why the 1x
+			// baseline was not inert: sub-flyouts were born x2.00 inside a 1x
+			// layout (log, 2026-08-19).
+			UiSpike::SetTierMirror(settings.spikeScaleFactor);
+
 			// #182: the sync runs for MANUAL tiers too. This gate used to be
 			// AutoScale-only, and that is the SECOND instance of the exact
 			// failure documented for #149 below ("AutoScale=0 - a supported

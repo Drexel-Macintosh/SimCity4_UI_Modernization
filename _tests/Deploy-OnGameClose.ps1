@@ -422,8 +422,33 @@ foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
 # untouched - the same split of authority the dependency-gate block uses.
 # A family with nothing recorded was not armed before (clean install): its 2x
 # stays armed, which is the historical default.
+# ⛔ "NOTHING ARMED" IS A STATE, NOT A GAP. Set-Tier.ps1 -Tier 1 disarms every
+# tier package on purpose - that IS the 1x baseline. This restore used to treat
+# an empty snapshot as "no information" and leave whatever the family blocks had
+# just armed (2x), so running a deploy during a 1x reference session silently
+# put 2x ART under 1x GEOMETRY. Measured 2026-08-19: after a deploy, Set-Tier
+# -Status showed six families at 2x while the ini still read ScaleFactor=1.
+# A half-state like that is worse than either tier, and it is invisible unless
+# someone happens to run -Status.
+$anyArmedBefore = $ARMED_BEFORE.Count -gt 0
+if (-not $anyArmedBefore) {
+    Write-Output "  NOTHING was armed before this deploy - honouring the 1x baseline (Set-Tier -Tier 1)."
+}
 foreach ($fam in $TIER_FAMILIES) {
     $want = $ARMED_BEFORE[$fam.Base]
+    if (-not $want -and -not $anyArmedBefore) {
+        # Deliberate 1x baseline: disarm everything the copies above re-armed.
+        $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $plug }
+        if (-not (Test-Path $dir)) { continue }
+        foreach ($tier in @("15x","2x","3x")) {
+            $live = Join-Path $dir ($fam.Base + "-" + $tier + ".dat")
+            if (Test-Path $live) {
+                Move-Item $live ($live + ".x1-disabled") -Force
+                Write-Output ("  kept disarmed (1x baseline): " + (Split-Path $live -Leaf))
+            }
+        }
+        continue
+    }
     if (-not $want) { continue }
     $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $plug }
     if (-not (Test-Path $dir)) { continue }

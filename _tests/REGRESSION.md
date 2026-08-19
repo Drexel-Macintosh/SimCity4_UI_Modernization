@@ -15813,3 +15813,68 @@ transition that has been made many times. Three separate things were wrong:
 Both files are written without a BOM and dgVoodoo.conf is backed up once
 (dgVoodooCpl.exe rewrites it if launched). CaptureMouse goes to false with
 FullScreenMode, because true traps the cursor so the title bar is unreachable.
+
+## ⭐ THE 1x BASELINE WAS NOT INERT: gTierF DEFAULTED TO 2.0f (2026-08-19)
+
+USER, at the 1x reference: "some of the docking is breaking at 1x?" It is OUR
+bug, and the log names it in one line.
+
+MEASURED, same run:
+    [09:21:39] Settings ... ScaleFactor=1.00
+    [09:21:39] AutoScale: DirectX Windowed - render res = window 1024x768.
+    [09:21:39] Static layers: selecting the x1.00 package
+    [09:21:56] UiSpike: SUBBORN2 installed ... nested sub-flyouts are born
+               x2.00, dock=1
+
+That %.2f is `gTierF` printed live. It read 2.00 on a tier-1.00 run.
+
+    src/UiSpike.cpp:170   float gTierF = 2.0f;      <- the whole defect
+    assigned at exactly TWO sites: ScaleGodFlyouts (:12456) and
+    ScaleMenuFlyouts (:17876) - BOTH are scaling paths.
+    READ at 97 sites.
+
+At tier 1 neither assignment runs, so the mirror keeps its initialiser for the
+whole process and all 97 readers behave as if the tier were 2x. Sub-flyouts
+born at 2x inside a 1x layout is exactly the broken docking in the screenshot.
+
+⭐ AND IT IS NOT A 1x-ONLY BUG. At EVERY tier, any hook that fires BEFORE those
+two functions reads 2.0 regardless of the real factor. At 2x that is invisibly
+correct; at 1.5x and 3x it is silently WRONG - which is worse than the 1x case,
+because nothing looks obviously broken.
+
+    ⭐ LAW: A DEFAULT THAT IS NOT THE IDENTITY TURNS "NOT YET KNOWN" INTO A
+    CONFIDENT WRONG ANSWER. For a scale factor the identity is 1.0. Any other
+    initialiser means every consumer that runs before the real value arrives is
+    served a plausible lie instead of a harmless no-op - and it will only be
+    caught at the ONE tier where the lie happens to be visible.
+
+    ⭐ COROLLARY - A MIRROR MUST BE WRITTEN WHERE THE TRUTH IS DECIDED, NOT
+    WHERE IT HAPPENS TO BE CONVENIENT. gTierF was set inside two scaling
+    functions, so "no scaling to do" silently meant "no factor to publish".
+
+CURE, both halves:
+  * `float gTierF = 1.0f;`
+  * `UiSpike::SetTierMirror(f)` called UNCONDITIONALLY in the director at the
+    moment the effective factor is known, for BOTH the AutoScale and the manual
+    branch. ⛔ NOT gated on factor > 1.01 - that gate is what caused this.
+
+⚠ THIS INVALIDATES EVERY PRIOR 1x "REFERENCE" TAKEN WITH THIS DLL LOADED. The
+1x control was not stock; it was 1x geometry with a 2x-believing hook set. Any
+comparison that used one is suspect and should be retaken.
+
+## AND THE DEPLOY CLOBBERED THE 1x BASELINE IT WAS RUN BESIDE
+
+Running Deploy-OnGameClose during a 1x reference session re-armed 2x while the
+ini still read ScaleFactor=1: 2x ART under 1x GEOMETRY, a half-state worse than
+either tier and invisible unless someone runs -Status. The armed-tier restore
+treated an EMPTY snapshot as "no information" and left whatever the family
+blocks had just armed.
+
+    ⭐ LAW: "NOTHING SELECTED" IS A STATE, NOT A GAP. Set-Tier -Tier 1 disarms
+    every package ON PURPOSE - that IS the 1x baseline. A restore that reads an
+    empty set as "nothing to restore" will happily overwrite a deliberate
+    choice with a default.
+
+The restore now detects an empty snapshot as a deliberate 1x baseline and
+disarms what the copies re-armed. Verified by deploying twice in a row against
+a 1x baseline and confirming everything stayed disarmed.
