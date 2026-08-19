@@ -11674,6 +11674,43 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 				// window is stretched. The chart line proper still needs the
 				// live DPROBE pass if this leaves it 1x.
 				0x8A8B5B71, 0x8A8B5B72, 0x0A4A8176,
+				// #191 MOVE IN MY SIM MARKER - the framed sim face + arrow that
+				// floats over a candidate house. A WINDOW PAIR, both parented
+				// directly to the 3D-view root 0x9A47B417, each with two
+				// GZWinBMP children (the 46x97 plate, and the 36x41 portrait
+				// 0xEA9457BA at (5,5)):
+				//     0x27DF05BE  green arrow - sits on the target house
+				//     0x27DF05BF  red arrow   - follows the mouse
+				// Art: {46a006b0,13f15213} green / {46a006b0,13f15214} red.
+				//
+				// THE SWEEP ALREADY RESIZES THEM. Measured, tier 2.00:
+				//     panel 0x27DF05BE (531,375 46x97) -> (1062,750 92x194)
+				//     "3 windows scaled", portrait child -> (10,10) 72x82
+				// and it HOLDS at 92x194 for the rest of the session. The
+				// geometry was never the problem.
+				//
+				// ⭐ THEY DREW 1x ANYWAY BECAUSE A GZWinBMP DRAWS dst = src
+				// (law 83 / the BMPX rationale at :11655) and these roots were
+				// not in this list, so the blit hook never ran on them. A
+				// window at 92x194 showing a 46x97 source is exactly the user's
+				// "identical instead of scaling", and it is why FIVE patches
+				// aimed at sizes and constants could not move it - the size was
+				// already right and the BLIT was not following.
+				//
+				// ⛔ THE "IT IS NOT A WINDOW" VERDICT WAS A FALSE NULL OF MY
+				// OWN MAKING. The 37-dump test compared the last 8 dumps
+				// against the FIRST FIVE - and these windows first appear in
+				// dump #5, so the things being hunted were absorbed into the
+				// test's own baseline. They are never destroyed either: they
+				// persist in the view's child list and merely toggle vis, and a
+				// "no NEW ids" test is structurally blind to a resident
+				// show/hide widget. The positive control (the picker grid
+				// appearing for one tick) proved the dump sees TRANSIENTS; it
+				// never proved it could see THIS.
+				// ⭐ LAW: A DIFF NEEDS A BASELINE TAKEN BEFORE THE THING
+				// EXISTS. State when the target first appears relative to the
+				// window the baseline covers, or the diff hides it.
+				0x27DF05BE, 0x27DF05BF,
 				// U-DRIVE-IT MISSION MARKER (task #60, v2.36.6). MEASURED live
 				// 2026-07-30 22:23 with markers on screen, after TWO dead leads
 				// (the 4x-art attempt at {46a006b0,094ac89a}, and the

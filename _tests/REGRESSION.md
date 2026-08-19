@@ -16363,3 +16363,56 @@ buffer at 0x0046F64A) and find the writes at +0x30 and +0x80. That names the
 quad builder, and its size inputs are the lever.
 
 ⛔ NO further patch until that writer is READ. Five is enough.
+
+## ⭐ #191 CAUSE FOUND — AND MY OWN TEST WAS THE FALSE NULL (2026-08-19, dep 11:44:06)
+
+The Move In My Sim marker IS a window pair. Both parented directly to the
+3D-view root 0x9A47B417, each with two GZWinBMP children:
+
+    0x27DF05BE   green arrow - sits on the target house
+    0x27DF05BF   red arrow   - follows the mouse
+      child (no id)   46x97   the plate
+      child 0xEA9457BA 36x41  the portrait, at (5,5)
+    art: {46a006b0,13f15213} green / {46a006b0,13f15214} red
+
+⛔ **THE "IT IS NOT A GZWin" VERDICT WAS A FALSE NULL I MANUFACTURED.** The
+37-dump diff compared the LAST 8 dumps against the FIRST FIVE — and these
+windows first appear in **dump #5**. The things being hunted were absorbed into
+the test's own baseline. They are also never destroyed: they persist in the
+view's child list and merely toggle `vis`, so a "no NEW ids" test cannot see
+them at all. The positive control (the picker grid appearing for one tick)
+proved the dump sees TRANSIENTS — it never proved it could see THIS.
+
+    ⭐ LAW: A DIFF NEEDS A BASELINE TAKEN BEFORE THE TARGET EXISTS. State when
+    the target first appears relative to the window the baseline covers. And a
+    positive control only licenses the class of thing it demonstrated —
+    "sees transients" does not license "sees resident show/hide widgets".
+
+**THE SWEEP WAS ALWAYS RESIZING THEM.** Measured at tier 2.00 in the same
+capture:
+
+    panel 0x27DF05BE (531,375 46x97) -> (1062,750 92x194)   "3 windows scaled"
+    children then read: plate 92x194, portrait (10,10) 72x82
+
+and it HOLDS at 92x194 for the remaining 28 dumps. **The geometry was never the
+problem.**
+
+⭐ **THEY DREW 1x BECAUSE A GZWinBMP DRAWS dst = src** (law 83, and this
+project's own BMPX rationale at UiSpike.cpp:11655) **and these roots were absent
+from kBmpxCityRoots**, so our blit hook never ran on them. A window at 92x194
+displaying a 46x97 source IS "identical instead of scaling".
+
+⛔ **AND THAT IS WHY FIVE PATCHES COULD NOT MOVE IT.** Every one aimed at a
+SIZE — icon extents, plate height, UV divisor, a record scale, a never-scale
+entry. The size was already correct. The BLIT was not following it. No constant
+anywhere could have fixed a dst=src blit.
+
+    ⭐ LAW: BEFORE HUNTING A SIZE CONSTANT, CHECK WHETHER THE WINDOW IS ALREADY
+    THE RIGHT SIZE. One grep of the sweep's own "panel 0x… -> (…)" line answers
+    it, and it discriminates "geometry wrong" from "draw not following" — two
+    problems with disjoint cures that present identically on screen.
+
+CURE: `0x27DF05BE, 0x27DF05BF` added to `kBmpxCityRoots`, so BmpCtxBltThunk
+runs on their children and the blit follows the window. Self-limiting by
+construction: a correct draw clamps to m=1.0, only content smaller than its
+window is stretched.
