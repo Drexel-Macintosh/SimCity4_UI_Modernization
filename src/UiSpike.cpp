@@ -7951,6 +7951,39 @@ namespace
 	// #153 SEATPROBE budget. Declared HERE, beside its sibling, for the same
 	// reason: Disarm() resets it and Disarm is defined above the BMPX block.
 	int    gBmpSeatProbe = 0;
+	// #191 (2026-08-19). THAT COUNTER IS ONE GLOBAL BUDGET AND IT IS MEASURED
+	// TO STARVE. Two captures, two different tiers, identical result:
+	//   2026-08-18 22:04:57.250..505  24/24 rows, ALL id=0x48E945B4, x2.00
+	//   2026-08-19 08:02:27.408..798  24/24 rows, ALL id=0x48E945B4, x3.00
+	// 0x48E945B4 is the U-Drive-It mission marker; it redraws on a timer and
+	// empties the budget inside 400 ms, so every runtime-supplied portrait
+	// drawn afterwards produces NO ROW AT ALL. (The Debug BMPX budget went the
+	// same way in the same run: 40/40 rows, same id, zero others.) A probe that
+	// cannot emit is a REFUSAL, not a null - law 54 / NULL IS NOT EVIDENCE -
+	// and it is exactly why the hover-portrait report has no runtime evidence.
+	// Per-id quota: every distinct window id gets its own small share. The old
+	// global count survives as a second, larger ceiling.
+	struct BmpSeatQuota { uint32_t id; int used; };
+	BmpSeatQuota gBmpSeatQuota[24] = {};
+	int    gBmpSeatQuotaN = 0;
+	bool BmpSeatBudget(uint32_t id)
+	{
+		if (gBmpSeatProbe >= 96) { return false; }
+		for (int i = 0; i < gBmpSeatQuotaN; i++)
+		{
+			if (gBmpSeatQuota[i].id != id) { continue; }
+			if (gBmpSeatQuota[i].used >= 4) { return false; }
+			gBmpSeatQuota[i].used++;
+			gBmpSeatProbe++;
+			return true;
+		}
+		if (gBmpSeatQuotaN >= 24) { return false; }
+		gBmpSeatQuota[gBmpSeatQuotaN].id = id;
+		gBmpSeatQuota[gBmpSeatQuotaN].used = 1;
+		gBmpSeatQuotaN++;
+		gBmpSeatProbe++;
+		return true;
+	}
 	// v2.42.3: an OPEN is (pointer changed) OR (hidden -> visible). The
 	// v2.42.2 budget re-armed only on a NEW-HOOK pass, which is blind to
 	// exactly the user's headline repro: the My Sims STRIP windows hook ONCE
@@ -8089,6 +8122,8 @@ void UiSpike::Disarm()
 	FlushBmpOpenCensus();     // v2.42.3: report the city's last open
 	gBmpDrawLog = 0;          // v2.42.1: BMPX draw budget re-arms per city
 	gBmpSeatProbe = 0;        // #153 SEATPROBE budget, same discipline
+	gBmpSeatQuotaN = 0;       // #191: and the per-id quota that now feeds it
+	for (BmpSeatQuota& q : gBmpSeatQuota) { q.id = 0; q.used = 0; }
 	gBmpDrawLogSatLogged = false;
 	gBmpxRootTrackN = 0;      // v2.42.1: root pointers die with the city
 	// v2.39.1: both strip pointers are RAW pointers to game objects that die
@@ -9038,6 +9073,13 @@ namespace
 	// prints SIZES ONLY, which cannot distinguish "the window is misplaced"
 	// from "the hook draws it wrong". These two capture the missing half.
 	int32_t gBmpWinL = 0, gBmpWinT = 0;
+	// #191: GetL()/GetT() are PARENT-RELATIVE, so the #153 row alone cannot say
+	// whether a portrait sits wrong inside its frame or whether the frame is
+	// itself displaced. Capture the parent id and the accumulated screen origin
+	// too, so a single row can be checked against design x f offline.
+	uint32_t gBmpParentId = 0;
+	int32_t gBmpAbsL = 0, gBmpAbsT = 0;
+	int32_t gBmpDepth = 0;                 // parents walked (0 = a root)
 
 	// Scale the plain-path dest rect about its own origin. Self-limiting: the
 	// multiplier starts at the sweep factor and is reduced until the scaled
@@ -9136,15 +9178,18 @@ namespace
 					// BMPX rows are Debug and were invisible at the user's live
 					// logLevel. An instrument nobody can read is not evidence
 					// (law 54: no log line = did not run).
-					if (gBmpSeatProbe < 24)
+					if (BmpSeatBudget(gBmpCurId))
 					{
-						gBmpSeatProbe++;
 						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SEATPROBE id=0x%08X win L,T=(%d,%d) %dx%d "
-							"| dst origin=(%d,%d) src %dx%d -> dst %dx%d (x%.2f)",
-							gBmpCurId, gBmpWinL, gBmpWinT, gBmpWinW, gBmpWinH,
+							"UiSpike: SEATPROBE id=0x%08X parent=0x%08X d=%d "
+							"win L,T=(%d,%d) %dx%d abs=(%d,%d) "
+							"| dst origin=(%d,%d) src %dx%d -> dst %dx%d "
+							"(x%.2f) f=%.2f",
+							gBmpCurId, gBmpParentId, gBmpDepth,
+							gBmpWinL, gBmpWinT, gBmpWinW, gBmpWinH,
+							gBmpAbsL, gBmpAbsT,
 							dst[0], dst[1], sw, sh,
-							dst[2] - dst[0], dst[3] - dst[1], m);
+							dst[2] - dst[0], dst[3] - dst[1], m, gBmpScale);
 					}
 					if (Logger::Get().IsEnabled(LogLevel::Debug))
 					{
@@ -9193,6 +9238,25 @@ namespace
 			gBmpWinL = w->GetL();     // #153 probe: position, not just size
 			gBmpWinT = w->GetT();
 			gBmpCurId = w->GetID();
+			// #191: parent id + accumulated screen origin. Read-only, already
+			// inside this function's __try, and bounded at 24 hops exactly like
+			// IsOnScreen's guard so a self-parented or cyclic node cannot spin.
+			gBmpParentId = ParentIdOf(w);
+			gBmpAbsL = gBmpWinL;
+			gBmpAbsT = gBmpWinT;
+			gBmpDepth = 0;
+			{
+				cIGZWin* pw = w->GetParentWin();
+				while (pw && pw != w && gBmpDepth < 24)
+				{
+					gBmpAbsL += pw->GetL();
+					gBmpAbsT += pw->GetT();
+					gBmpDepth++;
+					cIGZWin* nx = pw->GetParentWin();
+					if (nx == pw) { break; }
+					pw = nx;
+				}
+			}
 			// EDGE/9-slice test, exactly as the draw itself does it: the
 			// holder object embedded at [this+0xd8] answers vt[10](bit).
 			bool edgeMode = false;
