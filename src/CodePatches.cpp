@@ -4494,6 +4494,31 @@ namespace CodePatches
 			// deployment marker, whose count was rendering at stock size under
 			// an already-scaled pin.
 			{ 0x0046CCBA, 32.0f, "icon+hitbox (category 3)" },
+			// #195 THE DEPLOYMENT COUNT. The TEXT indicator categories size
+			// themselves asymmetrically:
+			//     0x0046CAF0  fild [esp+0x48]        ; MEASURED text width
+			//     0x0046CAFD  fstp [esi+0xD0]        ; WIDTH  <- computed
+			//     0x0046CB03  mov  [esi+0xD4], 14.0f ; HEIGHT <- fixed
+			// The width follows the font, which our FontStyle table scales, so
+			// at 2x the glyphs are twice as tall inside a quad that is still 14
+			// - and the number under the deployment hat disappears.
+			//
+			// ⭐ WHY THIS IS BACK AFTER BEING REVERTED. It was removed on the
+			// prediction that "scaling 14.0f alone stretches the digits
+			// vertically, because the UVs come from the power-of-two texture
+			// side, NOT from +0xD0/+0xD4". That is true for the IMAGE
+			// categories, whose divisor is the hard-coded 64 at 0x0046CCCE -
+			// and FALSE for the TEXT categories, which COMPUTE their divisor at
+			// 0x0046CA04 (`call 0x006046B0` = NextPow2 of the measured extent).
+			// A computed divisor tracks the doubled text on its own, so raising
+			// the quad height makes the quad match the glyphs instead of
+			// stretching them.
+			//
+			// ⛔ THE LESSON, since the revert cost a round trip: a warning
+			// about one code path does not transfer to a sibling path that
+			// derives the same quantity differently. Check whether the divisor
+			// is a CONSTANT or a CALL before applying the objection.
+			{ 0x0046CB09, 14.0f, "count plate height (text categories)" },
 			// ⛔ 0x0046CB09 (the text-indicator HEIGHT, 14.0f) WAS HERE AND WAS
 			// REMOVED THE SAME DAY. It is a real unscaled constant and it is
 			// still NOT a lever, for a reason worth keeping:
@@ -4567,10 +4592,11 @@ namespace CodePatches
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: CSI indicators x%.2f - icon+hitbox %.1f -> %.1f px "
-				"(type 4) and %.1f -> %.1f px (type 3), pin quad 64 -> %.0f px. "
+				"(type 4) and %.1f -> %.1f px (type 3), count plate height "
+				"%.1f -> %.1f px (text types), pin quad 64 -> %.0f px. "
 				"%d immediates, all inline in .text. #188/#195.",
 				factor, 35.0f, 35.0f * factor, 32.0f, 32.0f * factor,
-				64.0f * factor, n);
+				14.0f, 14.0f * factor, 64.0f * factor, n);
 		}
 
 		// ⛔ ApplyMySimIndicatorScale WAS HERE AND IS REVERTED. The field
