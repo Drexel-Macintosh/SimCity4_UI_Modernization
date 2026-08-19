@@ -197,6 +197,53 @@ def listed():
 # justify every entry with a measured draw path, never a class-level claim.
 CODE_BOUND = [
     ("46a006b0", "14015580"),   # cSC4WinTrendBar ramp - art-centred, no divide
+    # SIM PORTRAIT FACES (#190) - 36x41, bound 1:1 to a swept 36x41 slot, so
+    # their only contract is to MATCH THEIR WINDOW. They are CODE-BOUND (TGI
+    # composed at runtime from the sim exemplar id, see build_selective_safe
+    # CODE_BOUND_TGIS), so scan() can never see them - this list is the only
+    # way in. WITHOUT THESE the 1.5x tier upscales them 60x62 against a
+    # measured 54x62 window and GZWinBMP's SetImage clamp (VA 0x009BC482 /
+    # 0x009BC4A4) slices 6 px off the right of every face. Control: the .UI
+    # placeholder {1abe787d,ea32f100} is the SAME 36x41 source, is already in
+    # this file via scan(), and comes out at the correct 54x62.
+    ("46a006b0", "fa8cdfbf"),
+    ("46a006b0", "fa8cdfc0"),
+    ("46a006b0", "fa8cdfc1"),
+    ("46a006b0", "fa8cdfc2"),
+    ("46a006b0", "fa8cdfc3"),
+    ("46a006b0", "fa8cdfc4"),
+    ("46a006b0", "fa8cdfc5"),
+    ("46a006b0", "fa8cdfc6"),
+    ("46a006b0", "fa8cdfc7"),
+    ("46a006b0", "fa8cdfc8"),
+    ("46a006b0", "fa8cdfc9"),
+    ("46a006b0", "fa8cdfca"),
+    ("46a006b0", "fa8cdfcb"),
+    ("46a006b0", "fa8cdfcc"),
+    ("46a006b0", "fa8cdfcd"),
+    ("46a006b0", "fa8cdfce"),
+    ("46a006b0", "fa8cdfd0"),
+    ("46a006b0", "fa8cdfd1"),
+    ("46a006b0", "fa8cdfd2"),
+    ("1abe787d", "fa8cdfbf"),
+    ("1abe787d", "fa8cdfc0"),
+    ("1abe787d", "fa8cdfc1"),
+    ("1abe787d", "fa8cdfc2"),
+    ("1abe787d", "fa8cdfc3"),
+    ("1abe787d", "fa8cdfc4"),
+    ("1abe787d", "fa8cdfc5"),
+    ("1abe787d", "fa8cdfc6"),
+    ("1abe787d", "fa8cdfc7"),
+    ("1abe787d", "fa8cdfc8"),
+    ("1abe787d", "fa8cdfc9"),
+    ("1abe787d", "fa8cdfca"),
+    ("1abe787d", "fa8cdfcb"),
+    ("1abe787d", "fa8cdfcc"),
+    ("1abe787d", "fa8cdfcd"),
+    ("1abe787d", "fa8cdfce"),
+    ("1abe787d", "fa8cdfd0"),
+    ("1abe787d", "fa8cdfd1"),
+    ("1abe787d", "fa8cdfd2"),
 ]
 
 

@@ -453,6 +453,61 @@ CODE_BOUND_TGIS = [
     (0x46A006B0, 0x46A006A6),
     (0x46A006B0, 0x46A006A7),
     (0x46A006B0, 0x46A006A8),
+    # SIM PORTRAIT FACES (#190). The 19 named-Sim head shots, 36x41 RGB,
+    # shipped TWICE in SimCity_1.dat: G=0x46A006B0 (offsets 54,714,699..
+    # 54,767,511) and G=0x1ABE787D (64,502,102..64,554,914). Instance ids run
+    # 0xFA8CDFBF..0xFA8CDFD2 with 0xFA8CDFCF ABSENT - 19 members, not 20;
+    # 0xFA8CDFBE and 0xFA8CDFD3 are absent too, so the block is bounded.
+    # Verified against all 9 shipped archives with tools\dbpf\find_tgi.py.
+    #
+    # WHY THE REF-MAP NEVER SAW THEM, and why that is not a ref-map bug: the
+    # TGI is COMPOSED AT RUNTIME as {group, sim-exemplar-instance}. The sim
+    # exemplars are type 0x6534284A group 0x6A297266, loaded at VA 0x0043B710
+    # (`cmp [edi+4], 0x6a297266` at 0x0043B718 - the ONLY site of that
+    # constant in .text) into 0x30-byte records; the exemplar carries a name
+    # LTEXT (prop 0xCA416B3F) and the sim id (prop 0xEA296F8D) but NO image
+    # property. Neither 0xFA8CDFBF nor 0xFA8CDFD2 exists as a constant
+    # anywhere in the 7.87 MB image. So no .UI names them, the corpus scan
+    # cannot reach them, and refmap.csv correctly holds zero rows - law 107,
+    # a .UI-keyed derivation is BLIND to code-bound art. (Positive control:
+    # all 431 refmap rows ARE literally present in the 330-file corpus.)
+    #
+    # WHY 2x-IN-PLACE CANNOT DOUBLE-APPLY (#197's trap), by arithmetic:
+    # every consumer is a GZWinBMP (class vt 0x00ADF6A0) whose 36x41 slot is
+    # declared in the .UI and resized by the SWEEP, never by the art.
+    # GZWinBMP::SetImage (0x009BC57E) calls 0x009BC447, which sets
+    # imagerect = {0,0,winW,winH} then CLAMPS it down to the image
+    # (0x009BC482 / 0x009BC4A4), so src = min(win, img) and a stale crop is
+    # impossible. Live BMPX captures on the 20 picker slots measure the
+    # window at EXACTLY floor(v*f+0.5): 54x62 @1.5x, 72x82 @2x, 108x123 @3x.
+    # Feed art of that same size and BmpCtxBltThunk computes m=f, sees
+    # w*f > winW, clamps m to winW/w = 1.0, and `m > 1.001f` is FALSE - the
+    # hook returns untouched. The factor is applied exactly once, by the
+    # sweep, to the window.
+    #
+    # SHIPS WITH the find_no_snap.py CODE_BOUND entry. Without it the 1.5x
+    # preview art is 60x62 against a 54x62 window and SetImage's clamp slices
+    # 6 px off the right of every face - at the 1.5x tier ONLY (law 92).
+    (0x46A006B0, 0xFA8CDFBF), (0x46A006B0, 0xFA8CDFC0),
+    (0x46A006B0, 0xFA8CDFC1), (0x46A006B0, 0xFA8CDFC2),
+    (0x46A006B0, 0xFA8CDFC3), (0x46A006B0, 0xFA8CDFC4),
+    (0x46A006B0, 0xFA8CDFC5), (0x46A006B0, 0xFA8CDFC6),
+    (0x46A006B0, 0xFA8CDFC7), (0x46A006B0, 0xFA8CDFC8),
+    (0x46A006B0, 0xFA8CDFC9), (0x46A006B0, 0xFA8CDFCA),
+    (0x46A006B0, 0xFA8CDFCB), (0x46A006B0, 0xFA8CDFCC),
+    (0x46A006B0, 0xFA8CDFCD), (0x46A006B0, 0xFA8CDFCE),
+    (0x46A006B0, 0xFA8CDFD0), (0x46A006B0, 0xFA8CDFD1),
+    (0x46A006B0, 0xFA8CDFD2),
+    (0x1ABE787D, 0xFA8CDFBF), (0x1ABE787D, 0xFA8CDFC0),
+    (0x1ABE787D, 0xFA8CDFC1), (0x1ABE787D, 0xFA8CDFC2),
+    (0x1ABE787D, 0xFA8CDFC3), (0x1ABE787D, 0xFA8CDFC4),
+    (0x1ABE787D, 0xFA8CDFC5), (0x1ABE787D, 0xFA8CDFC6),
+    (0x1ABE787D, 0xFA8CDFC7), (0x1ABE787D, 0xFA8CDFC8),
+    (0x1ABE787D, 0xFA8CDFC9), (0x1ABE787D, 0xFA8CDFCA),
+    (0x1ABE787D, 0xFA8CDFCB), (0x1ABE787D, 0xFA8CDFCC),
+    (0x1ABE787D, 0xFA8CDFCD), (0x1ABE787D, 0xFA8CDFCE),
+    (0x1ABE787D, 0xFA8CDFD0), (0x1ABE787D, 0xFA8CDFD1),
+    (0x1ABE787D, 0xFA8CDFD2),
     # (0x46A006B0, 0xE2B66DB8) REVERTED same session (task #87): staged on the
     # law-13 inference that the news row X is a clone born at this art's size.
     # Eyes-on refuted it, and the REAL mechanism refuted the follow-up theory
