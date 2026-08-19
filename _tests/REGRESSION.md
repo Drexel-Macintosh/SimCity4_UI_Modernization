@@ -14956,3 +14956,40 @@ ScaleFactor=1.5 stays as the manual fallback and is now ignored.
 the tier gate admits 2x and refuses 3x. All three tiers are built and current
 (SelectiveArt 18:27, DialogStatic 18:46), and the #189 cave is in the DLL so it
 is tier-independent.
+
+## #178 CLOSED — 261, USER DECISION 2026-08-18
+
+USER: "Yea that's fine just include it as we aren't going to scale that at
+runtime."
+
+DECIDED: 261. The CAM intro splash {856ddbac, 46a006b0, ea7f0eae} ships ONLY in
+z_SC4UIScale_CamUI, dependency-gated on CAM being installed. It is not copied
+into the ungated DialogStatic package.
+
+"INCLUDE IT" VERIFIED AT EVERY TIER RATHER THAN ASSUMED - the phrase is a
+requirement, so it got a measurement:
+
+    CamUI 15x        22 entries, ea7f0eae PRESENT
+    CamUI 2x (live)  22 entries, ea7f0eae PRESENT
+    CamUI 3x         22 entries, ea7f0eae PRESENT
+
+The 2x package was the one that had never been checked, and it is the one that
+matters now: AutoScale went back on this session, the render res here is
+2400x1600, and 3x needs 2400x1800 - so the tier gate admits 2x. Had the splash
+been missing from 2x only, "include it" would have been satisfied on paper and
+broken on screen, at the exact tier the machine selects. (⚠ tools/packages/ has
+no 2x subfolder - the 2x build is the UNTAGGED tools/dialog-static/
+z_SC4UIScale_CamUI.dat, so a per-tier check that globs *-2x.dat in
+tools/packages/ finds nothing and reads as absent. Check the DEPLOYED file.)
+
+WHY 261 COSTS NOTHING: the resource only exists if CAM is installed, so putting
+it in the ungated package delivers nothing to a non-CAM player - it only places
+a third party's derived art in the package that ships to everyone. 261 gives
+CAM users the whole thing and non-CAM users no CAM content, which is the
+posture #146 is auditing for.
+
+"Not scaled at runtime" is WHY it is a data override: served pre-scaled from
+the gated dat, so nothing has to reach it while it is on screen.
+
+All three tiers consistent at DialogStatic = 261; Test-DatIntegrity expects 261
+at 15x/2x/3x; suite green.
