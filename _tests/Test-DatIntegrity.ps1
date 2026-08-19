@@ -161,7 +161,7 @@ $EXPECTED = @(
   # sibling button (0x000A0000). All three roots are ALSO in kNeverScaleIds.
   # +4 not +3: the three scripts plus one art asset that became referenced.
   # Same 259 at every tier by construction (one builder, --factor only).
-  @{ name = "z_SC4UIScale_DialogStatic-2x.dat";  entries = 261 },  # 262 -> 261 2026-08-16: #178 CAM splash {ea7f0eae} now ships ONLY in gated CamUI, ALL tiers consistent. USER DECISION STILL OWED on 262 (ship ungated); flip back if decided
+  @{ name = "z_SC4UIScale_DialogStatic-2x.dat";  entries = 265 },  # 262 -> 261 2026-08-16: #178 CAM splash {ea7f0eae} now ships ONLY in gated CamUI, ALL tiers consistent. USER DECISION STILL OWED on 262 (ship ungated); flip back if decided
   @{ name = "z_SC4UIScale_ItemIcons-2x.dat";     entries = 356 },
   # 124 = 55 submenus-mod + 69 other-plugin icons (2026-07-29 landmarks
   # pass): CAM System Integration Module (73: submenu-extended + DLC/Maxis
@@ -222,9 +222,9 @@ $EXPECTED = @(
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-15x.dat"; entries = 4 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-3x.dat"; entries = 4 },
   @{ name = "z_SC4UIScale_SelectiveArt-15x.dat"; entries = 693 },
-  @{ name = "z_SC4UIScale_DialogStatic-15x.dat"; entries = 261 }, # #178: see the -2x row note (2026-08-16)
+  @{ name = "z_SC4UIScale_DialogStatic-15x.dat"; entries = 265 }, # #178: see the -2x row note (2026-08-16)
   @{ name = "z_SC4UIScale_SelectiveArt-3x.dat";  entries = 693 },   # #136: was 651; #190: was 655
-  @{ name = "z_SC4UIScale_DialogStatic-3x.dat";  entries = 261 }, # #178: see the -2x row note (2026-08-16)
+  @{ name = "z_SC4UIScale_DialogStatic-3x.dat";  entries = 265 }, # #178: see the -2x row note (2026-08-16)
   # TIER MATH PASS (2026-07-29, v2.24.0): ItemIcons + ItemIconsSub now exist at
   # every tier (audit finding A1 - they were -2x only, so ALL ~266+130 menu
   # icons silently reverted to 1x in scaled cells at 1.5x/3x). Built by

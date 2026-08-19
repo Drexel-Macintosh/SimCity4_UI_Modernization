@@ -322,6 +322,7 @@ TARGET_GID = 0x96A006B0
 
 # (iid hex string, human name) -- build order == report order
 TARGETS = [
+    ("6a9455c9", "Move In My Sim marker (green+red, #191)"),
     ("0a7df315", "Play Options"),
     ("ca53f06e", "Audio Options"),
     ("8a7e052f", "Graphic Options"),

@@ -4958,6 +4958,8 @@ namespace
 		            //   control is already right once art is 2x (law 2);
 		            //   doubling this frame can only break it. Twin pair
 		            //   I-0a41be3e / I-0a41be3f, both 62x49.
+		0x27DF05BE, // #191 Move In My Sim marker, green twin - born
+		            // correct from the data-scaled I-6a9455c9
 		0x27DF05BF, // 46x97 tiled plaque (I-6a9455c9), backing image
 		            // {46a006b0,13f15214} + a 36x41 icon inset at (5,5).
 		            // ⚠ ONLY the ...BF twin. 0x27DF05BE is NOT here on
