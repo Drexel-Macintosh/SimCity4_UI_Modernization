@@ -15918,3 +15918,44 @@ being assumed inert.
 ⛔ AND THE CONSEQUENCE FOR EVERY 1x REFERENCE EVER TAKEN THIS WAY: they were
 1x geometry with the full sweep running, hooks installed, and strips at x2. Not
 one of them was a control. Retake anything that mattered.
+
+## #191 IS A GAP, NOT A REGRESSION - AND THE SIGNPOST LAYER IS ELIMINATED (2026-08-19)
+
+USER, on the 1x/2x pair: "At 2x it does not scale it stays exactly the same size
+... The green arrow and facebox did not scale". Corrected an earlier reading of
+mine ("frame scaled, face did not") - NOTHING about the world sim marker scales:
+arrow, facebox and face are all 1x while the surrounding UI is 2x. The face is
+PIXEL-IDENTICAL between tiers, not stretched, not cropped.
+
+⇒ #191 is not a centring bug, not a content bug, and not a regression. It is a
+widget we have NEVER TOUCHED. The apparent "drift" is a consequence: a 1x marker
+sitting in a 2x layout reads as displaced relative to everything around it.
+
+⭐ AND THE SIGNPOST FAMILY IS ELIMINATED, ON SCREEN. At tier 2.00 the patch
+PROVABLY APPLIED:
+
+    [09:08:46] CodePatches: SIGNPOST balloon 44 -> 88.0 px, raise 150 -> 300.0 px
+               at 0x005F20AF/0x005F20BF.
+
+and the marker in the user's 2x screenshot is unchanged from 1x. Law 112: a
+patch that provably ran and changed nothing on screen eliminates its whole
+layer. 0x005F20AF/0x005F20BF is NOT the sim marker.
+
+⚠ WHICH RAISES A QUESTION NOBODY HAS ASKED: what DOES the signpost patch move?
+It has applied at 1.5x/2x/3x across many sessions (signpost-applied=1 in every
+tiered capture checked) and no eyes-on confirmation of its effect exists in this
+file. Its own header says the attribution was already "CORRECTED 2026-08-17 by
+screen evidence" once. A patch with no confirmed consumer is a candidate for the
+same mislabelling that made 0x48E945B4 - commented as "the U-Drive-It mission
+marker" - actually be the RIGHT-DRAG ring, and cost #193 an audit against the
+wrong widget (law 111). Do not assume it is correct just because it verifies its
+bytes and logs a tidy line.
+
+STATE: the drawer for the arrow+facebox+face marker is UNKNOWN. Three
+independent investigations running. What is ruled out so far:
+  * the SIGNPOST constants (eliminated on screen, above)
+  * a centring/rounding fault (the face is pixel-identical, so nothing is being
+    computed wrongly - nothing is being computed at all)
+  * art staging as the cure (#190 put the portraits in every tier package at
+    36x41*f and the Select-A-Sim grid consumes them correctly - user-confirmed;
+    this consumer ignores them)
