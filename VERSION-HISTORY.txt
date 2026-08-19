@@ -1,3 +1,34 @@
+2026-08-19  v3.1.2   #195 CLOSED - the deployment counts, and a 1.5x-only
+                     rounding fault behind them (USER-CONFIRMED)
+
+  The count under each dispatch hat is a TEXT-category indicator sized
+  asymmetrically: width from the MEASURED text, height a hard-coded 14.0f at
+  0x0046CB09. The width follows the font, which our FontStyle table scales, so
+  at 2x the glyphs were twice as tall inside a quad still 14 high and the
+  number vanished. Scaling that height brought the counts back at 2x.
+
+  1.5x STILL FAILED, and the A/B is what found it: with MissionBubbleFx=1 (all
+  CSI exe patches off) the number came back at 1.5x; with them on it did not;
+  1x and 2x were unaffected either way. 1.5x is the ONLY tier that makes these
+  screen-pixel constants fractional - 43*1.5 = 64.5 and 21*1.5 = 31.5 - and the
+  raw product was being stored. Now rounded with the project's one convention
+  (RoundHalfUp, law 89), which is a provable no-op at 2x and 3x because every
+  stock times 2 or 3 is already whole.
+
+  ALSO FIXED, and it had made an earlier change silently inert: the verify and
+  write loops read `k < 4` while the constant table had grown to five, so the
+  fifth entry was never checked and never written. The count is now derived
+  from the array. A hand-typed loop bound beside a table that grows is the same
+  hand-list rot this project has booked before.
+
+  The fifth entry is the .data twin of the centring offset. A float sweep of
+  the drawer showed it read from TWO addresses - [0x00A88268] in .rdata (which
+  we scaled) and [0x00B07F80] in .data, read three times as often (which we did
+  not). Scaling one copy and not the other puts two derivations of the same
+  quantity out of step; the original sweep was scoped to .rdata and was a
+  filtered null in the same family as "a .rdata sweep is blind to inline
+  immediates".
+
 2026-08-19  v3.1.1   RESIDENT MARKER PORTRAIT - the default sim faces were
                      never staged (USER-CONFIRMED at 2x)
 

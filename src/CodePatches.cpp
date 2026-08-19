@@ -4334,12 +4334,32 @@ namespace CodePatches
 			{ 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 60.0f, 14.0f, 32.0f, 35.0f, 64.0f };
 		// The CSI block proper: {VA, stock value}.
 		struct CsiConst { uintptr_t va; float stock; };
-		const CsiConst kCsiConsts[4] =
+		const CsiConst kCsiConsts[5] =
 		{
 			{ 0x00A8819C, 42.0f },   // indicator quad edge (px)  <- THE ONE
 			{ 0x00A881A0, 50.0f },   // orbit radius when >1 indicator on a vehicle
 			{ 0x00A88260, 43.0f },   // outline / leader offset
 			{ 0x00A88268, 21.0f },   // half of 42 - the centring offset
+			// ⭐ THE SECOND 21, AND IT IS READ THREE TIMES AS OFTEN.
+			// A float sweep of the drawer 0x0046D990..0x0046EFA8 shows the
+			// centring half-extent read from TWO different addresses:
+			//     [0x00A88268] = 21   read 2x   <- the .rdata copy, above
+			//     [0x00B07F80] = 21   read 6x   <- .data, and NOT scaled
+			// The .data one is used at 0x0046E3F8 / 0x0046E42A to turn a corner
+			// into a CENTRE before the leader direction is normalised:
+			//     fild [esp+0x1c] ; fadd [0xB07F80]  -> centre.x
+			//     fild [esp+0x20] ; fadd [0xB07F80]  -> centre.y
+			// It is half of the quad edge 42, which we scale to 63/84/126 - so
+			// its half must become 31/42/63 and staying at 21 leaves the centre
+			// short by (42f - 21) px: 10.5 at 1.5x, 21 at 2x, 42 at 3x.
+			//
+			// ⛔ SCALING ONE COPY OF A CONSTANT AND NOT THE OTHER IS WORSE
+			// THAN SCALING NEITHER - it puts two derivations of the same
+			// quantity out of step, and the sweep that found it only looked at
+			// .rdata. A constant sweep scoped to one section is a FILTERED
+			// NULL (law 99's sibling: .rdata-only misses .text immediates, and
+			// this one missed .data entirely).
+			{ 0x00B07F80, 21.0f },   // .data twin of the centring offset
 		};
 
 		// ---- #188 CSIKILL: subtraction test on the CSI DRAWER -------------
@@ -4838,8 +4858,14 @@ namespace CodePatches
 		{
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			// Verify ALL FOUR before touching any (both-or-neither).
-			for (int k = 0; k < 4; ++k)
+			// Verify EVERY entry before touching any (both-or-neither).
+			// ⛔ COUNT DERIVED FROM THE ARRAY, NEVER TYPED. This loop said
+			// `k < 4` while the table had grown to 5, so the fifth constant was
+			// silently never verified and never written - a change that looked
+			// applied (the log printed its usual line) and did nothing.
+			const int kCsiCount =
+				static_cast<int>(sizeof(kCsiConsts) / sizeof(kCsiConsts[0]));
+			for (int k = 0; k < kCsiCount; ++k)
 			{
 				const float cur = *reinterpret_cast<float*>(
 					kCsiConsts[k].va + base - kImageBase);
@@ -4854,7 +4880,7 @@ namespace CodePatches
 					return;
 				}
 			}
-			for (int k = 0; k < 4; ++k)
+			for (int k = 0; k < kCsiCount; ++k)
 			{
 				float* p = reinterpret_cast<float*>(
 					kCsiConsts[k].va + base - kImageBase);
@@ -4866,7 +4892,19 @@ namespace CodePatches
 						static_cast<unsigned>(kCsiConsts[k].va));
 					return;
 				}
-				*p = kCsiConsts[k].stock * want;
+				// ⭐ ROUND TO THE PROJECT'S ONE CONVENTION (law 89,
+				// RoundHalfUp) instead of storing a raw product. These are
+				// SCREEN-PIXEL constants and 1.5x is the only tier that makes
+				// them fractional: 43*1.5 = 64.5, 21*1.5 = 31.5, and the
+				// deployment count vanished at 1.5x while 1x and 2x were fine.
+				// A/B-proven: with these patches off at 1.5x the number came
+				// back, with them on it did not, and 2x/3x were unaffected.
+				//
+				// ⛔ PROVABLE NO-OP AT AN INTEGER FACTOR by construction -
+				// every one of these stocks times 2 or 3 is already whole, so
+				// this cannot move 2x or 3x (law 95: a fractional-tier fix must
+				// read exactly zero at the integer tiers first).
+				*p = std::floor(kCsiConsts[k].stock * want + 0.5f);
 				VirtualProtect(p, sizeof(float), old, &old);
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -4874,8 +4912,10 @@ namespace CodePatches
 				"50 -> %d, leader 43 -> %d, centre 21 -> %d (drawer 0x0046D990).",
 				static_cast<int>(want),
 				static_cast<int>((want - static_cast<int>(want)) * 100),
-				static_cast<int>(42.0f * want), static_cast<int>(50.0f * want),
-				static_cast<int>(43.0f * want), static_cast<int>(21.0f * want));
+				static_cast<int>(std::floor(42.0f * want + 0.5f)),
+				static_cast<int>(std::floor(50.0f * want + 0.5f)),
+				static_cast<int>(std::floor(43.0f * want + 0.5f)),
+				static_cast<int>(std::floor(21.0f * want + 0.5f)));
 		}
 
 		void ApplyPixelTable(float want)
