@@ -15695,3 +15695,46 @@ it. Recorded here so the next session does not find the script and assume it was
 merely forgotten. IF the sub-flyout atlas is ever staged scaled, this becomes
 live at 1.5x and the corrected shape above is the fix - helper at line 211, and
 no bare `else` in front of a declaration.
+
+## #190 SIM PORTRAITS STAGED (2026-08-19, dep 08:42:11)
+
+The 19 named-Sim head shots were never in any tier package, so every window
+binding a Sim face drew 1x pixels inside a swept slot.
+
+⭐ THE REF-MAP ABSENCE IS CORRECT-BY-DESIGN, AND THE POSITIVE CONTROL IS WHAT
+MAKES THAT A FINDING RATHER THAN A NULL. refmap.csv is derived purely from
+`image={gid,iid}` occurrences in the .UI corpus. All 431 refmap rows were
+searched for as literal {gid,iid} tokens across the 330-file / 45 MB corpus:
+431 of 431 present. The map is a 1:1 mirror of the corpus, so it demonstrably
+COULD have listed these. The corpus contains ZERO `fa8cdf` tokens in any form,
+because the TGI is COMPOSED AT RUNTIME from the sim exemplar id (type
+0x6534284A group 0x6A297266, loaded at 0x0043B710). A .UI-keyed derivation is
+structurally blind to code-bound art - law 107, again.
+
+SET BOUNDS MEASURED, NOT ASSUMED: 0xFA8CDFBF..0xFA8CDFD2 with 0xFA8CDFCF
+ABSENT = 19 members, not 20; 0xFA8CDFBE and 0xFA8CDFD3 are absent too, so the
+block is bounded on both sides. Shipped TWICE in SimCity_1.dat under
+G=0x46A006B0 and G=0x1ABE787D, both at 36x41.
+
+BOTH HALVES, and either alone is worse than neither:
+  * build_selective_safe.py CODE_BOUND_TGIS - stages 2x in place at the original
+    TGI, no clone, no imagerect edit. Correct because SetImage (0x009BC57E ->
+    0x009BC447) recomputes the crop from the window on every bind.
+  * find_no_snap.py - keeps the upscaler from cell-snapping them. WITHOUT this
+    the 1.5x tier renders 36x41 as 60x62 against a measured 54x62 window and
+    GZWinBMP's SetImage clamp (0x009BC482 / 0x009BC4A4) slices 6px off the RIGHT
+    of every face: a 1.5x-only residual, exactly the law 92 shape.
+
+POSITIVE CONTROL FOR THE SECOND HALF: {1abe787d,ea32f100} is the SAME 36x41
+source, is already in no-snap.txt via scan(), and comes out at 54x62. After the
+fix all 38 portraits measure 54x62 at 1.5x - identical to the control.
+
+VERIFIED FROM THE PACKAGE PAYLOADS, not the builder's own count (presence is not
+execution): both groups present in all three tiers at 54x62 / 72x82 / 108x123 =
+exactly 36x41*f.
+
+⭐ AND THE ENTRY-COUNT GATE EARNED ITS KEEP: it failed immediately at
+"693 entries, expected 655". The delta is EXACTLY 38 = 19 portraits x 2 groups,
+with no remainder - which is the real verification that nothing else was dragged
+in. Pin updated to 693 with that arithmetic recorded, so the next unexplained
+move cannot be waved through as "the portraits again".
