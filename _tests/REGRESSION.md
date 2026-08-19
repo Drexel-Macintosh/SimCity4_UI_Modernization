@@ -15878,3 +15878,43 @@ blocks had just armed.
 The restore now detects an empty snapshot as a deliberate 1x baseline and
 disarms what the copies re-armed. Verified by deploying twice in a row against
 a 1x baseline and confirming everything stayed disarmed.
+
+## THE 1x BASELINE RAN THE WHOLE SWEEP (2026-08-19, dep 09:35:41)
+
+The gTierF fix was real but it was not the docking bug. MEASURED on the next 1x
+run, with the new DLL confirmed live (deployed sha == built sha):
+
+    [09:31:59] Settings ... ScaleFactor=1.00
+    [09:32:27] UiSpike: ScaleAll done, 529 windows scaled.
+    [09:32:35] UiSpike: SUBHOOK strip 0x8A2CAD8B 44x387 -> disaster strip hooks
+               installed (item fields x2, clickHook=1)
+
+529 windows swept at f=1.00, draw hooks installed, and the sub-flyout strip
+handed **x2 item fields** inside a 1x layout. That is the docking in the user's
+screenshot - the nested sub-flyout's buttons and its connector bracket drawn at
+roughly twice the parent flyout's scale.
+
+WHY: the "Tier 1 = TRUE stock: every scaling subsystem off. (Isolation-tested:
+the DLL must be inert here, not merely 'disabled')" block sits INSIDE
+`if (settings.spikeAutoScale)`. Set-Tier.ps1 -Tier 1 sets AutoScale=0 and
+ScaleFactor=1 - which is precisely how a 1x reference is taken - so the manual
+branch ran `tierActive = settings.spikeScaleAll` (1 from the ini) and nothing
+was ever turned off.
+
+    ⭐ LAW: A DECISION THAT DEPENDS ONLY ON THE FACTOR MUST NEVER LIVE INSIDE A
+    BRANCH THAT ASKS HOW THE FACTOR WAS CHOSEN. This is the THIRD instance of
+    the identical shape in this ONE function - #149 and #182 are both recorded
+    in its own comments as "AutoScale=0, a supported user setting, silently
+    changed behaviour", and both were fixed by moving a gate OUT of the
+    AutoScale branch. The comments were right there while the same mistake was
+    made a third time. When a file documents a recurring failure, GREP THAT
+    FILE FOR OTHER INSTANCES OF IT before adding anything nearby.
+
+CURE: after the if/else, unconditionally - `if (spikeScaleFactor <= 1.01f)` ->
+tierActive=false and all four subsystems off, with a log line naming the factor
+AND the AutoScale value, so the next 1x run proves its own inertness instead of
+being assumed inert.
+
+⛔ AND THE CONSEQUENCE FOR EVERY 1x REFERENCE EVER TAKEN THIS WAY: they were
+1x geometry with the full sweep running, hooks installed, and strips at x2. Not
+one of them was a control. Retake anything that mattered.

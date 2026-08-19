@@ -261,6 +261,41 @@ public:
 					           : "untouched (ScaleAll=0)");
 			}
 
+			// ⛔ FACTOR 1 MEANS INERT, NO MATTER HOW THE FACTOR WAS CHOSEN.
+			// The "Tier 1 = TRUE stock" block above lives inside the AutoScale
+			// branch, so it never ran for a MANUAL tier 1 - and Set-Tier.ps1
+			// -Tier 1 sets AutoScale=0 + ScaleFactor=1, which is exactly how a
+			// 1x reference is taken. Result, measured 2026-08-19 at 1024x768:
+			//     UiSpike: ScaleAll done, 529 windows scaled.
+			//     UiSpike: SUBHOOK strip 0x8A2CAD8B -> ... (item fields x2)
+			// The whole sweep ran at f=1.00 and the sub-flyout strip was given
+			// x2 item fields inside a 1x layout. That is the broken docking the
+			// user photographed at the 1x baseline, twice.
+			//
+			// ⭐ THIRD INSTANCE OF THIS EXACT SHAPE IN THIS ONE FUNCTION. The
+			// comments below already record #149 and #182 - both "AutoScale=0,
+			// a supported user setting, silently changed behaviour". Those two
+			// were fixed by moving a gate OUT of the AutoScale branch, and this
+			// one is the same move for the same reason. A decision that depends
+			// only on the FACTOR must never live inside a branch that asks how
+			// the factor was chosen.
+			if (settings.spikeScaleFactor <= 1.01f)
+			{
+				tierActive = false;
+				settings.spikeScaleAll = false;
+				settings.spikeScaleRegion = false;
+				settings.spikeMenuFlyouts = false;
+				settings.spikeDumpTree = false;
+				logger.WriteLine(
+					LogLevel::Info,
+					"Factor %.2f is stock: every scaling subsystem forced OFF "
+					"(ScaleAll/ScaleRegion/MenuFlyouts/DumpTree), regardless of "
+					"AutoScale=%d. A 1x baseline must be INERT, not merely "
+					"'scaling by 1' - the sweep still installs draw hooks and "
+					"hands strips x2 item fields.",
+					settings.spikeScaleFactor, settings.spikeAutoScale ? 1 : 0);
+			}
+
 			// The hook-visible tier mirror, pushed UNCONDITIONALLY and for
 			// BOTH branches (auto and manual), at the first moment the
 			// effective factor is known. It used to be set only inside
