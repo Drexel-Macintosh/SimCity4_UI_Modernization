@@ -15641,3 +15641,57 @@ ALSO CORRECTED HERE: this file said 0x0046CCB9 was "every non-4 type". It is
 CATEGORY 3 ONLY - 0x0046C925/0x0046C92E are two separate `cmp`/`je` pairs into
 the SAME target 0x46CB52, so 3 and 4 merge and split later. Reading one branch
 tells you where it GOES, never who ARRIVES.
+
+## RING BLIT GUARDS: THE QUEUED SCRIPT DOES NOT COMPILE, AND HALF OF IT IS DEAD (2026-08-19)
+
+`fix_ringguards.py` sat in the scratchpad all session as "written but never
+applied". It was verified by actually COMPILING the shapes (MSVC 14.44.35207,
+/std:c++17 to match SC4UIScale.vcxproj, syntax-only, throwaway files):
+
+  (a) helper inserted at the gMayorRebirthLogs declaration (line 7383) while
+      both use sites are at 2410 and 2506 - declared ~5,000 lines AFTER use:
+        error C3861: 'ringSrcLooksScaled': identifier not found
+        error C2065: 'gRingScaledRefusals': undeclared identifier
+      It belongs at line 211, beside RoundHalfUp/gTierF/FloorScale.
+
+  (b) `if (c) {...} else const int ringDstW = ...; for(...; ox < ringDstW; ...)`
+        error C2065: 'ringDstW': undeclared identifier
+      ⭐ THE `else` PARSES. The declaration is then scoped into the else's
+      IMPLICIT BLOCK and the loop below cannot see it. This is the exact hazard
+      the task flagged - and the good news is it fails LOUDLY, because
+      ringDstW/subDstW each occur exactly twice with no outer declaration to
+      shadow. Had one existed, the guard would have silently disabled scaling.
+
+  The corrected shape compiles clean (EXIT=0).
+
+    ⚠ LAW: "WRITTEN BUT NEVER APPLIED" IS NOT A SAFE RESTING STATE. This script
+    would have been picked up by a later session as ready-to-run work. A patch
+    script that has never been compiled is a HYPOTHESIS, exactly like a static
+    defect - and this one was wrong in two independent ways.
+
+AND THE GUARD IS MOSTLY DEAD ANYWAY - reachability COMPUTED, not assumed:
+    site A gate (:2375)  sw>80 && sw<120 && sh>40 && sh<90
+    site B gate (:2473)  sw>=70 && sw<=140 && sh>=35 && sh<=100
+    source          siteA  siteB
+    94x62 stock      yes    yes
+    141x93 (1.5x)     no     no    (141 misses site B by ONE)
+    188x124 (2x)      no     no
+    80x53 stock       no    yes
+    120x80 (1.5x)     no    YES   <- the ONLY live f-squared path
+    160x106 (2x)      no     no
+Site A admits ONLY stock 94x62, so a site-A guard is DEAD CODE today. The whole
+hazard reduces to one case: site B at f=1.5 with a staged 80x53 source, which
+would draw 180x120 = 2.25x.
+
+AND IT IS LATENT, NOT LIVE: SUBFLYOUT-ART-VERDICT.md sec.4 records that the
+sub-flyout atlas TGIs are absent from refmap.csv, package-list.txt,
+selective-safe/stage/ AND CODE_BOUND_TGIS - the reference-driven pass can never
+reach them, so nothing stages them scaled. RCAL measures src 80x53 at every
+tier, i.e. stock.
+
+DECISION: NOT APPLIED. One dead half plus one latent 1.5x-only path is not worth
+a hand-written guard at two shared blit sites, and the user has never reported
+it. Recorded here so the next session does not find the script and assume it was
+merely forgotten. IF the sub-flyout atlas is ever staged scaled, this becomes
+live at 1.5x and the corrected shape above is the fix - helper at line 211, and
+no bare `else` in front of a declaration.
