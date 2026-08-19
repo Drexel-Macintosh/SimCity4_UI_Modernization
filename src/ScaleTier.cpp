@@ -1648,17 +1648,34 @@ namespace IconSynth
 
 namespace ScaleTier
 {
+	// THE fit predicate. Extracted from Decide 2026-08-19 so the in-game
+	// selector can ask the same question the boot path asks, rather than
+	// carrying its own copy of 880/558/800/600 - a second copy would be a
+	// second rule, and this one is shown to the player as a promise about
+	// what will happen at the next launch.
+	bool Fits(float factor, int width, int height)
+	{
+		if (width <= 0 || height <= 0 || factor <= 1.01f)
+		{
+			// Stock always fits and is always available: it needs no package
+			// and no room.
+			return factor <= 1.01f;
+		}
+		// Density cap: never scale past "everything feels like 800x600".
+		const float capW = width / 800.0f;
+		const float capH = height / 600.0f;
+		const float cap = capW < capH ? capW : capH;
+		return kWidestDesignPx * factor <= width
+			&& kTallestDesignPx * factor <= height
+			&& factor <= cap;
+	}
+
 	float Decide(int width, int height)
 	{
 		if (width <= 0 || height <= 0)
 		{
 			return 1.0f;
 		}
-
-		// Density cap: never scale past "everything feels like 800x600".
-		const float capW = width / 800.0f;
-		const float capH = height / 600.0f;
-		const float cap = capW < capH ? capW : capH;
 
 		for (int i = 0; i < kPackageCount; i++)
 		{
@@ -1667,9 +1684,7 @@ namespace ScaleTier
 			{
 				continue;
 			}
-			if (kWidestDesignPx * pkg.factor <= width
-				&& kTallestDesignPx * pkg.factor <= height
-				&& pkg.factor <= cap)
+			if (Fits(pkg.factor, width, height))
 			{
 				return pkg.factor;
 			}

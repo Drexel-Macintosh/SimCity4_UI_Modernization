@@ -29,6 +29,7 @@
 #include "GZServPtrs.h"
 #include "cIGZFrameWork.h"
 #include "cRZCOMDllDirector.h"
+#include "ScaleTier.h"   // the selector greys out tiers this resolution cannot carry
 #include "CodePatches.h"  // v2.37.0 #78: is the Data Views legend born correct?
 #include "SpinProbe.h"    // #107: per-launch outcome recorder (was Budget opened?)
 
@@ -18678,8 +18679,17 @@ namespace
 {
 	// Row order MUST match the listelement order the builder writes.
 	const float kSelFactors[] = { 0.0f, 1.0f, 1.5f, 2.0f, 3.0f }; // [0] = Auto
+	const char* const kSelLabels[] = { "Auto", "1x", "1.5x", "2x", "3x" };
 	const int   kSelCount =
 		static_cast<int>(sizeof(kSelFactors) / sizeof(kSelFactors[0]));
+	// Design px of the widest and tallest UI pieces, for the "needs WxH" text
+	// ONLY. The DECISION is ScaleTier::Fits; these two just render the number
+	// its arithmetic implies, so a player reading the row sees the same
+	// thresholds the boot path would apply.
+	const int kSelWidestPx = 880;
+	const int kSelTallestPx = 558;
+	bool  gSelUsable[8] = { true, true, true, true, true, true, true, true };
+	int   gSelCommitted = -1;       // row currently written to the ini
 
 	// The four stock resolution radios. Our radio means "none of these" -
 	// i.e. the resolution came from SC4GraphicsOptions.ini rather than this
@@ -18695,7 +18705,6 @@ namespace
 	const uint32_t kSelLabelId   = 0x5CA1E003;
 	const uint32_t kSelComboId   = 0x5CA1E004;
 
-	int   gSelStaged = -1;          // combo row the player picked, -1 = none
 	int   gSelPushed = -2;          // last row we pushed or observed
 	bool  gSelDlgUp = false;        // dialog visible at the last service
 	int   gSelLogs = 0;
@@ -18717,6 +18726,22 @@ namespace
 			}
 		}
 		return -1;   // a factor no row can express: say nothing, claim nothing
+	}
+
+	// Can THIS resolution carry the tier on row k? Auto and 1x always can.
+	// Delegated to ScaleTier::Fits so the answer shown to the player is the
+	// answer the next launch will actually give.
+	bool SelRowUsable(int k)
+	{
+		if (k <= 1) { return true; }             // Auto, 1x
+		if (gReadoutW <= 0 || gReadoutH <= 0)
+		{
+			// We were never handed a render size. Offer everything rather
+			// than hide a tier on the strength of a number we do not have -
+			// a missing measurement is not evidence of a small screen.
+			return true;
+		}
+		return ScaleTier::Fits(kSelFactors[k], gReadoutW, gReadoutH);
 	}
 
 	void SelSetCaption(cIGZWin* parent, uint32_t id, const char* text)
@@ -18858,24 +18883,16 @@ namespace
 					(d1 == kSelComboId || d2 == kSelComboId) ? "  <- our COMBO" :
 					(d1 == kSelRadioId || d2 == kSelRadioId) ? "  <- our RADIO" : "");
 			}
-			if (accept)
-			{
-				if (gSelStaged >= 0)
-				{
-					SelCommit(gSelStaged);
-					gSelStaged = -1;
-				}
-			}
-			else if (cancel)
-			{
-				if (gSelStaged >= 0)
-				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELECTOR Cancel - staged row %d discarded.",
-						gSelStaged);
-					gSelStaged = -1;
-				}
-			}
+			// ⛔ NO COMMIT HERE ANY MORE. This used to fire when a message
+			// carried the Accept button's id, and the instrument below proved
+			// no such message exists - 120 captured messages, every one a
+			// mouse coordinate pair or a repeated window pointer, not one
+			// control id in any slot. The commit moved to the selection
+			// change itself, which is observable. Kept as an INSTRUMENT: if a
+			// message ever does carry one of these ids, the log says so and
+			// real Accept/Cancel semantics become available.
+			(void)accept;
+			(void)cancel;
 		}
 
 		uint32_t refCount;
@@ -18906,9 +18923,13 @@ void UiSpike::ServiceScaleSelector()
 		// must commit nothing, and the next open re-reads the live settings.
 		if (gSelDlgUp)
 		{
+			// Closed. Drop the per-appearance state so the next open re-reads
+			// the live settings and re-derives which tiers this resolution
+			// can carry - the player may have changed the resolution in the
+			// same visit.
 			gSelDlgUp = false;
-			gSelStaged = -1;
 			gSelPushed = -2;
+			gSelCommitted = -1;
 		}
 		return;
 	}
@@ -18998,8 +19019,17 @@ void UiSpike::ServiceScaleSelector()
 	}
 
 	// ---- 3. the combo ---------------------------------------------------
-	// On open: push the live setting. After that the COMBO owns the value -
-	// re-pushing every service would fight the player's own selection.
+	// On open: REBUILD the list, then push the live setting. After that the
+	// combo owns the value - re-pushing every service would fight the
+	// player's own selection.
+	//
+	// WHY THE LIST IS REBUILT AT RUNTIME: whether a tier is usable depends on
+	// the resolution, which no .UI can know. A row the resolution cannot
+	// carry is marked with what it needs, and selecting it is REFUSED - so
+	// the control can never promise a tier that would silently fall back to
+	// stock at the next launch. The rule comes from ScaleTier::Fits, the same
+	// predicate the boot path uses; a second copy of 880/558 here would be a
+	// second rule, and this one is shown to the player.
 	cIGZWin* comboWin = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
 	if (comboWin)
 	{
@@ -19009,24 +19039,83 @@ void UiSpike::ServiceScaleSelector()
 		{
 			if (justOpened)
 			{
-				const int row = SelRowFromSettings(settings);
-				if (row >= 0 && c->GetSelection() != row)
+				for (int k = 0; k < kSelCount; k++)
 				{
-					c->SetSelection(row, false);
+					gSelUsable[k] = SelRowUsable(k);
 				}
+				c->RemoveAllStrings();
+				for (int k = 0; k < kSelCount; k++)
+				{
+					char row[64];
+					if (gSelUsable[k])
+					{
+						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s",
+							kSelLabels[k]);
+					}
+					else
+					{
+						// Say WHAT IT NEEDS, not just "no". A disabled control
+						// that does not explain itself is a bug report.
+						_snprintf_s(row, sizeof(row), _TRUNCATE,
+							"%s - needs %dx%d", kSelLabels[k],
+							static_cast<int>(kSelWidestPx * kSelFactors[k]),
+							static_cast<int>(kSelTallestPx * kSelFactors[k]));
+					}
+					cRZBaseString s(row);
+					c->InsertString(s, k);
+				}
+				const int row = SelRowFromSettings(settings);
+				if (row >= 0) { c->SetSelection(row, false); }
 				gSelPushed = row;
+				gSelCommitted = row;
 			}
 			else
 			{
 				const int row = c->GetSelection();
 				if (row >= 0 && row < kSelCount && row != gSelPushed)
 				{
-					gSelStaged = row;
-					gSelPushed = row;
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELECTOR staged row %d (%s) - commits on "
-						"Accept, applies next launch.", row,
-						row == 0 ? "Auto" : "manual tier");
+					if (!gSelUsable[row])
+					{
+						// REFUSED. Snap back to what is actually live rather
+						// than leaving a selection we will not honour: a
+						// control that shows one thing and does another is
+						// worse than one that says no.
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELECTOR refused row %d (%s) - %dx%d "
+							"cannot carry it (needs %dx%d). Selection snapped "
+							"back.", row, kSelLabels[row], gReadoutW, gReadoutH,
+							static_cast<int>(kSelWidestPx * kSelFactors[row]),
+							static_cast<int>(kSelTallestPx * kSelFactors[row]));
+						const int back = (gSelCommitted >= 0)
+							? gSelCommitted : SelRowFromSettings(settings);
+						if (back >= 0) { c->SetSelection(back, false); }
+						gSelPushed = back;
+					}
+					else
+					{
+						// COMMIT ON CHANGE, not on Accept.
+						//
+						// ⭐ MEASURED, NOT CHOSEN (2026-08-19). The first
+						// build staged the choice and committed when a
+						// message carrying the Accept button's id arrived.
+						// The SELMSG instrument proved no such message
+						// exists: across 120 captured messages every one was
+						// either a mouse coordinate pair (type 0x0D) or one
+						// repeated WINDOW POINTER (0xA2BF8ACD/CE/CF) - not a
+						// single control id in any data slot. That commit
+						// path could never have fired, and only the
+						// instrument could have told me so.
+						//
+						// Committing on change is safe HERE specifically
+						// because the tier applies at the next launch: the
+						// write changes nothing about the running game, and
+						// picking a different row simply overwrites it. The
+						// cost is that Cancel does not revert this one
+						// setting, which the row label states outright.
+						gSelPushed = row;
+						gSelCommitted = row;
+						SelCommit(row);
+					}
 				}
 			}
 			c->Release();

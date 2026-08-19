@@ -18,6 +18,14 @@ namespace ScaleTier
 	// Falls back to 1.0 (stock, scaling dormant) when nothing fits.
 	float Decide(int width, int height);
 
+	// The fit predicate ALONE, without the "is it installed" and
+	// "largest first" parts of Decide. Published so the in-game scale
+	// selector can grey out a factor this resolution cannot carry, using the
+	// SAME arithmetic that would refuse it at boot rather than a second copy
+	// of the thresholds. Two copies of a rule are two rules, and this one is
+	// about to be shown to the player as a promise.
+	bool Fits(float factor, int width, int height);
+
 	// Enable the package matching `factor` and stash every other installed
 	// package (suffix ".x1-disabled"). PLUGINS-ONLY: all managed files -
 	// both dats and FontStyle.ini - live beside the DLL in the Documents

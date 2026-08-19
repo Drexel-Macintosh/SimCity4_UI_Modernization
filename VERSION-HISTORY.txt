@@ -1,3 +1,60 @@
+2026-08-19  v3.2.1   Selector: opaque drop list, unusable tiers refused, and
+                     the commit path the INSTRUMENT actually supported
+
+  Three corrections to v3.2.0, all from one eyes-on pass.
+
+  1. THE DROP LIST RENDERED IN BANDS. The combo node was cloned from the stock
+  combos in I-e9263de5, which carry `transparent` and pbufftrans=yes - and
+  those are wrong HERE. The class draws its drop list as an overlay, so a
+  transparent paint buffer composites whatever the list happens to cover; ours
+  opens over the Renderer label and a divider, and picked both up. The stock
+  ones get away with it because they open over flat dialog fill.
+  ⭐ LAW: CLONING A NODE CLONES ITS ASSUMPTIONS ABOUT WHAT IS BEHIND IT. A
+  transparency flag is not a property of the widget, it is a claim about its
+  background, and the claim does not travel with the copy.
+
+  2. A TIER THE RESOLUTION CANNOT CARRY IS NOW REFUSED, not silently ignored.
+  At 2400x1600 the fit rule gives 3x 880*3 = 2640 > 2400, so picking it would
+  have written ScaleFactor=3 and come back at stock next launch with no
+  explanation. Rows the screen cannot carry now read "3x - needs 2640x1674"
+  and snap back if selected, saying so in the log.
+
+  THE RULE IS SHARED, NOT COPIED: ScaleTier::Fits is extracted out of Decide
+  and called by both, so the answer shown to the player is the answer the next
+  boot will give. A second copy of 880/558/800/600 in UiSpike would have been
+  a second rule, and this one is displayed as a promise. Fits() also answers
+  the Auto/1x rows as always-available, which is true by construction - stock
+  needs no package and no room.
+
+  3. ⭐ THE COMMIT PATH COULD NEVER HAVE FIRED, AND ONLY THE INSTRUMENT KNEW.
+  v3.2.0 staged the choice and committed when a message carrying the Accept
+  button's id (0xEA57DA59) reached the chained winproc. The SELMSG log from
+  the first run settles it: 120 messages captured while the dialog was open
+  and the player worked the combo, and NOT ONE carried a control id in any
+  data slot. Every message was one of three shapes -
+    type 0x0000000D   d1=x  d2=y            (a mouse coordinate pair)
+    type 0xA2BF8AD4   d1=(x<<16|y)          (the same, packed)
+    type 0xA2BF8ACD/CE/CF  d1=<cIGZWin*>    (one repeated window pointer)
+  so the Accept/Cancel test was dead code that looked live. This is the whole
+  reason the instrument shipped in the same build as the feature.
+
+  Commit moved to the SELECTION CHANGE, which is observable by polling
+  GetSelection - the mechanism already used to notice the change at all. That
+  is safe here specifically because the tier applies at the next launch: the
+  write changes nothing in the running game and picking another row overwrites
+  it. The cost is that Cancel does not revert this one setting. The winproc
+  chain STAYS as an instrument: if a message ever does carry one of those ids
+  the log will say so, and real Accept/Cancel semantics become available
+  without guessing again.
+
+  ⭐ LAW: A HANDLER KEYED ON A FIELD THE MESSAGE DOES NOT CARRY IS INDISTIN-
+  GUISHABLE FROM A WORKING ONE. It compiles, it runs, it is reached, and it
+  does nothing - the same signature as the four patches that provably executed
+  and moved zero pixels. Ship the instrument WITH the mechanism, not after it.
+
+  Files: tools\dialog-static\build_dialog_static.py, src\UiSpike.cpp,
+  src\ScaleTier.{h,cpp}.
+
 2026-08-19  v3.2.0   IN-GAME SCALE SELECTOR in Graphic Options (USER REQUEST)
 
   The scale is now changeable from inside the game. Graphic Options gains a

@@ -610,17 +610,29 @@ def inject_res_readout(text, fn):
     label = label.replace('area=(293,211,465,232)', 'area=(266,211,463,232)')
     # The combo: stock grammar from I-e9263de5, our items. editable=no makes
     # it a pure picker; the class draws its own drop list.
+    # ⛔ NO `transparent`, AND pbufftrans=no. The stock combos in I-e9263de5
+    # carry both and they are WRONG HERE: the class draws its drop list as an
+    # overlay, so a transparent paint buffer composites whatever the list
+    # happens to cover. Measured on screen 2026-08-19 - the open list picked up
+    # the Renderer label and the divider beneath it and rendered in bands. The
+    # stock ones get away with it because they open over flat dialog fill.
     combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-             'area=(293,233,420,253) fillcolor=(255,255,255) transparent '
+             'area=(293,233,420,253) fillcolor=(255,255,255) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
-             'winflag_pbufftrans=yes winflag_pbufferase=yes '
+             'winflag_pbufftrans=no winflag_pbufferase=yes '
              'winflag_pbuffvid=no winflag_mousetrans=no '
              'winflag_ignoremouse=no colorfontnormal=(0,0,0) '
              'colorfontdisabled=(164,164,164) colorfonthilited=(255,255,255) '
              'highlightcolor=(24,32,106) editable=no outlinecolor=(0,0,0) '
              'initselection=0 combodownarrowrect=(0,0,64,15) '
              'combodowncolor=(197,197,197) buttongutter=1 gutters=(6,2) '
+             # Placeholder rows only - the DLL REPLACES this list at runtime
+             # (RemoveAllStrings + InsertString) so it can mark the tiers this
+             # resolution cannot carry. The row ORDER is the contract:
+             # 0=Auto 1=1x 2=1.5x 3=2x 4=3x, and UiSpike's kSelFactors must
+             # match it. Kept non-empty so the widget still has a sane shape
+             # if the code half is ever missing.
              'listelement="Auto" listelement="1x" listelement="1.5x" '
              'listelement="2x" listelement="3x" >' % SEL_COMBO_ID)
     new += [indent + radio, indent + label, indent + combo]
