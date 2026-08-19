@@ -4426,9 +4426,34 @@ namespace CodePatches
 		//     cannot drift apart - user-observed: "only the inner glyph is
 		//     clickable".
 		//
-		// ⛔ 0x0046CCB9 is the SAME instruction shape holding 32.0f on the
-		// NON-CSI branch (category 3). Patching it would resize unrelated
-		// indicators. It is deliberately absent from this table.
+		//   QUAD B-PRIME - THE SAME ICON SIZE ON THE OTHER SIDE OF THE BRANCH.
+		//     0x0046CC41 is `cmp [esi+4],4` and 0x0046CC45 is `jne 0x0046CCB9`,
+		//     so the builder is a plain TWO-WAY if/else: type 4 takes 35.0f,
+		//     EVERYTHING ELSE takes 32.0f from the identical `mov eax,imm32` +
+		//     `mov [esi+D0/D4],eax` pair at 0x0046CCB9. Both are in this table
+		//     now. #195.
+		//
+		// ⭐ THE OLD NOTE HERE SAID TO LEAVE THE ELSE ALONE - "it would resize
+		// unrelated indicators". THAT REASONING INVERTED THE DAY THE PIN QUAD
+		// WAS SCALED, and it is worth spelling out because the same shape will
+		// recur. The pin verts live in cSC4DispatchVehicleView::Draw, which is
+		// SHARED by every indicator regardless of type. So once the pin scales,
+		// the else-branch indicators are not being spared - they are being
+		// HALF-PATCHED: scaled plate, stock icon. That is exactly what the user
+		// photographed as "hat on top, number stranded beside it". A caution
+		// written about one lever goes stale the moment a SECOND lever starts
+		// firing on the same object; re-read every such note when the set of
+		// patched sites grows.
+		//
+		// ⛔ 0x0046CCB9 IS THE OPCODE BYTE (B8). THE IMMEDIATE IS AT
+		// 0x0046CCBA. This table stores IMMEDIATE addresses - 0x0046CC48 is the
+		// imm of the B8 at 0x0046CC47, one past it, same as here. Entering the
+		// opcode address instead would read 00 00 00 42 89 = 2.58e-43, miss the
+		// 32.0f the all-or-none verify expects, and REFUSE THE ENTIRE TABLE -
+		// silently reverting the balloon that already works. The failure would
+		// present as "the new fix did nothing AND the old one broke", which is
+		// the most expensive way to be wrong. Bytes were read out of the shipped
+		// exe, not out of this comment.
 		//
 		// ⭐ WHY THIS TOOK SO LONG, recorded so it is not repeated: every
 		// sweep searched .rdata for a constant. BOTH levers are inline
@@ -4442,6 +4467,12 @@ namespace CodePatches
 		struct CsiQuadConst { uintptr_t va; float stock; const char* what; };
 		const CsiQuadConst kCsiQuad[] = {
 			{ 0x0046CC48, 35.0f, "icon+hitbox" },   // mov eax,imm32  (B8)
+			// #195: the ELSE of `cmp [esi+4],4`. Same instruction, same
+			// `mov [esi+0xD0/0xD4],eax` store pair, 32.0f instead of 35.0f.
+			// Covers every non-type-4 indicator - including the U-Drive-It
+			// deployment marker, whose count was rendering at stock size under
+			// an already-scaled pin.
+			{ 0x0046CCBA, 32.0f, "icon+hitbox (else branch)" },
 			{ 0x0046EABD, -32.0f, "pin V0.x" },     // C7 84 24 ... imm at +7
 			{ 0x0046EACA, -32.0f, "pin V0.y" },
 			{ 0x0046EAF6, -32.0f, "pin V1.x" },
@@ -4491,10 +4522,11 @@ namespace CodePatches
 				VirtualProtect(p, sizeof(float), old, &old);
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: CSI offer balloon x%.2f - icon+hitbox %.1f -> "
-				"%.1f px, pin quad 64 -> %.0f px (%d immediates, all in "
-				".text). #188.",
-				factor, 35.0f, 35.0f * factor, 64.0f * factor, n);
+				"CodePatches: CSI indicators x%.2f - icon+hitbox %.1f -> %.1f px "
+				"(type 4) and %.1f -> %.1f px (all other types, #195), pin quad "
+				"64 -> %.0f px. %d immediates, all inline in .text. #188/#195.",
+				factor, 35.0f, 35.0f * factor, 32.0f, 32.0f * factor,
+				64.0f * factor, n);
 		}
 
 		// ------------------------------------------------------------------

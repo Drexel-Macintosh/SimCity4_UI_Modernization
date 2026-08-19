@@ -18063,6 +18063,12 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 	// The size is written HERE, so the refusal belongs HERE. With the art
 	// staged at RoundHalfUp(32*f), the window is BORN carrying f; scaling it
 	// again is the second application (on-screen = 32 * a * f).
+	// ⛔ LOCAL, NOT THE FILE-SCOPE gArtSizedSkipSelf. ScaleSubtree recurses,
+	// so a file-scope flag raised for THIS node is still raised when the walk
+	// reaches its children - it would suppress their size writes too and
+	// reproduce the exact regression (numbers gone) that this guard exists to
+	// avoid. One invocation, one bool.
+	bool artSizedSelf = false;
 	if (win->GetID() == 0x48E945B4 && f > 1.01f)
 	{
 		const int32_t want = RoundHalfUp(32 * f);
@@ -18085,7 +18091,7 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		// window is already art-sized; its children are not, and they still
 		// need the factor. Fall through to the child walk with the size write
 		// suppressed for this node alone.
-		gArtSizedSkipSelf = true;
+		artSizedSelf = true;
 	}
 
 	const ScaleState state = Classify(win);
@@ -18322,8 +18328,18 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 			// Resize self. Root keeps its anchor; descendants also scale
 			// their position within the (already-scaled) parent so the
 			// layout grows coherently instead of bunching in the top-left.
-			win->SetW(newW);
-			win->SetH(newH);
+			//
+			// #197: unless this window is ALREADY SIZED BY ITS ART. Then the
+			// size write is the SECOND application of f (on-screen = 32*a*f
+			// with a already == f) and only the size is skipped - position
+			// still scales, children are still walked below. Same shape as the
+			// font-sized path thirty lines up, minus its `return`, which is
+			// the one detail that made the first attempt eat the child.
+			if (!artSizedSelf)
+			{
+				win->SetW(newW);
+				win->SetH(newH);
+			}
 			if (depth > 0)
 			{
 				win->GZWinMoveTo(newL - l, newT - t);
@@ -18336,8 +18352,12 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 			// there. Log per fire (law 54), capped like LEAFSIZE, WITH a
 			// saturation notice - the fire count is this change's
 			// blast-radius measurement and must not truncate silently.
+			// #197: nothing was resized when artSizedSelf, so there is no
+			// stale SetImage crop to refresh - and relatching to newW/newH
+			// would pin the crop to a size the window never took (law 73: the
+			// CROP is the third number and it does not follow intent).
 			int32_t rlW = 0, rlH = 0;
-			if (gRelatchArmed
+			if (!artSizedSelf && gRelatchArmed
 				&& RelatchBmpSourceRect(win, w, h, newW, newH, &rlW, &rlH))
 			{
 				static int relatchEpoch = -1;
@@ -18363,7 +18383,14 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 				}
 			}
 
-			ScaleRecord rec = { win->GetID(), w, h, newW, newH, 0, false };
+			// #197: record what the window ACTUALLY IS. Storing newW/newH for
+			// a window we did not resize makes the next sweep's Classify read
+			// Unrecognized ("the game resized it behind us") and abandon it,
+			// instead of AlreadyScaled. Same w,h,w,h form the font-sized path
+			// uses, and for the same reason.
+			ScaleRecord rec = artSizedSelf
+				? ScaleRecord{ win->GetID(), w, h, w, h, 0, false }
+				: ScaleRecord{ win->GetID(), w, h, newW, newH, 0, false };
 			StoreScaleRecord(win, rec);
 		}
 	}

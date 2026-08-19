@@ -486,6 +486,104 @@ $BUBBLE = @{ T = [Convert]::ToUInt32("856DDBAC", 16)
              I = [Convert]::ToUInt32("094AC89A", 16)
              Design = 32 }
 $BUBBLE_TIERS = @{ "15x" = 1.5; "2x" = 2.0; "3x" = 3.0 }
+# ===========================================================================
+# ===========================================================================
+# DEPENDENCY-GATE LIST DRIFT (added 2026-08-19, same defect as below).
+#
+# Deploy-OnGameClose.ps1 now decides "is this package dependency-gated?" from an
+# explicit $DEPENDENCY_GATED list instead of a filename pattern. The AUTHORITY
+# for that answer is ScaleTier.cpp: a package is dependency-gated exactly when
+# its SyncDat call is passed a DepOkByName(...) argument. A hand-kept copy of an
+# authority rots (law 94), so compare the two and fail on drift IN EITHER
+# DIRECTION - they fail differently and both matter:
+#   in C++ but not the deploy -> deploy RE-ARMS a third-party package whose mod
+#                                is absent (loud: Test-ThirdPartyGates goes red)
+#   in the deploy but not C++ -> deploy REFUSES to arm a package that should be
+#                                live, at every tier, with no output. Silent.
+#                                That is exactly how CsiIcons shipped disarmed.
+$scaleTierSrc = Get-Content (Join-Path $proj "src\ScaleTier.cpp") -Raw
+$deploySrc    = Get-Content (Join-Path $proj "_tests\Deploy-OnGameClose.ps1") -Raw
+
+$cppGated = [regex]::Matches($scaleTierSrc, 'DepOkByName[^)]*?(z_SC4UIScale_[A-Za-z0-9]+)') |
+            ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+$psBlock  = [regex]::Match($deploySrc, '(?s)\$DEPENDENCY_GATED\s*=\s*@\((.*?)\)')
+if (-not $psBlock.Success) {
+  $failures += "Deploy-OnGameClose.ps1: no `$DEPENDENCY_GATED list found - the dependency gate reverted to a filename pattern, which disarms tier-gated-only packages"
+} elseif ($cppGated.Count -eq 0) {
+  # A parse that finds nothing is a REFUSAL, not a pass (NULL IS NOT EVIDENCE).
+  $failures += "dependency-gate drift check: parsed ZERO DepOkByName call sites out of ScaleTier.cpp - the regex no longer matches the source, so this gate proved nothing"
+} else {
+  $psGated = [regex]::Matches($psBlock.Groups[1].Value, '"(z_SC4UIScale_[A-Za-z0-9]+)"') |
+             ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+  $missing = @($cppGated | Where-Object { $psGated -notcontains $_ })
+  $extra   = @($psGated  | Where-Object { $cppGated -notcontains $_ })
+  foreach ($m in $missing) {
+    $failures += ("dependency-gate drift: " + $m + " is DepOkByName-gated in ScaleTier.cpp but absent from `$DEPENDENCY_GATED - the deploy will re-arm it with its mod uninstalled")
+  }
+  foreach ($e in $extra) {
+    $failures += ("dependency-gate drift: " + $e + " is in `$DEPENDENCY_GATED but has NO DepOkByName gate in ScaleTier.cpp - the deploy will silently refuse to arm it at every tier")
+  }
+  if ($missing.Count -eq 0 -and $extra.Count -eq 0) {
+    Write-Output ("  dependency-gate list matches ScaleTier.cpp (" + $cppGated.Count + " gated packages).")
+  }
+}
+
+# ARMED-TIER AGREEMENT (added 2026-08-19 after CsiIcons shipped 1.5x art to a
+# 2x install for a day).
+#
+# ⭐ PRESENCE IS NOT ARMING. Every existing assertion here asks whether a
+# package EXISTS. CsiIcons existed at all three tiers, correct sizes, and was
+# still wrong - because the deploy armed the 15x file (plain .dat name) while
+# every other family armed 2x. No "is it present" test can see that, and the
+# runtime SyncDat repairs the disk at launch, so the log cannot see it either.
+#
+# The question this asks instead: across every tier-managed family, is the SAME
+# tier the armed one? A family that disagrees with the majority is the defect,
+# and it does not matter which tier the machine is set to - only that they
+# agree. That makes the gate independent of ScaleFactor/AutoScale, which is the
+# point: a gate keyed on the tier would have to be right about the tier too.
+$tierFamilies = @(
+  @{ Dir = $plugins;                          Base = "z_SC4UIScale_SelectiveArt" },
+  @{ Dir = $plugins;                          Base = "z_SC4UIScale_DialogStatic" },
+  @{ Dir = $plugins;                          Base = "z_SC4UIScale_ItemIcons"    },
+  @{ Dir = "$plugins\zzz-SC4UIScale";         Base = "z_SC4UIScale_ItemIconsSub" },
+  @{ Dir = "$plugins\zzz-SC4UIScale";         Base = "z_SC4UIScale_CsiIcons"     }
+)
+$armed = @{}
+foreach ($fam in $tierFamilies) {
+  if (-not (Test-Path $fam.Dir)) { continue }
+  $plainTiers = @()
+  foreach ($tier in @("15x","2x","3x")) {
+    if (Test-Path (Join-Path $fam.Dir ($fam.Base + "-" + $tier + ".dat"))) {
+      $plainTiers += $tier
+    }
+  }
+  if ($plainTiers.Count -eq 0) { continue }   # family not installed: fine
+  if ($plainTiers.Count -gt 1) {
+    $failures += ($fam.Base + ": MORE THAN ONE armed tier (" +
+      ($plainTiers -join ", ") + ") - two copies of the same TGIs race on " +
+      "load order and the winner is whichever sorts last")
+  }
+  $armed[$fam.Base] = $plainTiers[0]
+}
+if ($armed.Count -gt 1) {
+  $distinct = @($armed.Values | Sort-Object -Unique)
+  if ($distinct.Count -gt 1) {
+    $majority = ($armed.Values | Group-Object | Sort-Object Count -Descending |
+                 Select-Object -First 1).Name
+    foreach ($k in @($armed.Keys)) {
+      if ($armed[$k] -ne $majority) {
+        $failures += ($k + ": armed at " + $armed[$k] +
+          " while the rest of the install is armed at " + $majority +
+          " - this family ships the wrong tier's art")
+      }
+    }
+  } else {
+    Write-Output ("  armed-tier agreement: all " + $armed.Count +
+      " tier-managed families armed at " + $distinct[0] + ".")
+  }
+}
+
 $nBubble = 0
 foreach ($tag in $BUBBLE_TIERS.Keys) {
   # #197: expected size is now the FACTOR times design, not a constant, and

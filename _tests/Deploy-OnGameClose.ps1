@@ -103,9 +103,30 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ItemIconsSub-3x.dat" "$zzz\z_SC4
 # each looked fine locally and was simply absent on a clean install.
 # Tier suffixes follow the ItemIconsSub pattern: the ACTIVE tier keeps its
 # plain .dat name, the other two ship .x1-disabled and ScaleTier renames.
-Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_CsiIcons-15x.dat" "$zzz\z_SC4UIScale_CsiIcons-15x.dat" -Force
-Copy-Item "$proj\tools\packages\2x\z_SC4UIScale_CsiIcons-2x.dat" "$zzz\z_SC4UIScale_CsiIcons-2x.dat.x1-disabled" -Force
-Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_CsiIcons-3x.dat" "$zzz\z_SC4UIScale_CsiIcons-3x.dat.x1-disabled" -Force
+# ⛔ THESE THREE LINES SHIPPED INVERTED (2026-08-18 -> 2026-08-19). 15x was
+# copied to the PLAIN name and 2x to .x1-disabled, so a 2x install deployed
+# 1.5x offer-balloon icons. The comment above was right the whole time; the
+# code under it was written during a 1.5x test session and never swapped back.
+# It passed every gate because every gate asked "is the package present?" and
+# all three were - and because ScaleTier's SyncDat re-arms the correct tier at
+# launch with MOVEFILE_REPLACE_EXISTING, erasing the evidence before anyone
+# reads a log. Written as the same $ACTIVE_TIER-driven loop the other families
+# use, so the tier can no longer be typed in by hand per package.
+foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
+  Copy-Item ("$proj\tools\packages\" + $t[0] + "\z_SC4UIScale_CsiIcons-" + $t[0] + ".dat") `
+            (Join-Path $zzz ("z_SC4UIScale_CsiIcons-" + $t[0] + ".dat" + $t[1])) -Force
+}
+# A stale plain-named file from the inverted era survives the loop above (it
+# only writes 15x to the .x1-disabled name, it does not remove the armed one),
+# and a leftover armed 15x beside an armed 2x is two live copies of the same
+# TGIs racing on load order. Remove any non-active plain-named tier file.
+foreach ($stale in @("15x","3x")) {
+  $sp = Join-Path $zzz ("z_SC4UIScale_CsiIcons-" + $stale + ".dat")
+  if (Test-Path $sp) {
+    Remove-Item $sp -Force
+    Write-Host ("  removed stale ARMED non-active tier: z_SC4UIScale_CsiIcons-" + $stale + ".dat")
+  }
+}
 
 # UncoveredIcons - ADDED 2026-08-15 (#149). ItemIcons a third-party LOT ships
 # that no package of ours covered; at any tier > 1 the strip's cell is scaled
@@ -282,15 +303,46 @@ foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
 # So: push the fresh bytes into the DISABLED name and remove the active one.
 # Content current, gate decision untouched. On a machine where the mod IS
 # installed there is no twin and none of this runs.
+# ⛔ MEMBERSHIP, NOT PATTERN. Only these packages have a DEPENDENCY gate in
+# ScaleTier.cpp - each is conditioned on a third-party mod being installed.
+# Every other package is TIER-gated only, and for those a -2x.x1-disabled twin
+# means "not the active tier" or "stale from an earlier deploy", never "turn it
+# off". Matching on the filename alone disarmed CsiIcons completely (2026-08-19)
+# because ScaleTier.cpp:1872 states it has no dependency gate at all.
+$DEPENDENCY_GATED = @(
+    "z_SC4UIScale_CamUI",         # CAM
+    "z_SC4UIScale_WarriorUI",     # Warrior's UI mod
+    "z_SC4UIScale_ThirdPartyUI",  # assorted third-party UI overrides
+    "z_SC4UIScale_SaveWarningUI", # save-warning mod
+    "z_SC4UIScale_NamIcons"       # NAM
+)
 foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
     if (-not (Test-Path $dir)) { continue }
     Get-ChildItem $dir -Filter "*-2x.dat.x1-disabled" -File -ErrorAction SilentlyContinue |
         ForEach-Object {
+            $base = $_.Name -replace '-2x\.dat\.x1-disabled$', ''
+            if ($DEPENDENCY_GATED -notcontains $base) { return }
             $active = $_.FullName -replace '\.x1-disabled$', ''
             if (Test-Path $active) {
                 Copy-Item $active $_.FullName -Force
                 Remove-Item $active -Force
                 Write-Output ("  package is dependency-GATED OFF; refreshed in place: " + $_.Name)
+            }
+        }
+}
+# Tier-gated-only packages: a stale -2x.x1-disabled twin beside an armed -2x.dat
+# is leftover state, not a decision. The armed file is correct; drop the twin so
+# the next run cannot mistake it for a gate again.
+foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
+    if (-not (Test-Path $dir)) { continue }
+    Get-ChildItem $dir -Filter "*-2x.dat.x1-disabled" -File -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            $base = $_.Name -replace '-2x\.dat\.x1-disabled$', ''
+            if ($DEPENDENCY_GATED -contains $base) { return }
+            $active = $_.FullName -replace '\.x1-disabled$', ''
+            if (Test-Path $active) {
+                Remove-Item $_.FullName -Force
+                Write-Output ("  dropped stale disabled twin (tier-gated only): " + $_.Name)
             }
         }
 }
