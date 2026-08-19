@@ -15391,3 +15391,103 @@ gate proves nothing - law 54):
 ALSO: SC4UIScale.ini carried ScaleFactor=1.5 under AutoScale=1. Inert while
 auto is on (it resolves 2.00 here) and a silent drop to 1.5x the moment anyone
 sets AutoScale=0. Set to 2.0 with a comment saying which one wins.
+
+## #195 AND #197 ARE ONE DEFECT, AND THE FIRST FIX WAS ON THE WRONG LIST (2026-08-19, 3x)
+
+### The measurement that ended three sessions of theorising
+
+From the user's own 3x run, three lines that were in the log the whole time:
+
+    UiSpike: panel 0x48E945B4 (1891,805 96x96) -> (1795,709 288x288)
+    UiSpike: VWKID  0 id=0x48E945B4 vt=6E4A1318 (1795,709 288x288)
+    UiSpike: BMPX draw id=0x48E945B4 img 96x96 win 288x288 -> dst 288x288 (x3.00)
+
+Art 96x96 = RoundHalfUp(32*3), correct. Window born at 96, swept to 288 = 96*3.
+That is 32 * a * f with a = f: NINE times the design instead of three.
+
+### ⭐ THE "INERT" FIX WAS THE CAUSE
+
+Three sessions ago 0x48E945B4 was added "to kNeverScaleIds" with the anchor
+
+    "\t\t0xAA3AC002, // Taxes editor popup\n"
+
+which IS unique in the file - and lives in **kAlwaysScaleCityIds** (:5303),
+not kNeverScaleIds (:4847-4955). The marker was placed on the FORCE-SCALE list
+by the edit written to protect it. Every later reading was built on that:
+
+  * "it had no effect"        -> it had the OPPOSITE effect
+  * "kNeverScaleIds is consulted at only two sites and this window is not a
+    direct view child" -> the log says `VWKID 0 id=0x48E945B4`. It IS a direct
+    view child, and the panel loop consults IsNeverScaleId at :10702
+    immediately before calling ScalePanelRoot. The list would have worked from
+    the first attempt.
+
+Two increasingly elaborate mechanisms were invented to explain a null whose
+cause was that the change had never been made.
+
+    ⭐ LAW: A UNIQUE ANCHOR PROVES THE TEXT IS UNIQUE, NOT THAT IT IS IN THE
+    RIGHT CONTAINER. When inserting into one of several same-shaped lists,
+    assert the ENCLOSING array - or verify the inserted line number falls
+    between that array's own start and end. Every list of hex ids looks like
+    every other one in a diff. This fix was verified that way:
+        kNeverScaleIds      lines 4847..4981   0x48E945B4 inside: [4980]
+        kAlwaysScaleCityIds lines 5329..5447   0x48E945B4 inside: NO
+
+    ⭐ LAW: WHEN A FIX APPEARS INERT, RE-READ THE FILE BEFORE THEORISING ABOUT
+    WHY THE MECHANISM DID NOT REACH. "The edit did not land where I think it
+    did" outranks every subtler explanation and is one grep to rule out.
+
+### ⭐ AND IT EXPLAINS #195, WHICH IS NOT A SEPARATE BUG
+
+ScalePanelRoot does not only resize - it MOVES. (1891,805) -> (1795,709), 96px
+left and 96px up. The count callout is the LTEXT "%d available"
+(T=2026960B G=6A231EAA I=4A54ED13), fetched at exactly ONE site in the exe,
+VA 0x004BA8CA, and handed to a call that places it from the marker's REAL
+position. We had moved the art away from that position, so the hat and its
+count separated: "hat on top, number on bottom" at 1x, two unrelated things at
+3x. One cause, two symptoms - the shape a "two symptoms therefore two bugs"
+reading always mistakes for two.
+
+⛔ AND IT KILLS THE CSI HYPOTHESIS OUTRIGHT. #195 was blamed on the icon-size
+constant in the billboard builder. The 3x log proves that patch RAN and did
+nothing to the picture:
+
+    CodePatches: CSI indicators x3.00 - icon+hitbox 35.0 -> 105.0 px (type 4)
+    and 32.0 -> 96.0 px (all other types, #195), pin quad 64 -> 192 px.
+    10 immediates, all inline in .text.
+
+The else-branch entry is still correct and stays (it was measured, and the
+"would resize unrelated indicators" caution really had inverted), but it was
+never this defect. ⭐ A PATCH THAT PROVABLY RAN AND CHANGED NOTHING ON SCREEN
+ELIMINATES ITS WHOLE LAYER - that is worth more than most positive findings.
+
+### The armed-tier gate caught a live bug on its first exposure
+
+The user played at 3x, so ScaleTier armed the 3x packages. The deploy then
+armed 2x alongside them: two copies of the same TGIs, winner decided by load
+order. Every family block spelled the tier decision out longhand with 2x
+hard-coded - eight times.
+
+⭐ ONE PATH OWNS THE SCALE. The DLL owns "which tier is armed"; the deploy owns
+"are the bytes current". The deploy had quietly taken both, exactly as it had
+taken the dependency-gate decision an hour earlier. Now it SNAPSHOTS the armed
+tier before touching anything and restores it afterwards.
+
+⛔ AND THE FIRST VERSION OF THAT SNAPSHOT WAS WRONG IN THE ONE CASE IT EXISTED
+FOR. Reading "which tier is armed" off disk only works while exactly one is -
+and the bug it fixes leaves two. The first-match scan picked 2x on a 3x install
+and dutifully disarmed the correct tier. The DLL RECORDS its decision
+("...-3x.dat -> ACTIVE"), so the snapshot now reads the newest log first and
+falls back to disk only when the disk is unambiguous.
+
+    ⭐ LAW: A REPAIR THAT READS THE STATE IT IS REPAIRING MUST BE CORRECT ON
+    THE BROKEN STATE, NOT THE HEALTHY ONE. Ask what the input looks like WHEN
+    THE BUG IS PRESENT - that is the only input it will ever see.
+
+Also removed: a CsiIcons-specific "remove any armed 15x/3x" sweep added earlier
+the same day. It assumed 2x was always active and deleted the correct file on a
+3x install, then the restore re-armed it, every run. Two things deciding one
+question is the bug, not the tie-break.
+
+VERIFIED: deploy run twice back to back, identical result; gate ALL PASS with
+"armed-tier agreement: all 5 tier-managed families armed at 3x."

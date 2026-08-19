@@ -4952,6 +4952,32 @@ namespace
 		// toolbar scales cleanly (bottom-left column); the flyouts scale but
 		// are re-positioned by the god-flyout DOCK below (Phase 2 flow), not
 		// the generic center/edge anchor which mislocated them.
+
+		// ---- #197 U-DRIVE-IT MISSION MARKER (placed correctly 2026-08-19) --
+		// This window is BORN AT ITS ART'S PIXEL SIZE, and the art now stages
+		// at RoundHalfUp(32*f) - 48/64/96 - so the window ALREADY carries f
+		// before the sweep sees it. Scaling it here applies f a second time:
+		//     on-screen = 32 * a * f,  a = f  ->  32*f*f
+		// Measured at 3x before this landed: art 96x96, window swept to
+		// 288x288 = 96*3, i.e. NINE times the 32px design instead of three.
+		//
+		// With the sweep skipped the draw multiply self-cancels: the BMPX blit
+		// clamps until the source fits the live window, source == window here,
+		// so m = 1 and the marker draws at exactly 32*f.
+		//
+		// ⛔ THIS ENTRY BELONGS IN **kNeverScaleIds**. The first attempt put
+		// it in kAlwaysScaleCityIds by anchoring on a comment line that IS
+		// unique in the file but lives in the OTHER array - so the marker was
+		// put on the FORCE-SCALE list by the change meant to protect it, and
+		// the "it had no effect" reading that followed sent two more sessions
+		// hunting a mechanism that was never involved. If you move this line,
+		// confirm BY LINE NUMBER that it still falls inside this array's own
+		// bounds; a unique anchor proves the text is unique, not that it is in
+		// the right container. Every list of hex ids looks alike in a diff.
+		//
+		// ⛔ BOTH HALVES OR NEITHER. Without the builder staging art at f
+		// (MISSION_BUBBLE_FIXED96_MULT = FACTOR) this pins the marker at 1x.
+		0x48E945B4, // U-Drive-It mission marker (art is f-scaled offline)
 	};
 
 	// GOD-MODE TOOL FLYOUTS (Phase 2 FLOW). Stock reference (vanilla dump
@@ -5309,21 +5335,6 @@ namespace
 		// art ships in SelectiveArt (scripts I-aa3acdfe/I-cbc3c2b9), so a
 		// 1x window would draw quarter-art + black fill.
 		0xAA3AC002, // Taxes editor popup
-		// #197 U-DRIVE-IT MISSION MARKER (2026-08-18). The other half of
-		// the builder change that made its art scale by f instead of a fixed
-		// x3. This window is BORN AT ITS ART'S PIXEL SIZE by the exe, so once
-		// the art is f-scaled the window is ALREADY 32*f - and sweeping it
-		// would multiply by f a second time, which is exactly the pre-#186
-		// f-squared state this change exists to remove.
-		//
-		// on-screen = 32 * a * f, and with a = f and the sweep skipped the
-		// remaining draw multiply self-cancels: BmpCtxBltThunk clamps m until
-		// the source fits the live window, and source == window here, so
-		// m = 1 and the marker draws at 32*f exactly.
-		//
-		// ⛔ NEVER list this WITHOUT the builder change, or the marker pins at
-		// 1x. The two are one edit.
-		0x48E945B4, // U-Drive-It mission marker (art is f-scaled offline)
 		0xCA4C332D, // Take Out A Loan popup
 		// Advisors (2026-07-29 late): the console strip's 2x face art in
 		// 1x buttons showed quarter-zoomed faces on FIRST open (user

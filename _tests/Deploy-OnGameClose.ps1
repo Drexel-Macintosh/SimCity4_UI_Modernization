@@ -6,6 +6,77 @@
 $ErrorActionPreference = "Stop"
 $proj = (Split-Path -Parent $PSScriptRoot)
 $plug = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins')
+
+# ---- ARMED-TIER SNAPSHOT (2026-08-19) --------------------------------------
+# Which tier is LIVE right now, per tier-managed family, recorded BEFORE any
+# copy runs. The family blocks below each hard-code 2x as the armed tier; on a
+# 1.5x or 3x machine that leaves TWO armed packages and the load order decides
+# which art the player gets. Restored verbatim at the end of this script.
+# The DLL owns this decision (ScaleTier resolves the factor from the screen
+# when AutoScale=1); this script owns only whether the bytes are current.
+$TIER_FAMILIES = @(
+    @{ Sub = "";                 Base = "z_SC4UIScale_SelectiveArt" },
+    @{ Sub = "";                 Base = "z_SC4UIScale_DialogStatic" },
+    @{ Sub = "";                 Base = "z_SC4UIScale_ItemIcons"    },
+    @{ Sub = "zzz-SC4UIScale";   Base = "z_SC4UIScale_ItemIconsSub" },
+    @{ Sub = "zzz-SC4UIScale";   Base = "z_SC4UIScale_CsiIcons"     },
+    @{ Sub = "zzz-SC4UIScale";   Base = "z_SC4UIScale_UncoveredIcons" }
+)
+# ⛔ THE FILES ARE NOT A RELIABLE SOURCE FOR THIS. Reading "which tier is
+# armed" off disk works only while exactly one is armed - and the very bug this
+# block exists to fix leaves TWO armed, at which point a first-match scan picks
+# whichever tier sorts first and locks in the wrong answer. That happened on the
+# first run of this code: a 3x install had 2x and 3x both live, the scan chose
+# 2x, and the deploy dutifully disarmed the correct tier.
+#
+# The DLL RECORDS its decision, so ask it instead. ScaleTier logs one line per
+# package as it arms the tier it resolved:
+#     ScaleTier: zzz-SC4UIScale\z_SC4UIScale_CsiIcons-3x.dat -> ACTIVE.
+# The newest log wins; this script preserves the previous log before every
+# deploy, so there is always at least one to read.
+$TIER_FROM_LOG = $null
+$logs = @(Get-ChildItem $plug -Filter "SC4UIScale*.log" -File -ErrorAction SilentlyContinue |
+          Sort-Object LastWriteTime -Descending)
+foreach ($lg in $logs) {
+    $m = [regex]::Matches((Get-Content $lg.FullName -Raw -ErrorAction SilentlyContinue),
+                          '-(15x|2x|3x)\.dat -> ACTIVE')
+    if ($m.Count) {
+        $TIER_FROM_LOG = $m[$m.Count-1].Groups[1].Value
+        Write-Output ("  armed tier per the DLL's own log (" + $lg.Name + "): " + $TIER_FROM_LOG)
+        break
+    }
+}
+
+$ARMED_BEFORE = @{}
+foreach ($fam in $TIER_FAMILIES) {
+    $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $plug }
+    if (-not (Test-Path $dir)) { continue }
+    $live = @()
+    foreach ($tier in @("15x","2x","3x")) {
+        if (Test-Path (Join-Path $dir ($fam.Base + "-" + $tier + ".dat"))) { $live += $tier }
+    }
+    if ($live.Count -eq 0) { continue }
+    if ($live.Count -eq 1) {
+        # Unambiguous on disk. Trust it even if the log disagrees - the user may
+        # have armed a tier by hand since the last run.
+        $ARMED_BEFORE[$fam.Base] = $live[0]
+    } elseif ($TIER_FROM_LOG -and $live -contains $TIER_FROM_LOG) {
+        $ARMED_BEFORE[$fam.Base] = $TIER_FROM_LOG
+        Write-Output ("  " + $fam.Base + ": " + ($live -join "+") +
+                      " both armed - the log says " + $TIER_FROM_LOG + "; using that")
+    } else {
+        # Ambiguous AND no log to break the tie. Say so rather than guessing -
+        # a silent pick here is what produced the wrong answer the first time.
+        $ARMED_BEFORE[$fam.Base] = $live[0]
+        Write-Output ("  ⚠ " + $fam.Base + ": " + ($live -join "+") +
+                      " both armed and no log to arbitrate - keeping " + $live[0])
+    }
+}
+if ($ARMED_BEFORE.Count) {
+    Write-Output ("  armed tier before deploy: " +
+        (($ARMED_BEFORE.GetEnumerator() | Sort-Object Name |
+          ForEach-Object { $_.Value }) | Sort-Object -Unique) -join ", ")
+}
 # #104: the game HANGS ON SHUTDOWN often enough that this loop blocked twice in
 # one session (2026-08-03) - the window closes, the PROCESS does not exit, and
 # the wait spun silently until the user noticed and used End Task. Silence was
@@ -116,17 +187,14 @@ foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
   Copy-Item ("$proj\tools\packages\" + $t[0] + "\z_SC4UIScale_CsiIcons-" + $t[0] + ".dat") `
             (Join-Path $zzz ("z_SC4UIScale_CsiIcons-" + $t[0] + ".dat" + $t[1])) -Force
 }
-# A stale plain-named file from the inverted era survives the loop above (it
-# only writes 15x to the .x1-disabled name, it does not remove the armed one),
-# and a leftover armed 15x beside an armed 2x is two live copies of the same
-# TGIs racing on load order. Remove any non-active plain-named tier file.
-foreach ($stale in @("15x","3x")) {
-  $sp = Join-Path $zzz ("z_SC4UIScale_CsiIcons-" + $stale + ".dat")
-  if (Test-Path $sp) {
-    Remove-Item $sp -Force
-    Write-Host ("  removed stale ARMED non-active tier: z_SC4UIScale_CsiIcons-" + $stale + ".dat")
-  }
-}
+# ⛔ A CsiIcons-specific "remove any armed 15x/3x" sweep used to sit here. It
+# was written when 2x was assumed to be the active tier always, and it DELETED
+# THE CORRECT FILE on a 3x install - the armed-tier restore at the end of this
+# script would re-arm 3x and this block would remove it again, every run. The
+# armed tier is now snapshot-and-restored generically for every family (see the
+# ARMED-TIER SNAPSHOT block at the top), so a per-package sweep can only
+# disagree with it. Deleted rather than repaired: two things deciding the same
+# question is the bug, not the tie-break.
 
 # UncoveredIcons - ADDED 2026-08-15 (#149). ItemIcons a third-party LOT ships
 # that no package of ours covered; at any tier > 1 the strip's cell is scaled
@@ -345,6 +413,35 @@ foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
                 Write-Output ("  dropped stale disabled twin (tier-gated only): " + $_.Name)
             }
         }
+}
+
+# ---- RESTORE THE ARMED TIER (2026-08-19) -----------------------------------
+# The family blocks above always write their 2x package to the plain name. Put
+# back whatever WAS armed, so a 1.5x or 3x install is not left with two live
+# copies of the same TGIs racing on load order. Bytes refreshed, decision
+# untouched - the same split of authority the dependency-gate block uses.
+# A family with nothing recorded was not armed before (clean install): its 2x
+# stays armed, which is the historical default.
+foreach ($fam in $TIER_FAMILIES) {
+    $want = $ARMED_BEFORE[$fam.Base]
+    if (-not $want) { continue }
+    $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $plug }
+    if (-not (Test-Path $dir)) { continue }
+    foreach ($tier in @("15x","2x","3x")) {
+        $live  = Join-Path $dir ($fam.Base + "-" + $tier + ".dat")
+        $stash = $live + ".x1-disabled"
+        if ($tier -eq $want) {
+            if (-not (Test-Path $live) -and (Test-Path $stash)) {
+                Move-Item $stash $live -Force
+                Write-Output ("  re-armed " + (Split-Path $live -Leaf) + " (was armed before deploy)")
+            }
+        } elseif (Test-Path $live) {
+            # MOVE, not delete: the bytes were just refreshed and the disabled
+            # name is where the DLL expects to find them if the tier changes.
+            Move-Item $live $stash -Force
+            Write-Output ("  disarmed " + (Split-Path $live -Leaf) + " (not the armed tier)")
+        }
+    }
 }
 
 $a = (Get-Item "$proj\build\Release\SC4UIScale.dll").Length
