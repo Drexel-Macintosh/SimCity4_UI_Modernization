@@ -16272,3 +16272,34 @@ the portraits (the preload at 0x00775239 is 0x0077xxxx, NOT the 0x0046Cxxx
 billboard builder every patch today targeted). That is a fresh search in a
 module nobody has mapped, and the boundary note's standing advice applies:
 "weigh it against the prize" before spending another session.
+
+## #191 CLICK TRACE - "MOVE IN MY SIM" LANDS IN 0x0077xxxx (2026-08-19)
+
+USER: "Trace my clicks and you'll find it ... 'Move in my sim' is distinct."
+Correct, and it is the first thread today that stays in ONE module and
+contradicts nothing measured.
+
+    LTEXT  "Move In My Sim"  T=0x2026960B G=0x6A231EAA I=0x4ACE23B5
+    BUTTON id=0xCA243E0C  area=(0,0,236,30) caption="Move In My Sim"
+           captionres={6a231eaa,4ace23b5}   in script I-0a243d80
+    HANDLER 0x00776B43  cmp eax,0xCA243E0C ; je 0x00776B92
+            0x00776B92  lea ecx,[esi-8] ; call 0x007755A0
+            0x007755A0  the move-in action
+
+Only TWO references to 0xCA243E0C exist in the image: the dispatcher above and
+0x00775002 (`push 0xca243e0c ; call [edx+0x8c]`, i.e. the code that FINDS the
+button by id). So the button has exactly one handler and it is 0x00776B92.
+
+⭐ AND IT IS THE SAME MODULE AS THE PORTRAIT PRELOAD (0x00775239). Every one of
+today's four failed patches was in 0x0046Cxxx. The click handler, the portrait
+loader and the button lookup are all 0x0077xxxx. That convergence is the first
+independent corroboration that the marker's owner lives there.
+
+⛔ STILL NOT THE ANSWER: 0x007755A0 is the ACTION (it builds strings and makes
+vtable calls), not the DRAW. The size lever is downstream of it. Do not patch
+anything on the strength of this trace alone - that is precisely the mistake
+made four times today.
+
+⚠ WHAT THIS TRACE DOES NOT DO is prove which code draws the marker. It proves
+where the FEATURE lives. Those are different claims and conflating them is how
+the category-3 identification survived three sessions.
