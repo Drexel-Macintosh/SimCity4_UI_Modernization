@@ -18764,12 +18764,19 @@ namespace
 		if (k <= 1) { return true; }             // Auto, 1x
 		if (gReadoutW <= 0 || gReadoutH <= 0)
 		{
-			// We were never handed a render size. Offer everything rather
-			// than hide a tier on the strength of a number we do not have -
-			// a missing measurement is not evidence of a small screen.
-			return true;
+			// We were never handed a render size, so the FIT question cannot
+			// be answered - a missing measurement is not evidence of a small
+			// screen. The PACKAGE question needs no screen and still runs.
+			return ScaleTier::PackageAvailable(kSelFactors[k]);
 		}
-		return ScaleTier::Fits(kSelFactors[k], gReadoutW, gReadoutH);
+		// ⭐ PACKAGE FIRST, THEN FIT. Offering a tier whose art is not
+		// installed makes the escape hatch WRITE THE TRAP: the player picks
+		// it, and the next boot's validator bounces it straight back to Auto.
+		// A control that offers a choice it knows will be refused is worse
+		// than one that does not offer it. Same predicate the boot path uses,
+		// so the selector and the validator can never disagree.
+		return ScaleTier::PackageAvailable(kSelFactors[k])
+			&& ScaleTier::Fits(kSelFactors[k], gReadoutW, gReadoutH);
 	}
 
 	void SelSetCaption(cIGZWin* parent, uint32_t id, const char* text)

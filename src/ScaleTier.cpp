@@ -127,6 +127,20 @@ namespace
 	// The package's art dat (live or gated) beside the DLL marks it
 	// installed. The 2x package also accepts its legacy UNTAGGED names
 	// (pre-multi-package installs) so Decide() works before migration runs.
+	// One place that writes the repaired tier back, so "the file, the game and
+	// the selector agree" is a single statement rather than four copies.
+	// Both keys are written: the ini must not keep `inf` / `4` / `2,5` text,
+	// because the in-game selector and the next human reader both go through
+	// that value.
+	void WriteRepairedIni(const wchar_t* iniPath, float tier)
+	{
+		if (iniPath == nullptr || iniPath[0] == 0) { return; }
+		wchar_t val[32] = {};
+		swprintf_s(val, L"%.2f", tier);
+		WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1", iniPath);
+		WritePrivateProfileStringW(L"UiSpike", L"ScaleFactor", val, iniPath);
+	}
+
 	bool PackageInstalled(const Package& pkg)
 	{
 		wchar_t dir[MAX_PATH];
@@ -1668,6 +1682,258 @@ namespace ScaleTier
 		return kWidestDesignPx * factor <= width
 			&& kTallestDesignPx * factor <= height
 			&& factor <= cap;
+	}
+
+	bool KnownFactor(float factor)
+	{
+		for (int i = 0; i < kPackageCount; i++)
+		{
+			if (factor >= kPackages[i].factor - 0.01f
+				&& factor <= kPackages[i].factor + 0.01f)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool PackageAvailable(float factor)
+	{
+		for (int i = 0; i < kPackageCount; i++)
+		{
+			if (factor >= kPackages[i].factor - 0.01f
+				&& factor <= kPackages[i].factor + 0.01f)
+			{
+				return PackageInstalled(kPackages[i]);
+			}
+		}
+		return false;
+	}
+
+	// ============ THE BOOT-STATE VALIDATOR ================================
+	// USER REQUEST: "if a user manually adjusts the ini file we need to run a
+	// check for 'resolution and scale combination correct', and if it flags
+	// false we should flip it back to auto. Automatically."
+	//
+	// Every condition below is a MEASURED failure mode, not a defensive
+	// guess - each one was reproduced against this code and then survived an
+	// adversarial pass whose job was to refute it. The order matters and is
+	// commented at each step.
+	bool ValidateBootState(BootState& st, const wchar_t* iniPath)
+	{
+		// The installed census, printed nowhere before today. Half the
+		// failure modes are invisible without it, because "which tiers does
+		// this install actually have art for" was never in the log.
+		const bool have15 = PackageAvailable(1.5f);
+		const bool have2 = PackageAvailable(2.0f);
+		const bool have3 = PackageAvailable(3.0f);
+		const bool have4 = PackageAvailable(4.0f);
+		const bool measured = (st.renderW > 0 && st.renderH > 0);
+
+		Logger::Get().WriteLine(LogLevel::Info,
+			"BootState: AutoScale=%d ScaleFactor(ini)=%.2f ScaleAll=%d "
+			"render=%dx%d%ls installed{1.5=%d 2=%d 3=%d 4=%d}",
+			st.autoScale ? 1 : 0, st.factor, st.scaleAll ? 1 : 0,
+			st.renderW, st.renderH, measured ? L"" : L" (UNMEASURED)",
+			have15 ? 1 : 0, have2 ? 1 : 0, have3 ? 1 : 0, have4 ? 1 : 0);
+
+		// ---- C0: did we actually READ the file? --------------------------
+		// A UTF-8 BOM on the FIRST line destroys the first section header, so
+		// every key silently returns its built-in default - AutoScale=1,
+		// ScaleAll=0, ScaleFactor=2.0 - which is precisely the art-armed,
+		// geometry-off state below. MEASURED against a real ini in four
+		// encodings: with a BOM and [UiSpike] on line 1, every key reads
+		// empty while the SECOND section still reads fine.
+		//
+		// AN EMPTY SECTION READ IS A READ FAILURE, NOT A REQUEST FOR
+		// DEFAULTS. It is also the positive control for this whole function:
+		// if we could not read the file, nothing below is evidence of
+		// anything.
+		//
+		// (The shipped ini is immune - its line 1 is a ';' comment, which
+		// absorbs the BOM. This catches a hand-edited or re-saved one.)
+		if (iniPath != nullptr && iniPath[0] != 0 && FileExists(iniPath))
+		{
+			wchar_t sect[64] = {};
+			const DWORD n = GetPrivateProfileSectionW(L"UiSpike", sect, 64,
+				iniPath);
+			if (n == 0)
+			{
+				st.autoScale = false;
+				st.factor = 1.0f;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"BootState REPAIR: the ini exists but its [UiSpike] "
+					"section reads EMPTY - a UTF-8 BOM on the first line "
+					"destroys the first section header and every key then "
+					"falls back to its built-in default. Forcing stock. "
+					"NOTHING written to that file: the write would append a "
+					"SECOND [UiSpike] and make it worse. Re-save it as ANSI "
+					"or UTF-16LE.");
+				return false;
+			}
+		}
+
+		// ---- C1: ScaleAll off while the factor asks for a tier -----------
+		// THE WORST OF THE MEASURED FAILURES, because it traps the player.
+		// The art/font layer is armed FROM THE FACTOR, while every geometry
+		// consumer is gated on ScaleAll - so ScaleAll=0 with a tier means
+		// tier art and tier fonts drawn inside 1x windows. And the in-game
+		// selector cannot repair it: it writes AutoScale and ScaleFactor,
+		// never ScaleAll, so every row it offers leaves the art armed.
+		//
+		// A DELETED KEY REACHES THIS TOO. GetPrivateProfileIntW returns 0 for
+		// any WORD ("true", "yes", "on"), and the built-in default is false,
+		// so a missing key is indistinguishable from a disabled one.
+		//
+		// Remedy is to LOWER THE ART TO THE GEOMETRY, never to switch a
+		// subsystem on behind the user's back: ScaleAll is their own off
+		// switch, and their stored tier preference is not ours to overwrite.
+		// Nothing is written; the log names the key to restore.
+		const float effective = st.autoScale
+			? Decide(st.renderW, st.renderH) : st.factor;
+		if (!st.scaleAll && effective > 1.01f)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState REPAIR: ScaleAll=0 (or the key is missing - its "
+				"built-in default is 0) but the factor asks for %.2f. Art and "
+				"fonts are armed from the factor while every geometry patch "
+				"is gated on ScaleAll, so this would draw %.2fx art inside 1x "
+				"windows. Forcing stock: factor 1.00, every package stashed. "
+				"NOTHING written to the ini - restore ScaleAll=1 to get "
+				"scaling back.", effective, effective);
+			st.autoScale = false;
+			st.factor = 1.0f;
+			return false;
+		}
+
+		// Everything below judges a MANUAL factor. Auto cannot fail them:
+		// Decide only ever returns a tier that is installed and fits.
+		if (st.autoScale)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState: COHERENT (AutoScale - the tier is derived, so it "
+				"is installed and fits by construction).");
+			return true;
+		}
+
+		// ---- C2: finite ---------------------------------------------------
+		// wcstod accepts inf, nan, infinity, 0x1p3. NaN fails EVERY
+		// comparison, so it slips past `factor > 1.01f` in both the package
+		// guard and the stock block, and reaches the tier mirror and the
+		// code-patch battery that write factor-derived immediates into .text.
+		if (!(st.factor == st.factor) || st.factor > 1.0e6f
+			|| st.factor < -1.0e6f)
+		{
+			const float was = st.factor;
+			st.autoScale = true;
+			st.factor = Decide(st.renderW, st.renderH);
+			WriteRepairedIni(iniPath, st.factor);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState REPAIR: ScaleFactor %.2f is not a finite number. "
+				"Falling back to Auto, which picks %.2f. Written back so the "
+				"file, the running game and the in-game selector agree.",
+				was, st.factor);
+			return false;
+		}
+
+		// ---- C3: below stock -> clamp, do NOT flip ------------------------
+		// A negative or zero factor already lands on coherent stock; this
+		// only stops "-2.00" leaking into the tier mirror's 97 readers and
+		// into the Graphic Options readout. Flipping here would turn scaling
+		// ON in a state that is already correct.
+		if (st.factor < 1.0f)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState: ScaleFactor %.2f is below stock - clamped to 1.00 "
+				"for the tier mirror and the readout. AutoScale left at %d "
+				"(this is already a stock state, not a repair).",
+				st.factor, st.autoScale ? 1 : 0);
+			st.factor = 1.0f;
+			return false;
+		}
+
+		// ---- C4: manual stock is COHERENT, and must short-circuit ---------
+		// Set-Tier.ps1 -Tier 1 writes exactly this for every 1x reference
+		// capture. Stock needs no package and no room, so returning here is
+		// what makes it impossible for a baseline to be flipped back on.
+		if (st.factor <= 1.01f)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState: COHERENT (manual stock - needs no package and no "
+				"room; a 1x reference capture can never be flipped).");
+			return true;
+		}
+
+		// ---- C5: a tier the package table knows -------------------------
+		// SyncStaticLayers REFUSES a non-table factor and returns, leaving
+		// last boot's art armed while the sweep runs at the new one.
+		if (!KnownFactor(st.factor))
+		{
+			const float was = st.factor;
+			st.autoScale = true;
+			st.factor = Decide(st.renderW, st.renderH);
+			WriteRepairedIni(iniPath, st.factor);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState REPAIR: ScaleFactor %.2f is not a supported tier "
+				"(1.5 / 2 / 3). The art layer would have stayed at whatever "
+				"was armed last boot while geometry scaled by %.2f. Falling "
+				"back to Auto, which picks %.2f - written back.",
+				was, was, st.factor);
+			return false;
+		}
+
+		// ---- C6: and that tier's art is ON DISK --------------------------
+		// The manual path never asked. kPackages carries a 4.0 row that no
+		// package has ever been built for, so ScaleFactor=4 passed every
+		// existing check, stashed all three real tiers and armed nothing -
+		// including the stock-tier selector, leaving no way back.
+		if (!PackageAvailable(st.factor))
+		{
+			const float was = st.factor;
+			st.autoScale = true;
+			st.factor = Decide(st.renderW, st.renderH);
+			WriteRepairedIni(iniPath, st.factor);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState REPAIR: ScaleFactor %.2f is a supported tier but "
+				"NO package for it is installed. Selecting it stashes every "
+				"tier that IS installed and arms none, which takes the "
+				"in-game selector down with it. Falling back to Auto, which "
+				"picks %.2f - written back.", was, st.factor);
+			return false;
+		}
+
+		// ---- C7: and the screen can carry it -----------------------------
+		// The trap the user raised: a tier chosen on a large display puts
+		// Graphic Options (558 design px tall) off-screen on a smaller one,
+		// and that dialog is the only in-game way back.
+		if (!measured)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState: render resolution UNMEASURED (0x0) - the FIT "
+				"check is skipped; a missing number is not evidence of a "
+				"small screen. The finite / supported-tier / package-installed "
+				"checks all still ran.");
+			return true;
+		}
+		if (!Fits(st.factor, st.renderW, st.renderH))
+		{
+			const float was = st.factor;
+			st.autoScale = true;
+			st.factor = Decide(st.renderW, st.renderH);
+			WriteRepairedIni(iniPath, st.factor);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootState REPAIR: ScaleFactor %.2f does not fit %dx%d - the "
+				"UI would be scaled past the screen and Graphic Options, the "
+				"only way to change it, would go off-screen with it. Falling "
+				"back to Auto, which picks %.2f - written back.",
+				was, st.renderW, st.renderH, st.factor);
+			return false;
+		}
+
+		Logger::Get().WriteLine(LogLevel::Info,
+			"BootState: COHERENT (manual %.2f - supported, installed, and it "
+			"fits %dx%d).", st.factor, st.renderW, st.renderH);
+		return true;
 	}
 
 	float Decide(int width, int height)

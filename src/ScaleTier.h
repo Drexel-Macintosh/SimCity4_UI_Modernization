@@ -26,6 +26,40 @@ namespace ScaleTier
 	// about to be shown to the player as a promise.
 	bool Fits(float factor, int width, int height);
 
+	// Is this factor one of the tiers the package table knows about?
+	bool KnownFactor(float factor);
+
+	// KnownFactor AND that tier's art actually on disk. PUBLISHED because the
+	// MANUAL path never asked the disk: PackageInstalled had exactly one
+	// caller (Decide), which is why every "factor with no art" failure mode
+	// exists. kPackages even carries a 4.0 row no package was ever built for.
+	bool PackageAvailable(float factor);
+
+	// THE BOOT-STATE VALIDATOR (2026-08-19, user request: "run a check for
+	// resolution and scale combination correct, and if it flags false flip it
+	// back to auto, automatically").
+	//
+	// One function, one call site, run BEFORE the tier is applied. Answers
+	// "is [AutoScale, ScaleFactor, ScaleAll, packages, resolution] coherent?",
+	// repairs it if not, writes the repair back where writing is safe, and
+	// tells the caller a repair happened so the static-layer sync cannot then
+	// be skipped.
+	//
+	// Deliberately takes PRIMITIVES, not Settings: ScaleTier does not know
+	// about the settings struct today and this must not be the change that
+	// couples them.
+	struct BootState
+	{
+		bool  autoScale;         // in/out
+		float factor;            // in/out
+		bool  scaleAll;          // in ONLY - never written, never mutated
+		int   renderW, renderH;  // in - 0/0 means UNMEASURED, not small
+	};
+
+	// true  = coherent as read; nothing changed, nothing written.
+	// false = REPAIRED; autoScale/factor now hold what will actually run.
+	bool ValidateBootState(BootState& st, const wchar_t* iniPath);
+
 	// Enable the package matching `factor` and stash every other installed
 	// package (suffix ".x1-disabled"). PLUGINS-ONLY: all managed files -
 	// both dats and FontStyle.ini - live beside the DLL in the Documents

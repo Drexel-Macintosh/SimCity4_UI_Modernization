@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.2.4"
+#define UISCALE_VERSION_STR "3.3.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -237,6 +237,31 @@ public:
 			// different question and the wrong one for that gate.
 			const bool iniWantsScaling = settings.spikeScaleAll;
 
+			// ⭐ THE BOOT-STATE VALIDATOR (user request: "if a user manually
+			// adjusts the ini we need to run a check for resolution and scale
+			// combination correct, and if it flags false flip it back to
+			// auto, automatically").
+			//
+			// HERE, and outside both branches, because what it asks depends
+			// only on the ini and the screen - never on HOW the factor was
+			// chosen. A gate that depends only on the factor living inside a
+			// branch that asks how the factor was picked is the shape that
+			// has shipped from this one function four times (#149, #182, and
+			// the two of 2026-08-19 recorded below).
+			//
+			// It replaces the narrower Fits() rescue that used to sit in the
+			// manual branch: that was one of these conditions, and two
+			// rescues in two branches would be two rules.
+			wchar_t bootIni[MAX_PATH] = {};
+			GetDllSiblingPath(L"SC4UIScale.ini", bootIni, MAX_PATH);
+			ScaleTier::BootState bs = {
+				settings.spikeAutoScale, settings.spikeScaleFactor,
+				settings.spikeScaleAll, gfxW, gfxH
+			};
+			const bool bootRepaired = !ScaleTier::ValidateBootState(bs, bootIni);
+			settings.spikeAutoScale = bs.autoScale;
+			settings.spikeScaleFactor = bs.factor;
+
 			if (settings.spikeAutoScale)
 			{
 				const float tier = ScaleTier::Decide(gfxW, gfxH);
@@ -260,56 +285,10 @@ public:
 			}
 			else
 			{
-				// ⭐ A MANUAL TIER THAT NO LONGER FITS THE SCREEN FALLS BACK
-				// TO AUTO (2026-08-19, user-raised). The scenario is real and
-				// it is the worst failure this feature can produce: pick 3x on
-				// a large display, then run the game on a smaller one - a
-				// laptop, a changed resolution, a different monitor - and the
-				// UI is scaled past the screen. Graphic Options is 558 design
-				// px tall, so at 3x it needs 1674 and simply does not fit;
-				// THE CONTROL THAT WOULD FIX IT IS THE FIRST THING TO GO
-				// OFF-SCREEN. The player is trapped in a UI they cannot
-				// navigate, with no in-game way back.
-				//
-				// So the manual factor is CHECKED against the render
-				// resolution, with the same ScaleTier::Fits the auto path
-				// uses. If it does not fit we fall back to Auto, which by
-				// construction picks the largest tier that DOES.
-				//
-				// AND WE WRITE IT BACK. A silent per-launch override would
-				// leave the ini saying 3 while the game ran at 1.5 and the
-				// selector showed 1.5 - three sources of truth, two of them
-				// wrong. Writing AutoScale=1 makes the recovery visible,
-				// permanent, and consistent with what the player sees in
-				// Graphic Options.
-				// ⚠ ONLY WHEN WE ACTUALLY HAVE A RESOLUTION. Fits() answers
-				// false for a zero size, so an unreadable
-				// SC4GraphicsOptions.ini would otherwise "rescue" a
-				// perfectly good manual tier all the way down to stock -
-				// a missing measurement is not evidence of a small screen
-				// (NULL IS NOT EVIDENCE). No number, no rescue.
-				if (gfxW > 0 && gfxH > 0
-					&& !ScaleTier::Fits(settings.spikeScaleFactor, gfxW, gfxH))
-				{
-					const float was = settings.spikeScaleFactor;
-					const float tier = ScaleTier::Decide(gfxW, gfxH);
-					settings.spikeAutoScale = true;
-					settings.spikeScaleFactor = tier;
-					wchar_t iniPath2[MAX_PATH] = {};
-					GetDllSiblingPath(L"SC4UIScale.ini", iniPath2, MAX_PATH);
-					WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1",
-						iniPath2);
-					logger.WriteLine(
-						LogLevel::Info,
-						"AutoScale RESCUE: manual ScaleFactor %.2f does not "
-						"fit %dx%d - falling back to Auto, which picks %.2f. "
-						"AutoScale=1 written back to the ini so the setting, "
-						"the running game and the in-game selector agree. "
-						"Without this the UI would be scaled past the screen "
-						"and Graphic Options - the only way to change it - "
-						"would be off-screen too.",
-						was, gfxW, gfxH, tier);
-				}
+				// The fit rescue that used to live here is now condition C7
+				// of ScaleTier::ValidateBootState, which runs above and
+				// outside both branches. Two rescues in two branches would be
+				// two rules, and this one could only ever see manual mode.
 				tierActive = settings.spikeScaleAll
 					&& settings.spikeScaleFactor > 1.01f;
 				logger.WriteLine(
@@ -398,7 +377,14 @@ public:
 			// renamed. The distinction the old gate could not draw is "the user
 			// asked for stock" versus "the rig is dormant"; the ini's own
 			// ScaleAll is what separates them.
-			if (settings.spikeAutoScale || tierActive || iniWantsScaling)
+			// `|| bootRepaired` is MANDATORY, not cosmetic. A repair means we
+			// are running something other than what the ini asked for, so the
+			// art MUST be resynced to what we actually run. Without it the
+			// force-stock repair (autoScale=false, factor=1.0, scaleAll=false)
+			// makes all three other terms false, and the previous tier's dats
+			// stay armed - the exact trap the repair exists to close.
+			if (settings.spikeAutoScale || tierActive || iniWantsScaling
+				|| bootRepaired)
 			{
 				// #111: name the EFFECTIVE factor at the moment the static
 				// layers are chosen, so "which art/font package is live" is
