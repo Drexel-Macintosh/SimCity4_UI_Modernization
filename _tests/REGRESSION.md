@@ -15491,3 +15491,117 @@ question is the bug, not the tie-break.
 
 VERIFIED: deploy run twice back to back, identical result; gate ALL PASS with
 "armed-tier agreement: all 5 tier-managed families armed at 3x."
+
+## #197 CURED IN ScalePanelRoot - AND TWO OF MY OWN FIXES CAME BACK OUT (2026-08-19, 3x, dep 08:19:39)
+
+Both reverts are recorded rather than quietly undone, because each looked right.
+
+### (1) The ScaleSubtree guard was dead code AND turned a crash gate red
+
+Every capture ever taken contains ZERO "ARTSIZED" lines - a controlled null,
+with the positive control stated: the guard was in the 22:01:59 build, it logs
+at Info (Info lines fill that file), its counter resets per city so the 4-line
+cap is not the cause, f=2.00 passes the f>1.01 test, and the window
+demonstrably existed and was resized twice in that same session. ScaleSubtree
+simply never sees this id.
+
+Worse, the eight-line comment introducing it failed the repo's own gate:
+
+    python _tests/Test-MutationCountInvariant.py
+    FAIL: 18351 SetW ... nearest increment 18337, 14 lines away (max 12)
+
+That gate protects #117: five CRASH KILLER liveness verifies are SKIPPED when
+the scale count did not move, so a mutation drifting from its increment means a
+verify gets skipped when it is needed. A COMMENT was enough to break it.
+Removed entirely.
+
+    ⭐ LAW: A COMMENT CAN BREAK A GATE. Gates that reason about SOURCE LAYOUT -
+    distance between statements, ordering, adjacency - are as sensitive to
+    prose as to code. Run them after documentation-only edits too.
+
+### (2) ⛔ MOVING THE ID TO kNeverScaleIds WOULD HAVE BROKEN THE NUMBERS AGAIN
+
+The panel loop's `if (IsNeverScaleId(...)) { continue; }` skips the whole
+ScalePanelRoot CALL - and THE CHILD WALK LIVES INSIDE ScalePanelRoot, after the
+root geometry block. So never-scale drops the resize we wanted dropped AND the
+child walk we needed: the "numbers are gone from the deploy icons" regression a
+third time, by a third route. The id stays on kAlwaysScaleCityIds (membership
+there is what reaches it while vis=0 and arms gRelatchArmed for its subtree);
+only its comment was false and is corrected.
+
+    ⭐ LAW: A SKIP LIST SKIPS THE FUNCTION, NOT THE LINE. Before excluding a
+    window from a pass, read what ELSE that pass does for it.
+
+⚠ AND THE PREVIOUS ENTRY IN THIS FILE IS WRONG ABOUT ITS OWN CURE. It says the
+fix was "0x48E945B4 moved to kNeverScaleIds, verified by line number". The line
+numbers were right; the destination was not. Corrected here rather than edited
+there, so the sequence stays readable.
+
+### The actual cure, at the site the log names
+
+    f=1.5  img 48x48  win 72x72   -> dst 72    want 48    246 samples
+    f=2.0  img 64x64  win 128x128 -> dst 128   want 64   2159 samples
+    f=3.0  img 96x96  win 288x288 -> dst 288   want 96    628 samples
+
+Every one is art*f = 32*f*f. ScalePanelRoot now refuses the ROOT geometry write
+for 0x48E945B4 and logs ARTSIZED-ROOT; source == window, the blit clamp gives
+m = 1, drawn = 32*f exactly.
+
+  * THE MOVE GOES TOO, and it is not optional: newX/newY are computed FROM
+    newW/newH, so "size only" is not separable. The measured teleport
+    (934,700)->(902,668) is 32px off the world point the game had just set -
+    and that displacement is #195, the count callout placed from the marker's
+    REAL position while the art sat elsewhere.
+  * THE RECORD IS STILL WRITTEN, {w,h,w,h}. Without one the root stays Fresh
+    and PURGE-ON-FRESH-ROOT wipes every descendant record on EVERY pass, so the
+    count child would classify Fresh and be re-scaled by f each sweep. Runaway
+    growth; the least obvious trap in this patch.
+  * count++ MUST NOT FIRE - nothing was mutated. The invariant gate requires
+    mutation -> increment, never the reverse, so omitting it is gate-safe.
+  * CHILDREN ARE UNAFFECTED: the child loop takes rootDesignL/rootDesignT, set
+    from l/t (POSITION), never from newW/newH. The #161 frame they round in is
+    byte-identical with or without this edit.
+
+### ⛔ AND THE ID IS NOT WHAT WE CALL IT
+
+0x007AD3B0 is ScrollWin::GZOnMouseDownR (vtable 0x00AB8CD0 slot +0x21C):
+
+    007AD3B5  68 b4 45 e9 48   push 0x48E945B4
+    007AD3BA  ff 90 88 000000  call [eax+0x88]      ; GetChildWindowFromID
+
+The RIGHT-BUTTON-DOWN handler owns this window. Six push sites, two symmetric
+clusters - CITY 0x4B7E16/0x4B7E7F/0x4B83CB, REGION 0x7AAEC6/0x7AC718/0x7AD3B6.
+Our source calls it "the U-Drive-It mission marker"; it is the right-drag
+anchor ring, in the city view AND the region map. That mislabel is why #193
+("when I hold right click to move, the circle is massive in maps") was audited
+against sub-flyout and disaster rings and came back clean.
+
+    ⭐ LAW: A WRONG NAME IN OUR OWN SOURCE IS A SEARCH-BLOCKER. Every audit
+    keyed on the label looked at the wrong widget and returned an honest null.
+    When a null is confident and repeated, re-derive the IDENTITY from the exe
+    before trusting the name we gave it.
+
+⇒ #193 AND #197 ARE THE SAME DEFECT. This one fix addresses both.
+
+### #195's exe hypothesis is dead, and the record corrected
+
+The 3x run proves the CSI patch RAN and changed nothing:
+
+    CodePatches: CSI indicators x3.00 - icon+hitbox 35.0 -> 105.0 px (type 4)
+    and 32.0 -> 96.0 px, pin quad 64 -> 192 px. 10 immediates.
+
+    ⭐ LAW: A PATCH THAT PROVABLY RAN AND CHANGED NOTHING ON SCREEN ELIMINATES
+    ITS WHOLE LAYER. Worth more than most positive findings.
+
+Two corrections to what was written here this morning:
+  * 0x0046CCB9 is CATEGORY 3 ONLY, not "every non-4 type". Exhaustive
+    branch-target enumeration of 0x0046C8B0..0x0046D110: 0x0046CC41 has ONE
+    inbound edge, from a block entered only from 0x0046CB52, which is entered
+    from BOTH `cmp [esi+4],3` and `cmp [esi+4],4`. The two categories MERGE and
+    then split. Reading one `jne` tells you where it goes, never who arrives.
+  * The entry stays (category 3's plate really was scaling against a stock
+    icon) but it never was #195.
+
+The count string is the LTEXT "%d available" T=2026960B G=6A231EAA I=4A54ED13,
+fetched at exactly ONE site, VA 0x004BA8CA, and placed relative to the marker's
+real position - which is why removing the marker's teleport is the cure.

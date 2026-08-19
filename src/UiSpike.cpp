@@ -4952,32 +4952,6 @@ namespace
 		// toolbar scales cleanly (bottom-left column); the flyouts scale but
 		// are re-positioned by the god-flyout DOCK below (Phase 2 flow), not
 		// the generic center/edge anchor which mislocated them.
-
-		// ---- #197 U-DRIVE-IT MISSION MARKER (placed correctly 2026-08-19) --
-		// This window is BORN AT ITS ART'S PIXEL SIZE, and the art now stages
-		// at RoundHalfUp(32*f) - 48/64/96 - so the window ALREADY carries f
-		// before the sweep sees it. Scaling it here applies f a second time:
-		//     on-screen = 32 * a * f,  a = f  ->  32*f*f
-		// Measured at 3x before this landed: art 96x96, window swept to
-		// 288x288 = 96*3, i.e. NINE times the 32px design instead of three.
-		//
-		// With the sweep skipped the draw multiply self-cancels: the BMPX blit
-		// clamps until the source fits the live window, source == window here,
-		// so m = 1 and the marker draws at exactly 32*f.
-		//
-		// ⛔ THIS ENTRY BELONGS IN **kNeverScaleIds**. The first attempt put
-		// it in kAlwaysScaleCityIds by anchoring on a comment line that IS
-		// unique in the file but lives in the OTHER array - so the marker was
-		// put on the FORCE-SCALE list by the change meant to protect it, and
-		// the "it had no effect" reading that followed sent two more sessions
-		// hunting a mechanism that was never involved. If you move this line,
-		// confirm BY LINE NUMBER that it still falls inside this array's own
-		// bounds; a unique anchor proves the text is unique, not that it is in
-		// the right container. Every list of hex ids looks alike in a diff.
-		//
-		// ⛔ BOTH HALVES OR NEITHER. Without the builder staging art at f
-		// (MISSION_BUBBLE_FIXED96_MULT = FACTOR) this pins the marker at 1x.
-		0x48E945B4, // U-Drive-It mission marker (art is f-scaled offline)
 	};
 
 	// GOD-MODE TOOL FLYOUTS (Phase 2 FLOW). Stock reference (vanilla dump
@@ -5334,6 +5308,21 @@ namespace
 		// to 2x. Same vis-gate intermittency as the news reader. Their 2x
 		// art ships in SelectiveArt (scripts I-aa3acdfe/I-cbc3c2b9), so a
 		// 1x window would draw quarter-art + black fill.
+		// #197 U-DRIVE-IT / RIGHT-DRAG MARKER 0x48E945B4 - STAYS ON THIS LIST.
+		// Membership here forces the panel loop to reach it even while vis=0
+		// and arms gRelatchArmed for its subtree; both are wanted. What is NOT
+		// wanted is the root's own geometry write, and that is suppressed
+		// inside ScalePanelRoot rather than by excluding the window here.
+		//
+		// ⛔ DO NOT MOVE THIS TO kNeverScaleIds. That was tried on
+		// 2026-08-19. The panel loop's IsNeverScaleId test does `continue`,
+		// which skips the whole ScalePanelRoot CALL - and the CHILD WALK LIVES
+		// INSIDE ScalePanelRoot. Excluding the window drops the resize we want
+		// dropped AND the child walk we need, i.e. the "numbers are gone from
+		// the deploy icons" regression for a third time by a third route.
+		// A skip list skips the FUNCTION, not the line.
+		0x48E945B4, // U-Drive-It / right-drag marker (root write refused in
+		            // ScalePanelRoot; art is f-scaled offline)
 		0xAA3AC002, // Taxes editor popup
 		0xCA4C332D, // Take Out A Loan popup
 		// Advisors (2026-07-29 late): the console strip's 2x face art in
@@ -7382,7 +7371,6 @@ namespace
 	int       gBudgetTickLog = 0;
 	int       gMayorRebirthLogs = 0;   // #194
 	int       gArtSizedRefusals = 0;     // #197
-	bool      gArtSizedSkipSelf = false; // #197: suppress THIS node's size write only
 	int32_t   gReadoutW = 0, gReadoutH = 0;   // #192, set by the director
 	int       gReadoutLogs = 0;
 	bool      gBudgetTickAnnounced = false;
@@ -15213,9 +15201,57 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		if (gapB >= 0 && newY + newH > frameH) newY = frameH - newH;
 		if (gapT >= 0 && newY < 0) newY = 0;
 
+		// #197 ART-SIZED ROOT: this window is BORN at its art's pixel size, so
+		// writing a scaled geometry here is the SECOND application of f.
+		// Measured across the user's captures at every tier - img 48/64/96 in
+		// a window ScalePanelRoot had set to 72/128/288, i.e. art*f = 32*f*f.
+		// Refuse the write and source == window, so the blit's clamp gives
+		// m = 1 and the marker draws at exactly 32*f.
+		//
+		// ⛔ THE MOVE GOES WITH IT. newX/newY are computed FROM newW/newH,
+		// so "size only" is not separable - and the measured teleport
+		// (934,700)->(902,668) is 32px off the world point the game had just
+		// set for it. A move derived from a size we refuse to write is
+		// incoherent.
+		//
+		// ⛔ THE RECORD IS STILL MANDATORY. Without one this root stays
+		// Fresh, and PURGE-ON-FRESH-ROOT wipes every descendant record on every
+		// pass - the count child would classify Fresh and be re-scaled by f
+		// each sweep. Runaway growth, and the least obvious trap here.
+		//
+		// ⛔ count++ MUST NOT FIRE: nothing was mutated, and the log line
+		// would otherwise claim a write that did not happen. The invariant gate
+		// requires mutation -> increment, never the reverse.
+		const bool artSizedRoot = (win->GetID() == 0x48E945B4 && f > 1.01f);
+		if (artSizedRoot)
+		{
+			ScaleRecord rec = { win->GetID(), w, h, w, h, 0, false };
+			rec.origL = l;
+			rec.origT = t;
+			rec.hasOrigPos = true;
+			StoreScaleRecord(win, rec);
+			if (gArtSizedRefusals < 4)
+			{
+				gArtSizedRefusals++;
+				const int32_t want = RoundHalfUp(32 * f);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: ARTSIZED-ROOT 0x%08X %dx%d at f=%.2f - refusing "
+					"the root geometry write (art is staged at f, so it is "
+					"already %d). %s Children still walked below.",
+					win->GetID(), w, h, f, want,
+					(w == want && h == want)
+						? "Matches - on-screen is exactly the factor."
+						: "DOES NOT MATCH the expected size: the art stage and "
+						  "this refusal have drifted - re-check "
+						  "MISSION_BUBBLE_FIXED96_MULT.");
+			}
+		}
+		else
+		{
 		// Proven call order preserved: move the root to its anchor first,
 		// then resize. The move is RELATIVE, so the delta comes from the
 		// CURRENT position even when the anchor came from the recorded one.
+		count++;
 		win->GZWinMoveTo(newX - curL, newY - curT);
 		win->SetW(newW);
 		win->SetH(newH);
@@ -15225,7 +15261,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		rec.origT = t;
 		rec.hasOrigPos = true;
 		StoreScaleRecord(win, rec);
-		count++;
+		}
 
 		Logger::Get().WriteLine(
 			LogLevel::Debug,
@@ -18058,53 +18094,6 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		return;
 	}
 
-	// ============ #197: A WINDOW ALREADY SIZED BY ITS ART =================
-	// My first attempt at this was INERT and I shipped it as fixed. I put
-	// 0x48E945B4 in kNeverScaleIds - but that list is consulted at exactly two
-	// sites (the dormant ShowHook, and the sweep's DIRECT-view-child panel
-	// loop), and ScaleSubtree does not honour it at all (task #85 note). This
-	// marker is reached recursively, so the refusal never fired and the sweep
-	// kept multiplying. The user measured it: "same exact size".
-	//
-	// ⭐ SECOND TIME IN ONE SESSION: the budget popup (#189) had the identical
-	// shape hours earlier. ADDING AN ID TO kNeverScaleIds DOES NOTHING FOR A
-	// WINDOW THAT IS NOT A DIRECT VIEW CHILD - prove it appears in the panel
-	// loop (a VWKID line) before reaching for that list.
-	//
-	// The size is written HERE, so the refusal belongs HERE. With the art
-	// staged at RoundHalfUp(32*f), the window is BORN carrying f; scaling it
-	// again is the second application (on-screen = 32 * a * f).
-	// ⛔ LOCAL, NOT THE FILE-SCOPE gArtSizedSkipSelf. ScaleSubtree recurses,
-	// so a file-scope flag raised for THIS node is still raised when the walk
-	// reaches its children - it would suppress their size writes too and
-	// reproduce the exact regression (numbers gone) that this guard exists to
-	// avoid. One invocation, one bool.
-	bool artSizedSelf = false;
-	if (win->GetID() == 0x48E945B4 && f > 1.01f)
-	{
-		const int32_t want = RoundHalfUp(32 * f);
-		const int32_t haveW = win->GetW(), haveH = win->GetH();
-		if (gArtSizedRefusals < 4)
-		{
-			gArtSizedRefusals++;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: ARTSIZED 0x48E945B4 %dx%d at f=%.2f - NOT scaling "
-				"(art is staged at f, so the window is already %d). %s",
-				haveW, haveH, f, want,
-				(haveW == want && haveH == want)
-					? "Matches - on-screen is exactly the factor."
-					: "DOES NOT MATCH: the art stage and this refusal have "
-					  "drifted; re-check MISSION_BUBBLE_FIXED96_MULT.");
-		}
-		// ⛔ DO NOT return HERE. The first version did, and `return` skips the
-		// WHOLE SUBTREE - so the deployment count child never got scaled and
-		// the numbers vanished off the markers (user, immediately). Only THIS
-		// window is already art-sized; its children are not, and they still
-		// need the factor. Fall through to the child walk with the size write
-		// suppressed for this node alone.
-		artSizedSelf = true;
-	}
-
 	const ScaleState state = Classify(win);
 
 	// #161: this window's absolute DESIGN origin, for its children to round in.
@@ -18340,17 +18329,8 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 			// their position within the (already-scaled) parent so the
 			// layout grows coherently instead of bunching in the top-left.
 			//
-			// #197: unless this window is ALREADY SIZED BY ITS ART. Then the
-			// size write is the SECOND application of f (on-screen = 32*a*f
-			// with a already == f) and only the size is skipped - position
-			// still scales, children are still walked below. Same shape as the
-			// font-sized path thirty lines up, minus its `return`, which is
-			// the one detail that made the first attempt eat the child.
-			if (!artSizedSelf)
-			{
-				win->SetW(newW);
-				win->SetH(newH);
-			}
+			win->SetW(newW);
+			win->SetH(newH);
 			if (depth > 0)
 			{
 				win->GZWinMoveTo(newL - l, newT - t);
@@ -18363,12 +18343,8 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 			// there. Log per fire (law 54), capped like LEAFSIZE, WITH a
 			// saturation notice - the fire count is this change's
 			// blast-radius measurement and must not truncate silently.
-			// #197: nothing was resized when artSizedSelf, so there is no
-			// stale SetImage crop to refresh - and relatching to newW/newH
-			// would pin the crop to a size the window never took (law 73: the
-			// CROP is the third number and it does not follow intent).
 			int32_t rlW = 0, rlH = 0;
-			if (!artSizedSelf && gRelatchArmed
+			if (gRelatchArmed
 				&& RelatchBmpSourceRect(win, w, h, newW, newH, &rlW, &rlH))
 			{
 				static int relatchEpoch = -1;
@@ -18394,14 +18370,7 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 				}
 			}
 
-			// #197: record what the window ACTUALLY IS. Storing newW/newH for
-			// a window we did not resize makes the next sweep's Classify read
-			// Unrecognized ("the game resized it behind us") and abandon it,
-			// instead of AlreadyScaled. Same w,h,w,h form the font-sized path
-			// uses, and for the same reason.
-			ScaleRecord rec = artSizedSelf
-				? ScaleRecord{ win->GetID(), w, h, w, h, 0, false }
-				: ScaleRecord{ win->GetID(), w, h, newW, newH, 0, false };
+			ScaleRecord rec = { win->GetID(), w, h, newW, newH, 0, false };
 			StoreScaleRecord(win, rec);
 		}
 	}

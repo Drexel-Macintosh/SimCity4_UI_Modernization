@@ -4426,24 +4426,45 @@ namespace CodePatches
 		//     cannot drift apart - user-observed: "only the inner glyph is
 		//     clickable".
 		//
-		//   QUAD B-PRIME - THE SAME ICON SIZE ON THE OTHER SIDE OF THE BRANCH.
-		//     0x0046CC41 is `cmp [esi+4],4` and 0x0046CC45 is `jne 0x0046CCB9`,
-		//     so the builder is a plain TWO-WAY if/else: type 4 takes 35.0f,
-		//     EVERYTHING ELSE takes 32.0f from the identical `mov eax,imm32` +
-		//     `mov [esi+D0/D4],eax` pair at 0x0046CCB9. Both are in this table
-		//     now. #195.
+		//   QUAD B-PRIME - THE SAME ICON SIZE FOR CATEGORY 3.
+		//     0x0046CC45 is `jne 0x0046CCB9`, which reads like a plain two-way
+		//     else - and that reading is WRONG. Exhaustive branch-target
+		//     enumeration over the whole builder 0x0046C8B0..0x0046D110 shows
+		//     0x0046CC41 has exactly ONE inbound edge, from a straight-line
+		//     block entered only from 0x0046CB52, which is itself entered from
+		//     BOTH `cmp [esi+4],3` and `cmp [esi+4],4`. So 3 and 4 SHARE the
+		//     path and then split: 4 takes 35.0f, 3 takes 32.0f. The store at
+		//     0x0046CCB9 executes for category 3 and nothing else.
 		//
-		// ⭐ THE OLD NOTE HERE SAID TO LEAVE THE ELSE ALONE - "it would resize
-		// unrelated indicators". THAT REASONING INVERTED THE DAY THE PIN QUAD
-		// WAS SCALED, and it is worth spelling out because the same shape will
-		// recur. The pin verts live in cSC4DispatchVehicleView::Draw, which is
-		// SHARED by every indicator regardless of type. So once the pin scales,
-		// the else-branch indicators are not being spared - they are being
-		// HALF-PATCHED: scaled plate, stock icon. That is exactly what the user
-		// photographed as "hat on top, number stranded beside it". A caution
-		// written about one lever goes stale the moment a SECOND lever starts
-		// firing on the same object; re-read every such note when the set of
-		// patched sites grows.
+		// ⛔ SO THE BLAST RADIUS IS CATEGORY 3 ALONE, not "every non-4 type".
+		// The wider claim came from eyeballing one `jne` and assuming the
+		// obvious control flow; it took enumerating every jcc target in the
+		// function to see that two categories merge before they split. Reading
+		// ONE branch tells you where that branch goes, never who arrives.
+		//
+		// ⛔ AND THIS IS NOT THE CURE FOR #195. The 3x run PROVED it: the
+		// patch applied (log: "32.0 -> 96.0 px", 10 immediates) and the split
+		// marker did not change. #195 is the marker's ROOT being moved by
+		// ScalePanelRoot away from where the game places the count - see
+		// UiSpike.cpp's ARTSIZED-ROOT block. This entry stays because it is
+		// independently correct (category 3's plate scales while its icon did
+		// not), but it never was that defect.
+		// ⭐ A PATCH THAT PROVABLY RAN AND CHANGED NOTHING ON SCREEN
+		// ELIMINATES ITS WHOLE LAYER - worth more than most positive findings.
+		//
+		// ⭐ THE OLD NOTE HERE SAID TO LEAVE THIS ALONE - "it would resize
+		// unrelated indicators". That reasoning inverted the day the pin quad
+		// was scaled: the pin verts live in cSC4DispatchVehicleView::Draw,
+		// which is SHARED by every indicator regardless of type, so once the
+		// pin scaled, category 3 was not being spared - it was HALF-PATCHED,
+		// scaled plate on a stock icon. Scaling this puts it back in step.
+		// A caution written about one lever goes stale the moment a SECOND
+		// lever starts firing on the same object; re-read every such note when
+		// the set of patched sites grows.
+		// ⚠ But note what the old caution got RIGHT and this correction had
+		// to walk back: the affected set really is narrow (category 3), not
+		// "everything that is not 4". Being right about the direction of a
+		// change does not make you right about its reach.
 		//
 		// ⛔ 0x0046CCB9 IS THE OPCODE BYTE (B8). THE IMMEDIATE IS AT
 		// 0x0046CCBA. This table stores IMMEDIATE addresses - 0x0046CC48 is the
@@ -4523,7 +4544,7 @@ namespace CodePatches
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: CSI indicators x%.2f - icon+hitbox %.1f -> %.1f px "
-				"(type 4) and %.1f -> %.1f px (all other types, #195), pin quad "
+				"(type 4) and %.1f -> %.1f px (type 3, #195), pin quad "
 				"64 -> %.0f px. %d immediates, all inline in .text. #188/#195.",
 				factor, 35.0f, 35.0f * factor, 32.0f, 32.0f * factor,
 				64.0f * factor, n);
