@@ -14871,3 +14871,35 @@ closures (#89, #109, #149, #157 among them) and are historical section titles,
 not live state. The TASK LIST and the GitHub issues are authoritative for what
 is open; this file is the evidence trail. Do not read a stale header as a live
 defect - measure the shipped artifact, which took one command here.
+
+## BACKLOG HYGIENE: #144 CLOSED AS OBSOLETE, #145/#147 REFRESHED (2026-08-18)
+
+USER: "144 is pointless now." Correct, and it had rotted in three separate
+ways while its TITLE still read like live work:
+
+  * "Bump 2.99.0 -> 3.0.0 everywhere" - DONE long ago.
+    src/SC4UIScaleDllDirector.cpp:49 reads UISCALE_VERSION_STR "3.0.38", and
+    dist\SC4UIScale-v3.0.0 exists on disk. The cut happened, then 38 more
+    patch releases happened after it.
+  * "Safety: THIS PROJECT HAS NO GIT REPO" - false since the repo became the
+    source of truth.
+  * "Blocked by #149" - #149 closed.
+
+The one live residue was BUNDLE DRIFT, and it is not a versioning problem: the
+newest dist bundle is v3.0.0 while the code is v3.0.38, so the bundle is
+missing every fix from 2026-08-18 (#123 #172 #175 #177 #183 #184 #185 #186
+#189 and GH5's 1732 supersampled sheets). That moved to #147, which has to
+build from HEAD anyway, and #147 is now explicitly blocked by #146.
+
+#145 was checked and is NOT stale in the same way - it is the PUBLIC export
+repo, a different thing from the private canonical one, and still real work.
+Its facts were refreshed: it still said "code is now at 2.99.0", and its
+include/exclude list is ~45 releases behind #108's pass, so it has never seen
+the supersampler, its gates, or anything from today.
+
+⭐ THE LESSON: a task whose BODY encodes a snapshot of the world rots silently
+while its TITLE keeps looking live. "No git repo", "no dist since v2.93.1",
+"blocked by #149" were all true when written and all false now, and nothing
+ever re-read them. Release tasks should name an OUTCOME - "a player can
+download and install a working mod" - not a version number, because the
+outcome cannot expire and a version number does so the moment you ship.
