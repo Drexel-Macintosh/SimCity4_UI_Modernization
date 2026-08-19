@@ -1,3 +1,28 @@
+2026-08-19  v3.1.1   RESIDENT MARKER PORTRAIT - the default sim faces were
+                     never staged (USER-CONFIRMED at 2x)
+
+  After Move In a Sim, the "<name> lives here" purple circle showed some sims
+  correctly and others magnified to their top-left corner. The differential -
+  two residents, one screenshot, same build and tier - is what solved it.
+
+  The category-3 indicator divides its icon UVs by ONE power-of-two texture
+  side (0x0046CCCE). v3.1.0 staged the 19 named portraits at 36x41*f, so those
+  upload into a 128 square at 2x/3x - but there are 42 36x41 faces in the
+  portrait groups, and the other four (EA32F100 / EA32F101, the DEFAULT faces)
+  were not staged. Those still uploaded into a 64 square, so no single divisor
+  could be right for both and the fallback sims drew magnified.
+
+  Fix: stage the default faces too. Both 46A006B0 members now ship at
+  54x62 / 72x82 / 108x123 - that is the group the indicator composes
+  (0x0046CB7B). The 1ABE787D default and one ea32f101 the builder refused (an
+  UNSCALED-only .UI reference, a script consumer that must stay 1x) are off the
+  indicator path.
+
+  LAW: if a consumer divides by ONE texture size, every source it can bind must
+  be the SAME size. v3.1.0 staged a SET where the contract was a FAMILY.
+
+  SelectiveArt 693 -> 696 entries.
+
 2026-08-19  v3.1.0   #191 CLOSED - THE MOVE IN MY SIM MARKER
                      (USER-CONFIRMED at 2x, 2400x1600)
             Also: #193 CLOSED, #190 CLOSED, the 1x baseline made genuinely
