@@ -18704,6 +18704,21 @@ namespace
 	const uint32_t kSelRadioId   = 0x5CA1E002;
 	const uint32_t kSelLabelId   = 0x5CA1E003;
 	const uint32_t kSelComboId   = 0x5CA1E004;
+	// The game's OWN "takes effect next restart" popup, born hidden inside
+	// this dialog, and its Accept button.
+	const uint32_t kSelNoticeId  = 0x2A57CB83;
+	unsigned int gSelNoticeShownMs = 0;
+	unsigned int gSelClickMs = 0;      // last click seen by the winproc
+	// ACCEPT TRACE (2026-08-19). We cannot tell from a message WHICH
+	// control was clicked - no id is carried - so the rects of the two
+	// buttons that close this dialog are captured when it opens and every
+	// click is tested against them. One Accept click settles whether a
+	// coordinate hit-test is a sound basis for real Accept semantics.
+	int  gSelAcceptRect[4] = { 0, 0, 0, 0 };   // L,T,W,H absolute
+	int  gSelCancelRect[4] = { 0, 0, 0, 0 };
+	bool gSelRectsOk = false;
+	bool gSelNoticeWasUp = false;    // last observed notice visibility
+	int  gSelTraceLogs = 0;
 
 	int   gSelPushed = -2;          // last row we pushed or observed
 	bool  gSelDlgUp = false;        // dialog visible at the last service
@@ -18808,6 +18823,38 @@ namespace
 		}
 	}
 
+	// ⭐ THE GAME ALREADY OWNS THIS BOX (user direction, 2026-08-19).
+	// 0x2A57CB83 is a GZWinGen born hidden inside Graphic Options carrying the
+	// stock text "Resolution, UI translucency, color quality, color cursor and
+	// rendering mode changes will not take effect until the next time you
+	// start the game." - which is EXACTLY true of a tier change, for exactly
+	// the same reason (the setting is read once, at startup). Showing the
+	// game's own notice beats inventing a second one that says the same thing
+	// in our words: same wording, same art, same place the player already
+	// learned to expect it.
+	//
+	// Its Accept button (0xEA57DA6F) is the game's, and so is whatever hides
+	// the box again. We only ever SHOW it - see the dismissal safety net in
+	// the winproc, which exists because we cannot see that button's clicks.
+	void ShowRestartNotice(cIGZWin* gfxDlg)
+	{
+		cIGZWin* notice = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
+		if (!notice)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR restart notice %08X not found - the scale "
+				"still changed, the player just was not told.", kSelNoticeId);
+			return;
+		}
+		if (!notice->IsVisible())
+		{
+			notice->ShowWindow();
+			gSelNoticeShownMs = GetTickCount();
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR showed the game's own restart notice.");
+		}
+	}
+
 	// Our WinProc CHAINS - it never replaces the dialog's own handler. The
 	// game's Accept/Cancel/radio logic lives behind GetWinProc(); dropping it
 	// would break the dialog outright, so every message is forwarded and our
@@ -18872,7 +18919,15 @@ namespace
 		{
 			const bool accept = (d1 == kSelAcceptId || d2 == kSelAcceptId);
 			const bool cancel = (d1 == kSelCancelId || d2 == kSelCancelId);
-			if (gSelMsgLogs < 120)
+			// ⛔ THE HOVER TYPES ARE EXCLUDED ON PURPOSE. The first capture
+			// spent 96 of its 120 lines on three message types that repeat on
+			// every mouse move (0xA2BF8ACD/CE/CF, each carrying one unchanging
+			// window pointer), which is how a bounded instrument can fill up
+			// with noise and MISS the one event it was armed for. Same shape
+			// as a grep that filters out the adjacent line holding the answer.
+			const bool hoverNoise = (id == 0xA2BF8ACDu || id == 0xA2BF8ACEu
+				|| id == 0xA2BF8ACFu);
+			if (!hoverNoise && gSelMsgLogs < 80)
 			{
 				gSelMsgLogs++;
 				Logger::Get().WriteLine(LogLevel::Info,
@@ -18882,6 +18937,28 @@ namespace
 					cancel ? "  <- CANCEL id" :
 					(d1 == kSelComboId || d2 == kSelComboId) ? "  <- our COMBO" :
 					(d1 == kSelRadioId || d2 == kSelRadioId) ? "  <- our RADIO" : "");
+			}
+			// THE ACCEPT TRACE. Type 0x0D carries x in d1 and y in d2 - the
+			// one directly usable fact the first capture established. Test it
+			// against the two closing buttons and SAY SO, so a single click
+			// tells us whether their coordinates and ours share a space.
+			if (id == 0x0000000Du && gSelRectsOk && gSelTraceLogs < 40)
+			{
+				gSelTraceLogs++;
+				const int x = static_cast<int>(d1), y = static_cast<int>(d2);
+				const bool inAcc =
+					x >= gSelAcceptRect[0] && x < gSelAcceptRect[0] + gSelAcceptRect[2] &&
+					y >= gSelAcceptRect[1] && y < gSelAcceptRect[1] + gSelAcceptRect[3];
+				const bool inCan =
+					x >= gSelCancelRect[0] && x < gSelCancelRect[0] + gSelCancelRect[2] &&
+					y >= gSelCancelRect[1] && y < gSelCancelRect[1] + gSelCancelRect[3];
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELHIT click (%d,%d) accept=[%d,%d %dx%d]->%s "
+					"cancel=[%d,%d %dx%d]->%s", x, y,
+					gSelAcceptRect[0], gSelAcceptRect[1], gSelAcceptRect[2],
+					gSelAcceptRect[3], inAcc ? "HIT" : "miss",
+					gSelCancelRect[0], gSelCancelRect[1], gSelCancelRect[2],
+					gSelCancelRect[3], inCan ? "HIT" : "miss");
 			}
 			// ⛔ NO COMMIT HERE ANY MORE. This used to fire when a message
 			// carried the Accept button's id, and the instrument below proved
@@ -18893,6 +18970,12 @@ namespace
 			// real Accept/Cancel semantics become available.
 			(void)accept;
 			(void)cancel;
+			// The ONE fact this instrument established that is directly
+			// usable: type 0x0000000D is a mouse click, carrying x in d1 and
+			// y in d2. We cannot tell WHICH control was hit - no id is
+			// present in any slot - but "a click happened" is enough for the
+			// restart notice's safety net below.
+			if (id == 0x0000000Du) { gSelClickMs = GetTickCount(); }
 		}
 
 		uint32_t refCount;
@@ -18936,6 +19019,61 @@ void UiSpike::ServiceScaleSelector()
 	const bool justOpened = !gSelDlgUp;
 	gSelDlgUp = true;
 
+	// ---- 0a. ACCEPT TRACE: capture the closing buttons' absolute rects ----
+	// Captured on OPEN, because that is when they exist and are laid out, and
+	// re-captured every open in case the tier (and therefore the geometry)
+	// changed. SafeAbsRect walks the parent chain under SEH - the same helper
+	// the sweep uses - so a bad pointer cannot take the game down.
+	if (justOpened)
+	{
+		gSelRectsOk = false;
+		cIGZWin* acc = gfxDlg->GetChildWindowFromIDRecursive(kSelAcceptId);
+		cIGZWin* can = gfxDlg->GetChildWindowFromIDRecursive(kSelCancelId);
+		if (acc && can
+			&& SafeAbsRect(acc, &gSelAcceptRect[0], &gSelAcceptRect[1],
+				&gSelAcceptRect[2], &gSelAcceptRect[3])
+			&& SafeAbsRect(can, &gSelCancelRect[0], &gSelCancelRect[1],
+				&gSelCancelRect[2], &gSelCancelRect[3]))
+		{
+			gSelRectsOk = true;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELHIT rects captured - Accept=[%d,%d %dx%d] "
+				"Cancel=[%d,%d %dx%d]. Click coordinates are compared against "
+				"these; if a click ON Accept reports miss, the two are in "
+				"different coordinate spaces and a hit-test is the wrong "
+				"mechanism.",
+				gSelAcceptRect[0], gSelAcceptRect[1], gSelAcceptRect[2],
+				gSelAcceptRect[3], gSelCancelRect[0], gSelCancelRect[1],
+				gSelCancelRect[2], gSelCancelRect[3]);
+		}
+		else
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELHIT could not resolve the Accept/Cancel rects "
+				"(accept=%p cancel=%p) - the trace cannot run this visit.",
+				static_cast<void*>(acc), static_cast<void*>(can));
+		}
+	}
+
+	// ---- 0c. DOES THE GAME RAISE ITS OWN RESTART NOTICE? -----------------
+	// The user reports the stock box appears only AFTER Accept. If the game
+	// raises it by itself when a restart-relevant setting changed, that
+	// transition is a FREE, exact Accept signal - better than any hit-test.
+	// Report every transition either way, so one Accept click says which.
+	{
+		cIGZWin* nw = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
+		const bool up = (nw != nullptr && nw->IsVisible());
+		if (up != gSelNoticeWasUp)
+		{
+			gSelNoticeWasUp = up;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELNOTICE %s (weShowedItAt=%u) - a rise we did not "
+				"cause is the game's own Accept handler, and that transition "
+				"is the Accept signal we lack.",
+				up ? "VISIBLE" : "hidden", gSelNoticeShownMs);
+		}
+	}
+
 	// ---- 0. chain our WinProc onto the dialog ---------------------------
 	// Re-checked whenever the dialog POINTER changes, not once ever: the
 	// dialog can be destroyed and rebuilt, and a rebuilt one carries none of
@@ -18964,6 +19102,35 @@ void UiSpike::ServiceScaleSelector()
 				"UiSpike: SELECTOR could not get cIGZWinGen on the dialog - "
 				"clicks will not be seen.");
 			gSelProcOn = gfxDlg;   // do not retry on every service
+		}
+	}
+
+	// ---- 0b. THE RESTART NOTICE MUST NOT BE ABLE TO TRAP THE PLAYER -----
+	// We show the game's own notice; its Accept button is the game's, and we
+	// CANNOT SEE ITS CLICKS - the instrument proved no message carries a
+	// control id. So if the game's handler does not hide the box, nothing
+	// else would, and a notice with no way out is worse than no notice.
+	//
+	// The net: once a click lands after the box went up, the box goes away.
+	// If the game's own Accept already hid it, IsVisible is false and this
+	// does nothing - so the net costs nothing when it is not needed. The
+	// 400ms guard keeps the click that CAUSED the notice (we react to the
+	// selection up to one 250ms service later) from dismissing it instantly.
+	if (gSelNoticeShownMs != 0)
+	{
+		cIGZWin* notice = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
+		if (notice == nullptr || !notice->IsVisible())
+		{
+			gSelNoticeShownMs = 0;   // the game dismissed it; nothing to do
+		}
+		else if (gSelClickMs != 0
+			&& static_cast<int>(gSelClickMs - gSelNoticeShownMs) > 400)
+		{
+			notice->HideWindow();
+			gSelNoticeShownMs = 0;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR dismissed the restart notice on a click "
+				"(safety net - the game's own Accept had not hidden it).");
 		}
 	}
 
@@ -19018,18 +19185,20 @@ void UiSpike::ServiceScaleSelector()
 		}
 	}
 
-	// ---- 3. the combo ---------------------------------------------------
-	// On open: REBUILD the list, then push the live setting. After that the
+	// ---- 3. the combo IS the readout ------------------------------------
+	// On open: REBUILD the list, then select the live row. After that the
 	// combo owns the value - re-pushing every service would fight the
 	// player's own selection.
 	//
-	// WHY THE LIST IS REBUILT AT RUNTIME: whether a tier is usable depends on
-	// the resolution, which no .UI can know. A row the resolution cannot
-	// carry is marked with what it needs, and selecting it is REFUSED - so
-	// the control can never promise a tier that would silently fall back to
-	// stock at the next launch. The rule comes from ScaleTier::Fits, the same
-	// predicate the boot path uses; a second copy of 880/558 here would be a
-	// second rule, and this one is shown to the player.
+	// THE LIST IS BUILT AT RUNTIME because both facts it shows are runtime
+	// facts. Whether a tier is usable depends on the resolution, which no .UI
+	// can know; and the ACTIVE row carries the live resolution so the closed
+	// control reads "1.5x @ 2400x1600" - the readout line this row used to
+	// hold before the combo took its place. A row the screen cannot carry
+	// says what it would need, and selecting it is REFUSED, so the control
+	// can never promise a tier that would silently fall back to stock at the
+	// next launch. The rule is ScaleTier::Fits, the same predicate the boot
+	// path uses; a second copy of 880/558 here would be a second rule.
 	cIGZWin* comboWin = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
 	if (comboWin)
 	{
@@ -19039,6 +19208,7 @@ void UiSpike::ServiceScaleSelector()
 		{
 			if (justOpened)
 			{
+				const int live = SelRowFromSettings(settings);
 				for (int k = 0; k < kSelCount; k++)
 				{
 					gSelUsable[k] = SelRowUsable(k);
@@ -19046,28 +19216,34 @@ void UiSpike::ServiceScaleSelector()
 				c->RemoveAllStrings();
 				for (int k = 0; k < kSelCount; k++)
 				{
-					char row[64];
-					if (gSelUsable[k])
+					char row[80];
+					if (!gSelUsable[k])
 					{
-						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s",
-							kSelLabels[k]);
-					}
-					else
-					{
-						// Say WHAT IT NEEDS, not just "no". A disabled control
-						// that does not explain itself is a bug report.
+						// Say WHAT IT NEEDS, not just "no". A control that
+						// refuses without explaining itself is a bug report.
 						_snprintf_s(row, sizeof(row), _TRUNCATE,
 							"%s - needs %dx%d", kSelLabels[k],
 							static_cast<int>(kSelWidestPx * kSelFactors[k]),
 							static_cast<int>(kSelTallestPx * kSelFactors[k]));
 					}
-					cRZBaseString s(row);
-					c->InsertString(s, k);
+					else if (k == live && gReadoutW > 0 && gReadoutH > 0)
+					{
+						// The ACTIVE row carries the resolution, so the closed
+						// combo shows the whole readout line.
+						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s @ %dx%d",
+							kSelLabels[k], gReadoutW, gReadoutH);
+					}
+					else
+					{
+						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s",
+							kSelLabels[k]);
+					}
+					cRZBaseString rs(row);
+					c->InsertString(rs, k);
 				}
-				const int row = SelRowFromSettings(settings);
-				if (row >= 0) { c->SetSelection(row, false); }
-				gSelPushed = row;
-				gSelCommitted = row;
+				if (live >= 0) { c->SetSelection(live, false); }
+				gSelPushed = live;
+				gSelCommitted = live;
 			}
 			else
 			{
@@ -19076,20 +19252,31 @@ void UiSpike::ServiceScaleSelector()
 				{
 					if (!gSelUsable[row])
 					{
-						// REFUSED. Snap back to what is actually live rather
-						// than leaving a selection we will not honour: a
-						// control that shows one thing and does another is
-						// worse than one that says no.
+						// REFUSED -> BOUNCE TO AUTO (user direction,
+						// 2026-08-19). Auto is the only row that always fits
+						// by construction, and it answers what the player was
+						// reaching for: "give me the biggest scale this
+						// screen can take". Snapping back to the PREVIOUS row
+						// would have been the timid choice and leaves someone
+						// who just moved to a smaller screen stuck on a tier
+						// that no longer fits.
+						//
+						// It COMMITS Auto too, deliberately. A bounce that
+						// only moved the highlight would leave the ini
+						// holding the old value while the closed control read
+						// "Auto" - the control would be lying, which is the
+						// one thing it must never do.
 						Logger::Get().WriteLine(LogLevel::Info,
 							"UiSpike: SELECTOR refused row %d (%s) - %dx%d "
-							"cannot carry it (needs %dx%d). Selection snapped "
-							"back.", row, kSelLabels[row], gReadoutW, gReadoutH,
+							"cannot carry it (needs %dx%d). Bounced to Auto.",
+							row, kSelLabels[row], gReadoutW, gReadoutH,
 							static_cast<int>(kSelWidestPx * kSelFactors[row]),
 							static_cast<int>(kSelTallestPx * kSelFactors[row]));
-						const int back = (gSelCommitted >= 0)
-							? gSelCommitted : SelRowFromSettings(settings);
-						if (back >= 0) { c->SetSelection(back, false); }
-						gSelPushed = back;
+						c->SetSelection(0, false);
+						gSelPushed = 0;
+						gSelCommitted = 0;
+						SelCommit(0);
+						ShowRestartNotice(gfxDlg);
 					}
 					else
 					{
@@ -19100,21 +19287,20 @@ void UiSpike::ServiceScaleSelector()
 						// message carrying the Accept button's id arrived.
 						// The SELMSG instrument proved no such message
 						// exists: across 120 captured messages every one was
-						// either a mouse coordinate pair (type 0x0D) or one
-						// repeated WINDOW POINTER (0xA2BF8ACD/CE/CF) - not a
-						// single control id in any data slot. That commit
-						// path could never have fired, and only the
-						// instrument could have told me so.
+						// either a mouse coordinate pair (type 0x0D /
+						// 0xA2BF8AD4) or one repeated WINDOW POINTER
+						// (0xA2BF8ACD/CE/CF) - not a single control id in any
+						// data slot. That commit path could never have fired,
+						// and only the instrument could have said so.
 						//
 						// Committing on change is safe HERE specifically
 						// because the tier applies at the next launch: the
 						// write changes nothing about the running game, and
-						// picking a different row simply overwrites it. The
-						// cost is that Cancel does not revert this one
-						// setting, which the row label states outright.
+						// picking another row overwrites it.
 						gSelPushed = row;
 						gSelCommitted = row;
 						SelCommit(row);
+						ShowRestartNotice(gfxDlg);
 					}
 				}
 			}

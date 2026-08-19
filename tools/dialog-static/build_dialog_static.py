@@ -554,7 +554,12 @@ def inject_res_readout(text, fn):
     """
     if not fn.endswith("_I-%s.ui" % RES_READOUT_IID):
         return text, 0
-    if RES_READOUT_IDS[0] in text:
+    # ⚠ KEY THE GUARD ON A NODE WE STILL EMIT. It used to test for
+    # RES_READOUT_IDS[0], the #192 readout label - which the combo REPLACED on
+    # 2026-08-19, so the test could never match again and a second pass would
+    # have injected a duplicate radio and combo. An idempotence check that
+    # names a retired node is not idempotent, it is off.
+    if SEL_COMBO_ID in text:
         return text, 0          # already injected; idempotent
     lines = text.split("\n")
     at = None
@@ -580,13 +585,19 @@ def inject_res_readout(text, fn):
             'winflag_ignoremouse=yes font=GenBodyMedium align=lefttop '
             'notify=no wrapped=no opaque=no forecolor=(63,73,103) '
             'bkgcolor=(0,0,0) gutters=(2,2) textoffsets=(0,0) >')
-    # ONE line only. The second row at y=345..366 was CLIPPED on screen
-    # (user screenshot, 2026-08-18) while this row rendered in full, so the
-    # parent clips inside [346,366) and there is no room for a second 20px
-    # row above it. Both numbers go on this row instead.
-    new = [indent + tmpl % (RES_READOUT_IDS[0], 325, 346)]
+    # ---- THE COMBO IS THE READOUT (2026-08-19, user direction) ------------
+    # It sits ON the readout row - (293,325,465,346), the slot the #192 text
+    # label occupied - so ONE control both shows the live setting and changes
+    # it, instead of a readout in one place and a picker in another. The DLL
+    # writes the selected row as "1.5x @ 2400x1600", which is the readout line
+    # the label used to carry, so nothing is lost by retiring it.
+    #
+    # The row still has to be THIS one: the parent GZWinBMP is (15,37,479,393)
+    # so children clip at height 356, and [325,346) is the last full 21px row
+    # that fits. The second row #192 tried at y=345..366 was clipped on screen.
+    #
     # Radio: byte-for-byte the Software radio (0x6a57da58) attribute set with
-    # our id and row. It MUST take clicks (ignoremouse=no, unlike the labels).
+    # our id. It MUST take clicks (ignoremouse=no, unlike the old labels).
     radio = ('<LEGACY clsid=GZWinBtn iid=IGZWinBtn id=%s '
              'area=(270,325,286,341) fillcolor=(204,204,204) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
@@ -604,38 +615,41 @@ def inject_res_readout(text, fn):
              'gutters=(0,0,0,0) tiptext="" tipoffsets=(0,0) '
              'tipflag=0x01000000 align=center '
              'btnclicksnd={ca4d1943,2a5c322b} >' % SEL_RADIO_ID)
-    # Caption row for the selector, same empty-caption contract as the
-    # readout labels (tmpl already carries ignoremouse=yes).
-    label = tmpl % (SEL_LABEL_ID, 211, 232)
-    label = label.replace('area=(293,211,465,232)', 'area=(266,211,463,232)')
-    # The combo: stock grammar from I-e9263de5, our items. editable=no makes
-    # it a pure picker; the class draws its own drop list.
-    # ⛔ NO `transparent`, AND pbufftrans=no. The stock combos in I-e9263de5
+    # NO `transparent`, AND pbufftrans=no. The stock combos in I-e9263de5
     # carry both and they are WRONG HERE: the class draws its drop list as an
     # overlay, so a transparent paint buffer composites whatever the list
-    # happens to cover. Measured on screen 2026-08-19 - the open list picked up
-    # the Renderer label and the divider beneath it and rendered in bands. The
+    # covers. Measured on screen 2026-08-19 - the open list picked up the
+    # Renderer label and the divider beneath it and rendered in bands. The
     # stock ones get away with it because they open over flat dialog fill.
+    #
+    # COLOURS ARE THE DIALOG'S OWN, not the stock combo's. (221,238,238) is
+    # the fill this same script's restart-notice text panel uses, and
+    # (63,73,103) is the forecolor every label in this dialog carries. The
+    # inherited white-field-with-black-text pairing is a BUDGET-DIALOG look
+    # and read as foreign here (user, 2026-08-19).
     combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-             'area=(293,233,420,253) fillcolor=(255,255,255) '
+             'area=(293,325,465,346) fillcolor=(221,238,238) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=no winflag_pbufferase=yes '
              'winflag_pbuffvid=no winflag_mousetrans=no '
-             'winflag_ignoremouse=no colorfontnormal=(0,0,0) '
-             'colorfontdisabled=(164,164,164) colorfonthilited=(255,255,255) '
-             'highlightcolor=(24,32,106) editable=no outlinecolor=(0,0,0) '
+             'winflag_ignoremouse=no colorfontnormal=(63,73,103) '
+             'colorfontdisabled=(140,148,168) colorfonthilited=(255,255,255) '
+             'highlightcolor=(24,32,106) editable=no outlinecolor=(63,73,103) '
              'initselection=0 combodownarrowrect=(0,0,64,15) '
              'combodowncolor=(197,197,197) buttongutter=1 gutters=(6,2) '
              # Placeholder rows only - the DLL REPLACES this list at runtime
-             # (RemoveAllStrings + InsertString) so it can mark the tiers this
-             # resolution cannot carry. The row ORDER is the contract:
-             # 0=Auto 1=1x 2=1.5x 3=2x 4=3x, and UiSpike's kSelFactors must
-             # match it. Kept non-empty so the widget still has a sane shape
-             # if the code half is ever missing.
+             # (RemoveAllStrings + InsertString) so it can show the live
+             # resolution and mark tiers this screen cannot carry. The row
+             # ORDER is the contract: 0=Auto 1=1x 2=1.5x 3=2x 4=3x, and
+             # UiSpike's kSelFactors must match it. Kept non-empty so the
+             # widget still has a sane shape if the code half is missing.
              'listelement="Auto" listelement="1x" listelement="1.5x" '
              'listelement="2x" listelement="3x" >' % SEL_COMBO_ID)
-    new += [indent + radio, indent + label, indent + combo]
+    # The #192 readout label and the separate "UI Scale" caption are both
+    # RETIRED: the combo occupies the readout row and its selected row IS the
+    # readout. Two widgets showing one fact is how they drift apart.
+    new = [indent + radio, indent + combo]
     lines[at + 1:at + 1] = new
     return "\n".join(lines), len(new)
 

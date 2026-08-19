@@ -5,13 +5,13 @@ WHY THIS PACKAGE EXISTS
 -----------------------
 At the stock tier the DLL stashes every art package, which is correct: 1x must
 look and behave like an unmodded game. But the in-game scale selector lives in
-DATA (four injected nodes in the Graphic Options script), so stashing every
+DATA (the nodes injected into the Graphic Options script), so stashing every
 package also removes the ONE control that lets a player leave 1x. That makes
 the stock tier a one-way door, and the whole point of the selector is that it
 is not.
 
 So this package carries EXACTLY ONE script - Graphic Options, at STOCK
-geometry, with our four nodes injected and nothing else changed. Every other
+geometry, with our nodes injected and nothing else changed. Every other
 widget keeps its authored 1x rect, so the dialog is pixel-identical to stock
 apart from the selector.
 
@@ -61,15 +61,16 @@ def main():
                  "row. Re-measure the dialog.")
     print("injected %d node(s) into %s" % (n, SRC_FN))
 
-    # PROVE the four ids are present and their rects are the AUTHORED stock
-    # ones. A silent scale here would put the selector somewhere else in a
-    # dialog whose every other widget stayed 1x - the exact half-patched shape
-    # law 108 is about.
+    # PROVE the ids are present and their rects are the AUTHORED stock ones.
+    # A silent scale here would put the selector somewhere else in a dialog
+    # whose every other widget stayed 1x - the half-patched shape of law 108.
+    # Two nodes since 2026-08-19: the combo took the readout row and the
+    # separate readout label + "UI Scale" caption were retired, so the closed
+    # combo IS the readout. This assertion is the reason that reshape could
+    # not ship half-done here - it failed the moment the shapes diverged.
     want = {
-        "0x5ca1e000": (293, 325, 465, 346),
-        "0x5ca1e002": (270, 325, 286, 341),
-        "0x5ca1e003": (266, 211, 463, 232),
-        "0x5ca1e004": (293, 233, 420, 253),
+        "0x5ca1e002": (270, 325, 286, 341),   # radio, beside the row
+        "0x5ca1e004": (293, 325, 465, 346),   # combo, ON the readout row
     }
     seen = {}
     for ln in text.split("\n"):
@@ -83,7 +84,7 @@ def main():
     if seen != want:
         sys.exit("FATAL: injected geometry is not the authored stock geometry.\n"
                  "  want %s\n  got  %s" % (sorted(want.items()), sorted(seen.items())))
-    print("verified: 4 selector nodes at authored stock rects")
+    print("verified: %d selector node(s) at authored stock rects" % len(want))
 
     if not os.path.isdir(STAGE):
         os.makedirs(STAGE)

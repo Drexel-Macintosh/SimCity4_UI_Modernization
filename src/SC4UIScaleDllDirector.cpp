@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.2.1"
+#define UISCALE_VERSION_STR "3.2.2"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -252,13 +252,65 @@ public:
 			}
 			else
 			{
-				tierActive = settings.spikeScaleAll;
+				// ⭐ A MANUAL TIER THAT NO LONGER FITS THE SCREEN FALLS BACK
+				// TO AUTO (2026-08-19, user-raised). The scenario is real and
+				// it is the worst failure this feature can produce: pick 3x on
+				// a large display, then run the game on a smaller one - a
+				// laptop, a changed resolution, a different monitor - and the
+				// UI is scaled past the screen. Graphic Options is 558 design
+				// px tall, so at 3x it needs 1674 and simply does not fit;
+				// THE CONTROL THAT WOULD FIX IT IS THE FIRST THING TO GO
+				// OFF-SCREEN. The player is trapped in a UI they cannot
+				// navigate, with no in-game way back.
+				//
+				// So the manual factor is CHECKED against the render
+				// resolution, with the same ScaleTier::Fits the auto path
+				// uses. If it does not fit we fall back to Auto, which by
+				// construction picks the largest tier that DOES.
+				//
+				// AND WE WRITE IT BACK. A silent per-launch override would
+				// leave the ini saying 3 while the game ran at 1.5 and the
+				// selector showed 1.5 - three sources of truth, two of them
+				// wrong. Writing AutoScale=1 makes the recovery visible,
+				// permanent, and consistent with what the player sees in
+				// Graphic Options.
+				// ⚠ ONLY WHEN WE ACTUALLY HAVE A RESOLUTION. Fits() answers
+				// false for a zero size, so an unreadable
+				// SC4GraphicsOptions.ini would otherwise "rescue" a
+				// perfectly good manual tier all the way down to stock -
+				// a missing measurement is not evidence of a small screen
+				// (NULL IS NOT EVIDENCE). No number, no rescue.
+				if (gfxW > 0 && gfxH > 0
+					&& !ScaleTier::Fits(settings.spikeScaleFactor, gfxW, gfxH))
+				{
+					const float was = settings.spikeScaleFactor;
+					const float tier = ScaleTier::Decide(gfxW, gfxH);
+					settings.spikeAutoScale = true;
+					settings.spikeScaleFactor = tier;
+					wchar_t iniPath2[MAX_PATH] = {};
+					GetDllSiblingPath(L"SC4UIScale.ini", iniPath2, MAX_PATH);
+					WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1",
+						iniPath2);
+					logger.WriteLine(
+						LogLevel::Info,
+						"AutoScale RESCUE: manual ScaleFactor %.2f does not "
+						"fit %dx%d - falling back to Auto, which picks %.2f. "
+						"AutoScale=1 written back to the ini so the setting, "
+						"the running game and the in-game selector agree. "
+						"Without this the UI would be scaled past the screen "
+						"and Graphic Options - the only way to change it - "
+						"would be off-screen too.",
+						was, gfxW, gfxH, tier);
+				}
+				tierActive = settings.spikeScaleAll
+					&& settings.spikeScaleFactor > 1.01f;
 				logger.WriteLine(
 					LogLevel::Info,
-					"AutoScale off: manual ScaleFactor %.2f, static layers %s.",
+					"AutoScale %s: ScaleFactor %.2f, static layers %s.",
+					settings.spikeAutoScale ? "RESCUED to auto" : "off (manual)",
 					settings.spikeScaleFactor,
 					tierActive ? "synced at this factor (#182)"
-					           : "untouched (ScaleAll=0)");
+					           : "untouched (ScaleAll=0 or stock factor)");
 			}
 
 			// ⛔ FACTOR 1 MEANS INERT, NO MATTER HOW THE FACTOR WAS CHOSEN.

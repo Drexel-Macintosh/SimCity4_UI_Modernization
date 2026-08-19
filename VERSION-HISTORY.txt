@@ -1,3 +1,75 @@
+2026-08-19  v3.2.2   The combo IS the readout; refusal bounces to Auto; a
+                     manual tier that no longer fits is RESCUED at boot
+
+  v3.2.1 worked - the log shows a 1.5x commit, a correct refusal of 3x at
+  2400x1600, and an Auto commit - and four things came out of looking at it.
+
+  1. ONE CONTROL, NOT TWO. The combo moves onto the readout row itself
+  (293,325,465,346), and the #192 readout label and the separate "UI Scale"
+  caption are RETIRED. The DLL writes the ACTIVE row as "1.5x @ 2400x1600", so
+  the closed control shows exactly what the label used to say and opening it
+  changes it. Two widgets displaying one fact is how they drift apart.
+
+  The row still has to be that one: the parent GZWinBMP is (15,37,479,393) so
+  children clip at height 356, and [325,346) is the last full 21px row that
+  fits - the same measurement that explains #192's clipped second row.
+
+  ⚠ The idempotence guard had to move with it. It tested for the readout
+  label's id, which no longer exists, so a second pass would have injected a
+  duplicate radio and combo. AN IDEMPOTENCE CHECK THAT NAMES A RETIRED NODE IS
+  NOT IDEMPOTENT, IT IS OFF. Now keyed on the combo.
+
+  2. COLOURS ARE THE DIALOG'S OWN. fillcolor (221,238,238) - the fill this
+  same script's restart-notice panel uses - and forecolor (63,73,103), which
+  every label in the dialog carries. The inherited white-field/black-text pair
+  is a BUDGET-DIALOG look and read as foreign here.
+
+  3. A REFUSED TIER BOUNCES TO AUTO (user direction), not to the previous row.
+  Auto is the only row that always fits by construction, and it answers what
+  the player was reaching for. It COMMITS Auto too: a bounce that only moved
+  the highlight would leave the ini holding the old value while the control
+  read "Auto" - the control would be lying, which is the one thing it must
+  never do.
+
+  4. ⭐ A MANUAL TIER THAT NO LONGER FITS THE SCREEN IS RESCUED AT BOOT.
+  User-raised, and it is the worst failure this feature can produce: pick 3x
+  on a large display, then run on a smaller one - a laptop, a changed
+  resolution, a different monitor - and the UI is scaled past the screen.
+  Graphic Options is 558 design px tall, so at 3x it needs 1674 and does not
+  fit, which means THE CONTROL THAT WOULD FIX IT IS THE FIRST THING TO GO
+  OFF-SCREEN. The player is trapped in a UI they cannot navigate.
+
+  The manual factor is now checked against the render resolution with the same
+  ScaleTier::Fits the auto path uses, and a factor that does not fit falls
+  back to Auto - which by construction picks the largest tier that does. It
+  WRITES AutoScale=1 BACK: a silent per-launch override would leave the ini
+  saying 3 while the game ran at 1.5 and the selector showed 1.5, three
+  sources of truth with two of them wrong.
+
+  ⚠ ONLY WHEN A RESOLUTION WAS ACTUALLY READ. Fits() answers false for a zero
+  size, so an unreadable SC4GraphicsOptions.ini would otherwise have "rescued"
+  a good manual tier all the way down to stock. NULL IS NOT EVIDENCE: no
+  number, no rescue. Desk-checked over seven cases including manual 1x (a
+  reference capture must never be rescued) and the zero-resolution case.
+
+  INSTRUMENT, NOT YET ARMED: the restart notice. The user reports the stock
+  box appears only AFTER Accept, and we still cannot see Accept - no message
+  carries a control id. Rather than guess a third time, this build captures
+  the Accept/Cancel absolute rects on open (SafeAbsRect) and tests every click
+  coordinate against them (SELHIT), and reports every visibility transition of
+  the notice itself (SELNOTICE) - because a rise we did not cause IS the
+  Accept signal we lack, and it would be exact rather than inferred. One
+  Accept click settles which mechanism to arm.
+
+  ⚠ The first capture spent 96 of its 120 lines on three hover message types
+  that repeat on every mouse move. A BOUNDED INSTRUMENT CAN FILL WITH NOISE
+  AND MISS THE EVENT IT WAS ARMED FOR - the same shape as a grep that filters
+  out the adjacent line holding the answer. Those three types are now excluded.
+
+  Files: tools\dialog-static\build_dialog_static.py,
+  tools\dialog-static\build_selector_1x.py, src\UiSpike.cpp,
+  src\SC4UIScaleDllDirector.cpp.
+
 2026-08-19  v3.2.1   Selector: opaque drop list, unusable tiers refused, and
                      the commit path the INSTRUMENT actually supported
 
