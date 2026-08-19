@@ -16222,3 +16222,53 @@ still unidentified. NO fifth patch was written. Four have now provably executed
 and moved zero pixels, and the failure has been in the identification step every
 single time - so the next move must be an instrument that fires AT DRAW with the
 marker on screen, not another disassembly that fits.
+
+## ⭐ #191 IS OUTSIDE THE WINDOW LAYER - MEASURED, AND THE TRIAGE TEST EXISTED (2026-08-19)
+
+The Move In a Sim marker is NOT a GZWin. Full-depth live tree dumps at 1000ms,
+37 ticks over one short session with the marker deliberately left on screen:
+
+    dumps: 37   ids present in ALL of the last 8: 623   NEW vs the first 5: 0
+
+ZERO new windows appear while the marker is displayed. The tree is identical
+with it up and with it down. (Positive control that the dump CAN see transient
+windows: the Select-A-Sim picker's 0x1234xxxx grid and 0x0A243Dxx dialog show up
+in exactly one tick when it opened - 88 transient ids captured - so a null here
+is a real null, not a blind probe.)
+
+⛔ THEREFORE NO WINDOW-SIDE FIX CAN EVER WORK. kNeverScaleIds, the sweep,
+ScalePanelRoot, SEATPROBE, BMPX - none of them can reach this. The 0x27DF05BF
+attempt was doomed by construction, not by bad luck.
+
+⭐ AND THE PROJECT ALREADY HAD THE TRIAGE TEST FOR THIS, in
+reference-sc4-ui-sdk-boundary: "If an element (a) never appears as a window in a
+FULL-DEPTH dump, (b) has no art in any dat, and (c) spans or overlays the 3D
+view - stop, it is outside the SDK. Apply BEFORE spending a session." It was not
+run. Four patches were written first, all of which provably executed and moved
+nothing, and the dump that settled it took one ten-second launch.
+
+    ⭐ LAW: RUN THE SDK-BOUNDARY TRIAGE BEFORE THE FIRST PATCH, NOT AFTER THE
+    FOURTH. "Is this even a window?" is one live dump and it eliminates or
+    confirms the entire toolkit in a single launch. Every hour spent choosing
+    between candidate addresses is wasted if the answer is "none of them,
+    it is not in the window layer at all".
+
+⚠ AND THIS MARKER IS A CASE THE BOUNDARY NOTE DOES NOT NAME: it scores (a) YES
+and (c) YES but (b) NO - its art IS in a dat, and #190 stages it. So it is not
+"outside the SDK" wholesale; it is ART-REACHABLE, GEOMETRY-UNREACHABLE. That
+split is exactly why every result today looked contradictory: the staged 72x82
+portrait genuinely IS loaded (ARTFETCH proves the fetch), and the renderer then
+draws it at a size it computes itself, resampling it back to 1x on screen -
+"pixel-identical", as the user reported.
+
+    ⭐ LAW: ART REACHABLE + GEOMETRY UNREACHABLE IS ITS OWN CATEGORY. Staging
+    bigger art for such an element changes NOTHING on screen and looks like the
+    staging failed. Before staging art for anything drawn over the 3D view,
+    establish which half of the pair you can actually reach.
+
+WHERE IT STANDS: the cure, if there is one, is a size constant in the renderer's
+own path - the same class of lever as SIGNPOST/CSI but in the module that owns
+the portraits (the preload at 0x00775239 is 0x0077xxxx, NOT the 0x0046Cxxx
+billboard builder every patch today targeted). That is a fresh search in a
+module nobody has mapped, and the boundary note's standing advice applies:
+"weigh it against the prize" before spending another session.
