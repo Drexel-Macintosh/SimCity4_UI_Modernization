@@ -745,6 +745,40 @@ def inject_res_readout(text, fn):
                                        'winflag_visible=no', 1))
                 relabelled += 1
                 break
+    # ---- CANCEL AND DEFAULT SETTINGS ARE DISABLED (user instruction) ----
+    # ⭐ THE SIMPLEST THING THAT REMOVES A WHOLE CLASS OF PROBLEM.
+    # A day of work went into telling Accept, Cancel and Default apart from
+    # the outside - coordinates, an ini side-effect, a message filter, a reset
+    # fanout - and each mechanism was eliminated or misread in turn. The
+    # deciding insight is not a better detector: it is that TWO OF THE THREE
+    # BUTTONS DO NOT NEED TO EXIST for this control.
+    #
+    # With Cancel and Default Settings disabled, Accept is the only way out,
+    # so "did the player confirm?" has one answer and there is nothing left to
+    # infer. GZWinBtn renders a disabled button with colorfontdisabled, so it
+    # greys itself - the same treatment the save-warning mod uses on the quit
+    # buttons it suppresses.
+    #
+    # ⚠ IN DATA, NOT AT RUNTIME. Disabling these on a timer tick would let the
+    # player see them live and then go grey, which is the flicker that got
+    # the hidden resolution rows moved into data too.
+    DISABLED_BTNS = {
+        "0x6a57da48": "Cancel",
+        "0xea5e99d9": "Default Settings",
+    }
+    disabled = 0
+    for bid, bname in DISABLED_BTNS.items():
+        for i, ln in enumerate(lines):
+            if 'id=%s ' % bid in ln and 'winflag_enabled=yes' in ln:
+                lines[i] = ln.replace('winflag_enabled=yes',
+                                      'winflag_enabled=no', 1)
+                disabled += 1
+                break
+    if disabled != len(DISABLED_BTNS):
+        sys.exit("FATAL: disabled %d of %d buttons in %s - an id did not "
+                 "match, so the dialog changed. Do not guess."
+                 % (disabled, len(DISABLED_BTNS), fn))
+
     # The radios have unique ids already; hide them the same way.
     STOCK_RES_RADIOS = ("0x6a57da5a", "0x6a57da5b", "0x6a57da5c", "0x6a57da5d")
     radios_hidden = 0

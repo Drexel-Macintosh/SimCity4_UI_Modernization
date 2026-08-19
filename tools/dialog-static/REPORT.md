@@ -198,7 +198,7 @@ dat of the same name.
   same script). EXCLUDED per instruction: `I-49889894` -- a 476x43 bottom
   strip, not a dialog.
 
-## Package contents (265 entries, 2650016 bytes)
+## Package contents (265 entries, 2650014 bytes)
 
 164 edited .UI scripts at their ORIGINAL TGIs (same-TGI overrides) + 100 PNGs:
 
