@@ -15146,3 +15146,44 @@ captions once per appearance, comparing before writing.
 
 Blank on screen now means the DATA half is missing, and the log says so.
 
+
+## #192 second row was CLIPPED - collapsed to one line (2026-08-18, dep 21:39:29)
+
+USER screenshot: "Rendering: 2400x1600" renders in full at design y=325..346;
+"UI scale: 2.00x (auto)" at y=345..366 is cut across the glyphs.
+
+SO THE CLIP IS IN [346, 366), and the label's parent is NOT the 435-tall inner
+frame I sized against - I placed the rows as siblings of the "Software" label
+and inherited whatever clips THAT, which is shorter. Software ends at y=314, so
+between 314 and ~346 there is not room for two 20px rows.
+
+⭐ I did NOT guess a boundary inside that 20px band. Picking 358 and rebuilding
+would have been a coin-flip costing another build and another eyes-on, and the
+evidence cannot distinguish 350 from 365. Collapsed to ONE line on the row that
+is PROVEN to render, carrying both numbers:
+
+    2400x1600 @ 2.00x auto
+
+Kept short deliberately: the column is 172 design px, so the string has to fit
+at 1.5x, 2x AND 3x, and a long string would fail only at the tier nobody
+happens to be testing.
+
+MEASURED CONFIRMATION that the mechanism works, before this change, from the
+live log - so the only thing in doubt was the layout, never the plumbing:
+    RESREADOUT filled Graphic Options - "Rendering: 2400x1600" /
+    "UI scale: 2.00x (auto)"
+
+## #196 CONFIRMED FIXED ON THE NEXT BOOT (2026-08-18, log 21:35:39)
+
+    ScaleTier: zzz-SC4UIScale\z_SC4UIScale_CsiIcons-2x.dat -> ACTIVE.
+    ScaleTier: zzz-SC4UIScale\z_SC4UIScale_CsiIcons-15x.dat -> disabled.
+
+and on disk: CsiIcons-2x.dat live, 15x and 3x .x1-disabled. The package now
+follows the tier like its ten siblings.
+
+⭐ AND IT ELIMINATES A HYPOTHESIS FOR #195. The user reports the deployment
+markers look unchanged with the CSI art now correct-tier. So the 15x-under-2x
+mismatch was NOT what split the hat from the number - that hypothesis is dead,
+and #195 belongs to the multiplier/immediates question (#197/#193), not to
+package selection. Recorded because a dead hypothesis is worth as much as a
+live one and this one looked very promising.

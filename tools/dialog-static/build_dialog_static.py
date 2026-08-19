@@ -556,8 +556,11 @@ def inject_res_readout(text, fn):
             'winflag_ignoremouse=yes font=GenBodyMedium align=lefttop '
             'notify=no wrapped=no opaque=no forecolor=(63,73,103) '
             'bkgcolor=(0,0,0) gutters=(2,2) textoffsets=(0,0) >')
-    new = [indent + tmpl % (RES_READOUT_IDS[0], 325, 346),
-           indent + tmpl % (RES_READOUT_IDS[1], 345, 366)]
+    # ONE line only. The second row at y=345..366 was CLIPPED on screen
+    # (user screenshot, 2026-08-18) while this row rendered in full, so the
+    # parent clips inside [346,366) and there is no room for a second 20px
+    # row above it. Both numbers go on this row instead.
+    new = [indent + tmpl % (RES_READOUT_IDS[0], 325, 346)]
     lines[at + 1:at + 1] = new
     return "\n".join(lines), len(new)
 

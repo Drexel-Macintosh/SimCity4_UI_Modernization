@@ -15579,25 +15579,29 @@ void UiSpike::IncrementalPass()
 				pMainWindow->GetChildWindowFromIDRecursive(0x2A57CB82);
 			if (gfxDlg != nullptr && gfxDlg->IsVisible())
 			{
-				char l1[96], l2[96];
+				// ONE line: the second row was clipped by this label's parent
+				// (user screenshot). Both numbers ride on the row that is
+				// proven to render, kept short so it fits the 172-design-px
+				// column at every tier.
+				char l1[96];
 				if (gReadoutW > 0 && gReadoutH > 0)
 				{
-					_snprintf_s(l1, sizeof(l1), _TRUNCATE,
-						"Rendering: %dx%d", gReadoutW, gReadoutH);
+					_snprintf_s(l1, sizeof(l1), _TRUNCATE, "%dx%d @ %.2fx %s",
+						gReadoutW, gReadoutH, settings.spikeScaleFactor,
+						settings.spikeAutoScale ? "auto" : "manual");
 				}
 				else
 				{
-					// Honest rather than blank-but-wrong: we only claim a
-					// number we were actually handed.
-					_snprintf_s(l1, sizeof(l1), _TRUNCATE, "Rendering: unknown");
+					// Honest rather than blank-but-wrong: only claim a render
+					// size we were actually handed.
+					_snprintf_s(l1, sizeof(l1), _TRUNCATE, "res ? @ %.2fx %s",
+						settings.spikeScaleFactor,
+						settings.spikeAutoScale ? "auto" : "manual");
 				}
-				_snprintf_s(l2, sizeof(l2), _TRUNCATE, "UI scale: %.2fx (%s)",
-					settings.spikeScaleFactor,
-					settings.spikeAutoScale ? "auto" : "manual");
 
-				const uint32_t ids[2] = { 0x5CA1E000, 0x5CA1E001 };
-				const char* txt[2] = { l1, l2 };
-				for (int k = 0; k < 2; k++)
+				const uint32_t ids[1] = { 0x5CA1E000 };
+				const char* txt[1] = { l1 };
+				for (int k = 0; k < 1; k++)
 				{
 					cIGZWin* lab =
 						gfxDlg->GetChildWindowFromIDRecursive(ids[k]);
@@ -15619,9 +15623,9 @@ void UiSpike::IncrementalPass()
 				{
 					gReadoutLogs++;
 					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: RESREADOUT filled Graphic Options - \"%s\" / "
-						"\"%s\". Blank on screen instead means the DATA half is "
-						"missing: rebuild DialogStatic.", l1, l2);
+						"UiSpike: RESREADOUT filled Graphic Options - \"%s\". "
+						"Blank on screen instead means the DATA half is "
+						"missing: rebuild DialogStatic.", l1);
 				}
 			}
 		}
