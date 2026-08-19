@@ -18728,6 +18728,15 @@ namespace
 	unsigned int gSelClickMs = 0;      // last message seen by the winproc
 	int  gSelLastX = -1, gSelLastY = -1;  // last pointer position seen
 	int  gSelStagedRow = -1;          // chosen, not yet confirmed
+	// ⭐ THE POINTER AND THE WALKED RECTS ARE IN DIFFERENT SPACES, AND THE
+	// MAPPING IS MEASURED, NEVER ASSUMED. A centring hypothesis was tried and
+	// its own arithmetic refuted it: with the dialog centred, neither observed
+	// close-pointer lands in either button. So the offset is CALIBRATED from
+	// a click whose target we know exactly - our own radio, which the engine
+	// toggles on click (proven) and which is only 16 design px wide, so the
+	// pointer must be within half that of its centre.
+	int  gSelCalDx = 0, gSelCalDy = 0;
+	bool gSelCalibrated = false;
 	// ACCEPT TRACE (2026-08-19). We cannot tell from a message WHICH
 	// control was clicked - no id is carried - so the rects of the two
 	// buttons that close this dialog are captured when it opens and every
@@ -19118,17 +19127,42 @@ void UiSpike::ServiceScaleSelector()
 			// a dialog the player already has open.
 			if (gSelStagedRow >= 0)
 			{
-				const bool onAccept = gSelRectsOk
-					&& gSelLastX >= gSelAcceptRect[0]
-					&& gSelLastX < gSelAcceptRect[0] + gSelAcceptRect[2]
-					&& gSelLastY >= gSelAcceptRect[1]
-					&& gSelLastY < gSelAcceptRect[1] + gSelAcceptRect[3];
-				const bool onCancel = gSelRectsOk
-					&& gSelLastX >= gSelCancelRect[0]
-					&& gSelLastX < gSelCancelRect[0] + gSelCancelRect[2]
-					&& gSelLastY >= gSelCancelRect[1]
-					&& gSelLastY < gSelCancelRect[1] + gSelCancelRect[3];
-				if (onAccept)
+				// Map the walked rects into the pointer's space with the
+				// MEASURED offset. Without a calibration point this session
+				// there is nothing to compare, so the change is COMMITTED and
+				// the log says the test could not be run - a staged change
+				// that silently evaporates is worse than a Cancel that does
+				// not revert, and the previous build did exactly that.
+				const int ax = gSelAcceptRect[0] + gSelCalDx;
+				const int ay = gSelAcceptRect[1] + gSelCalDy;
+				const int cx = gSelCancelRect[0] + gSelCalDx;
+				const int cy = gSelCancelRect[1] + gSelCalDy;
+				const bool onAccept = gSelRectsOk && gSelCalibrated
+					&& gSelLastX >= ax && gSelLastX < ax + gSelAcceptRect[2]
+					&& gSelLastY >= ay && gSelLastY < ay + gSelAcceptRect[3];
+				const bool onCancel = gSelRectsOk && gSelCalibrated
+					&& gSelLastX >= cx && gSelLastX < cx + gSelCancelRect[2]
+					&& gSelLastY >= cy && gSelLastY < cy + gSelCancelRect[3];
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELGEOM pointer (%d,%d) | calibrated=%d offset "
+					"(%+d,%+d) | Accept walked [%d,%d %dx%d] -> mapped "
+					"[%d,%d] | Cancel walked [%d,%d] -> mapped [%d,%d]",
+					gSelLastX, gSelLastY, gSelCalibrated ? 1 : 0,
+					gSelCalDx, gSelCalDy,
+					gSelAcceptRect[0], gSelAcceptRect[1], gSelAcceptRect[2],
+					gSelAcceptRect[3], ax, ay,
+					gSelCancelRect[0], gSelCancelRect[1], cx, cy);
+				if (!gSelCalibrated)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELCLOSE no calibration this session - "
+						"committing the staged scale rather than discarding "
+						"it. Click the radio beside the dropdown once and the "
+						"Accept/Cancel test becomes exact.");
+					SelCommit(gSelStagedRow);
+					gSelStagedRow = -1;
+				}
+				else if (onAccept)
 				{
 					Logger::Get().WriteLine(LogLevel::Info,
 						"UiSpike: SELCLOSE pointer (%d,%d) was on ACCEPT - "
@@ -19553,6 +19587,28 @@ void UiSpike::ServiceScaleSelector()
 			Logger::Get().WriteLine(LogLevel::Info,
 				"UiSpike: SELRADIO a stock resolution was chosen - our custom "
 				"radio cleared.");
+		}
+		// CALIBRATION POINT. `ours` going 0 -> 1 is a click WE did not make,
+		// on a 16x16 design-px target - the most precisely located event
+		// available to us. The difference between where the pointer was and
+		// where the walked geometry says that radio is IS the mapping.
+		if (oursNow && !gSelOursWas && gSelLastX >= 0)
+		{
+			int rl = 0, rt = 0, rw = 0, rh = 0;
+			cIGZWin* rw2 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
+			if (rw2 && SafeAbsRect(rw2, &rl, &rt, &rw, &rh) && rw > 0)
+			{
+				gSelCalDx = gSelLastX - (rl + rw / 2);
+				gSelCalDy = gSelLastY - (rt + rh / 2);
+				gSelCalibrated = true;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELCAL our radio was clicked at pointer (%d,%d); "
+					"its walked rect is [%d,%d %dx%d] centre (%d,%d). OFFSET "
+					"= (%+d,%+d). Accept/Cancel now testable in the pointer's "
+					"own space.",
+					gSelLastX, gSelLastY, rl, rt, rw, rh,
+					rl + rw / 2, rt + rh / 2, gSelCalDx, gSelCalDy);
+			}
 		}
 		gSelOursWas = (mask & (1 << 4)) != 0;
 		gSelStockWas = mask & 0x0F;
