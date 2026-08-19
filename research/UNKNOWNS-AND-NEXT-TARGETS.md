@@ -278,3 +278,59 @@ The most transferable material in this repo is not the address list — it is th
 12. **The symbol is the anchor; the line number is not.** Measured: 92% citation rot in one document over weeks.
 13. **Two blind instruments agreeing count as one.** Corroboration counts only between independent failure modes.
 14. **Lead any published issues page with what is already dead.** Five dead attributions on #176, ten refuted theories on #148, eight on #162, fifteen eliminations on #188. The refutation record is the expensive part, and it is the part that stops a reader repeating the work.
+---
+
+## E. 2026-08-19 — #191 (Move In My Sim marker): what this register already knew
+
+⭐ **THIS SECTION EXISTS BECAUSE THE REGISTER WAS NOT CONSULTED AND SHOULD HAVE
+BEEN.** Five patches were written for #191 before it was opened. Three rows
+already covered the target, the method, and the risk:
+
+| row | what it says | how it applied |
+|---|---|---|
+| **20** | *MySim head bubble + aircraft landing ring* — **"Free if #8 is done"** | This IS #191. Named, scored, and parked. |
+| **8** | *The other six dispatch-indicator categories* — "settles a **printed contradiction**" — "read jump table + 1 suppression launch" | The prescribed method. The "printed contradiction" is exactly what four patches walked into. |
+| **18** | *The TagKind sprite's literal size constant* — **"continue `0x00510690` past `0x5106E7`"** | The likely size lever, with the exact resume address. |
+| **28** | *The S3D format* — "hand-decode the **244-byte arrow plate**" | The green arrow is already known to be an **S3D mesh**, not a sprite. |
+
+**A.4 already documents the TagKind spine** (live-confirmed): 25 `Tag1x1x3_*`
+exemplars bind a deliberately **NULL S3D** and carry a TagKind byte (property
+`0xABB90E58`, occurring exactly once image-wide at `0x004FBFFC`). Chain:
+ctor `0x004FBB40` → visitor `0x004FC710` → builder `0x004FBFE0`
+(jump table `0x004FC410` on tag−1) → factory `0x00505370` (`vt+0x3C`) →
+creator `0x00510690`.
+
+### E.1 New, measured 2026-08-19 — promote these into §B
+
+| item | status |
+|---|---|
+| **Move In My Sim click chain** | **SOLVED.** LTEXT `{6a231eaa,4ACE23B5}` → button `0xCA243E0C` (script `I-0a243d80`) → dispatcher `0x00776B43` (`cmp eax,0xCA243E0C ; je 0x00776B92`) → `0x00776B92` → **action `0x007755A0`**. Only TWO refs to the button id image-wide (the dispatcher and the `GetChildWindowFromID` at `0x00775002`), so there is exactly one handler. |
+| **Portrait ownership** | **SOLVED.** The 19 faces are preloaded together at `0x00775239` (loop `0x0077521B..`, 48-byte stride, registers each via `call [eax+0x94]`). Owner is a **`0x0077xxxx`** subsystem — the SAME module as the click handler. |
+| **Is the marker a window?** | **SOLVED — NO.** 37 full-depth dumps with it on screen: 623 ids in all of the last 8, **0 new** vs the first 5. Positive control: the Select-A-Sim grid appears in exactly one tick (88 transient ids). |
+| **Does the marker route through the `0x0046Cxxx` billboard system?** | **NO — eliminated ON SCREEN.** At 2.00 the log shows category-3 icon 32→64, shared pin quad 64→128, and MYSIMTEX UV divisor 64→128, all applied, with the marker unchanged. |
+| **The marker's DRAW and its size lever** | **STILL OPEN.** Downstream of `0x007755A0`. Row 18's resume address `0x5106E7` is the cheapest lead. |
+| **What does `SIGNPOST` (`0x005F20AF`/`0x005F20BF`) actually move?** | **NEW UNKNOWN.** Applies at every tier (`balloon 44→88, raise 150→300` at 2x) across many sessions with **no eyes-on confirmation of its consumer anywhere**. Its own header records the attribution was already corrected once by screen evidence. Same profile as the `0x48E945B4` mislabel. Merge with row 26 ("is `0x5F20A0` live at all"). |
+| **`ARTFETCH` cannot see cached consumers** | **NEW STRUCTURAL FACT.** It hooks the fetch; the portraits are cached at load, so the draw never passes through it. Record beside the buffer-class fact in `reference-sc4-ui-sdk-boundary`. |
+
+### E.2 A category the SDK-boundary triage does not name
+
+The triage assumes an element is fully inside or fully outside the SDK. This one
+is **art-reachable, geometry-unreachable**:
+
+    (a) never a window in a full-depth dump    YES
+    (b) has no art in any dat                  NO  — it IS a staged dat portrait
+    (c) overlays the 3D view                   YES
+
+⛔ **Consequence: staging bigger art for such an element changes NOTHING on
+screen and reads as "the staging failed".** #190 genuinely staged 72x82
+portraits, the game genuinely loads them (ARTFETCH proves the fetch), and the
+renderer draws at a size it computes itself — resampling the face back to 1x.
+
+### E.3 Correction to a published reference
+
+`tools/research/CITY-SITUATION-INDICATORS.md` §3 says of `0x0046CCB9`:
+*"Patching it resizes unrelated indicators. Never touch it when working on
+CSIs."* **It is category 3 only** — proven by exhaustive inbound-edge
+enumeration of `0x0046C8B0..0x0046D200`: one edge in, from `cmp [esi+4],4 ; jne`
+at `0x0046CC45`. Categories 3 and 4 merge at `0x46CB52` and split later, which
+is why the single-`jne` reading was wrong.
