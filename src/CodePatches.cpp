@@ -4582,27 +4582,95 @@ namespace CodePatches
 		// re-discovered and re-tried: its uniqueness to category 3 is real, its
 		// meaning is still unknown, and it is NOT the size.
 
-		// ⛔ ApplyMySimMarkerTexSide (MYSIMTEX, imm32 at 0x0046CCCE) WAS HERE
-		// AND IS REVERTED. It forced category 3's power-of-two texture divisor
-		// 64 -> 128 to match #190's staged 72x82 portraits. It never changed
-		// the Move In marker (that was a blit problem, fixed in
-		// kBmpxCityRoots), and it is the prime suspect for a defect the user
-		// reported straight after: the "<name> lives here" resident balloon
-		// draws only the TOP-LEFT QUARTER of the face in its purple circle.
+		// ---- #191 MY SIM WORLD MARKER: the icon's UV divisor is a 64 -------
+		// The framed sim face floating over a house is CATEGORY 3 of THIS same
+		// dispatch-indicator system, not a window and not the signpost
+		// lollipop. cSC4MySim (CID 0x4A1DBBBF, GetGZCLSID 0x00424AF0) ->
+		// cSC4MySimDispatch (CID 0xCBC14674, GetGZCLSID 0x00433D40) ->
+		// AddIndicator(..., 3, ...). Only two of the seven AddIndicator call
+		// sites pass 3 and BOTH are in the MySim module: 0x004356F5 and
+		// 0x0043E711. Its face is fetched at 0x0046CB7B as
+		// {T=0x856DDBAC, G=0x46A006B0, I=<the sim's own instance>} - the SAME
+		// 19 portraits #190 restaged.
 		//
-		// ⭐ THE ARITHMETIC OF THE REGRESSION: the divisor is applied to EVERY
-		// category-3 indicator, but the texture side is per-TEXTURE. Any
-		// category-3 face still uploaded into a 64px square - i.e. any that
-		// binds a 36x41 source rather than our 72x82 - gets its UVs divided by
-		// 128 instead of 64, halving them on both axes and sampling exactly the
-		// top-left quarter. One over-broad constant, two different textures.
+		// The icon quad's UVs are pixelExtent / [esp+0x18], where [esp+0x18]
+		// is the SQUARE power-of-two texture side. Category 4 COMPUTES it
+		// (0x0046CC4C push width; 0x0046CC59 call 0x006046B0 = NextPow2).
+		// Category 3 HARD-CODES it:
+		//     0x0046CCCA  C7 44 24 18 40 00 00 00  mov [esp+0x18], 64
+		// consumed at 0x0046CD9E (fild; fdivr 1.0f) and written into the
+		// record UVs at 0x0046CDDC / 0x0046CDE7 / 0x0046CE18.
 		//
-		// ⛔ DO NOT RE-ADD IT WITHOUT A PER-INDICATOR TEXTURE SIZE. The
-		// divisor is only correct for indicators whose face actually crossed
-		// the 64->128 boundary, and a single immediate cannot express two
-		// answers. See also: it was kept armed for several launches on the
-		// strength of "it might be needed", which is exactly how a patch that
-		// never proved itself became a regression.
+		// The uploader 0x006046D0 makes the texture SQUARE, side =
+		// max(NextPow2(w), NextPow2(h)) - two loops at 0x0060474D/0x0060475C,
+		// max picked at 0x0060477A. MEASURED from the shipped payloads, all 38
+		// staged portraits (19 ids x 2 groups):
+		//     1x    36x41  -> side  64   (the stock 64 is CORRECT)
+		//     1.5x  54x62  -> side  64   (still CORRECT - must stay 64)
+		//     2x    72x82  -> side 128
+		//     3x   108x123 -> side 128
+		// So from 2x up the divisor is HALF the real texture side, every UV is
+		// 2x too large, and the face draws at 50% of its quad anchored to the
+		// corner (u0 = 0, forced by the fmul against 0.0f at 0x00A81054) -
+		// i.e. exactly 1x-sized and off-centre inside a pin our own kCsiQuad
+		// correctly doubled. THIS IS A #190 REGRESSION: with the stock 36x41
+		// art the constant was right at every tier.
+		//
+		// SCOPE, byte-proven: 0x0046CCB9 is reached ONLY by `cmp [esi+4],4 ;
+		// jne` at 0x0046CC45, and 0x0046CB52 ONLY by `cmp eax,3 ; je`
+		// (0x0046C928) and `cmp eax,4 ; je` (0x0046C931). A capstone branch
+		// sweep of 0x0046C8B0-0x0046D200 found no other edge, and no rel32
+		// call/jmp in .text targets either address. Category 3 is MySim and
+		// nothing else - the 32 at 0x0046C8EA and the computed store at
+		// 0x0046CA04 belong to the TEXT categories and are NOT touched.
+		void ApplyMySimMarkerTexSide(float factor)
+		{
+			const uintptr_t kVa = 0x0046CCCE;  // imm32 of the C7 at 0x0046CCCA
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			uint32_t* p =
+				reinterpret_cast<uint32_t*>(kVa + base - kImageBase);
+			if (*p != 64u)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: MYSIMTEX 0x%08X reads %u, expected 64 - "
+					"REFUSED, nothing written (#191).",
+					static_cast<unsigned>(kVa), static_cast<unsigned>(*p));
+				return;
+			}
+			// DERIVE FROM THE ART, NEVER FROM THE FACTOR. The staged portrait
+			// is round(36*f) x round(41*f) and the uploader squares it up.
+			const int w = static_cast<int>(36.0f * factor + 0.5f);
+			const int h = static_cast<int>(41.0f * factor + 0.5f);
+			const int big = (w > h) ? w : h;
+			uint32_t side = 1u;
+			while (side < static_cast<uint32_t>(big)) { side <<= 1; }
+			if (side == 64u)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: MYSIMTEX INERT at x%.2f - the staged "
+					"portrait %dx%d still fits a 64px square texture, so the "
+					"stock constant is already correct (#191).",
+					factor, w, h);
+				return;
+			}
+			DWORD old = 0;
+			if (!VirtualProtect(p, sizeof(uint32_t), PAGE_READWRITE, &old))
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: MYSIMTEX VirtualProtect failed at 0x%08X - "
+					"skipped (#191).", static_cast<unsigned>(kVa));
+				return;
+			}
+			*p = side;
+			VirtualProtect(p, sizeof(uint32_t), old, &old);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: MYSIMTEX x%.2f - My Sim marker icon UV divisor "
+				"64 -> %u to match the staged %dx%d portrait's square texture "
+				"(category 3 only, imm32 at 0x%08X). #191.",
+				factor, static_cast<unsigned>(side), w, h,
+				static_cast<unsigned>(kVa));
+		}
 
 		// ------------------------------------------------------------------
 		// CSIAIM - re-aim the CSI size hunt from the INI, with NO REBUILD.
@@ -6845,6 +6913,11 @@ namespace CodePatches
 		// only in-world overlay a player interacts with, so an unscaled
 		// one is both ugly AND a tiny tap target at 1.5x/2x/3x.
 		if (factor > 1.01f && mode >= 2) { ApplyCsiIndicatorScale(factor); }
+		// #191 - MUST ride the same gate as the line above. ApplyCsiIndicatorScale
+		// doubles the category-3 icon QUAD; this fixes the UV divisor that decides
+		// how much of the (now larger) portrait texture that quad shows. Arming
+		// one without the other is the exact half-patched state #191 reported.
+		if (factor > 1.01f && mode >= 2) { ApplyMySimMarkerTexSide(factor); }
 		// Ungated by mode on purpose: CSIAIM is inert unless [UiSpike]CsiAim
 		// names an address, and it must be aimable without touching any
 		// other knob (that is the whole point - one launch, many candidates).
