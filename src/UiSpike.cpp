@@ -18996,6 +18996,7 @@ namespace
 	const uint32_t kSelMsgMove  = 0x0000000Du;
 	bool gSelInDefault = false;      // pointer currently inside Default
 	bool gSelDefaultHit = false;     // Default was pressed, act on it
+	int  gSelClickedBtn = -1;        // button that received the 0x10 click
 	// ⛔ "0x16 WHILE THE POINTER IS IN DEFAULT" WAS NOT ENOUGH, and the
 	// reason is a layout collision I should have predicted: the combo sits on
 	// the readout row and its drop list opens DOWNWARD, straight over the
@@ -19010,6 +19011,15 @@ namespace
 	// A stray 0x16 to one button is not that, no matter where the pointer is.
 	unsigned int gSelResetMs = 0;    // when the current 0x16 burst started
 	int  gSelResetMask = 0;          // which buttons it has reached
+	// ⭐ THE DIALOG RESETS OUR COMBO TO ITS AUTHORED initselection, WHICH IS
+	// AUTO. That is why picking a tier "jumped back to auto": the 0x16
+	// three-button fanout is the dialog re-reading every control, it fires
+	// ROUTINELY (twice in one 400ms window with no button pressed), and our
+	// combo goes back to row 0 with it. No commit, no refusal and no stage
+	// appeared in the log during those jumps - because our code was not doing
+	// it. gSelDesiredRow is what we want shown, re-asserted after every reset.
+	int  gSelDesiredRow = -1;
+	bool gSelWasReset = false;
 
 	class SelBtnFilter : public cIGZWinMessageFilter
 	{
@@ -19048,19 +19058,31 @@ namespace
 				if (gSelBtns[i].win != nullptr && gSelBtns[i].win == pWin)
 				{
 					gSelLastBtn = i;
-					// Default Settings, identified by its own protocol rather
-					// than by where a pixel landed.
-					if (i == 2)
+					// ⭐ 0x10 IS THE CLICK, and it is per-button - no
+					// coordinates, no heuristics. Measured end to end on
+					// Cancel: 0x13 enter, 0x11, 0x07, 0x12, 0x0A, 0x12, then
+					// 0x10 as the dialog closed.
+					//
+					// Default Settings was never seen with a 0x10 - but in
+					// that capture it was never CLICKED either, only hovered
+					// (three enter/leave pairs, no press). The earlier
+					// conclusion that it cannot send one came from a capture
+					// whose budget had been eaten by mouse moves. If it turns
+					// out to use a different message the log will say so.
+					if (msg.dwMessageType == kSelMsgEnter && i == 2)
 					{
-						if (msg.dwMessageType == kSelMsgEnter)
-						{
-							gSelInDefault = true;
-						}
-						else if (msg.dwMessageType == kSelMsgLeave)
-						{
-							gSelInDefault = false;
-						}
-						// (the fanout is counted below, across ALL buttons)
+						gSelInDefault = true;
+					}
+					else if (msg.dwMessageType == kSelMsgLeave && i == 2)
+					{
+						gSelInDefault = false;
+					}
+					else if (msg.dwMessageType == kSelMsgClick)
+					{
+						gSelClickedBtn = i;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELBTN  *** %s CLICKED (0x10) ***",
+							gSelBtns[i].name);
 					}
 					// FANOUT COUNTER, across every button - a reset touches
 					// them all, a stray broadcast touches one.
@@ -19079,15 +19101,16 @@ namespace
 						{
 							if (gSelResetMask & (1 << b)) { n++; }
 						}
-						if (n >= 3 && gSelInDefault)
+						// ⛔ NOT A DEFAULT PRESS. That reading was refuted by
+						// the very next trace: this fanout arrived twice in
+						// one 400ms window with nothing pressed at all. It
+						// means only "the dialog just re-read its controls",
+						// and what matters is that OUR combo was re-read with
+						// them, back to initselection=0.
+						if (n >= 3)
 						{
-							gSelDefaultHit = true;
+							gSelWasReset = true;
 							gSelResetMask = 0;
-							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: SELBTN  reset FANOUT reached %d "
-								"buttons within 50ms while the pointer was "
-								"inside Default Settings - that is a press.",
-								n);
 						}
 					}
 					// Mouse moves are the noise that exhausted the old budget
@@ -19321,42 +19344,22 @@ void UiSpike::ServiceScaleSelector()
 			// the live settings and re-derives which tiers this resolution
 			// can carry - the player may have changed the resolution in the
 			// same visit.
-			// ⭐ DECIDED BY WHICH BUTTON RECEIVED THE MESSAGE.
-			// Not by coordinates. Two coordinate attempts failed and a third
-			// refuted itself on paper; the SDK can simply say which window a
-			// message went to, and gSelLastBtn is the last button that got
-			// one before the dialog vanished.
+			// The close no longer decides anything: Accept and Cancel are
+			// handled the instant their 0x10 click arrives, which is both
+			// earlier and unambiguous. Anything still staged when the dialog
+			// vanishes was closed some other way (Escape, or a click we did
+			// not see) and is DISCARDED - the safe direction for a setting
+			// the player did not confirm.
+			if (gSelStagedRow >= 0)
 			{
-				const char* btn = (gSelLastBtn >= 0)
-					? gSelBtns[gSelLastBtn].name : "(none seen)";
 				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELCLOSE the last button to receive a message "
-					"was %s. staged=%d", btn, gSelStagedRow);
-				// ⛔ NO DEFAULT-SETTINGS BRANCH HERE ANY MORE. It was written
-				// on the assumption that every button closes the dialog, and
-				// the trace disproved it: Default Settings resets the controls
-				// IN PLACE and never sends the 0x10 click nor closes anything,
-				// so this branch could not fire. It is handled where it
-				// actually happens - see SELDEFAULT in the service above.
-				if (gSelStagedRow >= 0)
-				{
-					const bool cancelled = (gSelLastBtn == 1);
-					if (cancelled)
-					{
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SELCLOSE CANCEL - the staged scale is "
-							"discarded and the ini is untouched.");
-					}
-					else
-					{
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SELCLOSE committing the staged scale "
-							"(closed via %s).", btn);
-						SelCommit(gSelStagedRow);
-					}
-					gSelStagedRow = -1;
-				}
+					"UiSpike: SELCLOSE dialog closed with row %d still staged "
+					"and no Accept click seen - discarded.", gSelStagedRow);
+				gSelStagedRow = -1;
 			}
+			gSelDesiredRow = -1;
+			gSelClickedBtn = -1;
+			gSelWasReset = false;
 			SelDetachButtonFilters();
 			gSelDlgUp = false;
 			gSelPushed = -2;
@@ -19628,53 +19631,91 @@ void UiSpike::ServiceScaleSelector()
 	SelSetCaption(gfxDlg, kSelReadoutId, l1);
 	SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
 
-	// ---- 1a. DEFAULT SETTINGS WAS PRESSED -------------------------------
-	// Handled HERE, not at close, because Default Settings does not close the
-	// dialog - it resets the controls in place. Deciding at close could never
-	// see it, which is exactly what happened: the radio came back unchecked
-	// and nothing was committed.
-	//
-	// "Default" for our setting is AUTO. The game's own Default restores ITS
-	// settings; ours is the scale, and the default state of a setting whose
-	// whole job is to derive itself from the screen is the deriving one.
-	//
-	// It also RE-ASSERTS our two controls, because the game's reset cleared
-	// our radio along with its own - the user watched it go dark. A reset
-	// that half-applies is worse than one that does not run.
-	if (gSelDefaultHit)
+	// ---- 1a0. PUT OUR CONTROLS BACK AFTER THE DIALOG RE-READ THEM -------
+	// The 0x16 fanout means the dialog just re-read every control, and ours
+	// went back to its authored initselection=0 with them - which reads as
+	// "picking a tier jumps to Auto". Re-assert BEFORE the selection poll
+	// below, or that poll sees row 0 and mistakes the reset for the player
+	// choosing Auto.
+	if (gSelWasReset && gSelDesiredRow >= 0)
 	{
-		gSelDefaultHit = false;
-		gSelStagedRow = -1;          // any pending pick is superseded
-		SelCommit(0);                // Auto
-		gSelPushed = 0;
-		gSelCommitted = 0;
-		cIGZWin* cw = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
-		if (cw)
+		gSelWasReset = false;
+		cIGZWin* cw0 = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
+		if (cw0)
 		{
-			cIGZWinCombo* c2 = nullptr;
-			if (cw->QueryInterface(GZIID_cIGZWinCombo,
-					reinterpret_cast<void**>(&c2)) && c2)
+			cIGZWinCombo* c0 = nullptr;
+			if (cw0->QueryInterface(GZIID_cIGZWinCombo,
+					reinterpret_cast<void**>(&c0)) && c0)
 			{
-				c2->SetSelection(0, false);
-				c2->Release();
+				if (c0->GetSelection() != gSelDesiredRow)
+				{
+					c0->SetSelection(gSelDesiredRow, false);
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELRESET the dialog re-read its controls and "
+						"reset our combo; restored row %d.", gSelDesiredRow);
+				}
+				c0->Release();
 			}
 		}
-		cIGZWin* rw3 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
-		if (rw3)
+		gSelPushed = gSelDesiredRow;   // so the poll does not misread it
+	}
+
+	// ---- 1a. A BUTTON WAS CLICKED (0x10) --------------------------------
+	if (gSelClickedBtn >= 0)
+	{
+		const int btn = gSelClickedBtn;
+		gSelClickedBtn = -1;
+		if (btn == 2)
 		{
-			cIGZWinBtn* b3 = nullptr;
-			if (rw3->QueryInterface(GZIID_cIGZWinBtn,
-					reinterpret_cast<void**>(&b3)) && b3)
+			// DEFAULT SETTINGS -> Auto, and re-assert our controls, because
+			// the game's reset clears them along with its own. Handled here
+			// rather than at close: this button does not close the dialog.
+			gSelStagedRow = -1;
+			gSelDesiredRow = 0;
+			gSelPushed = 0;
+			gSelCommitted = 0;
+			SelCommit(0);
+			cIGZWin* cw = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
+			if (cw)
 			{
-				if (!b3->IsChecked()) { b3->SetChecked(true); }
-				b3->Release();
+				cIGZWinCombo* c2 = nullptr;
+				if (cw->QueryInterface(GZIID_cIGZWinCombo,
+						reinterpret_cast<void**>(&c2)) && c2)
+				{
+					c2->SetSelection(0, false);
+					c2->Release();
+				}
 			}
+			cIGZWin* rw3 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
+			if (rw3)
+			{
+				cIGZWinBtn* b3 = nullptr;
+				if (rw3->QueryInterface(GZIID_cIGZWinBtn,
+						reinterpret_cast<void**>(&b3)) && b3)
+				{
+					if (!b3->IsChecked()) { b3->SetChecked(true); }
+					b3->Release();
+				}
+			}
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELDEFAULT Default Settings clicked - scale restored "
+				"to Auto, our radio re-checked and the dropdown set to Auto.");
 		}
-		Logger::Get().WriteLine(LogLevel::Info,
-			"UiSpike: SELDEFAULT Default Settings pressed - scale restored to "
-			"Auto, our radio re-checked and the dropdown put back to Auto. "
-			"The game's reset clears our controls along with its own, so "
-			"re-asserting them is part of honouring the button.");
+		else if (btn == 0 && gSelStagedRow >= 0)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELACCEPT Accept clicked - committing row %d.",
+				gSelStagedRow);
+			SelCommit(gSelStagedRow);
+			gSelStagedRow = -1;
+		}
+		else if (btn == 1 && gSelStagedRow >= 0)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELCANCEL Cancel clicked - staged row %d discarded, "
+				"the ini is untouched.", gSelStagedRow);
+			gSelStagedRow = -1;
+		}
 	}
 
 	// ---- 1b. RESTORE THE STOCK RESOLUTION ROWS IF THEY STILL WORK -------
@@ -19925,6 +19966,7 @@ void UiSpike::ServiceScaleSelector()
 				if (live >= 0) { c->SetSelection(live, false); }
 				gSelPushed = live;
 				gSelCommitted = live;
+				gSelDesiredRow = live;
 			}
 			else
 			{
@@ -19958,6 +20000,7 @@ void UiSpike::ServiceScaleSelector()
 						gSelPushed = 0;
 						gSelCommitted = 0;
 						gSelStagedRow = 0;
+						gSelDesiredRow = 0;
 						ShowRestartNotice(gfxDlg);
 					}
 					else
@@ -20003,6 +20046,7 @@ void UiSpike::ServiceScaleSelector()
 						// The user hit Cancel and the change stuck anyway,
 						// which is the one thing a Cancel button must not do.
 						gSelStagedRow = row;
+						gSelDesiredRow = row;
 						ShowRestartNotice(gfxDlg);
 					}
 				}
