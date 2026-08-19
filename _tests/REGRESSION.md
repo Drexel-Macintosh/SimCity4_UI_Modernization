@@ -15959,3 +15959,50 @@ independent investigations running. What is ruled out so far:
   * art staging as the cure (#190 put the portraits in every tier package at
     36x41*f and the Select-A-Sim grid consumes them correctly - user-confirmed;
     this consumer ignores them)
+
+## #191 CAUSE FOUND: 0x27DF05BF WAS IN kNeverScaleIds (2026-08-19, dep 09:55:43)
+
+The world sim marker - facebox, portrait and green arrow over a house - is
+window 0x27DF05BF, and we were deliberately refusing to scale it. Our own
+comment predicted the symptom: the v2.65.0 #54 census listed it as a MODE C root
+("a doubled frame over 1x art") and accepted the cost in writing - "worst case
+the control stays stock-sized". That worst case is the reported defect.
+
+⭐ THE REASONING WAS RIGHT IN GENERAL AND WRONG FOR THIS ROOT. The script says:
+
+    id=0x27df05bf area=(109,151,155,248) image={46a006b0,13f15214} blttype=TILED
+
+A TILED root REPEATS to fill its window and NEVER stretches (law 86: strip /N,
+9-slice /3, tiled NOTHING). So "a doubled frame over 1x art" is not a defect
+here - it is the CORRECT treatment, and the art must NOT be staged. The census
+applied the un-tiled objection to a tiled root, the one case where it inverts.
+
+    ⭐ LAW: BEFORE EXCLUDING A ROOT AS "FRAME DOUBLED OVER 1x ART", READ ITS
+    blttype. For `tiled` the doubled frame is the cure, not the damage - and
+    excluding it freezes the widget at stock size forever.
+
+⛔ AND THE TWINS DISAGREED ON SCREEN. 0x27DF05BE and 0x27DF05BF are declared in
+the SAME script (I-6a9455c9), same area (109,151,155,248), same tiled image -
+but only BF was listed, so the sweep scaled one and froze the other. Measured at
+tier 2.00:
+
+    VWKID 1 id=0x27DF05BE (910,785 92x194)   <- scaled
+    VWKID 1 id=0x27DF05BF (865,810 46x97)    <- frozen
+
+Half a matched pair at each tier. That is what the user reported as "shifted",
+on top of "did not scale".
+
+    ⭐ LAW: WHEN EXCLUDING AN ID, CHECK WHETHER IT HAS A TWIN IN THE SAME
+    SCRIPT. Excluding one of a matched pair guarantees a mismatch, and the
+    exclusion comment will happily explain why the OTHER twin was left out
+    without noticing they are siblings.
+
+The 36x41 portrait inset is already staged at 36x41*f by #190, so the child is
+correct once the parent is allowed to grow. BE keeps its data-scaled treatment
+for the Obliterate City confirm (I-2a41436c) - a different host, unreached by
+this edit.
+
+ELIMINATED ALONG THE WAY, on screen: the SIGNPOST constants
+(0x005F20AF/0x005F20BF) provably applied at 2.00 - "balloon 44 -> 88.0 px,
+raise 150 -> 300.0 px" - with the marker unchanged. That layer is not this
+widget, and what it DOES move is still unconfirmed after many sessions.

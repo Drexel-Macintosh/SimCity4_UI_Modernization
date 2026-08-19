@@ -4958,14 +4958,42 @@ namespace
 		            //   control is already right once art is 2x (law 2);
 		            //   doubling this frame can only break it. Twin pair
 		            //   I-0a41be3e / I-0a41be3f, both 62x49.
-		0x27DF05BF, // 46x97 tiled plaque (I-6a9455c9), backing image
-		            // {46a006b0,13f15214} + a 36x41 icon inset at (5,5).
-		            // ⚠ ONLY the ...BF twin. 0x27DF05BE is NOT here on
-		            // purpose: that id is ALSO the root of the Obliterate
-		            // City confirm (I-2a41436c), which we already ship
-		            // DATA-SCALED via build_dialog_static.py:280. One id,
-		            // two different windows - listing BE would reach the
-		            // wrong one (law: match the family THEN check the host).
+		// ⛔ 0x27DF05BF WAS LISTED HERE AND IT WAS WRONG. Removed 2026-08-19
+		// after the user photographed the consequence at 2x: the sim marker
+		// over a house - facebox, portrait and green arrow - stayed entirely
+		// 1x while the query panel beside it scaled.
+		//
+		// WHY IT WAS LISTED: the v2.65.0 #54 census called it a MODE C root,
+		// "a doubled frame over 1x art", and reasoned that never-scale is the
+		// safe direction because the alternative ("stage art + list id") is
+		// #100's shape that predicts 8x at the 2x tier. It even wrote down the
+		// cost: "worst case the control stays stock-sized". That worst case is
+		// the reported defect.
+		//
+		// ⭐ WHY THE REASONING DOES NOT APPLY: the script says
+		//     id=0x27df05bf area=(109,151,155,248) image={46a006b0,13f15214}
+		//     blttype=TILED
+		// A TILED root REPEATS to fill its window; it never stretches (law 86:
+		// strip /N, 9-slice /3, tiled NOTHING). So a doubled frame over 1x art
+		// is not a defect here - it is the CORRECT treatment, and the art must
+		// NOT be staged. The census applied the un-tiled objection to a tiled
+		// root, which is the one case where it is backwards.
+		//
+		// ⛔ AND THE TWINS DISAGREED ON SCREEN. 0x27DF05BE and 0x27DF05BF are
+		// declared in the SAME script (I-6a9455c9) with the SAME area and the
+		// SAME tiled image, but only BF was listed - so the sweep scaled one
+		// and froze the other. Measured at 2.00:
+		//     VWKID 1 id=0x27DF05BE (910,785 92x194)   <- scaled
+		//     VWKID 1 id=0x27DF05BF (865,810 46x97)    <- frozen
+		// Half a twin pair at each tier is what the user saw as "shifted".
+		// ⭐ WHEN AN ID IS EXCLUDED, CHECK WHETHER IT HAS A TWIN IN THE SAME
+		// SCRIPT - excluding one of a matched pair guarantees a mismatch.
+		//
+		// The 36x41 portrait inset is staged at 36x41*f by #190, so the child
+		// is correct once the parent is allowed to grow. BE is untouched by
+		// this change and keeps its existing data-scaled treatment for the
+		// Obliterate City confirm (I-2a41436c) - that host is a different
+		// window and this edit does not reach it.
 		// NOTE (2026-07-23): the god-mode tool UI (toolbar 0xC991EDA8 +
 		// flyouts) is NOT excluded - northstar is EVERYTHING SCALES. The
 		// toolbar scales cleanly (bottom-left column); the flyouts scale but
