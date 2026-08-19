@@ -364,3 +364,46 @@ That hypothesis is UNTESTED and must not be treated as fact.
 (1) the three running traces from `0x007755A0` forward; (2) whether the marker is
 an S3D/prop like row 28's 244-byte arrow plate; (3) the `0x0077xxxx` owner class
 identified from the preload at `0x00775239`.
+
+### E.5 #191 — the contradiction that is now the sharpest lead (2026-08-19)
+
+USER, on zoom behaviour: *"It works identical to all other items on screen like
+the UDriveIt icons."* Constant on-screen size at every zoom = SCREEN-SPACE
+billboard, exactly like the CSI/U-Drive-It indicators — which are also NOT
+windows, so this is fully consistent with the live-dump null. **The per-zoom
+world-geometry hypothesis (E.4) is therefore REFUTED, and the billboard system
+is back in play.**
+
+CONFIRMED by disassembly this session:
+  * `AddIndicator` `0x0046F240` is __thiscall (`mov ebp,ecx`), category arrives
+    as `[esp+0x280]` and indexes per-category slot tables at
+    `[ebp + edi*4 + 0x60]` and `[ebp + edi*4 + 0x7C]`.
+  * Call sites: `push 3` at `0x004356F5` (MySim module), `push 4` at
+    `0x00528F4B` (CSI), `push 5` at `0x00528725`, `push 4`-adjacent at
+    `0x005653EA`.
+
+⛔ **SO MYSIM IS CATEGORY 3 — AND PATCHING CATEGORY 3's SIZE DID NOTHING.**
+`0x0046CCBA` 32.0f → 64.0f applied at 2.00 (logged) with the marker unchanged.
+Both facts are measured. One of these must therefore be false:
+  (i) the Move In marker is the category-3 indicator, or
+  (ii) `[esi+0xD0]/[esi+0xD4]` is what sizes what we see.
+
+**(ii) IS THE ONE TO ATTACK, and there is a named candidate.** The category
+census recorded that within `cSC4DispatchVehicleView::Draw` `0x0046D990`,
+*"only `0x0046E8CB` (the record's own **+0x80 array draw**) is category-4
+excluded"*. That is a SECOND draw path inside the same drawer, keyed off a
+per-record array at `+0x80`, which category 4 does NOT take and category 3 DOES.
+If the MySim head bubble draws through the `+0x80` array rather than the
+`+0xD0/+0xD4` half-extents, then every size patch aimed at `+0xD0/+0xD4` is
+correct for the CSI balloon and structurally invisible here — which is precisely
+the observed pattern across four patches.
+
+**NEXT, in order, and NO patch until one is confirmed:**
+1. Read `0x0046E8CB` and the `+0x80` array: what populates it, what sizes it.
+2. Establish who WRITES `+0x80` on a category-3 record — likely in the
+   `0x0046C8B0` builder or in `AddIndicator`'s case-3 arm `0x0046F351`.
+3. Only then look for its size lever.
+
+⚠ **DO NOT re-test by patching.** The identification test for this is reading
+which of the two draw paths a category-3 record takes — static, and it
+distinguishes the hypotheses without a build.
