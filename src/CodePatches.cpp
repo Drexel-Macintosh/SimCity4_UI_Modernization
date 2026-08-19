@@ -4494,24 +4494,29 @@ namespace CodePatches
 			// deployment marker, whose count was rendering at stock size under
 			// an already-scaled pin.
 			{ 0x0046CCBA, 32.0f, "icon+hitbox (category 3)" },
-			// #195 THE COUNT PIN. The TEXT indicator categories (everything
-			// that is not 3 or 4 - the dispatch at 0x0046C922 sends 3 and 4 to
-			// 0x0046CB52 and falls through for the rest) size themselves as:
-			//     0x0046CAF0  fild  [esp+0x48]        ; measured text width
-			//     0x0046CAFD  fstp  [esi+0xD0]        ; WIDTH  <- computed
-			//     0x0046CB03  mov   [esi+0xD4], 14.0f ; HEIGHT <- HARD-CODED
-			// So the width already follows the font (which our FontStyle
-			// scales) and the height never moves: 14px at 1x, 14px at 3x. That
-			// is the "1" pin sitting 1x-sized directly under a 3x hat in the
-			// user's screenshot - the two halves of one marker at two scales.
+			// ⛔ 0x0046CB09 (the text-indicator HEIGHT, 14.0f) WAS HERE AND WAS
+			// REMOVED THE SAME DAY. It is a real unscaled constant and it is
+			// still NOT a lever, for a reason worth keeping:
 			//
-			// ⭐ THE ASYMMETRY IS THE TELL. One of a width/height pair being
-			// COMPUTED while the other is an inline immediate is exactly how a
-			// widget half-scales: the computed half tracks the font for free
-			// and hides the fact that nothing scaled the other. Whenever a size
-			// is only half wrong, look for the pair where one member is derived
-			// and the other is a constant.
-			{ 0x0046CB09, 14.0f, "count pin height (text categories)" },
+			//   the TEXT categories size themselves as
+			//       0x0046CAF0  fild [esp+0x48]        ; measured text width
+			//       0x0046CAFD  fstp [esi+0xD0]        ; WIDTH  = computed
+			//       0x0046CB03  mov  [esi+0xD4], 14.0f ; HEIGHT = immediate
+			//   but the content quad's UVs come from the measured pixel extents
+			//   and the POWER-OF-TWO texture size ([esp+0x18], set at
+			//   0x0046C8EA / 0x0046CA04 / 0x0046CC65) - NOT from +0xD0/+0xD4.
+			//
+			// So scaling the height alone stretches the digits VERTICALLY and
+			// nothing else: a new defect wearing the shape of a fix. Both
+			// numbers have to move together and the width is not a constant at
+			// all, so no entry in this table can do it.
+			//
+			// ⭐ THIS WAS MEASURED BEFORE IT WAS SHIPPED, AND SHIPPED ANYWAY.
+			// The finding that says "scaling 14.0f alone is a new defect, not a
+			// fix" was already written when the entry was added; it was applied
+			// off the first half of the report without reading to the end. The
+			// user confirmed "not fixed" on the very next run. READ THE WHOLE
+			// MEASUREMENT BEFORE ACTING ON ITS FIRST PARAGRAPH.
 			{ 0x0046EABD, -32.0f, "pin V0.x" },     // C7 84 24 ... imm at +7
 			{ 0x0046EACA, -32.0f, "pin V0.y" },
 			{ 0x0046EAF6, -32.0f, "pin V1.x" },
@@ -4562,11 +4567,10 @@ namespace CodePatches
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: CSI indicators x%.2f - icon+hitbox %.1f -> %.1f px "
-				"(type 4) and %.1f -> %.1f px (type 3), count-pin height "
-				"%.1f -> %.1f px (text types, #195), pin quad 64 -> %.0f px. "
+				"(type 4) and %.1f -> %.1f px (type 3), pin quad 64 -> %.0f px. "
 				"%d immediates, all inline in .text. #188/#195.",
 				factor, 35.0f, 35.0f * factor, 32.0f, 32.0f * factor,
-				14.0f, 14.0f * factor, 64.0f * factor, n);
+				64.0f * factor, n);
 		}
 
 		// ------------------------------------------------------------------

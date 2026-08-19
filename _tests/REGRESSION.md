@@ -15738,3 +15738,44 @@ exactly 36x41*f.
 with no remainder - which is the real verification that nothing else was dragged
 in. Pin updated to 693 with that arithmetic recorded, so the next unexplained
 move cannot be waved through as "the portraits again".
+
+## #195: THE HEIGHT CONSTANT WAS SHIPPED AGAINST ITS OWN MEASUREMENT, AND REVERTED (2026-08-19)
+
+`{ 0x0046CB09, 14.0f }` was added to kCsiQuad, deployed, and the user reported
+"not fixed" on the next run. The log proves it applied:
+
+    CodePatches: CSI indicators x2.00 - ... count-pin height 14.0 -> 28.0 px
+    (text types, #195) ... 11 immediates, all inline in .text.
+
+⛔ THE MEASUREMENT THAT SAID NOT TO DO IT ALREADY EXISTED WHEN IT WAS DONE:
+
+    "The content quad's UVs are computed from the measured pixel extents and the
+     POWER-OF-TWO texture size ([esp+0x18], set at 0x0046C8EA / 0x0046CA04 /
+     0x0046CC65), NOT from +0xD0/+0xD4. Therefore scaling 14.0f alone stretches
+     the digits VERTICALLY only - a new defect, not a fix. Both numbers must
+     move together and one of them is not a constant."
+
+It was applied off the first half of that report without reading to the end.
+
+    ⭐ LAW: READ THE WHOLE MEASUREMENT BEFORE ACTING ON ITS FIRST PARAGRAPH.
+    A report that names an address in section 1 and disqualifies it in section 9
+    is not a licence to patch after section 1. This is the same failure as
+    trusting a stale comment (law 112's sibling): the disqualifying sentence was
+    written down and simply not read.
+
+REVERTED. kCsiQuad is back to 10 entries.
+
+WHAT #195 ACTUALLY NEEDS, now that two constant-swaps have been eliminated ON
+SCREEN (the category-3 icon, and this height): the text plate's height must be
+DERIVED from the measured glyph extent the way its WIDTH already is -
+
+    0x0046CAF0  fild [esp+0x48]        ; measured text width  -> +0xD0
+    0x0046CB03  mov  [esi+0xD4], 14.0f ; height, a constant
+
+so the cure is a #159-style jmp-to-cave replacing the `mov` with a computation
+off the same measurement, NOT another table entry. No constant in kCsiQuad can
+express it, because one of the two numbers is not a constant.
+
+⭐ TWO LAYERS ELIMINATED ON SCREEN FOR #195 SO FAR - the icon size (patch ran,
+picture unchanged) and now the plate height. Both were recorded as eliminations
+rather than left ambiguous, which is what makes the remaining space small.
