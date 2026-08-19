@@ -7354,6 +7354,9 @@ namespace
 		{ 0xCA4C332D, 0, 0, 0, 0, false },
 	};
 	int       gBudgetTickLog = 0;
+	int       gMayorRebirthLogs = 0;   // #194
+	int32_t   gReadoutW = 0, gReadoutH = 0;   // #192, set by the director
+	int       gReadoutLogs = 0;
 	bool      gBudgetTickAnnounced = false;
 	int       gBudgetShowOpens = 0;
 	bool      gShowHookInstalled = false;
@@ -8059,6 +8062,7 @@ void UiSpike::Disarm()
 	for (BudgetWatch& bw : gBudgetWatch) { bw.seen = false; }  // per city
 	gBudgetKidsLog = 0;
 	gBudgetTickLog = 0;
+	gMayorRebirthLogs = 0;    // #194: re-report per city
 	gBudgetTickAnnounced = false;
 	for (BudgetTick& bt : gBudgetTick) { bt.seen = false; }
 	for (int& c : gBudgetKidsCount) { c = -1; }   // no baseline carries
@@ -14191,6 +14195,74 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			cIGZWin* win = pView->GetChildWindowFromIDRecursive(m.flyoutId);
 			if (!win || win->GetW() <= 0 || win->GetH() <= 0) { continue; }
 
+			// ============ #194 REBIRTH PURGE ============================
+			// USER: in mayor mode the Emergency flyout, opened FIRST after a
+			// load, drew its ring detached from the strip; clicking elsewhere
+			// and reopening fixed it.
+			//
+			// THE LATCH IS NOT COLD - IT IS WARM WITH FOREIGN DATA, and that
+			// distinction is the whole fix. #80 cured the DISASTER flyout by
+			// warming a cache earlier, and applying that here would do nothing
+			// (every absent-record path already returns the right answer) and
+			// could poison more addresses.
+			//
+			// MEASURED, log _tests/captures/SC4UIScale-2026-08-18-205344.log:
+			//   :16034  MDOCK 0x0992FD17 live marker (3,234) units=screen
+			//           -> used (3,234) -> (25,776) overrides table (22,542)
+			//   :16035  mayor flyout 0x0992FD17 at(25,776) size 308x840, +7 win
+			// +7 where the script has EIGHT windows: the marker was skipped.
+			//
+			// WHY. These flyouts are destroyed and recreated on every open, so
+			// a new marker lands on a RECYCLED heap address still carrying a
+			// dead window's record. The only anti-reuse test in Classify is
+			// win->GetID() != rec.id, and the alignment marker's id is
+			// 0x0000AAAA - CENSUSED over tools/uiscripts/extracted: 74
+			// instances across 41 scripts with 25 distinct rect sizes. An
+			// id-keyed guard is structurally inert for the most-shared id in
+			// the corpus. Classify returns AlreadyScaled, ScaleSubtree skips
+			// the marker, MarkerIsDesignUnits then matches neither size and
+			// falls through to "screen units", so the dock subtracts the RAW
+			// design offset and lands on the game's own native placement -
+			// where nothing looks moved, so the container is never seated and
+			// the welded ring sits (f-1)*234 px low.
+			//
+			// It self-corrects on a later open because it is sticky per
+			// ADDRESS, not per open: opening another flyout recycles the
+			// pointer, the marker classifies Fresh, and the dock is right
+			// thereafter. That is exactly what the user saw.
+			//
+			// THE CURE IS THE PROJECT'S OWN, copied from ScalePanelRoot
+			// (~:14887) whose comment describes this failure in these words:
+			// "new objects land on RECYCLED heap addresses ... classify
+			// Unrecognized, and stay stuck at 1x design geometry forever".
+			// Erase the root's own record too - that is what clears a
+			// tug-of-war tombstone left by a previous instance at this
+			// address, which otherwise pins the whole flyout at raw 1x.
+			//
+			// ⚠ THE GATE IS THE ENTIRE SAFETY ARGUMENT. Purge ONLY when the
+			// root is not already at its recorded scaled size. After
+			// ScaleSubtree the record carries scaledW == GetW(), so the gate
+			// is false on every subsequent tick and the purge fires exactly
+			// once per open. Without it this would re-purge and re-scale at
+			// sweep cadence - the double-scale that shipped #98's 4x legend.
+			// God-path flyouts are hidden/re-shown rather than rebuilt, keep
+			// their scaled size, and so never take this branch.
+			if (Classify(win) != ScaleState::AlreadyScaled)
+			{
+				scaleMap.erase(win);
+				PurgeSubtreeRecords(win, 0);
+				if (gMayorRebirthLogs < 8)
+				{
+					gMayorRebirthLogs++;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: REBIRTH 0x%08X purged stale records before "
+						"scale (%dx%d) - a recreated flyout landed on recycled "
+						"addresses; without this its 0x0000AAAA marker keeps a "
+						"dead window's record and the dock uses design units.",
+						m.flyoutId, win->GetW(), win->GetH());
+				}
+			}
+
 			int n = 0;
 			ScaleSubtree(win, f, 0, &n, false);
 
@@ -14839,6 +14911,15 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 // Erase every scaleMap record keyed under win's CURRENT subtree pointers
 // (win itself excluded - its record is about to be overwritten). Read-only
 // walk; only the bookkeeping map is touched.
+// #192: the director hands us the RENDER resolution the tier was decided
+// from, so the Graphic Options readout can state what is actually being
+// rendered rather than what was requested.
+void UiSpike::SetRenderResForReadout(int32_t w, int32_t h)
+{
+	gReadoutW = w;
+	gReadoutH = h;
+}
+
 void UiSpike::PurgeSubtreeRecords(cIGZWin* win, int depth)
 {
 	// v2.69.0: a silent stop here leaves stale scaleMap records below the cap,
@@ -15480,6 +15561,71 @@ void UiSpike::IncrementalPass()
 				}
 			}
 		}
+		// ============ #192 RESOLUTION / SCALE READOUT ==================
+		// USER REQUEST: show the current resolution and scaling factor in the
+		// Graphic Options dialog, in the empty right column below Software.
+		//
+		// The two labels ship in DATA with our ids and EMPTY captions
+		// (build_dialog_static.py inject_res_readout), so the .UI carries the
+		// windows and this fills the text - a .UI cannot hold a runtime value.
+		// Empty-in-data is deliberate: if this code never runs the player sees
+		// blank space, never a stale or invented resolution.
+		//
+		// Set once per appearance, not every tick: GetCaption is compared
+		// first, so this is a string compare on a dialog that is almost never
+		// open, and the caption is written only when it actually differs.
+		{
+			cIGZWin* gfxDlg =
+				pMainWindow->GetChildWindowFromIDRecursive(0x2A57CB82);
+			if (gfxDlg != nullptr && gfxDlg->IsVisible())
+			{
+				char l1[96], l2[96];
+				if (gReadoutW > 0 && gReadoutH > 0)
+				{
+					_snprintf_s(l1, sizeof(l1), _TRUNCATE,
+						"Rendering: %dx%d", gReadoutW, gReadoutH);
+				}
+				else
+				{
+					// Honest rather than blank-but-wrong: we only claim a
+					// number we were actually handed.
+					_snprintf_s(l1, sizeof(l1), _TRUNCATE, "Rendering: unknown");
+				}
+				_snprintf_s(l2, sizeof(l2), _TRUNCATE, "UI scale: %.2fx (%s)",
+					settings.spikeScaleFactor,
+					settings.spikeAutoScale ? "auto" : "manual");
+
+				const uint32_t ids[2] = { 0x5CA1E000, 0x5CA1E001 };
+				const char* txt[2] = { l1, l2 };
+				for (int k = 0; k < 2; k++)
+				{
+					cIGZWin* lab =
+						gfxDlg->GetChildWindowFromIDRecursive(ids[k]);
+					if (!lab) { continue; }
+					cIGZWinText* t = nullptr;
+					if (lab->QueryInterface(GZIID_cIGZWinText,
+							reinterpret_cast<void**>(&t)) && t)
+					{
+						cRZBaseString want(txt[k]);
+						cIGZString* cur = lab->GetCaption();
+						const bool same =
+							(cur != nullptr && cur->ToChar() != nullptr
+							 && strcmp(cur->ToChar(), txt[k]) == 0);
+						if (!same) { t->SetCaption(want); }
+						t->Release();
+					}
+				}
+				if (gReadoutLogs < 2)
+				{
+					gReadoutLogs++;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: RESREADOUT filled Graphic Options - \"%s\" / "
+						"\"%s\". Blank on screen instead means the DATA half is "
+						"missing: rebuild DialogStatic.", l1, l2);
+				}
+			}
+		}
+
 		const float f = settings.spikeScaleFactor;
 		const int32_t scrW = pMainWindow->GetW();
 		const int32_t scrH = pMainWindow->GetH();

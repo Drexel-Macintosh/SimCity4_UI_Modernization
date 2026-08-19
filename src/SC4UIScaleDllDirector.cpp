@@ -223,6 +223,12 @@ public:
 					LogLevel::Info, "AutoScale: Software %ls - render res = requested %dx%d.", mode, gfxW, gfxH);
 			}
 
+			// #192: publish what the tier was decided FROM, for the readout in
+			// the Graphic Options dialog. gfxW/gfxH here is the RENDER res
+			// after the wrapper has had its say - not the requested size the
+			// game's own resolution list shows.
+			UiSpike::SetRenderResForReadout(gfxW, gfxH);
+
 			if (settings.spikeAutoScale)
 			{
 				const float tier = ScaleTier::Decide(gfxW, gfxH);

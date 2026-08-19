@@ -197,7 +197,7 @@ dat of the same name.
   same script). EXCLUDED per instruction: `I-49889894` -- a 476x43 bottom
   strip, not a dialog.
 
-## Package contents (261 entries, 2883406 bytes)
+## Package contents (261 entries, 2884454 bytes)
 
 163 edited .UI scripts at their ORIGINAL TGIs (same-TGI overrides) + 97 PNGs:
 
@@ -638,7 +638,7 @@ GUID form) before packing.
 - Root GZWinGen id=0x2a57cb82: area `(3,0,725,558)` -> `(5,0,1088,837)` (722x558 -> 1083x837).
   NOTE: this root gen is larger than the visible dialog art -- expected,
   doubled as-is by design.
-- `area=` rects doubled: 72 (every one in the script; 72 controls total).
+- `area=` rects doubled: 74 (every one in the script; 74 controls total).
 - Art refs: `{1abe787d,144161e4}` x1 2x in place; `{1abe787d,144161ee}` x1 2x in place; `{1abe787d,14416240}` x2 2x in place; `{1abe787d,14416246}` x26 2x in place; `{46a006b0,144161eb}` x4 2x in place; `{46a006b0,144161ee}` x1 2x in place; `{46a006b0,14416245}` x5 2x in place.
 - `imagerect=` doubled (3):
   - GZWinBMP `(12,32,180,180)` -> `(18,48,270,270)`
@@ -647,7 +647,7 @@ GUID form) before packing.
 - 37 control(s) with 2x art but no `imagerect` (edge-slice frames /
   button state strips -- the engine fits cells to the control area;
   self-adapting, eyeball frame thickness in-game).
-- Fonts converted: `GenBodyMedium` x26 -> `0x4a809917` (26 px ini, was 13); `GenButton` x4 -> `0x4a809919` (32 px ini, was 16); `GenHeader` x1 -> `0x4a809916` (36 px ini, was 18).
+- Fonts converted: `GenBodyMedium` x28 -> `0x4a809917` (26 px ini, was 13); `GenButton` x4 -> `0x4a809919` (32 px ini, was 16); `GenHeader` x1 -> `0x4a809916` (36 px ini, was 18).
 
 ### Region Name (Create Region) (`I-8a5ab1cb`, source `T-00000000_G-96a006b0_I-8a5ab1cb.ui`)
 

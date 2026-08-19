@@ -1844,6 +1844,37 @@ namespace ScaleTier
 			// ("zzz-SC4UIScale" beats "150-mods").
 			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_ItemIconsSub",
 				pkg.tag, match);
+			// #196 (2026-08-18): CsiIcons was MISSING from this list entirely -
+			// zero occurrences of "CsiIcons" anywhere in this file - while
+			// Deploy-OnGameClose.ps1 hard-copies the 15x build to the plain
+			// .dat name and the other two as .x1-disabled. Its own comment
+			// there says "the ACTIVE tier keeps its plain .dat name, the other
+			// two ship .x1-disabled and ScaleTier renames" - a dependency on
+			// a call that did not exist. So the package NEVER followed the
+			// tier: it stayed on whatever the deploy hard-coded, which is 1.5x.
+			//
+			// MEASURED, and this is how it surfaced: with AutoScale on and the
+			// tier resolved to 2x, Set-StockCompare's enumeration listed
+			// z_SC4UIScale_CsiIcons-15x.dat as LIVE while every sibling was
+			// -2x and CsiIcons-2x.dat sat .x1-disabled beside it. All three
+			// builds exist and carry the same 16 instances, so this was never
+			// a build gap - the file was simply never renamed.
+			//
+			// ⭐ THIRD TIME THIS SHAPE HAS SHIPPED. #119 was WarriorUI missing
+			// its SyncDat call; the deploy block above records three more
+			// packages that rotted by being hand-placed and never wired. The
+			// standing law is "a package is not done until it is in the
+			// MANIFEST", and the manifest is TWO lists, not one: the deploy
+			// that places the files AND this list that follows the tier.
+			// Wiring only the first is what happened here, on the same day the
+			// package was added.
+			//
+			// No dependency gate: CsiIcons is built from the player's own Maxis
+			// archives, so unlike CamUI/WarriorUI/ThirdPartyUI there is no mod
+			// whose presence it must be conditioned on. Tier-gated only, which
+			// is exactly the ItemIconsSub shape directly above.
+			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_CsiIcons",
+				pkg.tag, match);
 			// SUBFOLDER package (#149): ItemIcons that a THIRD-PARTY LOT
 			// supplies and no package of ours covered - the Lighted Palm Plaza
 			// case. Built by tools\itemicons\build_uncovered_icons.py, which

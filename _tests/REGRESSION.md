@@ -15092,3 +15092,57 @@ live ini earlier this session while disarming dev probes. The bubble families
 are adjacent (#188's start-bubble scale, #100's mission bubble). That edit must
 be ruled out before any bubble observation from tonight is trusted - rule out
 your own last change first.
+
+## THREE FIXES DEPLOYED 21:34:12 (2026-08-18)
+
+### #196 CsiIcons never followed the tier - a HALF-WIRED manifest
+ScaleTier.cpp had ZERO occurrences of "CsiIcons" while
+Deploy-OnGameClose.ps1:106 hard-copies the 15x build to the plain .dat name.
+That deploy block's own comment says "the ACTIVE tier keeps its plain .dat
+name, the other two ship .x1-disabled and ScaleTier renames" - a dependency on
+a call that did not exist. So the package sat on 1.5x forever.
+
+⭐ THIRD TIME THIS SHAPE HAS SHIPPED, and it landed on the SAME DAY the package
+was added (#188). #119 was WarriorUI missing its SyncDat; the deploy block
+above it records three more packages that rotted by being hand-placed. THE
+MANIFEST IS TWO LISTS, NOT ONE: the deploy that places the files AND the
+SyncDat list that follows the tier. Wiring only the first is the failure mode.
+Tier-gated only, no dep gate - CsiIcons is built from the player's own Maxis
+archives, so there is no mod to condition on.
+
+### #194 the emergency ring - the latch was WARM WITH FOREIGN DATA, not cold
+I first called this #80's cold latch. Wrong, and the correction matters: every
+absent-record path already returns the right answer, so warming earlier would
+do nothing and could poison more addresses.
+
+MEASURED (log SC4UIScale-2026-08-18-205344.log:16034-16035):
+    MDOCK 0x0992FD17 live marker (3,234) units=screen -> used (3,234)
+      -> (25,776) overrides table (22,542)
+    mayor flyout 0x0992FD17 at(25,776) size 308x840, +7 win
++7 where the script has EIGHT windows - the marker was skipped.
+
+CAUSE: mayor flyouts are destroyed and recreated per open, so a new marker
+lands on a RECYCLED heap address still carrying a dead window's record. The
+only anti-reuse test in Classify is win->GetID() != rec.id, and the alignment
+marker's id is 0x0000AAAA - CENSUSED: 74 instances across 41 scripts, 25
+distinct rect sizes. An id-keyed guard is structurally inert for the
+most-shared id in the corpus. (The workflow said 34 sizes; measured 25.)
+
+CURE: a rebirth purge before ScaleSubtree, gated on
+Classify(win) != AlreadyScaled, copied from ScalePanelRoot:14887 whose comment
+describes this exact failure. The gate IS the safety argument: after
+ScaleSubtree the record carries scaledW == GetW(), so it fires exactly once per
+open and cannot re-purge at sweep cadence - that would be #98's double-scale.
+Applies to ALL EIGHT mayor entries, not just Emergency: nothing in the
+mechanism is Emergency-specific, it just has a 50x40 marker that matches no
+sibling record while the 64x50 ones self-heal by accident.
+
+### #192 resolution / scale readout - both halves now shipped
+DATA: 2 labels injected into I-8a7e052f before parse_ui (261 entries at every
+tier, unchanged - they are children of an existing script, not new entries).
+CODE: the director publishes the RENDER res the tier was decided from - not the
+requested size the game's own list shows - and the dialog pass fills both
+captions once per appearance, comparing before writing.
+
+Blank on screen now means the DATA half is missing, and the log says so.
+
