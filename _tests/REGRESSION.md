@@ -14903,3 +14903,56 @@ while its TITLE keeps looking live. "No git repo", "no dist since v2.93.1",
 ever re-read them. Release tasks should name an OUTCOME - "a player can
 download and install a working mod" - not a version number, because the
 outcome cannot expire and a version number does so the moment you ship.
+
+## Test-DatIntegrity was RED on a promise the deploy never makes (2026-08-18)
+
+    FAIL: DEPLOYED != BUILT: zzz-SC4UIScale\z_SC4UIScale_MenuFix.dat does not
+    match tools\itemicons\_work\z_SC4UIScale_MenuFix.dat
+
+NOT a deploy that was skipped. Deploy-OnGameClose DELIBERATELY does not copy
+MenuFix, for a reason recorded in that file: it rewrites CAM's GAMEPLAY submenu
+data rather than scaling any UI, so shipping it is a decision about a
+third-party mod's content, and it is slated to be dropped. Meanwhile this suite
+asserted the deployed copy matched the repo build.
+
+⭐ AND THE FAILURE WAS PREDICTED IN WRITING, in the very file that causes it:
+
+    "Those assertions passed only because the live files were hand-placed once
+     and never regenerated - the instant the builder produced different bytes,
+     DatIntegrity would fail with no explanation and no deploy to blame."
+
+That instant arrived today: the live copy is dated 2026-07-29, the builder
+regenerated _work\ at 18:28. Both 864 bytes, different bytes. Nobody had to
+diagnose it because the diagnosis was already on disk - the value of writing
+down a predicted failure is that the next person recognises it instead of
+investigating it.
+
+FIX: removed BOTH MenuFix assertions (the deployed==built pair and the 6-entry
+row). This is not weakening the gate - the gate was asserting something the
+deploy never promises, which is the passing-by-luck state that same comment
+names. It is now REPORTED, following the precedent already in this file for
+SC4TouchControls.dll ("It is REPORTED, not gated"):
+
+    note: a HAND-PLACED z_SC4UIScale_MenuFix.dat is live in Plugins (dated
+    2026-07-29). This deploy does not manage it and this suite does not gate
+    it. It rewrites CAM's gameplay submenu data - see #146.
+
+A hand-placed file in the tree we deploy into is our business, and this one is
+live input to the #146 provenance audit - so it must be VISIBLE without being
+a standing red. A standing red makes every later red look pre-excused; this
+repo has paid for that twice.
+
+    ALL PASS (24 dats + 3 font sources + DLL presence/quarantine
+              + 28 deployed==built hashes + 3/3 bubble payload sizes)
+
+## AutoScale restored (2026-08-18, user request)
+
+SC4UIScale.ini AutoScale 0 -> 1, written byte-level with the BOM assertion on
+both sides (a BOM'd ini is unreadable to the game - standing rule).
+ScaleFactor=1.5 stays as the manual fallback and is now ignored.
+
+⚠ EXPECT 2x, NOT 1.5x, on this machine. The log reads "render res = monitor
+2400x1600 (requested 3840x2160 ignored by wrapper)", and 3x needs 2400x1800, so
+the tier gate admits 2x and refuses 3x. All three tiers are built and current
+(SelectiveArt 18:27, DialogStatic 18:46), and the #189 cave is in the DLL so it
+is tier-independent.

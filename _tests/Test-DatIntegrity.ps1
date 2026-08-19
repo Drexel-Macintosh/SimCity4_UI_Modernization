@@ -181,7 +181,6 @@ $EXPECTED = @(
   # CAM 4.0.1's ten broken submenu parents (police/fire/jail/prison/
   # lifeguard). DELETE when CAM fixes upstream, then re-run
   # tools\itemicons\scan_unreachable_items.py to confirm.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_MenuFix.dat"; entries = 6 },
   # THIRD-PARTY DATA GAP (#147, 2026-08-06): CAM's Power/Water chart exemplars
   # bind label LTEXT 0xFF5D2E9F for their 4th series, and that id exists in NO
   # installed archive (0 hits in 118,896 records / 107 DBPF files; 0x0A5D2E9D,
@@ -329,6 +328,24 @@ foreach ($f in $FONT_SOURCES) {
 if (-not (Test-Path "$plugins\SC4UIScale.dll")) {
   $failures += "missing $plugins\SC4UIScale.dll"
 }
+# MENUFIX: REPORTED, NOT GATED (2026-08-18).
+# Deploy-OnGameClose deliberately does not copy it - it rewrites CAM's GAMEPLAY
+# submenu data rather than scaling any UI, so shipping it is a decision about a
+# third-party mod's content, and it is slated to be dropped. This suite used to
+# assert the deployed copy matched tools\itemicons\_work\, which is a promise
+# the deploy never makes; it passed for months only because the live file was
+# hand-placed once and never regenerated, and it went red the first time the
+# builder produced different bytes. Deploy-OnGameClose.ps1 predicted that
+# failure in writing. Asserting it back would restore passing-by-luck.
+# It is REPORTED because a hand-placed file in the tree we deploy into is our
+# business, and because it is live input to the #146 provenance audit.
+$menuFix = "$plugins\zzz-SC4UIScale\z_SC4UIScale_MenuFix.dat"
+if (Test-Path $menuFix) {
+  $mfDate = (Get-Item $menuFix).LastWriteTime.ToString("yyyy-MM-dd")
+  Write-Host ("  note: a HAND-PLACED z_SC4UIScale_MenuFix.dat is live in " +
+    "Plugins (dated $mfDate). This deploy does not manage it and this suite " +
+    "does not gate it. It rewrites CAM's gameplay submenu data - see #146.")
+}
 if (Test-Path "$plugins\SC4TouchControls.dll") {
   Write-Host ("  note: SC4TouchControls.dll is loaded (quarantine lifted " +
     "2026-08-09, user order). It is a live variable in any UI-scaling result.")
@@ -390,7 +407,6 @@ $BUILT_PAIRS = @(
   # IS deployed across tier x icon x state.
   @{ b = "tools\itemicons\z_SC4UIScale_ItemIcons.dat";                d = "z_SC4UIScale_ItemIcons-2x.dat" }
   @{ b = "tools\itemicons\_work\z_SC4UIScale_ItemIconsSub-2x.dat";    d = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-2x.dat" }
-  @{ b = "tools\itemicons\_work\z_SC4UIScale_MenuFix.dat";            d = "zzz-SC4UIScale\z_SC4UIScale_MenuFix.dat" }
   @{ b = "tools\webtext\z_SC4UIScale_WebText.dat";                    d = "z_SC4UIScale_WebText.dat" }
   # FONTS (#57 phase 4, 2026-08-02). Fonts were the ONE asset family with no
   # deployed-vs-built assertion - existence-checked only, a few lines above -
