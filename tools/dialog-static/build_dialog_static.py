@@ -508,6 +508,59 @@ RUNTIME_BOUND_2X = {
 }
 
 # roots deliberately larger than the visible dialog art -- doubled as-is
+# ---- #192 RESOLUTION / SCALE READOUT (2026-08-18) --------------------------
+# Two labels injected into the Graphic Options dialog before the doubling
+# pass, so they scale with every sibling. Captions are set by the DLL at
+# runtime (UiSpike.cpp, RESREADOUT).
+#
+# THE CAPTION IS DELIBERATELY EMPTY HERE. If the DLL half of this change is
+# ever missing or its lookup fails, the dialog shows blank space rather than
+# a stale or invented number. A resolution printed confidently and wrongly is
+# worse than no resolution at all, and this project has twice shipped an
+# instrument that lied in its own favour.
+RES_READOUT_IID = "8a7e052f"
+RES_READOUT_ANCHOR = 'caption="Software"'
+RES_READOUT_IDS = ("0x5ca1e000", "0x5ca1e001")
+
+
+def inject_res_readout(text, fn):
+    """Add the two runtime-filled labels to Graphic Options.
+
+    Returns (text, n_added). A no-op for every other script.
+    """
+    if not fn.endswith("_I-%s.ui" % RES_READOUT_IID):
+        return text, 0
+    if RES_READOUT_IDS[0] in text:
+        return text, 0          # already injected; idempotent
+    lines = text.split("\n")
+    at = None
+    for i, ln in enumerate(lines):
+        if RES_READOUT_ANCHOR in ln:
+            at = i
+            break
+    if at is None:
+        sys.exit("FATAL #192: anchor %s not found in %s. The dialog changed - "
+                 "do NOT guess a new insertion point, re-measure the layout."
+                 % (RES_READOUT_ANCHOR, fn))
+    indent = lines[at][:len(lines[at]) - len(lines[at].lstrip())]
+    # Same attribute set as the Software label it sits under, minus
+    # captionres (ours is not an LTEXT), with an empty caption and
+    # ignoremouse so it can never eat a click meant for a radio.
+    tmpl = ('<LEGACY clsid=GZWinText iid=IGZWinText id=%s '
+            'area=(293,%d,465,%d) fillcolor=(0,0,0) caption="" '
+            'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
+            'winflag_sizeable=no winflag_sortable=no winflag_pbuff=no '
+            'winflag_pbufftrans=yes winflag_pbufferase=yes '
+            'winflag_pbuffvid=no winflag_alphablend=no '
+            'winflag_acceptfocus=yes winflag_mousetrans=no '
+            'winflag_ignoremouse=yes font=GenBodyMedium align=lefttop '
+            'notify=no wrapped=no opaque=no forecolor=(63,73,103) '
+            'bkgcolor=(0,0,0) gutters=(2,2) textoffsets=(0,0) >')
+    new = [indent + tmpl % (RES_READOUT_IDS[0], 325, 346),
+           indent + tmpl % (RES_READOUT_IDS[1], 345, 366)]
+    lines[at + 1:at + 1] = new
+    return "\n".join(lines), len(new)
+
 OVERSIZE_ROOT_IIDS = {"0a7df315", "8a7e052f"}
 # tail-anchored popups the GAME positions (tail at clicked tile): the doubled
 # origin is meaningless, only the doubled SIZE is asserted
@@ -1118,6 +1171,10 @@ def main():
     for fn in ui_files:
         with open(os.path.join(UI_DIR, fn), "r", encoding="latin-1", newline="") as f:
             text = f.read()
+        text, _n192 = inject_res_readout(text, fn)
+        if _n192:
+            print("   #192 res/scale readout: %d label(s) injected into %s"
+                  % (_n192, fn))
         roots = parse_ui(text)
         for nd in walk(roots):
             for (gid, iid, _, _) in nd.images:

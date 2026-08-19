@@ -14993,3 +14993,49 @@ the gated dat, so nothing has to reach it while it is on screen.
 
 All three tiers consistent at DialogStatic = 261; Test-DatIntegrity expects 261
 at 15x/2x/3x; suite green.
+
+## #192 res/scale readout — DATA HALF IN (2026-08-18, NOT YET DEPLOYED)
+
+USER REQUEST: put the current resolution and scaling factor into the Graphic
+Options dialog, in the empty area they marked with a black box.
+
+THE SPACE IS REAL AND THE COORDINATES ARE MEASURED, not chosen. Design layout
+of the dialog's inner frame 0x2A57CB84, read out of I-8a7e052f:
+
+    Renderer   y=255..276  x=267..439
+    Hardware   y=273..294  x=293..457
+    Software   y=293..314  x=293..457   <- the right column ENDS here
+    1280x1024  y=313..334  x= 30..247   } the left column keeps going
+    1600x1200  y=333..354  x= 30..247   }
+    divider    y=397..427  x=  9..487
+
+so x=293..465, y=314..397 is genuinely free - exactly where the user drew the
+box. Two labels go at y=325..346 and y=345..366, keeping the dialog's own 20px
+pitch, with font GenBodyMedium and forecolor (63,73,103) COPIED off the
+Software label rather than picked.
+
+WHY IT IS WORTH HAVING: the game's own list stops at 1600x1200 and shows what
+was REQUESTED, not what is rendered. This machine asks for 3840x2160 and the
+wrapper renders 2400x1600. A player currently has no way to see either that or
+which tier AutoScale chose.
+
+DATA HALF DONE: build_dialog_static.py gained inject_res_readout(), wired at
+SCRIPT LOAD TIME - before parse_ui - so the two labels are part of the tree the
+doubling pass walks. They therefore take the factor with every sibling and need
+no scaling rule of their own, so the hand-list that law 94 says will rot never
+exists. Ids 0x5CA1E000/0x5CA1E001, verified unused across the whole .UI corpus
+and src/. Idempotent (returns early if already injected) and FATAL if its
+anchor is missing rather than guessing a new insertion point.
+
+⚠ THE CAPTIONS ARE DELIBERATELY EMPTY IN DATA. A .UI can carry the WINDOW but
+not the TEXT - the numbers only exist at runtime - so the DLL must fill them.
+Empty means that if the DLL half is ever missing or its lookup fails, the
+dialog shows blank space rather than a stale or invented number. A resolution
+printed confidently and wrongly is worse than none, and this session alone shed
+three instruments that lied in my favour.
+
+STATE: data half committed, NOT rebuilt and NOT deployed. Shipping it alone is
+harmless (two empty labels in empty space) but pointless. DLL half owed:
+find 0x5CA1E000/1 under the Graphic Options dialog when it is built and
+SetCaption from the live render res and tier - born correct at build, not a
+tick later (#189's lesson).
