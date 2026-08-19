@@ -40,6 +40,7 @@
 #include "cIGZWinCombo.h"   //   ... the tier picker
 #include "cIGZWinGen.h"     //   ... SetWinProc/GetWinProc on the dialog
 #include "cIGZWinProc.h"    //   ... the chained click handler
+#include "cIGZWinMessageFilter.h"  // ... per-BUTTON message filter
 #include "cGZMessage.h"
 #include "cRZBaseString.h"
 #include "cIGZBuffer.h"
@@ -18947,6 +18948,136 @@ namespace
 		}
 	}
 
+	// ============ THE BUTTONS, ASKED DIRECTLY ============================
+	// Two coordinate-based attempts failed and a third (centring) refuted
+	// itself on paper. The mistake was reasoning about WHERE a click landed
+	// when the SDK can say WHICH WINDOW received it.
+	//
+	// cIGZWin::AddMessageFilter attaches to ANY window - including each
+	// button - and cIGZWinMessageFilter::DoMessage is handed the window the
+	// message went to. So a click identifies its own button by POINTER
+	// IDENTITY. No rects, no offsets, no assumptions about where the game put
+	// the dialog.
+	//
+	// One filter instance serves all four buttons; the pWin argument
+	// distinguishes them. It never consumes anything - DoMessage returns
+	// false so the game's own handling runs exactly as before, and this stays
+	// an observer that happens to also record the last button touched.
+	struct SelBtnSlot { uint32_t id; const char* name; cIGZWin* win; };
+	SelBtnSlot gSelBtns[] = {
+		{ 0xEA57DA59u, "ACCEPT",           nullptr },
+		{ 0x6A57DA48u, "CANCEL",           nullptr },
+		{ 0xEA5E99D9u, "DEFAULT SETTINGS", nullptr },
+		{ 0xEA57DA6Fu, "NOTICE-ACCEPT",    nullptr },
+	};
+	const int kSelBtnCount =
+		static_cast<int>(sizeof(gSelBtns) / sizeof(gSelBtns[0]));
+
+	int  gSelLastBtn = -1;        // index of the last button to get a message
+	int  gSelBtnLogs = 0;
+	bool gSelFiltersOn = false;
+
+	class SelBtnFilter : public cIGZWinMessageFilter
+	{
+	public:
+		SelBtnFilter() : refCount(0) {}
+
+		bool QueryInterface(uint32_t riid, void** ppvObj) override
+		{
+			if (riid == GZIID_cIGZWinMessageFilter)
+			{
+				*ppvObj = static_cast<cIGZWinMessageFilter*>(this);
+				AddRef();
+				return true;
+			}
+			if (riid == GZIID_cIGZUnknown)
+			{
+				*ppvObj = static_cast<cIGZUnknown*>(this);
+				AddRef();
+				return true;
+			}
+			return false;
+		}
+		uint32_t AddRef() override { return ++refCount; }
+		uint32_t Release() override
+		{
+			// Never self-deletes: a DLL-lifetime singleton, and a
+			// use-after-free here would land inside the game's message pump.
+			if (refCount > 0) { --refCount; }
+			return refCount;
+		}
+
+		bool DoMessage(cIGZWin* pWin, cGZMessage& msg) override
+		{
+			for (int i = 0; i < kSelBtnCount; i++)
+			{
+				if (gSelBtns[i].win != nullptr && gSelBtns[i].win == pWin)
+				{
+					gSelLastBtn = i;
+					if (gSelBtnLogs < 60)
+					{
+						gSelBtnLogs++;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELBTN  %-16s got type=0x%08X "
+							"d1=0x%08X d2=0x%08X d3=0x%08X",
+							gSelBtns[i].name, msg.dwMessageType,
+							msg.dwData1, msg.dwData2, msg.dwData3);
+					}
+					break;
+				}
+			}
+			// OBSERVE ONLY. Returning true here could swallow the click and
+			// break the game's own Accept.
+			return false;
+		}
+
+	private:
+		uint32_t refCount;
+	};
+
+	SelBtnFilter gSelBtnFilter;
+
+	// Attach on every fresh appearance, and report exactly which buttons were
+	// found - a missing one is the difference between "the player did not
+	// click it" and "we were never listening".
+	void SelAttachButtonFilters(cIGZWin* gfxDlg)
+	{
+		int found = 0;
+		for (int i = 0; i < kSelBtnCount; i++)
+		{
+			cIGZWin* w = gfxDlg->GetChildWindowFromIDRecursive(gSelBtns[i].id);
+			gSelBtns[i].win = w;
+			if (w != nullptr)
+			{
+				w->AddMessageFilter(&gSelBtnFilter);
+				found++;
+			}
+		}
+		gSelFiltersOn = found > 0;
+		gSelLastBtn = -1;
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELBTN attached a message filter to %d of %d buttons "
+			"(Accept 0x%08X, Cancel 0x%08X, Default 0x%08X, notice-Accept "
+			"0x%08X). Every message any of them receives is now named in the "
+			"log - which button, not which pixel.",
+			found, kSelBtnCount, gSelBtns[0].id, gSelBtns[1].id,
+			gSelBtns[2].id, gSelBtns[3].id);
+	}
+
+	void SelDetachButtonFilters()
+	{
+		if (!gSelFiltersOn) { return; }
+		for (int i = 0; i < kSelBtnCount; i++)
+		{
+			if (gSelBtns[i].win != nullptr)
+			{
+				gSelBtns[i].win->RemoveMessageFilter(&gSelBtnFilter);
+				gSelBtns[i].win = nullptr;
+			}
+		}
+		gSelFiltersOn = false;
+	}
+
 	// Our WinProc CHAINS - it never replaces the dialog's own handler. The
 	// game's Accept/Cancel/radio logic lives behind GetWinProc(); dropping it
 	// would break the dialog outright, so every message is forwarded and our
@@ -19111,74 +19242,53 @@ void UiSpike::ServiceScaleSelector()
 			// the live settings and re-derives which tiers this resolution
 			// can carry - the player may have changed the resolution in the
 			// same visit.
-			// ⭐ ACCEPT vs CANCEL, DECIDED BY THE POINTER.
-			// Two mechanisms are already eliminated by measurement: no message
-			// carries a control id, and the game does not rewrite
-			// SC4GraphicsOptions.ini on Accept. What the message layer DOES
-			// give us is the pointer position, and the two closing buttons'
-			// absolute rects are captured when the dialog opens and were
-			// verified against a screenshot ([200,964 316x60] and
-			// [520,964 316x60] at 2x). Whichever the pointer is inside when
-			// the dialog vanishes is the button that closed it.
-			//
-			// COMMIT ONLY ON A CONFIRMED ACCEPT. Cancel, Escape and anything
-			// we cannot place all DISCARD: "Cancel left my change applied" is
-			// a broken button, while a missed commit costs one more visit to
-			// a dialog the player already has open.
-			if (gSelStagedRow >= 0)
+			// ⭐ DECIDED BY WHICH BUTTON RECEIVED THE MESSAGE.
+			// Not by coordinates. Two coordinate attempts failed and a third
+			// refuted itself on paper; the SDK can simply say which window a
+			// message went to, and gSelLastBtn is the last button that got
+			// one before the dialog vanished.
 			{
-				// Map the walked rects into the pointer's space with the
-				// MEASURED offset. Without a calibration point this session
-				// there is nothing to compare, so the change is COMMITTED and
-				// the log says the test could not be run - a staged change
-				// that silently evaporates is worse than a Cancel that does
-				// not revert, and the previous build did exactly that.
-				const int ax = gSelAcceptRect[0] + gSelCalDx;
-				const int ay = gSelAcceptRect[1] + gSelCalDy;
-				const int cx = gSelCancelRect[0] + gSelCalDx;
-				const int cy = gSelCancelRect[1] + gSelCalDy;
-				const bool onAccept = gSelRectsOk && gSelCalibrated
-					&& gSelLastX >= ax && gSelLastX < ax + gSelAcceptRect[2]
-					&& gSelLastY >= ay && gSelLastY < ay + gSelAcceptRect[3];
-				const bool onCancel = gSelRectsOk && gSelCalibrated
-					&& gSelLastX >= cx && gSelLastX < cx + gSelCancelRect[2]
-					&& gSelLastY >= cy && gSelLastY < cy + gSelCancelRect[3];
+				const char* btn = (gSelLastBtn >= 0)
+					? gSelBtns[gSelLastBtn].name : "(none seen)";
 				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELGEOM pointer (%d,%d) | calibrated=%d offset "
-					"(%+d,%+d) | Accept walked [%d,%d %dx%d] -> mapped "
-					"[%d,%d] | Cancel walked [%d,%d] -> mapped [%d,%d]",
-					gSelLastX, gSelLastY, gSelCalibrated ? 1 : 0,
-					gSelCalDx, gSelCalDy,
-					gSelAcceptRect[0], gSelAcceptRect[1], gSelAcceptRect[2],
-					gSelAcceptRect[3], ax, ay,
-					gSelCancelRect[0], gSelCancelRect[1], cx, cy);
-				if (!gSelCalibrated)
+					"UiSpike: SELCLOSE the last button to receive a message "
+					"was %s. staged=%d", btn, gSelStagedRow);
+				// DEFAULT SETTINGS -> back to Auto (user instruction).
+				// The game's own Default restores ITS settings; ours is the
+				// scale, and "default" for the scale is Auto - the state that
+				// derives the tier from the screen instead of pinning one.
+				// Committed here rather than staged, because the button that
+				// closed the dialog IS the confirmation.
+				if (gSelLastBtn == 2)
 				{
 					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELCLOSE no calibration this session - "
-						"committing the staged scale rather than discarding "
-						"it. Click the radio beside the dropdown once and the "
-						"Accept/Cancel test becomes exact.");
-					SelCommit(gSelStagedRow);
+						"UiSpike: SELCLOSE DEFAULT SETTINGS - restoring the "
+						"scale to Auto, which is what 'default' means for a "
+						"setting whose whole job is to derive itself from the "
+						"screen.");
+					SelCommit(0);
 					gSelStagedRow = -1;
 				}
-				else if (onAccept)
+				else if (gSelStagedRow >= 0)
 				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELCLOSE pointer (%d,%d) was on ACCEPT - "
-						"committing the staged scale.", gSelLastX, gSelLastY);
-					SelCommit(gSelStagedRow);
+					const bool cancelled = (gSelLastBtn == 1);
+					if (cancelled)
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELCLOSE CANCEL - the staged scale is "
+							"discarded and the ini is untouched.");
+					}
+					else
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELCLOSE committing the staged scale "
+							"(closed via %s).", btn);
+						SelCommit(gSelStagedRow);
+					}
+					gSelStagedRow = -1;
 				}
-				else
-				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELCLOSE pointer (%d,%d) was %s - the staged "
-						"scale is DISCARDED and the ini is untouched.",
-						gSelLastX, gSelLastY,
-						onCancel ? "on CANCEL" : "on neither button");
-				}
-				gSelStagedRow = -1;
 			}
+			SelDetachButtonFilters();
 			gSelDlgUp = false;
 			gSelPushed = -2;
 			gSelCommitted = -1;
@@ -19283,6 +19393,7 @@ void UiSpike::ServiceScaleSelector()
 		// instant the dialog opened.
 		gSelGfxStamp = SelGfxIniStamp();
 		gSelAcceptSeen = false;
+		SelAttachButtonFilters(gfxDlg);
 		gSelRectsOk = false;
 		cIGZWin* acc = gfxDlg->GetChildWindowFromIDRecursive(kSelAcceptId);
 		cIGZWin* can = gfxDlg->GetChildWindowFromIDRecursive(kSelCancelId);

@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.4.2"
+#define UISCALE_VERSION_STR "3.5.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
