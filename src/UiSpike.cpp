@@ -18993,8 +18993,23 @@ namespace
 	const uint32_t kSelMsgEnter = 0x00000013u;
 	const uint32_t kSelMsgLeave = 0x00000014u;
 	const uint32_t kSelMsgReset = 0x00000016u;
+	const uint32_t kSelMsgMove  = 0x0000000Du;
 	bool gSelInDefault = false;      // pointer currently inside Default
 	bool gSelDefaultHit = false;     // Default was pressed, act on it
+	// ⛔ "0x16 WHILE THE POINTER IS IN DEFAULT" WAS NOT ENOUGH, and the
+	// reason is a layout collision I should have predicted: the combo sits on
+	// the readout row and its drop list opens DOWNWARD, straight over the
+	// button row. Moving the pointer down the list to pick a tier generates
+	// ENTER and MOVE on Default Settings, so any 0x16 arriving then read as a
+	// press - and picking 2x or 3x snapped straight back to Auto.
+	//
+	// The measured signature of a real press is the FANOUT: 0x16 reaching
+	// THREE distinct buttons inside the same millisecond, which is the dialog
+	// re-reading every control after the reset.
+	//     16:16:21.090  DEFAULT 0x16 | CANCEL 0x16 | ACCEPT 0x16   <- press
+	// A stray 0x16 to one button is not that, no matter where the pointer is.
+	unsigned int gSelResetMs = 0;    // when the current 0x16 burst started
+	int  gSelResetMask = 0;          // which buttons it has reached
 
 	class SelBtnFilter : public cIGZWinMessageFilter
 	{
@@ -19045,18 +19060,40 @@ namespace
 						{
 							gSelInDefault = false;
 						}
-						else if (msg.dwMessageType == kSelMsgReset
-							&& gSelInDefault)
+						// (the fanout is counted below, across ALL buttons)
+					}
+					// FANOUT COUNTER, across every button - a reset touches
+					// them all, a stray broadcast touches one.
+					if (msg.dwMessageType == kSelMsgReset)
+					{
+						const unsigned int nowMs = GetTickCount();
+						if (gSelResetMs == 0
+							|| static_cast<int>(nowMs - gSelResetMs) > 50)
 						{
-							// The reset fanout, while the pointer is inside
-							// this button. Gating on ENTER/LEAVE is what
-							// separates it from the same broadcast arriving
-							// later for unrelated reasons - the trace shows
-							// both, 60ms apart.
+							gSelResetMs = nowMs;
+							gSelResetMask = 0;
+						}
+						gSelResetMask |= (1 << i);
+						int n = 0;
+						for (int b = 0; b < kSelBtnCount; b++)
+						{
+							if (gSelResetMask & (1 << b)) { n++; }
+						}
+						if (n >= 3 && gSelInDefault)
+						{
 							gSelDefaultHit = true;
+							gSelResetMask = 0;
+							Logger::Get().WriteLine(LogLevel::Info,
+								"UiSpike: SELBTN  reset FANOUT reached %d "
+								"buttons within 50ms while the pointer was "
+								"inside Default Settings - that is a press.",
+								n);
 						}
 					}
-					if (gSelBtnLogs < 60)
+					// Mouse moves are the noise that exhausted the old budget
+					// and hid the events it was armed for; they are counted,
+					// never printed.
+					if (msg.dwMessageType != kSelMsgMove && gSelBtnLogs < 200)
 					{
 						gSelBtnLogs++;
 						Logger::Get().WriteLine(LogLevel::Info,
