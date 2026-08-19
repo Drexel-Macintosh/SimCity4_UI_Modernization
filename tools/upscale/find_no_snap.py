@@ -206,6 +206,10 @@ CODE_BOUND = [
     # 0x009BC4A4) slices 6 px off the right of every face. Control: the .UI
     # placeholder {1abe787d,ea32f100} is the SAME 36x41 source, is already in
     # this file via scan(), and comes out at the correct 54x62.
+    # default/placeholder faces - same 36x41 contract as the 19 named ones
+    ("46a006b0", "ea32f101"),
+    ("1abe787d", "ea32f101"),
+    ("46a006b0", "ea32f100"),
     ("46a006b0", "fa8cdfbf"),
     ("46a006b0", "fa8cdfc0"),
     ("46a006b0", "fa8cdfc1"),

@@ -508,6 +508,27 @@ CODE_BOUND_TGIS = [
     (0x1ABE787D, 0xFA8CDFCD), (0x1ABE787D, 0xFA8CDFCE),
     (0x1ABE787D, 0xFA8CDFD0), (0x1ABE787D, 0xFA8CDFD1),
     (0x1ABE787D, 0xFA8CDFD2),
+    # DEFAULT / PLACEHOLDER SIM FACES (2026-08-19). Same 36x41 shape as the 19
+    # named portraits, in both the same groups, but OUTSIDE the FA8CDFBF..D2
+    # block - so #190 missed them, and a sim that resolves to a default face
+    # kept a 36x41 source while the named ones became 72x82.
+    #
+    # ⛔ THAT MISMATCH IS NOT COSMETIC, it is the whole "top-left quarter"
+    # defect. The category-3 indicator divides its UVs by a SINGLE texture side
+    # (0x0046CCCE, which we set to NextPow2(max(36f,41f))). A 36x41 face uploads
+    # into a 64 square while a 72x82 face uploads into 128, so with two source
+    # sizes in play ONE immediate cannot be right for both: the 64-texture sims
+    # get their UVs halved and draw magnified. Staging these makes every
+    # portrait texture the same size again, which is what the single divisor
+    # requires.
+    #
+    # ⭐ LAW: IF A CONSUMER DIVIDES BY ONE TEXTURE SIZE, EVERY SOURCE IT CAN
+    # BIND MUST BE THE SAME SIZE. Staging "the 19 portraits" was staging a
+    # FAMILY, not a SET - the fallback members are part of the contract.
+    # ARTFETCH proves the game loads these two beside the 19 (ret=0x00775239
+    # and 0x00775854).
+    (0x46A006B0, 0xEA32F100), (0x1ABE787D, 0xEA32F100),
+    (0x46A006B0, 0xEA32F101), (0x1ABE787D, 0xEA32F101),
     # (0x46A006B0, 0xE2B66DB8) REVERTED same session (task #87): staged on the
     # law-13 inference that the news row X is a clone born at this art's size.
     # Eyes-on refuted it, and the REAL mechanism refuted the follow-up theory

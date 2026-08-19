@@ -11,7 +11,14 @@ $plugins = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\P
 
 # name pattern (live or gated), expected entry count
 $EXPECTED = @(
-  # SelectiveArt: 693 at EVERY tier (1.5x / 2x / 3x).
+  # SelectiveArt: 696 at EVERY tier (1.5x / 2x / 3x).
+# 2026-08-19: 693 -> 696. The DEFAULT/PLACEHOLDER sim faces {EA32F100,
+# EA32F101} in both portrait groups - 4 TGIs, 3 of them new (one was already
+# staged via a .UI reference). They are the same 36x41 contract as the 19
+# named portraits, and the category-3 indicator divides its UVs by ONE
+# texture side - so a 36x41 fallback beside a 72x82 named face cannot both
+# be right, and the fallback sims drew magnified. Staging the family, not
+# the set.
   # ⭐ #190 (2026-08-19): 655 -> 693. The delta is EXACTLY 38 = the 19 runtime
   # Sim portraits (0xFA8CDFBF..0xFA8CDFD2, with 0xFA8CDFCF absent, so 19 not 20)
   # shipped under BOTH groups the archive carries, 0x46A006B0 and 0x1ABE787D.
@@ -152,7 +159,7 @@ $EXPECTED = @(
   # 476 = 461 + 15 My Sims family arts (v2.22.0: roots 0x698894D3 /
   # 0xCA1F1D9C / 0xAA1F1EC5, script I-aa1f1f57 - the panel came OFF the
   # kNeverScaleIds deferral; see REGRESSION.md "MY SIMS").
-  @{ name = "z_SC4UIScale_SelectiveArt-2x.dat";  entries = 693 },
+  @{ name = "z_SC4UIScale_SelectiveArt-2x.dat";  entries = 696 },
   # DialogStatic 255 -> 259 (2026-07-29, Batch A, task #54): the last three
   # bucket-D text-bearing roots joined TARGETS in build_dialog_static.py -
   # I-6b704690 Label Tool (root 0x8A8DFCF5, shared with the generic message
@@ -221,9 +228,9 @@ $EXPECTED = @(
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-2x.dat"; entries = 4 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-15x.dat"; entries = 4 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-3x.dat"; entries = 4 },
-  @{ name = "z_SC4UIScale_SelectiveArt-15x.dat"; entries = 693 },
+  @{ name = "z_SC4UIScale_SelectiveArt-15x.dat"; entries = 696 },
   @{ name = "z_SC4UIScale_DialogStatic-15x.dat"; entries = 265 }, # #178: see the -2x row note (2026-08-16)
-  @{ name = "z_SC4UIScale_SelectiveArt-3x.dat";  entries = 693 },   # #136: was 651; #190: was 655
+  @{ name = "z_SC4UIScale_SelectiveArt-3x.dat";  entries = 696 },   # #136: was 651; #190: was 655
   @{ name = "z_SC4UIScale_DialogStatic-3x.dat";  entries = 265 }, # #178: see the -2x row note (2026-08-16)
   # TIER MATH PASS (2026-07-29, v2.24.0): ItemIcons + ItemIconsSub now exist at
   # every tier (audit finding A1 - they were -2x only, so ALL ~266+130 menu
