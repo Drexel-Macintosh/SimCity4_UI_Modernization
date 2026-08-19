@@ -16509,3 +16509,17 @@ window and nothing re-reads it afterwards.
 
 ⛔ NOT ATTEMPTED YET. Recorded rather than half-built at the end of a long
 session; the size half is deployed, green, and confirmed.
+
+## #146 CLOSED - USER DECISION, NO ISSUE (2026-08-19)
+
+The content-provenance audit is closed. USER: "146 is closed there's no issue."
+
+It was never a build task - HARDENING-PROPOSALS row 9 recorded it as "needs a
+decision, not a build", and the decision is the user's to make. The audit itself
+was delivered earlier: no upstream bytes survive in any shipped package (every
+image is regenerated from the player's own installed archives), NOTICE and
+THIRD-PARTY-NOTICES.md cover the code, and the one tracked third-party input
+`tools/selective-safe/thirdparty-ui/T-00000000_G-96a006b0_I-6bc61f19.ui` is a
+BUILD INPUT, not shipped content.
+
+⛔ #147 was recorded as "explicitly blocked by #146" - that block is now lifted.
