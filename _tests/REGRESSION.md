@@ -16069,3 +16069,67 @@ category and the extents. Guessing between four write sites and two drawers is
 exactly how today produced three patches that ran and changed nothing.
 ⛔ Hooking 0x0046C8B0 needs the calling convention MEASURED first (standing
 order: never guess one - two crashes in one session).
+
+## #191 CAUSE: THE MY SIM MARKER'S UV DIVISOR IS A HARD-CODED 64 (2026-08-19, dep 10:29:45)
+
+The world sim marker is CATEGORY 3 of the dispatch-indicator system - not a
+window, not the signpost lollipop. cSC4MySim (CID 0x4A1DBBBF) ->
+cSC4MySimDispatch (CID 0xCBC14674) -> AddIndicator(...,3,...). Only TWO of the
+seven AddIndicator call sites pass 3 and both are in the MySim module
+(0x004356F5, 0x0043E711), so category 3 is MySim and nothing else.
+
+Its face is fetched at 0x0046CB7B as {0x856DDBAC, 0x46A006B0, <the sim's own
+instance>} - the same 19 portraits #190 restaged.
+
+THE DEFECT. The icon quad's UVs are pixelExtent / [esp+0x18], the SQUARE
+power-of-two texture side. Category 4 COMPUTES it (0x0046CC59 call 0x006046B0 =
+NextPow2, verified). Category 3 HARD-CODES it:
+
+    0x0046CCCA  C7 44 24 18 40 00 00 00   mov [esp+0x18], 64   (imm at 0x0046CCCE)
+
+The uploader 0x006046D0 makes textures SQUARE at max(NextPow2(w),NextPow2(h)).
+Measured from the shipped payloads, all 38 staged portraits:
+
+    1x    36x41   -> side  64    the stock 64 is CORRECT
+    1.5x  54x62   -> side  64    still CORRECT - must stay 64
+    2x    72x82   -> side 128    constant is HALF
+    3x   108x123  -> side 128    constant is HALF
+
+From 2x up every UV is 2x too large, so the face draws at 50% of its quad,
+corner-anchored (u0 forced to 0 by the fmul against 0.0f at 0x00A81054). 50% of
+a 64px quad = 32px = exactly the stock 1x face pinned to the corner of a pin our
+own kCsiQuad correctly doubled. That IS "1x CENTERED / 2X DRIFTING and not
+scaled" - PREDICTED from the arithmetic, not fitted to the report.
+
+⛔ THIS IS A #190 REGRESSION. With the stock 36x41 art the constant was right at
+every tier. Staging the portraits at 2x/3x is what invalidated it.
+
+    ⭐ LAW: STAGING BIGGER ART CAN BREAK A CONSUMER THAT HARD-CODES THE
+    TEXTURE'S POWER-OF-TWO SIDE. An art upgrade is not automatically safe: any
+    consumer that divides by a baked-in atlas/texture dimension silently
+    halves its UVs the moment the art crosses a power-of-two boundary. When
+    staging art, ask WHO DIVIDES BY ITS SIZE - and note the break appears only
+    at the tier that crosses the boundary (1.5x is fine here, 2x is not), which
+    reads as a tier-specific mystery rather than an art change.
+
+CURE: derive the divisor FROM THE ART, never from the factor -
+side = NextPow2(max(round(36f), round(41f))). At 1.5x that is still 64 and the
+patch REPORTS ITSELF INERT rather than writing 96, which is not a texture size
+and would have broken the one tier that currently works. Verify-before-write
+(refuses unless it reads 64), and it rides the same gate as
+ApplyCsiIndicatorScale because arming one without the other is the half-patched
+state that produced the report.
+
+SCOPE, byte-proven: a capstone branch sweep of 0x0046C8B0-0x0046D200 finds one
+edge into 0x0046CCB9 (`cmp [esi+4],4 ; jne` at 0x0046CC45) and two into
+0x0046CB52 (cat 3 and cat 4 joins); no rel32 call/jmp in .text targets either.
+The 32 at 0x0046C8EA and the computed store at 0x0046CA04 serve the TEXT
+categories and are untouched.
+
+TWO PRIOR RECORDS CORRECTED:
+  * tools/research/CITY-SITUATION-INDICATORS.md sec.3 says of 0x0046CCB9
+    "Patching it resizes unrelated indicators. Never touch it when working on
+    CSIs." It is category 3 = MySim ONLY.
+  * this file's #195 note lists the [esp+0x18] setters as
+    "0x0046C8EA / 0x0046CA04 / 0x0046CC65" and MISSES 0x0046CCCA - the fourth,
+    and the one that mattered.
