@@ -14759,3 +14759,53 @@ art sums" means. If the frame is built born-visible and SetSize'd at the
 stacker tail, BUDGETTICK prints at least one transition per open. If it is
 STILL silent on this id, the size is set before any flag traffic and the next
 instrument goes on the builder itself (sub_77A6F0), not on the window.
+
+## #189 THE BUDGET DEPARTMENT OPEN-JUMP: CAUSE FOUND, IT WAS OURS, AND IT WAS
+## ONE LINE (2026-08-18, deployed 20:04:03)
+
+    src/CodePatches.cpp   if (bh > 127) bh = 127;   // push imm8 ceiling
+
+A SILENT clamp on the department popup's create height. Width took the factor
+(300 -> 450), height did not (100 -> 150 wanted, 127 written). We shipped a
+HALF-PATCHED create size, so the box is born 23px short at 1.5x and something
+later sets the true height - which is the "opens for a split second then
+resizes" the user reported all evening.
+
+MEASURED, three opens, identical every time (BUDGETTICK, log 19:59):
+    0x0423278F (0,0 0x0)         -> (975,736 450x127)   built at the clamp
+    0x0423278F (975,736 450x127) -> (975,736 450x150)   corrected afterwards
+150 = 100 * 1.5 exactly. And our OWN log line had been printing the evidence
+all along, in plain sight, every launch:
+    CodePatches: budget family x1.50 (...), bizbox 450x127 (7 sites).
+
+WHY EVERY TIER, AND WORSE WITH THE FACTOR: the clamp is a constant while the
+target is not. 1.5x wants 150 -> 23px jump; 2x wants 200 -> 73px; 3x wants
+300 -> 173px. "This was an issue at 2x and 3x as well" is that arithmetic, and
+it is why no tier-specific model ever fit.
+
+⛔ THE CLAMP BROKE THIS FILE'S OWN RULE, ~40 LINES AWAY. ApplyCostBoxScale hits
+the identical imm8 ceiling and REFUSES both sites rather than half-patch,
+logging why (#159, kCostBoxHeightSite). This site truncated silently instead.
+A patch that cannot express its value must REFUSE or WIDEN - never quietly
+truncate. That is the law this cost a session to relearn.
+
+THE CURE (#159's, not a runtime pin - a pin IS the flash, it corrects after
+creation by construction): the 7-byte span `push imm8 h; push imm32 w` cannot
+hold two imm32 pushes (10 needed) and has no room to widen in place (#136), so
+it becomes `jmp rel32` + 2 NOPs into a per-site cave that pushes both
+full-width and jumps back to site+7. Five sites, five caves, allocated once.
+The window is BORN at its final size and nothing corrects it.
+
+GUARDS: stock bytes verified BEFORE allocating or writing, so an unverified
+site consumes no cave and is left stock; a failed alloc leaves the site stock
+(a 1x create beats a half-patched one) and logs Error; the <=127 in-place path
+is kept for a hypothetical small factor. The span stays exactly 7 bytes so
+anything targeting site+7 still lands.
+
+The summary line now reports how many sites took the cave, so "did the fix
+run" is answerable from the log rather than assumed (law 54).
+
+EYES-ON OWED: the popup should now open at full size with no resize, at every
+tier. If it still jumps, the remaining suspect is the SECOND code path for this
+shared window (law 16 - the same box is built by a different path for the
+Business Deals empty box, with its OWN copies of these constants).

@@ -121,6 +121,10 @@ namespace
 	};
 	const int kStockCostOrigin = 124;
 	void* gCostCave = nullptr;         // one cave per process, never freed
+	// #189: one cave per bizbox size site. Same discipline as gCostCave -
+	// allocated once, never freed, because the patched bytes jump into it
+	// for the life of the process.
+	void* gBizBoxCaves[5] = {};
 
 	// INTRO VIDEO SURFACE (#138, 2026-08-05). The intro clip draws 768x384
 	// centred no matter the screen size, so at 2400x1600 it is a postage
@@ -3400,6 +3404,7 @@ namespace CodePatches
 		// sib bytes are read from memory and pinned as context exactly like
 		// the sub-imm8 loop above.
 		int nLea = 0;
+		int nBoxCave = 0;   // #189: sites taking the widened imm32 cave path
 		for (const LeaDisp8Site& s : kBudgetLeaDisp8Sites)
 		{
 			const long v = std::lround(static_cast<double>(s.stock) * factor);
@@ -3431,18 +3436,116 @@ namespace CodePatches
 			if (VerifiedWrite("budget lea-disp8", s.site, delta, expect, repl, len)) nLea++;
 		}
 
-		// Business Deals empty box.
+		// ================= #189 THE BUDGET DEPARTMENT OPEN-JUMP ==============
+		// USER, all evening: a department popup "opens for a split second then
+		// resizes to the correct size", at 1.5x AND 2x AND 3x, on EVERY open.
+		//
+		// IT WAS THIS LINE, and it was ours:
+		//     if (bh > 127) bh = 127;   // push imm8 ceiling
+		// A SILENT clamp. Width took the factor (300 -> 450) and height did
+		// not (100 -> 150 wanted, 127 written), so we shipped a HALF-PATCHED
+		// create size and the box was born 23px short at 1.5x. Our own log
+		// line said so in plain sight the whole time - "bizbox 450x127" - and
+		// BUDGETTICK finally measured the consequence on the live window:
+		//     0x0423278F (0,0 0x0) -> (975,736 450x127)   [built at the clamp]
+		//     0x0423278F ...450x127 -> ...450x150         [corrected after]
+		// three opens, identical each time. 150 = 100 * 1.5 exactly, which is
+		// what the height should have been at creation.
+		//
+		// WHY EVERY TIER, and why it got WORSE with the factor: the clamp is a
+		// constant while the target is not. 1.5x wants 150 (23px jump), 2x
+		// wants 200 (73px), 3x wants 300 (173px). "This was an issue at 2x and
+		// 3x as well" is that arithmetic.
+		//
+		// THE CLAMP ALSO BROKE THIS FILE'S OWN RULE. ApplyCostBoxScale, ~40
+		// lines up, hits the identical imm8 ceiling and REFUSES both sites
+		// rather than half-patch, saying so in the log. This site clamped
+		// silently instead. A patch that cannot express the value must refuse
+		// or widen - never truncate quietly.
+		//
+		// THE CURE IS #159's, NOT A RUNTIME PIN. A pin IS the flash: it
+		// corrects after creation by construction, which is the thing we are
+		// removing. The 7-byte span `push imm8 h; push imm32 w` cannot hold
+		// two imm32 pushes (10 needed), and #136-style in-place widening has
+		// no room - so the span becomes a jmp into a cave that pushes both
+		// full-width and returns, exactly like kCostOriginSite. The window is
+		// then BORN at the right size and nothing has to correct it.
 		const uint32_t bw = static_cast<uint32_t>(std::lround(kStockBizBoxW * factor));
-		long bh = std::lround(kStockBizBoxH * factor);
-		if (bh > 127) bh = 127; // push imm8 ceiling
+		const long bh = std::lround(kStockBizBoxH * factor);
 		if (bw != kStockBizBoxW)
 		{
+			int caveIdx = 0;
 			for (uintptr_t site : kBizBoxSizeSites)
 			{
 				const uint8_t expect[7] = { 0x6A, 0x64, 0x68, 0x2C, 0x01, 0x00, 0x00 };
-				uint8_t repl[7] = { 0x6A, static_cast<uint8_t>(bh), 0x68, 0, 0, 0, 0 };
-				memcpy(repl + 3, &bw, 4);
-				if (VerifiedWrite("bizbox size", site, delta, expect, repl, 7)) nBox++;
+				if (bh <= 127)
+				{
+					// Fits the stock encoding - keep the cheap in-place write.
+					// Unreachable at every shipped tier (100*1.5 already
+					// exceeds it); kept so a hypothetical small factor takes
+					// the simplest path rather than allocating a cave.
+					uint8_t repl[7] = { 0x6A, static_cast<uint8_t>(bh), 0x68, 0, 0, 0, 0 };
+					memcpy(repl + 3, &bw, 4);
+					if (VerifiedWrite("bizbox size", site, delta, expect, repl, 7)) nBox++;
+					caveIdx++;
+					continue;
+				}
+
+				// --- cave path -------------------------------------------
+				// Verify the stock bytes BEFORE allocating or writing
+				// anything: a different exe build must be left exactly as
+				// shipped, and an unverified site must not consume a cave.
+				const uint8_t* pchk = reinterpret_cast<const uint8_t*>(site + delta);
+				if (memcmp(pchk, expect, 7) != 0)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: bizbox size site 0x%08X unexpected "
+						"(%02X %02X ...) - skipped, no cave allocated.",
+						static_cast<uint32_t>(site), pchk[0], pchk[1]);
+					caveIdx++;
+					continue;
+				}
+				if (!gBizBoxCaves[caveIdx])
+				{
+					gBizBoxCaves[caveIdx] = VirtualAlloc(
+						nullptr, 64, MEM_COMMIT | MEM_RESERVE,
+						PAGE_EXECUTE_READWRITE);
+				}
+				if (!gBizBoxCaves[caveIdx])
+				{
+					Logger::Get().WriteLine(LogLevel::Error,
+						"CodePatches: bizbox cave alloc FAILED for 0x%08X - "
+						"site left STOCK (a 1x create is better than a "
+						"half-patched one).",
+						static_cast<uint32_t>(site));
+					caveIdx++;
+					continue;
+				}
+				uint8_t* cave = static_cast<uint8_t*>(gBizBoxCaves[caveIdx]);
+				const uint32_t bh32 = static_cast<uint32_t>(bh);
+				int n = 0;
+				cave[n++] = 0x68;                         // push imm32 h
+				memcpy(cave + n, &bh32, 4); n += 4;
+				cave[n++] = 0x68;                         // push imm32 w
+				memcpy(cave + n, &bw, 4); n += 4;
+				cave[n] = 0xE9;                           // jmp back to site+7
+				const uint32_t relBack = static_cast<uint32_t>(
+					(site + 7 + delta)
+					- (reinterpret_cast<uintptr_t>(cave) + n + 5));
+				memcpy(cave + n + 1, &relBack, 4); n += 5;
+
+				// 5-byte jmp + two NOPs so the span stays exactly 7 bytes and
+				// any instruction that targets site+7 still lands correctly.
+				uint8_t repl[7] = { 0xE9, 0, 0, 0, 0, 0x90, 0x90 };
+				const uint32_t relTo = static_cast<uint32_t>(
+					reinterpret_cast<uintptr_t>(cave) - (site + delta + 5));
+				memcpy(repl + 1, &relTo, 4);
+				if (VerifiedWrite("bizbox size (cave)", site, delta, expect, repl, 7))
+				{
+					nBox++;
+					nBoxCave++;
+				}
+				caveIdx++;
 			}
 			// Close-X: keep the stock right/top insets, scaled.
 			const uint32_t cx = bw - static_cast<uint32_t>(std::lround(31 * factor));
@@ -3492,7 +3595,7 @@ namespace CodePatches
 
 		Logger::Get().WriteLine(
 			LogLevel::Info,
-			"CodePatches: budget family x%.2f (%d imm8 + %d imm32 + %d sub-imm8 + %d lea-disp8 + %d notch sites), bizbox %ux%ld (%d sites).",
+			"CodePatches: budget family x%.2f (%d imm8 + %d imm32 + %d sub-imm8 + %d lea-disp8 + %d notch sites), bizbox %ux%ld (%d sites, %d via the #189 imm32 cave - the height is no longer clamped to 127, so the department popup is BORN at its final size).",
 			factor, n8, n32, nSub, nLea, nRaw, bw, bh, nBox);
 	}
 
