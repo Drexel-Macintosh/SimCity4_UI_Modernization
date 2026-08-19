@@ -16458,3 +16458,54 @@ portrait draws `img 36x41`, i.e. it binds the STOCK 1x face and BMPX stretches
 it to 72x82. #190's staged 72x82 portrait is NOT what this consumer loads. It
 looks correct because the stretch is exact, but it is resampled rather than
 sharp. Separate question, separate fix.
+
+## #191 ALIGNMENT: THE OFFSETS ARE LATCHED AT INIT (2026-08-19, dep 12:02:43)
+
+The size fix stands and is user-confirmed ("YOU GOT IT ... it grew"). The
+remaining shift is a LATCH, and my first attempt at it was wrong twice over.
+
+⛔ **THE SEAT-ON-RESIZE COULD NEVER HAVE WORKED.** I computed a compensation
+against the marker's bottom-centre tip - the correct ANCHOR - and applied it in
+ScalePanelRoot. But the tool re-places this window EVERY FRAME:
+`0x0043A26A` / `0x00437ED5` call `GZWinMoveTo(mouseX - [ctrl+0x48],
+mouseY - [ctrl+0x44])`. Anything we write is overwritten on the next tick.
+
+    ⭐ LAW: BEFORE COMPENSATING A POSITION, CHECK WHO WRITES IT LAST. A
+    per-frame writer beats any one-shot correction. The fix must go where the
+    STALE INPUT is produced, not where the symptom appears.
+
+⛔ **AND IT BROKE THE #117 GATE, WHICH I THEN DEPLOYED.** The ~28 comment lines
+pushed the mutations away from `count++`:
+    FAIL: 3 violation(s) - line 15415 -> increment at 15412 ... etc.
+The deploy ran anyway because Deploy-OnGameClose copies whatever is in
+build\Release, and a FAILED MSBuild leaves the PREVIOUS dll there. So the gate
+was red, the build was broken, and the deploy still reported success.
+
+    ⛔ LAW: A FAILED BUILD DOES NOT STOP THE DEPLOY - IT SHIPS THE LAST GOOD
+    DLL AND SAYS "deployed". Run the gate and read the BUILD result before
+    deploying; "deployed ... ALL PASS" after a broken compile is a lie made of
+    two true statements. (Removing the block then left a stray brace and the
+    NEXT build failed too - caught only by reading the compiler output.)
+
+**THE REAL CAUSE, measured:** at init, `0x0043A82D` and `0x0043A841` latch
+    [ctrl+0x44] = win->GetH()      -> 97
+    [ctrl+0x48] = win->GetW() / 2  -> 23
+while the window is still 46x97, and NOTHING refreshes them. Our sweep then
+grows the window to 92x194 and the game keeps anchoring a 2x marker with 1x
+offsets - the tip lands half a marker down-and-right of the target. At 2x the
+error is exactly (+23, +97), which is the reported "shifted down and to the
+right".
+
+⭐ The #176 LATCH LAW again, in its purest form: **ask WHEN the value was
+captured, not what it is.** Third instance in this project.
+
+**THE CURE HAS TO MAKE THE WINDOW THE RIGHT SIZE BEFORE INIT LATCHES**, i.e.
+born-correct via a data-scaled `.UI` for script `{0x00000000, 0x96A006B0,
+0x6A9455C9}` (area 46x97 -> 92x194, imagerect to match), with the root then
+excluded from the sweep so it is not scaled twice. That is the DialogStatic
+pattern this project already ships for exactly this shape - and it is the only
+route that gets the correct number INTO the latch, because the latch reads the
+window and nothing re-reads it afterwards.
+
+⛔ NOT ATTEMPTED YET. Recorded rather than half-built at the end of a long
+session; the size half is deployed, green, and confirmed.

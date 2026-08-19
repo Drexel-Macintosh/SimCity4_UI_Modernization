@@ -15409,6 +15409,25 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// Proven call order preserved: move the root to its anchor first,
 		// then resize. The move is RELATIVE, so the delta comes from the
 		// CURRENT position even when the anchor came from the recorded one.
+		// ⛔ A SEAT-ON-RESIZE WAS HERE AND IS REMOVED. It compensated the
+		// growth against the marker's bottom-centre tip, which is the right
+		// ANCHOR - but it cannot work, because the tool re-places this window
+		// EVERY FRAME: 0x0043A26A / 0x00437ED5 call GZWinMoveTo with
+		// (mouseX - [ctrl+0x48], mouseY - [ctrl+0x44]). Anything we write is
+		// overwritten on the next tick.
+		//
+		// ⭐ THE REAL CAUSE IS A LATCH (the #176 shape again). Those two
+		// offsets are captured AT INIT, at 0x0043A82D and 0x0043A841, as
+		//     [ctrl+0x44] = win->GetH()      -> 97
+		//     [ctrl+0x48] = win->GetW() / 2  -> 23
+		// while the window is still 46x97, and NOTHING refreshes them. Our
+		// sweep then grows the window to 92x194 and the game keeps anchoring it
+		// with 1x offsets, so the tip lands half a marker down-and-right of the
+		// cursor - exactly "shifted down and to the right".
+		//
+		// ⭐ LAW: BEFORE COMPENSATING A POSITION, CHECK WHO WRITES IT LAST.
+		// A per-frame writer beats any one-shot correction, and the fix has to
+		// go where the STALE INPUT is produced, not where the symptom appears.
 		count++;
 		if (!worldAnchored) { win->GZWinMoveTo(newX - curL, newY - curT); }
 		win->SetW(newW);
