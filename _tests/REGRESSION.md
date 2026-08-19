@@ -16186,3 +16186,39 @@ verify-before-write, derived from the art rather than the factor, inert at 1x
 and 1.5x, and it announces itself in the log - so it is auditable and cheap to
 carry while the probe settles what it actually serves. If ARTFETCH shows the
 face is not category 3, it comes out.
+
+## #191: ARTFETCH NAMES THE LOADER, AND CANNOT NAME THE DRAWER (2026-08-19)
+
+The probe worked and answered a real question - just not the one needed.
+
+    [10:40:40] ARTFETCH ret=0x00775239 ICON {G=0x46A006B0,I=0xFA8CDFBF}
+    ... all 19 portraits, same instant, same return address ...
+    [10:40:40] ARTFETCH ret=0x00775854 ICON {G=0x46A006B0,I=0xEA32F100}
+
+0x00775239 is a PRELOAD loop (0x0077521B-0x00775239 walks an array with a
+48-byte stride and registers each portrait via `call [eax+0x94]`). So the
+portraits are owned by a 0x0077xxxx subsystem.
+
+⛔ EVERY ADDRESS PATCHED TODAY WAS IN 0x0046Cxxx - the billboard builder. Wrong
+module entirely. That is the fourth independent confirmation that the
+category-3/CSI identification was wrong, and the first one that says where to
+look instead.
+
+⛔ AND THE PROBE'S STRUCTURAL LIMIT, stated so nobody re-runs it expecting more:
+the portraits are CACHED at load, so the marker draws from the registry and
+never re-fetches. ARTFETCH hooks the FETCH. It therefore cannot see this draw,
+by construction - not "found nothing", but "could not have found it". The only
+image re-fetched per redraw in the whole capture is 0x14315E61, a 120x120
+two-state toggle (twin 0x14315E62 selected by a branch at 0x007E8B0A) - ordinary
+UI art, not the marker.
+
+    ⭐ LAW: A FETCH PROBE CANNOT FIND A CACHED CONSUMER. Before arming an
+    instrument, ask what it hooks and whether the thing you want passes through
+    that point EVERY TIME or only ONCE. A load-time hook answers "who owns
+    this", never "who is drawing it right now".
+
+WHERE #191 STANDS: the portraits' owner is a 0x0077xxxx subsystem; the drawer is
+still unidentified. NO fifth patch was written. Four have now provably executed
+and moved zero pixels, and the failure has been in the identification step every
+single time - so the next move must be an instrument that fires AT DRAW with the
+marker on screen, not another disassembly that fits.
