@@ -334,3 +334,33 @@ CSIs."* **It is category 3 only** — proven by exhaustive inbound-edge
 enumeration of `0x0046C8B0..0x0046D200`: one edge in, from `cmp [esi+4],4 ; jne`
 at `0x0046CC45`. Categories 3 and 4 merge at `0x46CB52` and split later, which
 is why the single-`jne` reading was wrong.
+
+### E.4 #191 — families ELIMINATED by cheap identification tests (2026-08-19)
+
+Each of these cost one query and no patch. Recorded so they are never
+re-searched, and as the positive controls for the searches themselves.
+
+| family | test | verdict |
+|---|---|---|
+| **TagKind markers** (row 18's lead, `0x00510690`) | enumerated all 25 `Tag1x1x3_*` exemplar names from the archives | **NOT IT.** Every one is a spawn point or vehicle anchor: AttackHelicopter, CropDuster, Cruiseship, Fireplane, Helipad_Medical, Helipad_News, MarinaUDISpawn, Marinafront1-8, MilitaryJet, Runway, SeaportSpawnPoint, SkyDiver, Stuntplane, UFO, ferryopp/termin/termout. No MySim, no move-in, no query marker. Row 18's size constant is real but serves a different widget. |
+| **`Ui8x1x3` in-world UI model family** | regex over all archives for `*Ui\dx\dx\d*` | **NOT IT.** 20 hits, ALL `ConnectArrow_Ui8x1x3_Z{1..5}{S,W,N,E}` — the network connect arrows. |
+| **`*arrow*` named resources** | regex over all archives | **NOT IT.** 38 distinct names; the non-ConnectArrow ones are all `onewayarrow_0be35e*` (road one-way markings). |
+| **`0x0046Cxxx` dispatch/CSI billboard system** | four patches applied and logged at 2.00 | **NOT IT — eliminated ON SCREEN.** category-3 icon 32→64, shared pin quad 64→128, UV divisor 64→128 all applied, marker unchanged. |
+| **the GZWin window layer** | 37 full-depth live dumps with the marker up | **NOT IT.** 0 new windows; positive control = the Select-A-Sim grid appears in exactly one tick. |
+
+⭐ **THE POINT OF THIS TABLE**: five families removed for the cost of four
+queries and one ten-second launch, versus four patches + four deploys + four
+launches that removed one family and misled three sessions. **An identification
+test is an order of magnitude cheaper than a patch, and it is the SAME evidence
+either way.**
+
+⚠ **`ConnectArrow_Ui8x1x3_Z1..Z5` IS STILL WORTH KNOWING**: it establishes the
+engine's convention for world-space UI markers — **one model per ZOOM level, not
+one model scaled**. If the Move In marker follows that convention, no pixel-side
+lever can ever resize it and the honest cure is per-zoom art, not a constant.
+That hypothesis is UNTESTED and must not be treated as fact.
+
+**STILL OPEN**: what draws the Move In marker. Leads remaining, cheapest first —
+(1) the three running traces from `0x007755A0` forward; (2) whether the marker is
+an S3D/prop like row 28's 244-byte arrow plate; (3) the `0x0077xxxx` owner class
+identified from the preload at `0x00775239`.
