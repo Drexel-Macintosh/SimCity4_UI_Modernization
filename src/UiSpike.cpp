@@ -18847,9 +18847,27 @@ namespace
 		return u.QuadPart;
 	}
 
+	// ⭐ WHAT WE COMMITTED, FOR DISPLAY ONLY - and it is why the control
+	// looked broken. SelCommit writes the INI; it deliberately does not touch
+	// the live `settings`, because spikeScaleFactor is read all over the
+	// running game and changing it mid-session would move geometry that the
+	// art cannot follow until the next launch.
+	//
+	// But the combo seeded itself from `settings` on every open, so the moment
+	// the dialog was reopened it snapped back to whatever was RUNNING - Auto -
+	// and every deliberate choice looked like it had been thrown away. The
+	// user reported exactly that: "no matter the resolution I select it just
+	// jumps back to auto". The commits were all in the log; only the display
+	// was lying.
+	//
+	// So the display reads the PENDING choice when there is one, and the live
+	// settings otherwise. Nothing about the running game changes.
+	int gSelPendingRow = -1;
+
 	void SelCommit(int row)
 	{
 		if (row < 0 || row >= kSelCount) { return; }
+		gSelPendingRow = row;
 		wchar_t ini[MAX_PATH] = {};
 		SelIniPath(ini, MAX_PATH);
 		if (ini[0] == 0) { return; }
@@ -19482,7 +19500,9 @@ void UiSpike::ServiceScaleSelector()
 		{
 			if (justOpened)
 			{
-				const int live = SelRowFromSettings(settings);
+				// The PENDING choice wins if there is one - see gSelPendingRow.
+				const int live = (gSelPendingRow >= 0)
+					? gSelPendingRow : SelRowFromSettings(settings);
 				for (int k = 0; k < kSelCount; k++)
 				{
 					gSelUsable[k] = SelRowUsable(k);
@@ -19499,6 +19519,13 @@ void UiSpike::ServiceScaleSelector()
 						SelMinimumFor(k, &mw, &mh);
 						_snprintf_s(row, sizeof(row), _TRUNCATE,
 							"%s - needs %dx%d", kSelLabels[k], mw, mh);
+					}
+					else if (k == live && k == gSelPendingRow)
+					{
+						// Chosen this session: say that it is queued, so the
+						// player can tell a pending choice from the live one.
+						_snprintf_s(row, sizeof(row), _TRUNCATE,
+							"%s - on restart", kSelLabels[k]);
 					}
 					else if (k == live && gReadoutW > 0 && gReadoutH > 0)
 					{
@@ -19551,7 +19578,7 @@ void UiSpike::ServiceScaleSelector()
 						gSelPushed = 0;
 						gSelCommitted = 0;
 						SelCommit(0);
-						gSelNoticePending = true;
+						ShowRestartNotice(gfxDlg);
 					}
 					else
 					{
@@ -19574,10 +19601,26 @@ void UiSpike::ServiceScaleSelector()
 						// picking another row overwrites it.
 						gSelPushed = row;
 						gSelCommitted = row;
+						// ⛔ SHOWN ON THE CHANGE, AND THAT IS NOT THE
+						// PREFERRED TIMING - it is the only one left.
+						// The user asked for it on Accept, twice, and
+						// Accept has now been eliminated by two
+						// independent measurements:
+						//   1. MESSAGES - 36 traced with the dialog
+						//      open, none touching the Accept rect, and
+						//      none arriving at all at the moment it was
+						//      pressed. The winproc does not see it.
+						//   2. SIDE EFFECT - the game does NOT rewrite
+						//      SC4GraphicsOptions.ini on Accept. Three
+						//      Accepts in one session, three
+						//      "NO write ... was ever seen" lines.
+						// The detector below stays armed anyway: it costs
+						// one file stat, and if a future build of the
+						// game (or another setting changed in the same
+						// visit) does move that file, the log will say
+						// so and the timing can move with it.
 						SelCommit(row);
-						// ARM, do not show: the notice belongs on
-						// Accept, exactly where the game puts its own.
-						gSelNoticePending = true;
+						ShowRestartNotice(gfxDlg);
 					}
 				}
 			}
