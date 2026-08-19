@@ -18728,6 +18728,9 @@ namespace
 	// message does not carry got written earlier today.
 	int  gSelRadioState = -1;        // bitmask: b0..b3 stock radios, b4 ours
 	int  gSelRadioLogs = 0;
+	bool gSelOursWas = false;        // our radio last service
+	int  gSelStockWas = 0;           // stock radio mask last service
+	bool gSelResRescued = false;      // resolution mismatch handled once
 	int  gSelTraceLogs = 0;
 
 	int   gSelPushed = -2;          // last row we pushed or observed
@@ -19029,6 +19032,67 @@ void UiSpike::ServiceScaleSelector()
 	const bool justOpened = !gSelDlgUp;
 	gSelDlgUp = true;
 
+	// ---- 0. THE RESOLUTION THE GAME ACTUALLY LAID OUT AT -----------------
+	// ⭐ THE TIER IS DECIDED FROM AN INFERENCE; THIS IS THE MEASUREMENT.
+	// At PreAppInit there is no window yet, so the director must PREDICT the
+	// render size from two SC4GraphicsOptions.ini keys plus a rule about what
+	// the wrapper does with them ("DirectX + FullScreen -> monitor native,
+	// requested size ignored"). That rule is right for this machine's current
+	// setup and it is still an inference about someone else's software.
+	//
+	// pMainWindow->GetW()/GetH() is the size the UI was ACTUALLY laid out at.
+	// If it disagrees with what the tier was decided from, the tier was chosen
+	// from a number that never happened - which is what the user hit after
+	// changing resolution here: the resolution moved and the text stayed
+	// scaled, because the prediction still said the old size.
+	//
+	// Per the standing instruction for this case, a disagreement flips to Auto
+	// for the NEXT launch rather than trying to rescale a live game: the tier
+	// packages and the font are chosen once, at startup, and cannot move now.
+	{
+		const int32_t realW = pMainWindow->GetW();
+		const int32_t realH = pMainWindow->GetH();
+		if (realW > 0 && realH > 0 && gReadoutW > 0 && gReadoutH > 0
+			&& !gSelResRescued)
+		{
+			// 64px of slack: window chrome and rounding are not a resolution
+			// change, and a gauge that fires on noise is worse than none.
+			const int dw = realW > gReadoutW ? realW - gReadoutW : gReadoutW - realW;
+			const int dh = realH > gReadoutH ? realH - gReadoutH : gReadoutH - realH;
+			if (dw > 64 || dh > 64)
+			{
+				gSelResRescued = true;
+				const bool badNow =
+					!ScaleTier::Fits(settings.spikeScaleFactor, realW, realH);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: RESMISMATCH the tier was decided from %dx%d but "
+					"the UI is laid out at %dx%d. Factor %.2f %s that size.",
+					gReadoutW, gReadoutH, realW, realH,
+					settings.spikeScaleFactor,
+					badNow ? "DOES NOT FIT" : "still fits");
+				// Report the truth from here on, whatever we do about it.
+				gReadoutW = realW;
+				gReadoutH = realH;
+				if (badNow && !settings.spikeAutoScale)
+				{
+					wchar_t iniP[MAX_PATH] = {};
+					SelIniPath(iniP, MAX_PATH);
+					if (iniP[0] != 0)
+					{
+						WritePrivateProfileStringW(L"UiSpike", L"AutoScale",
+							L"1", iniP);
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: RESMISMATCH wrote AutoScale=1 - a manual "
+							"factor that cannot fit the size actually being "
+							"rendered is exactly the trap the boot rescue "
+							"exists for, and the next launch now picks the "
+							"tier from the real resolution.");
+					}
+				}
+			}
+		}
+	}
+
 	// ---- 0a. ACCEPT TRACE: capture the closing buttons' absolute rects ----
 	// Captured on OPEN, because that is when they exist and are laid out, and
 	// re-captured every open in case the tier (and therefore the geometry)
@@ -19210,10 +19274,74 @@ void UiSpike::ServiceScaleSelector()
 				b->Release();
 			}
 		}
-		// SELRADIO: one line per CHANGE, never per service. This is the
-		// measurement that decides whether "make our radio selectable" is a
-		// matter of reading a checkbox the engine already toggles, or of
-		// toggling it ourselves from a click we would first have to locate.
+		// ---- MUTUAL EXCLUSION, ENFORCED BY US -------------------------
+		// MEASURED 2026-08-19: the engine DOES toggle our injected
+		// radiocheck button when it is clicked (mask went 0x02 -> 0x12 on the
+		// user's click), so the choice is readable directly - no click
+		// detection needed, which matters because Accept clicks provably
+		// never reach us. But the engine does NOT group ours with the stock
+		// four: the same trace caught 1024x768 AND ours lit simultaneously
+		// (mask 0x12). Radio buttons that can both be on are not radio
+		// buttons, so the grouping is ours to enforce.
+		//
+		// The rule is by TRANSITION, not by state: whichever one just turned
+		// ON wins, and the other side is cleared. Deciding from state alone
+		// cannot tell which the user actually clicked.
+		const bool oursNow = oursChecked;
+		const int  stockNow = mask & 0x0F;
+		if (oursNow && !gSelOursWas && stockNow != 0)
+		{
+			// The player just chose OUR resolution: clear the stock four.
+			//
+			// ⭐ THIS IS ALSO HOW THE CHOICE SURVIVES ACCEPT. The game writes
+			// SC4GraphicsOptions.ini from ITS OWN radio state, and we cannot
+			// see the Accept click to intervene. With no stock resolution
+			// selected there is nothing for it to write, so the custom
+			// WindowWidth/Height already in the file simply stays - which is
+			// exactly what "keep my resolution" means.
+			for (int k = 0; k < 4; k++)
+			{
+				cIGZWin* w2 =
+					gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
+				if (!w2) { continue; }
+				cIGZWinBtn* b2 = nullptr;
+				if (w2->QueryInterface(GZIID_cIGZWinBtn,
+						reinterpret_cast<void**>(&b2)) && b2)
+				{
+					if (b2->IsChecked()) { b2->SetChecked(false); }
+					b2->Release();
+				}
+			}
+			mask &= ~0x0F;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELRADIO custom resolution re-selected - cleared the "
+				"stock resolution radios so the game has nothing to write over "
+				"%dx%d on Accept.", gReadoutW, gReadoutH);
+		}
+		else if (stockNow != 0 && gSelStockWas == 0 && oursNow)
+		{
+			// A stock resolution just won: ours must go dark, or two radios
+			// claim the same choice.
+			cIGZWin* w2 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
+			if (w2)
+			{
+				cIGZWinBtn* b2 = nullptr;
+				if (w2->QueryInterface(GZIID_cIGZWinBtn,
+						reinterpret_cast<void**>(&b2)) && b2)
+				{
+					b2->SetChecked(false);
+					b2->Release();
+				}
+			}
+			mask &= ~(1 << 4);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELRADIO a stock resolution was chosen - our custom "
+				"radio cleared.");
+		}
+		gSelOursWas = (mask & (1 << 4)) != 0;
+		gSelStockWas = mask & 0x0F;
+
+		// SELRADIO: one line per CHANGE, never per service.
 		if (mask != gSelRadioState && gSelRadioLogs < 30)
 		{
 			gSelRadioLogs++;
