@@ -549,6 +549,53 @@ namespace
 			{
 				wchar_t aside[MAX_PATH];
 				swprintf_s(aside, L"%sFontStyle.ini%s", liveDir, kDisabledSuffix);
+				// ⭐ A STALE STASH MADE THE STOCK TIER KEEP ITS SCALED FONT.
+				// MoveFileExW with no flags REFUSES when the destination
+				// exists (err 183), and the destination survives every
+				// previous visit to stock - so the SECOND time a player
+				// selected 1x the rename failed, the 2x FontStyle.ini stayed
+				// live, and the whole UI came up stock-sized with scaled text.
+				// User-reported 2026-08-19 ("when I select 1x the font scaling
+				// is not changing"), and the log had been saying it in plain
+				// words the entire time: "kept - an earlier ... already exists
+				// (err 183)". A failure that logs itself is still a failure.
+				//
+				// The stale file is OUR OWN previously-stashed font - the
+				// user's original, if there ever was one, lives under
+				// .user-original and is restored above, before this line is
+				// reached. So it is safe to drop and re-stash the current one,
+				// which also keeps exactly ONE stashed copy instead of
+				// silently preferring the oldest.
+				// PROVEN OURS, NOT ASSUMED OURS. The stale stash is deleted
+				// only when it is byte-identical to one of the tier font
+				// sources we ship - the same distinguishing test #118 uses
+				// twenty lines above. If it is anything else it is left
+				// exactly where it is and the rename fails as before: a
+				// scaled font staying live is a cosmetic defect, and deleting
+				// a font we cannot prove is ours is not.
+				if (FileExists(aside))
+				{
+					const wchar_t* asideTag =
+						MatchesAnyTierFontSource(aside, srcDir);
+					if (asideTag != nullptr)
+					{
+						DeleteFileW(aside);
+						Logger::Get().WriteLine(LogLevel::Info,
+							"ScaleTier: dropped a stale %ls stash so the live "
+							"font can be put aside - it was byte-identical to "
+							"our own %ls source, and leaving it there is what "
+							"kept a scaled font live at the stock tier.",
+							kDisabledSuffix, asideTag);
+					}
+					else
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"ScaleTier: an existing %ls stash is NOT one of "
+							"our fonts - leaving it untouched. The live font "
+							"stays and the stock tier keeps scaled text; that "
+							"is the safe direction.", aside);
+					}
+				}
 				if (!MoveFileExW(live, aside, 0))
 				{
 					Logger::Get().WriteLine(
