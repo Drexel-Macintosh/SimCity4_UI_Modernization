@@ -19524,6 +19524,32 @@ void UiSpike::ServiceScaleSelector()
 		}
 	}
 
+	// ---- 0d. THE COMBO'S LIVE GEOMETRY vs ITS PARENT'S CLIP -------------
+	// The user reports the box "cut off". Rather than adjust it by eye a
+	// second time, print what the game actually laid out: the combo's own
+	// rect and its parent's, so the margin at the bottom is a number instead
+	// of an impression. Once per appearance.
+	if (justOpened)
+	{
+		cIGZWin* cg = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
+		if (cg != nullptr)
+		{
+			int cl = 0, ct = 0, cw = 0, ch = 0;
+			cIGZWin* par = cg->GetParentWin();
+			int pl = 0, pt = 0, pw = 0, ph = 0;
+			if (SafeAbsRect(cg, &cl, &ct, &cw, &ch)
+				&& par != nullptr && SafeAbsRect(par, &pl, &pt, &pw, &ph))
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELGEOM combo [%d,%d %dx%d] parent [%d,%d %dx%d] "
+					"- bottom margin %d px (combo bottom %d, parent bottom "
+					"%d). A negative or tiny margin is the box being clipped.",
+					cl, ct, cw, ch, pl, pt, pw, ph,
+					(pt + ph) - (ct + ch), ct + ch, pt + ph);
+			}
+		}
+	}
+
 	// ---- 1. the readout line (#192 behaviour, unchanged) ----------------
 	char l1[96];
 	if (gReadoutW > 0 && gReadoutH > 0)
