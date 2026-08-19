@@ -461,20 +461,37 @@ foreach ($pair in $BUILT_PAIRS) {
 # absent - which is what it did on its first run here. A gate that fails for
 # its own reason is worse than no gate; it must be able to PASS before it is
 # allowed to fail (law 50b).
-# ⚠ #186 (2026-08-17, USER DECISION "grow at all tiers for clickability"):
-# the bubble family is now PINNED at 96px = 3x design in EVERY tier package
-# (on-screen = 96 x tierFactor via the born-at-art-size + sweep + BMPX chain;
-# the f-squared compounding that made tiers inconsistent is retired). The
-# assertion below therefore expects 96 at every tier - the #100 hazard
-# (accidental 4x flag = 128px art) still fails it, which is the point.
+# ⚠ #197 (2026-08-18) SUPERSEDES #186's PIN - AND IT SUPERSEDES A USER
+# DECISION, so it is spelled out rather than quietly swapped.
+#   #186, 2026-08-17, USER: "grow at all tiers for clickability" -> art pinned
+#     at 96px (3x design) in EVERY tier package.
+#   #197, 2026-08-18, USER: "we overdid it with scaling on our UDriveIt
+#     buttons ... 1.5X should truly just be 1.5X, 2X=2X etc."
+# The later rule wins. The pin was not wrong about clickability - it was wrong
+# about ARITHMETIC: the window is BORN at the art's pixel size and the sweep
+# then multiplies by f, so on-screen = 32 * a * f. With a pinned at 3 the
+# marker was a flat 3x oversize at EVERY tier, which is what the user saw.
+#
+# Art is now staged at RoundHalfUp(32*f) - 48 / 64 / 96 - and 0x48E945B4 is in
+# kNeverScaleIds so the sweep cannot apply f a second time. The draw clamp
+# then self-cancels (source == window => m = 1), giving 32*f exactly, crisp.
+# The #100 hazard is still caught: a 4x flag would stage 128 at f=2 and fail
+# the 64 expected here.
+#
+# ⛔ IF CLICKABILITY IS NOW TOO SMALL AT 1.5x, that is a HIT-BOX question, not
+# a size question - grow the hit box, do not re-pin the art, or the arithmetic
+# breaks again and #100 comes back.
 $BUBBLE = @{ T = [Convert]::ToUInt32("856DDBAC", 16)
              G = [Convert]::ToUInt32("46A006B0", 16)
              I = [Convert]::ToUInt32("094AC89A", 16)
-             Pinned = 96 }
+             Design = 32 }
 $BUBBLE_TIERS = @{ "15x" = 1.5; "2x" = 2.0; "3x" = 3.0 }
 $nBubble = 0
 foreach ($tag in $BUBBLE_TIERS.Keys) {
-  $want = $BUBBLE.Pinned
+  # #197: expected size is now the FACTOR times design, not a constant, and
+  # it is computed with the project's one rounding convention (law 89,
+  # RoundHalfUp) so the gate and the builder cannot drift apart.
+  $want = [int][Math]::Floor($BUBBLE.Design * $BUBBLE_TIERS[$tag] + 0.5)
   $p = Join-Path $plugins ("z_SC4UIScale_SelectiveArt-{0}.dat" -f $tag)
   if (-not (Test-Path $p)) { $p = "$p.x1-disabled" }
   if (-not (Test-Path $p)) { $failures += ("#100 bubble: no SelectiveArt-$tag package deployed"); continue }

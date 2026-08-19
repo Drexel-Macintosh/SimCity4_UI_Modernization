@@ -662,7 +662,16 @@ CODE_BOUND_FORCE = {
 # gate in main() FATALs if the routing ever drifts from the ledger below.
 # Dims in the comments are informational; the CODE measures each 1x source
 # and demands output == 3 x measured, never assuming 32.
-MISSION_BUBBLE_FIXED96_MULT = 3   # x3 of the 1x design = 96px on the 32px bubble
+# #197 (2026-08-18): WAS 3 - a flat 3x overshoot at every tier, because the
+# window is BORN at the art's pixel size and the sweep then multiplies it by f
+# again (on-screen = 32*a*f). The user's rule is that scale must equal the
+# factor exactly, so the art multiplier is now the FACTOR itself and the
+# window is excluded from the sweep (0x48E945B4 in kNeverScaleIds). Art scaled
+# offline + window never swept is the DialogStatic pattern; it yields 32*f
+# exactly AND keeps the art crisp, which a=1 would not.
+# ⛔ BOTH HALVES OR NEITHER. Art-at-f without the never-scale entry restores
+# the pre-#186 f-squared state; never-scale without art-at-f pins it at 1x.
+MISSION_BUBBLE_FIXED96_MULT = FACTOR   # = f: 48 / 64 / 96 px on the 32px base
 # ⛔⛔ ONE SHEET, NOT THE FAMILY (adversarial review 2026-08-17, finding 1 -
 # the reviewer RENDERED the candidates). The other twelve "family" members
 # are the engine's CLASS-DEFAULT WIDGET sheets registered at VA 0x44DEC7:
@@ -2071,7 +2080,9 @@ def build_mission_bubble_fixed96():
         sys.exit("FATAL #186: fixed-96 regeneration failed (exit "
                  "%d):\n%s%s" % (r.returncode, r.stderr, r.stdout))
     out = {}
-    print("#186 fixed-96 mission-bubble family (x%d of measured 1x, every "
+    # %d on a float printed "x1" while staging x1.5 - an instrument lying
+    # in its own favour, the fifth caught on 2026-08-18. %g prints 1.5.
+    print("#186 mission-bubble family (x%g of measured 1x, every "
           "tier):" % MISSION_BUBBLE_FIXED96_MULT)
     for (gid, iid) in sorted(MISSION_BUBBLE_FIXED96):
         p = os.path.join(out_dir, tgi_png_name(gid, iid))

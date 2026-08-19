@@ -15187,3 +15187,48 @@ mismatch was NOT what split the hat from the number - that hypothesis is dead,
 and #195 belongs to the multiplier/immediates question (#197/#193), not to
 package selection. Recorded because a dead hypothesis is worth as much as a
 live one and this one looked very promising.
+
+## #197 FIXED — the marker is now EXACTLY the factor (2026-08-18, dep 21:46:53)
+
+USER RULE: "1.5X should truly just be 1.5X, 2X=2X etc."
+
+THE LAW, measured not guessed:      on-screen = 32 * a * f
+where a is the multiplier baked into the ART. The exe BIRTHS the window at the
+bound art's pixel size, and our sweep then multiplies that live size by f
+again - so an art multiplier leaks into GEOMETRY. That is the part nobody had
+named, and it is why every previous attempt reasoned about the wrong stage.
+
+Design is 32x32; we shipped 96x96 BYTE-IDENTICAL in all three tier packages
+(verified on disk: 15x and 3x both 96x96, 871 bytes). a = 3, so the marker was
+a flat 3x oversize at EVERY tier. NOT f-squared - that was the pre-2026-08-17
+state (a = f), already retired by #186. The model is validated by deriving
+#100's number rather than quoting it: a = 2f gives art 128 at f=2, window born
+128, swept 256, drawn 256 = 8x design = #100's "predicts 8x at the 2x tier".
+
+CURE - the DialogStatic pattern, both halves in one edit:
+    a = f      art staged RoundHalfUp(32*f) = 48 / 64 / 96
+    sweep      0x48E945B4 -> kNeverScaleIds (removes the second multiply)
+    draw       source == window => the BMPX clamp yields m = 1
+    result     32*f EXACTLY, and crisp at every tier
+a = 1 would give the right size and soft art (32px stretched to 96 at 3x) -
+which is exactly what the pin existed to avoid. Swapping one wrong constant
+for another is what the user's rule forbids.
+⛔ NEITHER HALF ALONE. Art-at-f without never-scale restores f-squared;
+never-scale without art-at-f pins the marker at 1x.
+
+⚠ THIS SUPERSEDES A USER DECISION, so it is written down rather than quietly
+swapped: #186 (2026-08-17) pinned 96px on the user's own "grow at all tiers
+for clickability". The later rule wins. The pin was not wrong about
+clickability - it was wrong about ARITHMETIC. If the marker is now too small
+to click at 1.5x, that is a HIT-BOX question: grow the hit box, never re-pin
+the art, or #100 comes straight back.
+
+TWO INSTRUMENTS CORRECTED IN THE SAME PASS:
+ * the builder printed "x%d of measured 1x" - %d on a float, so at f=1.5 it
+   announced "x1" while staging x1.5. FIFTH lying instrument caught today.
+ * Test-DatIntegrity asserted a flat Pinned=96 at every tier. Now computes
+   RoundHalfUp(32*f) with the project's single rounding convention (law 89) so
+   the gate and the builder cannot drift.
+
+GATE GREEN: ALL PASS (24 dats + 3 font sources + DLL presence/quarantine +
+28 deployed==built hashes + 3/3 bubble payload sizes).

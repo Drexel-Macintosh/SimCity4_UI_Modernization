@@ -5309,6 +5309,21 @@ namespace
 		// art ships in SelectiveArt (scripts I-aa3acdfe/I-cbc3c2b9), so a
 		// 1x window would draw quarter-art + black fill.
 		0xAA3AC002, // Taxes editor popup
+		// #197 U-DRIVE-IT MISSION MARKER (2026-08-18). The other half of
+		// the builder change that made its art scale by f instead of a fixed
+		// x3. This window is BORN AT ITS ART'S PIXEL SIZE by the exe, so once
+		// the art is f-scaled the window is ALREADY 32*f - and sweeping it
+		// would multiply by f a second time, which is exactly the pre-#186
+		// f-squared state this change exists to remove.
+		//
+		// on-screen = 32 * a * f, and with a = f and the sweep skipped the
+		// remaining draw multiply self-cancels: BmpCtxBltThunk clamps m until
+		// the source fits the live window, and source == window here, so
+		// m = 1 and the marker draws at 32*f exactly.
+		//
+		// ⛔ NEVER list this WITHOUT the builder change, or the marker pins at
+		// 1x. The two are one edit.
+		0x48E945B4, // U-Drive-It mission marker (art is f-scaled offline)
 		0xCA4C332D, // Take Out A Loan popup
 		// Advisors (2026-07-29 late): the console strip's 2x face art in
 		// 1x buttons showed quarter-zoomed faces on FIRST open (user
