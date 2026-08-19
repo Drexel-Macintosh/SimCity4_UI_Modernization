@@ -14852,3 +14852,22 @@ build path (law 16 - the Business Deals empty box reaches it through a
 different function with its OWN copies of these constants). The five sites
 patched are 0x77BEC0's. If the empty box ever shows the same jump, that is the
 other path and it needs the same treatment.
+
+## #165 IS NOT OPEN - MEASURED CURED IN THE SHIPPED PACKAGE (2026-08-18)
+
+Its header still reads "OPEN, LIVE IN THE SHIPPED 1.5x PACKAGE". Measured just
+now, out of the deployed z_SC4UIScale_SelectiveArt-15x.dat:
+
+    {46a006b0,14416315}  shipped 1.5x = 208x26,  cell = 208/8 = 26.00 EXACT
+    (the defect was 204x26, cell 25.5 - the engine's integer divide read 25)
+
+The cell-first rule built for #171 and generalised by #186/law 107
+(N * RoundHalfUp(cell, f)) covers this sheet: 8 * R(17,1.5) = 8 * 26 = 208.
+Fixed as a side effect, never re-verified, so the header rotted into a false
+open item.
+
+LEDGER HYGIENE: several "## ... OPEN" headers in this file predate their own
+closures (#89, #109, #149, #157 among them) and are historical section titles,
+not live state. The TASK LIST and the GitHub issues are authoritative for what
+is open; this file is the evidence trail. Do not read a stale header as a live
+defect - measure the shipped artifact, which took one command here.
