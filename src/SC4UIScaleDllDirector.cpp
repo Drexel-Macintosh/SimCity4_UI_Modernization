@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.2.2"
+#define UISCALE_VERSION_STR "3.2.3"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -229,6 +229,14 @@ public:
 			// game's own resolution list shows.
 			UiSpike::SetRenderResForReadout(gfxW, gfxH);
 
+			// ⚠ CAPTURED BEFORE ANYTHING FORCES IT. spikeScaleAll is set to
+			// false in two places below (the auto-path's !tierActive block and
+			// the stock-factor block), so by the time the static-layer gate is
+			// reached it no longer answers "did the USER ask for this mod to be
+			// active" - it answers "is scaling happening right now", which is a
+			// different question and the wrong one for that gate.
+			const bool iniWantsScaling = settings.spikeScaleAll;
+
 			if (settings.spikeAutoScale)
 			{
 				const float tier = ScaleTier::Decide(gfxW, gfxH);
@@ -369,7 +377,28 @@ public:
 			// the proof - law 54). Manual + ScaleAll=0 keeps the untouched
 			// behaviour: Set-StockCompare owns that state with its own
 			// suffixes, and a dormant rig must not have its files renamed.
-			if (settings.spikeAutoScale || tierActive)
+			// ⭐ `|| iniWantsScaling` ADDED 2026-08-19 - CHOOSING 1x MUST UNLOAD
+			// THE ART. Without it, a manual stock factor skipped this sync
+			// entirely and the PREVIOUS tier's dats stayed armed: geometry ran
+			// at 1x while the art was still 2x, so the whole UI was wrong on
+			// screen. User-reported the first time the in-game selector was
+			// used to pick 1x ("1X didn't work the game loaded with every
+			// broken"), and the log named it two lines apart - "Factor 1.00 is
+			// stock: every scaling subsystem forced OFF" followed by "static
+			// layers untouched".
+			//
+			// SyncStaticLayers(1.0) is exactly the right call here: its own
+			// contract for factor <= 1.01 is disable-all, so this stashes every
+			// package and leaves the stock-tier selector as the only thing of
+			// ours in the game - which is precisely what picking 1x means.
+			//
+			// The ScaleAll=0 rig KEEPS its untouched behaviour, because that is
+			// what iniWantsScaling reads: Set-StockCompare owns that state with
+			// its own suffixes and a dormant rig must not have its files
+			// renamed. The distinction the old gate could not draw is "the user
+			// asked for stock" versus "the rig is dormant"; the ini's own
+			// ScaleAll is what separates them.
+			if (settings.spikeAutoScale || tierActive || iniWantsScaling)
 			{
 				// #111: name the EFFECTIVE factor at the moment the static
 				// layers are chosen, so "which art/font package is live" is
@@ -382,6 +411,27 @@ public:
 					settings.spikeScaleFactor);
 				ScaleTier::SyncStaticLayers(settings.spikeScaleFactor);
 			}
+
+			// ⭐ UNCONDITIONAL, AND OUTSIDE EVERY BRANCH ABOVE. The stock-tier
+			// scale selector's package is armed by the ABSENCE of a tier, so
+			// the one state it must reach is the state in which none of the
+			// branches above run at all.
+			//
+			// MEASURED 2026-08-19, one build after it shipped: it was folded
+			// into SyncStaticLayers, which is not called at the stock tier
+			// ("static layers untouched (ScaleAll=0 or stock factor)" two
+			// lines up in the same log). Result on a 1x machine - the dat sat
+			// as .x1-disabled, this DLL logged that the selector "IS
+			// serviced", and Graphic Options had no selector in it. The code
+			// half ran, the data half was stashed, and the log looked healthy.
+			//
+			// THIRD TIME THIS SHAPE HAS SHIPPED FROM THIS FUNCTION. #149 and
+			// #182 are recorded a few lines below in exactly these terms:
+			// work bolted onto a convenient neighbour inherits that
+			// neighbour's gate silently. The condition this depends on is
+			// "is the tier stock" - so that, and nothing else, is what it is
+			// gated on.
+			ScaleTier::SyncSelectorPackage(!tierActive);
 
 			// #149: OUTSIDE the AutoScale branch, deliberately. The scan
 			// depends only on the FACTOR, never on how the factor was chosen.

@@ -1692,6 +1692,43 @@ namespace ScaleTier
 		return 1.0f; // stock
 	}
 
+	// THE ONE PACKAGE ARMED BY THE ABSENCE OF A TIER.
+	// z_SC4UIScale_SelectorUI-1x carries a single script: Graphic Options at
+	// STOCK geometry with the scale-selector nodes injected. Its gate is the
+	// INVERSE of every other package - live only when NO tier is active -
+	// because 1x without the selector is a one-way door: every other package
+	// is stashed, so the only way back up would be editing the ini by hand.
+	//
+	// ⛔ IT LIVED INSIDE SyncStaticLayers FOR ONE BUILD AND THAT WAS THE BUG.
+	// SyncStaticLayers is not called at the stock tier - the director's own log
+	// says "static layers untouched (ScaleAll=0 or stock factor)" - so the
+	// package could never be armed in THE EXACT STATE IT EXISTS FOR. Measured
+	// 2026-08-19: a 1x machine had z_SC4UIScale_SelectorUI-1x.dat.x1-disabled
+	// on disk, the DLL logged that the selector "IS serviced", and the dialog
+	// had no selector in it. The code half ran and the data half was stashed.
+	//
+	// ⭐ THIRD RECORDING OF THIS SHAPE IN THIS FILE'S NEIGHBOURHOOD (#149 and
+	// #182 are the others, both in SC4UIScaleDllDirector.cpp beside the call
+	// site). BOLTING WORK ONTO A CONVENIENT NEIGHBOUR MAKES IT INHERIT THAT
+	// NEIGHBOUR'S GATE SILENTLY. The condition this depends on is "is the tier
+	// stock", so that is the only thing it may be gated on - and the caller
+	// invokes it UNCONDITIONALLY.
+	void SyncSelectorPackage(bool stockTier)
+	{
+		// Same directory every other package is synced in: the DLL's own
+		// folder, which IS the Documents Plugins folder (see SyncStaticLayers).
+		wchar_t docPlugins[MAX_PATH];
+		DllDir(docPlugins, MAX_PATH);
+		SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_SelectorUI",
+			L"-1x", stockTier);
+		Logger::Get().WriteLine(LogLevel::Info,
+			"ScaleTier: SelectorUI-1x %ls (tier is %ls). This is the ONLY "
+			"package armed by the ABSENCE of a tier, and it is what keeps 1x "
+			"from being a one-way door.",
+			stockTier ? L"ARMED" : L"stashed",
+			stockTier ? L"stock" : L"scaled");
+	}
+
 	void EnlargeUncoveredIcons(float factor)
 	{
 		IconSynth::EnlargeAndRegister(factor);
@@ -1964,31 +2001,6 @@ namespace ScaleTier
 			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons", depOk));
-		}
-		// THE ONE PACKAGE ARMED BY THE ABSENCE OF A TIER (2026-08-19).
-		// z_SC4UIScale_SelectorUI-1x carries a single script: Graphic Options
-		// at STOCK geometry with the four scale-selector nodes injected. Its
-		// gate is the INVERSE of every package above - live only when NO tier
-		// is active - because that is the only state in which the selector
-		// would otherwise vanish, and 1x without the selector is a one-way
-		// door: every other package is stashed, so the only way back up would
-		// be editing the ini by hand.
-		//
-		// It is inside the tier loop's scope but deliberately OUTSIDE the
-		// loop: the loop asks "which tier is this package for", and the
-		// answer here is "none of them".
-		//
-		// The dialog is otherwise pixel-identical to stock - build_selector_1x
-		// asserts the four rects are the AUTHORED ones and that the package
-		// holds exactly one entry, so this can never quietly become a way to
-		// scale the stock tier.
-		{
-			const bool stock = (activeTag == nullptr);
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_SelectorUI",
-				L"-1x", stock);
-			Logger::Get().WriteLine(LogLevel::Info,
-				"ScaleTier: SelectorUI-1x %ls (stock tier %ls).",
-				stock ? L"ARMED" : L"stashed", stock ? L"active" : L"inactive");
 		}
 		// Install root FIRST (the copy the game reads); Documents mirror
 		// second (kept for inspectability + package consistency).

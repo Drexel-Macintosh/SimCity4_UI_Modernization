@@ -1,3 +1,65 @@
+2026-08-19  v3.2.3   ⭐ CHOOSING 1x LEFT THE 2x ART ARMED, AND THE STOCK-TIER
+                     SELECTOR WAS STASHED IN THE ONE STATE IT EXISTS FOR
+
+  Two defects, one build apart, and they are the same mistake wearing
+  different clothes: boot work attached to a neighbouring call whose gate did
+  not match the condition the work actually depends on.
+
+  ⛔ 1. PICKING 1x BROKE THE WHOLE UI (user-reported: "1X didn't work the game
+  loaded with every broken"). The static-layer sync was gated on
+  `spikeAutoScale || tierActive`, and BOTH are false for a manual stock
+  factor - the auto path is off and the "factor <= 1.01" block has already
+  forced tierActive false. So the sync never ran, THE PREVIOUS TIER'S ART DATS
+  STAYED ARMED, and geometry ran at 1x against 2x art. Every widget wrong.
+
+  The log named it two lines apart and nobody read them together:
+      Factor 1.00 is stock: every scaling subsystem forced OFF ...
+      AutoScale off (manual): ScaleFactor 1.00, static layers untouched
+  "Forced OFF" and "untouched" look like agreement and are the opposite:
+  the first turns the geometry off, the second leaves the ART on.
+
+  Cure: capture the ini's OWN ScaleAll before anything forces it
+  (`iniWantsScaling`) and add it to the gate. SyncStaticLayers(1.0) is
+  disable-all by its own contract, so a deliberate 1x now stashes every
+  package - which is exactly what the user said picking 1x should mean:
+  "deload everything except the selection box". The ScaleAll=0 rig keeps its
+  untouched behaviour, because that is the question iniWantsScaling actually
+  asks. The old gate could not tell "the user asked for stock" from "the rig
+  is dormant"; the ini's own ScaleAll is what separates them.
+
+  ⛔ 2. THE STOCK-TIER SELECTOR PACKAGE WAS UNREACHABLE. v3.2.0 armed
+  z_SC4UIScale_SelectorUI-1x from inside ScaleTier::SyncStaticLayers - which
+  is not called at the stock tier, the ONLY state that package exists for.
+  Measured on the user's 1x machine: the dat sat as .x1-disabled, this DLL
+  logged that the selector "IS serviced", and Graphic Options had no selector
+  in it. The code half ran, the data half was stashed, and the log looked
+  healthy. The one-way door the package was built to prevent was live.
+
+  Cure: extracted to ScaleTier::SyncSelectorPackage(bool stockTier), called
+  UNCONDITIONALLY from the director and gated on nothing but !tierActive.
+
+  ⭐ THIS SHAPE HAS NOW SHIPPED FOUR TIMES FROM THIS ONE FUNCTION. #149 and
+  #182 are recorded in comments AT THE CALL SITE, in these exact terms -
+  "it used to ride inside SyncStaticLayers and therefore inherited that
+  function's AutoScale gate". I read that comment while adding the third and
+  fourth instances beside it. A COMMENT DID NOT STOP IT; a gate can.
+
+  NEW GATE: _tests\Test-StockTierContract.py, a source-shape gate over the
+  director and ScaleTier asserting four things - the selector is armed OUTSIDE
+  SyncStaticLayers, the call is unconditional, it is gated on !tierActive and
+  nothing else, and the static-layer guard carries a term true for a manual
+  stock factor (captured before anything forces it).
+
+  ⭐ AND ITS OWN NEGATIVE CONTROL FOUND IT BLIND. Six damaged copies were fed
+  to it; the first version CAUGHT FIVE AND MISSED THE MOST IMPORTANT ONE - the
+  original defect - because the guard walk stopped at the block's opening
+  brace, one line before the `if` it was looking for. A GATE THAT PASSES ON
+  THE FIXED CODE PROVES NOTHING UNTIL IT FAILS ON THE BROKEN CODE. All six
+  controls trip now, including both real defects.
+
+  Files: src\SC4UIScaleDllDirector.cpp, src\ScaleTier.{h,cpp},
+  _tests\Test-StockTierContract.py (new).
+
 2026-08-19  v3.2.2   The combo IS the readout; refusal bounces to Auto; a
                      manual tier that no longer fits is RESCUED at boot
 

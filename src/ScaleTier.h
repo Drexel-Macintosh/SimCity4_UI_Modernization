@@ -34,6 +34,16 @@ namespace ScaleTier
 	// self-heals on the next boot.
 	void SyncStaticLayers(float factor);
 
+	// Arm or stash z_SC4UIScale_SelectorUI-1x - the stock-tier scale selector,
+	// the ONE package gated on the ABSENCE of a tier.
+	//
+	// ⛔ CALL THIS UNCONDITIONALLY. It must NOT be folded into
+	// SyncStaticLayers: that function is not called at the stock tier, which
+	// is the only state this package is for, so folding it in makes it
+	// unreachable exactly when it is needed (measured 2026-08-19 - the dat sat
+	// .x1-disabled on a 1x machine while the DLL reported the selector live).
+	void SyncSelectorPackage(bool stockTier);
+
 	// #149 stage 2. SyncStaticLayers runs before the game opens a single dat,
 	// so it can only NAME the icons no package of ours enlarges. This runs at
 	// PostAppInit - dats indexed, no menu built yet - and registers a
