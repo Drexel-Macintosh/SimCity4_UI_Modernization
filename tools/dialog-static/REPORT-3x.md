@@ -198,7 +198,7 @@ dat of the same name.
   same script). EXCLUDED per instruction: `I-49889894` -- a 476x43 bottom
   strip, not a dialog.
 
-## Package contents (265 entries, 2840562 bytes)
+## Package contents (265 entries, 2840582 bytes)
 
 164 edited .UI scripts at their ORIGINAL TGIs (same-TGI overrides) + 100 PNGs:
 
@@ -670,7 +670,7 @@ GUID form) before packing.
 - 38 control(s) with 2x art but no `imagerect` (edge-slice frames /
   button state strips -- the engine fits cells to the control area;
   self-adapting, eyeball frame thickness in-game).
-- Fonts converted: `GenBodyMedium` x26 -> `0x4a809917` (26 px ini, was 13); `GenButton` x4 -> `0x4a809919` (32 px ini, was 16); `GenHeader` x1 -> `0x4a809916` (36 px ini, was 18).
+- Fonts converted: `GenBodyMedium` x27 -> `0x4a809917` (26 px ini, was 13); `GenButton` x4 -> `0x4a809919` (32 px ini, was 16); `GenHeader` x1 -> `0x4a809916` (36 px ini, was 18).
 
 ### Region Name (Create Region) (`I-8a5ab1cb`, source `T-00000000_G-96a006b0_I-8a5ab1cb.ui`)
 

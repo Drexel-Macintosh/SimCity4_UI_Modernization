@@ -615,27 +615,46 @@ def inject_res_readout(text, fn):
              'gutters=(0,0,0,0) tiptext="" tipoffsets=(0,0) '
              'tipflag=0x01000000 align=center '
              'btnclicksnd={ca4d1943,2a5c322b} >' % SEL_RADIO_ID)
-    # NO `transparent`, AND pbufftrans=no. The stock combos in I-e9263de5
-    # carry both and they are WRONG HERE: the class draws its drop list as an
-    # overlay, so a transparent paint buffer composites whatever the list
-    # covers. Measured on screen 2026-08-19 - the open list picked up the
-    # Renderer label and the divider beneath it and rendered in bands. The
-    # stock ones get away with it because they open over flat dialog fill.
+    # ---- STYLING: BLEND WHEN CLOSED, STOCK LIST WHEN OPEN ----------------
+    # User direction 2026-08-19: "the colors in the menu option [should] blend
+    # 100% and then when you click the dropdown that's where the new colors
+    # come from", with the Neighbor Deals combo as the reference look.
     #
-    # COLOURS ARE THE DIALOG'S OWN, not the stock combo's. (221,238,238) is
-    # the fill this same script's restart-notice text panel uses, and
-    # (63,73,103) is the forecolor every label in this dialog carries. The
-    # inherited white-field-with-black-text pairing is a BUDGET-DIALOG look
-    # and read as foreign here (user, 2026-08-19).
+    # ⚠ THE REFERENCE HAS NO .UI TO COPY. The Neighbor Deals combos are built
+    # in CODE, not in any script - the corpus contains exactly three scripted
+    # GZWinCombos (Set Lot Size, Select A My Sim, and I-e9a56248) and none of
+    # them is that dialog. So this is matched attribute-by-attribute against
+    # the scripted stock combos plus the corpus-wide attribute set, not cloned
+    # from the thing in the screenshot.
+    #
+    # `transparent` is the BLEND lever, and it is why it comes back here after
+    # being removed in v3.2.1. The dialog's panel is ART (image={46a006b0,
+    # 144161ee} blttype=edge on the root), not a flat colour, so NO fillcolor
+    # can ever match it - only letting the art through can. That is what the
+    # closed field needs.
+    #
+    # ⛔ ONE DELIBERATE DEVIATION FROM STOCK: winflag_pbufftrans stays NO.
+    # v3.2.0 carried the stock pbufftrans=yes and the OPEN LIST rendered in
+    # bands, compositing the Renderer label and the divider it opens over
+    # (measured on screen). The stock combos get away with yes because they
+    # open over flat panel fill; ours opens over furniture. Keeping the paint
+    # buffer opaque is what stops the list compositing, and it is a different
+    # thing from `transparent`, which is about the field itself - conflating
+    # the two is what made v3.2.1 remove both and lose the blend.
+    #
+    # The colours below are the stock scripted-combo set, unchanged. They are
+    # the "new colours" that appear on open: white list, black text, the
+    # (24,32,106) highlight bar with white text on the selected row.
     combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-             'area=(293,325,465,346) fillcolor=(221,238,238) '
+             'area=(293,325,465,346) fillcolor=(255,255,255) transparent '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=no winflag_pbufferase=yes '
              'winflag_pbuffvid=no winflag_mousetrans=no '
-             'winflag_ignoremouse=no colorfontnormal=(63,73,103) '
-             'colorfontdisabled=(140,148,168) colorfonthilited=(255,255,255) '
-             'highlightcolor=(24,32,106) editable=no outlinecolor=(63,73,103) '
+             'winflag_ignoremouse=no font=GenBodyMedium '
+             'colorfontnormal=(0,0,0) '
+             'colorfontdisabled=(164,164,164) colorfonthilited=(255,255,255) '
+             'highlightcolor=(24,32,106) editable=no outlinecolor=(0,0,0) '
              'initselection=0 combodownarrowrect=(0,0,64,15) '
              'combodowncolor=(197,197,197) buttongutter=1 gutters=(6,2) '
              # Placeholder rows only - the DLL REPLACES this list at runtime

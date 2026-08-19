@@ -18718,6 +18718,16 @@ namespace
 	int  gSelCancelRect[4] = { 0, 0, 0, 0 };
 	bool gSelRectsOk = false;
 	bool gSelNoticeWasUp = false;    // last observed notice visibility
+	// RADIO TRACE. The user wants OUR radio to be selectable - clicking it
+	// should make the custom resolution the one that applies on restart. Before
+	// building that, one measurement is needed: does clicking a GZWinBtn we
+	// injected actually CHECK it? It is style=radiocheck but it belongs to no
+	// group the game knows about, so whether the engine toggles it on click,
+	// or whether only the dialog's own handler does that for ITS radios, is an
+	// open question - and guessing it is how a handler keyed on a field the
+	// message does not carry got written earlier today.
+	int  gSelRadioState = -1;        // bitmask: b0..b3 stock radios, b4 ours
+	int  gSelRadioLogs = 0;
 	int  gSelTraceLogs = 0;
 
 	int   gSelPushed = -2;          // last row we pushed or observed
@@ -19157,6 +19167,7 @@ void UiSpike::ServiceScaleSelector()
 	// DERIVED every service, never tracked: ask the four stock radios what
 	// they are rather than remembering what we last saw.
 	{
+		int mask = 0;
 		bool anyStock = false;
 		for (int k = 0; k < 4; k++)
 		{
@@ -19167,21 +19178,53 @@ void UiSpike::ServiceScaleSelector()
 			if (w->QueryInterface(GZIID_cIGZWinBtn,
 					reinterpret_cast<void**>(&b)) && b)
 			{
-				if (b->IsChecked()) { anyStock = true; }
+				if (b->IsChecked()) { anyStock = true; mask |= (1 << k); }
 				b->Release();
 			}
 		}
 		cIGZWin* w = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
+		bool oursChecked = false;
 		if (w)
 		{
 			cIGZWinBtn* b = nullptr;
 			if (w->QueryInterface(GZIID_cIGZWinBtn,
 					reinterpret_cast<void**>(&b)) && b)
 			{
-				const bool want = !anyStock;
-				if (b->IsChecked() != want) { b->SetChecked(want); }
+				oursChecked = b->IsChecked();
+				if (oursChecked) { mask |= (1 << 4); }
+				// ⚠ ONLY SEEDED ON OPEN. Forcing it every service would make
+				// the control unclickable: the player checks it, 250ms later
+				// we overwrite it from the stock radios, and the click looks
+				// ignored. On open we state the truth; after that the player
+				// owns it - and the trace below records what their click did.
+				if (justOpened)
+				{
+					const bool want = !anyStock;
+					if (oursChecked != want)
+					{
+						b->SetChecked(want);
+						oursChecked = want;
+						mask = (mask & 0x0F) | (want ? (1 << 4) : 0);
+					}
+				}
 				b->Release();
 			}
+		}
+		// SELRADIO: one line per CHANGE, never per service. This is the
+		// measurement that decides whether "make our radio selectable" is a
+		// matter of reading a checkbox the engine already toggles, or of
+		// toggling it ourselves from a click we would first have to locate.
+		if (mask != gSelRadioState && gSelRadioLogs < 30)
+		{
+			gSelRadioLogs++;
+			gSelRadioState = mask;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELRADIO stock[800x600=%d 1024=%d 1280=%d 1600=%d] "
+				"ours=%d (mask 0x%02X). If `ours` flips to 1 after a click we "
+				"did not make, the engine toggles injected radiocheck buttons "
+				"and the custom-resolution choice is readable directly.",
+				(mask >> 0) & 1, (mask >> 1) & 1, (mask >> 2) & 1,
+				(mask >> 3) & 1, (mask >> 4) & 1, mask);
 		}
 	}
 
