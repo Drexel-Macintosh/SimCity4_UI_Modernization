@@ -615,45 +615,39 @@ def inject_res_readout(text, fn):
              'gutters=(0,0,0,0) tiptext="" tipoffsets=(0,0) '
              'tipflag=0x01000000 align=center '
              'btnclicksnd={ca4d1943,2a5c322b} >' % SEL_RADIO_ID)
-    # ---- STYLING: BLEND WHEN CLOSED, STOCK LIST WHEN OPEN ----------------
-    # User direction 2026-08-19: "the colors in the menu option [should] blend
-    # 100% and then when you click the dropdown that's where the new colors
-    # come from", with the Neighbor Deals combo as the reference look.
+    # ---- STYLING: MEASURED, NOT MATCHED BY EYE -------------------------
+    # User direction: blend 100% when closed, and let the new colours appear
+    # when the list opens.
     #
-    # ⚠ THE REFERENCE HAS NO .UI TO COPY. The Neighbor Deals combos are built
-    # in CODE, not in any script - the corpus contains exactly three scripted
-    # GZWinCombos (Set Lot Size, Select A My Sim, and I-e9a56248) and none of
-    # them is that dialog. So this is matched attribute-by-attribute against
-    # the scripted stock combos plus the corpus-wide attribute set, not cloned
-    # from the thing in the screenshot.
+    # ⭐ THE PANEL COLOUR IS A MEASUREMENT. The dialog's background is the art
+    # {46a006b0,144161ee}, a 180x180 edge-blit sheet, and its interior is
+    # ONE FLAT COLOUR - (218,224,229) across 100% of the sampled interior
+    # (tools/dbpf/extracted/SimCity_1/T-856ddbac_G-46a006b0_I-144161ee.png).
+    # So the panel CAN be matched exactly with an opaque fill, and every
+    # earlier attempt to approximate it by eye was guessing at a number that
+    # was sitting in the art all along.
     #
-    # `transparent` is the BLEND lever, and it is why it comes back here after
-    # being removed in v3.2.1. The dialog's panel is ART (image={46a006b0,
-    # 144161ee} blttype=edge on the root), not a flat colour, so NO fillcolor
-    # can ever match it - only letting the art through can. That is what the
-    # closed field needs.
+    # ⛔ NO `transparent`. THAT is what produced the two-tone the user saw:
+    # "white center and it has a blue square around it". With transparency on,
+    # the field paints fillcolor in the middle and lets the blue panel art
+    # through at the edges, so the closed control reads as a white block in a
+    # blue frame. It also made the OPEN list composite whatever it overhangs -
+    # and this list extends past the dialog's own edge, so it straddled two
+    # different backgrounds. One flag, two symptoms, and the cure for both is
+    # to paint the measured colour opaquely instead of borrowing it.
     #
-    # ⛔ ONE DELIBERATE DEVIATION FROM STOCK: winflag_pbufftrans stays NO.
-    # v3.2.0 carried the stock pbufftrans=yes and the OPEN LIST rendered in
-    # bands, compositing the Renderer label and the divider it opens over
-    # (measured on screen). The stock combos get away with yes because they
-    # open over flat panel fill; ours opens over furniture. Keeping the paint
-    # buffer opaque is what stops the list compositing, and it is a different
-    # thing from `transparent`, which is about the field itself - conflating
-    # the two is what made v3.2.1 remove both and lose the blend.
-    #
-    # The colours below are the stock scripted-combo set, unchanged. They are
-    # the "new colours" that appear on open: white list, black text, the
-    # (24,32,106) highlight bar with white text on the selected row.
+    # The "new colours on open" are then exactly the stock ones: the
+    # (24,32,106) highlight bar with white text on the selected row, inside
+    # the black drop-down outline. The field itself disappears into the panel.
     combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-             'area=(293,325,465,346) fillcolor=(255,255,255) transparent '
+             'area=(293,325,465,346) fillcolor=(218,224,229) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=no winflag_pbufferase=yes '
              'winflag_pbuffvid=no winflag_mousetrans=no '
              'winflag_ignoremouse=no font=GenBodyMedium '
-             'colorfontnormal=(0,0,0) '
-             'colorfontdisabled=(164,164,164) colorfonthilited=(255,255,255) '
+             'colorfontnormal=(63,73,103) '
+             'colorfontdisabled=(140,148,168) colorfonthilited=(255,255,255) '
              'highlightcolor=(24,32,106) editable=no outlinecolor=(0,0,0) '
              'initselection=0 combodownarrowrect=(0,0,64,15) '
              'combodowncolor=(197,197,197) buttongutter=1 gutters=(6,2) '
