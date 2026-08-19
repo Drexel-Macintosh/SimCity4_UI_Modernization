@@ -10866,10 +10866,28 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		// purely because Budget never got opened), so it is recorded per
 		// launch rather than remembered.
 		SpinProbe::NoteWindowId(p.win->GetID());
-		// #176: the RELATCH guard is provably safe only under roots whose
-		// staged scripts pre-scale every authored crop (see the scope note at
-		// RelatchBmpSourceRect) - arm it for exactly those, never blanket.
-		gRelatchArmed = IsAlwaysScaleCityId(p.win->GetID());
+		// #176 RELATCH, ARMED FOR EVERY CITY PANEL ROOT (widened 2026-08-19).
+		// It used to be limited to kAlwaysScaleCityIds on the grounds that the
+		// guard is "provably safe only under roots whose staged scripts
+		// pre-scale every authored crop". That scoping is unnecessary, because
+		// RelatchBmpSourceRect refuses on its own terms - it acts ONLY when the
+		// crop is EXACTLY (0,0,oldW,oldH), i.e. when it demonstrably tracked the
+		// pre-resize window and is therefore a stale SetImage latch. Its own
+		// comment says so: "not latch-following: leave every real crop alone".
+		// It also requires the GZWinBMP class, the has-imagerect flag, sane
+		// image dims, and no-ops when the crop already matches.
+		//
+		// WHY IT HAD TO WIDEN: the "<name> lives here" balloon that appears
+		// after Move In a Sim is an ANONYMOUS root (id 0x00000000, 272x200 ->
+		// 544x400 at 2x), so it cannot be named in any id list. Its portrait
+		// kept a 36x41 crop over the 72x82 face our package now wins with, and
+		// drew the top-left quarter magnified - user: "a purple circle shows
+		// which should have his face but it's only showing the top left 1/4".
+		//
+		// ⭐ LAW: WHEN THE ROOT HAS NO ID, THE FIX CANNOT BE AN ID LIST. Widen
+		// a guard that is self-limiting rather than inventing a size or
+		// position heuristic to name the unnameable.
+		gRelatchArmed = true;
 		const int n = ScalePanelRoot(p.win, screenW, screenH, f);
 		gRelatchArmed = false;
 		// n counts WINDOWS MUTATED (every SetW/SetH/GZWinMoveTo in
