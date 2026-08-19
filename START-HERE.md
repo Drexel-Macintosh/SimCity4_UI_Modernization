@@ -378,7 +378,7 @@ untested".
 (`src\ScaleTier.cpp:1670-1672`), on top of `PackageInstalled` (`src\ScaleTier.cpp:1666`):
 `kWidestDesignPx(880) * f <= width` · `kTallestDesignPx(558) * f <= height` ·
 `f <= min(w/800, h/600)` (constants `src\ScaleTier.cpp:26-27`, cap `src\ScaleTier.cpp:1659-1661`).
-Combining them, the true minimums are **1.5x = 1320x900 · 2x = 1760x1200 · 3x = 2640x1800**,
+Combining them, the true minimums are **1.5x = 1440x1080 · 2x = 1920x1440 · 3x = 2880x2160**,
 not ~~1200x900 / 1600x1200 / 2400x1800~~ — that is the density cap alone, which never binds
 width, because the fit gate is stricter horizontally (880 > 800) and looser vertically (558 < 600).
 

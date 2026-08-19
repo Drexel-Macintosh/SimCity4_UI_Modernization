@@ -70,6 +70,7 @@ def main():
     # not ship half-done here - it failed the moment the shapes diverged.
     want = {
         "0x5ca1e002": (270, 325, 286, 341),   # radio, beside the row
+        "0x5ca1e005": (292, 324, 466, 347),   # 1px frame around the combo
         "0x5ca1e004": (293, 325, 465, 346),   # combo, ON the readout row
     }
     seen = {}

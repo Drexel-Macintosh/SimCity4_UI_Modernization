@@ -18682,12 +18682,17 @@ namespace
 	const char* const kSelLabels[] = { "Auto", "1x", "1.5x", "2x", "3x" };
 	const int   kSelCount =
 		static_cast<int>(sizeof(kSelFactors) / sizeof(kSelFactors[0]));
-	// Design px of the widest and tallest UI pieces, for the "needs WxH" text
-	// ONLY. The DECISION is ScaleTier::Fits; these two just render the number
-	// its arithmetic implies, so a player reading the row sees the same
-	// thresholds the boot path would apply.
-	const int kSelWidestPx = 880;
-	const int kSelTallestPx = 558;
+	// ⛔ THE "needs WxH" NUMBERS ARE NO LONGER COMPUTED HERE. They used to be
+	// 880*f and 558*f - this file's own copy of the fit arithmetic - and when
+	// that arithmetic was replaced by an explicit per-tier minimum table the
+	// caption would have gone on quoting the old numbers at the player. A
+	// second copy of a rule is a second rule, and this one is displayed as a
+	// promise. ScaleTier::TierMinimum reads the table the boot path enforces.
+	void SelMinimumFor(int k, int* w, int* h)
+	{
+		*w = 0; *h = 0;
+		ScaleTier::TierMinimum(kSelFactors[k], w, h);
+	}
 	bool  gSelUsable[8] = { true, true, true, true, true, true, true, true };
 	int   gSelCommitted = -1;       // row currently written to the ini
 
@@ -19188,30 +19193,43 @@ void UiSpike::ServiceScaleSelector()
 
 	// ---- 0b. THE RESTART NOTICE MUST NOT BE ABLE TO TRAP THE PLAYER -----
 	// We show the game's own notice; its Accept button is the game's, and we
-	// CANNOT SEE ITS CLICKS - the instrument proved no message carries a
-	// control id. So if the game's handler does not hide the box, nothing
-	// else would, and a notice with no way out is worse than no notice.
+	// cannot see its clicks. If the game's handler does not hide the box then
+	// nothing else would, so there is a net - but it is a TIMER, not a click.
 	//
-	// The net: once a click lands after the box went up, the box goes away.
-	// If the game's own Accept already hid it, IsVisible is false and this
-	// does nothing - so the net costs nothing when it is not needed. The
-	// 400ms guard keeps the click that CAUSED the notice (we react to the
-	// selection up to one 250ms service later) from dismissing it instantly.
+	// ⛔ IT USED TO DISMISS ON "A CLICK", AND THAT SILENTLY KILLED THE
+	// FEATURE. The net fired on message type 0x0D, which the FIRST capture -
+	// two occurrences, arriving with a button press - made look like a click.
+	// The SECOND capture showed the truth: 36 of them in one continuous sweep
+	// as the pointer moved. It is a mouse MOVE. So the notice was dismissed
+	// within ~250ms of appearing, every time, by nothing more than the user
+	// moving the mouse. Measured 2026-08-19:
+	//     15:21:03.433 showed the game's own restart notice
+	//     15:21:03.896 dismissed the restart notice on a click (safety net)
+	// and the user reported, correctly, that no notice ever appeared.
+	//
+	// ⭐ MY OWN INSTRUMENT HAD ALREADY CORRECTED THE LABEL AND I KEPT THE
+	// CONCLUSION DRAWN FROM THE FIRST READING. A second measurement that
+	// contradicts the first is a RETRACTION, not extra confidence.
+	//
+	// A timeout cannot be wrong about what a message means. Ten seconds is
+	// long enough to read one sentence and reach the button, and it still
+	// guarantees the box can never become a trap.
 	if (gSelNoticeShownMs != 0)
 	{
 		cIGZWin* notice = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
 		if (notice == nullptr || !notice->IsVisible())
 		{
-			gSelNoticeShownMs = 0;   // the game dismissed it; nothing to do
+			gSelNoticeShownMs = 0;   // dismissed - by the game, or by us
 		}
-		else if (gSelClickMs != 0
-			&& static_cast<int>(gSelClickMs - gSelNoticeShownMs) > 400)
+		else if (static_cast<int>(now - gSelNoticeShownMs) > 10000)
 		{
 			notice->HideWindow();
 			gSelNoticeShownMs = 0;
 			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELECTOR dismissed the restart notice on a click "
-				"(safety net - the game's own Accept had not hidden it).");
+				"UiSpike: SELECTOR retired the restart notice after 10s - the "
+				"game's own Accept had not hidden it, so the net did. If this "
+				"line appears every time, that button is not wired to a notice "
+				"WE raised and the net is the only way it ever closes.");
 		}
 	}
 
@@ -19399,10 +19417,10 @@ void UiSpike::ServiceScaleSelector()
 					{
 						// Say WHAT IT NEEDS, not just "no". A control that
 						// refuses without explaining itself is a bug report.
+						int mw = 0, mh = 0;
+						SelMinimumFor(k, &mw, &mh);
 						_snprintf_s(row, sizeof(row), _TRUNCATE,
-							"%s - needs %dx%d", kSelLabels[k],
-							static_cast<int>(kSelWidestPx * kSelFactors[k]),
-							static_cast<int>(kSelTallestPx * kSelFactors[k]));
+							"%s - needs %dx%d", kSelLabels[k], mw, mh);
 					}
 					else if (k == live && gReadoutW > 0 && gReadoutH > 0)
 					{
@@ -19444,12 +19462,13 @@ void UiSpike::ServiceScaleSelector()
 						// holding the old value while the closed control read
 						// "Auto" - the control would be lying, which is the
 						// one thing it must never do.
+						int bounceMinW = 0, bounceMinH = 0;
+						SelMinimumFor(row, &bounceMinW, &bounceMinH);
 						Logger::Get().WriteLine(LogLevel::Info,
 							"UiSpike: SELECTOR refused row %d (%s) - %dx%d "
 							"cannot carry it (needs %dx%d). Bounced to Auto.",
 							row, kSelLabels[row], gReadoutW, gReadoutH,
-							static_cast<int>(kSelWidestPx * kSelFactors[row]),
-							static_cast<int>(kSelTallestPx * kSelFactors[row]));
+							bounceMinW, bounceMinH);
 						c->SetSelection(0, false);
 						gSelPushed = 0;
 						gSelCommitted = 0;

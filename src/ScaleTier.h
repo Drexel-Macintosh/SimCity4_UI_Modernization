@@ -29,6 +29,12 @@ namespace ScaleTier
 	// Is this factor one of the tiers the package table knows about?
 	bool KnownFactor(float factor);
 
+	// The explicit minimum resolution this tier needs, for the in-game
+	// selector's "needs WxH" caption. PUBLISHED so the number shown to the
+	// player is READ FROM the table the boot path enforces, never a second
+	// copy of the arithmetic - the player is being made a promise here.
+	bool TierMinimum(float factor, int* outW, int* outH);
+
 	// KnownFactor AND that tier's art actually on disk. PUBLISHED because the
 	// MANUAL path never asked the disk: PackageInstalled had exactly one
 	// caller (Decide), which is why every "factor with no art" failure mode

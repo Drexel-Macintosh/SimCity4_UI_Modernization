@@ -198,7 +198,7 @@ dat of the same name.
   same script). EXCLUDED per instruction: `I-49889894` -- a 476x43 bottom
   strip, not a dialog.
 
-## Package contents (265 entries, 2840574 bytes)
+## Package contents (265 entries, 2841068 bytes)
 
 164 edited .UI scripts at their ORIGINAL TGIs (same-TGI overrides) + 100 PNGs:
 
@@ -661,7 +661,7 @@ GUID form) before packing.
 - Root GZWinGen id=0x2a57cb82: area `(3,0,725,558)` -> `(9,0,2175,1674)` (722x558 -> 2166x1674).
   NOTE: this root gen is larger than the visible dialog art -- expected,
   doubled as-is by design.
-- `area=` rects doubled: 74 (every one in the script; 74 controls total).
+- `area=` rects doubled: 75 (every one in the script; 75 controls total).
 - Art refs: `{1abe787d,144161e4}` x1 2x in place; `{1abe787d,144161ee}` x1 2x in place; `{1abe787d,14416240}` x2 2x in place; `{1abe787d,14416246}` x27 2x in place; `{46a006b0,144161eb}` x4 2x in place; `{46a006b0,144161ee}` x1 2x in place; `{46a006b0,14416245}` x5 2x in place.
 - `imagerect=` doubled (3):
   - GZWinBMP `(12,32,180,180)` -> `(36,96,540,540)`

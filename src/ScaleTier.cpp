@@ -1667,6 +1667,60 @@ namespace ScaleTier
 	// carrying its own copy of 880/558/800/600 - a second copy would be a
 	// second rule, and this one is shown to the player as a promise about
 	// what will happen at the next launch.
+	// ⭐ EXPLICIT MINIMUM RESOLUTIONS PER TIER (user instruction 2026-08-19:
+	// "you need to have minimum resolutions for all the scaling coded in").
+	//
+	// ⛔ THE OLD RULE PASSED A CONFIGURATION THAT DEMONSTRABLY DOES NOT WORK.
+	// It was three inequalities - 880*f <= w, 558*f <= h, and f <= the density
+	// cap min(w/800, h/600) - and at 1920x1200 the cap is EXACTLY 2.00, so 2x
+	// passed by sitting precisely on the boundary. On screen it does not fit:
+	// the user measured the options menu pushed over the other menus. A tier
+	// admitted at the exact cap has zero headroom, and zero headroom is not a
+	// margin, it is a coincidence.
+	//
+	// So the thresholds now come from the CONTROLS, which is the standing law
+	// for this project - measure the known-good set, and if the gauge fails
+	// them the gauge is wrong:
+	//     2x   @ 2400x1600  GOOD (weeks of daily use)
+	//     2x   @ 1920x1200  BAD  (measured 2026-08-19, this defect)
+	//     1.5x @ 1920x1200  GOOD (same session)
+	//     3x   @ 3840x2160  GOOD (user-confirmed)
+	// One stated choice - 20% density headroom over the 800x600 feel - lands a
+	// table consistent with every one of those four points, which is the most
+	// any threshold here can currently claim:
+	//     minW = max(880*f, 800*f * 1.2) = 960*f
+	//     minH = max(558*f, 600*f * 1.2) = 720*f
+	//
+	// The numbers are written out rather than computed so they can be READ,
+	// argued with, and corrected against the next measurement - a threshold
+	// nobody can see is a threshold nobody will check.
+	struct TierMinRow { float factor; int minW; int minH; };
+	const TierMinRow kTierMinimums[] = {
+		{ 1.5f, 1440, 1080 },   // 1920x1200 clears this - confirmed good there
+		{ 2.0f, 1920, 1440 },   // 1920x1200 FAILS on height - the measured defect
+		{ 3.0f, 2880, 2160 },   // 3840x2160 clears this - confirmed good there
+		{ 4.0f, 3840, 2880 },   // no package ships for 4x; kept so the table is
+		                        // total over kPackages rather than silently
+		                        // falling through for one row.
+	};
+	const int kTierMinimumCount =
+		static_cast<int>(sizeof(kTierMinimums) / sizeof(kTierMinimums[0]));
+
+	bool TierMinimumFor(float factor, int* outW, int* outH)
+	{
+		for (int i = 0; i < kTierMinimumCount; i++)
+		{
+			if (factor >= kTierMinimums[i].factor - 0.01f
+				&& factor <= kTierMinimums[i].factor + 0.01f)
+			{
+				if (outW) { *outW = kTierMinimums[i].minW; }
+				if (outH) { *outH = kTierMinimums[i].minH; }
+				return true;
+			}
+		}
+		return false;
+	}
+
 	bool Fits(float factor, int width, int height)
 	{
 		if (width <= 0 || height <= 0 || factor <= 1.01f)
@@ -1675,13 +1729,20 @@ namespace ScaleTier
 			// and no room.
 			return factor <= 1.01f;
 		}
-		// Density cap: never scale past "everything feels like 800x600".
-		const float capW = width / 800.0f;
-		const float capH = height / 600.0f;
-		const float cap = capW < capH ? capW : capH;
-		return kWidestDesignPx * factor <= width
-			&& kTallestDesignPx * factor <= height
-			&& factor <= cap;
+		int minW = 0, minH = 0;
+		if (TierMinimumFor(factor, &minW, &minH))
+		{
+			return width >= minW && height >= minH;
+		}
+		// A factor with no table row is not a tier we ship. Refuse rather
+		// than fall back to the old arithmetic: ValidateBootState's C5/C6
+		// reject it by name, and a second opinion here would only disagree.
+		return false;
+	}
+
+	bool TierMinimum(float factor, int* outW, int* outH)
+	{
+		return TierMinimumFor(factor, outW, outH);
 	}
 
 	bool KnownFactor(float factor)

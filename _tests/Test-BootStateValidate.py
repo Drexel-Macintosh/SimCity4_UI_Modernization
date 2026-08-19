@@ -28,16 +28,25 @@ PASS = exit 0.
 import math
 import sys
 
-# Mirrors src/ScaleTier.cpp: kPackages[] largest-first, and the fit constants.
+# Mirrors src/ScaleTier.cpp: kPackages[] largest-first, and kTierMinimums[].
 KNOWN_TIERS = [4.0, 3.0, 2.0, 1.5]
-WIDEST, TALLEST = 880, 558
+
+# The EXPLICIT per-tier minimums. These replaced a three-inequality rule whose
+# density cap admitted 2x at 1920x1200 by sitting exactly on the boundary -
+# which does not fit on screen (measured: the options menu overlapped others).
+# Derived from the known-good/known-bad set with 20% density headroom; see the
+# table's comment in ScaleTier.cpp for the four controls it satisfies.
+TIER_MIN = {1.5: (1440, 1080), 2.0: (1920, 1440),
+            3.0: (2880, 2160), 4.0: (3840, 2880)}
 
 
 def fits(f, w, h):
     if w <= 0 or h <= 0 or f <= 1.01:
         return f <= 1.01
-    cap = min(w / 800.0, h / 600.0)
-    return WIDEST * f <= w and TALLEST * f <= h and f <= cap
+    for t, (mw, mh) in TIER_MIN.items():
+        if abs(f - t) <= 0.01:
+            return w >= mw and h >= mh
+    return False   # not a tier we ship
 
 
 def known(f):
@@ -126,6 +135,10 @@ ROWS = [
      False, NAN, True, ALL3, 3840, 2160, True, False, True, 3.0, True),
     ("3x on a screen that cannot carry it (the off-screen dialog trap)",
      False, 3.0, True, ALL3, 1920, 1080, True, False, True, 1.5, True),
+    # THE MEASURED DEFECT: 2x at 1920x1200 passed the old cap rule by sitting
+    # exactly on it, and pushed the options menu over the other menus.
+    ("2x at 1920x1200 - the boundary case that does not fit on screen",
+     False, 2.0, True, ALL3, 1920, 1200, True, False, True, 1.5, True),
     ("4x with NO resolution - the package check needs no screen",
      False, 4.0, True, ALL3, 0, 0, True, False, True, 1.0, True),
     ("ScaleAll=0 under AutoScale: tier art, no geometry",

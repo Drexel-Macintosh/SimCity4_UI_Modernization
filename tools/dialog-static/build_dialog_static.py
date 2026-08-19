@@ -544,6 +544,9 @@ RES_READOUT_IDS = ("0x5ca1e000", "0x5ca1e001")
 SEL_RADIO_ID = "0x5ca1e002"
 SEL_LABEL_ID = "0x5ca1e003"
 SEL_COMBO_ID = "0x5ca1e004"
+# The 1px frame around the combo (GZWinCombo's own outlinecolor draws
+# the DROP-DOWN LIST, not the closed field).
+SEL_BORDER_ID = "0x5ca1e005"
 
 
 def inject_res_readout(text, fn):
@@ -662,7 +665,29 @@ def inject_res_readout(text, fn):
     # The #192 readout label and the separate "UI Scale" caption are both
     # RETIRED: the combo occupies the readout row and its selected row IS the
     # readout. Two widgets showing one fact is how they drift apart.
-    new = [indent + radio, indent + combo]
+    # ---- THE BORDER -----------------------------------------------------
+    # The stock combos in the screenshot the user pointed at have a dark 1px
+    # frame around the field; ours had none, because `outlinecolor` on a
+    # GZWinCombo draws the DROP-DOWN LIST's outline, not the closed field's.
+    # The dialog draws its own separators with GZWinFlatRect (see the three
+    # 0x0a7e153d rules in this same script), so the frame is one of those with
+    # style=nofill - which paints the four edges and leaves the middle alone.
+    #
+    # ignoremouse=yes is REQUIRED: this sits over the combo, and a decoration
+    # that eats the click meant for the control it decorates is worse than no
+    # decoration. It is emitted BEFORE the combo so the combo paints on top
+    # (.UI order is add order is paint order).
+    border = ('<LEGACY clsid=GZWinFlatRect iid=IGZWinFlatRect id=%s '
+              'area=(292,324,466,347) fillcolor=(0,0,0) '
+              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
+              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
+              'winflag_pbufftrans=yes winflag_pbufferase=yes '
+              'winflag_pbuffvid=no winflag_alphablend=no '
+              'winflag_acceptfocus=no winflag_mousetrans=no '
+              'winflag_ignoremouse=yes colorleft=(63,73,103) '
+              'colortop=(63,73,103) colorright=(63,73,103) '
+              'colorbottom=(63,73,103) style=nofill >' % SEL_BORDER_ID)
+    new = [indent + radio, indent + border, indent + combo]
     lines[at + 1:at + 1] = new
     return "\n".join(lines), len(new)
 
