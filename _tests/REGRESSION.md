@@ -16006,3 +16006,66 @@ ELIMINATED ALONG THE WAY, on screen: the SIGNPOST constants
 (0x005F20AF/0x005F20BF) provably applied at 2.00 - "balloon 44 -> 88.0 px,
 raise 150 -> 300.0 px" - with the marker unchanged. That layer is not this
 widget, and what it DOES move is still unconfirmed after many sessions.
+
+## #191: 0x27DF05BF WAS NOT THE MARKER - CHANGE REVERTED (2026-08-19)
+
+Removing 0x27DF05BF from kNeverScaleIds WORKED at the window level and did
+nothing on screen. Both proven in the same run:
+
+    UiSpike: panel 0x27DF05BF (640,825 46x97) -> (617,776 92x194)
+    UiSpike: panel 0x27DF05BE (1073,611 46x97) -> (1050,562 92x194)
+    (deployed sha == built sha)
+
+USER: "It did not scale at all this is the move in in My Sim".
+
+⭐ Law 112 again, and this time against my own change: a patch that provably ran
+and changed nothing on screen eliminates its layer. 0x27DF05BE/BF are NOT the My
+Sim move-in marker. The 46x97-plaque-with-a-36x41-inset shape matched on paper -
+the inset is exactly portrait-sized - and that resemblance is what made it look
+like a find. It was a coincidence.
+
+REVERTED, because it is not merely inert: the log shows
+"FLASHSET incremental 0x27DF05BF scaled 3 window(s) ON SCREEN - THIS ONE
+FLASHED", i.e. a visible 1x->2x pop, for zero benefit. An unproven change that
+alters geometry is not free.
+
+    ⭐ LAW: A SHAPE THAT MATCHES THE SYMPTOM IS NOT AN IDENTIFICATION. "46x97
+    plaque + 36x41 icon inset" reads like a portrait marker because the inset
+    size is right; the right test is whether changing it MOVES THE PIXELS, and
+    that test is one deploy away. Run it before writing the ledger entry.
+
+WHAT IS NOW PROVEN (workflow angle 3, byte-level, high confidence):
+  * #190's staged art DOES reach this consumer. Staged in place at the STOCK
+    group and STOCK instance (38 tuples, no clone), measured 54x62 / 72x82 /
+    108x123 = RoundHalfUp(36*f) x RoundHalfUp(41*f). No tier short, no group
+    short, no third-party holder in any group. So art staging is not the cure
+    and never was.
+  * The portrait TGI is composed in CODE at exactly one site:
+        0046CB52  mov eax,[esi+0x14]          ; runtime sim id
+        0046CB73  mov [esp+0x70],0x856DDBAC   ; TYPE = PNG
+        0046CB7B  mov [esp+0x74],0x46A006B0   ; GROUP hard-coded (we stage it)
+        0046CB83  mov [esp+0x78],eax          ; INSTANCE = runtime
+    inside the indicator billboard builder 0x0046C8B0 - the SAME builder as the
+    dispatch/CSI markers. 0x0046CB52 is the join target of BOTH
+    `cmp [esi+4],3 / je` and `cmp [esi+4],4 / je`.
+  * The icon extents [esi+0xD0]/[esi+0xD4] have FOUR write sites and we patch
+    two:  (a) 0x0046CAFD computed + 0x0046CB03 imm 14.0f  UNPATCHED
+          (b) 0x0046CB39/3F  from EDX, no immediate       UNPATCHED
+          (c) 0x0046CC48 35.0f category 4                 PATCHED
+          (d) 0x0046CCBA 32.0f category 3                 PATCHED
+
+⛔ AND THE CONTRADICTION THAT MUST BE RESOLVED BEFORE THE NEXT EDIT: if the My
+Sim marker were category 3 or 4 its icon WOULD be patched, and the shared pin
+quad (0x0046EABD.., patched with no category guard, "SHARED by every indicator
+regardless of type") would have doubled its plate. The user reports NOTHING
+scales. So either it is not category 3/4, or it does not render through
+cSC4DispatchVehicleView::Draw at all. THE CATEGORY AT [esi+4] FOR THIS MARKER IS
+UNMEASURED - the workflow states that plainly and calls its own section (6) a
+hypothesis, not a defect.
+
+NEXT STEP IS AN INSTRUMENT, NOT A PATCH: log [esi+4] and the resulting
++0xD0/+0xD4 for every indicator the builder makes, so ONE hover names the
+category and the extents. Guessing between four write sites and two drawers is
+exactly how today produced three patches that ran and changed nothing.
+⛔ Hooking 0x0046C8B0 needs the calling convention MEASURED first (standing
+order: never guess one - two crashes in one session).
