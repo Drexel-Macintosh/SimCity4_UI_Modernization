@@ -18777,6 +18777,14 @@ namespace
 	// without this the dialog showed the opposite of the file for the rest of
 	// the session - and could show a tier the screen cannot carry.
 	bool gSelAutoOverride = false;
+	// The mode the game BOOTED with, captured once. SelLiveModeIndex reads
+	// the ini, and the ini changes the moment a choice is committed - so it
+	// answers "what will apply", never "what am I running". The
+	// "(current)" marker needs the second question, exactly as the
+	// resolution combo does.
+	int  gSelModeRunning = -1;
+	bool gSelModeUserChanged = false;
+	bool gSelModeNeedsRebuild = false;
 
 	int SelRowFromSettings(const Settings& s)
 	{
@@ -19866,15 +19874,31 @@ void UiSpike::ServiceScaleSelector()
 					}
 					else
 					{
-						// No row is selected - the running resolution is not
-						// in the offered list. WRITE WHAT IS RUNNING rather
-						// than a zero or a guessed row: the player did not ask
-						// to change the resolution, so it must not move.
-						w = gReadoutW;
-						h = gReadoutH;
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SELCLOSE no resolution row was selected "
-							"- writing the running %dx%d unchanged.", w, h);
+						// No row selected at all. Prefer the largest row this
+						// mode DOES offer over the running size, because the
+						// usual reason nothing matched is that the running
+						// size is invalid in the mode being committed - and
+						// writing it back is how a Windowed switch produced a
+						// window bigger than the screen.
+						if (gSelResShown > 0)
+						{
+							const int f = gSelResShownIdx[0];
+							w = gSelResList[f].w;
+							h = gSelResList[f].h;
+							Logger::Get().WriteLine(LogLevel::Info,
+								"UiSpike: SELCLOSE no row was selected - the "
+								"running %dx%d is not valid in this mode, so "
+								"writing the largest that is, %dx%d.",
+								gReadoutW, gReadoutH, w, h);
+						}
+						else
+						{
+							w = gReadoutW;
+							h = gReadoutH;
+							Logger::Get().WriteLine(LogLevel::Info,
+								"UiSpike: SELCLOSE no rows at all - writing "
+								"the running %dx%d unchanged.", w, h);
+						}
 					}
 					Logger::Get().WriteLine(LogLevel::Info,
 						"UiSpike: SELCLOSE committing %s at %dx%d (closed via "
@@ -20555,11 +20579,40 @@ void UiSpike::ServiceScaleSelector()
 						else if (isRunning && live < 0) { live = gSelResShown; }
 						gSelResShown++;
 					}
+					// ⭐ IF THE RUNNING RESOLUTION IS NOT IN THIS MODE'S LIST,
+					// THE RESOLUTION MUST MOVE. Switching to Windowed at
+					// 2400x1600 on a 2400x1600 desktop is exactly that: the
+					// size cannot be a window, so it is not offered, nothing
+					// matched, and the commit fell back to "write what is
+					// running" - which is the one value that cannot work in
+					// the mode just chosen. Measured 2026-08-20:
+					//     SELRES built 7 row(s) for Windowed
+					//     SELCLOSE no resolution row was selected - writing
+					//     the running 2400x1600 unchanged
+					// "Do not move what the player did not touch" is right
+					// until the mode makes the current value invalid; then
+					// refusing to move IS the defect. Row 0 is the largest
+					// that fits, which is the closest thing to what they had.
+					if (live < 0 && gSelResShown > 0)
+					{
+						live = 0;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELRES %dx%d is not available in %s - "
+							"selecting the largest that is, %dx%d.",
+							gReadoutW, gReadoutH,
+							kSelModeLabels[SelEffectiveModeIdx()],
+							gSelResList[gSelResShownIdx[0]].w,
+							gSelResList[gSelResShownIdx[0]].h);
+						// It differs from what is running, so it IS a pending
+						// change and must be committed like one.
+						gSelResUserChanged = true;
+						gSelResStaged = gSelResShownIdx[0];
+					}
 					if (live >= 0) { c->SetSelection(live, false); }
 					gSelResPushed = live;
 					gSelResSelFull = (live >= 0 && live < gSelResShown)
 						? gSelResShownIdx[live] : -1;
-					gSelResStaged = -1;
+					if (gSelResStaged < 0) { gSelResStaged = -1; }
 					Logger::Get().WriteLine(LogLevel::Info,
 						"UiSpike: SELRES offering %d of %d resolutions - the "
 						"display is %dx%d and nothing larger is shown.",
@@ -20622,21 +20675,34 @@ void UiSpike::ServiceScaleSelector()
 			if (mc->QueryInterface(GZIID_cIGZWinCombo,
 					reinterpret_cast<void**>(&c)) && c)
 			{
-				if (justOpened)
+				if (justOpened || gSelModeNeedsRebuild)
 				{
+					gSelModeNeedsRebuild = false;
+					if (gSelModeRunning < 0)
+					{
+						gSelModeRunning = SelLiveModeIndex();
+					}
+					const int chosen = (gSelModeStaged >= 0)
+						? gSelModeStaged
+						: (gSelModeUserChanged ? SelLiveModeIndex() : -1);
 					c->RemoveAllStrings();
 					for (int m = 0; m < kSelModeCount; m++)
 					{
-						char row[48];
+						char row[56];
+						// Same vocabulary as the other two combos: "(current)"
+						// is what is running, "- on restart" is what was
+						// chosen. Without them this control alone gave no sign
+						// that a pick had registered.
+						const char* tag =
+							(m == gSelModeRunning) ? " (current)"
+							: (m == chosen) ? " - on restart"
+							: (m == 1) ? " (recommended)" : "";
 						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s%s",
-							kSelModeLabels[m],
-							m == 1 ? " (recommended)" : "");
+							kSelModeLabels[m], tag);
 						cRZBaseString rs(row);
 						c->InsertString(rs, m);
 					}
-					// Which one is live is read from the file, not inferred:
-					// gReqResIgnored only distinguishes borderless.
-					const int live = SelLiveModeIndex();
+					const int live = (chosen >= 0) ? chosen : gSelModeRunning;
 					c->SetSelection(live, false);
 					gSelModePushed = live;
 					gSelModeStaged = -1;
@@ -20648,6 +20714,8 @@ void UiSpike::ServiceScaleSelector()
 					{
 						gSelModePushed = sel;
 						gSelModeStaged = sel;
+						gSelModeUserChanged = true;
+						gSelModeNeedsRebuild = true;
 						// The mode decides what "resolution" MEANS, so both
 						// the resolution list and the scale's fit set are now
 						// stale. Rebuild both rather than let either keep an
