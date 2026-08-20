@@ -18969,14 +18969,83 @@ namespace
 		return SelLiveModeIndex();
 	}
 
+	// ⭐ THE RESOLUTION LIST IS BUILT PER MODE, because "resolution" means a
+	// different thing in each one and offering the same rows everywhere is how
+	// the control ended up promising something the game ignores.
+	//
+	//   BORDERLESS  the game renders at the DESKTOP and documents
+	//               WindowWidth/Height as ignored. One row, the desktop, and
+	//               nothing to choose - a control with no effect must not look
+	//               like a choice.
+	//   FULLSCREEN  a real display-mode change. Only modes the display ACTUALLY
+	//               REPORTS are offered (EnumDisplaySettingsW), because an
+	//               unsupported mode in exclusive fullscreen is a black screen,
+	//               not a cosmetic problem. A 16:10 size on a 3:2 panel is
+	//               exactly that trap.
+	//   WINDOWED    a window, which needs room for its own title bar and
+	//               borders. Capped BELOW the desktop by the real frame size,
+	//               or the bottom of the window - including this dialog's
+	//               Accept button - lands off-screen.
+	// ⭐ THE PANEL'S CAPABILITY, NOT THE MODE THE GAME IS CURRENTLY IN.
+	// GetSystemMetrics reports the CURRENT display mode, and in exclusive
+	// fullscreen that is the mode THE GAME SET. Capping the list at it makes
+	// the control a ONE-WAY RATCHET: pick 800x600 fullscreen, and the next
+	// visit reports an 800x600 "desktop", filters everything larger, and
+	// offers exactly one row. There is then no way back up from inside the
+	// game. Measured 2026-08-20:
+	//     AutoScale: DirectX FullScreen - render res = requested 800x600
+	//     SELRES built 1 row(s) for Fullscreen on a 800x600 desktop
+	//
+	// ENUM_CURRENT_SETTINGS has the same flaw. The two questions that do not
+	// move are: what is the panel's LARGEST mode (its capability), and what is
+	// the mode stored in the registry (the user's actual desktop, which a
+	// fullscreen game does not rewrite).
+	void SelDisplayMax(int* w, int* h)
+	{
+		*w = 0; *h = 0;
+		DEVMODEW dm = {};
+		dm.dmSize = sizeof(dm);
+		for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm); i++)
+		{
+			const int mw = static_cast<int>(dm.dmPelsWidth);
+			const int mh = static_cast<int>(dm.dmPelsHeight);
+			if (mw * mh > (*w) * (*h)) { *w = mw; *h = mh; }
+		}
+		if (*w <= 0)
+		{
+			*w = GetSystemMetrics(SM_CXSCREEN);
+			*h = GetSystemMetrics(SM_CYSCREEN);
+		}
+	}
+
+	// The user's desktop mode, from the registry - unaffected by whatever
+	// mode a fullscreen game has temporarily put the display into.
+	void SelDesktopMode(int* w, int* h)
+	{
+		DEVMODEW dm = {};
+		dm.dmSize = sizeof(dm);
+		if (EnumDisplaySettingsW(nullptr, ENUM_REGISTRY_SETTINGS, &dm)
+			&& dm.dmPelsWidth > 0)
+		{
+			*w = static_cast<int>(dm.dmPelsWidth);
+			*h = static_cast<int>(dm.dmPelsHeight);
+			return;
+		}
+		SelDisplayMax(w, h);
+	}
+
 	void SelEffectiveRes(int* w, int* h)
 	{
 		// BORDERLESS: the desktop, whatever the resolution control says. The
 		// game's own ini documents WindowWidth/Height as ignored here.
 		if (SelEffectiveModeIdx() == kModeBorderless)
 		{
-			const int dw = GetSystemMetrics(SM_CXSCREEN);
-			const int dh = GetSystemMetrics(SM_CYSCREEN);
+			// The DESKTOP mode, not GetSystemMetrics - see SelDesktopMode. In
+			// exclusive fullscreen the current metrics are the mode the GAME
+			// set, so borderless would inherit whatever the last fullscreen
+			// choice happened to be.
+			int dw = 0, dh = 0;
+			SelDesktopMode(&dw, &dh);
 			if (dw > 0 && dh > 0) { *w = dw; *h = dh; return; }
 		}
 		// Fullscreen and Windowed both render at the requested size.
@@ -19191,36 +19260,27 @@ namespace
 
 	const int kSelModeCount = 3;
 
-	// ⭐ THE RESOLUTION LIST IS BUILT PER MODE, because "resolution" means a
-	// different thing in each one and offering the same rows everywhere is how
-	// the control ended up promising something the game ignores.
-	//
-	//   BORDERLESS  the game renders at the DESKTOP and documents
-	//               WindowWidth/Height as ignored. One row, the desktop, and
-	//               nothing to choose - a control with no effect must not look
-	//               like a choice.
-	//   FULLSCREEN  a real display-mode change. Only modes the display ACTUALLY
-	//               REPORTS are offered (EnumDisplaySettingsW), because an
-	//               unsupported mode in exclusive fullscreen is a black screen,
-	//               not a cosmetic problem. A 16:10 size on a 3:2 panel is
-	//               exactly that trap.
-	//   WINDOWED    a window, which needs room for its own title bar and
-	//               borders. Capped BELOW the desktop by the real frame size,
-	//               or the bottom of the window - including this dialog's
-	//               Accept button - lands off-screen.
+
 	void SelBuildResList()
 	{
-		const int dw = GetSystemMetrics(SM_CXSCREEN);
-		const int dh = GetSystemMetrics(SM_CYSCREEN);
+		// FULLSCREEN is bounded by what the PANEL can do; WINDOWED and
+		// BORDERLESS by the user's DESKTOP, which is a different question and
+		// the one that does not move when the game changes mode.
+		int capW = 0, capH = 0;
+		SelDisplayMax(&capW, &capH);
+		int deskW = 0, deskH = 0;
+		SelDesktopMode(&deskW, &deskH);
 		const int mode = SelEffectiveModeIdx();
+		const int dw = (mode == kModeFullscreen) ? capW : deskW;
+		const int dh = (mode == kModeFullscreen) ? capH : deskH;
 		gSelResCount = 0;
 
 		if (mode == kModeBorderless)   // the desktop, and only that
 		{
-			if (dw > 0 && dh > 0)
+			if (deskW > 0 && deskH > 0)
 			{
-				gSelResList[0].w = dw;
-				gSelResList[0].h = dh;
+				gSelResList[0].w = deskW;
+				gSelResList[0].h = deskH;
 				gSelResCount = 1;
 			}
 			return;
@@ -19278,12 +19338,12 @@ namespace
 			}
 			// The desktop mode is always legal even if it is not in the list
 			// above - a 3:2 panel's native size is in nobody's familiar table.
-			if (dw > 0 && dh > 0)
+			if (deskW > 0 && deskH > 0)
 			{
 				bool have = false;
 				for (int k = 0; k < gSelResCount; k++)
 				{
-					if (gSelResList[k].w == dw && gSelResList[k].h == dh)
+					if (gSelResList[k].w == deskW && gSelResList[k].h == deskH)
 					{
 						have = true;
 						break;
@@ -19291,8 +19351,8 @@ namespace
 				}
 				if (!have && gSelResCount < kSelResMax)
 				{
-					gSelResList[gSelResCount].w = dw;
-					gSelResList[gSelResCount].h = dh;
+					gSelResList[gSelResCount].w = deskW;
+					gSelResList[gSelResCount].h = deskH;
 					gSelResCount++;
 				}
 			}
@@ -20626,8 +20686,17 @@ void UiSpike::ServiceScaleSelector()
 					// reach. The list is capped rather than the choice
 					// refused, because a row you cannot pick needs no
 					// explanation.
-					const int monW = GetSystemMetrics(SM_CXSCREEN);
-					const int monH = GetSystemMetrics(SM_CYSCREEN);
+					// Capability for fullscreen, desktop otherwise - the same
+					// distinction the builder makes, and for the same reason:
+					// the CURRENT metrics are whatever mode the game is in.
+					int capW2 = 0, capH2 = 0;
+					SelDisplayMax(&capW2, &capH2);
+					int deskW2 = 0, deskH2 = 0;
+					SelDesktopMode(&deskW2, &deskH2);
+					const bool fsNow =
+						(SelEffectiveModeIdx() == kModeFullscreen);
+					const int monW = fsNow ? capW2 : deskW2;
+					const int monH = fsNow ? capH2 : deskH2;
 					// The SELECTED row is what the ini says will apply; the
 					// "(current)" marker is what is rendering now. After an
 					// Accept those differ, and showing the running one would
