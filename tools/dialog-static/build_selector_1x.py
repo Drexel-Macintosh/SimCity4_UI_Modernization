@@ -70,8 +70,8 @@ def main():
     # not ship half-done here - it failed the moment the shapes diverged.
     want = {
         "0x5ca1e002": (270, 320, 286, 336),   # radio, beside the row
-        "0x5ca1e005": (292, 319, 466, 342),   # 1px frame around the combo
-        "0x5ca1e004": (293, 320, 465, 341),   # combo, ON the readout row
+        "0x5ca1e005": (292, 319, 458, 342),   # 1px frame around the combo
+        "0x5ca1e004": (293, 320, 457, 341),   # combo, ON the readout row
     }
     seen = {}
     for ln in text.split("\n"):

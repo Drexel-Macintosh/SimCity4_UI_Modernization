@@ -621,10 +621,21 @@ def inject_res_readout(text, fn):
     # so children clip at height 356, and this is the last full 21px row that
     # fits. The second row #192 tried at y=345..366 was clipped outright.
     #
-    # ⚠ MOVED UP 5px (2026-08-19): at y=325..346 the combo's bottom edge sat
-    # 9 design px from that clip and read as cut off on screen - a text label
-    # got away with it there, a bordered control with a drop arrow does not.
-    # Now 319..342, which leaves 14.
+    # ⭐ THE RIGHT EDGE IS THE ONE THAT WAS CLIPPED, and it is arithmetic, not
+    # judgement. The parent's INNER width is 479-15 = 464, and the nodes ran to
+    # 465 (combo) and 466 (border) - one and two pixels PAST it - so the right
+    # border was cut away. The #192 label this row inherited its width from had
+    # the same 465 and got away with it because a text node has no right-hand
+    # edge to lose.
+    #
+    # They now stop at 457, which is where the dialog's OWN labels stop
+    # ("Hardware", "Software" at (293,...,457,...)). Matching the stock margin
+    # beats inventing one.
+    #
+    # (The row also moved up 5px earlier in the same session. That was aimed at
+    # the BOTTOM edge, which measurement then showed was never clipped - it had
+    # 10px of room. Kept for the extra margin, but it was not the fix, and
+    # saying so is cheaper than leaving a wrong reason in the file.)
     #
     # Radio: byte-for-byte the Software radio (0x6a57da58) attribute set with
     # our id. It MUST take clicks (ignoremouse=no, unlike the old labels).
@@ -670,7 +681,7 @@ def inject_res_readout(text, fn):
     # (24,32,106) highlight bar with white text on the selected row, inside
     # the black drop-down outline. The field itself disappears into the panel.
     combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-             'area=(293,320,465,341) fillcolor=(218,224,229) '
+             'area=(293,320,457,341) fillcolor=(218,224,229) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=no winflag_pbufferase=yes '
@@ -717,7 +728,7 @@ def inject_res_readout(text, fn):
     # decoration. It is emitted BEFORE the combo so the combo paints on top
     # (.UI order is add order is paint order).
     border = ('<LEGACY clsid=GZWinFlatRect iid=IGZWinFlatRect id=%s '
-              'area=(292,319,466,342) fillcolor=(63,73,103) '
+              'area=(292,319,458,342) fillcolor=(63,73,103) '
               'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
               'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
               'winflag_pbufftrans=no winflag_pbufferase=yes '
