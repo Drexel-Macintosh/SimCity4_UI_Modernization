@@ -18877,12 +18877,36 @@ namespace
 	// combo did before it learned to show its pending choice. The ini is the
 	// answer to "what did I choose"; gReadoutW/H is the answer to "what am I
 	// running", and only the second deserves the "(current)" marker.
+	// ⭐ THE INI IS READ ONCE PER SERVICE PASS, NOT PER CALL.
+	// SelEffectiveRes is called from inside row-building loops, and each call
+	// was doing a GetPrivateProfileInt - a file open, parse and close - so a
+	// single rebuild hit the disk dozens of times. Together with the nested
+	// display enumeration that is what froze the dialog for seconds on a
+	// click. The ini cannot change under us mid-pass: WE are the only writer,
+	// and we write at close.
+	int  gSelIniResW = -1, gSelIniResH = -1;
+	int  gSelIniModeCache = -1;
+	void SelInvalidateIniCache()
+	{
+		gSelIniResW = -1;
+		gSelIniResH = -1;
+		gSelIniModeCache = -1;
+	}
+
 	void SelIniRes(int* w, int* h)
 	{
+		if (gSelIniResW >= 0)
+		{
+			*w = gSelIniResW;
+			*h = gSelIniResH;
+			return;
+		}
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
-		*w = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, p);
-		*h = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, p);
+		gSelIniResW = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, p);
+		gSelIniResH = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, p);
+		*w = gSelIniResW;
+		*h = gSelIniResH;
 	}
 
 	// ⭐ THREE MODES, ALPHABETICAL, AND NAMED - not positional.
@@ -18936,18 +18960,18 @@ namespace
 	int SelLiveModeIndex()
 
 	{
+		if (gSelIniModeCache >= 0) { return gSelIniModeCache; }
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
 		wchar_t mode[40] = {};
 		GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
 			L"FullScreen", mode, 40, p);
-		if (_wcsicmp(mode, L"Windowed") == 0) { return kModeWindowed; }
-		if (_wcsicmp(mode, L"Borderless") == 0
-			|| _wcsicmp(mode, L"BorderlessFullScreen") == 0)
-		{
-			return kModeBorderless;
-		}
-		return kModeFullscreen;
+		gSelIniModeCache =
+			(_wcsicmp(mode, L"Windowed") == 0) ? kModeWindowed
+			: (_wcsicmp(mode, L"Borderless") == 0
+				|| _wcsicmp(mode, L"BorderlessFullScreen") == 0)
+				? kModeBorderless : kModeFullscreen;
+		return gSelIniModeCache;
 	}
 
 	// ⭐ THE RENDER SIZE IS A FUNCTION OF THE MODE, NOT JUST THE RESOLUTION.
@@ -19000,38 +19024,94 @@ namespace
 	// move are: what is the panel's LARGEST mode (its capability), and what is
 	// the mode stored in the registry (the user's actual desktop, which a
 	// fullscreen game does not rewrite).
-	void SelDisplayMax(int* w, int* h)
+	// ⭐ ENUMERATED ONCE. EnumDisplaySettingsW is a system call, and the
+	// fullscreen list was calling it INSIDE A NESTED LOOP - once per familiar
+	// size, over every mode the driver reports - so a rebuild cost hundreds of
+	// them, and the game visibly locked up for seconds on a click. The modes a
+	// display supports do not change while the game is running, so asking more
+	// than once is pure waste.
+	SelRes gSelModeCache[64];
+	int  gSelModeCacheN = 0;
+	bool gSelModeCacheDone = false;
+	int  gSelCapW = 0, gSelCapH = 0;      // largest mode the panel reports
+	int  gSelDeskW = 0, gSelDeskH = 0;    // the registry desktop mode
+
+	void SelEnumOnce()
 	{
-		*w = 0; *h = 0;
+		if (gSelModeCacheDone) { return; }
+		gSelModeCacheDone = true;
 		DEVMODEW dm = {};
 		dm.dmSize = sizeof(dm);
 		for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm); i++)
 		{
 			const int mw = static_cast<int>(dm.dmPelsWidth);
 			const int mh = static_cast<int>(dm.dmPelsHeight);
-			if (mw * mh > (*w) * (*h)) { *w = mw; *h = mh; }
+			if (mw <= 0 || mh <= 0) { continue; }
+			if (mw * mh > gSelCapW * gSelCapH) { gSelCapW = mw; gSelCapH = mh; }
+			bool dup = false;
+			for (int k = 0; k < gSelModeCacheN; k++)
+			{
+				if (gSelModeCache[k].w == mw && gSelModeCache[k].h == mh)
+				{
+					dup = true;
+					break;
+				}
+			}
+			if (!dup && gSelModeCacheN < 64)
+			{
+				gSelModeCache[gSelModeCacheN].w = mw;
+				gSelModeCache[gSelModeCacheN].h = mh;
+				gSelModeCacheN++;
+			}
 		}
-		if (*w <= 0)
+		DEVMODEW rd = {};
+		rd.dmSize = sizeof(rd);
+		if (EnumDisplaySettingsW(nullptr, ENUM_REGISTRY_SETTINGS, &rd)
+			&& rd.dmPelsWidth > 0)
 		{
-			*w = GetSystemMetrics(SM_CXSCREEN);
-			*h = GetSystemMetrics(SM_CYSCREEN);
+			gSelDeskW = static_cast<int>(rd.dmPelsWidth);
+			gSelDeskH = static_cast<int>(rd.dmPelsHeight);
 		}
+		if (gSelCapW <= 0)
+		{
+			gSelCapW = GetSystemMetrics(SM_CXSCREEN);
+			gSelCapH = GetSystemMetrics(SM_CYSCREEN);
+		}
+		if (gSelDeskW <= 0) { gSelDeskW = gSelCapW; gSelDeskH = gSelCapH; }
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELRES display enumerated ONCE - %d distinct mode(s), "
+			"panel max %dx%d, desktop %dx%d. Re-asking per row is what made "
+			"the dialog lock up on a click.",
+			gSelModeCacheN, gSelCapW, gSelCapH, gSelDeskW, gSelDeskH);
 	}
 
-	// The user's desktop mode, from the registry - unaffected by whatever
-	// mode a fullscreen game has temporarily put the display into.
+	bool SelModeSupported(int w, int h)
+	{
+		SelEnumOnce();
+		for (int k = 0; k < gSelModeCacheN; k++)
+		{
+			if (gSelModeCache[k].w == w && gSelModeCache[k].h == h)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	void SelDisplayMax(int* w, int* h)
+	{
+		SelEnumOnce();
+		*w = gSelCapW;
+		*h = gSelCapH;
+	}
+
+	// The user's desktop mode - unaffected by whatever mode a fullscreen game
+	// has temporarily put the display into.
 	void SelDesktopMode(int* w, int* h)
 	{
-		DEVMODEW dm = {};
-		dm.dmSize = sizeof(dm);
-		if (EnumDisplaySettingsW(nullptr, ENUM_REGISTRY_SETTINGS, &dm)
-			&& dm.dmPelsWidth > 0)
-		{
-			*w = static_cast<int>(dm.dmPelsWidth);
-			*h = static_cast<int>(dm.dmPelsHeight);
-			return;
-		}
-		SelDisplayMax(w, h);
+		SelEnumOnce();
+		*w = gSelDeskW;
+		*h = gSelDeskH;
 	}
 
 	void SelEffectiveRes(int* w, int* h)
@@ -19320,19 +19400,10 @@ namespace
 				{
 					continue;
 				}
-				bool supported = false;
-				DEVMODEW dm = {};
-				dm.dmSize = sizeof(dm);
-				for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm); i++)
+				if (!SelModeSupported(kFamiliar[f].w, kFamiliar[f].h))
 				{
-					if (static_cast<int>(dm.dmPelsWidth) == kFamiliar[f].w
-						&& static_cast<int>(dm.dmPelsHeight) == kFamiliar[f].h)
-					{
-						supported = true;
-						break;
-					}
+					continue;
 				}
-				if (!supported) { continue; }
 				gSelResList[gSelResCount] = kFamiliar[f];
 				gSelResCount++;
 			}
@@ -19392,6 +19463,7 @@ namespace
 		}
 		WritePrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
 			modeStr, p);
+		SelInvalidateIniCache();   // we are the writer; the cache is now stale
 		Logger::Get().WriteLine(LogLevel::Info,
 			"UiSpike: SELMODE SC4GraphicsOptions.ini -> WindowMode=%ls "
 			"WindowWidth=%d WindowHeight=%d.%ls",
@@ -19844,6 +19916,8 @@ void UiSpike::ServiceScaleSelector()
 
 	cIGZWin* gfxDlg = pMainWindow->GetChildWindowFromIDRecursive(kSelDlgId);
 	if (gfxDlg != nullptr) { gSelDlgLast = gfxDlg; }
+	// One read per pass: drop last pass's answers.
+	SelInvalidateIniCache();
 	if (gfxDlg == nullptr || !gfxDlg->IsVisible())
 	{
 		// Closed. Forget the staged choice: a dialog dismissed without Accept
