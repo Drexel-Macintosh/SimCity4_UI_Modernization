@@ -78,15 +78,14 @@ def main():
     RELABELLED_STOCK = {"0x5ca1e010", "0x5ca1e011", "0x5ca1e012", "0x5ca1e013"}
     want = {
     "0x5ca1e003": (267, 313, 439, 334),   # "Scale" caption, Renderer rail
-    "0x5ca1e002": (270, 333, 286, 349),   # radio, beside the scale combo
     "0x5ca1e005": (292, 332, 458, 355),   # frame around the scale combo
     "0x5ca1e004": (293, 333, 457, 354),   # scale combo, below its caption
-        "0x5ca1e007": (4, 255, 246, 276),     # "Window Mode" caption (top)
-        "0x5ca1e00a": (29, 274, 248, 297),    # frame, Window Mode
-        "0x5ca1e008": (30, 275, 247, 296),    # Window Mode combo
-        "0x5ca1e00b": (4, 303, 246, 324),     # "Resolution" caption
-        "0x5ca1e009": (29, 322, 248, 345),    # frame, Resolution
-        "0x5ca1e006": (30, 323, 247, 344),    # Resolution combo
+    "0x5ca1e007": (4, 255, 246, 276),     # "Window Mode" caption (top)
+    "0x5ca1e00a": (29, 274, 248, 297),    # frame, Window Mode
+    "0x5ca1e008": (30, 275, 247, 296),    # Window Mode combo
+    "0x5ca1e00b": (4, 313, 246, 334),     # "Resolution" caption, Scale band
+    "0x5ca1e009": (29, 332, 248, 355),    # frame, Resolution
+    "0x5ca1e006": (30, 333, 247, 354),    # Resolution combo
     }
     seen = {}
     for ln in text.split("\n"):

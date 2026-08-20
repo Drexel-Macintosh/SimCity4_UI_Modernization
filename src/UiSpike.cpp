@@ -18716,15 +18716,14 @@ namespace
 		ScaleTier::TierMinimum(kSelFactors[k], w, h);
 	}
 
-	// The four stock resolution radios. Our radio means "none of these" -
-	// i.e. the resolution came from SC4GraphicsOptions.ini rather than this
-	// list, which is the state every scaled tier runs in.
-	const uint32_t kStockResRadios[] = {
-		0x6A57DA5A, 0x6A57DA5B, 0x6A57DA5C, 0x6A57DA5D
-	};
+	// The four stock resolution radios and our custom-resolution radio
+	// (0x5CA1E002) are GONE as of v3.14.3: the stock four ship hidden in
+	// data, and ours was generation-1 furniture the state machine made dead
+	// (our close-time commit owns SC4GraphicsOptions.ini; the game never
+	// rewrites it on Accept - measured). The builder comment carries the
+	// full rationale.
 	const uint32_t kSelDlgId    = 0x2A57CB82;   // Graphic Options root (GZWinGen)
 	const uint32_t kSelReadoutId = 0x5CA1E000;
-	const uint32_t kSelRadioId   = 0x5CA1E002;
 	const uint32_t kSelLabelId   = 0x5CA1E003;
 	const uint32_t kSelComboId   = 0x5CA1E004;
 	const uint32_t kSelResComboId  = 0x5CA1E006;
@@ -19422,13 +19421,6 @@ namespace
 	                               // I running", never "what will apply".
 	bool gSelPkg[8] = { true, true, false, false, false, false, false, false };
 	bool gSelPkgCached = false;
-	// The radio's transition state (the engine toggles injected radiocheck
-	// buttons on click - measured - but does NOT group ours with the stock
-	// four, so the grouping is ours to enforce).
-	int  gSelRadioState = -1;      // bitmask: b0..b3 stock radios, b4 ours
-	int  gSelRadioLogs = 0;
-	bool gSelOursWas = false;
-	int  gSelStockWas = 0;
 	// Notice watch + net.
 	bool gSelNoticeWasUp = false;
 	unsigned int gSelNoticeShownMs = 0;
@@ -20255,122 +20247,6 @@ namespace
 		}
 	}
 
-	// THE STOCK RESOLUTION RADIOS. Our radio means "none of the stock four"
-	// - the resolution came from SC4GraphicsOptions.ini, the state every
-	// scaled tier runs in. MEASURED 2026-08-19: the engine DOES toggle our
-	// injected radiocheck button when it is clicked, but does NOT group ours
-	// with the stock four (1024x768 AND ours lit simultaneously), so the
-	// grouping is ours to enforce - by TRANSITION, not by state: whichever
-	// side just turned ON wins, because state alone cannot say which the
-	// user actually clicked.
-	// ⭐ THIS IS ALSO HOW THE CHOICE SURVIVES ACCEPT: the game writes
-	// SC4GraphicsOptions.ini from ITS OWN radio state, and with no stock
-	// resolution selected there is nothing for it to write, so the custom
-	// WindowWidth/Height already in the file simply stays.
-	void SelRadioTick(cIGZWin* gfxDlg, bool justOpened)
-	{
-		PerfProbe::Scope perf_("sel.radio");
-		int mask = 0;
-		bool anyStock = false;
-		for (int k = 0; k < 4; k++)
-		{
-			cIGZWin* w =
-				gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
-			if (!w) { continue; }
-			cIGZWinBtn* b = nullptr;
-			if (w->QueryInterface(GZIID_cIGZWinBtn,
-					reinterpret_cast<void**>(&b)) && b)
-			{
-				if (b->IsChecked()) { anyStock = true; mask |= (1 << k); }
-				b->Release();
-			}
-		}
-		cIGZWin* w = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
-		bool oursChecked = false;
-		if (w)
-		{
-			cIGZWinBtn* b = nullptr;
-			if (w->QueryInterface(GZIID_cIGZWinBtn,
-					reinterpret_cast<void**>(&b)) && b)
-			{
-				oursChecked = b->IsChecked();
-				if (oursChecked) { mask |= (1 << 4); }
-				// ? ONLY SEEDED ON OPEN. Forcing it every service would make
-				// the control unclickable: the player checks it, 250ms later
-				// we overwrite it from the stock radios, and the click looks
-				// ignored. On open we state the truth; after that the player
-				// owns it.
-				if (justOpened)
-				{
-					const bool want = !anyStock;
-					if (oursChecked != want)
-					{
-						b->SetChecked(want);
-						oursChecked = want;
-						mask = (mask & 0x0F) | (want ? (1 << 4) : 0);
-					}
-				}
-				b->Release();
-			}
-		}
-		const bool oursNow = oursChecked;
-		const int  stockNow = mask & 0x0F;
-		if (oursNow && !gSelOursWas && stockNow != 0)
-		{
-			// The player just chose OUR resolution: clear the stock four.
-			for (int k = 0; k < 4; k++)
-			{
-				cIGZWin* w2 =
-					gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
-				if (!w2) { continue; }
-				cIGZWinBtn* b2 = nullptr;
-				if (w2->QueryInterface(GZIID_cIGZWinBtn,
-						reinterpret_cast<void**>(&b2)) && b2)
-				{
-					if (b2->IsChecked()) { b2->SetChecked(false); }
-					b2->Release();
-				}
-			}
-			mask &= ~0x0F;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELRADIO custom resolution re-selected - cleared "
-				"the stock resolution radios so the game has nothing to "
-				"write over %dx%d on Accept.", gReadoutW, gReadoutH);
-		}
-		else if (stockNow != 0 && gSelStockWas == 0 && oursNow)
-		{
-			// A stock resolution just won: ours must go dark, or two radios
-			// claim the same choice.
-			cIGZWin* w2 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
-			if (w2)
-			{
-				cIGZWinBtn* b2 = nullptr;
-				if (w2->QueryInterface(GZIID_cIGZWinBtn,
-						reinterpret_cast<void**>(&b2)) && b2)
-				{
-					b2->SetChecked(false);
-					b2->Release();
-				}
-			}
-			mask &= ~(1 << 4);
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELRADIO a stock resolution was chosen - our "
-				"custom radio cleared.");
-		}
-		gSelOursWas = (mask & (1 << 4)) != 0;
-		gSelStockWas = mask & 0x0F;
-		// SELRADIO: one line per CHANGE, never per service.
-		if (mask != gSelRadioState && gSelRadioLogs < 30)
-		{
-			gSelRadioLogs++;
-			gSelRadioState = mask;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELRADIO stock[800x600=%d 1024=%d 1280=%d 1600=%d] "
-				"ours=%d (mask 0x%02X).",
-				(mask >> 0) & 1, (mask >> 1) & 1, (mask >> 2) & 1,
-				(mask >> 3) & 1, (mask >> 4) & 1, mask);
-		}
-	}
 }
 
 void UiSpike::DumpSelectorPerf(const char* why)
@@ -20522,5 +20398,4 @@ void UiSpike::ServiceScaleSelector()
 
 	SelApplyStatics(gfxDlg, settings);
 	SelNoticeTick(gfxDlg, now);
-	SelRadioTick(gfxDlg, justOpened);
 }

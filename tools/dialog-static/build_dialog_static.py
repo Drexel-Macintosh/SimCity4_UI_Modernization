@@ -526,10 +526,9 @@ RES_READOUT_IDS = ("0x5ca1e000", "0x5ca1e001")
 # ---- IN-GAME SCALE SELECTOR (2026-08-19, user request) ---------------------
 # Three more nodes ride the same injection point, same rules (empty captions,
 # DLL fills; blank on screen = the DLL half is missing, never a stale value):
-#   0x5ca1e002  radio beside the scale combo row, lit when the custom
-#               resolution is the active one. Clone of the Software radio
-#               idiom (16x16 style=radiocheck at x=270; the text column is
-#               x=293).
+#   0x5ca1e002  RETIRED v3.14.3 (user direction): the radio beside the scale
+#               combo was generation-1 furniture the state machine made dead
+#               (see the NO RADIO comment at the injection point).
 #   0x5ca1e003  "Scale" caption row, directly under Software. RE-INTRODUCED
 #               2026-08-20 after the #192 reshape retired it: the combo
 #               below needs a caption like its Window Mode / Resolution
@@ -541,7 +540,6 @@ RES_READOUT_IDS = ("0x5ca1e000", "0x5ca1e001")
 # The DLL maps the combo index to the ini: 0=Auto (AutoScale=1), 1..4 =
 # manual 1 / 1.5 / 2 / 3 (AutoScale=0 + ScaleFactor). initselection=0 is a
 # placeholder; the DLL sets the true selection every time the dialog appears.
-SEL_RADIO_ID = "0x5ca1e002"
 SEL_LABEL_ID = "0x5ca1e003"
 SEL_COMBO_ID = "0x5ca1e004"
 # The 1px frame around the combo (GZWinCombo's own outlinecolor draws
@@ -655,30 +653,19 @@ def inject_res_readout(text, fn):
     #                         1px to spare (the stock's own Renderer/
     #                         Hardware bands overlap 4-6px the same way).
     #   row pattern = the left column's: label (y, y+21), frame one pixel
-    #                 larger than the combo, combo (y+20, y+41), radio
-    #                 top-aligned with the combo.
+    #                 larger than the combo, combo (y+20, y+41).
     #   right edge  = 457/458, inside the 464 inner width - the old 465/466
     #                 right-edge clip (documented below) must not return.
     #
-    # Radio: byte-for-byte the Software radio (0x6a57da58) attribute set with
-    # our id. It MUST take clicks (ignoremouse=no, unlike the old labels).
-    radio = ('<LEGACY clsid=GZWinBtn iid=IGZWinBtn id=%s '
-             'area=(270,333,286,349) fillcolor=(204,204,204) '
-             'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
-             'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
-             'winflag_pbufftrans=yes winflag_pbufferase=yes '
-             'winflag_pbuffvid=no winflag_alphablend=no '
-             'winflag_acceptfocus=yes winflag_mousetrans=no '
-             'winflag_ignoremouse=no image={1abe787d,14416246} '
-             'colorfontnormal=(0,0,0) colorfontdisabled=(0,0,0) '
-             'colorfonthilited=(0,0,0) colorfontnormalbkg=(0,0,0) '
-             'colorfontdisabledbkg=(0,0,0) colorfonthilitedbkg=(0,0,0) '
-             'toggle=off triggerondown=off showcaption=no fill=yes '
-             'autosize=no wrapcaption=no shiftcaption=no tips=no '
-             'tipsdelay=no tipstimeout=no style=radiocheck '
-             'gutters=(0,0,0,0) tiptext="" tipoffsets=(0,0) '
-             'tipflag=0x01000000 align=center '
-             'btnclicksnd={ca4d1943,2a5c322b} >' % SEL_RADIO_ID)
+    # ⛔ NO RADIO BESIDE THE SCALE COMBO (removed v3.14.3, user direction).
+    # It was generation-1 furniture: "lit when the custom resolution is
+    # active", and the mutual-exclusion dance with the four stock resolution
+    # radios was how a custom size survived a game-written ini. The state
+    # machine made it dead: OUR close-time commit writes SC4GraphicsOptions
+    # .ini (measured: the game never rewrites it on Accept - 3 Accepts, 3
+    # "no write ever seen"), the stock radios ship hidden, and next to the
+    # scale combo the radio only read as a stray control. The node, its DLL
+    # watcher (SelRadioTick) and the id are gone together.
     # ---- STYLING: WHITE, LIKE THE STOCK INPUT BOXES (2026-08-20) --------
     # ⭐ THE ENGINE'S COMBO CHROME IS HARDCODED. The down-arrow button and the
     # drop-list frame GZWinCombo draws come out in a hardcoded white-ish
@@ -903,19 +890,24 @@ def inject_res_readout(text, fn):
 
     # Placeholder rows only - the DLL rebuilds both lists at runtime, because
     # the useful resolutions depend on the monitor and only it knows that.
-    res_border  = _frame(SEL_RES_BORDER_ID, 29, 322, 248, 345)
-    res_combo   = _combo(SEL_RES_COMBO_ID, 30, 323, 247, 344,
+    # The Resolution row drops 10px (v3.14.3, user direction) so its caption
+    # and combo sit on the SAME horizontal band as the Scale caption and
+    # combo (313/333): the two bottom rows read as one aligned pair. The
+    # frame bottom lands at 355, the same 1px-inside-the-356-clip seat as
+    # the scale row.
+    res_border  = _frame(SEL_RES_BORDER_ID, 29, 332, 248, 355)
+    res_combo   = _combo(SEL_RES_COMBO_ID, 30, 333, 247, 354,
                          ["2400x1600", "1920x1200", "1600x1200"])
     # Window Mode leads the column, Resolution follows it.
     mode_label  = (tmpl % (SEL_MODE_LABEL_ID, 255, 276)).replace(
                       'area=(293,255,465,276)', 'area=(4,255,246,276)')
-    res_label   = (tmpl % (SEL_RES_LABEL_ID, 303, 324)).replace(
-                      'area=(293,303,465,324)', 'area=(4,303,246,324)')
+    res_label   = (tmpl % (SEL_RES_LABEL_ID, 313, 334)).replace(
+                      'area=(293,313,465,334)', 'area=(4,313,246,334)')
     mode_border = _frame(SEL_MODE_BORDER_ID, 29, 274, 248, 297)
     mode_combo  = _combo(SEL_MODE_COMBO_ID, 30, 275, 247, 296,
                          ["Fullscreen", "Windowed"])
 
-    new = [indent + scale_label, indent + radio, indent + border,
+    new = [indent + scale_label, indent + border,
            indent + combo, indent + mode_label, indent + mode_border,
            indent + mode_combo, indent + res_label, indent + res_border,
            indent + res_combo]

@@ -66,7 +66,7 @@ all four pass criteria met, see the ledger entry at VERSION-HISTORY.txt:1):**
 dialog close and shutdown; a >500ms frame-gap watchdog and a >25ms pass
 watchdog name their contributors. Read it after every launch.
 
-## The v3.14 rewrite — SHIPPED & VERIFIED v3.14.0, patched v3.14.1 (2026-08-20)
+## The v3.14 rewrite — SHIPPED & VERIFIED v3.14.0, patched through v3.14.3 (2026-08-20)
 
 **Executed, deployed, and user-verified on screen 2026-08-20.** The
 ~1,400-line per-250ms `ServiceScaleSelector` is now a state machine:
@@ -80,8 +80,13 @@ deployed 15:19):** a city-loaded unchanged Accept CRASHED — the close
 re-read touched a dialog the game DESTROYS (not hides) with a city loaded;
 now liveness-guarded (pointer found this pass, or skip). Same build cured
 the combo chrome two-tone (fields now white like stock) and added the
-"Scale" caption. One launch owed: city + unchanged Accept (the crash
-repro) + eyes on the dropdowns. The plan below is kept as the record of
+"Scale" caption. **v3.14.2:** scale-row geometry derived from the panel
+clip arithmetic (caption on the Renderer rail, frame 1px inside the 356
+local clip). **v3.14.3:** the stray radio beside the scale combo removed
+(node + dead SelRadioTick watcher; the contract gate asserts the
+retirement), and the Resolution row dropped onto the Scale row's band so
+the two bottom rows align. One launch owed: city + unchanged Accept (the
+crash repro) + eyes on the aligned rows. The plan below is kept as the record of
 what shipped; the ledger entry (VERSION-HISTORY.txt:1) names what was
 stripped, what was kept, the verification numbers, and the two
 pre-existing red tools gates that are NOT this build's doing.

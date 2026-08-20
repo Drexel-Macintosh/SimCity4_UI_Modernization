@@ -159,11 +159,23 @@ def main():
     for name in ("SelBuildResRows", "SelDerive", "SelPushCombo",
                  "SelOnOpen", "SelOnTick", "SelOnClose", "SelCommitScale",
                  "SelWriteGraphicsIni", "SelWriteDgVoodooFullScreen",
-                 "SelApplyStatics", "SelNoticeTick", "SelRadioTick"):
+                 "SelApplyStatics", "SelNoticeTick"):
         spans[name] = find_function(src, name)
     spans["ServiceScaleSelector"] = find_function(
         src, "ServiceScaleSelector",
         r"void\s+UiSpike::ServiceScaleSelector\s*\(\s*\)\s*\{")
+    # SelRadioTick and the custom-resolution radio were retired in v3.14.3
+    # (the state machine's close commit owns the gfx ini; the radio was
+    # generation-1 furniture). If either ever comes back, it needs its own
+    # contract row - absence is the asserted state.
+    if re.search(r"\bSelRadioTick\b", src):
+        failures.append("SelRadioTick is back. The custom-resolution radio "
+                        "was retired in v3.14.3 with its watcher; re-adding "
+                        "either needs a deliberate contract update, not a "
+                        "silent return.")
+        print("  [radio watcher stays retired] *** PRESENT ***")
+    else:
+        print("  [radio watcher stays retired] ok")
 
     missing = [n for n, s in spans.items() if s is None]
     if missing:

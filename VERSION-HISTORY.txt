@@ -1,3 +1,30 @@
+2026-08-20  v3.14.3  THE RADIO IS GONE AND THE TWO BOTTOM ROWS ARE ONE
+                     ALIGNED PAIR (user direction, arithmetic as of v3.14.2)
+
+  1. The radio beside the scale combo is REMOVED - node, id, and its DLL
+  watcher (SelRadioTick + the four transition globals) gone together. It
+  was generation-1 furniture: "lit when the custom resolution is active",
+  plus a mutual-exclusion dance with the four stock radios that was "how
+  the choice survives Accept" back when the game might write the gfx ini
+  from its own radio state. The state machine made all of it dead: OUR
+  close-time commit writes SC4GraphicsOptions.ini, and the game never
+  rewrote it on Accept (measured in v3.13.x: 3 Accepts, 3 "no write ever
+  seen"). Next to the scale combo the radio only read as a stray control.
+  The contract gate now asserts the watcher STAYS retired.
+  2. The Resolution row drops 10px (1x) so its caption and combo sit on
+  the SAME horizontal band as the Scale caption and combo: captions both
+  at y=313, combos both at y=333, frames both ending 355 - 1px inside the
+  356 local clip, the seat v3.14.2 derived. The two bottom rows read as
+  one aligned pair; the Window Mode row and the scale row keep their
+  boxes where they were (user: "keep the boxes where they are").
+  build_selector_1x's rect assertion carries the new nine rects (the radio
+  left the contract), so the reshape cannot ship half-done.
+
+  Files: tools\dialog-static\build_dialog_static.py + build_selector_1x.py
+  (+ stages, REPORTs, dats), src\UiSpike.cpp (radio machinery removed),
+  _tests\Test-SelectorContract.py (retirement asserted),
+  src\SC4UIScaleDllDirector.cpp (3.14.3).
+
 2026-08-20  v3.14.2  SCALE ROW GEOMETRY FROM THE CLIP ARITHMETIC, not the
                      eye: rail = Renderer's x, row moved up, cutoff gone
 
