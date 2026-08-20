@@ -87,6 +87,61 @@
   Files: src\Logger.{h,cpp}, src\UiSpike.{h,cpp},
   src\SC4UIScaleDllDirector.cpp, _tests\Test-SelectorDerive.py (new).
 
+2026-08-19..20      BACKFILL - v3.2.4 .. v3.13.1 (condensed 2026-08-20)
+
+  The ledger habit broke during the selector sprint: these releases were
+  recorded only as git commit messages. One line each, newest first; expand
+  any of them with `git show <hash>` - the commits carry full bodies.
+
+  7316385 v3.13.1  the freeze: hundreds of syscalls and dozens of file reads
+                   per click (cached; necessary but NOT sufficient - v3.13.3)
+  9179aa3 v3.13.0  the resolution list was a ONE-WAY RATCHET in fullscreen
+  02c725d v3.12.1  Window Mode + Resolution hide themselves when the DLL
+                   that owns them is not installed
+  7f61b43 v3.12.0  Borderless first; fullscreen list = familiar sizes the
+                   display actually reports (removes the pink scrollbar)
+  24ed28c v3.11.2  a mode switch that invalidates the resolution must MOVE
+                   it; Window Mode gets the pending marker
+  e7e57fc v3.11.0  remaining audit findings: ScaleAll, commit-time
+                   coherence, repair divergence, bundle escape hatch
+  86f3b92 v3.10.1  three defects the state audit found, all reachable
+  e1b9953 v3.10.0  the window mode decides what "resolution" MEANS
+  d2900ba v3.9.2   the scale readout names the resolution that will apply
+  f2e1c00 v3.9.1   the Resolution combo opens on what is RUNNING
+  cf3d96d v3.9.0   the combo shows what you chose; restart popup gone;
+                   layout reordered (Window Mode / Resolution / Scale)
+  08e50f5 v3.8.0   Borderless added; fullscreen render-size rule corrected
+  bb89cb5 v3.7.1   both dropdowns judge the same resolution; list capped at
+                   what the display can show
+  102e55b v3.7.0   Resolution + Window Mode dropdowns, writing both files
+                   together (SC4GraphicsOptions.ini + dgVoodoo)
+  03622a7 v3.6.3   the clipped edge was the RIGHT one, and it is arithmetic
+  17b8161 v3.6.2   lift the selector row clear of the panel clip (wrong
+                   edge - see v3.6.3)
+  062b2e5 v3.6.1   ROLL BACK to the working build; DISABLE Cancel + Default
+                   Settings - Accept becomes the only exit (user direction)
+  122ced8 v3.6.0   stop polling the combo (superseded by the rollback)
+  4f89e34 v3.5.3   the dialog was resetting our combo
+  8f9e7c0 v3.5.2   a Default press is the FANOUT, not a stray broadcast
+                   (refuted next capture - fanout fires routinely)
+  298c6e4 v3.5.1   Default Settings, handled where it happens (wrong)
+  f53b941 v3.5.0   ask the BUTTONS, not the pixels: cIGZWinMessageFilter
+                   per button, identity not geometry - the breakthrough
+  8d98d72 v3.4.2   measure the pointer-to-geometry offset (superseded)
+  f4477f2 v3.4.1   resolution rows born hidden; Cancel no longer commits
+  b45b095 v3.4.0   visible combo border; inert stock resolution rows hidden
+  9b812e3 v3.3.4   selecting 1x kept the scaled font - stale stash blocked
+                   the rename (err 183)
+  9ce3ce2 v3.3.3   the combo showed the RUNNING scale, not the CHOSEN one
+  581a266 v3.3.2   restart notice moves to Accept, detected by side effect
+                   (later measured dead - v3.13.2)
+  cb9ba9d v3.3.1   explicit per-tier minimum resolutions (2x at 1920x1200
+                   was the measured boundary defect); notice net fixed
+  f74f108 v3.3.0   ScaleTier::ValidateBootState - one coherence check for
+                   the whole ini (26 audited failure modes; 17-row gate)
+  8b03fe7 v3.2.4   radio exclusivity from a measurement; the tier checks
+                   the size the game actually laid out at (RESMISMATCH)
+
 2026-08-19  v3.2.3   ⭐ CHOOSING 1x LEFT THE 2x ART ARMED, AND THE STOCK-TIER
                      SELECTOR WAS STASHED IN THE ONE STATE IT EXISTS FOR
 

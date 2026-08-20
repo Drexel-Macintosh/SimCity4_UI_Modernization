@@ -1,25 +1,14 @@
 # START HERE
 
 **SC4UIScale — runtime UI scaling for SimCity 4 Deluxe 1.1.641.**
-~~Current version **v2.99.0** (DLL + data; cell-aligned sampling for state strips — see rule 22).~~
-~~Current version **v3.0.1** (2026-08-16, #176 RELATCH — the SetImage crop latch is carried
-across the sweep resize; see VERSION-HISTORY.txt:1).~~
-Current version **v3.0.2** (2026-08-17, #182 — manual tier mode now syncs the static
-layers: the gate is `(AutoScale || tierActive)`; `VERSION-HISTORY.txt:1`. Macro check
-2026-08-17: `src\SC4UIScaleDllDirector.cpp:49` reads `"3.0.2"`. ⚠ the latest capture,
-`_tests\captures\SC4UIScale-2026-08-17-082334.log`, still headers **v3.0.1** — the
-v3.0.2 DLL rides the next `Deploy-OnGameClose.ps1` pass). Prior: v3.0.1 (#176 RELATCH,
-user-confirmed); v3.0.0 — DLL + a new tool; custom third-party menu icons are enlarged
-automatically at boot (#149).
-*(corrected 2026-08-16 — the v2.99.0 line above was stale. `src\SC4UIScaleDllDirector.cpp:49`
-reads `#define UISCALE_VERSION_STR "3.0.1"`; the v3.0.0 evidence trail below is historical:
-`2026-08-15  v3.0.0  CUSTOM THIRD-PARTY MENU ICONS ARE HANDLED AUTOMATICALLY` and describes it
-as "DLL + a new tool" at `VERSION-HISTORY.txt:6`; `dist\SC4UIScale-v3.0.0\` is built
-(Install.ps1, Plugins\, SHA256SUMS.txt). The old descriptor — cell-aligned sampling for state
-strips — belongs to v2.99.0, `VERSION-HISTORY.txt:45`, and was NOT carried forward.
-`UISCALE_VERSION_STR` is what stamps the DLL's own log header
-(`src\SC4UIScaleDllDirector.cpp:107`), so when this line and that macro disagree, the macro is
-the one that is running — check it before trusting any version written in prose.)*
+
+**The current version is never pinned in prose here — prose rots.** Two
+sources cannot rot: `UISCALE_VERSION_STR` in `src\SC4UIScaleDllDirector.cpp`
+is the version that stamps the running DLL's log header, and
+`VERSION-HISTORY.txt:1` is the newest ledger entry. When any document
+disagrees with the macro, the macro is the one that is running.
+Current work in flight and the next actions live in `CONTINUITY.md`.
+
 This file is the entry point. If you have lost everything else and found this,
 read it top to bottom and you can continue.
 
@@ -279,143 +268,25 @@ generator; do not hand-edit them, and do not treat them as sources of truth.
 
 ## 6. State right now
 
-**Shipping:** ~~v2.99.0~~ ~~v3.0.0~~ **v3.0.1 on disk, v3.0.2 built** (see the header note —
-the running DLL is whatever the last capture's header says). ~~Deployed 2026-08-14~~
-**Batch deployed 2026-08-16 22:31** (#172 + #177 + #173 + the #181 key-integrity gate, one
-deploy; corpus rebuilt with 5 derived lists + ladder redraw + key gate inline),
-`Test-DatIntegrity` ALL PASS **with the #178 pins updated to the de-facto 261**, all
-offline gates green; `gate_btn_undercover` reads **fractional residual 15x=0**. Tier
-currently forced to 1.5× (`Set-Tier.ps1 -Tier 1.5`, `AutoScale=0`) — ⚠ and that manual
-mode is exactly what #182 bit; its data cure (activate `-15x`, disable `-2x` for
-UncoveredIcons) is queued on game close and the DLL cure is v3.0.2.
+**This file no longer carries state - state written in prose rotted here
+three separate times, each stale banner contradicting the line above it.**
+Where the truth actually lives:
 
-*(Version + deploy date corrected 2026-08-16. VERSION: `src\SC4UIScaleDllDirector.cpp:49`
-`#define UISCALE_VERSION_STR "3.0.0"`, `VERSION-HISTORY.txt:1` "2026-08-15  v3.0.0", and the
-DEPLOYED `Plugins\SC4UIScale.dll` carries the literal string "SC4UIScale v3.0.0". DATE: v3.0.0
-did not exist on 2026-08-14 — the deployed DLL is stamped 2026-08-16 11:13 (matching
-`build\Release\SC4UIScale.dll`) and `z_SC4UIScale_SelectiveArt-15x.dat` 2026-08-16 12:16, the
-#170 rebuild. The rest of the line was re-verified the same day and left alone: `$EXPECTED` has
-25 rows (`_tests\Test-DatIntegrity.ps1:13-290`) and `$BUILT_PAIRS` 29 (`:355-408`), and the
-script was RUN, not assumed — it printed ALL PASS; `tools\uimap\emu\gate_btn_undercover.py`
-exits 0 with the #171 fractional residual reported-not-failed; live `SC4UIScale.ini` has
-`AutoScale=0` and `ScaleFactor=1.5`.)*
+- **Version running:** the log header written by the deployed DLL
+  (`Documents\SimCity 4\Plugins\SC4UIScale.log`, line 1), stamped from
+  `UISCALE_VERSION_STR` in `src\SC4UIScaleDllDirector.cpp`.
+- **Work in flight + next actions:** `CONTINUITY.md`.
+- **What changed and why, forever:** `VERSION-HISTORY.txt`, newest first.
+- **Active tier + mode:** run `_tests\Set-Tier.ps1 -Status` and
+  `_tests\Set-StockCompare.ps1 -Status` - never trust a prose claim,
+  including this file's git history.
 
-~~**⚠⚠ THE INSTALL IS IN STOCK MODE RIGHT NOW — RESTORE IT BEFORE TESTING.**~~
-~~A 3x windowed test rig was being set up when the session ended:~~
+To move tiers: `_tests\Set-Tier.ps1 -Tier <1|1.5|2|3>` (renames the tier
+dats AND swaps the matching font; hand-editing `ScaleFactor` does neither).
+`-Tier 1 -Windowed` also exists and is the correct 1x reference control.
 
-```
-# ⛔ SUPERSEDED 2026-08-16 — DO NOT RUN EITHER LINE. Kept only to show what the
-# stale banner told people to do. Nothing is disabled, and the rig is at 1.5x.
-_tests\Set-StockCompare.ps1 -Mode Ours      <- RUN THIS FIRST. 13 of our files
-                                              are disabled; the mod is OFF.
-_tests\Set-Tier.ps1 -Tier 3
-```
-
-**CORRECTED 2026-08-16 — THE INSTALL IS NOT IN STOCK MODE. THE MOD IS LIVE AT THE
-1.5× TIER**, exactly as the tier line two lines above already says. Measured, not
-inferred:
-
-- `_tests\Set-StockCompare.ps1 -Status` prints `Mode : OURS (2x scaling active)`
-  and `Resolution: 3840x2160 FullScreen / DirectX`. (The "2x" in that string is
-  hard-coded at `Set-StockCompare.ps1:101` — it does **not** mean the tier is 2x.)
-- Stock mode is the `.compare-off` suffix, **not** `.x1-disabled`
-  (`Set-StockCompare.ps1:39`). There is not one `.compare-off` file in any of the
-  five sites the script disables — `Documents\SimCity 4\Plugins`, that folder's
-  `zzz-SC4UIScale\`, `<install>\Plugins`, `<install>`, `<install>\Apps`
-  (`Set-StockCompare.ps1:45-65`) — and no `SC4UIScale.compare-state.txt`.
-  `-Mode Ours` would therefore restore **0 files** and change nothing.
-- `_tests\Set-Tier.ps1 -Status` prints `15x` for all seven live packages
-  (SelectiveArt, DialogStatic, ItemIcons, CamUI, ItemIconsSub, SaveWarningUI,
-  ThirdPartyUI), `ini: AutoScale=0 ScaleFactor=1.5`, `FontStyle.ini matches: 15x`.
-  Every `-2x` and `-3x` twin carries `.x1-disabled`.
-- ⚠ NamIcons and WarriorUI report `(none - dependency-gated off)` and their **15x**
-  copy is `.x1-disabled` too. That is the MOD gate (NAM / Warrior not installed),
-  not stock mode — do not read those two files as evidence that our layer is off.
-
-To move tiers run `_tests\Set-Tier.ps1 -Tier <1.5|2|3>` (it renames the tier dats
-AND copies the matching font; setting `ScaleFactor` in the ini by hand does not).
-Confirm with `_tests\Set-Tier.ps1 -Status` + `_tests\Set-StockCompare.ps1 -Status` —
-**not** `Test-DatIntegrity.ps1`, which checks entry counts and built artifacts and
-never reports the active tier.
-
-~~State as left: `SC4GraphicsOptions.ini` = **2400x1800 Windowed**;~~
-~~`SC4UIScale.ini` = `AutoScale=0 ScaleFactor=3`; dgVoodoo~~
-~~`FullScreenMode=false` + `CaptureMouse=false`~~ (backups: `.before-windowed-3x`,
-`.before-3x-window`).
-
-**CORRECTED 2026-08-16 — the windowed 3x rig was reverted; every value struck above
-is stale.** Measured: `SC4GraphicsOptions.ini:36,41,63` = `WindowWidth=3840`,
-`WindowHeight=2160`, `WindowMode=FullScreen`; `SC4UIScale.ini:111,124` =
-`AutoScale=0`, `ScaleFactor=1.5`; `Apps\dgVoodoo.conf:30,41` =
-`FullScreenMode = true`, `CaptureMouse = true`. The two named backup files do still
-exist.
-
-⛔ **Do not trust any state line in this file — run the two `-Status` commands
-first.** This banner sat here stale across at least two deploys while contradicting
-the tier line printed directly above it.
-
-**NEXT: the 3x eyes-on round.** The border question is settled — see
-`reference-sc4-windowed-mode-dgvoodoo` / the note below. What is NOT yet tested
-is our layer ON at 2400x1800; that combination has never been launched.
-
-### The windowed-mode finding (2026-08-14)
-
-`WindowMode=Windowed` in SC4's ini **does nothing on its own** — dgVoodoo's
-`Apps\dgVoodoo.conf` `FullScreenMode=true` overrides it, which is why there was
-no title bar to drag. `CaptureMouse=true` compounds it by trapping the cursor
-inside the client area so the title bar is unreachable. Both now `false`.
-
-Bisected properly, one variable at a time: border present at **1024x768** stock,
-then still present at **2400x1800** stock. **Resolution is innocent** — a window
-taller than the desktop, and past DirectX 7's 2048 limit, still gets a border
-and still drags. ⚠ That does NOT convict our layer either: `FullScreenMode` and
-the layer both changed between the failing case and the working one, so the
-honest state is "the wrapper setting was the fix; our layer at that size is
-untested".
-
-**Tier minimums** — ⚠ **CORRECTED 2026-08-16: the density cap is only ONE of three gates.**
-`ScaleTier::Decide` returns a factor only when **all three** hold
-(`src\ScaleTier.cpp:1670-1672`), on top of `PackageInstalled` (`src\ScaleTier.cpp:1666`):
-`kWidestDesignPx(880) * f <= width` · `kTallestDesignPx(558) * f <= height` ·
-`f <= min(w/800, h/600)` (constants `src\ScaleTier.cpp:26-27`, cap `src\ScaleTier.cpp:1659-1661`).
-Combining them, the true minimums are **1.5x = 1440x1080 · 2x = 1920x1440 · 3x = 2880x2160**,
-not ~~1200x900 / 1600x1200 / 2400x1800~~ — that is the density cap alone, which never binds
-width, because the fit gate is stricter horizontally (880 > 800) and looser vertically (558 < 600).
-
-On this 2400x1600 monitor 3x fails **all three** gates, not one: width 2640 > 2400,
-height 1674 > 1600, cap 3 > 2.667. So ~~"height is the binding constraint — expect any 3x
-breakage at the BOTTOM (the dock) first"~~ was wrong for being **exclusive**, not for naming
-height: height alone drives the cap failure (`capW` = 2400/800 = 3.00 passes *exactly*;
-`capH` = 1600/600 = 2.667 does not). Width binds too, and by more — the widest design piece
-overhangs by **240px** against the tallest piece's **74px**. Note also that
-`kTallestDesignPx` is the **Graphics Options dialog** (`src\ScaleTier.cpp:27`), not the dock,
-so the dock was never what that constant measured.
-
-3x is reachable here only by **forcing** it: `Decide` is not consulted at all unless AutoScale
-is on (`src\SC4UIScaleDllDirector.cpp:127`), so with `AutoScale=0` a tier can be set below its
-minimum. Under AutoScale, 3x is simply never selected at this resolution.
-
-`Set-Tier.ps1` has no `1` option (`_tests\Set-Tier.ps1:29`, `[ValidateSet("1.5", "2", "3")]`);
-1x is `Set-StockCompare.ps1 -Mode Stock`.
-
-**⚠ SC4TouchControls is OUT of `Plugins\` right now** — moved (not deleted) to
-`Documents\SimCity 4\_touch-QUARANTINE-do-not-reinstall\` at the user's request
-so they could test something without it. Put it back before treating any touch
-behaviour as evidence.
-
-**#154 CLOSED v2.97.1 — USER-CONFIRMED "perfect" (2026-08-13).** CAM's three
-OWN dialogs — the Village Hall / Town Hall info screen and the civic + school
-query panels — are scaled for the first time. They had rendered at 1× under
-scaled fonts since the project began, with every gate green, because no check
-ever asked whether a *mod's own* window was scaled (rule 19).
-`winning_corpus.py` now reports **0 third-party winners**: every `.UI` in the
-load order is the game's or ours.
-
-It took two builds. **v2.97.0 scaled the window and the bitmap and left the
-`imagerect` crop between them at 1×** (rule 20), so every row stripe painted
-285px of a 428px window — user-reported, and the gate had passed it. The
-repaired rule also fixed two CAM query panels that had been drawing short
-stripes since v2.38.3.
+⚠ NamIcons and WarriorUI reporting `(none - dependency-gated off)` is the
+dependency gate (NAM / Warrior not installed), not stock mode.
 
 ## ✅ ALL THREE TIERS ARE NOW VERIFIED ON SCREEN
 
