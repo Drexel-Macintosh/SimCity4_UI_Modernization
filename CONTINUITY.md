@@ -40,8 +40,9 @@ Windowed) that write `SC4GraphicsOptions.ini` + dgVoodoo's conf as a pair.
 Cancel and Default Settings ship disabled, so **Accept is the only exit** and
 a dialog close IS the commit. Everything applies on restart.
 
-**Just shipped, v3.13.3 (deployed 11:25:36, commit `ad37a3b`) — NOT yet
-user-verified on screen; verification is the first next action:**
+**Shipped and VERIFIED, v3.13.3 (deployed 11:25:36, commit `ad37a3b`;
+verified on screen by the 11:31 launch — full click-through in the log,
+all four pass criteria met, see the ledger entry at VERSION-HISTORY.txt:1):**
 
 1. **The multi-second freeze is closed.** After two fix attempts shipped on
    inference, v3.13.2 shipped an in-memory instrument (PerfProbe,
@@ -100,17 +101,20 @@ summarized here so this repo is self-sufficient):
 
 ## Open defects / next actions, in order
 
-1. **Verify v3.13.3 on screen — it has NOT been user-tested yet.** The
-   session ended right after the deploy. Pass looks like: first Graphic
-   Options open instant (the 3.3s enumeration now runs on a warm thread at
-   DLL load — the `SELRES display enumerated ONCE in Xms` log line lands
-   near boot, before any dialog); Windowed offers six sizes with 1920x1200
-   preselected "- on restart"; Borderless one row (the desktop); Fullscreen
-   seven rows; the SELPERF table on dialog close shows no big bucket. The
-   earlier user report "the load is now only on the first load which is
-   okay" was against v3.13.2, BEFORE the warm thread existed.
-2. **The v3.14 rewrite** (Phases 1–3 above). One build, full gate set, then
-   the click-through matrix in the plan.
+1. ~~**Verify v3.13.3 on screen.**~~ **DONE 2026-08-20, by the 11:31 launch
+   (first launch after the deploy) — all four pass criteria met.** Warm
+   thread: `SELRES display enumerated ONCE in 9201ms` landed at boot+9s,
+   29s before the first dialog open; no `sel.buildResList` in any SELPERF
+   bucket proves it ran off-thread. Windowed built 6 rows and committed
+   1920x1200; Borderless 1 row (the desktop); Fullscreen 7 rows. SELPERF:
+   no frame-gap lines, no bucket near a second; the biggest single pass is
+   the 124ms commit pass (two file writes). Scale picks exercised too:
+   manual 1.5x committed, then Auto. Numbers in the ledger entry. Note the
+   launch ran at the STOCK tier (800x600 fullscreen); the session ended
+   Borderless 2400x1600 + AutoScale=1, so the next launch derives a real
+   tier — routine SELPERF read after it, as always.
+2. **The v3.14 rewrite** (Phases 1–3 above) — now the first open item. One
+   build, full gate set, then the click-through matrix in the plan.
 3. **Production scrub, remainder**: strikethrough sweep across research/ and
    _tests/ docs. Already done 2026-08-20: START-HERE.md's rotted version
    preamble and §6 state graveyard replaced with rot-proof pointers,

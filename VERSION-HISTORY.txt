@@ -1,3 +1,47 @@
+2026-08-20  v3.13.3 VERIFIED ON SCREEN: one launch, full click-through, all
+                     four pass criteria met - the freeze is closed
+
+  The 11:31:18 launch (first since the 11:25:36 deploy; the user drove a
+  full click-through and the log carries the whole of it):
+
+  1. WARM THREAD RAN AT BOOT. "SELRES display enumerated ONCE in 9201ms -
+  28 distinct mode(s)" landed at 11:31:27, 9s after DLL load and 29s BEFORE
+  the first Graphic Options open (11:31:56). The line's own caveat - "unless
+  the time above is part of a SELPERF pass" - is answered by the tables: NO
+  sel.buildResList bucket appears in any SELPERF dump, so the enumeration
+  never ran on the UI thread. 9201ms vs the 3264ms measured on the first
+  click in v3.13.2: the warm run overlaps game boot (dgVoodoo init + load
+  contention) and is 2.8x slower for it - harmless, because it is off the
+  critical path and finished half a minute before any dialog.
+  2. FIRST OPEN INSTANT. Rows built 2ms after the serviced line; sel.open
+  bucket n=4 max=0.464ms; the 70 passes before the first close total
+  27.8ms, max 2.6ms - no watchdog fired while any dialog was up.
+  3. ALL THREE MODE LISTS RIGHT. Windowed built 6 rows (the new branch),
+  staged and committed 1920x1200. Borderless: 1 row (the 2400x1600
+  desktop), with the correct fallback line "800x600 is not available in
+  Borderless - selecting the largest that is". Fullscreen: 7 rows.
+  4. SELPERF CLEAN on all four dumps (three closes + shutdown): no
+  frame-gap lines, no bucket near a second. The biggest single pass is the
+  124ms CLOSE pass = the commit itself (iniWrite 34-40ms across the
+  OneDrive filter + dgVoodoo.conf 3-25ms + commit overhead) - real work,
+  not a stall. The 3264ms buildResList bucket that defined the defect is
+  simply absent from every table.
+
+  Scale picks were exercised in the same session: first Accept committed
+  AutoScale=0 ScaleFactor=1.5 (manual), second Accept committed AutoScale=1
+  (Auto) - both via ACCEPT with Cancel/Default disabled, exactly as
+  designed. Final committed graphics state: Borderless 2400x1600, dgVoodoo
+  FullScreenMode=false; ini AutoScale=1 (ScaleFactor=1.5 stands as the
+  request). NOTE: this launch itself ran at the STOCK tier (800x600
+  fullscreen -> tier 1.00, SelectorAtStock=1) - the freeze fix is
+  display-level and tier-independent, and the next launch (Borderless
+  desktop) derives a real tier; routine SELPERF read after it.
+
+  Deploy proven, not assumed: Test-DatIntegrity.ps1 ALL PASS (29
+  deployed==built hashes) with the v3.13.3 DLL.
+
+  No code changes in this entry - verification + records only.
+
 2026-08-20  v3.13.3  THE INSTRUMENT NAMED BOTH IN ONE LAUNCH: the freeze was
                      the display enumeration itself, and Windowed had NO BRANCH
 
