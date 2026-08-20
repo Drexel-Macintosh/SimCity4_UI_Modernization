@@ -84,6 +84,28 @@ if ($missing.Count -gt 0) {
     throw "refusing to ship a partial bundle"
 }
 
+# --- INVISIBLE TO THE PARSER, AND THAT IS THE BUG IT CLOSES -----------------
+# The deploy script copies SelectorUI-1x through VARIABLES:
+#     Copy-Item $selSrc (Join-Path $zzz ("z_SC4UIScale_SelectorUI-1x.dat" + $selSuffix))
+# so the literal-path regex above cannot see it and the bundle shipped WITHOUT
+# the stock-tier scale selector. That made 1x a ONE-WAY DOOR for anyone
+# installing from a bundle: at stock every other package is stashed, and the
+# only control that could raise the tier again lives in that dat.
+#
+# ⭐ THE PARSER IS A DERIVED LIST, WHICH IS THE RIGHT SHAPE - but a derived
+# list only sees what it can parse, and "not matched" is indistinguishable
+# from "not present". The assertion below is what makes that difference
+# visible, because the next package copied through a variable will be invisible
+# in exactly the same way.
+$selectorSrc = Join-Path $proj ("tools" + [IO.Path]::DirectorySeparatorChar + "packages" + [IO.Path]::DirectorySeparatorChar + "1x" + [IO.Path]::DirectorySeparatorChar + "z_SC4UIScale_SelectorUI-1x.dat")
+if (-not (Test-Path $selectorSrc)) {
+    throw ("the stock-tier selector package is missing: $selectorSrc - " +
+           "without it a bundle install cannot leave 1x from inside the game")
+}
+Copy-Item $selectorSrc (Join-Path $zzzOut "z_SC4UIScale_SelectorUI-1x.dat") -Force
+$copied++
+Write-Output "  + z_SC4UIScale_SelectorUI-1x.dat (stock-tier selector; the DLL arms or stashes it at boot)"
+
 # the shipping user ini - the packaging copy, not the developer one
 Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $plugOut "SC4UIScale.ini") -Force
 $copied++
@@ -110,6 +132,14 @@ foreach ($u in $unbuildable) {
     } else {
         $notes += "omitted BY DECISION (rewrites CAM gameplay data, not UI): $($u.Name)"
     }
+}
+
+# ⭐ PROVE THE ESCAPE HATCH IS IN THE BUNDLE. A missing selector does not
+# break anything visibly - it removes the only way back from 1x, which nobody
+# discovers until they are already there.
+$selectorOut = Join-Path $zzzOut "z_SC4UIScale_SelectorUI-1x.dat"
+if (-not (Test-Path $selectorOut)) {
+    throw "the bundle has no stock-tier selector - 1x would be a one-way door"
 }
 
 # --- docs --------------------------------------------------------------------

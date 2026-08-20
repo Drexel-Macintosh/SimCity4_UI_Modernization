@@ -18772,8 +18772,16 @@ namespace
 	unsigned int gSelLastMs = 0;
 	void* gSelProcOn = nullptr;     // dialog our proc is currently chained on
 
+	// Set when a runtime repair has written AutoScale=1 to the ini. The combo
+	// seeds from `settings`, which still holds the value read at BOOT, so
+	// without this the dialog showed the opposite of the file for the rest of
+	// the session - and could show a tier the screen cannot carry.
+	bool gSelAutoOverride = false;
+
 	int SelRowFromSettings(const Settings& s)
 	{
+		// A runtime repair beats the boot-time reading: the ini has moved on.
+		if (gSelAutoOverride) { return 0; }
 		if (s.spikeAutoScale) { return 0; }
 		for (int k = 1; k < kSelCount; k++)
 		{
@@ -19274,6 +19282,35 @@ namespace
 		wchar_t ini[MAX_PATH] = {};
 		SelIniPath(ini, MAX_PATH);
 		if (ini[0] == 0) { return; }
+
+		// ⭐ ScaleAll IS WRITTEN TOO, AND THAT CLOSES THE WORST TRAP FOUND.
+		// The art and font layer is armed from the FACTOR, while every
+		// geometry consumer is gated on ScaleAll - so with ScaleAll=0 (or the
+		// key deleted, or written as a word, all of which parse to 0) every
+		// choice made here was committed and then silently voided at the next
+		// boot, forever. The dialog was reachable and NO combination inside it
+		// could repair the state, because the selector wrote AutoScale and
+		// ScaleFactor and never the key that was actually off. Three review
+		// passes flagged it independently.
+		//
+		// Picking a scale from this control IS a request for scaling, so the
+		// switch that enables it is part of the request. Stock (row 1) is the
+		// one case that must not touch it: 1x is meant to be inert, and a
+		// reference capture taken with ScaleAll=0 must stay that way.
+		if (row != 1)
+		{
+			wchar_t cur[16] = {};
+			GetPrivateProfileStringW(L"UiSpike", L"ScaleAll", L"1", cur, 16, ini);
+			if (_wtoi(cur) == 0)
+			{
+				WritePrivateProfileStringW(L"UiSpike", L"ScaleAll", L"1", ini);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELECTOR ScaleAll was %ls - written back as 1. "
+					"Without it the tier's art and fonts arm while every "
+					"geometry patch stays off, and nothing in this dialog "
+					"could have repaired that.", cur);
+			}
+		}
 		if (row == 0)
 		{
 			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1", ini);
@@ -19657,6 +19694,20 @@ void UiSpike::ServiceScaleSelector()
 							"rendered is exactly the trap the boot rescue "
 							"exists for, and the next launch now picks the "
 							"tier from the real resolution.");
+						// ⭐ AND THE IN-MEMORY STATE FOLLOWS THE FILE.
+						// This wrote the ini and left `settings` holding the
+						// manual factor, so the Scale combo - which seeds from
+						// settings - showed the opposite of what the ini said
+						// for the rest of the session, and could show a tier
+						// the screen cannot carry. A repair that leaves two
+						// sources of truth disagreeing has moved the defect
+						// rather than fixed it.
+						// `settings` is const here, and casting that away to patch
+						// one field would hide the divergence rather than record
+						// it. An explicit override says what happened, and is what
+						// the row derivation consults.
+						gSelAutoOverride = true;
+						gSelPendingRow = -1;   // re-derive on the next open
 					}
 				}
 			}
@@ -19763,6 +19814,29 @@ void UiSpike::ServiceScaleSelector()
 				// thing that can close it is Accept.
 				if (gSelStagedRow >= 0)
 				{
+					// ⭐ THE PAIR IS RE-CHECKED HERE, not only on the 250ms
+					// rebuild. Accepting within one tick of a resolution
+					// change skipped that rebuild entirely and committed a
+					// pair that cannot both be true - 1024x768 with 1.5x, say.
+					// The rebuild is a courtesy that keeps the display honest
+					// while the dialog is open; THIS is the check that decides
+					// what gets written, and a guard on the write cannot be
+					// outrun by a fast click.
+					int cw = 0, ch = 0;
+					SelEffectiveRes(&cw, &ch);
+					if (gSelStagedRow > 1 && cw > 0 && ch > 0
+						&& !ScaleTier::Fits(kSelFactors[gSelStagedRow], cw, ch))
+					{
+						int mw = 0, mh = 0;
+						SelMinimumFor(gSelStagedRow, &mw, &mh);
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELCLOSE %s cannot fit the committed "
+							"%dx%d (needs %dx%d) - committing Auto instead. "
+							"The pair was accepted faster than the list could "
+							"be rebuilt.",
+							kSelLabels[gSelStagedRow], cw, ch, mw, mh);
+						gSelStagedRow = 0;
+					}
 					Logger::Get().WriteLine(LogLevel::Info,
 						"UiSpike: SELCLOSE committing the staged scale "
 						"(closed via %s; Cancel and Default are disabled, so "
