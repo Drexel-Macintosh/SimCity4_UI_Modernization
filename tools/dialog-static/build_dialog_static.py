@@ -666,40 +666,37 @@ def inject_res_readout(text, fn):
     # "no write ever seen"), the stock radios ship hidden, and next to the
     # scale combo the radio only read as a stray control. The node, its DLL
     # watcher (SelRadioTick) and the id are gone together.
-    # ---- STYLING: WHITE, LIKE THE STOCK INPUT BOXES (2026-08-20) --------
-    # ⭐ THE ENGINE'S COMBO CHROME IS HARDCODED. The down-arrow button and the
-    # drop-list frame GZWinCombo draws come out in a hardcoded white-ish
-    # family that NO .UI attribute recolors - fillcolor paints the field,
-    # never that chrome.
+    # ---- STYLING: ONE COLOUR, THE ENGINE'S STANDARD (v3.14.4) -----------
+    # The dropdown must be ONE COLOUR (user direction, with a stock
+    # reference image: the Budget dialog's "Initiate Deal" combo, open list
+    # uniform). Three measured builds converged here:
     #
-    # The first version painted the field the panel's own colour to blend in:
-    # (218,224,229), a MEASUREMENT of the dialog background art
-    # {46a006b0,144161ee} (one flat colour across 100% of the sampled
-    # interior). Against that grey blend the white chrome stood out as
-    # lighter edges - a "square in a square" (user-reported at 2x,
-    # 2026-08-20).
+    #   fillcolor = panel (218,224,229), opaque   -> the hardcoded white
+    #       arrow button + drop-list chrome stood out as lighter edges,
+    #       "a square in a square".
+    #   fillcolor = white, opaque                 -> the closed field clean,
+    #       but the OPEN list two-toned: the row area follows fillcolor
+    #       (white) while the combo's internal drop-list child paints the
+    #       engine's STANDARD list colour (222,232,227) as its surround,
+    #       whatever the flags say.
+    #   transparent + white (the stock grammar)   -> the stock open list is
+    #       ALSO the uniform standard colour, not white: the reference
+    #       image proves the drop-list background is (222,232,227) for
+    #       everyone, an engine constant no .UI attribute recolors. An
+    #       all-white open list is therefore unreachable from data; making
+    #       it white would be a game-wide byte patch of the shared listbox
+    #       colour.
     #
-    # Stock combos hide the very same chrome by being WHITE-ON-WHITE: the
-    # stock input box is white, so the white arrow button and drop-list frame
-    # disappear into it. Our fields therefore paint (255,255,255) too - the
-    # stock input-box look - with the dark 1px GZWinFlatRect frame (below)
-    # kept, because a white field still needs separation from the panel.
-    #
-    # ⛔ NO `transparent`. THAT produced the EARLIER two-tone the user saw:
-    # "white center and it has a blue square around it". With transparency
-    # on, the field paints fillcolor in the middle and lets the panel art
-    # through at the edges, so the closed control reads as a block in a
-    # frame. It also made the OPEN list composite whatever it overhangs -
-    # and this list extends past the dialog's own edge, so it straddled two
-    # different backgrounds. One flag, two symptoms, and the cure for both is
-    # to paint the field opaquely (winflag_pbufftrans=no stays) instead of
-    # borrowing the background.
-    #
-    # The open-list colours are exactly the stock ones: the (24,32,106)
-    # highlight bar with white text on the selected row, inside the black
-    # drop-down outline.
+    # So the one-colour solution is to JOIN the standard: fillcolor =
+    # (222,232,227), the engine's own list colour. Then closed field, open
+    # row area and open surround are all one colour - pixel-identical to
+    # the stock control the user pointed at (sage field, white arrow
+    # button, dark 1px frame, (24,32,106) highlight bar with white text).
+    # Opaque (winflag_pbufftrans=no) stays: `transparent` paints fillcolor
+    # in the field's middle and lets the panel through at the edges - the
+    # earliest two-tone.
     combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-             'area=(293,333,457,354) fillcolor=(255,255,255) '
+             'area=(293,333,457,354) fillcolor=(222,232,227) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=no winflag_pbufferase=yes '
@@ -862,7 +859,7 @@ def inject_res_readout(text, fn):
     # this file now states in one place so it is not repeated per control.
     def _combo(cid, x0, y0, x1, y1, items):
         return ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-                'area=(%d,%d,%d,%d) fillcolor=(255,255,255) '
+                'area=(%d,%d,%d,%d) fillcolor=(222,232,227) '
                 'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
                 'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
                 'winflag_pbufftrans=no winflag_pbufferase=yes '

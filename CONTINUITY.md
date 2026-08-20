@@ -79,8 +79,11 @@ cycles, a 0.2ms no-event tick, and no frame-gap. **v3.14.1 (same day,
 deployed 15:19):** a city-loaded unchanged Accept CRASHED — the close
 re-read touched a dialog the game DESTROYS (not hides) with a city loaded;
 now liveness-guarded (pointer found this pass, or skip). Same build cured
-the combo chrome two-tone (fields now white like stock) and added the
-"Scale" caption. **v3.14.2:** scale-row geometry derived from the panel
+the combo chrome two-tone and added the "Scale" caption; v3.14.4 settled
+the styling for good: fields paint the engine's standard list colour
+(222,232,227) so closed field and open list are ONE colour - an all-white
+open list is unreachable from .UI (the drop-list child paints the standard
+colour regardless; measured across three builds). **v3.14.2:** scale-row geometry derived from the panel
 clip arithmetic (caption on the Renderer rail, frame 1px inside the 356
 local clip). **v3.14.3:** the stray radio beside the scale combo removed
 (node + dead SelRadioTick watcher; the contract gate asserts the

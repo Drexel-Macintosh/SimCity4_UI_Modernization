@@ -1,3 +1,28 @@
+2026-08-20  v3.14.4  THE DROPDOWN IS ONE COLOUR: join the engine's standard
+                     list colour - an all-white open list is unreachable
+
+  User direction: "it has to be one color in the dropdown", with a stock
+  reference (Budget's Initiate Deal combo: open list uniform). Three
+  measured builds converged the mechanism:
+    * the combo's internal drop-list child paints the engine's STANDARD
+      list colour (222,232,227) as its background whatever the flags -
+      the stock grammar (transparent + white fill) opens sage too, as the
+      reference image shows;
+    * the open list's ROW AREA follows fillcolor when opaque - so opaque
+      white made rows white inside a sage surround (the two-tone), and
+      opaque panel-colour made the chrome stand out;
+    * therefore an all-white open list cannot be produced from .UI at all
+      (it would be a game-wide byte patch of the shared listbox colour),
+      and the one-colour solution is to JOIN the standard: fillcolor =
+      (222,232,227) on all three combos. Closed field, open rows and open
+      surround are now one colour - the stock control's exact look (sage
+      field, white arrow button, dark 1px frame, (24,32,106) highlight).
+  Data-only; DLL re-stamped 3.14.4. Eyes-on owed: open each dropdown -
+  one uniform colour, no border-in-border.
+
+  Files: tools\dialog-static\build_dialog_static.py (+ stages, REPORTs,
+  dats), src\SC4UIScaleDllDirector.cpp (3.14.4).
+
 2026-08-20  v3.14.3  THE RADIO IS GONE AND THE TWO BOTTOM ROWS ARE ONE
                      ALIGNED PAIR (user direction, arithmetic as of v3.14.2)
 
