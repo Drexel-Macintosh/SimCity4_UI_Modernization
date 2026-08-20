@@ -1,3 +1,35 @@
+2026-08-20  v3.14.0 VERIFIED ON SCREEN: the state machine's first launch,
+                     at the REAL tier, user click-through all working
+
+  The 14:02 launch - first v3.14 run, and the first at a real tier
+  (Borderless 2400x1600 -> tier 2.00; the v3.13.3 verification ran stock).
+  BootState COHERENT. The user drove the matrix and reported "all
+  working"; the log carries the measurement:
+
+  1. WARM THREAD: "SELRES display enumerated ONCE in 4449ms" at boot+4.4s,
+  14s before the first dialog open. No enumeration bucket exists in any
+  SELPERF table - it ran off-thread, as designed.
+  2. THE STATE MACHINE, EXERCISED: first open offered 1 Borderless row;
+  staged Windowed + 1920x1200 + 1.5x, one ACCEPT committed all three
+  (AutoScale=0 ScaleFactor=1.5 to our ini, WindowMode/Width/Height to the
+  gfx ini, dgVoodoo FullScreenMode=false - the pair, both files). Reopen
+  showed the pending future (6 Windowed rows, "- on restart" tags -
+  user-confirmed). Staged Borderless, second ACCEPT committed AutoScale=1
+  + Borderless 2400x1600. Close-time re-read, staged values, single
+  commit per close - exactly the designed flow.
+  3. SELPERF CLEAN: no frame-gap lines, no pass-watchdog line while any
+  dialog was open. The biggest single pass is the 119ms CLOSE pass = the
+  commit itself (iniWrite 41ms across the OneDrive filter + dgWrite +
+  commit overhead) - real work, not a stall. The no-event tick costs what
+  it was designed to cost: sel.poll n=93, max 0.2ms.
+  4. THE STRIP, MEASURED IN THE TABLE: v3.13.3's table carried
+  sel.observe (7,507 message-path calls) and sel.gfxStamp (115 file
+  stats); neither bucket exists any more. Whole-visit sel.pass fell from
+  173 passes / 262ms to 144 passes / 156ms, with the dialog doing MORE
+  (two full commit cycles).
+
+  Files: log evidence only; no code changes in this entry.
+
 2026-08-20  v3.14.0  THE SELECTOR REWRITE: six generations of mechanism
                      become ONE pure function - derive, diff-apply, commit
                      at close
