@@ -40,17 +40,17 @@ Headline findings are collected in [§ What this slice settles](#what-this-slice
 | `+0x00` | `sub_7B5C40:0x7B5C43` writes `0x00AB9658` | primary vtable |
 | `+0x4C` | `vt+0x15C` = `0x0099BE4C` = `8B 41 4C C3` (`mov eax,[ecx+0x4C]; ret`) | context ptr handed to the window callback |
 | `+0xD8` | `sub_7B5C40:0x7B5C49` writes `0x00AB9644` | **embedded painter interface** (see below) |
-| `+0xDC` | `sub_7B59B0:0x7B5A96` | key passed to `app->vt+0x2C` — ⚠ region/city-set handle |
+| `+0xDC` | `sub_7B59B0:0x7B5A96` | key passed to `app->vt+0x2C` — Note: region/city-set handle |
 | `+0xE0` | `sub_7B5C40` Releases it; `sub_7B6060:0x7B618F` assigns it | a PNG image ref (`{0x856DDBAC, 0x6A1EED2C, 0x4A2805FF}`) |
 | `+0xE4` | `sub_7B5DB0`, `sub_7B5DD0` | current **hover/selected item\*** |
 | `+0xE8` / `+0xEC` | `sub_7B5CA0:0x7B5CBF/0x7B5CC5` (added), `sub_7B3030:0x7B3047/0x7B3068` (subtracted) | **pan** (int x, int y) — confirms GROUND TRUTH |
 | `+0xF0` | `sub_7B5E20` writes; `sub_7B59B0` reads (0 ⇒ early-out) | UI-script **instance id** for a normal item window |
-| `+0xF4` | `sub_7B5E20` writes; `sub_7B59B0` passes as arg2 of the factory | second GUID for the item window ⚠ (window class/type id) |
+| `+0xF4` | `sub_7B5E20` writes; `sub_7B59B0` passes as arg2 of the factory | second GUID for the item window Note: (window class/type id) |
 | `+0x100/+0x104/+0x108` | `sub_7B5D50`, `sub_7B5E20`, `sub_7B5C40` (raw `free`) | `item*` vector `{begin, end, capEnd}`, stride 4 |
 | `+0x10C` | `sub_7B6060` creates it; `sub_7B5C40` Releases it | **the 256×256 tile cache** |
-| `+0x111` | `sub_7B59B0:0x7B5A72` | ⚠ "build a window for every item" (else only for `+0xE4`) |
-| `+0x112` | `sub_7B59B0:0x7B5ACF` | ⚠ "build even when the cell has no city" |
-| `+0x116` | `sub_7B59B0:0x7B5A32` | ⚠ "use the alternate art for the player's current city" |
+| `+0x111` | `sub_7B59B0:0x7B5A72` | Note: "build a window for every item" (else only for `+0xE4`) |
+| `+0x112` | `sub_7B59B0:0x7B5ACF` | Note: "build even when the cell has no city" |
+| `+0x116` | `sub_7B59B0:0x7B5A32` | Note: "use the alternate art for the player's current city" |
 | `+0x11C…` | `sub_7B6060:0x7B619A`, dtor `0x6C6E90` | vector, resized to **2**, holds the airport/seaport PNGs |
 
 ### The embedded painter interface at `this+0xD8` (vtable `0x00AB9644`)
@@ -75,7 +75,7 @@ Object is `0x44` bytes (`push 0x44; call 0x005E55E0` at `0x7B608C`), vtables
 |---|---|---|
 | `+0x0C/+0x10/+0x14` | `sub_7B5E90` (`sar …,3`), `sub_7B2620:0x7B274E` | tile vector, **stride 8** = `{IGZBuffer* buf; uint8 dirty;}` |
 | `+0x18/+0x1C` | `sub_7B2620:0x7B2627/0x7B262B` (multiplied by `+0x28`/`+0x2C`) | scroll origin **in tile units** |
-| `+0x20/+0x24` | zeroed together with `+0x18/+0x1C` at `0x7B600D..0x7B6016` | ⚠ second origin / last-drawn origin |
+| `+0x20/+0x24` | zeroed together with `+0x18/+0x1C` at `0x7B600D..0x7B6016` | Note: second origin / last-drawn origin |
 | `+0x28` | `sub_7B5EF0:0x7B5F06` | **tile width** (256) |
 | `+0x2C` | `sub_7B5EF0:0x7B5F16` | **tile height** (256) |
 | `+0x30` | `sub_7B5EF0:0x7B5F22` | tiles across = `(W-1)/tw + 2` |
@@ -91,9 +91,9 @@ Tile index = `tileY * [cache+0x30] + tileX` — measured in `sub_7B2620:0x7B2740
 
 | addr / value | what the bytes say |
 |---|---|
-| `[0x00B43C94]` | the SC4 application singleton. Setter at `0x00601C04` = `mov eax,[esp+4]; mov [0xB43C94],eax; mov al,1; ret`. ⚠ named `cISC4App` by inference from its accessor block at `sub_602290`. |
+| `[0x00B43C94]` | the SC4 application singleton. Setter at `0x00601C04` = `mov eax,[esp+4]; mov [0xB43C94],eax; mov al,1; ret`. Note: named `cISC4App` by inference from its accessor block at `sub_602290`. |
 | `[0x00B43C9C]` | **the graphics system.** Obtained at `0x00602384` from `GetSystemService(0xC416025C, 0x0073283C, &out)`; `0xC416025C` is `kGZGraphicSystem_SystemServiceID` in the class registry. |
-| `[0x00B43DD0]` | a render/scene singleton (176 xrefs); also written from `regionScreen+0x168` at `0x007AD0EB`. ⚠ not fully pinned. |
+| `[0x00B43DD0]` | a render/scene singleton (176 xrefs); also written from `regionScreen+0x168` at `0x007AD0EB`. Note: not fully pinned. |
 | `0x008793EC` | `A1 AC 40 B5 00 C3` = `return *(void**)0x00B540AC` — the framework/COM singleton getter. Its `vt+0x14` is `GetSystemService(serviceID, iid, void** out)`. |
 | `0xA417445E` | `kGZWinMgrDefaultSysServiceID` (class registry) — the **window manager** service. |
 | `0x856DDBAC` | resource **TypeID** used for every image load in `sub_7B6060` (SC4 PNG type). |
@@ -117,7 +117,7 @@ bool RebuildItemWindow(RegionItem* it)          // this = view (ESI)
 {
     /* --- 1. drop the existing child window ------------------------------- */
     if (it->win /*+0x30*/) {
-        this->vt_0x40(it->win);                 // 0x7B59C9  call [edx+0x40]  ⚠ RemoveChildWindow
+        this->vt_0x40(it->win);                 // 0x7B59C9  call [edx+0x40]  Note: RemoveChildWindow
         if (it->win) { it->win = 0; it->win->Release(); }   // vt+0x08
     }
 
@@ -159,7 +159,7 @@ bool RebuildItemWindow(RegionItem* it)          // this = view (ESI)
         GZ()->vt_0x14(0xA417445E /*kGZWinMgrDefaultSysServiceID*/, 0x5A4, &out);
     cIGZWinMgr* wm = (cIGZWinMgr*)out;
     sub_4177F0(&out);                                       // release the smart ref
-    void* savedFocus = wm->vt_0x90();                       // ⚠ GetFocus
+    void* savedFocus = wm->vt_0x90();                       // Note: GetFocus
 
     cIGZWin* w = sub_5F9390(&key, this, guid);              // cdecl(3)  UI-script factory
 
@@ -178,14 +178,14 @@ bool RebuildItemWindow(RegionItem* it)          // this = view (ESI)
         iq->Release();
     }
 restore_focus:
-    if (wm->vt_0x60(savedFocus)) wm->vt_0x94(savedFocus);   // ⚠ SetFocus if still valid
+    if (wm->vt_0x60(savedFocus)) wm->vt_0x94(savedFocus);   // Note: SetFocus if still valid
 }
 ```
 
 **FIELDS** — reads `this+0x111`, `+0x112`, `+0x116`, `+0xDC`, `+0xE4`, `+0xF0`, `+0xF4`,
 `+0x4C` (via `vt+0x15C`); reads/writes `item+0x30`; reads `item+0x08`, `item+0x0C`.
 
-**VTABLE CALLS** — `this->vt+0x40` (child removal ⚠), `this->vt+0x15C` = `0x0099BE4C`
+**VTABLE CALLS** — `this->vt+0x40` (child removal unsure), `this->vt+0x15C` = `0x0099BE4C`
 (byte-verified `mov eax,[ecx+0x4C]; ret`), plus the runtime-typed calls above.
 
 **CONSTANTS** — `0x96A006B0` (resource group), `0xCA539343` / `0x0A551C53` (current-city
@@ -194,7 +194,7 @@ overrides), `0xA417445E` + `0x5A4` (winmgr service + iid), `0x22BA0121` + `0x007
 
 **CALLERS** — `0x007B5D34` (in `sub_7B5CA0`), `0x007B5E55` (in `sub_7B5E20`).
 
-⚠ UNSURE: the meanings of `+0x111`, `+0x112`, `+0x116`; the identities of `vt+0x40`,
+Unsure: the meanings of `+0x111`, `+0x112`, `+0x116`; the identities of `vt+0x40`,
 `wm->vt+0x60/0x90/0x94`; and that `App()->vt+0x88` is "the region".
 
 ---
@@ -218,7 +218,7 @@ void ~RegionView() {
 }
 ```
 
-**CALLERS** — `0x007B5E73` (in `sub_7B5E70`). ⚠ The item array at `+0x100` is released with
+**CALLERS** — `0x007B5E73` (in `sub_7B5E70`). Note: The item array at `+0x100` is released with
 a *raw* `free` — the items themselves are not deleted here.
 
 ---
@@ -247,7 +247,7 @@ void InvalidateItem(RegionItem* it)
     box.bottom = y + (r[3] - r[1]);
 
     this->tileCache /*+0x10C*/ -> Invalidate(&box);       // 0x7B5D21  call 0x7B2620
-    (*(void**)0x00B43DD0)->vt_0x50();                     // 0x7B5D2E  ⚠ "needs redraw"
+    (*(void**)0x00B43DD0)->vt_0x50();                     // 0x7B5D2E  Note: "needs redraw"
     this->RebuildItemWindow(it);                          // 0x7B5D34  call 0x7B59B0
 }
 ```
@@ -283,9 +283,9 @@ void AddItem(RegionItem* it) {
 }
 ```
 
-⚠ The `if (eax)` guard at `0x7B5D6E` protects only the store, not the `+= 4`; that path is
+Note: The `if (eax)` guard at `0x7B5D6E` protects only the store, not the `+= 4`; that path is
 only reachable with a null-but-non-full vector, which cannot happen in practice.
-⚠ The `sub_51CA60` argument shape (`__thiscall` with 5 stack args, two of which are `lea`s
+Note: The `sub_51CA60` argument shape (`__thiscall` with 5 stack args, two of which are `lea`s
 into the caller's own argument slots) is inferred, not proven.
 
 **CALLERS** — `0x007B18B7` (in `sub_7B13C0`, the region screen's item-list builder).
@@ -371,7 +371,7 @@ void resize(unsigned n) {                 // this = {T* begin; T* end; T* cap;}
 }
 ```
 
-⚠→**REAL DEFECT (in the game, not in us).** `sizeof(T) == 8` and `sub_7B51D0` reads *both*
+Note:→**REAL DEFECT (in the game, not in us).** `sizeof(T) == 8` and `sub_7B51D0` reads *both*
 halves of the fill value — `0x007B51D0` contains `8B 0F` (`mov ecx,[edi]`, the pointer) and
 `8A 47 04` (`mov al,[edi+4]`, **the dirty byte**). But `sub_7B5E90` only executes
 `mov dword ptr [esp+8], 0`, zeroing bytes `[esp+8..esp+0xB]`; the byte at `[esp+0xC]` that
@@ -443,7 +443,7 @@ fail:
 code can only ever emit `fmt = 4` or `fmt = 9`, so only the `0x10` and `0x20` arms are live;
 `fmt = 2` → `bpp 8` is dead in this call path.
 
-**⚠→ THIS EXPLAINS THE MEASURED FAILURE.** The game **never re-Inits a live buffer.** Every
+**Note:→ THIS EXPLAINS THE MEASURED FAILURE.** The game **never re-Inits a live buffer.** Every
 tile that reaches `vt+0x0C` was created by `gs->vt_0x0C` a dozen instructions earlier
 (`0x7B5FB6`), and any pre-existing buffer in that slot was nulled and Released first
 (`0x7B5FA6..0x7B5FAE`). So "`Init(520,320,{9,0x20})` on an already-initialised 260×160
@@ -491,7 +491,7 @@ bool Init()
                     (char*)this + 0xD8))    // the embedded painter interface
         return false;
 
-    (*(void**)0x00B43DD0)->vt_0x80(this->tileCache, 0, 0x3E8);   // 0x7B6145  register @ z=1000 ⚠
+    (*(void**)0x00B43DD0)->vt_0x80(this->tileCache, 0, 0x3E8);   // 0x7B6145  register @ z=1000 (note)
     this->vt_0x110(0x00010000, 0);          // SetFlag  (0x0099DB6B, touches [this+0xC8])
     this->vt_0x110(0x00008000, 0);          // SetFlag
 
@@ -531,7 +531,7 @@ tile painter `0x007B4150` reads first (`mov esi,[ebp+8]` with `ebp = this+0xD8`)
 **CALLERS** — none in code; reached through vtable slot `+0x10` of `0x00AB9658`
 (data word at `0x00AB9668`, byte-scanned).
 
-⚠ UNSURE: `[0x00B43DD0]->vt+0x80(cache, 0, 1000)` — I read it as registering the tile cache
+Unsure: `[0x00B43DD0]->vt+0x80(cache, 0, 1000)` — I read it as registering the tile cache
 as a draw layer with a sort key of 1000, but I have not proven that.
 
 ---

@@ -1,16 +1,13 @@
-# THE BUDGET DETAIL DIALOGS — DECODED ENGINE REFERENCE (2026-07-30, v2.26.0)
+# THE BUDGET DETAIL DIALOGS — DECODED ENGINE REFERENCE
 
-> **Level 1 of the instruction hierarchy** (`METHOD.md` §1): this file is to
-> be re-read and QUOTED before any budget-dialog fix, and extended in the
-> same session with anything new. §POPUP's failed-attempts table exists so no
-> attempt is made twice.
+Re-read and quote this file before any budget-dialog fix; §POPUP's
+failed-attempts table exists so no attempt is made twice.
 
 Fully decoded by three disassembly passes + live MWKID/BHDR measurement +
 the true-stock 1024x768 reference (`_tests\captures\stock-budget\`,
 STOCK-REFERENCE.md carries the standing directive: output = stock scaled
-by f, judged by GEOMETRY/MATH, never pixel counting). Supersedes the
-2026-07-30 morning draft entirely (several of its identifications were
-wrong — corrections flagged ⚠ below).
+by f, judged by GEOMETRY/MATH, never pixel counting). The identifications
+below are the corrected set.
 
 ## 1. THE LAYOUT ENGINE
 
@@ -29,9 +26,9 @@ per-department builder functions. Its geometry comes from three primitives:
 - **`sub_779660`** (label factory): (parent, id, x, y, text, align, styleId,
   R,G,B) → autosized text window, then a `SetArea` carrying the constant 1000
   (`push 0x3e8` @0x77971A); align 0 = left at x, align 6 = RIGHT EDGE lands on
-  x, 0x63 = FILL. No internal cursor — y always supplied by the caller.
-  ⚠ **CORRECTED 2026-07-30 (v2.28.4):** the earlier reading of that 1000 as a
-  wrap width ("widened to 1000−textW") was WRONG and cost four builds. It is
+   x, 0x63 = FILL. No internal cursor — y always supplied by the caller.
+   **Correction:** the earlier reading of that 1000 as a
+   wrap width ("widened to 1000−textW") was WRONG and cost four builds. It is
   applied *before* alignment and, in the 0x63 branch, immediately overwritten
   by `SetArea(x, y, parentW−2x, parentH−y)` — see §POPUP P3. Wrap width is
   never a constant here; it is `GetW()−10`, recomputed per `SetArea`
@@ -57,7 +54,7 @@ sits ON it. With our 2x art the whole stack is exactly stock×2
 Specifically do NOT touch `add edx,eax` 0x77A7C7 — noping it corrupts the
 group-2 cursor too.
 
-## 2. ⚠ CORRECTED IDENTIFICATIONS (the morning draft was wrong)
+## 2. CORRECTED IDENTIFICATIONS
 
 - "Subtotal plates 0x551-0x554 (128x20, art 140155CB/CC)" → **the per-section
   SCROLL ARROWS** (exe ids 0x451-0x454 +0x100 at runtime; 4-state strips,
@@ -100,17 +97,17 @@ W−76, title 40/16, header 36) + combo width pin 240. All values
 round(stock×f); imm8/disp8 ceilings logged (slider w, ordinance names,
 combo width via pin instead).
 
-## 5. OPEN
+## 5. STANDING FACTS AND RESIDUAL GAPS
 
-- The gray header band: engine+art say it must paint pink through the same
-  plain-blit path as the slabs. The v2.25.33/34 hooks (now removed) are the
-  prime suspect for the observations. JUDGE LIVE at v2.26.0 before anything
-  else; if still gray, the next step is a draw trace — never geometry.
-- Taxes dialog: not yet eyes-on under the family patches (shares builders/
-  helpers; verify then patch residual sites the same way if flagged).
-- Second consumer of the D-series band arts (0x77F596 = Neighbor Deals'
-  stack) — any art change hits both families.
-- CustomBudgetDepartments.dll exists in Plugins and can alter row counts.
+Standing facts:
+- The D-series band arts have a second consumer (`0x77F596` = the Neighbor
+  Deals stack) — any art change hits both families.
+- `CustomBudgetDepartments.dll` exists in Plugins and can alter row counts;
+  the row-count clamp (`BUDGET-DETAIL-ANATOMY.md` §7.3, clamp to 9 at
+  `0x77C829`) is what keeps the height formula bounded under it.
+
+Two residual observations are filed as reference gaps in `SDK-GAPS.md` §13
+(G25 gray header band, G26 Taxes-dialog eyes-on).
 
 ## 6. DEAD ENDS (never re-walk)
 
@@ -141,7 +138,17 @@ Ordinances dialog 0x0423278F (900 wide)
 
 The SAME window serves the Business Deals empty box via a DIFFERENT code
 path (0x77C26C/0x77C292 vs the ordinance path 0x78BA35/0x78BA81), each with
-its own copies of the constants — law 16.
+its own copies of the constants — law 16. Concretely it is TWO builders with
+different stock heights: `sub_78B120` (ordinance description popup, stock H
+**125**, backdrop ids `0x384`/`0x484`, host = the Ordinances dialog) and
+`sub_77BEC0` (empty-ledger box, stock H **100**, backdrop ids `0x385`/`0x485`,
+close-X `0xCC`/`0x1CC`, and the host **is** the box itself — a top-level
+600x127 window). The POPBOX pin must therefore carry both heights, not one;
+applying the ordinance twin's 125 to the empty-ledger twin put the close-X
+above the host rect where the hit walk never descends (the v2.63.0 cure is a
+five-window coupled resize — host + popup + content + `0x485` + `0x385` —
+using `round(100*f)` for the empty-ledger twin). The WinProc closes this
+popup on ESC / ENTER / F4 (`0x78BCFE`).
 
 ## P2. THE TWO REAL CAUSES
 
@@ -205,9 +212,8 @@ screenshots at ~920 px. Measured, it is **4,225-6,166 px** — wrong by 6x, and
 it silently made "widen the box" look plausible for hours. The first build
 that logged a real number ended the argument in one launch.
 
-Stock capture of this popup: still never taken. It is no longer load-bearing
-(the fix reduces to stock at f=1 by construction) but remains the cheapest
-outstanding parity check — §5 procedure.
+Stock capture of this popup is not load-bearing: the fix reduces to stock at
+f=1 by construction, so the popup is correct without it.
 
 ## THE CREATE SIZE vs THE FINAL SIZE (#189, 2026-08-18)
 
@@ -226,6 +232,6 @@ it is what produced the visible open-jump for months. It is now widened through
 a per-site jmp-to-cave, so create == final and nothing corrects the window
 after it is shown.
 
-⚠ If you touch these constants, patch WIDTH AND HEIGHT TOGETHER or refuse
+**Law:** if you touch these constants, patch WIDTH AND HEIGHT TOGETHER or refuse
 both. A scaled width with a clamped height is worse than no patch at all: it
 looks like a working fix and jumps on every open.

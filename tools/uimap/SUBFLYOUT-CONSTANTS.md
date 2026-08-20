@@ -1,5 +1,17 @@
 # SUB-FLYOUT CONSTANTS — the nested plop menus (0x8A6E61E0 / 0x8A2CAD8B)
 
+> **STATUS: SUPERSEDED — kept as the raw first-pass scan.** This document's
+> central claim (§0: the container is ART-BOUND) was **refuted** by the full
+> decode: the geometry is **CODE-DERIVED** — see `SUBFLYOUT-BUILDER.md`
+> (builder identification, verified constant roles) and
+> `SUBFLYOUT-ART-VERDICT.md` (8/8 heights reproduced from immediates, three
+> independent falsifications of the art hypothesis). The immediate inventory
+> in §2 is still valid as a scan; the roles marked UNVERIFIED there are now
+> verified, and the function attribution is corrected (the builder is
+> `sub_7EAEB0`; `sub_7EAC70` is a different function — see
+> `SUBFLYOUT-ART-VERDICT.md` §2.1). Read those two files before acting on
+> anything here.
+
 Offline only: exe read-only, game never launched, `src\` untouched.
 Produced by the Stage-3 pass in `tools\uimap\emu\`. **The live dump is the
 authority; everything labelled HYPOTHESIS stays that way until measured.**
@@ -41,9 +53,9 @@ Two independent proofs:
    menu — which is precisely why the height varies and the width never does.
 
 **HYPOTHESIS (high confidence, one cheap test in §5):** the cure for the
-container is the same as for the budget bands — **ship that art family at `f`**
-— not a `CodePatches` table. This is the answer you asked me to give you
-*before* you write a patch table.
+container is the same as for the budget bands — **ship that art family at
+`f`** — not a `CodePatches` table. (This hypothesis was later refuted — see
+the status banner above.)
 
 ---
 
@@ -71,7 +83,7 @@ So even the strip is **helper-derived**, not literal-derived.
 
 ---
 
-## 2. THE IMMEDIATES — ⚠ ROLE UNVERIFIED, DO NOT EMIT A PATCH TABLE FROM THIS
+## 2. THE IMMEDIATES — ROLE UNVERIFIED, DO NOT EMIT A PATCH TABLE FROM THIS
 
 These are every immediate `sub_7EAC70` feeds into a helper call. **I have not
 decoded the helper classes, so I cannot tell you which of these is a width, a
@@ -124,15 +136,14 @@ need a runtime pin, exactly as the popup height did.
 
 ### 4. NO GENERATED C++ TABLE — DELIBERATELY
 
-You asked for `constants.json`-schema output that `gen_codepatches.py` can
-emit. **I am not producing one, and that is the finding, not a shortfall.**
-Emitting `{"va": "0x007EB165", "stock": 80, "scale": true}` for a value whose
-role is unknown, in a builder whose container is art-sized, is the exact shape
-of the three failed popup builds. If you want the rows anyway, they are §2 —
-but every one carries `"role": "UNVERIFIED"` and must not be scaled until the
-helper classes at `[esi vt+0x30/0x34/0x38]` and `[ebx vt+0x10/0x14/0x18]` are
-decoded (they are the next pass, and `sub_79AFF0` / `sub_799DD0` are their
-constructors).
+No `constants.json`-schema output for `gen_codepatches.py` was produced from
+this pass, and that is the finding, not a shortfall. Emitting
+`{"va": "0x007EB165", "stock": 80, "scale": true}` for a value whose role is
+unknown, in a builder believed at the time to be art-sized, is the exact
+shape of the three failed popup builds. The rows above all carry
+`"role": "UNVERIFIED"` and were not to be scaled until the helper classes at
+`[esi vt+0x30/0x34/0x38]` and `[ebx vt+0x10/0x14/0x18]` were decoded — they
+since have been, in `SUBFLYOUT-BUILDER.md`, which carries the verified roles.
 
 ---
 
@@ -157,20 +168,27 @@ SUBFLY: cont 0x8A6E61E0 (l,t WxH)  bmpchild 0x%08X (l,t WxH)  strip 0x8A2CAD8B (
 * Either way this one line also **proves `sub_7EAC70` is the builder that
   runs**: it is the only site in the image that pushes `0x8A6E61E0`
   (whole-image imm32 scan: exactly one hit, `0x007EB11A`). If the container
-  appears and the id is set, that function executed. ⚠ The strip id has
+  appears and the id is set, that function executed. The strip id has
   **two** sites — `0x007EB1F4` here and `0x007E5EB9` elsewhere — so log the
   strip's parent id too if you need to tell those apart.
 
+**Outcome:** the test's "wrong prediction" branch is what happened — the
+container is code-sized, §0 is wrong, and the §2 immediates became the live
+candidates. The push-site attribution above also moved: the `SetID` at
+`0x007EB11A` is inside `sub_7EAEB0`, not `sub_7EAC70`. See
+`SUBFLYOUT-BUILDER.md`.
+
 ---
 
-## 6. WHAT I DID NOT ESTABLISH
+## 6. WHAT THIS PASS DID NOT ESTABLISH
 
 * Which helper class `[esi vt+0x30/0x34/0x38]` and `[ebx vt+0x10/0x14/0x18]`
-  belong to, and therefore what any §2 immediate means. **This is the gating
-  unknown** and it is a bounded next pass: both ctors are known
-  (`sub_79AFF0` for the `0x150` container, `sub_799DD0` for the `0x1B4`
-  object).
-* Whether `0x007E5EB9` (the strip-id twin) is a live second path or dead.
+  belong to, and therefore what any §2 immediate means. **This was the
+  gating unknown** — resolved in `SUBFLYOUT-BUILDER.md` (both ctors were the
+  entry point: `sub_79AFF0` for the `0x150` container, `sub_799DD0` for the
+  `0x1B4` object).
+* Whether `0x007E5EB9` (the strip-id twin) is a live second path or dead
+  (resolved: a lookup helper, creates nothing — `SUBFLYOUT-BUILDER.md` §9).
 * The art instance ids per menu — they come from `[esp+0x98]`, a builder
-  argument, so they are supplied by the caller, not literal here. Getting that
-  list is what tells you exactly which art to re-ship at `f`.
+  argument, so they are supplied by the caller, not literal here. Resolved by
+  disassembling all seven call sites — `SUBFLYOUT-ART-VERDICT.md` §3.1.

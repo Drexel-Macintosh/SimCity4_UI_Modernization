@@ -2,12 +2,14 @@
 
 > ## **CODE-DERIVED.** Every pixel of the nested sub-flyout's geometry — the invariant width, the per-menu height, the item strip and its row pitch — is computed from `imm8` constants inside `sub_7EAEB0` and the container class's own `vf10`/`vf14`; the bitmap the builder loads is **never read for the window rect**. The single art-derived runtime quantity is `[container+0xec] = artWidth − 2×capH`, and it parameterises the *blit*, not the rect. Build the byte-patch.
 
-Offline only: exe opened read-only, game never launched, nothing in `src\`,
-`dist\`, `Plugins\` or another agent's files touched. Every number below is
-measured — from the PE image or from the shipped PNG headers — except where a
-line is explicitly labelled HYPOTHESIS.
+Offline analysis: the exe was opened read-only and the game was never
+launched. Every number below is measured — from the PE image or from the
+shipped PNG headers — except where a line is explicitly labelled HYPOTHESIS.
+Companion documents: `SUBFLYOUT-BUILDER.md` (the full decode),
+`SUBFLYOUT-LIVE-EVIDENCE.md` (the live oracle), `SUBFLYOUT-CONSTANTS.md`
+(the early scan whose art-bound hypothesis this verdict supersedes).
 
-**Tools written for this pass** (mine, in `tools\uimap\_subflyout-art\`):
+**Tools written for this investigation** (in `tools\uimap\_subflyout-art\`):
 `measure_art.py` (IHDR/JFIF/BMP/FSH dimension inventory of all 2,280
 type-`0x856DDBAC` entries → `art-dims.csv`), `sfdis.py` (PE-resolved capstone
 disassembler).
@@ -253,12 +255,12 @@ Art at 2x did not move the geometry one pixel. Two runtime constant patches
 did. Combined with §3.1 (constant art, varying height) the art hypothesis is
 falsified by evidence, not by analogy.
 
-**The art still has to be doubled** — just not for size. The open
-`MAYOR-MODE.md` items *"bar 1x"*, *"circle 1x"*, *"ring not 2x-covering"* are
-exactly a 1x atlas blitting into a 2x window. Ship `0x14215ED0..ED5`, `EDD`
-(both group mirrors) at 2x **and** patch the constants — and do it in lockstep,
-because `[+0xec] = artW − 2×25` recomputes itself from the art while the 25
-does not: a 584-wide atlas with an unpatched 25 mis-cuts the 9-slice.
+**The art still has to be doubled** — just not for size. The `MAYOR-MODE.md`
+items *"bar 1x"*, *"circle 1x"*, *"ring not 2x-covering"* are exactly a 1x
+atlas blitting into a 2x window. Ship `0x14215ED0..ED5`, `EDD` (both group
+mirrors) at 2x **and** patch the constants — and do it in lockstep, because
+`[+0xec] = artW − 2×25` recomputes itself from the art while the 25 does
+not: a 584-wide atlas with an unpatched 25 mis-cuts the 9-slice.
 
 ---
 
@@ -310,8 +312,8 @@ Implementation notes, flagged not decided:
 
 ## 6. WHAT WOULD OVERTURN THIS (there is one measurement, and it is cheap)
 
-I do not think the evidence is ambiguous — 8/8 heights, 4/4 strip heights, a
-clamped outlier reproduced exactly, three independent falsifications, and the
+The evidence is not ambiguous — 8/8 heights, 4/4 strip heights, a clamped
+outlier reproduced exactly, three independent falsifications, and the
 formula's stock value already written in our own source. But the honest
 one-line test, if anyone wants it, is the same log line
 `SUBFLYOUT-CONSTANTS.md` §5 proposed, read the other way round:

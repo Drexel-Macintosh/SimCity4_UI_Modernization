@@ -78,7 +78,7 @@ exe bytes unless marked otherwise.
   over via `[obj]->vt+0x20(ptr,count,0)` at `0x6CCDB4`.
 - Class registry (.data name/id pair list): `0xB08CC4` "cSC4FoundationOccupant"
   / `0xB08CC8` = `0xC97F987C`, next pair `0xB08CCC`
-  "cSC4LotBaseTextureOccupant" / `0xB08CD0` = `0x29802083`. ⚠ The
+  "cSC4LotBaseTextureOccupant" / `0xB08CD0` = `0x29802083`. The
   name↔id pairing DIRECTION in this table is unadjudicated (no anchor pair
   verified); record only that `0xC97F987C` sits in the lot-surface-occupant
   neighborhood of the registry.

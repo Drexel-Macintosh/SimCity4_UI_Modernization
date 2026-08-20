@@ -42,6 +42,32 @@ shared with unscaled screens, and doubled `imagerect` values wherever art is 2x.
 > bitmap draws only the corner that exists, which is exactly what a shadowed
 > art override looks like on screen.
 
+> ### NOTE ON THIS SNAPSHOT — settled corrections
+>
+> The binding model in this file was re-derived from the exe after it was
+> written; `SC4-UI-ENGINE.md` §4/§4A and `SDK-GAPS.md` are the current
+> reference. Four statements below are settled as follows:
+>
+> 1. **"PNG, TypeID 0x856DDBAC"** (§2) — `0x856DDBAC` is a generic image
+>    type. 74 of the 2,280 entries are JFIF (41, all of group `CA133ECB`),
+>    SHPI/FSH (26, inside `46A006B0`) and BMP (7, inside `6A1EED2C`). None is
+>    `.UI`-referenced, so the selective mechanism is unaffected — but an art
+>    tool that assumes PNG will trip over them.
+> 2. **"a ref's GID is honored"** (§2) — true for 5 of the 6 ref GIDs.
+>    `{82b9b75b,e2b66db8}` in `I-cb40cfdc` names a group that exists in no
+>    archive while its instance is a real strip under `46A006B0`; whether the
+>    engine falls back to instance lookup or the buttons simply draw
+>    unskinned is reference gap G11 in `SDK-GAPS.md` §13.
+> 3. **the `edgeimage` mechanism** (§3) — `imagerect` is a SOURCE RECT, never
+>    an inset: `GZPaint` divides only `r` and `b` by 3 and leaves `l`/`t`
+>    alone, so the 9-slice cell is `(r/3 − l, b/3 − t)` sampled from `(l,t)`
+>    (`SC4-UI-ENGINE.md` §4A.7). The practical rule is unchanged and now has
+>    a derivation: 2x art requires doubling all four `imagerect` numbers.
+> 4. **the 2,280-vs-431 gap** (§2 reason 4) — quantified: 266 exemplar
+>    ItemIcons, 61 `sc4://` HTML refs, 76 code image-request sites across 7
+>    groups, plus three code-only groups (`6A1EED2C`, `AB7E5421`,
+>    `A9179251`) that are largely not UI at all (`SDK-GAPS.md` §9).
+
 Four independent reasons, each fatal to blanket replacement, evidence below:
 
 1. **One image pool serves every screen.** UI images are not partitioned per screen.
@@ -142,11 +168,10 @@ Three attributes control it (SC4D wiki property table + empirical checks):
   However, the standard dialog-button strip `{46a006b0,144161eb}` (120x30; 30px
   cell) is referenced by buttons 130-370px wide (height always 30), and
   `{46a006b0,53244588}` (84x19; 21x19 cells) sits on 18x16 buttons — so for
-  standard styles the engine fits/stretches the state cell to the button area at
-  least horizontally. **Open question O1**: whether the vertical dimension also
-  stretches. Test before trusting: 2x one shared strip, open an unscaled dialog
-  (e.g. the budget window), see if buttons render correctly. Until then treat
-  shared button strips as unsafe for in-place 2x.
+   standard styles the engine fits/stretches the state cell to the button area at
+   least horizontally. **Reference gap (G27, `SDK-GAPS.md` §13)**: whether the
+   vertical dimension also stretches. Until it is settled, treat shared button
+   strips as unsafe for in-place 2x.
 
 ## 4. Sharing across screens (the blanket-2x killer)
 
@@ -220,8 +245,8 @@ Cross-referencing every `image=` ref against every .UI file:
    `area` must double `imagerect` on the same control.
 4. **Leave the other 1,849 non-.UI-referenced PNGs alone** until each consumer
    (exemplar ItemIcons, loading screens) is individually understood.
-5. **Resolve O1 first** (button-strip vertical stretch test, section 3) — if
-   buttons stretch both axes, the shared standard strips can move from SHARED to
+5. **O1 is filed as reference gap G27** (`SDK-GAPS.md` §13) — if buttons
+   stretch both axes, the shared standard strips can move from SHARED to
    "2x in place is harmless", shrinking the clone set substantially.
 6. Research lead (not required): the resolution-as-GID mechanism (0x08000600
    pattern) might let a "big UI" variant ship keyed to the table's exact

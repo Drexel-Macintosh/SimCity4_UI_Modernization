@@ -71,10 +71,9 @@ size in a doubled window — if it looked stock, the three column windows themse
 ### cSC4WinTrendBar — ART-size-derived (content scales with the bitmap, not the window)
 `Draw` @ 0x7BF0A0: requires two image objects `[this+0xEC]` (groove) and `[this+0xF0]` (fill);
 draws them **centered in the window at native image size**
-(`x = L + (winW − imgW)/2`, `y = T + (winH − imgH)/2`), splits the fill image into ~~3 bands
-(green/yellow/red thirds via `imgdim/3`)~~ ⚠ **SIX cells — `bandW = fillW/6`
-(0x7BF0E4 `imul 0xAAAAAAAB` / 0x7BF0F5 `shr 2`, the /6 reciprocal; corrected
-2026-08-17 from the 2026-08-16 disassembly, #176(b))**, and places the fill marker at
+(`x = L + (winW − imgW)/2`, `y = T + (winH − imgH)/2`), splits the fill image into
+**six cells — `bandW = fillW/6`
+(0x7BF0E4 `imul 0xAAAAAAAB` / 0x7BF0F5 `shr 2`, the /6 reciprocal; #176(b))**, and places the fill marker at
 `fraction[this+0xE0] × (imgdim − 1)` — i.e. every content dimension comes from the **image**.
 Band/threshold constants at 0xABA3EC/F0/F4 and 0xABA414/418/41C are value-domain
 (±1e-5, ±0.01, ±0.02), not pixels.
@@ -119,8 +118,8 @@ HUD controller binds cIGZWinText interfaces (iid 0x212cdc1f) for 0x09e418fe / 0x
 Controller at **0x7E86C0–0x7E8A80** (rating-change handler):
 - groove BMP 0x8a517556: image (re)bound via cIGZWinBMP (iid 0xc12cea13) `[vt+0x10]`;
   groove art 14015549 is .UI-bound and already 2x in the package (staged imagerect 204x22).
-  ⚠ **CORRECTION 2026-08-17 (#176, byte-verified 2026-08-16): the staged
-  imagerect is DEAD DATA at runtime.** What is (re)bound is not the sheet but a
+   **Correction (#176, byte-verified): the staged
+   imagerect is DEAD DATA at runtime.** What is (re)bound is not the sheet but a
   buffer **composed by sub_7E8510** (one filmstrip row of 14015549,
   `row = artH*(rating+100)/200`, replicated to every row), pushed through
   SetImage on EVERY rating tick — and SetImage's tail (0x9BC447) **overwrites

@@ -111,7 +111,7 @@ Proved by arity at four independent sites inside `sub_7A9D60`:
 | `+0x70/+0x74` | `+0x64/+0x68` | `TexEnv` / `TexParameter` (3 args) | `0x7AA09F`, `0x7AA085` | 3 args each |
 | `+0xA4/+0xA8` → real `+0xB0/+0xB4` | `Enable`/`Disable` | 1 arg | `0x7A9E0C..0x7A9E3C` | 1 arg each |
 
-⚠ One mismatch remains: real `vt+0xE8` is called with **1** argument at `0x7AA075`
+Note: One mismatch remains: real `vt+0xE8` is called with **1** argument at `0x7AA075`
 (header `+0xDC SetTexture(uint32, uint32)` wants 2). Either the header is wrong there or
 the real `SetTexture` takes just the handle. Marked UNSURE.
 
@@ -130,7 +130,7 @@ the real `SetTexture` takes just the handle. Marked UNSURE.
 | `+0x170` | — | **repaint / invalidate** | `sub_7A9810` @ `0x7A986E`, invoked exactly when a demand value changed |
 | `+0x250` | — | **scalar deleting destructor** | `0xAB8878` (RCI) and `0xAB8B10` (clouds) |
 
-> ⚠ **Repo-doc correction:** `tools\research\SC4-UI-ENGINE.md` line 249 lists "`SetID +0xFC`".
+> Note: **Repo-doc correction:** `tools\research\SC4-UI-ENGINE.md` line 249 lists "`SetID +0xFC`".
 > The bytes say `+0xFC` is the **getter** and `+0x100` is the setter. `Show +0x110` in the
 > same line is really the generic `SetFlag(flag, bool)`.
 
@@ -169,7 +169,7 @@ Consequences for the GROUND TRUTH head map:
 | `0xA867A4` | f32 | 0.001 | `sub_7A9D60` ms→s |
 | `0xACEC98` | f32 | (LCG scale) | RNG `0x91372E` |
 
-> ⚠ Do **not** conflate `0xAB7E10 = 128.0` with GROUND TRUTH's "one region cell = 128.0 px".
+> Note: Do **not** conflate `0xAB7E10 = 128.0` with GROUND TRUTH's "one region cell = 128.0 px".
 > The latter is *derived* (`90.51 + 37.49`) from the isometric basis at `0xB0DBA4..0xB0DBB0`;
 > `0xAB7E10` is a separate literal that this slice uses only as the cloud sprite size.
 
@@ -188,7 +188,7 @@ Consequences for the GROUND TRUTH head map:
 | `0x426840A0` | message type `cSC4WinRCI` subscribes to (RCI demand changed) | `sub_7A9340/0x7A9390/0x7A9810` |
 | `0x6A0AF41D` | window id of the cloud layer | `sub_7A99C0` @ `0x7A99E6` |
 | `0x4A624656..0x4A624659` | the four cloud texture instance ids | `sub_7A99C0` @ `0x7A9A38` (`lea eax,[ebp+0x4A624656]`, `ebp` = 0..3) |
-| `0xC2A676AC` | value stored at `+0xD8` of the vt-`0xAB8CD0` window | `sub_7AA520` @ `0x7AA53E` — ⚠ unidentified |
+| `0xC2A676AC` | value stored at `+0xD8` of the vt-`0xAB8CD0` window | `sub_7AA520` @ `0x7AA53E` — Note: unidentified |
 
 ### 0.6 Helper functions used repeatedly
 
@@ -206,10 +206,10 @@ Consequences for the GROUND TRUTH head map:
 | `0x91372E` | **`float cRZRandom::Rand01()`** — LCG `state *= 0x278DDE6D`, `* [0xACEC98] + 0.5` | body read directly |
 | `0x9136CA` | **`int cRZRandom::RandRange(lo, hi)`** = `lo + Rand(hi-lo)` | body read directly |
 | `0x913A5C` | `cRZRandom::Seed(int)` | ctor call with `-1` |
-| `0x88FEDF` / `0x890181` / `0x88FEFB` / `0x890198` / `0x89058F` / `0x8905C4` / `0xA6D837` | stopwatch at `clouds+0xD8`: ctor(4) / setmode(4) / `IsRunning` / `ElapsedMs` / `Restart` / `Start` / dtor | ⚠ names inferred from the `dt` computation in `sub_7A9D60` |
+| `0x88FEDF` / `0x890181` / `0x88FEFB` / `0x890198` / `0x89058F` / `0x8905C4` / `0xA6D837` | stopwatch at `clouds+0xD8`: ctor(4) / setmode(4) / `IsRunning` / `ElapsedMs` / `Restart` / `Start` / dtor | Note: names inferred from the `dt` computation in `sub_7A9D60` |
 | `0x747FF0` | `list<sprite>::push(&sprite)` on `clouds+0x114` | `sub_7A9D60` @ `0x7A9FAF` |
 | `0x5650A0` | destroy the `+0x114` list | `sub_7A9B90` |
-| `0x910003` | memcpy-ish row copy (the "no filtering" path in `sub_7AE160`) | ⚠ inferred from the call site |
+| `0x910003` | memcpy-ish row copy (the "no filtering" path in `sub_7AE160`) | Note: inferred from the call site |
 
 Globals:
 
@@ -217,7 +217,7 @@ Globals:
 |---|---|---|
 | `[0xB43CCC]` | **`cIGZMessageServer2`** — `vt+0x14` AddNotification, `vt+0x18` RemoveNotification | `sub_7A9340`/`sub_7A9390`; already recorded in `SC4-UI-ENGINE.md:576` |
 | `[0xB43CA0]` | **`cIGZGraphicSystem`** — `vt+0x0C` returns the `cIGZGDriver` | `sub_7A9D60` @ `0x7A9DF9` |
-| `[0xB43D74]` | the **demand/statistics service** — `vt+0x18(uint32 id, 0x20000)` returns a value object with float getters at `vt+0x30/+0x38/+0x3C` | `sub_7A93E0`; ⚠ class not identified |
+| `[0xB43D74]` | the **demand/statistics service** — `vt+0x18(uint32 id, 0x20000)` returns a value object with float getters at `vt+0x30/+0x38/+0x3C` | `sub_7A93E0`; Note: class not identified |
 
 ---
 
@@ -231,7 +231,7 @@ Globals:
 | `+0x000` | vptr `0xAB8884` — the `0x89E1574C` interface |
 | `+0x004` | vptr `0xAB8628` — **`cIGZWin`** (the `cGZWin` base occupies `+0x04 .. +0xDB`) |
 | `+0x0AC .. +0x0B8` | the window rect L,T,R,B (= `cIGZWin this+0xA8..0xB4`) |
-| `+0x070` | (= `cIGZWin this+0x6C`) the fill helper used by `Draw` — ⚠ identity unknown |
+| `+0x070` | (= `cIGZWin this+0x6C`) the fill helper used by `Draw` — Note: identity unknown |
 | `+0x0DC` | vptr `0xAB8614` — **`cIGZMessageTarget2`** |
 | `+0x0E0 .. +0x11F` | `uint32 sourceIds[16]` (no bounds check — see `sub_7A97D0`) |
 | `+0x120` | `int sourceCount` |
@@ -310,7 +310,7 @@ void* dtor(int flags) {
 bool Init() {
     if (IsInited())    return true;              // 0x99BC31
     MarkInited();                                // 0x99C2C3
-    (void)sub_913C72();                          // lazy singleton guarded by [0xB628C4] -> 0x7B2480  (⚠ unidentified)
+    (void)sub_913C72();                          // lazy singleton guarded by [0xB628C4] -> 0x7B2480  (Note: unidentified)
     cIGZMessageServer2* ms = *(void**)0xB43CCC;
     if (ms) {
         void* target = (char*)this + 0xD8;       // == obj+0xDC, the MT2 subobject
@@ -365,7 +365,7 @@ bool Recompute() {
     return !(oldMin==this->[0x124] && oldMax==this->[0x128] && oldVal==this->[0x12C]);
 }
 ```
-⚠ `if (id <= 0) continue` is a **signed** test on a resource id — ids with bit 31 set are
+Note: `if (id <= 0) continue` is a **signed** test on a resource id — ids with bit 31 set are
 silently skipped. Not exercised by the shipped `.UI` data (the RCI passes small ids).
 
 **CALLERS** `sub_7A97D0` @ `0x7A97FC`; `sub_7A9810` @ `0x7A9859`.
@@ -428,7 +428,7 @@ Instruction notes that matter:
 **FIELDS** reads `this+0x6C` (fill helper), `this+0xA8/0xAC/0xB0/0xB4` (rect),
 `this+0x120/0x124/0x128/0x12C`.
 **VTABLE CALLS** `m_fill vt+0x54` (set colour), `m_fill vt+0x8C` (fill rect).
-⚠ `this+0x6C`'s class is **not** established — only that it has those two slots.
+Note: `this+0x6C`'s class is **not** established — only that it has those two slots.
 **CALLERS** vtable `0xAB8788` only.
 
 <a id="sub_7a9770"></a>
@@ -448,7 +448,7 @@ cSC4WinRCI* ctor() {
     return this;
 }
 ```
-⚠ Note `this[0x124]`, `this[0x128]` and `this[0x130]` are **never initialised** by the
+Note: Note `this[0x124]`, `this[0x128]` and `this[0x130]` are **never initialised** by the
 ctor. `+0x124/+0x128` are zeroed on the first `Recompute`; `+0x130` (the colour) is
 garbage until someone calls `sub_7A92C0`.
 
@@ -469,7 +469,7 @@ bool SetSources(const uint32* ids, int count) {
     return Recompute();                                 // tail into sub_7A93E0, ecx preserved
 }
 ```
-⚠ **Latent overflow**: the destination array is `+0xE0..+0x11F` = 16 slots; `count > 16`
+Note: **Latent overflow**: the destination array is `+0xE0..+0x11F` = 16 slots; `count > 16`
 writes over `sourceCount`, the accumulators and the colour. Never hit in stock data.
 
 <a id="sub_7a9810"></a>
@@ -563,7 +563,7 @@ Particles are born **one sprite-width off the left edge** and drift right at 5..
 ## `sub_7A9980`  (0x7A9980..0x7A99C0, 64 bytes)
 `__stdcall SetWindDirection(float dx, float dy)`, `ret 8`:
 `k = 1.0f / sqrt(dx*dx + dy*dy); this->[0x108] = dx*k; this->[0x10C] = dy*k;`
-⚠ no zero-length guard — `(0,0)` yields NaNs. **CALLERS** `sub_7B1900` @ `0x7B1F9F`
+Note: no zero-length guard — `(0,0)` yields NaNs. **CALLERS** `sub_7B1900` @ `0x7B1F9F`
 (`cSC4WinRegionScreen::Init` sets the wind once).
 
 <a id="sub_7a99c0"></a>
@@ -625,7 +625,7 @@ void* ctor() {
     return this;
 }
 ```
-⚠ `+0xF8..+0x10C` (bounds and wind) are **not** initialised here — `Init` sets the bounds
+Note: `+0xF8..+0x10C` (bounds and wind) are **not** initialised here — `Init` sets the bounds
 and `cSC4WinRegionScreen::Init` sets the wind.
 **CALLERS** `sub_7B1900` @ `0x7B1EFF`, after `new(0x140)` at `0x7B1EEC`.
 
@@ -645,7 +645,7 @@ void dtor() {
     cGZWin::~cGZWin(this);                             // tail-jmp 0x99E1A2
 }
 ```
-⚠ The texture loop does **not** null the slots after releasing them.
+Note: The texture loop does **not** null the slots after releasing them.
 
 <a id="sub_7a9c00"></a>
 ## `sub_7A9C00`  (0x7A9C00..0x7A9C20, 32 bytes)
@@ -727,7 +727,7 @@ bool Draw() {
         v[2] = (px,       py+128.0f);
         v[3] = (px+128.0f,py+128.0f);                           // [0xAB7E10] = 128.0
 
-        g->SetTexture( *(uint32*)*(void**)this->tex[p->tex] );  // vt+0xE8, 1 arg   ⚠
+        g->SetTexture( *(uint32*)*(void**)this->tex[p->tex] );  // vt+0xE8, 1 arg   (note)
         g->TexParameter(0, 0, 1);   g->TexParameter(0, 1, 1);   // vt+0x74 ×2
         g->TexEnv(0, 0, 1);                                     // vt+0x70
         g->DrawArrays(1, 0, 4);                                 // vt+0x0C
@@ -742,9 +742,9 @@ Facts worth keeping:
 * the sprite is a **fixed 128×128 screen-space quad**; it never scales with UI factor.
 * the reap test is `p->x >= this->right` — the *right* emitter bound, i.e. the window width.
 * `dt` is clamped at 200 ms, so a stall cannot teleport the clouds.
-* ⚠ On the very first frame the "stopwatch not running" leg leaves `dt` = whatever was in
+* Note: On the very first frame the "stopwatch not running" leg leaves `dt` = whatever was in
   `[esp+0x10]` (`0x7A9DAC` sets it to 0 before the branch, so it is 0 — benign).
-* ⚠ `SetTexture`'s argument is `**binding` (two dereferences of `tex[i]`). I could not
+* Note: `SetTexture`'s argument is `**binding` (two dereferences of `tex[i]`). I could not
   prove which field of `cS3DTextureBinding` that is.
 
 <a id="sub_7aa0e0"></a>
@@ -849,7 +849,7 @@ Grid* ctor(int w, int h) {                     // __thiscall, ret 8
 <a id="sub_7aa2a0"></a>
 ## `sub_7AA2A0`  (0x7AA2A0..0x7AA2E0, 64 bytes)
 `QueryInterface`, vt `0xAB8C00+0x00`. Accepts `1` and **`0xAB953253`**, both returning
-`this` + AddRef; everything else `false`. `ret 8`. ⚠ `0xAB953253` is not in the
+`this` + AddRef; everything else `false`. `ret 8`. Note: `0xAB953253` is not in the
 `{clsid → name}` registry at `0xB05000..0xB0B000`.
 
 <a id="sub_7aa2e0"></a>
@@ -909,7 +909,7 @@ for (int y = rect[1]; y < rect[3]; ++y) {          // 0x7AA3C9 jge out
     base += rowStep;
 }
 ```
-⚠ Two quirks confirmed in the bytes: the row loop is **half-open** (`y < rect[3]`) while
+Note: Two quirks confirmed in the bytes: the row loop is **half-open** (`y < rect[3]`) while
 the column loop is **closed** (`x <= rect[2]`), and the column start `rect[0]` is used
 only as a loop counter — the pointer always starts at `base`.
 
@@ -942,7 +942,7 @@ writes `[this+0x0C]` into `out[0..3]`. Almost certainly "four corner heights of 
 
 <a id="sub_7aa4f0"></a>
 ## `sub_7AA4F0`  (0x7AA4F0..0x7AA500, 16 bytes)
-`fld dword [0xAB8B80] (= **1023.0f**); ret`. Slot `+0x60`. ⚠ 1023 = the maximum terrain
+`fld dword [0xAB8B80] (= **1023.0f**); ret`. Slot `+0x60`. Note: 1023 = the maximum terrain
 height the engine will report from the null grid.
 
 <a id="sub_7aa500"></a>
@@ -967,7 +967,7 @@ height the engine will report from the null grid.
 bool Init() {
     if (IsInited()) return true;
     MarkInited();
-    this->[0xD8] = 0xC2A676AC;               // 0x7AA53E   ⚠ unidentified id
+    this->[0xD8] = 0xC2A676AC;               // 0x7AA53E   Note: unidentified id
     this->vt[0x110](0x10000, false);         // SetFlag
     this->vt[0x110](0x8000,  false);
     return true;
@@ -1016,7 +1016,7 @@ bool f(void* ignored) {
     return true;
 }
 ```
-⚠ The `vt+0x88` on the window manager is unidentified; from context it yields a
+Note: The `vt+0x88` on the window manager is unidentified; from context it yields a
 coordinate pair for `this`.
 
 <a id="sub_7aa640"></a>
@@ -1082,7 +1082,7 @@ Two things matter here for the tile pipeline:
    mis-sampled. Flagged, not resolved.
 2. The result is stored into **`item+0x68` and `item+0x6C`** by the one call site:
    `0x7AE777: mov eax,[edi]; lea edx,[ebx+0x6C]; push edx; add ebx,0x68; push ebx; call 0x7AA6A0`.
-   ⚠ I did not trace `ebx` back to the 0x80-stride item array inside `sub_7AE510`, but
+   Note: I did not trace `ebx` back to the 0x80-stride item array inside `sub_7AE510`, but
    `sub_7AE510` addresses `ebx+0x24/+0x28/+0x50/+0x5C/+0x68/+0x6C` — all inside a 0x80 stride.
 
 **CALLERS** `sub_7AE510` @ `0x7AE781` (the composite creator).
@@ -1112,7 +1112,7 @@ void BuildKernel(float  x0,                 // [ebp+0x08]
     for (float* p = begin; p != end; ++p) *p *= k;
 }
 ```
-⚠ No `sum == 0` guard.
+Note: No `sum == 0` guard.
 **CALLERS** `sub_7AE160` @ `0x7AE1B6` and `0x7AE206`, `sub_7C0B80` @ `0x7C0BF6`.
 At `0x7AE1E6..0x7AE206` the arguments are literally
 `BuildKernel(-<offset>, 1.0f, begin, end, /*f=*/0x7AA0E0 /*tent*/, 16384.0f)`
@@ -1141,7 +1141,7 @@ call `sub_7AA5A0`.
 **PURPOSE** insertion step of the same sort: walks **backwards** in `0x0C`-byte strides
 (`sub edx,0x0C`) copying records forward while the new key sorts before them, then writes
 the new `{x, y, level}`. `__cdecl`, `ret` plain.
-⚠ I did not fully resolve which stack slot supplies which of the three new-record fields —
+Note: I did not fully resolve which stack slot supplies which of the three new-record fields —
 the final stores are `[ebx] = edi`, `[ebx+4] = ecx`, `[ebx+8] = [esp+0x1C]`.
 **CALLERS** `sub_7AC490` @ `0x7AC4BC`, `sub_7AD8D0` @ `0x7AD94B`.
 
@@ -1188,7 +1188,7 @@ bool Walk(a1, a2, cIGZWin* w /*3rd dword arg*/, void* value /*4th dword arg*/) {
     return true;
 }
 ```
-⚠ The exact argument slots: `w` is read from `[E+0x0C]` and `value` from `[E+0x10]`
+Note: The exact argument slots: `w` is read from `[E+0x0C]` and `value` from `[E+0x10]`
 (`E` = esp at entry). Whether the enumerator supplies `(parent, iid, child, data)` or
 `(child, id, data, extra)` is not proven — only the offsets are measured.
 Note **`vt+0x158`** is the "set value/state" slot common to `cIGZWinBtn` and `cIGZWinOptGrp`.
@@ -1216,7 +1216,7 @@ void FilterColumn(uint32*        dst,       // a1  [E+0x04]
     }
 }
 ```
-⚠ **`rows[0]` and `rows[3]`** — the second tap is taken from `+0x0C` of the record, not
+Note: **`rows[0]` and `rows[3]`** — the second tap is taken from `+0x0C` of the record, not
 `+0x04`. Either the caller's record is `{row0, ?, ?, row1}`, or this is a 4-row ring
 buffer of which only the two ends are used with these weights. I could not settle it
 without decoding `sub_7AE160`'s frame (slice 5/6 territory).

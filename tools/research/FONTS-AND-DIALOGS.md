@@ -1,8 +1,11 @@
 # SC4 UI Scaling — Font Inconsistency (Q1) + Transient Dialog Static-2x (Q2)
 
-**STATUS: PARTIAL (in progress 2026-07-21).** Q1 control inventory, ini cross-reference,
-and most of the binary mechanism are done; the final name-resolution step and all of Q2
-are still being worked. Sections marked `[OPEN]` are not yet settled.
+Q1 carries the control inventory, the ini cross-reference and the binary
+font-resolution mechanism; Q2 carries the static-2x recipe for the region
+transients. The one remaining open mechanism (why some `font=NAME` values
+resolve and others do not) is filed in `SDK-GAPS.md` §13 (G10); the
+operational rule — ship every `font=` as a GUID hex literal — is unaffected
+by it and is what both builders do.
 
 Research date: 2026-07-21. Binary: `SimCity 4.exe` 1.1.641.0 Steam (x86, 4GB-patched),
 ImageBase 0x400000; file offset = VA − 0x400000 (`.text` raw==RVA, per DYNAMIC-CONTROLS.md).
@@ -10,7 +13,8 @@ Deployed FontStyle.ini at the install root verified **byte-identical** to
 `tools\fonts\FontStyle.candidate.ini` (88 styles, all sizes doubled). Game files untouched;
 read-only analysis.
 
-> ⚠ **STYLE COUNT CORRECTED 2026-08-03.** 88 is right for **stock**
+> **Note — the two style counts are both right about different things.**
+> 88 is the **stock** count
 > (`FontStyle.default.ini` — measured). Every **generated** file — `candidate`,
 > `packages\15x\FontStyle-15x.ini`, `packages\3x\FontStyle-3x.ini` — carries
 > **90**, because `HTML_CLONE_BLOCK` adds `MessageHeaderHtml` +
@@ -90,16 +94,16 @@ All VAs from disassembly of the shipped 1.1.641 exe (capstone, offline).
    @0x7726b4 (ticker, known), LoadScreenTitle 0x4a9c7970 @0x777931 — **all of these are
    present and doubled in the ini**, consistent with the text that DOES scale.
 
-   > ⚠ **CORRECTED 2026-08-03 (task #57) — the `ChartLabel/Legend/ChartTickText
+   > **Correction (2026-08-03, task #57) — the `ChartLabel/Legend/ChartTickText
    > @0x76d63e/0x76dd8a` entry above conflates THREE styles across TWO
    > addresses, and it implies `Legend` is a chart style. It is not.**
-   > Byte-verified this session:
+   > Byte-verified:
    >
    > | style | GUID | verified push site | who renders it |
    > |---|---|---|---|
    > | `ChartLabel` | `0xE9C86B5E` | **`0x0076DD91`** | the **GRAPHS** chart legend rows |
    > | `Legend` | `0xE9C86B5F` | **`0x007A0747`** | the **DATA VIEWS** legend — a different panel entirely |
-   > | `ChartTickText` | `0xE9C86B6E` | ⚠ **UNVERIFIED** — what `0x0076D63E` actually pulls was never re-checked. Do not cite it as measured |
+   > | `ChartTickText` | `0xE9C86B6E` | unverified — what `0x0076D63E` actually pulls was never re-checked; do not cite it as measured |
    >
    > **Consequence, and it invalidated weeks of reasoning:**
    > `tools\fonts\make_fontstyle.py`'s `SIZE_SQUEEZE = {"Legend": 0.92}` **has
@@ -130,20 +134,24 @@ All VAs from disassembly of the shipped 1.1.641 exe (capstone, offline).
    RegionLabel, MayorNeedsBars, etc. — 0 hits), so working name-resolution can only go
    through the ini-fed dictionary of fact 2.
 
-### `[OPEN]` The last unexplained step
+### The one open mechanism (reference gap)
 
 What is proven: broken controls are plain GZWinText bound by `font=<name>`; their styles
 are registered (doubled) and never fetched by code; the GZWinText deserializer only honors
 a token-resolved (GUID-valued) font attribute, and the string form dead-ends in an unread
-property. What is NOT yet proven is the tokenizer step that decides which `.UI` font names
+property. What is NOT proven is the tokenizer step that decides which `.UI` font names
 resolve to their GUID (making e.g. `DataInsetHeader` work) and which do not (RegionLabel,
-RegionPopulation, Mayor*, PUckDate) — the `<LEGACY>` tag handler (registration at
-0x94b995) is the remaining suspect and is being disassembled now. The custom SC4 text
-class **0xaa7cecfd** (used by the two texts with ids 0xea5bd179 / 0x00000002) demonstrably
-resolves independently of that path (its font renders 2x in the same .UI file where
-GZWinText names fail).
+RegionPopulation, Mayor*, PUckDate). The `<LEGACY>` tag handler (registration at
+0x94b995) has been ruled out — that address is the tag's registration site inside the
+14-entry tag table, not a handler (`SDK-GAPS.md` §5). The tokenizer dictionary contains
+zero FontStyle style names, so no style name can resolve through the token path; the
+"different class" escape is also closed, since `DataInsetHeader` (×5) and `RegionLabel`
+(×1) are both on plain GZWinText. This is filed as `SDK-GAPS.md` §13 gap G10. The custom
+SC4 text class **0xaa7cecfd** (used by the two texts with ids 0xea5bd179 / 0x00000002)
+resolves through the same GZWinText font code with only the painter swapped
+(`SDK-GAPS.md` §8.1); its font renders 2x in the same .UI file where GZWinText names fail.
 
-### Region fix — concrete recommendation (actionable NOW, independent of the open step)
+### Region fix — the shipped recipe
 
 The GUID path is proven end-to-end (deserializer type-6 → SetFontStyleByGUID →
 GetStyleByGUID → doubled ini style; the round-trip serializer at 0x95bc5f writes
@@ -156,22 +164,22 @@ Therefore, in the SHIPPED (staged) copy of `T-0x00000000_G-0x96a006b0_I-0xaa9209
 and repack `z_SC4UIScale_SelectiveArt.dat`. This binds the styles by GUID at window
 creation, bypassing name resolution entirely; the doubled ini then takes effect. The same
 edit pattern extends to the city HUD scripts (I-2bc90671, I-4bc906b5, I-c973b411 — and
-their G-08000600 twins if 800x600 remains reachable) once the city pass resumes.
-`[OPEN]` — verify hex-literal font= acceptance on the live game before committing to it
-wholesale; fallback plan if the tokenizer rejects it is per-control cIGZWinText::
-SetFontStyle (iface vtable+0x4C, GUID arg) from the DLL at scale time, which needs no
-data edits at all.
+their G-08000600 twins). Hex-literal `font=` acceptance is confirmed on the live game —
+both builders convert every `font=NAME` to its GUID hex literal, anchored on a leading
+letter so the numeric `font=4888` / `font=0x00001318` tokens are left alone
+(`SDK-GAPS.md` §5).
 
 ---
 
 ## Q2 — "Load Region" dialog (0x4A5BA0E7) + region city-info bubble: static 2x recipe
 
-`[PARTIAL]` — Load Region dialog located and characterized; bubble not yet pinned to a
-single file (time cut short). Runtime context: `src\UiSpike.cpp` currently scales+docks
-0x4A5BA0E7 at runtime via `DialogDockTick` (kRegionDialogDocks[0], plus 5 sibling dialogs
-Create/Delete Region, Play/Audio/Graphic Options at ids 0xEA5BA0D1, 0x6A5BA20C, 0x2A57DB82,
-0xEA53F5DB, 0x2A57CB82); the bubble is not handled at all. The static approach would remove
-these from runtime scaling.
+Load Region dialog located and characterized below; the city-info bubble is resolved in
+`REGION-SWITCH.md` §0.5 (it is `0x0A551C50`, hanging under the map layer `0x2BA6BB97`,
+served by dialog-static on both bubble scripts `I-ca539340`/`I-0a8cd184`). Runtime
+context: `src\UiSpike.cpp` scales+docks 0x4A5BA0E7 at runtime via `DialogDockTick`
+(kRegionDialogDocks[0], plus 5 sibling dialogs Create/Delete Region, Play/Audio/Graphic
+Options at ids 0xEA5BA0D1, 0x6A5BA20C, 0x2A57DB82, 0xEA53F5DB, 0x2A57CB82). The static
+approach removes these from runtime scaling.
 
 ### Load Region dialog — `T-00000000_G-96a006b0_I-8a5ab1cc.ui` (root id 0x4a5ba0e7)
 
@@ -183,8 +191,7 @@ these from runtime scaling.
 - L6 title text: `font=GenHeader caption="Load Region"`.
 - L8 list frame: `image={1abe787d,144161ee} imagerect=(12,35,180,180) edgeimage=yes`.
 - L10 list box: `clsid=GZWinListBox id=0x00001000 area=(0,0,310,114) font=GenBodyMedium`.
-- (buttons OK/Cancel follow; not dumped in the truncated view — a full dump is a
-  1-minute follow-up.)
+- Buttons OK/Cancel follow the same `area=`-driven pattern.
 
 **Recipe (static 2x, no runtime fight):** double every `area=` and `imagerect=` tuple in
 I-8a5ab1cc.ui exactly as the selective-safe builder already does for panels (root becomes
@@ -198,34 +205,28 @@ kRegionDialogDocks so runtime no longer touches it.
 9-slice dialog frames used by **59+ scripts** (per UISCRIPTS.md §c) — they are edge-blt
 frames whose slice geometry is runtime-derived, so at a doubled window with UNCHANGED
 source art the borders draw at source thickness (thin relative to the big dialog). Whether
-that reads acceptably or needs 2x frame art must be eyeballed in-game (UI-ART-BINDING.md
-already flags edge-blt-under-2x as verify-in-game). `[OPEN]` confirm 2x variants of
-144161ee / 144161e4 exist in `tools\upscale\preview\SimCity_1` and whether doubling them
-is safe given the 59-script sharing (a shared-art clone at a new IID — the builder's
-CLONE_XOR 0x53430001 mechanism — would isolate the dialog if a global swap is too risky).
+that reads acceptably or needs 2x frame art is an eyes-on judgement (UI-ART-BINDING.md
+flags edge-blt-under-2x as verify-in-game). If a global swap is too risky for a 59-script
+shared sheet, the builder's CLONE_XOR 0x53430001 mechanism isolates this dialog behind a
+new IID. The 9-slice cell arithmetic (`cell = (r/3 − l, b/3 − t)`, never an inset) is in
+`SC4-UI-ENGINE.md` §4A.7 and `SDK-GAPS.md` §2.1.
 
-### Region city-info bubble ("New City / Mayor Rating / play", tail pointer) — `[OPEN]`
+### Region city-info bubble — resolved
 
-Not resolved to a single .UI in the time available. Search facts recorded for the next
-session:
-- "Mayor Rating" caption appears in 8 extracted scripts (I-0b72f276, I-2bc9060f,
-  I-6bc9065a, I-898897de, I-ca539340, I-ea287193, I-ea2871aa, plus the DBPF font-table
-  I-2a87bffc which is a false hit). None of these ALSO contains "New City".
-- "New City" appears in I-0a8cd184 and I-2a41436b (the latter is the "Establish City"
-  confirm dialog, root 0x6a414973, area=(75,47,509,281), frame art 144161ee — another
-  `area=`-driven transient, statically doublable).
-- The bubble with a **tail pointing at the clicked tile** is most likely **code-drawn /
-  code-positioned** (a cSC4WinRegionView callout, analogous to the query bubble), because
-  no single script carries its full caption set and the tail anchor is dynamic. If so it is
-  the "geometry from code" case → NOT a static .UI edit; it would need either the runtime
-  scaler (kept for just this element) or a code hook. This must be confirmed by a boot-time
-  region-tree dump (UiSpike DumpTree already supports it) locating the bubble's window id,
-  then checking whether that id appears in any extracted .ui.
+The bubble with a tail pointing at the clicked tile is the window `0x0A551C50`, a child
+of the full-screen map layer `0x2BA6BB97` (`cSC4WinRegionView`). It is NOT code-drawn:
+it comes from two `.UI` scripts selected in code at click time — `I-ca539340` (existing
+city, 258x250) and `I-0a8cd184` (start new city, 216x165) — with a narrow stub variant
+`I-ca539343` under a third id `0x0A551C53`. The tail anchor is dynamic (position from the
+game, size from the script), but the whole subtree is served by dialog-static at 2x and
+every live rect is exactly 2x its staged script. Because it hangs under a full-screen
+layer, the runtime sweep can never reach it; the static dat is its only lever. Full
+architecture, child map and the Mayor Rating bar decode: `REGION-SWITCH.md` §0.5 and
+`SDK-GAPS.md` §8.3.
 
-### Q2 bottom line so far
+### Q2 bottom line
 
 - **Load Region dialog: STATIC 2x is the right call** — pure `area=`/`imagerect=` geometry,
   game self-centers a GZWinGen root, art is the shared dialog frame (verify edge-blt at 2x).
-- **City-info bubble: probably code-drawn** (tail + no owning script) — likely NOT static-
-  editable; decide runtime-scale-only vs code-hook after a region-tree dump identifies its
-  window id.
+- **City-info bubble: static .UI (dialog-static), not code-drawn** — two scripts under one
+  window id, served at 2x, unreachable by the runtime sweep by construction.

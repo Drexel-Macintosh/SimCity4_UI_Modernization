@@ -7,8 +7,8 @@
 > Every immediate that feeds an x / y / width / height / margin in every
 > builder found by stage 1, **with its encoding** and **its twin site**.
 > This is the generated replacement for the hand-enumerated tables in
-> `src\CodePatches.cpp`. It is a READ of the exe - nothing here has been
-> shipped, and the live dump remains the authority.
+> `src\CodePatches.cpp`. It is a READ of the exe - the live dump remains the
+> authority.
 
 ## Why encoding, and why twins
 
@@ -522,10 +522,10 @@ These live inside the primitives themselves, so they cannot be scoped to one dia
 | `0x7E8510` | SetW | w | 1 | `push_imm8` | `0x7E8816` `0x7E8914` `0x7E8A6B` |
 | `0x7E8510` | SetW | w | 7 | `imul_imm8` | `0x7E87B1` `0x7E89D7` |
 
-## Known limits of this map (label these HYPOTHESIS-adjacent)
+## Known limits of this map
 
 1. It covers constants that reach a create through a **push**, a **register** written nearby, or **one stack local**. A constant that reaches geometry through an object field (`mov [esi+0x9C], eax` row cursors) or through more than one local hop is not listed.
-2. `SetArea(const Rect*)` (`vt+0xD8`) passes a pointer; the constants that built the rect are found only when they are register-traceable at the call.
+2. `SetArea(const Rect*)` (`vt+0xD8`) passes a pointer, not four coordinates, and the role filter drops every `0xD8` site before any tracing is attempted - measured: **zero** SetAreaRect records reach this map (positive control: 55 SetSize + 4 SetPosition records come through the same path). Do not guess a constant from the pushed `lea` displacement; a 0xD8 site is "builder found, constants not recoverable" until a rect-store resolver exists (`SDK-GAPS.md` §11).
 3. Twin detection is textual (same value+encoding+role+owner). It does not prove which twin is LIVE - offline that needs the branch condition, and the project's rule is to patch both.
 4. Only the budget family's primitives are enumerated. The candidate list in `BUILDER-CENSUS.md` 3 is the seed for the rest of the exe.
 

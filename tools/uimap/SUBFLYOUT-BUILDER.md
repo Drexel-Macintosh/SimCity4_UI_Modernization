@@ -1,4 +1,4 @@
-# THE SUB-FLYOUT BUILDER — DECODED (2026-07-30)
+# THE SUB-FLYOUT BUILDER — DECODED
 
 > **Scope.** The shared second-level menu container **`0x8A6E61E0`** and its
 > item strip **`0x8A2CAD8B`** — the strip that opens when you pick a tool
@@ -12,7 +12,8 @@
 >
 > Machine-readable twin: `subflyout-builder.json` (+ `subflyout_builder.py`,
 > `--resume`). Generated C++ tables: `generated-subflyout-builder-{1.5,2,3}x.txt`.
-> This file is agent-owned; it does **not** touch `SUBFLYOUT-CONSTANTS.md`.
+> The verdict on the art-vs-code question: `SUBFLYOUT-ART-VERDICT.md`; the
+> early scan this supersedes: `SUBFLYOUT-CONSTANTS.md`.
 
 ---
 
@@ -194,7 +195,7 @@ Encodings and expected original bytes re-read from the exe by
 | `0x7EB183` | `6a 0a` | push imm8 | top screen margin | 10 | 15 | 20 | 30 | `0x7E74C3` |
 | `0x7EB17B` | `83 c0 f6` | add r32,imm8 | bottom screen margin | −10 | −15 | −20 | −30 | `0x7E74BB` |
 
-### 4.2 `sub_7E7270` — the FIRST-LEVEL twin (⚠ read §7 before patching)
+### 4.2 `sub_7E7270` — the FIRST-LEVEL twin (read §7 before patching)
 
 | VA | bytes | enc | role | stock | 1.5x | 2x | 3x |
 |---|---|---|---|---|---|---|---|
@@ -256,7 +257,7 @@ record (law 14). If a thunk is unacceptable, the fallback is
 `push 0x50 → push 0x7F` (127) plus a **+33 width correction** applied in the
 `Place` thunk — but that is two mechanisms where one will do.
 
-⛔ Do **not** try to absorb the shortfall into `[0xE4]`: `[0xE4]` is
+Do **not** try to absorb the shortfall into `[0xE4]`: `[0xE4]` is
 **dual-use** — it is also the hit-claim width (`0x79AE30`) and the bar's
 flush-right draw width. `ENGINE` §2.1 already paid for that lesson once.
 
@@ -294,7 +295,7 @@ atlas gives `62 − 50 = 12`, which is **exactly** the `[0xEC]`=12 measured live
 in `ENGINE` §2.1. Two different atlases, two matching predictions, and neither
 number appears in any window rect.
 
-> ⚠ **One real coupling, and it bites.** `[0xEC] = artH − 2*[0xE8]`. Doubling
+> **One real coupling, and it bites.** `[0xEC] = artH − 2*[0xE8]`. Doubling
 > `[0xE8]` to 50 against a **1x** (53-tall) atlas yields `[0xEC] = −47` and the
 > bar draw goes negative. Verified present: both
 > `tools\selective\z_SC4UIScale_Art_2x_G0x46a006b0.dat` and
@@ -308,7 +309,7 @@ number appears in any window rect.
 
 ---
 
-## 7. ⚠ THE TWIN IS ALREADY SCALED BY OTHER MEANS — DO NOT PATCH IT BLIND
+## 7. THE TWIN IS ALREADY SCALED BY OTHER MEANS — DO NOT PATCH IT BLIND
 
 `sub_7E7270` builds the **first-level** flyout, from the **same two classes**
 (this is why `SVT` found byte-identical vtables and why every disaster fix

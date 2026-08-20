@@ -67,14 +67,14 @@ bool sub_7AE3D0(IGZBitmap* src, IGZBitmap** ppDst, double dx, double dy)
 
     RECT r1, r2;
     src->vt+0x2C(&r1);                            // 0x007AE402  GetRect(out)
-    dst->vt+0x2C(&r2);                            // 0x007AE40E  fetched and NEVER USED  ⚠
+    dst->vt+0x2C(&r2);                            // 0x007AE40E  fetched and NEVER USED  (note)
 
     // 0x007AE423..0x007AE43C — all four reads are from r1 (the SOURCE)
     int w = r1.right  - r1.left;
     int h = r1.bottom - r1.top;
     if (!dst->vt+0x0C(w + 2, h + 2, {9, 0x20}))   // 0x007AE443  Init(w+2, h+2, fmt)
     {
-        (*ppDst)->Release();                      // 0x007AE44E — *ppDst is NOT nulled  ⚠ DANGLING
+        (*ppDst)->Release();                      // 0x007AE44E — *ppDst is NOT nulled  Note: DANGLING
         return false;
     }
 
@@ -114,7 +114,7 @@ args of `sub_7AE160`. The `add esp,0x30` at `0x007AE4E3` (= `0x10` doubles + 8 p
 
 **CALLERS** — `sub_7AE510` ×4 (`0x007AE5B9`, `0x007AE5EA`, `0x007AE65D`, `0x007AE68E`).
 
-⚠ UNSURE: the purpose of the unused `dst->GetRect(&r2)` at `0x007AE40E`. Dead code, most likely.
+Unsure: the purpose of the unused `dst->GetRect(&r2)` at `0x007AE40E`. Dead code, most likely.
 
 ---
 
@@ -173,7 +173,7 @@ void sub_7AE510(RegionScreen* this, Item* it)
     esi = &it->vec5C;  sub_7AD400(it->img20, 8,    1);            // 0x007AE748
     esi = &it->vec50;  sub_7AD400(it->img20, 0x10, 1);            // 0x007AE757
     if (it->img24 && it->img28) sub_7ABCD0(it->img24, it->img28); // 0x007AE76F
-    eax = it->img20;                                              // 0x007AE777 (passed in EAX ⚠)
+    eax = it->img20;                                              // 0x007AE777 (passed in EAX unsure)
     sub_7AA6A0(&it->f68, &it->f6C);                               // 0x007AE781
 
     release old20; release old1C;
@@ -201,7 +201,7 @@ void sub_7AE510(RegionScreen* this, Item* it)
 
 **CALLERS** — `sub_7AFAA0` @ `0x007B00FA` (the "establish city" UI path), `sub_7B13C0` @ `0x007B185B`.
 
-### ⚠ CORRECTION to GROUND TRUTH
+### Note: CORRECTION to GROUND TRUTH
 > *"`sub_7AE510` creates the composite: at `0x007AE6D9` it reads the SOURCE's rect and at `0x007AE706`
 > calls `Init(w,h,{9,0x20})` — so the composite is sized verbatim from the source bitmap."*
 
@@ -245,7 +245,7 @@ return this;
 **NOTE on the vectors** — `sub_462F00` at `0x00462F12` does `sar ecx,2`, i.e. **element size 4 bytes**.
 So `item+0x38 / +0x44 / +0x50 / +0x5C` are each a `std::vector<uint32>` (`{begin,end,cap}` = 0xC bytes).
 Ground truth calls `+0x38` "a packed uint16 alpha run-list" — that is compatible if two `uint16`s are
-packed per element, but the *container* is 4-byte-element. ⚠ Flagged, not contradicted.
+packed per element, but the *container* is 4-byte-element. Note: Flagged, not contradicted.
 
 Layout implied: `0x74` + `0xC` (the `sub_624D60` member) = `0x80` — matches the confirmed stride.
 
@@ -382,7 +382,7 @@ void __thiscall sub_7AEC00(cSC4WinRegionScreen* this)
 ```
 **FIELDS** — `this+0x118` / `this+0x11C` (item array begin/end), stride `0x80` confirmed again.
 **CALLERS** — `sub_7AFAA0` @ `0x007B0114`, `sub_7B0470` @ `0x007B08B5`.
-⚠ UNSURE: `0xC9E41918` is not in the `.data` class-name registry (`0xB05000..0xB0B000`).
+Unsure: `0xC9E41918` is not in the `.data` class-name registry (`0xB05000..0xB0B000`).
 
 ---
 
@@ -509,7 +509,7 @@ for (Item* it : items) {                               // 0x007AF130 loop
    the terrain bitmap carries the usual `+1` fence-post row/column.
 2. **`item+0x08` / `item+0x0C`** are the city's origin in region cells (`<<6` → game tiles).
 3. The per-city terrain thumbnail is `dim × dim` at `{2, 8}` = 8-bit, `dim ∈ {64,128,256}`.
-   ⚠ Note the sampling loop indexes `terrain(ox+y, oy+x)` and writes `img(y, x)` — the two loop
+   Note: Note the sampling loop indexes `terrain(ox+y, oy+x)` and writes `img(y, x)` — the two loop
    counters are used in the same order on both sides, so no transpose; but the outer counter is
    `ebp` and the inner is `esi`, and `ox` pairs with `ebp` while `oy` pairs with `esi`.
 
@@ -565,7 +565,7 @@ return false;
 ```
 **FIELDS** — `this+0x118`/`+0x11C` (items), `this+0x1A4` (region key).
 **CALLERS** — `sub_7AF720` @ `0x007AF8A2`.
-⚠ UNSURE: the exact semantics of `flag` — it only decides whether the *record's own* stored size or
+Unsure: the exact semantics of `flag` — it only decides whether the *record's own* stored size or
 the *item's* size class is used for the area test.
 
 ---
@@ -607,7 +607,7 @@ So `[this+0x174]` is a **scroller/auto-pan object** with
 `[0xA81054] = 0.0f`, `[0xA8FE78] = -1.0f` — both are shared read-only float literals with
 1973 and 65 data references respectively, so **neither may be patched in place**.
 
-⚠ `[this+0x174]` is **not** the `+0x164` camera named in the ground truth. Separate object.
+Note: `[this+0x174]` is **not** the `+0x164` camera named in the ground truth. Separate object.
 
 ### The rest of the switch
 | command id | name | handler |
@@ -738,7 +738,7 @@ buttons and mirrored into a preferences byte at `+0xF06`.
 | `this+0x1A8` | a bool set from checkbox `0xCA5CFEE2`, mirrored to prefs `+0xF05` |
 | `this+0x1FD` | a bool flag (0 / 1) written by `0x4BB92C1F` / `0xEBB91356` |
 
-**CALLERS** — none found by `fn.py --callers` (it is reached through the vtable, slot unknown ⚠).
+**CALLERS** — none found by `fn.py --callers` (it is reached through the vtable, slot unknown unsure).
 
 ---
 
@@ -814,7 +814,7 @@ buf->vt+0x0C(newW, newH, {9, 0x20});  // 0x008269B0 : now succeeds
 so **the old bits are gone** — anything already blitted into the composite is lost and must be
 rebuilt (i.e. re-run `sub_7AE510`'s tail, or the `sub_7B3300` compositor).
 
-⚠ HAZARD, measured: if `Init` fails inside **`sub_7AE3D0`** (`0x007AE443`), the failure path at
+Note: HAZARD, measured: if `Init` fails inside **`sub_7AE3D0`** (`0x007AE443`), the failure path at
 `0x007AE44A` calls `Release()` on `*ppDst` but **does not null it** — `sub_7AE510` then goes on to
 call `vt+0x30` on that freed pointer at `0x007AE6DE`. Do not engineer an `Init` failure there.
 The composite's own failure path (`0x007AE70D`) *does* null the slot first and is safe.
@@ -837,7 +837,7 @@ The composite's own failure path (`0x007AE70D`) *does* null the slot first and i
 | `+0x24` | ptr | `0x007AE5EF` | 3rd bitmap (optional; only used if `+0x28` is also non-null) |
 | `+0x28` | ptr | `0x007AE604` | 4th bitmap |
 | `+0x2C` | ptr | `0x007AE6C2` | **composite buffer** |
-| `+0x30` | ptr | `0x007AE82D` (copy-ctor) | a 6th refcounted pointer — **not written anywhere in this slice** ⚠ |
+| `+0x30` | ptr | `0x007AE82D` (copy-ctor) | a 6th refcounted pointer — **not written anywhere in this slice** Note: |
 | `+0x34` | BYTE | `0x007AE83C` | "built" flag |
 | `+0x38` | vector\<dword\> | `0x007AE849` | 0xC bytes; not written in this slice |
 | `+0x44` | vector\<dword\> | `0x007AE739` | run-list, `sub_7AD400(img20, 0, 0)` |
@@ -903,7 +903,7 @@ The composite's own failure path (`0x007AE70D`) *does* null the slot first and i
 0x6A935E3C  kCommandID_QuitGame
 0x6AA9FE51  kCommandID_SetExpandedToolTips
 ```
-Not in the registry (⚠ names unknown): `0x287259F6`, `0x287259F7`, `0xC9E41918`, `0xEA5A96E6`,
+Not in the registry (Note: names unknown): `0x287259F6`, `0x287259F7`, `0xC9E41918`, `0xEA5A96E6`,
 `0x26C10A3E`, `0xCA5CFEE2`, `0xABA290E1`, `0xCBA290EC`, `0xABA290F6`, `0x4A5600xx`, `0x2A5B000x`,
 `0x098F4Fxx`, `0x09EBF2C8`, `0x0A5510A9`, `0x4BB92C1F`, `0xEBB91356`, `0x8A1DA655`, `0xA98F4F88`,
 `0xCA1DA670`, `0x4A779A09`, `0x4A779A1A`, `0x6BB92BCA`, `0x0BB0F5E7`, `0x6A231EAA`, `0xAA738C4E`.

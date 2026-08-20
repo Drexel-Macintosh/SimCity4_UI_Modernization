@@ -62,7 +62,7 @@ static = PARTIAL, say so).
      six zooms, so the pair is the real zoomMin/zoomMax. The arrow is
      **zoom-banded to close zooms (~3–5/6; absent at 1–2)**; exact
      inclusive/exclusive semantics unadjudicated.
-     ⚠ NOTE: `build_mission_bubble_fx.py`'s prose layout puts zoomMin/Max at
+     NOTE: `build_mission_bubble_fx.py`'s prose layout puts zoomMin/Max at
      nameEnd+57/58 — on these records +57/58 read 0. The pair that varies is
      at +61/62. The builder's CODE only touches the SCALE float so the prose
      off-by-2 never mattered; do not patch zoom bytes from the prose layout.

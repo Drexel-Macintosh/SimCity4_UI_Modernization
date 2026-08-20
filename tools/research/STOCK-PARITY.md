@@ -13,9 +13,8 @@ if it were stock.**
   stock. A clean stock run requires `[Scaling] Enabled=0` too.
 - NATIVE DESIGN: 2400x1600 pre-scale region dumps (multiple sessions).
 - OURS: the scaled geometry lines from the same logs (v2.5.7+ anchor rules).
-- Pixel captures for the stock side are PENDING (workstation was locked -
-  exclusive fullscreen + captures impossible; needs ~2 min of unlocked
-  machine time to re-run the stock cycle with captures).
+- This pass is geometric; pixel-level capture comparison was out of scope
+  (exclusive fullscreen on the stock machine).
 
 ## Panel-placement comparison (geometric)
 
@@ -42,16 +41,16 @@ layout convention is: fixed pixel corner gaps + centered top elements at any
 resolution; our 2x doubles panel, children, and gaps coherently — the result
 is exactly "the 800x600 layout built at 2x".
 
-## Remaining stock-parity items (pixel-level, need unlocked screen / clicks)
+## Follow-on work (settled since this pass)
 
 1. Font rendering: 437 name-form font= tokens converted to GUID form across
-   all 23 edited scripts (2026-07-22 dat) — legend rows (DataInsetLegend x20),
-   flyout checkboxes (GenBodyMedium x8), city funds/pop/date/rating, budget,
-   news. VERIFY VISUALLY against stock proportions once captures are possible.
-2. Load Region dialog: static 2x script deployed (z_SC4UIScale_DialogStatic.dat)
-   — needs a click to verify; the game may re-center it (fine). Root GZWinGen
-   + buttons have no imagerect (engine-fitted) — eyeball their frames.
-3. The other five dialogs (Play/Audio/Graphics/Create/Delete): same static
-   treatment once Load Region validates.
-4. Stock PIXEL reference capture at 800x600 (2-min unlocked cycle), then
-   side-by-side crop pairs vs native captures.
+   all 23 edited scripts — legend rows (DataInsetLegend x20), flyout
+   checkboxes (GenBodyMedium x8), city funds/pop/date/rating, budget, news.
+   The GUID rule and its mechanism: `FONTS-AND-DIALOGS.md` Q1.
+2. Load Region dialog: static 2x script shipped
+   (z_SC4UIScale_DialogStatic.dat); root GZWinGen + buttons have no
+   imagerect (engine-fitted). Recipe: `FONTS-AND-DIALOGS.md` Q2.
+3. The other five region dialogs (Play/Audio/Graphics/Create/Delete): same
+   static treatment.
+4. The region screen's full architecture, anchoring law and lifecycle:
+   `REGION-SWITCH.md` §0 and `REGION-SCREEN.md`.

@@ -101,7 +101,7 @@ all corroborated by call shape): `+0x5C` DestroyWindow, `+0x60` IsWindowValid,
 | Global | Meaning | Evidence |
 |---|---|---|
 | `[0xB43CF8]` | the flat region terrain grid (ctor `sub_7AACE0`) | `sub_7AC380` zeroes it in the same block that releases `RegionScreen+0x16C` — **confirms GROUND TRUTH** |
-| `[0xB43C94]` | the app singleton (⚠ *inferred* cISC4App) | `vt+0x44` = SavePreferences, `vt+0x98` = GetPreferences, `vt+0x88` = the region object |
+| `[0xB43C94]` | the app singleton (Note: *inferred* cISC4App) | `vt+0x44` = SavePreferences, `vt+0x98` = GetPreferences, `vt+0x88` = the region object |
 | `[0xB43CA8]` | a GZCOM resource/properties service | `sub_7ABF10`, `vt+0x0C(key, ...)` |
 | `[0xB43CB0]` | a service that takes `vt+0x50(win,0,0)` | `sub_7AB9F0` msg 0x1B branch |
 | `[0xB43CCC]` | the message server | `sub_7ABB00`, `vt+0x10(msgObj, 0)` |
@@ -175,7 +175,7 @@ Accessors proved by reading the tiny bodies in vtable `0xAB8C00`:
 **CALLERS** one site, `0x007ACD75` in `sub_7ACC90`.
 
 <a name="sub_7aad30"></a>
-### `sub_7AAD30` (0x7AAD30..0x7AAD60, 48 bytes) — ⚠ NOT in funcs.json
+### `sub_7AAD30` (0x7AAD30..0x7AAD60, 48 bytes) — Note: NOT in funcs.json
 
 Scalar-deleting destructor of the same class: restores both vptrs, calls
 `0x90D964` (second-base dtor), and `if (arg0 & 1) operator delete(this)`.
@@ -287,7 +287,7 @@ bool ScrollWin::GZOnMouseUpR(this, int x, int y, uint32 mods)
 ```
 
 `0x48E945B4` is the anchor-marker child created by `sub_7AC620`.
-⚠ Our own `UiSpike.cpp` calls `0x48E945B4` the "EDGE bubble / U-Drive-It marker".
+Note: Our own `UiSpike.cpp` calls `0x48E945B4` the "EDGE bubble / U-Drive-It marker".
 The bytes here say the *region screen* also uses that id for its scroll anchor —
 treat any id-keyed logic on `0x48E945B4` as **not unique to the city view**.
 
@@ -433,7 +433,7 @@ reads/writes `+0xE4/+0xE8` (velocity), `+0xEC/+0xF0` (damping), `+0x108` (in-scr
 `+0x120` (the elapsed-time timer object).
 **vtable calls** `vt+0xAC` GetL, `vt+0xB0` GetT, `vt+0xB4` GetR, `vt+0xB8` GetB,
 `vt+0x248` PostMsg; winMgr `vt+0x88` GetCursorRelativePosition.
-⚠ `0x0073283C` pushed at `0x7AB1BB` looks like a code address but is used as a **GZIID**;
+Note: `0x0073283C` pushed at `0x7AB1BB` looks like a code address but is used as a **GZIID**;
 `0xC416025C` is the service/setting id. Not further resolved.
 
 <a name="sub_7ab520"></a>
@@ -448,7 +448,7 @@ bool X::Init(this) {
 Class `0xAB8F50` is a **second, smaller cGZWin subclass** in the region module: it
 overrides only `Init`(`+0x10`)→`7AB520`, `Shutdown`(`+0x14`)→`7AB560`,
 `GZPaint`(`+0x160`)→`7AB590` and the dtor(`+0x250`)→`7AB5C0`.
-⚠ Not named; it paints whatever `[0xB43DD0]` currently is.
+Note: Not named; it paints whatever `[0xB43DD0]` currently is.
 
 <a name="sub_7ab560"></a>
 ### `sub_7AB560` (0x7AB560..0x7AB590, 48 bytes) — class-`0xAB8F50` `Shutdown`
@@ -471,7 +471,7 @@ bool X::GZPaint(this) {
     return true;
 }
 ```
-`cGZWin+0x6C` is zeroed by the base ctor `0x0099D938`; ⚠ I could not prove what it
+`cGZWin+0x6C` is zeroed by the base ctor `0x0099D938`; Note: I could not prove what it
 is — most likely the draw context / render target wrapper.
 
 <a name="sub_7ab5c0"></a>
@@ -493,7 +493,7 @@ void X::~X(this) {
 ```
 
 <a name="sub_7ab600"></a>
-### `sub_7AB600` (0x7AB600..0x7AB630, 48 bytes) — ⚠ NOT in funcs.json
+### `sub_7AB600` (0x7AB600..0x7AB630, 48 bytes) — Note: NOT in funcs.json
 
 Scalar-deleting destructor of a **multiple-inheritance pair**: primary vptr
 `0x00AB8CB8`, secondary vptr `0x00AB8CA0` at `+0x04`; calls `0x0090D990` then the
@@ -533,7 +533,7 @@ bool GroundDraw::Draw(this, Renderer* r)
 
 The colour dword is written as four byte stores per vertex (`+0x0C`=0, `+0x0D`=0,
 `+0x0E`=`0x40`, `+0x0F`=`0xFF`) → little-endian `0xFF400000`.
-⚠ Whether that is D3DCOLOR ARGB (A=FF, R=0x40) or something else is a guess.
+Note: Whether that is D3DCOLOR ARGB (A=FF, R=0x40) or something else is a guess.
 `0x7D2970` and `0x7FC2D0` are one-line forwarders into `[renderer+0x30]`'s vtable.
 
 <a name="sub_7ab760"></a>
@@ -578,8 +578,8 @@ and it is the natural lever for issue #131 (region map too small at 2x/3x).**
 ```c
 void RegionScreen::RecomputePanBounds(this)
 {
-    Region* rgn  = [0x00B43C94]->vt+0x88();      // ⚠ inferred cISC4App::GetRegion()
-    Obj*    o    = rgn->vt+0x2C(this->0x1A4);    // ⚠ per-region lookup by id
+    Region* rgn  = [0x00B43C94]->vt+0x88();      // Note: inferred cISC4App::GetRegion()
+    Obj*    o    = rgn->vt+0x2C(this->0x1A4);    // Note: per-region lookup by id
     int32   r[4]; o->vt+0x60(r);                 // bounding rect in CELLS
 
     int W = r[2] - r[0] + 1;                     // width  in region cells
@@ -666,7 +666,7 @@ bool RegionScreen::DoMessage(this, cGZMessage* m)
 **Note the axis swap:** the poster (`sub_7AB130`) pushes `(vy*256, vx*256)` as
 `(data1, data2)`, and the receiver adds `data1` to `+0x178` and `data2` to `+0x17C`.
 Downstream (`sub_7AC1A0`) `+0x178` pairs with **GetW()** and `+0x17C` with **GetH()**.
-⚠ I did not resolve which of `+0x178`/`+0x17C` the artist would call "X"; the
+Note: I did not resolve which of `+0x178`/`+0x17C` the artist would call "X"; the
 measured wiring is: `+0x178` ← posted `data1` ← `vy`; used with GetW.
 
 <a name="sub_7abb00"></a>
@@ -754,7 +754,7 @@ It is the second argument of `sub_7ABCD0` (see next), which explains where the
 **CALLED TWICE FROM `sub_7AE510`** (`0x007AE726`, `0x007AE76F`) — the composite creator.
 
 **CONVENTION** `__cdecl(Buffer* dst, Buffer* mask)` — plain `ret`, caller cleans.
-⚠ The prologue reads a third slot but never uses it, so the declared arity may be 3.
+Note: The prologue reads a third slot but never uses it, so the declared arity may be 3.
 
 ```c
 void StampAlpha(Buffer* dst, Buffer* mask)
@@ -779,7 +779,7 @@ void StampAlpha(Buffer* dst, Buffer* mask)
 }
 ```
 
-**⚠ MEASURED ODDITY, load-bearing.** Raw bytes at `0x007ABD06`:
+**Note: MEASURED ODDITY, load-bearing.** Raw bytes at `0x007ABD06`:
 
 ```
 007ABD06  8B 45 00        mov  eax,[ebp]        ; ebp = arg1 (mask)
@@ -803,7 +803,7 @@ function enforces it.**
 Buffer vtable slots used, consistent with GROUND TRUTH's `0x00AC1400` map
 (`+0x24` GetWidth, `+0x28` GetHeight, `+0x30` GetRect):
 `+0x18` lock/begin-access(flags), `+0x1C` unlock/end-access(flags),
-`+0x54` **GetPixel(x,y)**, `+0x58` **SetPixel(x,y,argb)**. ⚠ Lock/unlock names are a guess;
+`+0x54` **GetPixel(x,y)**, `+0x58` **SetPixel(x,y,argb)**. Note: Lock/unlock names are a guess;
 flags `0x8080` (dst, read+write) and `0x800` (mask, read-only) are exact.
 
 <a name="sub_7abdf0"></a>
@@ -847,7 +847,7 @@ sub-windows. **Constant table `0x00AB91AC`** = `{0x09EBF2BD, 0x09EBF2C8, 0x09EBF
 `0x09EBF2C3` (60×46 GZWinBtn) are declared in our extracted script
 `T-00000000_G-96a006b0_I-aa920991.ui` (root 1154×51) — the region toolbar.
 Host container id `0x09EBE9EE`.
-⚠ `vt+0x118`/`vt+0x114` are Hide/Show in one order or the other; I did not disambiguate.
+Note: `vt+0x118`/`vt+0x114` are Hide/Show in one order or the other; I did not disambiguate.
 
 <a name="sub_7abf10"></a>
 ### `sub_7ABF10` (0x7ABF10..0x7AC110, 512 bytes) — load the region-screen tuning exemplar
@@ -895,7 +895,7 @@ void RegionScreen::LoadTuning(this)
 }
 ```
 
-Property-reader helpers (⚠ names inferred from arg shape, all `__cdecl(props, id, out)`):
+Property-reader helpers (Note: names inferred from arg shape, all `__cdecl(props, id, out)`):
 `0x005FD450` int, `0x005FD480` u32/float, `0x005FD3C0` bool/byte, `0x005FD4F0` float pair.
 
 **This is the single best place to look for #131.** `+0x198`/`+0x19C` are the only
@@ -944,13 +944,13 @@ void RegionScreen::UpdateCamera(this)
     float rx0 = tx * P->0x60, rx1 = tx * P->0x64, rx2 = tx * P->0x68;   // "right" basis row
 
     float out[6] = { rx0, rx1, rx2,                     // point
-                     rx0 - uy0, rx1 - uy1, rx2 - uy2 }; // point - up   (⚠ exact pairing
+                     rx0 - uy0, rx1 - uy1, rx2 - uy2 }; // point - up   (Note: exact pairing
                                                         //  of the three subtractions is
                                                         //  by stack slot, see below)
     sub_7CD810(this->0x164 /*cSC4CameraControl*/, out);
 }
 ```
-⚠ The three `fsub`s at `0x7AC237/0x7AC243/0x7AC24F` pair `[esp+0x20..0x24]` against
+Note: The three `fsub`s at `0x7AC237/0x7AC243/0x7AC24F` pair `[esp+0x20..0x24]` against
 `[esp+0x10..0x18]`; I am confident about the inputs (`+0x60..+0x68` and `+0x6C..+0x74`
 scaled by `+0x150`) and about `this->0x164` being the camera, less so about the exact
 component order in the 6-float block.
@@ -1088,7 +1088,7 @@ void* ScrollWin::`scalar deleting destructor'(this, uint8 flags)
     return this;
 }
 ```
-⚠ Flag `0x4000` is not in the gzcom-dll `tWinFlag` list; from context it is an
+Note: Flag `0x4000` is not in the gzcom-dll `tWinFlag` list; from context it is an
 "initialised / created" bit.
 
 <a name="sub_7ac620"></a>

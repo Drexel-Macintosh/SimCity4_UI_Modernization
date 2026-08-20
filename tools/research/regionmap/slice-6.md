@@ -7,7 +7,7 @@ each ends where the next `starts` entry begins, so the slice physically covers
 
 Everything below was read out of the binary in this pass with
 `tools\research\scripts\disasm.py` and a byte-scanner over the PE sections.
-Guesses are marked `⚠ UNSURE`.
+Guesses are marked `Unsure`.
 
 ---
 
@@ -74,7 +74,7 @@ Ground truth already had `+0x0C Init(w,h,fmt)`, `+0x24 GetWidth`, `+0x28 GetHeig
 | `vt+0x58` | `void SetPixel(int x, int y, uint32 nativeColor)` | `0x7B2D77`, `0x7B2FEF` |
 | `vt+0x74` | `bool Blit(IBitmap* src, RECT* srcRect, RECT* dstRect, RECT* clip /*may be 0*/)` | `0x7B2868` (clip = grid rect), `0x7B2C96` (clip = `0`) |
 | `vt+0x78` | `uint32 MakeColor(uint8 r, uint8 g, uint8 b)` | `0x7B2D6B`, `0x7B2FE3` |
-| `vt+0x7C` | takes the return value of `vt+0x54`; **result discarded** | `0x7B2CE5`, `0x7B2F70` — ⚠ UNSURE what it is (a release/"unlock pixel" pair?) |
+| `vt+0x7C` | takes the return value of `vt+0x54`; **result discarded** | `0x7B2CE5`, `0x7B2F70` — Unsure what it is (a release/"unlock pixel" pair?) |
 | `vt+0x88` | `void* GetBits()` | `0x7B33C5`, `0x7B3743`, `0x7B2C25` |
 | `vt+0x8C` | `int GetPitch()` — **bytes per row** | `0x7B33B4`, `0x7B3734`, `0x7B2C15`; always `imul`'d by a row index and added to `GetBits()` |
 
@@ -97,7 +97,7 @@ The real vtable prefixes `cIGZUnknown` (QI/AddRef/Release), so real = header + d
 ⇒ **our `cIGZWin.h` is missing exactly one virtual somewhere between header slot 30
 and header slot 63** (i.e. between `SortChildren +0x078` and `GetFlag +0x0FC`).
 Any real offset in that window is ambiguous by one slot; those are flagged
-`⚠ UNSURE (delta 0x0C or 0x10)` below. Offsets outside it are safe.
+`Unsure (delta 0x0C or 0x10)` below. Offsets outside it are safe.
 
 ### 0.3 Data / rdata constants used by this slice
 
@@ -113,7 +113,7 @@ Any real offset in that window is ambiguous by one slot; those are flagged
 | `0x00AB9604` | vtable B of the "bouncer" class (11 slots) | `sub_7B3560` |
 | `0x00AB9630` | vtable of the tile-grid class (iid `0xC989F960`) | ctors at `sub_7B51D0`, `sub_7B6060` |
 | `0x00B43C94` | module-scope service pointer; `vt+0xC4` = "get a lookup table" | `sub_7B3170` |
-| `0x00B43DD0` | module-scope service pointer; `vt+0x50` = request repaint (0 args), `vt+0x60`/`vt+0x68` bracket the paint | `sub_7B28B0`, `sub_7B29E0`, `sub_7B3C10`. Set by `0x00602141`/`0x006025CB`, also by `0x007AC3BC`/`0x007AD0EB` in this module. **⚠ UNSURE which class.** |
+| `0x00B43DD0` | module-scope service pointer; `vt+0x50` = request repaint (0 args), `vt+0x60`/`vt+0x68` bracket the paint | `sub_7B28B0`, `sub_7B29E0`, `sub_7B3C10`. Set by `0x00602141`/`0x006025CB`, also by `0x007AC3BC`/`0x007AD0EB` in this module. **Unsure which class.** |
 | `0x00B02AF4` | `.data`: `0x007B24FA` — SEH scope-table entry for `sub_7B24B0` | — |
 
 ### 0.4 Helper functions outside the slice, identified here
@@ -153,7 +153,7 @@ Both are `std::vector<uint32>` `{begin,end,cap}` and both pack a position as
   low byte, shifted right by one** (`0x7B34A7: 8a17 d0ea` → weight 0..127, so its
   tint tops out at ~50%).
 
-**No producer of format B is in this slice.** ⚠ UNSURE where it is built.
+**No producer of format B is in this slice.** Unsure where it is built.
 
 ---
 
@@ -220,7 +220,7 @@ bool __cdecl HookUpButtons(cIGZWin* parent, uint32 id, cIGZWin* child, void* pCt
 `0x007B3170 .. 0x007B31C0 (80 bytes)`
 
 **PURPOSE** if an object's record in a global table has a flag set, poke a second
-object. ⚠ UNSURE what either object is.
+object. Unsure what either object is.
 
 **CONVENTION** `__stdcall bool f(A* a0, B* a1)` — `ret 8`, no `this`.
 
@@ -236,7 +236,7 @@ void __stdcall f(A* a, B* b) {
 ```
 
 **FIELDS** `[rec+0x10]` = a byte flag.
-⚠ UNSURE: `a` is probably **not** a `cIGZWin` — real `+0x10C`/`+0x104` would need
+Unsure: `a` is probably **not** a `cIGZWin` — real `+0x10C`/`+0x104` would need
 0-arg cIGZWin methods and none of the candidates in either delta fit.
 
 **CALLERS** `sub_7B4B80`.
@@ -253,7 +253,7 @@ vtable A = 0x00AB95F0        vtable B = 0x00AB9604   (stored at this+4)
   +0x04 0x005BE3E0  AddRef             +0x04 0x005BE410
   +0x08 0x005BE3F0  Release            +0x08 0x005BE420
   +0x0C 0x007B2500  DoMessage          +0x0C 0x0090D981
-  +0x10 0x0041D4C0  (GetGZCLSID? ⚠)    +0x10 0x009D7E63
+  +0x10 0x0041D4C0  (GetGZCLSID? unsure)    +0x10 0x009D7E63
                                        +0x14 0x007B3E60   (slice 7)
                                        +0x18 0x005BE420
                                        +0x1C 0x005BCB60
@@ -324,18 +324,18 @@ bool __thiscall DoMessage(Bouncer* this, cIGZWin* pSender, uint32* pMsg)
 
 * `vt+0x2C` → header `+0x20` `GetParentWin()` (delta 0x0C is proven for this range).
 * `vt+0xA8` → header `+0x9C` `GetH()`.
-* `vt+0xE0` → header `+0xD4` `GZWinMoveTo(x, y)` (2 args). ⚠ UNSURE by one slot
+* `vt+0xE0` → header `+0xD4` `GZWinMoveTo(x, y)` (2 args). Unsure by one slot
   (this offset is inside the ambiguous window of §0.2), but it is the only 2-int
   candidate.
 * `vt+0x8C` → `GetChildWindowFromID` or `GetChildWindowFromIDRecursive`
-  ⚠ UNSURE (delta ambiguity); non-AddRef'ing either way, since the code AddRefs it itself.
+  Unsure (delta ambiguity); non-AddRef'ing either way, since the code AddRefs it itself.
 
 **CONSTANTS** `0x4A630000` is a real UI window id — declared once in the corpus,
 `T-00000000_G-96a006b0_I-ca539343.ui`, a **42×65 GZWinBMP** (verified with
 `tools\sdk\lookup.py 0x4A630000`). So the bounce moves a 42×65 bitmap through
 `parent.H − 65` pixels twice every 1500 ms.
 
-⚠ UNSURE what `0xA2BF8ACD/AD5/AD6` are named; nothing in our corpus or source
+Unsure what `0xA2BF8ACD/AD5/AD6` are named; nothing in our corpus or source
 names them. Their behaviour here is unambiguous (tick / attach / detach).
 
 ### sub_7B3560
@@ -408,7 +408,7 @@ return sub_9457C6((char*)this + 4, riid, ppv);      // 0x9457C6 accepts only rii
 `0x7B23FB mov [esp+4],eax` rewrites the riid slot with the same value (a compiler
 artifact) before `add ecx,4 / jmp 0x9457C6`.
 
-**VTABLE** `0x00AB9630 + 0x00`. ⚠ UNSURE what interface `0xC989F960` names — it is not
+**VTABLE** `0x00AB9630 + 0x00`. Unsure what interface `0xC989F960` names — it is not
 in our source lists or the .UI corpus.
 
 ### sub_7B2620
@@ -498,7 +498,7 @@ a context object, compute the offset, drive `sub_7B2770`, then hand off.
 ```c
 bool __thiscall Paint(Grid* g, Ctx* ctx)
 {
-    (*(Svc**)0xB43DD0)->vt_0x68();                 // enter (⚠ profiler/scope?)
+    (*(Svc**)0xB43DD0)->vt_0x68();                 // enter (Note: profiler/scope?)
     void* dev = ctx->svc /*+0x28*/ ->vt_0x20();    // -> edi
     void* pWin = 0;
     ctx->win /*+0x30*/ ->vt_0x130(&pWin);          // fetch a window/target
@@ -526,7 +526,7 @@ bool __thiscall Paint(Grid* g, Ctx* ctx)
 ```
 `0xAB300B2B` is already in our notes as *"QueryInterface IID for the hardware blit
 path"* (`tools/flyout-sim/emu_plot.py:49`, `tools/research/HANDOFF-god-mode-flyouts.md:402`).
-⚠ UNSURE on the exact meaning of the `dx/dy` pair and of `ctx` slots `+0x28`/`+0x30`.
+Unsure on the exact meaning of the `dx/dy` pair and of `ctx` slots `+0x28`/`+0x30`.
 
 `sub_7D5230` divides `(ctx->[0xE4] − ctx->[0xE0])` by **104** (magic
 `0x4EC4EC4F`, `sar edx,5` at `0x7D524B`) — a vector of 104-byte records on `ctx`.
@@ -714,7 +714,7 @@ list, then invalidates everything.
 ```c
 bool __thiscall ClearItems(RegionView* v)
 {
-    v->[0xE4] = 0;                                       // ⚠ UNSURE what this is
+    v->[0xE4] = 0;                                       // Unsure what this is
 
     for (Item** p = v->items.begin /*+0x100*/; p != v->items.end /*+0x104*/; ++p)
     {
@@ -778,11 +778,11 @@ bool __thiscall PointHitsNothing(RegionView* v, int x, int y)
 `sub_78D6E0` is `pWin->EnumChildren(GZIID_cIGZWin, 0x78D670, &{x, y, 0})` returning
 the third context slot — i.e. the child window found at that point, or `0`.
 
-⚠ UNSURE which conversion `vt+0xF0` is: it falls inside the ambiguous window of
+Unsure which conversion `vt+0xF0` is: it falls inside the ambiguous window of
 §0.2, so it is either header `+0xE0 WindowToScreenCoordinates(int&,int&)` (delta
 0x10) or header `+0xE4 WindowToWindowCoordinates` (delta 0x0C) — but the latter
 takes three arguments and only two are passed, so **`WindowToScreenCoordinates` is
-the only fit**. ⚠ The direction (window→screen vs screen→window) is inferred from
+the only fit**. Note: The direction (window→screen vs screen→window) is inferred from
 that fit alone, not measured.
 
 **CALLERS** none direct; vtable only (`0x00AB98AC`).
@@ -835,7 +835,7 @@ and the copy direction at `0x007B33B0` (`8b 13 … ff 92 8c000000` = `src->GetPi
 `8b 55 00 … ff 92 8c000000` = `dst->GetPitch()` with `ebp` = dst; `esi` ← src,
 `edi` ← dst, then `f3 a5 rep movsd es:[edi], [esi]`).
 
-⚠ Note the source is `Lock(0x800)`-ed at `0x7B3329` and **never unlocked** — only
+Note: Note the source is `Lock(0x800)`-ed at `0x7B3329` and **never unlocked** — only
 `dst->Unlock(0x8080)` runs at `0x7B3554`. Either `0x800` is a query flag rather than
 a lock, or this is a real asymmetry in the game. Unresolved.
 
@@ -925,7 +925,7 @@ for (uint32* p = runs->begin; p != runs->end; )
             if (!a) continue;
             uint8 r,g,b;
             dst->GetPixelRGB(dxBase+x, dy, &r, &g, &b);        // vt+0x54
-            dst->vt_0x7C( <return of vt+0x54> );               // ⚠ unknown, result unused
+            dst->vt_0x7C( <return of vt+0x54> );               // Note: unknown, result unused
             uint32 inv = 255 - a;
             uint32 R = ((px>>16)&0xFF) + ((r*inv + 0x80) >> 8);   // source-over,
             uint32 G = ((px>> 8)&0xFF) + ((g*inv + 0x80) >> 8);   // source PREMULTIPLIED
@@ -982,7 +982,7 @@ for (uint32* p = runs->begin; p <= runs->end - 4; )
         if (!w) continue;
         uint8 r,g,b;
         dst->GetPixelRGB(x, row, &r, &g, &b);            // vt+0x54
-        dst->vt_0x7C(<ret>);                             // ⚠
+        dst->vt_0x7C(<ret>);                             // (note)
         r += (uint8)(((t0 - r)*w + 0x80) >> 8);          // lerp toward the colour
         g += (uint8)(((t1 - g)*w + 0x80) >> 8);
         b += (uint8)(((t2 - b)*w + 0x80) >> 8);
@@ -992,7 +992,7 @@ for (uint32* p = runs->begin; p <= runs->end - 4; )
 dst->Unlock(0x8040);
 ```
 
-⚠ UNSURE about which of the three colour bytes maps to R/G/B — the code reads
+Unsure about which of the three colour bytes maps to R/G/B — the code reads
 `byte[color+0]`, `byte[color+1]`, `byte[color+2]` and feeds them to `MakeColor` in
 that order, but the parameter order of `MakeColor` itself is inferred.
 
@@ -1056,7 +1056,7 @@ operator delete(zeroRow.begin);                          // 0x90CF63
 The row key is carried as `(y<<16)` in a register and bumped by `add edx, 0x10000`
 once per row (`0x7B3A3B`).
 
-⚠ UNSURE on the exact neighbour semantics of the composite: the chain at
+Unsure on the exact neighbour semantics of the composite: the chain at
 `0x7B37CD..0x7B38E5` unambiguously computes `px OVER (below OVER right)` per
 channel with `255 - alpha` weights and `+0x80 >> 8` rounding, but *why* it does
 that (premultiply? bilinear-safe edge padding?) is inference.
@@ -1137,7 +1137,7 @@ this->begin = this->end = this->cap = 0;
 void* p = n ? operator_new(n*8) : 0;             // 0x90CF54, lea eax,[edi*8]
 this->cap   = (E*)((char*)p + n*8);
 this->begin = this->end = p;
-E zero; zero.p = 0;                              // flag byte left UNINITIALISED ⚠
+E zero; zero.p = 0;                              // flag byte left UNINITIALISED (note)
 this->end   = sub_7B3630(p, n, &zero, <extra>);
 ```
 The `uninitialized_fill_n` call pushes **four** args (`add esp,0x10` at `0x7B3BBB`);
@@ -1172,7 +1172,7 @@ the fourth is ignored by the callee — an allocator parameter.
    **`[item+0x44]` / `[item+0x48]`** (begin/end of a sorted `int32` vector, keys
    `(y<<16)|x`) — read by `sub_7B3A80` at `0x7B3AFD`/`0x7B3B07`. Entries are
    **32-bit, not uint16**, and the pairs are (open, close) positions.
-   Nothing in this slice touches `[item+0x38]`. ⚠ It may still be a *different*
+   Nothing in this slice touches `[item+0x38]`. Note: It may still be a *different*
    list; I could not confirm or refute `+0x38` from these 36 functions.
 
 4. **`sub_7B2A30` is not "a per-pixel inc/inc loop" only.** It has an **opaque

@@ -25,9 +25,8 @@ fresh boot.
 | `...\Plugins\SC4TouchControls.log` (live) | v2.5.7-overhang | Fresh-boot proof session (22:30:05 region up, 9/9 scaled, exit 22:32:08). This is the session behind `tools\capture\out\region-v257-fairview.png`. |
 | `src\UiSpike.cpp` / `src\UiSpike.h` | current | Classify / ScalePanelsUnder / ScalePanelRoot / ScaleSubtree / RegionWatchTick as analyzed. |
 
-Note: the task brief said the switch session was v2.5.6; no v2.5.6 log exists in Plugins.
-The dialogtest backup (v2.5.5-dialogs) is the log containing the live switches and matches
-the described scenario (repeated Load Region use, ending with a city entry).
+Note: the dialogtest backup (v2.5.5-dialogs) is the log containing the live
+switches (repeated Load Region use, ending with a city entry).
 
 Logging caveat ruled out: `logLevel=2` = `LogLevel::Debug` (Logger.h enum), and Debug-level
 lines demonstrably appear (every `region panel ... windows scaled` line is Debug). So the
@@ -57,7 +56,7 @@ geometry** (`(5,1496 415x106)` etc.) with **no `[re-scaled after reset]` suffix*
 `ScalePanelRoot` the suffix-less line means `state == Fresh`, i.e. the pointer was not in
 scaleMap (or was evicted by id mismatch). Since every root has a distinctive id, Fresh here
 means **new window objects**: the game rebuilds the whole region screen wholesale on a
-region switch (it does NOT keep windows and merely update text - that hypothesis is dead).
+region switch; it does not keep windows and merely update text.
 
 There are **zero** `[re-scaled after reset]` lines for any region panel in the entire
 session. The only such lines anywhere are city-side (`0xC99237A0` at 22:13:23) and the
@@ -170,46 +169,40 @@ against the accumulating stale-record pool.
 
 ---
 
-## 2. Hypotheses, ranked
+## 2. The mechanism (settled)
 
-**(1) PRIMARY - stale anonymous-id records block re-scale of recreated children
-("partial recreation", task's hypothesis b, with the blocker identified).**
-The panel does NOT persist - everything is recreated - but 2-3 recreated id-0 descendants
-land on recycled addresses whose scaleMap records belonged to different (destroyed) windows.
-`Classify` cannot evict (`0 == 0` id match), the size matches neither `origW/H` nor
-`scaledW/H`, and the window classifies Unrecognized - by design "leave alone", by effect
-"never scale". Grounded in: the count table above (drops only in id-0-bearing subtrees, on
-every switch, permanent); absence of tombstone/guard/catch-up lines with Debug logging
-proven active; the AAAA-uniform-size and 0x09EBEE45-size-cluster corroborations; the
-dialog-descendant-count rot showing the identical mechanism elsewhere.
+**Stale anonymous-id records block re-scale of recreated children.** The
+panel does NOT persist — everything is recreated — but 2-3 recreated id-0
+descendants land on recycled addresses whose scaleMap records belonged to
+different (destroyed) windows. `Classify` cannot evict (`0 == 0` id match),
+the size matches neither `origW/H` nor `scaledW/H`, and the window
+classifies Unrecognized — by design "leave alone", by effect "never scale".
+Grounded in: the count table above (drops only in id-0-bearing subtrees, on
+every switch, permanent); absence of tombstone/guard/catch-up lines with
+Debug logging proven active; the AAAA-uniform-size and 0x09EBEE45-size-cluster
+corroborations; the dialog-descendant-count rot showing the identical
+mechanism elsewhere.
 
-**(2) REFUTED - game re-lays the pop text at design coords after our re-scale
-(task's hypothesis a).** That path requires either per-tick ResetToOriginal churn
-(`region panel ... windows scaled` lines between switches - none), a tug-of-war tombstone
-after >3 rounds (`tombstoned (game-managed geometry)` - none in the session), or an
-Unrecognized produced by a game-side resize - but then the boot session would eventually
-show the same relayout and the fresh-boot proof would break. Boot is clean, switch is
-instantly broken in the same pass: it is a classification failure, not a layout fight.
+The alternatives are excluded, each by a measured null: a game-side re-lay of
+the pop text would need per-tick ResetToOriginal churn or a tug-of-war
+tombstone (zero of either in the session, and a clean boot proves the relayout
+never happens); a carried-over tombstone is impossible because scaleMap is
+process-local with zero tombstone lines; and a double-scale-guard refusal is
+ruled out because both guard messages (Info panel-level, Debug subtree-level)
+are absent with Debug on.
 
-**(3) REFUTED - tombstone carried over from an earlier tug-of-war.** scaleMap is
-process-local (no cross-session persistence), and this session contains zero tombstone
-lines. The v2.5.3 dialog-walk (userclickthrough) predates the `origL/origT` fix and left no
-in-process residue relevant here.
-
-**(4) REFUTED - double-scale guard refusal.** Both guard messages (Info panel-level, Debug
-subtree-level) are absent; Debug is on.
-
-**(5) Unobserved variant, same root cause - late-created children.** If the game ever
-creates a region child a tick after the rebuild, it classifies Fresh at a fresh address
-(fine) or collides with a stale record (same rot). The logs show all switch scaling
-completed in single passes, so this variant did not occur here, but the fix below should
-keep it in mind (see edge case).
+**Edge case, same root cause — late-created children.** If the game ever
+creates a region child a tick after the rebuild, it classifies Fresh at a
+fresh address (fine) or collides with a stale record (same rot). The logs
+show all switch scaling completed in single passes, so this variant did not
+occur; the shipped fix (§3) keeps it in mind.
 
 ---
 
-## 3. Recommended fix: purge-on-Fresh-root (make a switch look like a boot)
+## 3. The fix: purge-on-Fresh-root (make a switch look like a boot) — shipped
 
-### Core change
+Shipped as `PurgeSubtreeRecords` in `src\UiSpike.cpp` (called on a Fresh
+panel root, and again on Fresh by the dialog paths). The mechanism:
 
 A Fresh classification of a **whitelisted panel root** proves the game just (re)built that
 subtree: the root is a new object, therefore every descendant is also a new object, and any
@@ -256,18 +249,17 @@ Do not re-Classify for this (Classify has side effects: id-eviction and the tug-
 counter); branch off the one existing call. On the true first boot the purge is a no-op
 (nothing recorded yet), so behavior there is unchanged.
 
-### Scope
+### Scope (as shipped)
 
-- **Region pass**: required - this is the proven bug.
-- **DialogDockTick** (`state == Fresh` branch, before its child sweep): recommended - the
-  8/7/6 descendant-count rot shows dialog interiors suffer identically. Currently gated
-  behind `DockDialogs=1`, so zero shipping risk.
-- **City pass**: the invariant (Fresh root implies new descendants) is structural, not
-  region-specific, and the same call site covers it automatically. City HUD panels that
-  persist across city loads classify AlreadyScaled and are never purged, so the documented
-  double-scale hazard is untouched. If minimal blast radius is preferred for the first
-  build, gate the purge on `isRegionPass` (thread a flag into ScalePanelRoot) and widen it
-  after the region validation passes.
+- **Region pass**: the proven bug; the purge runs on every Fresh region root.
+- **DialogDockTick** (`state == Fresh` branch, before its child sweep): the
+  8/7/6 descendant-count rot shows dialog interiors suffer identically; the
+  dialog paths call the same purge on Fresh. Gated behind `DockDialogs=1`.
+- **City pass**: the invariant (Fresh root implies new descendants) is
+  structural, not region-specific, and the same call site covers it
+  automatically. City HUD panels that persist across city loads classify
+  AlreadyScaled and are never purged, so the documented double-scale hazard
+  is untouched.
 
 ### Why not the alternatives
 
@@ -284,7 +276,9 @@ counter); branch off the one existing call. On the true first boot the purge is 
   get re-scaled). Hold in reserve for the one edge case purge cannot cover: a child created
   AFTER the purge pass at a recycled foreign address (not observed in any log to date).
 
-### Validation checklist
+### Regression oracle
+
+To re-verify the purge on any build:
 
 1. Rebuild, boot to region: expect the unchanged boot signature
    (`region panel 0x09EBE9EE - 9 windows scaled`) and a clean capture (parity with

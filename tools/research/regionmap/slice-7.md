@@ -244,7 +244,7 @@ set_origin:
 **Constants** none. **Vtable calls** `vt+0x04` AddRef, `vt+0x08` Release.
 **CALLERS** `sub_7B4A60` only (`0x7B4B6B`).
 
-> ⚠ Note the full-invalidate branch at `0x7B4076` does **not** reallocate, so a large
+> Note: Note the full-invalidate branch at `0x7B4076` does **not** reallocate, so a large
 > jump costs nothing but a full repaint. A small pan costs one allocation of the entire
 > cell array plus an AddRef/Release per cell — even when `dx == dy == 0`, because the
 > function is called unconditionally from `sub_7B4A60` whenever the pan changed at all.
@@ -312,12 +312,12 @@ if (V->bg /*+0xE0*/) {
 It has a 1×1 fast path (`0x8D8BF2`: `cmp edi,1` / `cmp ebx,edi`) that degenerates to a solid
 fill, and it reduces `phaseX` modulo the source width (`0x8D8D3D`: `idiv edi`).
 
-> ⚠ **The `+` sign in `-(pan + cell)` is not a transcription slip** — `0x7B417D`
+> Note: **The `+` sign in `-(pan + cell)` is not a transcription slip** — `0x7B417D`
 > `add eax,edi` / `0x7B417F` `add ecx,ebx` then `0x7B418A/0x7B418C` `neg eax` / `neg ecx`.
 > Items (below) use `− cell` only. My reconciliation: the cell is drawn on screen at
 > `cell − pan`, so the wallpaper's screen origin works out to `−2·cell`, which vanishes
 > modulo the wallpaper size whenever that size divides `2·256 = 512` — making the
-> wallpaper **screen-locked** rather than scrolling with the map. ⚠ UNSURE: that is an
+> wallpaper **screen-locked** rather than scrolling with the map. Unsure: that is an
 > inference from the modulus, not a measurement. If someone ever ships a wallpaper whose
 > width does not divide 512, this is where the seams will come from.
 
@@ -349,7 +349,7 @@ for (int i = 0; i < (V->itemsEnd - V->items)/4; ++i) {
 }
 ```
 
-> ⚠ **WARNING — pass 1's cull rect is the source bitmap's OWN rect, untranslated.**
+> Note: **WARNING — pass 1's cull rect is the source bitmap's OWN rect, untranslated.**
 > `0x7B4275`–`0x7B428E` copies `it->src->GetRect()` (i.e. `{0,0,w,h}`) into the local at
 > `[esp+0x78]`, and `0x7B4299`/`0x7B429E` hand *that same local* to `sub_79DD60` as both
 > `this` and arg1. The screen rect `dstR` built at `[esp+0x34..0x40]` is **never** tested.
@@ -434,7 +434,7 @@ Notes on this block, all byte-checked:
   have different line heights the two lines overlap or gap. Measured at `0x7B4753`–`0x7B4770`.
 * **`MakeColor(0x3C,0x53,0x8C)` at `0x7B4540` is dead** — `eax` is overwritten at `0x7B4543`
   by `mov eax,[ebx]` before anything reads it. Presumably a drop-shadow colour whose draw
-  call was removed. ⚠ Unless `vt+0x78` has a side effect, which slice 6 does not suggest.
+  call was removed. Note: Unless `vt+0x78` has a side effect, which slice 6 does not suggest.
 * `0x8000000` is a constant draw flag on both text calls.
 * `cRZString` here is a 5-dword object `{vtable=0x00A80810, begin, end, cap, 0}` with an
   8-byte heap seed (`operator new(8)` at `0x7B4576` / `0x7B45B8`).
@@ -523,7 +523,7 @@ already-confirmed table (`tools/research/SC4-UI-ENGINE.md:249`).
 
 **Placement rule, in plain words:** the per-city window is centred **horizontally** on the
 thumbnail and **bottom-aligned to the thumbnail's vertical centre** (its full height is
-subtracted, not half). ⚠ The `+ GetWidth()` / `+ GetHeight()` terms are the *thumbnail's*
+subtracted, not half). Note: The `+ GetWidth()` / `+ GetHeight()` terms are the *thumbnail's*
 size, so this placement moves with the art, not with the window.
 
 **CALLERS** `sub_7AC830` at `0x007ACA8C`.
@@ -687,7 +687,7 @@ bool Shutdown() {
 }
 ```
 
-> ⚠ `vt+0x10` on the buffers is called **before** the erase Releases them. Slice 6's slot
+> Note: `vt+0x10` on the buffers is called **before** the erase Releases them. Slice 6's slot
 > table does not cover `+0x10` on the buffer interface; from context it is a
 > "free the pixel storage"/`Uninit` call.
 
@@ -720,7 +720,7 @@ bool Shutdown() {
 ```
 
 `[0x00B43DD0]` is the same global the tile cache is registered with in slice 8 and that
-`sub_7B5430` pokes at `0x7B5505` (`vt+0x50`). ⚠ I did not identify it; it behaves like a
+`sub_7B5430` pokes at `0x7B5505` (`vt+0x50`). Note: I did not identify it; it behaves like a
 paint/refresh manager (`vt+0x50` = "request repaint", `vt+0x84` = "unregister").
 
 **CALLERS** `sub_7B5C40` (`0x7B5C53`) — the region-view destructor.
@@ -749,7 +749,7 @@ for (item_t** p = view->items; ...) (*p)->built = 0;            // 0x7B54F7  ALL
 (*(void**)0xB43DD0)->vt+0x50();                                 // 0x7B5505  request repaint
 ```
 
-> ⚠ **This is a whole-map invalidate for a single item's overlay change.** Every cache cell
+> Note: **This is a whole-map invalidate for a single item's overlay change.** Every cache cell
 > is marked dirty and every item's composite is un-built. If region-map redraw cost ever
 > becomes an issue, this is the reason.
 
@@ -812,7 +812,7 @@ for (int cat = 0; cat < 2; ++cat) {                                  // table wa
 `0x7B5561`), terminates on `cmp eax,0x00AB95B4; jl` (`0x7B598E`), advances by `0xC`, and
 passes **`[cursor-4]`** to `city->vt+0x120` — so exactly two iterations passing the dwords
 `[0x00AB9598] = 0` and `[0x00AB95A4] = 1`. Those are the values that matter.
-⚠ **INFERRED:** that the record is `{uint32 id, uint32 index, const char* name}` based at
+Note: **INFERRED:** that the record is `{uint32 id, uint32 index, const char* name}` based at
 `0x00AB9594`. The evidence is the `0xC`-apart pair `0xEBABB1B0` @ `0x00AB9594` /
 `0xEBABB1B1` @ `0x00AB95A0` and the two string pointers at `0x00AB959C` / `0x00AB95A8`.
 Nothing in this slice reads the `id` field, and entry 1's third dword would land on
@@ -828,7 +828,7 @@ airport/seaport PNGs — which is what makes the 0/1 index meaningful.
 block is filled with three `1.0f` (`0x3F800000` at `[esp+0x8C]`, `[esp+0x9C]`, `[esp+0xAC]`,
 `[esp+0xBC]`) plus the two projected floats and two `1` bytes, handed to `obj->vt+0x1C`,
 then `obj->vt+0x0C(0)`, then a 12-byte node `{next, prev, obj}` is allocated and spliced
-into `it->_70`. ⚠ I did not chase `[0x00B43D1C]`; it behaves like a scene/model manager.
+into `it->_70`. Note: I did not chase `[0x00B43D1C]`; it behaves like a scene/model manager.
 
 **Constants** `[0x00B4E1D4]` (splatted 9× into a 0x24-byte block at `0x7B5800`, a default
 transform row), `[0x00A92D28] = 0.5`, `[0x00AB95AC] = 12582912.0f`.
@@ -908,23 +908,23 @@ transform row), `[0x00A92D28] = 0.5`, `[0x00AB95AC] = 12582912.0f`.
 
 ## Open questions (flagged, not guessed)
 
-* ⚠ **The wallpaper phase `−(pan + cell)`** (`0x7B417D`/`0x7B418A`) versus the item offset
+* Note: **The wallpaper phase `−(pan + cell)`** (`0x7B417D`/`0x7B418A`) versus the item offset
   `−cell`. My screen-locked-modulo-512 reconciliation is an inference. A live probe that
   pans the region and watches whether the backdrop moves would settle it in one minute.
-* ⚠ **`MakeColor(0x3C,0x53,0x8C)` at `0x7B4540` is dead.** If it was meant to be a text
+* Note: **`MakeColor(0x3C,0x53,0x8C)` at `0x7B4540` is dead.** If it was meant to be a text
   drop-shadow, the shadow draw call is gone from the binary.
-* ⚠ **`y2 = y1 + h2`** (`0x7B4770`) uses the mayor style's line height to offset from the
+* Note: **`y2 = y1 + h2`** (`0x7B4770`) uses the mayor style's line height to offset from the
   city style's baseline. Harmless when the two styles match; a visible defect if a mod
   gives them different sizes. Directly relevant if #131 changes the region label fonts.
-* ⚠ **Pass 1 has no screen-space cull** (see the WARNING in `sub_7B4150`). I am confident in
+* Note: **Pass 1 has no screen-space cull** (see the WARNING in `sub_7B4150`). I am confident in
   the bytes; I am not confident it is a *bug* rather than deliberate reliance on
   `sub_7B2A30`'s own clipping.
-* ⚠ `[0x00B43DD0]` (`vt+0x50` repaint / `vt+0x84` unregister) and `[0x00B43D1C]`
+* Note: `[0x00B43DD0]` (`vt+0x50` repaint / `vt+0x84` unregister) and `[0x00B43D1C]`
   (`vt+0x1C` create instance) are unidentified globals.
-* ⚠ The text service `{0xC2C2EB0F, 0x22C2EB1F}` and its slot usage (`vt+0x14` style-by-GUID,
+* Note: The text service `{0xC2C2EB0F, 0x22C2EB1F}` and its slot usage (`vt+0x14` style-by-GUID,
   `vt+0x8C` used **with an argument** on the service at `0x7B46B3` but **without one** on a
   style at `0x7B468C`) do not line up cleanly with the singleton slot table in
   `SC4-UI-ENGINE.md:2118`. Two different classes are almost certainly involved; I did not
   separate them.
-* ⚠ `vt+0x10` on a tile buffer (`sub_7B5350:0x7B536B`, `sub_7B5430:0x7B5477`) is not in
+* Note: `vt+0x10` on a tile buffer (`sub_7B5350:0x7B536B`, `sub_7B5430:0x7B5477`) is not in
   slice 6's slot table. Context says "release the pixel storage".

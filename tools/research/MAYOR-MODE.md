@@ -1,9 +1,12 @@
-# ═══ SESSION STATE 2026-07-29 NIGHT (v2.23.3-lifecycle) — READ THIS FIRST ═══
+# MAYOR-MODE — city-mode UI scaling: mechanism history
 
-Deployed v2.23.3. **Full state, open bugs and the five audit digests are in
-`HANDOFF.md` and `tools\research\_checkpoints\` — read those, not this block,
-for anything current.** Next in-game session is scripted in
-`_tests\RUN-SHEET-NEXT-SESSION.md`.
+This file is the running mechanism history of city-mode scaling, newest
+first. Each block records what shipped, the mechanism it rests on, and the
+generalisable law it taught. For the current state see `START-HERE.md` and
+`VERSION-HISTORY.txt`; the audit digests live in
+`tools\research\_checkpoints\`.
+
+## State as of v2.23.3 (2026-07-29 night)
 
 Shipped since the v2.20.4 block below: Data Views (2.21.0-.3), U-Drive-It
 status panel + bubble + dashboard + gauges (2.21.4/.5, 2.23.2), My Sims all
@@ -13,14 +16,14 @@ sweep latency), the coverage-audit art bug (2.22.3), twelve text-sweep dialogs
 (2.23.1), Grutzehaus + 4 landmark icons (2.23.2), second-city lifecycle
 hardening (2.23.3).
 
-**Open, ranked:** #55 picker icons (our regression — LEFT1X art in a doubled
-frame), #48 U-Drive-It dock AND sub-flyout hooks (user asked twice; measure the
-strip before opting into kParents — widening that gate is what crashed the
-game), #47 runtime-painted images (portraits/chips/chart; gauges DONE and are
-the model), #53 silent caps, Graphs background + Building Style boxes (one
-measurement each), #52 tier math (in flight), #54 the last ~6%.
+The items open at this point (#55 picker icons, #48 U-Drive-It dock +
+sub-flyout hooks, #47 runtime-painted images, #53 silent caps, Graphs
+background + Building Style boxes, #52 tier math, #54 the last ~6%) were
+resolved by later releases — `VERSION-HISTORY.txt` carries the per-fix
+record; the gauge dial cure (v2.42.4 family) is the model for
+runtime-painted content.
 
-**New laws this session:** for a SHARED container the right class is not the
+**Laws from this phase:** for a SHARED container the right class is not the
 right window; auto-discovery rules can enrol unchecked parentage; a deferred
 window in a scaled ecosystem tears apart; an art sweep must scan `.SC4Lot`
 containers; LEFT1X art inside a doubled frame is a bug; the flash is the
@@ -28,9 +31,9 @@ visibility gate; latches must clear in `Disarm` or city 2 breaks.
 
 # City-mode UI scaling backlog
 
-# ═══ SESSION STATE 2026-07-29 NIGHT (v2.21.4-udriveit) — READ THIS FIRST ═══
+## History — v2.21.4 (U-Drive-It)
 
-## U-Drive-It (task #46): v2.21.4 DEPLOYED, awaiting eyes-on
+### U-Drive-It (task #46): v2.21.4
 
 Two fixes, both DPROBE/disasm-measured (`_tests\REGRESSION.md` →
 "U-DRIVE-IT"): the driving status panel was a **4x double-scale we shipped
@@ -41,10 +44,10 @@ kNeverScaleIds (the Establish City rule) + a parentage warning in
 build_dialog_static.py. The tiny mission bubble = code-bound art
 {46a006b0,094ac89a} + the 15-glyph mission table at VA 0x44DEC7 → CODE_BOUND_TGIS,
 SelectiveArt 358 → 367 (two glyphs conflict-skipped by the classifier:
-46a006a4/a6). NOTE for testing: mission bubbles are ONE-SHOT — each can
+46a006a4/a6). Note for testing: mission bubbles are ONE-SHOT — each can
 only be selected once, so verification needs an unused bubble.
 
-## Data Views panel (task #45): ✅ USER-CONFIRMED at v2.21.3
+## Data Views panel (task #45) — user-confirmed at v2.21.3
 
 Closed after three builds the same night. THREE coupled parts (breaking one
 regresses it): sweep+art (root 0xAA32BCE6, SelectiveArt 358), DVMAP surface
@@ -56,7 +59,7 @@ re-imposes scaled design geometry each sweep while the page is visible
 panel deferred to regression testing (Set-StockCompare.ps1). Details:
 `_tests\REGRESSION.md` → "DATA VIEWS PANEL".
 
-## v2.21.2 history (superseded by the block above)
+## v2.21.2 history
 
 The v2.21.0 crash is SOLVED by disassembly: the expand path is pure
 show/hide (no moves); the killer was the map child **0x00004203 — a second
@@ -71,7 +74,7 @@ ok`. Eyes-on checklist: expand, pick a view, check the 512 map; DPROBE
 the "small shift" (stock shifts 3px between states by design). Full
 write-up: `_tests\REGRESSION.md` → "DATA VIEWS PANEL".
 
-## Superseded that same night — v2.21.0/v2.21.1 history
+## v2.21.0/v2.21.1 history (reverted, then re-landed as v2.21.2/.3)
 
 The panel opened as a crushed 1x sliver because the city sweep SKIPPED root
 0xAA32BCE6 by id (`kGZWin_MenuContainer`, an early-spike label wrongly
@@ -82,9 +85,10 @@ right and crashed the game** (silent native death, no WER event). v2.21.1
 reverted BOTH sides (skip back + art out, 358 → 345 all tiers; deployed,
 suites green). The "shifted right" proves the expand handler repositions
 with 1x metrics; prime crash suspect is the code-painted 256x256 data-map
-child 0x00004203 (minimap-surface problem class). **Next step is OFFLINE:
-disassemble the expand handler** (playbook workflow) — full plan + trap
-signatures in `_tests\REGRESSION.md` → "DATA VIEWS PANEL". Facts that
+child 0x00004203 (minimap-surface problem class). **The next step was
+OFFLINE disassembly of the expand handler** (playbook workflow) — executed;
+the full plan + trap signatures are in `_tests\REGRESSION.md` → "DATA VIEWS
+PANEL". Facts that
 survive the revert: live script = **I-2bc9060f** (rect-matched;
 I-ea287193 / I-0b72f276 stale copies, same root id); on re-land 140155ec +
 14416264 go shared-clone (Audio Options I-ca53f06e keeps 14416264 at 1x —
@@ -95,7 +99,7 @@ scenario axis — re-audit every surviving id-skip when its subtree's real
 owner becomes known. And the scenario matrix's *panel lifecycle* axis
 includes EXPAND: a fix confirmed on the compact state only is half-tested.
 
-# ═══ SESSION STATE 2026-07-29 END OF DAY (v2.20.4) ═══
+# History — v2.20.4 (end of day, 2026-07-29)
 
 Assume no chat context. **Read `_tests\SCENARIOS.md` before believing any fix
 is done** — five bugs this session were caused by an untested scenario axis,
@@ -119,14 +123,16 @@ with its four previews — the first real vanilla data point for the roadmap's
 vanilla pass. The mod's layout has NO style previews at all; that is its
 design, not a scaling bug.
 
-## Where to look next
+## Follow-ups from this phase
+
+All four were completed by later releases:
 
 - Task #31 stock-parity PIXEL pass (geometry already verified clean).
-- Vanilla verification pass — see the TODO in `_tests\SCENARIOS.md` (needs a
-  whole-`Plugins` toggle script; copy the Building-Styles toggle pattern, and
-  remember it must move OUR override too or our copy keeps the mod alive).
+- Vanilla verification pass (whole-`Plugins` toggle; the Building-Styles
+  toggle pattern, which must also move OUR override or our copy keeps the
+  mod alive).
 - 1.5x / 3x eyes-on (they build and pass offline; rounding is the risk).
-- My Sims panel remains DEFERRED (`kNeverScaleIds`, Sim Mode).
+- My Sims panel: un-deferred in v2.22.0 (the deferral had become the bug).
 
 ## v2.20.2-stylepanel DEPLOYED — Building Style Control (task #44)
 
@@ -142,7 +148,7 @@ MOD's script into `zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI[-tag].dat`
 (new `thirdparty-ui\` builder input, synced by ScaleTier, 1 entry).
 Detail + traps: REGRESSION.md "BUILDING STYLE CONTROL"; developer callout
 in UPSTREAM-BUILDINGSTYLES-REPORT.md.
-EYES-ON: Building Style Control compact + expanded (list, both style
+Eyes-on checklist (historical): Building Style Control compact + expanded (list, both style
 columns, the mod's three checkboxes, Collapse button).
 
 ## v2.20.1 advisors — CONFIRMED WORKING by the user (faces + dock + no flash)
@@ -163,11 +169,11 @@ all 3 factors, VERIFIED 16/16 against live 2x values) so the heads are
 framed from 2x buttons at bind time. No injected input, no flash.
 `[Flyout] AdvisorHeal=0` is now only an escape hatch. Traps:
 REGRESSION.md "ADVISORS".
-EYES-ON: open Advisors first thing on a fresh city load — faces correct
+Eyes-on checklist (historical): open Advisors first thing on a fresh city load — faces correct
 immediately, no flash, and the strip's buttons/title NOT oversized or
 overlapping (that would mean double-scaling).
 
-## v2.19.5-advclick (superseded, kept as fallback)
+## v2.19.5-advclick (historical, superseded by v2.20.0)
 
 v2.19.3 fixed the briefing pages (user-confirmed) but NOT the first-open
 faces: LIVE 3D HEAD RENDERS whose framing is created ONCE (head binder
@@ -177,7 +183,7 @@ visibility is not the trigger. v2.19.5 synthesizes the user's manual
 workaround (real clicks: face 1 -> Return) once per city load on the
 strip's first scaled visible sighting; [Flyout] AdvisorHeal=0 off;
 briefing flashes ~250ms once. Detail: REGRESSION.md "ADVISORS".
-EYES-ON: advisor faces on very first open of a fresh city load (expect
+Eyes-on checklist (historical): advisor faces on very first open of a fresh city load (expect
 one brief briefing flash, then correct faces).
 
 ## v2.19.3-advisors DEPLOYED (on top of v2.19.2 below)
@@ -188,7 +194,7 @@ faces on first open (strip 0x6A15C767 had 2x art but no hidden pre-scale),
 corrupted briefing page + expanded view (0xAA15EF06/0x2A1D96B1 were never
 in the art pass), and their AdviceLists 0x0010010x guarded never-recurse
 preemptively. SelectiveArt 345 all tiers. Detail: REGRESSION.md
-"ADVISORS". EYES-ON: advisor strip first open, briefing page, expanded
+"ADVISORS". Eyes-on checklist (historical): advisor strip first open, briefing page, expanded
 speech box, ticker one-line scroll, one tutorial page, airports
 first-open.
 
@@ -202,7 +208,7 @@ kAlwaysScaleCityIds, they measured 1x-while-hidden) and the CRUSHED
 ADVISOR TOASTS (five message-box scripts I-4a5a89d4/d5, I-2bb16d50,
 I-0bbc06b6, I-4bbc080f into dialog-static -> DialogStatic 220 all tiers).
 Detail + trap signatures: REGRESSION.md "BUDGET PANEL + ADVISOR TOASTS".
-EYES-ON CHECKLIST: expanded budget clean, Taxes + Loan dialogs, toast at
+Eyes-on checklist (historical): expanded budget clean, Taxes + Loan dialogs, toast at
 2x, ticker one-line scroll, Credits look, one tutorial page, airports
 first-open.
 
@@ -215,7 +221,7 @@ re-imposes the marquee's init-cached 1x geometry every roll tick, so the
 runtime width-scale was undone within a frame. v2.19.1 ships the marquee
 DESIGN width scaled inside the edited .UI (SelectiveArt I-2a2aed99;
 676->1352 / 484->968) and the DLL never touches the marquee at all
-(kAdviceListNeverTouchIds). Remaining eyes-on: ticker one-line scroll,
+(kAdviceListNeverTouchIds). The remaining eyes-on at the time: ticker one-line scroll,
 pop-up toast, Credits look, one tutorial page, airports first-open.
 
 **THE FINDING: all news text is HTML.** Ticker roll, reader headline rows,
@@ -243,15 +249,15 @@ size does not work for news" limitation, now explained and fixed.
 4. Credits LTEXT size maps re-calibrated (build_dialog_static.py) - the
    old bumps would compound against the scaled tables.
 
-**EYES-ON CHECKLIST (next session start):** reader headlines ~24pt + row
+**Eyes-on checklist (historical):** reader headlines ~24pt + row
 geometry sane; click a story -> 2x text on 2x newspaper art; ticker text
 2x scrolling through a 2x strip; trigger a disaster/story -> the POP-UP
 TOAST (never yet measured - if its FRAME is 1x, MPROBE it, it is likely
 one of the 0x443FCA/0x76A183/0x78CE12 rich-item creation sites' windows);
 Credits from Play Options (approved look preserved); one tutorial page;
-airports first-open self-heal (v2.18.6, also still unconfirmed).
+airports first-open self-heal (v2.18.6).
 
-# ═══ (superseded) SESSION STATE 2026-07-29 EVENING (v2.18.6) ═══
+# History — v2.18.6 (evening, 2026-07-29)
 
 Deployed + USER-CONFIRMED as of v2.18.6:
 
@@ -282,40 +288,39 @@ Deployed + USER-CONFIRMED as of v2.18.6:
 - Root z_*.dat files CANNOT override subfolder dats (load-order law).
 - Parse BOTH exemplar formats (binary EQZB + text) - CAM is ~half text.
 
-# ═══ (superseded) SESSION STATE 2026-07-29 (v2.15.3) ═══
+# History — v2.15.3 (2026-07-29)
 
-Assume no chat context. This section is the current truth; everything below it
-is history kept for mechanism detail.
+Assume no chat context. This section records the state at v2.15.3;
+everything below it is history kept for mechanism detail.
 
 ## What works now (user-confirmed in game)
 
 | Item | State |
 |---|---|
-| Founded-city GOD MODE | ✅ all 4 tools (Obliterate/Reconcile/Disaster/Day-Night) |
-| Terraform (pre-founding god) | ✅ unchanged through ~20 rebuilds |
-| Minimap dock | ✅ |
-| Disaster flyout | ✅ still good after sharing its machinery with sub-flyouts |
-| Landscape flyout dock | ✅ (22,344) |
-| Zone flyout dock + 2x ring | ✅ (22,344) |
-| SUB-FLYOUT (zone density, road types...) | ✅ position, 2x bar, seated icons, 2x circle, LEFT-HALF CLICKS |
-| SelectiveArt | ✅ 264 entries, stray untagged package retired |
-| Offline suites | ✅ Test-DatIntegrity + Test-ScaleTierDecide ALL PASS |
+| Founded-city GOD MODE | all 4 tools (Obliterate/Reconcile/Disaster/Day-Night) |
+| Terraform (pre-founding god) | unchanged through ~20 rebuilds |
+| Minimap dock | confirmed |
+| Disaster flyout | still good after sharing its machinery with sub-flyouts |
+| Landscape flyout dock | (22,344) |
+| Zone flyout dock + 2x ring | (22,344) |
+| SUB-FLYOUT (zone density, road types...) | position, 2x bar, seated icons, 2x circle, LEFT-HALF CLICKS |
+| SelectiveArt | 264 entries, stray untagged package retired |
+| Offline suites | Test-DatIntegrity + Test-ScaleTierDecide ALL PASS |
 
-Derived-but-NOT-yet-eyes-on: Transportation (22,444), Utilities (22,544),
+Derived-but-NOT-yet-eyes-on at the time: Transportation (22,444), Utilities (22,544),
 Civic (22,344), Emergency (22,542 - its marker is PREDICTED from the script,
 never measured).
 
-Deferred: **My Sims** - in kNeverScaleIds, needs a code-level slot-pitch hook
+Deferred at the time: **My Sims** - in kNeverScaleIds, needs a code-level slot-pitch hook
 plus 2x portraits. It is SIM MODE, which the section plan puts after Mayor.
+(Later un-deferred and shipped in v2.22.0.)
 
-## ✅ CLOSED 2026-07-29: SubRingDX / SubRingDY are now DERIVED
+## CLOSED 2026-07-29: SubRingDX / SubRingDY are now DERIVED
 
 `[Flyout] SubRingDX=25  SubRingDY=-6` — derived by
 `tools\flyout-sim\derive_subring.py` (re-runnable; needs `tools\dbpf\extracted`).
 The 2026-07-29 eye-dial was (26,-4); the derivation confirmed it to 1-2px and
-replaced it. **Nothing in the project is hand-dialled any more.** Needs one
-eyes-on confirm next session (a 1px right + 2px down shift vs the approved
-look).
+replaced it. **Nothing in the project is hand-dialled any more.**
 
 **The padding theory recorded here earlier was WRONG.** No in-game dump was
 needed either — the atlas is plain DBPF art. What the measurements showed:
@@ -380,7 +385,7 @@ difference cannot depend on it. Nothing about the approved look changes.
    and below 300 its ring never got the 2x draw at all.
 
 **Expected log:** `SUBDOCK 0x8A6E61E0 btn=0x… abs(…) ringY=119 native(178,549)
--> target(125,525)` — ringY new in the line. NOT yet eyes-on-verified.
+-> target(125,525)` — ringY new in the line. (verified in a later session).
 
 ## v2.17.0 (2026-07-29): SUBMENUS-MOD INTEGRATION (memo.submenus.dll 2.1.0)
 
@@ -430,13 +435,13 @@ through the verified routing chain (container slot 121 `ContPt121Thunk` ->
 strip slot 62) and at the strip's commit handler (136) synthesize a REAL OS
 click (SetCursorPos + posted down/up, the touch DLL's proven input style) at
 the selected button's centre. The centre is structurally outside the arrow
-zone (btn+47 vs zone start btn+80), so no recursion. NOT yet eyes-on.
+zone (btn+47 vs zone start btn+80), so no recursion. (Verified in a later session.)
 
 Also: `[0xe0]` must NEVER be widened for this (dual-use: claim width AND a
 draw-side-halved Plot inset) - that is why the claim extension is a slot-121
 thunk, not a field write.
 
-## ✅ SOLVED 2026-07-29: EMERGENCY = the missed-art-pass case, NOT new hooks
+## SOLVED 2026-07-29: EMERGENCY = the missed-art-pass case, NOT new hooks
 
 The disasm of class 0x00ADF6A0's Plot (0x9BC325) ended the mystery: it is
 **GZWinBMP**, and it draws its image with **dst = origin + srcWxH** (the
@@ -450,9 +455,9 @@ imagerect inside a correctly-placed 2x window draws the ring at half size
 in the wrong band"). FIX: 0x0992FD17 added to SCALED_WINDOW_IDS ->
 SelectiveArt regenerated at all three factors = **271 entries** (+7).
 LESSON, again: before treating a flyout bug as a NEW mechanism, check
-whether the window ever got its art pass. NOT yet eyes-on.
+whether the window ever got its art pass.
 
-## (superseded by the above) probe notes from the same day
+## Probe notes from the same day (superseded by the fix above)
 
 `0x0992FD17` (mayor Emergency Tools, 308x840, docks at (22,542) via predicted
 marker (3,234) — live marker confirmed (6,468) 100x80). Its picture panel
@@ -469,7 +474,8 @@ Instruments: ini `[Flyout] EmergLog` (EVTP child-class dump + EBLT blit log).
 **Vtable seed for the disasm (dumped from the exe 2026-07-29, imagebase
 0x400000, vtable file offset 0x6df6a0).** The class follows the FAMILY SLOT
 LAYOUT — same lever slots as the disaster classes:
-- slot 87 GZPaint = 0x0099BE4C (base), **slot 88 Plot = 0x009BC325 (OVERRIDE)**
+- slot 87 = 0x0099BE4C (`GetNotificationTarget` — the per-class draw
+  `GZPaint` is slot 88), **slot 88 GZPaint = 0x009BC325 (OVERRIDE)**
 - slots 136/138 mouse = 0x009BC2D0 / 0x009BC27C (overrides, the click-fix slots)
 - slot 121 = 0x0099C8F5 (base), slot 133 = 0x0093878E, slot 149 = 0x0099BBBE
 - draw group 87..97: 0099be4c 009bc325 0099ba07 0099dce4 0099becc 0099bed1
@@ -481,7 +487,8 @@ LAYOUT — same lever slots as the disaster classes:
   0x0099d938 / 0x0099db6b are the candidates). EBLT proved the buffer is NOT
   the hooked class 0x00AC1400 (gEmergLog active from DLL load; panel painted
   at open; zero hits).
-- PLAN (the lessons, in order): (1) capstone the Plot + the three helpers to
+- PLAN AT THE TIME (superseded by the art-pass fix above; kept for the
+  lessons, in order): (1) capstone the Plot + the three helpers to
   find the buffer class + its Blt slot; (2) permanent class-Blt patch on THAT
   class (BltClassThunk pattern, gated by panel size 496 wide); (3) Plot-hook
   force-recreate via a THIRD vtable copy (gVtCopy3) on 0x00ADF6A0 slot 88;
@@ -490,9 +497,9 @@ LAYOUT — same lever slots as the disaster classes:
   red circle), derive offsets from art the way the sub-flyout ring was done;
   (6) every lever ini-gated, defaulting to today's behaviour.
 
-Also OPEN: tooltip boxes size for 1x text while the font is 2x (text clips/
-overflows). New surface — the transient tooltip window; find via DPROBE while
-hovering. (Task #41.)
+Also open at the time: tooltip boxes sized for 1x text while the font is 2x
+(text clips/overflows) — task #41, fixed in v2.18.0 by the TooltipWrapPatch
+byte patch (see the v2.18.6 table above).
 
 ## The sub-flyout, fully explained (every value has a cause)
 
@@ -553,7 +560,7 @@ sub-flyout ring resolved: the ring was never what should move, the container was
 
 # City-mode UI scaling backlog (2026-07-23 user pass)
 
-## ★★ THE ALIGNMENT-MARKER RULE (2026-07-28) — how SC4 places EVERY flyout
+## THE ALIGNMENT-MARKER RULE (2026-07-28) — how SC4 places EVERY flyout
 
 The single most useful thing found in this phase. It ends offset-guessing.
 
@@ -602,16 +609,15 @@ use its y position. Toolbar root 0x69E40A1F, live (8,364) 314x976.
 
 | # | Button | live abs | Flyout | Flyout id | marker(1x) | derived target |
 |---|---|---|---|---|---|---|
-| 1 | 0x8991EE08 | (28,398) | Landscape | 0x49923239 | (3,27) | (22,344) ✅ |
-| 2 | 0x0991EE13 | (28,498) | Zones | 0x69923479 | (3,77) | (22,344) ✅ |
-| 3 | 0xA994824D | (28,598) | Transportation | 0xC99237A0 | (3,77) | (22,444) ⬜ |
-| 4 | 0xE991EE2F | (28,698) | Utilities | 0xE992F711 | (3,77) | (22,544) ⬜ |
-| 5 | 0x0991EE39 | (28,798) | Civic | 0x699306ED | (3,227) | (22,344) ⬜ |
+| 1 | 0x8991EE08 | (28,398) | Landscape | 0x49923239 | (3,27) | (22,344) user-verified |
+| 2 | 0x0991EE13 | (28,498) | Zones | 0x69923479 | (3,77) | (22,344) user-verified |
+| 3 | 0xA994824D | (28,598) | Transportation | 0xC99237A0 | (3,77) | (22,444) derived + shipped |
+| 4 | 0xE991EE2F | (28,698) | Utilities | 0xE992F711 | (3,77) | (22,544) derived + shipped |
+| 5 | 0x0991EE39 | (28,798) | Civic | 0x699306ED | (3,227) | (22,344) derived + shipped |
 | 6 | 0xE999C820 | (28,922) | Bulldoze | (none) | - | - |
 | 7 | 0x6991EE42 | (28,1010) | Emergency | 0x0992FD17 | (3,234)* | (25,776)* |
 
-✅ user-verified   ⬜ derived + shipped, not yet verified   * predicted, never
-opened in any capture.
+\* predicted, never opened in any capture at the time.
 
 Note 1+2 both land at (22,344): each flyout's marker sits lower by exactly the
 button pitch, cancelling out. That is the rule being self-consistent.
@@ -644,11 +650,12 @@ puts it at 205..311, i.e. 53px past the buffer end, so the bar clips to a sliver
 and the icon strip (x 160..248) no longer overlaps it. Shifting left by exactly
 one bar width keeps it flush: 152 + 106 = 258. Do NOT gate this per-window.
 
-**STILL OPEN on this container (2026-07-28):** bar reads slightly too far left
-and the ring/circle is not 2x-covering. Next step is NOT another constant tweak
-- re-enable `[Flyout] SubBltLog=1` and read the SBLT trace, which gives every
-src/dst rect in call order. Three screenshot-driven builds failed here; one
-trace found the real cause immediately.
+**Open at the time (2026-07-28), since resolved:** the bar read slightly too
+far left and the ring/circle was not 2x-covering. The lesson stood: the next
+step was NOT another constant tweak — re-enable `[Flyout] SubBltLog=1` and
+read the SBLT trace, which gives every src/dst rect in call order. Three
+screenshot-driven builds failed here; one trace found the real cause
+immediately.
 
 ### Two code paths, know which one a flyout uses
 
@@ -670,13 +677,13 @@ trace found the real cause immediately.
    `R`, and the target that `R` would produce.
 4. Paste `R` into `kMayorFlyoutDock`, set `derived=true`, `MayorDock=1`.
 
-## ⚠️ 2026-07-28 (v2.12.x) — MAYOR MODE PHASE OPENED. READ THIS FIRST.
+## 2026-07-28 (v2.12.x) — MAYOR MODE PHASE
 
-God mode (pre-founding) is COMPLETE - see HANDOFF-god-mode-flyouts.md. The
+God mode (pre-founding) is COMPLETE - see GOD-MODE-FLYOUTS.md. The
 FOUNDED-CITY paths are a different, largely untested surface, and the first
 thing found there was a hard blocker.
 
-### ✅ FOUNDED-CITY GOD MODE FIXED (v2.12.2, USER-CONFIRMED 2026-07-28)
+### FOUNDED-CITY GOD MODE FIXED (v2.12.2, user-confirmed 2026-07-28)
 
 "god mode loads correctly now - tested all 4 fields and they all worked."
 TWO separate windows had to be fixed, and BOTH had the SAME root cause.
@@ -739,12 +746,12 @@ screenshots burned far longer and produced two wrong theories.
   claim in the god-mode notes was established PRE-FOUNDING. Re-verify each one
   against a founded city before trusting it.
 
-### Open, diagnosed, not yet fixed (from the same session)
+### Diagnosed at the time (both fixed in the v2.19.x series)
 
-| Item | Evidence | Layer | Planned fix |
+| Item | Evidence | Layer | Fix that landed |
 |---|---|---|---|
-| News reader `0xAA231508` renders 1x + visual error | `pos(260,348) size(880x456)` = dead stock, but **vis=0 while visibly drawing** -> the sweep's visibility gate skips it | window tree (+ art mismatch) | scale by id even while hidden (the `kGodPanelIds`/`kRegionPanelIds` lesson); the "visual error" is 2x art in a 1x frame and should resolve with it |
-| News ticker `0xCA2AEDC0` content stays 1x | container `1514x86` = EXACTLY 2x of stock 757x43 (root-only scale worked), but child `0x6A2AEDCA` is still `757x43` | draw/child layout | the `kRootOnlyScaleIds` premise (cSC4WinAdviceList re-lays children to the container each frame) does NOT hold for that child - needs a look at who owns its size |
+| News reader `0xAA231508` renders 1x + visual error | `pos(260,348) size(880x456)` = dead stock, but **vis=0 while visibly drawing** -> the sweep's visibility gate skips it | window tree (+ art mismatch) | scale by id even while hidden (the `kGodPanelIds`/`kRegionPanelIds` lesson); the "visual error" was 2x art in a 1x frame and resolved with it (v2.19.3) |
+| News ticker `0xCA2AEDC0` content stays 1x | container `1514x86` = EXACTLY 2x of stock 757x43 (root-only scale worked), but child `0x6A2AEDCA` is still `757x43` | draw/child layout | the `kRootOnlyScaleIds` premise (cSC4WinAdviceList re-lays children to the container each frame) did NOT hold for that child; the marquee is now never-touch with its width shipped in data (v2.19.1) |
 
 ## SECTION-BY-SECTION PLAN (user directive 2026-07-23)
 Finish each MODE completely before moving on, exactly like the region screen:
@@ -762,7 +769,7 @@ Do NOT jump to art before the mechanics+flow are right. Do NOT ship stock as
 "done". Draw directly on the REGION solution (whitelist scale + flyout
 docking + pre-scale-hidden + center/clamp anchoring + static dialogs).
 
-## GOD-MODE EXECUTION (this is the active work)
+## GOD-MODE EXECUTION (historical plan, completed in the v2.7.x series)
 - Confirm/message boxes: DONE (static-double; Obliterate + Reconcile x3).
 - Tool UI (toolbar 0xC991EDA8 + flyouts 0xCA35CBED terraform / 0x49923239
   terrain-fx / 0x0A78827A disaster / day-night / water / trees):
@@ -806,11 +813,11 @@ city-mode floating windows removes both the jump AND the wrong size at once.
 | 2 | Loading time clicking between toolbar Pages; + on FIRST city open the HUD/menus are absent/tiny until forced to redraw (user 2026-07-23) | runtime scaler late / arm timing | toolbar page panels + initial HUD arm | RESEARCH (tick/arm) |
 | 3 | My Sims screen a mess | CODE slot-pitch hook | 0x698894D3 (ITEMICONS.md Q3) | RESEARCH/HOOK |
 | 4 | Mayor info/query box small + floating | static .UI dialog | building query (Make Historical) | **DONE** (whole 117-panel family) |
-| 5 | God-mode boxes small, border box too small | static .UI dialog | god tool panels | TODO |
-| 6 | Disaster Window a mess | static .UI dialog | disaster picker | TODO |
-| 7 | Day/Night window misaligned (blue ring off the circle) + jump | static + art | aura/day-night control | TODO |
+| 5 | God-mode boxes small, border box too small | static .UI dialog | god tool panels | resolved (v2.7.x series) |
+| 6 | Disaster Window a mess | static .UI dialog | disaster picker | resolved (born-at-place, v2.36.0+) |
+| 7 | Day/Night window misaligned (blue ring off the circle) + jump | static + art | aura/day-night control | resolved (v2.12.x dock + art) |
 | 8 | Query Clicker compressed | == #4 (same building query) | building query | **DONE** (== #4) |
-| 9 | Route Query does the jump | static .UI dialog | Trip Types / route query | TODO |
+| 9 | Route Query does the jump | static .UI dialog | Trip Types / route query | resolved (static-double) |
 | 10 | Minimized panel restore button (btm-left) super small | runtime scale / art | restore/minimize control | RESEARCH |
 
 ## Candidate scripts found (grep, 2026-07-23)
@@ -896,8 +903,7 @@ restore). Turn it to 0 before the final city-mode ship.
 
 So the god-mode/news bucket splits: the CONFIRM box (0x27DF05BE) is a clean main-window static-double (fixes Obliterate + Reconcile at once); the disaster flyout / day-night / news window are VIEW-level and need runtime-sweep work (why does the city sweep leave these visible view-children at 1x?).
 
-## ✅ GOD TOOLBAR SOLVED (2026-07-24, USER: "GOOD JOB!!! That also fixed
-## the art for every Clickable menu")
+## GOD TOOLBAR SOLVED (2026-07-24 — also fixed the art of every clickable menu)
 
 The complete causal chain, for reuse on every later section:
 1. TWINS: the god toolbar always double-draws (0x69E40A1F stock-layout
@@ -920,13 +926,14 @@ DIAGNOSTIC that cracked it: the 1s live full-tree WATCHER + user toggling
 the menu (diff consecutive dumps), + abs-position queries. Also caught: the
 game RESETS UI to stock on every mode/menu toggle (status bar 476x43 ghost,
 toolbar pages 40x36) and the sweep re-scales ~1s later = the "loading
-time" / "first-open small" bugs (fix idea: tighten sweep interval or hook
-the toggle).
+time" / "first-open small" bugs. (Later solved properly by the
+mode-transition flash fix, v2.22.4: the cause was the visibility gate, and
+the cure pre-scales the affected ids while hidden.)
 
-REMAINING in god mode: terraform 0xCA35CBED + terrain-fx 0x49923239 dock
-fires on MID-ANIMATION captures ((26,352)->(52,-896) = off-screen) ->
-guard: skip dock when target lands outside the frame; catch the resting
-frame instead. Then full god-mode verification pass.
+What remained in god mode at the time: terraform 0xCA35CBED + terrain-fx
+0x49923239 dock fired on MID-ANIMATION captures ((26,352)->(52,-896) =
+off-screen) — solved by the guard that skips the dock when the target lands
+outside the frame and catches the resting frame instead.
 
 ## GOD-MODE TOOL UI: BASELINE = STOCK (v2.7.7, user choice 2026-07-23, superseded)
 
@@ -941,12 +948,10 @@ Confirmed by log: sweep was doing 74x351->148x702 (toolbar), 125x231->
 250x462 (terraform), 125x291->250x582 (terrain fx), 74x291->148x582
 (disaster) with wrong re-anchor.
 
-PROPER FIX (deferred, follow-up): region-style flyout DOCKING (scale SIZE +
+PROPER FIX (landed in the v2.7.x series): region-style flyout DOCKING (scale SIZE +
 anchor each flyout to its spawn button, like kRegionDialogDocks) PLUS 2x
-tool ART (below). The confirm/message boxes stay fixed (main-window
-static-double); only the TOOL flyouts/toolbar are baselined to stock.
-NOTE: if any god-mode flyout still mis-scales (water/trees tools not yet
-seen), grab its root id from the live dump and add to kNeverScaleIds.
+tool ART. The confirm/message boxes stay fixed (main-window
+static-double); only the TOOL flyouts/toolbar were baselined to stock.
 
 ## GOD-MODE TOOL FLYOUTS = frame scaled, ART is 1x (the "mess") — 2026-07-23
 
@@ -959,12 +964,12 @@ tools) renders at 1x -> small/garbled art in doubled slots = the user's
 "mess". This is the SAME class as the toolbar ItemIcons and the TrendBar
 art: code-bound button art that a plain frame-scale can't touch.
 
-FIX (a research + generation pass, like ITEMICONS.md, NOT a quick win):
+FIX (landed as a research + generation pass, like ITEMICONS.md):
   1. Disasm the god-mode tool-button art binding (which art group/TGIs the
-     terraform/disaster/day-night buttons load). Expect a pattern like the
-     ItemIcon `{0x856DDBAC, <group>, <inst>}` assembly.
-  2. Confirm 2x upscales exist (the upscale preview set may already cover
-     them) and pack an override dat at the same TGIs.
+     terraform/disaster/day-night buttons load) — the ItemIcon
+     `{0x856DDBAC, <group>, <inst>}` assembly pattern.
+  2. Confirm 2x upscales exist (the upscale preview set covers them) and
+     pack an override dat at the same TGIs.
   3. Re-test; the doubled slots then show doubled art.
 The god-mode tools are the most art-dense UI in the game -> treat as its own
 focused sub-effort within task #36.

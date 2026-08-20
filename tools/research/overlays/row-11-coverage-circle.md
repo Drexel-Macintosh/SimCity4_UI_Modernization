@@ -37,7 +37,7 @@ geometry itself is the EFFDIR child family **`<family>_coverage_circle_*`**
   **+0xC4 (Plop)** and **+0xB0 (Inactive)** via string-assign `0x424380`.
 - Each `_Existing` string has exactly ONE ref, in the `0x7D21xx` loop
   (Police push at `0x7D2206` etc.), passed to helper `0x7D1E40`.
-- ⛔ `plopmode`, `coverage_circle` do NOT appear in the exe — the lowercase
+- `plopmode`, `coverage_circle` do NOT appear in the exe — the lowercase
   forms live only in the EFFDIR name map (lookup is case-insensitive).
 
 ### Spawn = CreateEffectByName, both paths
@@ -60,7 +60,7 @@ geometry itself is the EFFDIR child family **`<family>_coverage_circle_*`**
   `plopmode_police_inactive`=0x33 @ file offset 0x104643,
   `plopmode_police_plop`=0x34 @ 0x104B7F, `plopmode_police_existing`=0x35 @
   0x1077DA, `plopmode_fire_existing`=0x38 @ 0x103CD0,
-  `plopmode_education_plop`=0x3D @ 0x103710. (⚠ raw string scans show these
+  `plopmode_education_plop`=0x3D @ 0x103710. (Raw string scans show these
   names with a trailing "digit" — that is the LE index byte, e.g. 0x34='4',
   not part of the name.)
 - Child records (doc §2.2 layout, parsed): e.g.

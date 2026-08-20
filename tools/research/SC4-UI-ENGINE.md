@@ -13,7 +13,7 @@ before you open it.
 | Per-fix history, expected log lines, trap signatures | `_tests\REGRESSION.md` |
 | The scenario axes every fix must be tested across | `_tests\SCENARIOS.md` |
 | The five laws that decide a fix | `README.md` → *LAWS* |
-| Current state / what is open | `START-HERE.md` (the entry point), `tools\research\TRIAGE.md`, `tools\research\MAYOR-MODE.md`. ⚠ **`HANDOFF.md` is GONE** — moved to `_archive\` and superseded by `START-HERE.md`. Every reference to it below is historical; do not go looking for it |
+| Current state / what is open | `START-HERE.md` (the entry point), `tools\research\TRIAGE.md`, `tools\research\MAYOR-MODE.md`. Note: `HANDOFF.md` has moved to `_archive\`, superseded by `START-HERE.md`; references to it below are historical |
 | **The engine itself** | **this file** |
 | How we are allowed to work — and where a NEW fact goes | `METHOD.md` (the method northstar: docs-as-SDK, decompile-for-instructions, document-the-novel) |
 
@@ -56,14 +56,13 @@ this SDK can reach it. Recognising that early is worth days.
 > to take before opening a disassembler. Read that, then come here for the
 > section it names.
 
-⛔ **TWO CORRECTIONS VERIFIED 2026-07-31 — they change how this document's slot
-numbers are read.**
+**Two settled facts change how this document's slot numbers are read.**
 
 1. **The vendor header `cIGZWin.h` is missing one virtual.** Between
    `GZWinMoveTo` (real 56) and `FitRectToWindow` sits an undeclared **relative**
    move at real slot 57, `0x0099BD27` — `mov edx,[ecx+0xB4]; add edx,[esp+8]`
    (a delta, not an absolute). So **every header-derived slot NAME above 56 is
-   one too low.** Our hooks were always installed at the correct *indices*;
+   one too low.** The hooks were always installed at the correct *indices*;
    only the names in older notes are wrong.
 2. **Slot 88 (`vt+0x160`) is the PER-CLASS "draw myself"**, not the composite
    driver. Measured across four classes, all distinct:
@@ -83,34 +82,29 @@ shrinking**, so its art must be compared against the **window**, not the source.
 
 | element | evidence | status |
 |---|---|---|
-⛔ **THE SECOND ROW OF THIS TABLE WAS ALSO WRONG, AND IT WAS REMOVED ON
-2026-07-31.** The paused screen-edge border was listed here as "not a window;
-no art in any dat; the 9-slice helper's 6 callers are all ordinary widgets".
-**Every clause was false.** It IS a window (`cSC4WinAlertBorder`, id
-`0x6A5E44B6`, vtable `0x00AB5B48`) that is born full-screen and *never flips
-visibility* — which is precisely why the visibility probes could not fire. Its
-art DOES exist in the shipped dats (three 120x120 sheets, `0x14315E60/61/62`),
-and two of the three were **already in our own override package**. And the
-"6 callers" audit cleared **`0x008D8800`** — a different helper; the real path
-is **`0x008D9550`, which has exactly one caller**. Fixed in v2.37.2 by staging
-the one missing sheet. Mechanism: `REGRESSION.md` "PAUSE / ALERT BORDER".
-> ⚠ **ADDENDUM 2026-08-18 — "a different helper" is true and was then misread
-> as "an irrelevant helper".** `0x008D8800` is the 9-slice blitter for
-> **`GZWinBMP`'s `edgeimage=yes` path and `GZWinBtn`'s**; the game has **two**
-> such blitters and this is the busy one. Neither blitter divides: each of the
-> three drawers (`0x00794100`, `0x009BC325`, `0x009B05E0`) cuts its own cell
-> first. See §4.6c and `REGRESSION.md` §"RESOLVED 2026-08-18 — three addresses,
-> three different JOBS".
+| *(empty — two earlier rows were removed after being proven wrong; both lessons are recorded below)* | | |
 
-**TWO ROWS OF THIS TABLE, TWO WRONG VERDICTS, SAME ROOT CAUSE.** Both were
-admitted on nulls whose instruments could not have seen the thing. That is why
-§0 now demands a positive control for every null in the evidence column — and
-why this table should be treated as a claim needing periodic re-audit, not as
-settled fact.
-⛔ **A ROW WAS REMOVED FROM THIS TABLE ON 2026-07-31, AND HOW IT GOT HERE IS
-THE LESSON.** The region city-bubble's **Mayor Rating bar** was listed here as
-"outside the boundary — the exe's own painter", on two pieces of evidence that
-were both worthless:
+**Removed row 1 — the paused screen-edge border IS a window.** It was listed
+here as "not a window; no art in any dat; the 9-slice helper's 6 callers are
+all ordinary widgets" — every clause false. It IS a window
+(`cSC4WinAlertBorder`, id `0x6A5E44B6`, vtable `0x00AB5B48`), born
+full-screen and *never flipping visibility* — precisely why the visibility
+probes could not fire. Its art DOES exist in the shipped dats (three 120x120
+sheets, `0x14315E60/61/62`), and two of the three were already in our own
+override package. The "6 callers" audit had cleared **`0x008D8800`** — a
+*different* helper; the real path is **`0x008D9550`, which has exactly one
+caller**. Fixed in v2.37.2 by staging the one missing sheet. Mechanism:
+`REGRESSION.md` "PAUSE / ALERT BORDER". Note on the two blitters: `0x008D8800`
+is the 9-slice blitter for **`GZWinBMP`'s `edgeimage=yes` path and
+`GZWinBtn`'s**; the game has **two** such blitters and this is the busy one.
+Neither blitter divides: each of the three drawers (`0x00794100`,
+`0x009BC325`, `0x009B05E0`) cuts its own cell first. See §4.6c and
+`REGRESSION.md` §"RESOLVED 2026-08-18 — three addresses, three different
+JOBS".
+
+**Removed row 2 — the region city-bubble's Mayor Rating bar IS a window.** It
+was listed here as "outside the boundary — the exe's own painter", on two
+pieces of evidence that were both worthless:
 
 1. *"`RGKID` shows no window where it renders."* The bar **is** a window —
    `clsid=0xAA5D16A9` (`cSC4WinAuraBar`), `id=0x4A553000`, declared 102x11 in
@@ -186,7 +180,7 @@ a window descends from decides how it can be fixed at all**:
 > `0xEA659793`). Transients parented at MAIN-WINDOW level are invisible to the
 > sweep and must be fixed in DATA.**
 
-⛔ ~~**if and only if**~~ **THE "IF" HALF IS FALSE — CORRECTED 2026-08-16.**
+**Correction — the "if" half of the rule above is false.**
 Descent from the host is **NECESSARY, NOT SUFFICIENT.** The MAIN-WINDOW half
 stands; the sufficiency half does not, and it fails for two structurally
 different reasons.
@@ -211,13 +205,13 @@ the root move/resize (ends `:14553`) and **before** the child loop (`:14579`,
 nothing re-opens those subtrees later. **Every descendant of such a root is a
 3D-view descendant the sweep NEVER WALKS.**
 
-⚠ **Read the list, never a copy of it.** `kDataScaledSubtreeIds` spans
+**Warning: read the list, never a copy of it.** `kDataScaledSubtreeIds` spans
 `src\UiSpike.cpp:5373-5486` and is longer than the advisor/Graphs/U-Drive-It
-story suggests — **ten** ids, re-measured 2026-08-16: the advisor strip
+story suggests — **ten** ids: the advisor strip
 (`:5374`), the three Graphs roots (`:5386-5388`), the U-Drive-It dashboard
 (`:5397`) and its fifth console variant (`:5429`), and the **four**
 Monthly-Budget roots (`:5466-5469`). A hand-list here would rot silently, and
-only in the case you needed it. ⚠ The array CLOSES at `:5486`: `kFontSizedIds`
+only in the case you needed it. Note: the array CLOSES at `:5486`: `kFontSizedIds`
 opens at `:5505` and the ids under it (Building Style Control `:5506`/`:5514`,
 the `0xAA3ACB00` and `0x00000200` spinner blocks `:5523-5527`) are a **different
 array with a different rule** — they are not walled off from the sweep.
@@ -241,14 +235,14 @@ it a *direct* child → does any of the eight gates skip it → is any ancestor 
 `kDataScaledSubtreeIds`. Only a "no" to the last three means `ScaleSubtree`
 governs it.
 
-⛔ The consequence table immediately below must be read with this correction —
-its `Under 0x9A47B417` row is corrected in place.
+The consequence table immediately below is corrected in place for this rule —
+see its `Under 0x9A47B417` row.
 
 Consequences, and this is the whole decision tree for a new panel:
 
 | Parentage | Treatment | Why |
 |---|---|---|
-| Under `0x9A47B417` | **Runtime scale** (`ScalePanelRoot` + `ScaleSubtree`) + 2x art in `SelectiveArt` — ⛔ **UNLESS the root id is in `kDataScaledSubtreeIds` (`src\UiSpike.cpp:5373`): `ScalePanelRoot` scales and anchors the ROOT, then RETURNS at `src\UiSpike.cpp:14568-14573`, before the child-enumeration loop that opens at `:14579`. `ScaleSubtree` is never entered below it and the children ship pre-scaled in the `.UI` (`double_subtree_areas` in `build_selective_safe.py`; §7.3 cure 1, §6.2)** — added 2026-08-16 | ~~the sweep walks this subtree every tick~~ the sweep walks this subtree every tick, **except below a `kDataScaledSubtreeIds` root, where it stops AT the root**. ⚠ Stated no stronger than the evidence: the gate lives only in `ScalePanelRoot` — `ScaleSubtree` does not consult the list (`IsDataScaledSubtreeId` has exactly one call site, `:14570`), so the exception holds because the sweep enters through `ScalePanelRoot` (`:10320`). The one path that could bypass it, `ScaleOnShow` (`:7371`), needs `gShowHookMode >= 2` and the shipped default is `0` (`:7217`) — added 2026-08-16 |
+| Under `0x9A47B417` | **Runtime scale** (`ScalePanelRoot` + `ScaleSubtree`) + 2x art in `SelectiveArt` — **Law: UNLESS the root id is in `kDataScaledSubtreeIds` (`src\UiSpike.cpp:5373`): `ScalePanelRoot` scales and anchors the ROOT, then RETURNS at `src\UiSpike.cpp:14568-14573`, before the child-enumeration loop that opens at `:14579`. `ScaleSubtree` is never entered below it and the children ship pre-scaled in the `.UI` (`double_subtree_areas` in `build_selective_safe.py`; §7.3 cure 1, §6.2)** | the sweep walks this subtree every tick, **except below a `kDataScaledSubtreeIds` root, where it stops AT the root**. Stated no stronger than the evidence: the gate lives only in `ScalePanelRoot` — `ScaleSubtree` does not consult the list (`IsDataScaledSubtreeId` has exactly one call site, `:14570`), so the exception holds because the sweep enters through `ScalePanelRoot` (`:10320`). The one path that could bypass it, `ScaleOnShow` (`:7371`), needs `gShowHookMode >= 2` and the shipped default is `0` (`:7217`) |
 | Under the main window | **Static 2x `.UI`** (`build_dialog_static.py`: `area=` included) | "transient dialogs parented at the MAIN-WINDOW level (parent `0x00000000`), OUTSIDE the city runtime sweep... static-doubling them cannot double-scale" — live dump 2026-07-23, `build_dialog_static.py` TARGETS comment |
 | **Both layers act** | **BUG: ~4x** | the failure mode below |
 
@@ -360,27 +354,27 @@ A negative gap can only reach the clamp via the matching edge-anchor branch
 ## 2. Widget catalogue
 
 Each row: what determines the widget's **size**, what its **art binding** is,
-and its **scaling rule**. Rules marked ⛔ are laws — breaking one has cost a
+and its **scaling rule**. Rules marked **Law** are laws — breaking one has cost a
 shipped regression.
 
 | Class (clsid / vtable) | Size determined by | Art binding | SCALING RULE |
 |---|---|---|---|
-| **`GZWinBMP`** (iid `0xC12CEA13`, descriptor `0xAD5CE0`; class vtable **`0x00ADF6A0`**, Plot override `0x9BC325`) | Its own `area=`; but the **DRAW** is `dst = origin + srcW×srcH` — the draw follows the SOURCE IMAGE, not the window | `image={gid,iid}` + optional `imagerect=` source crop; 419 controls have `area` exactly == PNG dims (1:1 blit) | **2x art scales the draw with NO code hook.** ⛔ `imagerect` must double whenever its art doubles. Corollary: **a 2x source rect over a 1x bitmap draws only the corner that exists** — that is exactly what a shadowed art override looks like on screen. Evidence: `MAYOR-MODE.md` "EMERGENCY = the missed-art-pass case" (Plot `0x9BC325`, 3-state branch divides src by 3, helper `0x8D8800`); `UI-ART-BINDING.md` addendum. ⭐ **And the LIVE `imagerect` is a bind-time LATCH** — `SetImage` (`0x9BC57E→0x9BC447`) rewrites `[win+0xE8]` from the window's area *at that moment* and `SetArea` never touches it, so content bound before a resize keeps drawing its pre-resize size (§2.6, #176/v3.0.1) |
-| **`GZWinText`** (cGZWinText, ctor `0x9C19C8`, 0x114 bytes, main vt `0xADFEB8`, iface vt `0xAE0118`, `cIGZWinText` iid `0x212cdc1f` at `+0xD8`) | The **font style**, resolved at creation | `font=` style; no image | Doubled window + doubled FontStyle style = correct. ⛔ But only if `font=` is **GUID-valued** (§5.1). Controllers bind the interface and update captions only (`0x7EE64D`/`0x7EE668`) |
-| **`GZWinBtn`** (iid `0x00008810`, descriptor `0xAD5CAC`; button class vtable `0x00ADDAF0`) | Its `area=`; the art is a **horizontal 4-state strip** (normal/hover/pressed/disabled), state selected by `imageWidth ÷ 4` — proportional, no pixel constants (875 buttons satisfy `pngW = 4×btnW`) | `image={gid,iid}` strip | **Safest case: a 2x strip still picks the right cell.** Verified in-game on the Audio playlist checkbox (8 states of 16x16, slicing is `imageWidth/8`). `OPEN QUESTION O1` (still open, `UI-ART-BINDING.md` §3): whether the **vertical** dimension also stretches for standard styles — the generic strip `{46a006b0,144161eb}` (120x30) is used on buttons 130–370px wide but always 30 tall, so horizontal fit is proven and vertical is not |
+| **`GZWinBMP`** (iid `0xC12CEA13`, descriptor `0xAD5CE0`; class vtable **`0x00ADF6A0`**, Plot override `0x9BC325`) | Its own `area=`; but the **DRAW** is `dst = origin + srcW×srcH` — the draw follows the SOURCE IMAGE, not the window | `image={gid,iid}` + optional `imagerect=` source crop; 419 controls have `area` exactly == PNG dims (1:1 blit) | **2x art scales the draw with NO code hook.** **Law:** `imagerect` must double whenever its art doubles. Corollary: **a 2x source rect over a 1x bitmap draws only the corner that exists** — that is exactly what a shadowed art override looks like on screen. Evidence: `MAYOR-MODE.md` "EMERGENCY = the missed-art-pass case" (Plot `0x9BC325`, 3-state branch divides src by 3, helper `0x8D8800`); `UI-ART-BINDING.md` addendum. **Warning: the LIVE `imagerect` is a bind-time LATCH** — `SetImage` (`0x9BC57E→0x9BC447`) rewrites `[win+0xE8]` from the window's area *at that moment* and `SetArea` never touches it, so content bound before a resize keeps drawing its pre-resize size (§2.6, #176/v3.0.1) |
+| **`GZWinText`** (cGZWinText, ctor `0x9C19C8`, 0x114 bytes, main vt `0xADFEB8`, iface vt `0xAE0118`, `cIGZWinText` iid `0x212cdc1f` at `+0xD8`) | The **font style**, resolved at creation | `font=` style; no image | Doubled window + doubled FontStyle style = correct. **Law:** only if `font=` is **GUID-valued** (§5.1). Controllers bind the interface and update captions only (`0x7EE64D`/`0x7EE668`) |
+| **`GZWinBtn`** (iid `0x00008810`, descriptor `0xAD5CAC`; button class vtable `0x00ADDAF0`) | Its `area=`; the art is a **horizontal 4-state strip** (normal/hover/pressed/disabled), state selected by `imageWidth ÷ 4` — proportional, no pixel constants (875 buttons satisfy `pngW = 4×btnW`) | `image={gid,iid}` strip | **Safest case: a 2x strip still picks the right cell.** Verified in-game on the Audio playlist checkbox (8 states of 16x16, slicing is `imageWidth/8`). Reference gap G27 (`SDK-GAPS.md` §13): whether the **vertical** dimension also stretches for standard styles — the generic strip `{46a006b0,144161eb}` (120x30) is used on buttons 130–370px wide but always 30 tall, so horizontal fit is proven and vertical is not |
 | **`GZWinTextEdit`** | `area=` | `image=` (format also defines `thumbimage`/`containerimage`/`backimage` for Scrollbar2/OptGrp/TextEdit, **none in use** in the shipped corpus) | Scales like a plain window. Data point: under runtime-only scaling its captions render **correctly** where sibling `GZWinText` nodes go purple (§1.2) |
 | **`0x89e1567c`** = **cSC4WinGenTransparent** (factory `0x4661D0`, ctor `0x79C560`, vt `0xAB7358`) | `area=` | `image=`/`blttype` like a GZWinGen | Ordinary container: scale it and recurse. It is also the **query-family fingerprint**: root `0x10000005` + `clsid=0x89e1567c` is what `discover_query_family()` matches (`build_dialog_static.py`) |
-| **`0xAA7CECFD`** (unnamed in the registry; 56 uses) | Its **font style**, resolved independently of the `GZWinText` name path | `font=` | **Scales correctly off fonts with no help.** Proven by co-location: in `I-aa920991` the region name (`0xEA5BD179`, this class) rendered 2x while sibling plain `GZWinText` nodes in the same file rendered 1x (`FONTS-AND-DIALOGS.md` Q1 table). Same for the city name `0x00000002` in `I-c973b411` |
-| **`cSC4WinAdviceList`** clsid **`0xCA1492AC`** (QI `0x793080`, Init `0x793190`, **item-create `0x7931F1`**, vt `0xAB58B0`; draw-self is a **no-op** `mov al,1; ret` @ `0x949ADE` — children paint) | Container from `area=`; **its items are GAME-sized**: item-create does `SetArea(0, 0, GetW(), GetH())` of the already-scaled container (vcalls `[+0xA4]`,`[+0xA8]`,`[+0xDC]` at `0x793210–0x79322E`) | none itself; items are the rich-text class below | ⛔ **Scale the list, NEVER recurse into it.** Recursing double-scales: the news reader's item ballooned to **1648x708 inside its 824x354 list** (v2.18.6). Members: `kAdviceListScaleSelfIds` = `0x6A231531` (news reader), `0x00100100`/`0x00100101` (advisor briefings), `0xAA1F1EB5`/`0x6A1F1F4A` (My Sims stories). **STRUCTURAL WEAKNESS, noted not fixed:** the guard is keyed by ID, so any NEW `0xCA1492AC` window is unprotected by default (`UiSpike.cpp` comment) |
-| **`cSC4WinMiniMap`** clsid **`0xCA318388`**, interface iid **`0xCA318385`** | `area=`; `blitSize` at `[this+0xE4]` self-updates via the class `SetArea` override — **but the display surface at `[this+0xF0]` is ONE-SHOT**, inited once at city load | code-painted into its own surface | ⛔ **Every scaled instance needs destroy-and-recreate of the surface** (not a resize: `vtable+0xC` is an `Init`, one-shot; calling it on a live surface corrupts it — replicate the game's own pattern `0x7A8C18–0x7A8C61`, then its recompute `0x7A7840`). **Three known instances:** dock minimap `0x0BC3B559` under `0x0987B48F` (MINIMAP block); Data-Views map child `0x00004203` (DVMAP block); U-Drive-It dashboard minimap, **same window id `0x0BC3B559`** under `0x4BCB938A` (UDMAP block, scoped). Skipping the recreate is **fatal, not cosmetic**: a 512-sized render into a surface still inited at 256 = heap overrun = silent native death, which is precisely the v2.21.0 Data Views expand crash (renderer `sub_7A2F60`, live rect read `vt+0xBC` @ `0x7A301E`, buffer create `0x7A3094` format `{9,32bpp}` clsid `0xC470D325`, 77-case painter table `0x7A4884`). ⛔ **And the SIZE you pick selects a code path — see §2.4 for the terrain bake, the derived `zoom`, and the exact-power-of-two constraint on `blitSize`** |
-| **`0xCBCBF1E0`** (unnamed, 134 uses) — code-painted **gauge dials** | its own **cached buffer**, which keeps its 1x size while the window doubles | code-painted (its TGIs *are* staged 2x and it still draws small) | **OPEN — but note the My Sims half of #47 CLOSED v2.42.4** (portraits: the hook was installed yet never CALLED; cure = one leaf invalidate per open, law 41). Try that instrument here FIRST (a per-open census of calls) before the buffer route. Symptom: a correct 2x black circle with a small dial face pinned top-left. Prescribed lever = **force-recreate-buffer** (§7.3) — ⚠ treat as a CANDIDATE, not settled: the underlying `[win+0x6c]`-buffer claim is contested (REGRESSION REFUTED 4/5), measure first. ⛔ Probe the vtable AND scope the hook to the owning root `0x4BCB938A` first — class identity alone is what crashed the game on Earned Cars (§2.1 note) |
+| **`0xAA7CECFD`** = **`cSC4WinText`** (`GZCLSIDDefs.h:285`; 56 uses) | The **font style** — it IS a `cGZWinText`: factory `0x007BE740` runs `cGZWinText`'s own constructor `0x9C19C8` on a 0x114-byte object and then swaps the vtable to `0x00ABA190`, which differs from `GZWinText`'s in exactly two slots: 88 (Plot → `0x007BE7A0`) and 148 (dtor) | `font=` | **Scales correctly off fonts with no help** — same object layout, same font-resolution code; only the painter differs. It is reached by GZCOM clsid instead of by the `.UI` class name, which is why it sits outside the `GZWinText` name path. Proven by co-location: in `I-aa920991` the region name (`0xEA5BD179`, this class) rendered 2x while sibling plain `GZWinText` nodes in the same file rendered 1x (`FONTS-AND-DIALOGS.md` Q1 table). Same for the city name `0x00000002` in `I-c973b411` |
+| **`cSC4WinAdviceList`** clsid **`0xCA1492AC`** (QI `0x793080`, Init `0x793190`, **item-create `0x7931F1`**, vt `0xAB58B0`; draw-self is a **no-op** `mov al,1; ret` @ `0x949ADE` — children paint) | Container from `area=`; **its items are GAME-sized**: item-create does `SetArea(0, 0, GetW(), GetH())` of the already-scaled container (vcalls `[+0xA4]`,`[+0xA8]`,`[+0xDC]` at `0x793210–0x79322E`) | none itself; items are the rich-text class below | **Law: scale the list, NEVER recurse into it.** Recursing double-scales: the news reader's item ballooned to **1648x708 inside its 824x354 list** (v2.18.6). Members: `kAdviceListScaleSelfIds` = `0x6A231531` (news reader), `0x00100100`/`0x00100101` (advisor briefings), `0xAA1F1EB5`/`0x6A1F1F4A` (My Sims stories). **STRUCTURAL WEAKNESS, noted not fixed:** the guard is keyed by ID, so any NEW `0xCA1492AC` window is unprotected by default (`UiSpike.cpp` comment) |
+| **`cSC4WinMiniMap`** clsid **`0xCA318388`**, interface iid **`0xCA318385`** | `area=`; `blitSize` at `[this+0xE4]` self-updates via the class `SetArea` override — **but the display surface at `[this+0xF0]` is ONE-SHOT**, inited once at city load | code-painted into its own surface | **Law: every scaled instance needs destroy-and-recreate of the surface** (not a resize: `vtable+0xC` is an `Init`, one-shot; calling it on a live surface corrupts it — replicate the game's own pattern `0x7A8C18–0x7A8C61`, then its recompute `0x7A7840`). **Three known instances:** dock minimap `0x0BC3B559` under `0x0987B48F` (MINIMAP block); Data-Views map child `0x00004203` (DVMAP block); U-Drive-It dashboard minimap, **same window id `0x0BC3B559`** under `0x4BCB938A` (UDMAP block, scoped). Skipping the recreate is **fatal, not cosmetic**: a 512-sized render into a surface still inited at 256 = heap overrun = silent native death, which is precisely the v2.21.0 Data Views expand crash (renderer `sub_7A2F60`, live rect read `vt+0xBC` @ `0x7A301E`, buffer create `0x7A3094` format `{9,32bpp}` clsid `0xC470D325`, 77-case painter table `0x7A4884`). **Law: the SIZE you pick selects a code path — see §2.4 for the terrain bake, the derived `zoom`, and the exact-power-of-two constraint on `blitSize`** |
+| **`0xCBCBF1E0`** (unnamed, 134 uses) — code-painted **gauge dials** | its own **cached buffer**, which keeps its 1x size while the window doubles | code-painted (its TGIs *are* staged 2x and it still draws small) | Reference gap G34 (`SDK-GAPS.md` §13). Note the My Sims half of #47 CLOSED v2.42.4 (portraits: the hook was installed yet never CALLED; cure = one leaf invalidate per open, law 41) — try that instrument here FIRST (a per-open census of calls) before the buffer route. Symptom: a correct 2x black circle with a small dial face pinned top-left. Prescribed lever = **force-recreate-buffer** (§7.3), still a CANDIDATE, not settled: the underlying `[win+0x6c]`-buffer claim is contested (REGRESSION REFUTED 4/5), measure first. **Law:** probe the vtable AND scope the hook to the owning root `0x4BCB938A` first — class identity alone is what crashed the game on Earned Cars (§2.1 note) |
 | **`0x00AB6AA8`** (vtable) container + **`0x00AB6D88`** (vtable) strip — the **flyout pair** | on-screen size == the **source buffer's** physical size, NOT the window rect (composite is a 1:1 clipped copy) | immediate-mode blits from an art atlas read out of the draw context | See §2.1 — the most involved widget in the game and the source of most reusable technique |
 | **`0xAA12E5F5`** — rich-text pane (`GetClassID 0x8FA317`; creation sites `0x443FC9`, `0x76A182`, `0x78CE11`, `0x7931F0`; created via `CreateInstance(clsid 0xAA12E5F5, iid 0x4A11FD4A)`) | Content-sized from the **HTML engine's** point tables — *not* FontStyle | text is HTML; page art via `sc4://` URLs | Text scales only via the `.rdata` table patch (§5.2). It appears as `id=2` in the five message-box scripts and is the item AdviceList creates |
-| **`GZWinCustom`, `id=0x0000AAAA`** — the **alignment marker** | sized like the panel's **anchor** (usually its spawn button) | none; `winflag_visible=no` | ⛔⛔ **POSITIONING DATA. NEVER SCALE IT — not at runtime, not in shipped data.** See §6.1 |
-| **`GZWinSpinner`** | derives its size from its **arrow strip** `{46a006b0,82b99d9d}` | that strip | ⛔ Art-sized ⇒ `kFontSizedIds` treatment: **scale position, leave size alone** (§6.2) |
+| **`GZWinCustom`, `id=0x0000AAAA`** — the **alignment marker** | sized like the panel's **anchor** (usually its spawn button) | none; `winflag_visible=no` | **Law: POSITIONING DATA. NEVER SCALE IT — not at runtime, not in shipped data.** See §6.1 |
+| **`GZWinSpinner`** | derives its size from its **arrow strip** `{46a006b0,82b99d9d}` | that strip | **Law:** art-sized ⇒ `kFontSizedIds` treatment: **scale position, leave size alone** (§6.2) |
 | **`GZWinGrid`** | `drowheight` / `dcolwidth` (**d-prefixed** — a `\browheight` regex silently missed them) and `wingridcol="a,b,width"` where **every 3rd slot is a PIXEL width** | per-row art may be code-bound (`0x14416244`) | Scale the d-attributes and the width slot only; never the two index slots (`build_dialog_static.py`; `DYNAMIC-CONTROLS.md` 2026-07-23 addendum) |
 | **`cSC4WinRCI`** clsid `0xC7A0E17E` (factory `0x466170`, ctor `0x7A9770`, **Draw `0x7A9500`**, vt `0xAB8628`) | **the WINDOW rect** — reads `this+0xA8..0xB4`, `half = extent/2` from the window, log-scales the demand value; **no pixel constants anywhere in the function** | none (FillRect via draw context) | Fully proportional: **follows doubling automatically**. If it looks stock, the three 8x71 column windows (`0x09D27EB0`/`0x29D27EC0`/`0x49D27ED0`) were not actually resized — dump their W/H (expect 16x142) |
-| **`cSC4WinTrendBar`** clsid `0xAA5C2F86` (factory `0x4661A0`, ctor `0x7BF5E0`, **Draw `0x7BF0A0`** = vt `0xABA430` slot 88, main vt `0xABA68C`, iface iid `0xCA5C2F84`) | **its ART's pixel size**, drawn *centred* in the window (`x = L+(winW−imgW)/2`); the fill marker is `fraction × (imgdim−1)`; ~~bands are `imgdim/3`~~ ⚠ *corrected 2026-08-16, from the bytes:* **the FILL sheet is a SIX-cell strip — `bandW = fillW/6`** (`0x7BF0E4` `imul 0xAAAAAAAB` / `0x7BF0F5` `shr 2`, the /6 reciprocal) | **code-bound** `{46A006B0,0x14015580}` groove + `{…,0x14015584}` fill, loaded by the polls controller at `0x7ED4AC` and pushed in via **`SetImages` `0x7BEEB0` (main vt slot 4) — stores POINTERS only** — **zero `.UI` refs**, so `find_cell_strips.py`'s `.UI` derivation is blind BY CONSTRUCTION; the fill's states=6 lives in its `CODE_BOUND` table (byte evidence inline) | Content scale = **art size only**. Note the deceptive symptom: the fill is proportioned relative to its own groove image, so the bar reads "correct" even while the whole unit renders 1x centred in a 2x frame. ⭐ **IMMUNE to §2.6's SetImage latch** (measured, #176(b)): Draw re-reads EVERY geometric input live per frame — groove/fill dims via `cIGZBuffer` Width/Height virtuals each draw, vertical extent from the draw rect that **vt`+0x184` (base impl `0x99CF6A`) recomputes INSIDE the SetArea chain** — full member census found zero stale-able geometry; bind-before-sweep and bind-after-sweep draw identically, f=2 control pixel-exact. (`+0x184` = slot 97 — a datum against §2.1's "95–97 unnamed" gap: for this family it is a draw-rect recompute) |
+| **`cSC4WinTrendBar`** clsid `0xAA5C2F86` (factory `0x4661A0`, ctor `0x7BF5E0`, **Draw `0x7BF0A0`** = vt `0xABA430` slot 88, main vt `0xABA68C`, iface iid `0xCA5C2F84`) | **its ART's pixel size**, drawn *centred* in the window (`x = L+(winW−imgW)/2`); the fill marker is `fraction × (imgdim−1)`; **the FILL sheet is a SIX-cell strip — `bandW = fillW/6`** (`0x7BF0E4` `imul 0xAAAAAAAB` / `0x7BF0F5` `shr 2`, the /6 reciprocal; byte-verified) | **code-bound** `{46A006B0,0x14015580}` groove + `{…,0x14015584}` fill, loaded by the polls controller at `0x7ED4AC` and pushed in via **`SetImages` `0x7BEEB0` (main vt slot 4) — stores POINTERS only** — **zero `.UI` refs**, so `find_cell_strips.py`'s `.UI` derivation is blind BY CONSTRUCTION; the fill's states=6 lives in its `CODE_BOUND` table (byte evidence inline) | Content scale = **art size only**. Note the deceptive symptom: the fill is proportioned relative to its own groove image, so the bar reads "correct" even while the whole unit renders 1x centred in a 2x frame. **Note: IMMUNE to §2.6's SetImage latch** (measured, #176(b)): Draw re-reads EVERY geometric input live per frame — groove/fill dims via `cIGZBuffer` Width/Height virtuals each draw, vertical extent from the draw rect that **vt`+0x184` (base impl `0x99CF6A`) recomputes INSIDE the SetArea chain** — full member census found zero stale-able geometry; bind-before-sweep and bind-after-sweep draw identically, f=2 control pixel-exact. (`+0x184` = slot 97 — a datum against §2.1's "95–97 unnamed" gap: for this family it is a draw-rect recompute) |
 | **`GZWinFlatRect`** | `area=`; the ticker's clip strip is **resized by code** at init to `SetSize(W, min(2×lineHeight, H))` | `fillcolor` | Ordinary — but see §6.3: some are re-imposed |
 
 ### 2.1 The flyout pair `0x00AB6AA8` / `0x00AB6D88` in detail
@@ -437,7 +431,7 @@ the user-measured dead-zone threshold. The strip's own hooks stayed silent
 there because they were **downstream of a closed gate** — silence in a
 downstream hook is not evidence the hook is wrong.
 
-⛔ **`[0xE0]` is DUAL-USE**: hit-claim width (wants 2x) **and** a Plot layout
+**Law: `[0xE0]` is DUAL-USE**: hit-claim width (wants 2x) **and** a Plot layout
 inset (wants 1x — otherwise the game paints its own bar beside our replayed
 one, the "second orange bar"). The rule: **scale it for the hit-test and mask
 it back to 1x inside the draw-group hooks** (slots 87..97; hit-tests never run
@@ -447,76 +441,60 @@ inside the draw group).
 `__thiscall` is callee-cleanup and a thunk with the wrong argument count
 corrupts the stack. Both `SlotThunk<N>` and `SlotThunk2<N>` are installed over
 `for (int si = 87; si <= 97; si++)` on a 256-entry private copy of the instance
-vtable (`src\UiSpike.cpp`, **six** install sites — ~~as of 2026-08-15: `:6499`,
-`:6536`, `:12393`, `:12478`, `:13054`, `:13169`~~; re-count with
-`grep -c "si <= 97"` rather than trusting this number).
+vtable (`src\UiSpike.cpp`, **six** install sites — re-count with
+`grep -c "si <= 97"` rather than trusting any line numbers; anchors move as
+the file grows, and the symbol is the anchor, not the number).
 
-> ⚠ **LINE ANCHORS RE-MEASURED 2026-08-16 — the COUNT of six is unchanged, the
-> numbers are not.** `grep -n "si <= 97" src\UiSpike.cpp` now gives `:6804`,
-> `:6841`, `:12702`, `:12787`, `:13363`, `:13478`; the six `SlotThunk<87>` /
-> `SlotThunk2<87>` installs (`:6808`, `:6845`, `:12707`, `:12792`, `:13367`,
-> `:13482`) still pair one-to-one with them, and no variant spelling of the
-> loop exists. Every anchor moved +305..+309 as the file grew to 16,976 lines,
-> so the struck list now points at unrelated code — `:6499` is a mid-sentence
-> comment, `:6536` is `if (check == nativeT)`. Per §9.0 item 15's resolution —
-> **the symbol is the anchor, the number is not** — treat the re-measured list
-> as a dated snapshot too: `grep -n "si <= 97"` is the authority for the
-> POSITIONS as well as the count.
-
-⛔ **THIS TABLE WAS OFF BY ONE FROM ITS FIRST WRITING UNTIL 2026-08-15, AND IT
-COST A PROBE BUILD ON #89.** The table below is the CORRECTED one, re-derived
-from the exe on 2026-08-01 (base `cGZWin` vt `0x00A8D000`; `cSC4WinMiniMap` vt
-`0x00AB83B8` differs only at `+0xDC` and `+0x160`) and carried in
-`src\UiSpike.cpp`'s header comment. The old table omitted **slot 89 `Draw`**
-entirely, which shifted every name after it by one — so a reader who called
-"92" expecting `GetDrawContext` got NULL, and "93" expecting
-`GetBufferToDrawTo` got `[ecx+0x6c]`, the DRAW CONTEXT.
+**The table below is the corrected one**, re-derived from the exe (base
+`cGZWin` vt `0x00ADC8D8`; `cSC4WinMiniMap` vt `0x00AB83B8` differs only at
+`+0xDC` and `+0x160`) and carried in `src\UiSpike.cpp`'s header comment. The
+first version of this table omitted **slot 89** entirely, which shifted every
+name after it by one and cost a probe build on #89 — a reader who called "92"
+expecting `GetDrawContext` got NULL, and "93" expecting `GetBufferToDrawTo`
+got `[ecx+0x6c]`, the DRAW CONTEXT. Slot 87's `0x0099BE4C` is
+`GetNotificationTarget` (a zero-arg getter), and the per-class draw `GZPaint`
+is slot **88** (§0).
 
 | idx | offset | virtual | VA |
 |---|---|---|---|
-| 87 | `+0x15C` | `GZPaint` | `0x0099BE4C` |
-| 88 | `+0x160` | **`Plot`** | base `0x009A0A17` / minimap `0x007A79B0` |
-| 89 | `+0x164` | **`Draw`** ← the slot the old table was missing | `0x0099BA07` |
+| 87 | `+0x15C` | `GetNotificationTarget` | `0x0099BE4C` |
+| 88 | `+0x160` | **`GZPaint`** (per-class draw) | base no-op `0x00949ADE` / minimap `0x007A79B0` |
+| 89 | `+0x164` | **`Plot`** (= composite + present) | `0x0099BA07` |
 | 90 | `+0x168` | `CalcAbsoluteArea` | `0x0099DCE4` |
 | 91 | `+0x16C` | `InvalidateSelf` (`[ecx+0x70] = 1`) | `0x0099BECC` |
 | 92 | `+0x170` | `InvalidateSelfAndParents` | `0x0099BED1` |
 | 93 | `+0x174` | `GetDrawContext` (`= [ecx+0x6c]`) | `0x0099BEF9` |
 | 94 | `+0x178` | `GetBufferToDrawTo` (`= [ecx+0x68]`) | `0x0099BEFD` |
-| 95–97 | `+0x17C..+0x184` | **UNNAMED — hooked but never identified** | — |
-| 100 | `+0x190` | `PrivateBuffer(bool)` — ⛔ **NOT zero-arg** | `0x0099EA70` |
+| 95–98 | `+0x17C..+0x188` | `SetBufferToDrawTo` / `…Recursive` / `SetAreaToDrawTo` / `…Recursive` — zero-arg, hooked safely | `0x0099C6F8` / `0x0099D57E` / `0x0099CF6A` / `0x0099D5B7` |
+| 100 | `+0x190` | `PrivateBuffer(bool)` — **NOT zero-arg** | `0x0099EA70` |
 | 101 | `+0x194` | `GetPrivateBuffer` (`= [ecx+0x64]`) | `0x009D419D` |
 | 123/124 | — | `PlotComposite` / `PlotPresent` | `0x0099E62D` / `0x0099C498` |
 
-⚠ **95, 96 and 97 are an honest gap.** We hook them and they are harmless in
-practice (the thunks return `uintptr_t`, preserving EAX), but nothing has ever
-identified them. The old table's `SetBufferToDrawTo` /
-`SetBufferToDrawToRecursive` / `SetAreaToDrawTo` / `SetAreaToDrawToRecursive`
-names were **guesses carried over from the community header**, and at least
-some of those take arguments — which is why the phrase "87..97 are *exactly*
-the zero-arg draw group" was never true and is not repeated above. Do not hook
-95–97 with a typed thunk on the strength of a name.
+Slots 95–98 are named from the base implementations and all end in a bare
+`ret` (zero-arg), which is why hooking the whole 87..97 range is safe; the
+community header's older names for this band included argument-taking
+guesses, so the phrase "87..97 are *exactly* the zero-arg draw group" was
+never true as stated. Do not hook any of them with a typed thunk on the
+strength of a name alone (`SDK-GAPS.md` §1).
 
-**Slot 89 `Draw` is load-bearing, not trivia:** it calls `[eax+0x1EC]` and only
+**Slot 89 `Plot` is load-bearing, not trivia:** it calls `[eax+0x1EC]` and only
 reaches `[eax+0x1F0]` if that returned true — so **a `[win+0x64]` private
 buffer cannot reach the screen without a paint on the same object in the same
 call.**
 
 **Built-in positive control for any hook in this range:** our own
 `InvalidateSelfAndParents()` routes through the swapped vtable, so **slot 92
-must fire** (it was slot 91 under the old numbering — another way the off-by-one
-made a null look real). If 92 fires and nothing else does, the machinery is
+must fire**. If 92 fires and nothing else does, the machinery is
 proven and the silence is a finding. If 92 is also silent, the swap did not take
 and the index base is wrong.
 
-⚠ **`src\UiSpike.cpp` ~~~:3380~~ ~:3669–3677 (re-measured 2026-08-16; the
-quoted sentence spans :3673–3674 — anchor on `grep "off by one"`, not the
-number, per §9.0 item 15) still carries a comment saying "the slot list in
-this file's header comment is off by one".** That was true when written
-(v2.41.6); the header was corrected on 2026-08-01 and the mid-file note was
-never retracted. **The header table is the current one.** Flagged here rather
-than edited, per law 34.
+Note: `src\UiSpike.cpp` still carries a mid-file comment saying "the slot
+list in this file's header comment is off by one" (anchor on
+`grep "off by one"`, not the line number, per §9.0 item 15). That was true
+when written (v2.41.6); the header was corrected on 2026-08-01 and the
+mid-file note was never retracted. **The header table is the current one.**
 
-**⛔ The right class is NOT the right window.** The disaster-derived surgery
+**Law: the right class is NOT the right window.** The disaster-derived surgery
 (buffer force-recreate, `[0xF4]/[0xF8]/[0xFC]` doubling, `[0xE0]` claim
 doubling) installed itself on U-Drive-It's *Earned Cars* strip — same class,
 different layout — and the game died. The container's vtable check passed;
@@ -525,7 +503,7 @@ class identity was **necessary but not sufficient**. The fix is a
 menus is visible (`SUBSKIP` logs the decline). Verify the class **and** the
 owning context (`REGRESSION.md` "CRASH: our disaster hooks on a FOREIGN menu").
 
-**⛔ Identify these windows positively, never by size.** Height-only gates
+**Law: identify these windows positively, never by size.** Height-only gates
 missed the 258x206 Freight menu twice (at 300, then 260); the identification
 that works is **exact width**: `destIsSubContainer = (selfW==258 && selfH>=100)`.
 And a "200–400 wide, >500 tall" bar gate ate **tooltip** buffers (tips are
@@ -555,7 +533,7 @@ vtable base. That is how base-vs-override was settled without a game launch.
 
 ### 2.3 The buffer classes (cIGZBuffer) — there are **TWO**, and **THREE** channels
 
-⛔ **THERE IS MORE THAN ONE BUFFER CLASS, AND MORE THAN ONE WAY OUT OF A
+**Law: THERE IS MORE THAN ONE BUFFER CLASS, AND MORE THAN ONE WAY OUT OF A
 BUFFER.** For most of this project's life this section named one class and one
 slot, and that is exactly why five separate instruments could all report
 "every blit corrected" while the screen showed uncorrected art (#149). Written
@@ -586,19 +564,19 @@ follows:
 2. **slot 20 (`+0x50`)** — the private-buffer present, `0x0099BA3E`.
 3. **`PlotPresent` `0x0099C498`** — primary call `[eax+0x98]`, the renderer.
 
-⛔ **A window that owns a PRIVATE BUFFER is invisible to a slot-29 hook.** The
+**Law: a window that owns a PRIVATE BUFFER is invisible to a slot-29 hook.** The
 menu strip's own slot 192 (`0x0079BDC0`) calls `PrivateBuffer(true)`, so its
 item draws write into that buffer, and the buffer then reaches the screen by
 channels 2 and 3. *Every* "the instrument says corrected, the screen says not"
 report in #149 reduces to this. **Before believing a blit census, ask whether
 the window has a private buffer** (`GetPrivateBuffer`, slot 101 = `[ecx+0x64]`).
 
-⚠ **The `PRESENTWATCH` positive control is the model to copy.** `gS20Any`
+**Note: the `PRESENTWATCH` positive control is the model to copy.** `gS20Any`
 counts EVERY slot-20 call for ANY window, not just the interesting one — so a
 silent "no present over the cell" can be told apart from "the thunk never ran".
 A probe without that counter produces a null that cannot be graded.
 
-⛔ **Buffer `Blt` CLIPS, it never stretches** (no scaling ops in `0x826AD0` or
+**Law: buffer `Blt` CLIPS, it never stretches** (no scaling ops in `0x826AD0` or
 its delegate `0x826210`; proven again empirically — a dest rect set to
 `2538x6102` changed nothing on screen). Therefore 2x is reached by a **bigger
 buffer**, a **code upscale**, or **field doubling** — never by enlarging the
@@ -609,7 +587,7 @@ Two consequences that are pure gold and reusable:
   draw source (`[0xD8]`) is itself a readable buffer, so the ring is fixed by a
   nearest-neighbour upscale of the 94x62 sprite into 188x124 — **no dat
   needed**.
-- ⛔ **The alpha guard shape is `0 < a < 128`, never `a < 128`.** Stock
+- **Law: the alpha guard shape is `0 < a < 128`, never `a < 128`.** Stock
   magenta-keyed art has `a == 0` everywhere and MUST keep drawing; the
   submenus mod's RGBA frame art has semi-transparent edges that painted a dark
   halo.
@@ -624,7 +602,7 @@ if (sp[0] == 0xFF && sp[1] == 0x00 && sp[2] == 0xFF) continue;  // B,G,R = magen
 if (sp[3] >  0x00 && sp[3] <  0x80)                  continue;  // 0 < a < 128
 ```
 
-⛔ **This is also why no interpolating resampler may ever touch shipped art**
+**Law: this is also why no interpolating resampler may ever touch shipped art**
 (#143). Interpolation moves a keyed pixel off exactly `0xFF00FF`, the test above
 misses it, and **the key colour itself draws** — that is the pink Mayor Rating
 bar and the pink news-reader borders, one launch after `--hq` was enabled.
@@ -662,7 +640,7 @@ pointer, which is what our code holds.
 | Offset | Kind | Meaning | Measured at |
 |---|---|---|---|
 | `+0xE0` | byte flags | handler tests bit `8` (surface-transfer path) and bit `2` | `0x7A86B0`, `0x7A8726` |
-| **`+0xE4`** | int32 | **`blitSize`** — the square edge of the whole map image. Self-updates via the class `SetArea` override; ⛔ `SetW`/`SetH` **bypass** that override (§2 row, and the v2.69.8 "split map") | `0x7A7879`, `0x7A8596` |
+| **`+0xE4`** | int32 | **`blitSize`** — the square edge of the whole map image. Self-updates via the class `SetArea` override; **Law:** `SetW`/`SetH` **bypass** that override (§2 row, and the v2.69.8 "split map") | `0x7A7879`, `0x7A8596` |
 | **`+0xF0`** | ptr | **display surface** — one-shot `Init` (`vt+0x0C`); destroy-and-recreate, never resize | `0x7A8B57` init site; pattern `0x7A8C18–0x7A8C61` |
 | `+0xF4` | ptr | the object the handler **locks** (`vt+0x18`/`vt+0x1C`, mode `0x8040`) and reads dimensions from (`vt+0x88`/`vt+0x8C`) on the transfer path | `0x7A86B8`–`0x7A8710` |
 | `+0xFC` | byte | one-shot init latch; also gates the message **subscription** at `0x7A714D` | set at `0x7A8B50` |
@@ -673,7 +651,7 @@ pointer, which is what our code holds.
 | `+0x118` / `+0x11C` | int32 | raster **w** / **h** | `0x7A8547`; read by our clip |
 | **`+0x120`** | 16 bytes | **dirty-tile bitmask** | `memset(-1)` `0x7A78E2`; tested `0x7A8165`; `memset(0)` `0x7A8614` |
 
-⛔ **`+0x114` IS NOT A COM OBJECT.** It is a plain 3-dword struct
+**Law: `+0x114` IS NOT A COM OBJECT.** It is a plain 3-dword struct
 `{pixel ptr, w, h}` — `0x7A7570` treats `ecx` as exactly that (early-out
 `0x7A757C`, free `0x5E5620`, `malloc(w*h*4)` `0x5E55E0`, store `0x7A75BB`), and
 the bake reads it as a raw base. v2.41.6 passed `this+0x114` to a
@@ -701,7 +679,7 @@ The computation is a **shift loop**, not a division (`0x7A7892–0x7A78D5`):
 `zoom = 0`; while `dim > blitSize` → `dim >>= 1, zoom++`; while
 `dim < blitSize` → `dim <<= 1, zoom--`.
 
-⛔ **HARD CONSTRAINT: `blitSize` MUST be an exact power-of-two multiple (or
+**Law — HARD CONSTRAINT: `blitSize` MUST be an exact power-of-two multiple (or
 divisor) of `terrainDim`.** The loop has no exactness test — on an inexact
 ratio it stops at the first crossing and every downstream address is computed
 from a `zoom` that does not describe the real size. The dest math
@@ -716,8 +694,8 @@ without our patch. **Any sizing policy must select only exact multiples.**
 | any | 256 | 256 | `0` | 1:1 |
 | 2x, large tile | 256 | 512 | `-1` | x2 |
 | 2x, medium tile | 128 | 512 | `-2` | x4 |
-| **2x, small tile** | **64** | **512** | **`-3`** | ⛔ **none — see §2.4.6** |
-| 1.5x / 3x | 64/128/256 | 384 / 768 | *inexact* | ⛔ `#109`, overruns |
+| **2x, small tile** | **64** | **512** | **`-3`** | **none — see §2.4.6** |
+| 1.5x / 3x | 64/128/256 | 384 / 768 | *inexact* | `#109`, overruns |
 
 #### 2.4.3 The recompute `0x7A7840` MARKS; it does not PAINT
 
@@ -734,7 +712,7 @@ exact call the class's own init makes at `0x7A8B57` — does, in order:
 5. `memset(this+0x120, 0xFF, 0x10)` — **mark every tile dirty**;
 6. `[+0xFD] = [+0xFE] = 1`.
 
-> ⛔ **Nothing in that list paints.** The recompute is a *request*. The paint
+> **Law: nothing in that list paints.** The recompute is a *request*. The paint
 > happens later, when the game's own message handler notices `+0xFD`.
 
 For stock this distinction is invisible: the map is built before the panel is
@@ -793,9 +771,9 @@ scratch tile). Structure:
    `add esp,0x18`:
    `f(dst, dstPitchBytes = blitSize*4, src = 16x16 scratch,
    srcPitchBytes = 0x40, destW = side, destH = side)`.
-   ⛔ **`dstPitchBytes` comes from `blitSize` (`+0xE4`) while the dest offset
-   was computed with the raster width (`+0x118`)** — the bake assumes those two
-   are equal. Any code that changes one must change the other.
+    **Law: `dstPitchBytes` comes from `blitSize` (`+0xE4`) while the dest offset
+    was computed with the raster width (`+0x118`)** — the bake assumes those two
+    are equal. Any code that changes one must change the other.
 5. Tail (`0x7A8602–0x7A8619`): `[+0xFD] = 0` and `memset(this+0x120, 0, 0x10)`
    — **the bake clears its own dirty state whether or not it drew anything.**
    That is what made the stock zoom `-3` failure *silent*: skip every tile,
@@ -831,7 +809,7 @@ The bound in front of it is the whole defect:
 0x7A8568  jmp [ecx*4+0x7A8628]
 ```
 
-⛔ **`ja` is UNSIGNED, so `zoom = -3` wraps to `0xFFFFFFFF` and every tile is
+**Law: `ja` is UNSIGNED, so `zoom = -3` wraps to `0xFFFFFFFF` and every tile is
 skipped** — and by §2.4.5 step 5 the bake then clears the dirty mask and
 reports success. **Only the dispatch stops at −2**; the surrounding dest math
 is general. Stock can never reach −3 (its largest blit 256 over its smallest
@@ -844,7 +822,7 @@ drawn. The surface is re-cleared to `0xFF000000` and repainted **every sim-day
 tick (~1 Hz)**, and the game **alpha-blends** cells onto whatever base exists at
 paint time. So the cells are *born* dark and cannot be un-blended:
 
-> ⛔ **LAW (cost four builds): if a base layer is missing, fix the BASE, never
+> **Law (cost four builds): if a base layer is missing, fix the BASE, never
 > the composite.** v2.69.5 (one-shot seed), v2.69.6 (black-hole heal), v2.70.0
 > (per-sweep heal from cache) each attacked the composite. The seed worked once
 > and went black at the next re-clear; the heal never fired at all because the
@@ -895,7 +873,7 @@ write `blitSize` **directly**; and our own `DVPIN` table entry re-doubled the
 map every sweep until the clamp was made the single source of truth (law 43,
 coupled pair).
 
-⛔ **AND THE FALLBACKS MUST STAND DOWN WHEN THE BAKE IS LIVE.** The v2.69.5
+**Law: AND THE FALLBACKS MUST STAND DOWN WHEN THE BAKE IS LIVE.** The v2.69.5
 dock-seed kept firing on open and overwrote a correctly baked 512 terrain with a
 blurry 128→512 bilinear upscale of the dock minimap — good map, then worse map,
 then re-bake: **that was the remaining open-jump**, and it was ours.
@@ -920,7 +898,7 @@ ratio (§2.4.2).
 > *after* it had been called probable stock behaviour. `METHOD.md`: measure,
 > don't infer.
 
-### 2.5 HOOKING RULES — ⛔ NEVER GUESS A CALLING CONVENTION
+### 2.5 HOOKING RULES — NEVER GUESS A CALLING CONVENTION
 
 *Added 2026-08-15. These were enforced only by comments in `UiSpike.cpp` while
 they cost **two crashes in one session**. They are engine-facing and belong in
@@ -931,16 +909,16 @@ CALLEE-CLEANUP**. A thunk that declares the wrong argument count cleans the
 wrong number of stack bytes and unwinds into garbage. There is no partial
 failure mode: it is a crash, usually far from the hook.
 
-| Situation | ⛔ The rule | The crash it prevents |
+| Situation | The rule | The crash it prevents |
 |---|---|---|
 | a `__thiscall` virtual with a **known, zero** arity | `uintptr_t __thiscall Fn(void*)` — a typed thunk is fine. Return `uintptr_t` so **EAX is preserved exactly**; void-returning slots simply have their garbage EAX ignored | — |
 | a `__thiscall` virtual with **known** args | write it as **`__fastcall(void* self, void* edx, …)`** — `ecx` maps to `self`, `edx` is ignored, and nothing is cleaned that should not be | `PlotPresent` detoured as `__stdcall` looked for `this` on the stack, left ECX as whatever the caller had, and the original ran against garbage: **ACCESS_VIOLATION at `0x0099C4A1`, ECX = 1** |
-| **arity UNKNOWN** | ⛔ **a `__declspec(naked)` TAIL JMP, and nothing else.** It makes no arity assumption at all: it never returns to you, so it never cleans anything, and `ecx`/`edx`/the argument stack pass through byte-identical. Read what you need off `[esp+N]` without disturbing the frame | the first typed thunk on **slot 20** — declared `__fastcall` with two stack args "inferred from two visible pushes" — died **PRIV_INSTRUCTION at a garbage EIP**, EDX still holding `0x00AC1400` |
-| you inferred the arity from a disassembly excerpt | ⛔ **that is guessing.** Two visible pushes at a call site are not proof of two parameters | both of the above |
+| **arity UNKNOWN** | **Law: a `__declspec(naked)` TAIL JMP, and nothing else.** It makes no arity assumption at all: it never returns to you, so it never cleans anything, and `ecx`/`edx`/the argument stack pass through byte-identical. Read what you need off `[esp+N]` without disturbing the frame | the first typed thunk on **slot 20** — declared `__fastcall` with two stack args "inferred from two visible pushes" — died **PRIV_INSTRUCTION at a garbage EIP**, EDX still holding `0x00AC1400` |
+| you inferred the arity from a disassembly excerpt | **Law: that is guessing.** Two visible pushes at a call site are not proof of two parameters | both of the above |
 
 **Where you patch matters as much as what you patch:**
 
-- ⛔ **Swap the vtable on the INSTANCE, never the class** — copy the class
+- **Law: swap the vtable on the INSTANCE, never the class** — copy the class
   vtable into a private 256-entry array (`cIGZWin` declares 144 virtuals / 147
   slots; concrete classes add their own, so the copy is deliberately oversized),
   point the instance at the copy, and leave the game's `.rdata` untouched. No
@@ -951,11 +929,11 @@ failure mode: it is a crash, usually far from the hook.
   paths that run outside the Plot we hooked. Those are gated *inside* the thunk
   instead (`destIsContainer` / `destIsSubContainer`), so other UI on the same
   buffer class is untouched.
-- ⛔ **CLASS IDENTITY IS NECESSARY, NEVER SUFFICIENT.** The disaster-derived
+- **Law: CLASS IDENTITY IS NECESSARY, NEVER SUFFICIENT.** The disaster-derived
   surgery installed itself on U-Drive-It's *Earned Cars* strip — same class,
   different layout — and the game died. Gate on the class **and** the owning
   context (§2.1).
-- ⛔ **Never call Plot or any draw entry point from a hook.**
+- **Law: never call Plot or any draw entry point from a hook.**
   `InvalidateSelfAndParents()` (slot 92) is the only safe repaint primitive
   after a geometry change.
 
@@ -987,7 +965,7 @@ a resize keeps drawing its pre-resize size until the game happens to call
 `SetImage` again. All byte-verified (`REGRESSION.md` "#176 — ROOT CAUSE FOUND";
 `VERSION-HISTORY.txt` v3.0.1).
 
-⭐ **THE LATCH LAW. A latch computed from live geometry is a hidden consumer of
+**Law — THE LATCH LAW. A latch computed from live geometry is a hidden consumer of
 that geometry.** Any value derived from a window's size at bind time
 (SetImage's crop; #130's arrow anchors at `[ctl+0x378]`) silently keeps the
 pre-resize world — resizing the window does not resize what was derived from
@@ -1011,7 +989,7 @@ looked right and paused inspections looked broken at every tier* — 1.5x drew
 observations of tick timing.** Captures: `2026-08-16-174827` (stale, one
 pre-sweep firing), `08-13-155410` / `2026-08-16-172018` (healed by a tick).
 
-⚠ **The three `imul ...,7` sites are ARROWS ONLY** (`0x7E87B1`/`0x7E89D7`/
+**Warning: the three `imul ...,7` sites are ARROWS ONLY** (`0x7E87B1`/`0x7E89D7`/
 `0x7E8A02`: the `SetW(delta*7)` reveal and the `GZWinMoveTo(base+(3−delta)*7)`
 reposition — §8.4). **No pixel constant exists in the fill chain** — the only
 wrong number in #176 was the latch. "imul 7 is the art's segment pitch" was
@@ -1030,7 +1008,7 @@ under sweep-first ordering (a staged crop ≠ old area → no fire). Log:
 firing pre-sweep, one RELATCH line, bar full from first paint with the sim
 paused.
 
-⚠ **The guard is armed PER PANEL ROOT, never blanket, and the reasons are
+**Warning: the guard is armed PER PANEL ROOT, never blanket, and the reasons are
 load-bearing** (adversarial review 2026-08-16; scope note at the helper):
 `crop == (0,0,oldW,oldH)` alone is NOT unique to the latch — **577 of 877
 authored `.UI` imagerects are full-area-at-origin, and 34 of those are the
@@ -1080,10 +1058,13 @@ that "another size = another copy of the numbers", not runtime layout. Any
 audit keyed only on `G-96A006B0` misses the twins, and a window existing in
 both groups references the same art from both.
 
-Format: `# Generated by UI editor` header, then one pseudo-XML `<LEGACY …>`
-element per line, nested via `<CHILDREN>…</CHILDREN>`. **Legacy markup, not
+Format: `# Generated by UI editor` header, then pseudo-XML `<LEGACY …>`
+records — usually one per line, but a quoted value may contain raw newlines
+(107 of 5,964 elements span multiple physical lines), nested via
+`<CHILDREN>…</CHILDREN>`. **Legacy markup, not
 XML** — unquoted attributes, tags closed by a bare `>`, `#` comments; needs a
-lenient parser. Annotated real example (`I-0a55161d`, the quit dialog):
+lenient parser, and `.UI` is NOT line-oriented (`SDK-GAPS.md` §5 for the full
+lexical contract). Annotated real example (`I-0a55161d`, the quit dialog):
 
 ```
 <LEGACY clsid=GZWinGen iid=IGZWinGen id=0xaa921f4f      <- window id
@@ -1100,7 +1081,10 @@ lenient parser. Annotated real example (`I-0a55161d`, the quit dialog):
 ```
 
 Attribute frequency across the 281 files: every control has `clsid`, `area`,
-`fillcolor`, 14 `winflag_*`; then `gutters` 4520, `image` 2962, `edgeimage`
+`fillcolor`, and **13** `winflag_*` (11 universal — `visible`, `enabled`,
+`moveable`, `sizeable`, `sortable`, `pbuff`, `pbufftrans`, `pbufferase`,
+`pbuffvid`, `mousetrans`, `ignoremouse` — plus near-universal `acceptfocus`
+and `alphablend`); then `gutters` 4520, `image` 2962, `edgeimage`
 844, `imagerect` 839, `blttype` 540, plus `caption`/`captionres`, `font`,
 `tiptext`/`tipres`, `textoffsets`, `tipoffsets`. **There is no
 inset/edges/corners/slice attribute anywhere in the corpus.**
@@ -1125,7 +1109,7 @@ that would read 878px starting at x=122 of an 878px image, impossible; as
 corners it is exactly "the same region of the big sheet, clipped by the
 window".
 
-⛔ **Never double an `imagerect` without doubling its art, and never double art
+**Law: never double an `imagerect` without doubling its art, and never double art
 without doubling the `imagerect`.** 839 crops exist in absolute source pixels;
 they are the real blanket-2x breaker (slice insets are not in scripts at all —
 §4.4). Four patterns matter:
@@ -1134,7 +1118,7 @@ they are the real blanket-2x breaker (slice insets are not in scripts at all —
    tool column `14015546` 157x489) drawn 1:1 by the root BMP, then child BMPs
    re-crop regions of the *same* image to layer text backgrounds.
 2. **Multi-state sheets** — mayor-rating bar `14015549` is 102x26 and
-   `imagerect=(0,0,102,11)` picks the first 11px state. ⚠ *2026-08-16:* on the
+   `imagerect=(0,0,102,11)` picks the first 11px state. Note: on the
    HUD groove `0x8A517556` that **staged crop is DEAD DATA at runtime** — the
    first `SetImage` from the rating handler overwrites `[win+0xE8]` with its
    own window-derived latch (§2.6), so editing this script's `imagerect` moves
@@ -1148,7 +1132,7 @@ they are the real blanket-2x breaker (slice insets are not in scripts at all —
    source rect edge-blitted into arbitrary window sizes.
 
 `blttype=` tally **in the 330-script STOCK corpus**: `edge` 277, `tiled` 254,
-`normal` 9. ⚠ That last number is why this section reads as a curiosity and
+`normal` 9. Note: that last number is why this section reads as a curiosity and
 should not: across the 11 third-party scripts in
 `tools\dialog-static\thirdparty-src\` the tally is `edge` 17, `tiled` 1,
 **`normal` 31** — more `normal` blits in 11 mod scripts than in all 330 of
@@ -1156,7 +1140,7 @@ Maxis's. CAM builds its dialogs almost entirely out of them. **A count taken
 over the stock corpus describes Maxis's habits, not the game's behaviour**, and
 mod data is where the rare paths live.
 
-#### ⛔ THE RULE ABOVE WAS ALREADY WRITTEN HERE, AND WAS STILL BROKEN (#154)
+#### THE RULE ABOVE WAS ALREADY WRITTEN HERE, AND WAS STILL BROKEN (#154)
 
 v2.97.0 scaled a mod dialog's windows and its bitmaps and left all 24 of its
 `imagerect` crops at 1×, so each row stripe painted 285px of a 428px window.
@@ -1197,17 +1181,23 @@ deserializers call it (`0x94CF0A`, `0x94F9E4`, `0x950657`, `0x950C94`,
 exists as a string in the exe, so name resolution can only go through the
 ini-fed dictionary.
 
-⛔ **Practical rule: in any shipped `.UI`, convert every `font=NAME` to
+**Law — practical rule: in any shipped `.UI`, convert every `font=NAME` to
 `font=0x........`.** The round-trip serializer at `0x95BC5F` writes
 `font=0x%08x` for styles without a resolvable name, so the parser accepts the
 hex form by construction. Both builders do this for every edited script (437
 tokens across 23 scripts in the 2026-07-22 dat).
 
-`[OPEN]` The exact tokenizer step that makes *some* names resolve
+The exact tokenizer step that makes *some* names resolve
 (`DataInsetHeader` works; `RegionLabel`, `RegionPopulation`, `Mayor*`,
-`PUckDate` do not) was never pinned; the `<LEGACY>` tag handler
-(registration `0x94B995`) is the remaining suspect. It does not matter
-operationally — the GUID form bypasses it — but do not claim it is understood.
+`PUckDate` do not) is reference gap G10 (`SDK-GAPS.md` §13). The tokenizer
+dictionary is now fully enumerated (391 keywords, six registration tables)
+and contains **zero** FontStyle style names, so no style name can resolve
+through the token path; the `<LEGACY>` tag handler is ruled out — `0x94B995`
+is the tag's *registration* site, not a handler. The paradox remains open,
+but it does not matter operationally — the GUID form bypasses it. Note also
+that `font=4888` / `font=0x00001318` are the loader's own token for the
+keyword `default` (registration `0x00955823`); no FontStyle GUID `0x1318`
+exists, so both spellings land on the fallback `0x68963C4C` "Default".
 
 ### 3.5 `winflag_visible`, and why a hidden window still matters
 
@@ -1242,10 +1232,9 @@ on screen via `0x0000AAAA` markers rather than parent/child nesting:
   Graphs panel).
 - **`I-aa1f1f57` (My Sims) has NINE**: `0x698894D3`, `0xCA1F1D9C`,
   `0xAA1F1EC5`, `0xEA1F1E4D`, `0x6A61E29F`, `0xABBAA2D3`, `0xEA1F1E4E`,
-  `0xEA1F1E5E` (+ the catalog/detail pairing). v2.22.0 listed three, v2.22.2
-  found six more, v2.22.3 found the ninth.
+  `0xEA1F1E5E`, `0xABB26B0E` (+ the catalog/detail pairing).
 
-⛔ **Deferral must cover the whole composition or none of it.** My Sims'
+**Law: deferral must cover the whole composition or none of it.** My Sims'
 outer root sat in `kNeverScaleIds` while the sweep scaled sibling `0xCA1F1D9C`
 (log `(149,1413 861x134) -> (298,1226 1722x268)`) — the marker-glued pair tore
 apart (scattered title, detached slots) — *and* three family arts were already
@@ -1273,17 +1262,23 @@ groups — `46a006b0` 810, `1abe787d` 743, `6a386d26` 356, `4c06f888` 112,
 text. **The other ~1,850 are bound some other way** — that gap is the whole
 reason a blanket 2x replacement is unsafe.
 
-⛔ **Art groups `0x46A006B0` and `0x1ABE787D` are near-mirror twins** — most
-IIDs exist in both with identical or near-identical art, different scripts pick
-different groups for the same instance, and overriding one without the other
-produces mixed-scale UI.
+**Law: art groups `0x46A006B0` and `0x1ABE787D` are twins — and the twin
+structure is exact, with a third twin.** `0x1ABE787D` is a **strict subset**
+of `0x46A006B0`: all 743 of its instances also exist under `46A006B0` (which
+has 810). **Group `0x00000001` is a third twin**: all 62 of its members exist
+under BOTH. Overriding one without the others produces mixed-scale UI —
+covering a shared instance can mean covering three TGIs.
 
 ### 4.1 Path 1 — `.UI`-referenced TGI
 
 `image={gid,iid}`, 2,962 occurrences, type `0x856DDBAC` implied; a ref's GID is
-honoured (refs to `46a006b0`, `1abe787d`, `22dec92d`, `4c06f888` all resolve
-under those exact groups), **which is what makes selective retargeting
-possible**. No `thumbimage`/`containerimage`/`backimage` is in use.
+honoured for five of the six ref GIDs (refs to `46a006b0`, `1abe787d`,
+`22dec92d`, `4c06f888` all resolve under those exact groups), **which is what
+makes selective retargeting possible**. The one shipped counter-example is
+`{82b9b75b,e2b66db8}` (`I-cb40cfdc`, the Apply/Remove Label buttons): group
+`0x82B9B75B` exists in no archive while the instance is a real strip under
+`0x46A006B0` — reference gap G11 (`SDK-GAPS.md` §13). No
+`thumbimage`/`containerimage`/`backimage` is in use.
 
 **Fixable at:** the art layer (`build_selective_safe.py`) — plus the
 `imagerect` on the same control.
@@ -1316,14 +1311,18 @@ Exemplars are type `0x6534284A` (cohorts `0x05342861`), **SimCity_1.dat only**
 `0x8A2602B9` **Item Order**, `0x8A2602BB` **Item Button ID**.
 
 - The property holds **only the instance**; type + group are hardcoded (4.2).
-- **266/266 values resolve** to a PNG in group `0x6A386D26`, and **all 266 are
-  exactly 176x44** = a 4-cell 44x44 state strip on a `GZWinBtn` (menu-item
-  template clsid `0x4988BC6A`).
+- **266/266 values resolve** to a PNG in group `0x6A386D26`, and **all 266
+  exemplar-referenced icons are exactly 176x44** = a 4-cell 44x44 state strip
+  on a `GZWinBtn` (menu-item template clsid `0x4988BC6A`). The GROUP is
+  larger: 356 images — the other **36 are 356x58** with sequential structured
+  instances `0xMM0000NN`, bound to the one-widget 89x58 template script
+  `I-ebd0d36d` (no `image=` at all), referenced by no exemplar and no `.UI`,
+  staged by nothing (reference gap G14, `SDK-GAPS.md` §13).
 - Because state selection is `imageWidth/4` and **there is no `imagerect`** on
   these buttons, this is the **safest** case: a 352x88 strip yields 88x88 cells
   and picks the right state every time.
 
-⛔ **Parse BOTH exemplar formats.** Base-game exemplars are all binary
+**Law: parse BOTH exemplar formats.** Base-game exemplars are all binary
 (`EQZB1###`), but **CAM is roughly half TEXT** — a binary-only parse silently
 missed 30 icons. Binary layout (decoded from scratch, 8,957/8,957 parse):
 signature 8 bytes, parent cohort TGI 3×u32, u32 property count, then per
@@ -1346,19 +1345,26 @@ panels 9-slice it with 16px insets and a 2x would corrupt their frames.
 
 ### 4.5 Path 4 — runtime-generated, NO TGI at all
 
-**No art pass can ever reach these.** They are not in any dat:
+**The PIXELS are unreachable by any art pass** — they are not in any dat.
+(The *frame* of a widget with a dangling `image=` ref is still editable —
+`RUNTIME_BOUND_2X` in `build_dialog_static.py` doubles such `imagerect`s
+where the runtime pixels are themselves 2x; see path 4b below.)
 
-- **My Sims portraits** — every portrait window is a `GZWinBMP` with
-  `imagerect=(0,0,36,41)` and **no `image={g,i}` at all**
-  (`I-aa1f1f57` lines 19-23: `0x22220000..04`, plus `0x22220055`;
-  `0x8A1F1EEF` carries `imagerect=(0,0,100,100)` with no image). The game
-  supplies the pixels at runtime.
+- **My Sims portraits** — two sub-shapes. **4a — no `image=` at all:** the
+  HUD panel `I-aa1f1f57` lines 19-23 (`0x22220000..04`, plus `0x22220055`;
+  `0x8A1F1EEF` carries `imagerect=(0,0,100,100)` with no image). **4b —
+  dangling `image=`:** the Select-A-Sim picker `I-0a243d80`'s 22 portrait
+  cells (`0x12340000..0x12340015`) each carry `image={46a006b0,ea32f104}` —
+  a TGI in no shipped archive — with `imagerect=(0,0,36,41)`. In both the
+  game supplies the pixels at runtime (composed into power-of-two
+  `cIGZBuffer`s — 36x41 into 64x64 — so a doubled `imagerect` samples past
+  the live data into the POT padding; the picker's rect must NOT double).
 - **Advisor faces** — the 7 strip faces are **live 3D head renders**, not
   films: their arts `14015570-76` are plain 220x94 4-state strips, and the head
   binder `0x41DE20` creates each head object ONCE per controller slot
   (`cmp [edi],0; jne` = reuse path).
 - **Gauge dials** (`0xCBCBF1E0`) and the **Graphs chart** — code-painted into
-  their own cached buffers. ⚠ **The chart's LEGEND is a different story**: its
+  their own cached buffers. **Note: the chart's LEGEND is a different story**: its
   swatches and text blocks are real entry objects laid out by the *panel*
   builder from `.text` literals and only *painted* by the chart, so it is
   reachable by a byte patch on the builder and by nothing else (§5.4).
@@ -1389,11 +1395,7 @@ art": the dials' TGIs are ALL already staged 2x-in-place
 | **CODE_BOUND_FORCE** | code-*created* controls that load the original TGI and cannot be retargeted | forced in-place; unscaled `fill=yes` consumers downscale acceptably |
 
 Plus: `imagerect` doubles **iff** that control's art went 2x; every `font=`
-name becomes a GUID; and ~~`double_subtree_areas` is the ONE stage that touches
-`area=` (§7.3) — otherwise **this builder never edits `area=`**, which is
-exactly why every panel it serves must stay runtime-scaled.~~
-
-**CORRECTED 2026-08-16 — THREE live stages edit `area=`, not one:**
+name becomes a GUID. **Three live stages edit `area=`:**
 
 1. `double_subtree_areas` (`build_selective_safe.py:646`; called at `:1963`,
    `:2011`, `:2035`, `:2057`, `:2082`) — pre-scales a whole subtree (§7.3).
@@ -1409,7 +1411,7 @@ exactly why every panel it serves must stay runtime-scaled.~~
    once). The code calls it "the ONE deliberate exception" at `:1934-1935`; see
    also the **Ticker marquee `0xAA12F33C`** row later in this file.
 
-⚠ `parity_nudge_btn_areas` (`:1241`, write at `:1273`) and
+Note: `parity_nudge_btn_areas` (`:1241`, write at `:1273`) and
 `double_one_window_area` (`:931`, write at `:957`) also contain `area=` writes
 but are **defined and never called** in the current file — the parity nudge was
 called here and reverted the same day it shipped (`:2122-2125`). A grep for
@@ -1421,7 +1423,7 @@ the opposite case: `0x6A15C767` is in `kDataScaledSubtreeIds`, so
 `ScalePanelRoot` returns before the child loop — `src\UiSpike.cpp:14568-14573` —
 and the runtime sweep never walks those buttons.)
 
-⛔ **ART AND RUNTIME SCALE MUST MOVE TOGETHER — including in reverts.** Art
+**Law: ART AND RUNTIME SCALE MUST MOVE TOGETHER — including in reverts.** Art
 without the scale, or the scale without the art, produce the *identical*
 symptom: **quarter-art with black fill** (budget panels, U-Drive-It dashboard,
 Graphs middle root, My Sims detail roots — four independent instances of one
@@ -1429,7 +1431,7 @@ signature). Scale factors are expressed via `FACTOR`/`scale_len` =
 `floor(v*N + 0.5)`, never `*2`: **1.5x is where rounding bugs hide, 2x hides
 them.**
 
-⛔ **THE LOAD-ORDER LAW.** Files in the `Plugins` **root load BEFORE
+**Law — THE LOAD-ORDER LAW.** Files in the `Plugins` **root load BEFORE
 subfolders**, so a root `z_*.dat` can NEVER override a dat inside a subfolder.
 Overrides of another mod must live in a folder sorting after it
 (`zzz-SC4UIScale\` beats `150-mods\`). And a plugin may replace a stock
@@ -1445,11 +1447,11 @@ stock `531x406` was the tell. Grep `Plugins\**\*.dat` for the TGI before
 touching anything. Corollary seen in practice: **wrong text COLOUR was a
 symptom of the wrong SCRIPT being loaded**, not a font or colour bug.
 
-### 4.6c ⛔ THE SHEET'S **ROLE** DECIDES ITS SIZING RULE — three roles, three rules
+### 4.6c THE SHEET'S **ROLE** DECIDES ITS SIZING RULE — three roles, three rules
 
-*Added 2026-08-15. This existed only as comments in `tools\upscale\Upscale2x.cs`
+This existed only as comments in `tools\upscale\Upscale2x.cs`
 and one `TRIAGE.md` row while it cost four separate 1.5x defects (#143, #150,
-#157, #160). It is an ENGINE fact and belongs here.*
+#157, #160). It is an ENGINE fact and belongs here.
 
 **The engine cell-divides a sheet with an INTEGER DIVIDE baked into its own
 machine code.** It never reads a cell count from data. So the *only* contract a
@@ -1459,16 +1461,16 @@ still come out even.** Which divide that is depends entirely on what the sheet
 
 | ROLE | What the engine does | Sizing rule for a scaled sheet | Derived from |
 |---|---|---|---|
-| **N-state strip** (buttons, ItemIcons, checkboxes) | `cell = imageWidth / N`, state selected by index. Cut **HORIZONTALLY ONLY** | ~~snap **width** to a multiple of N; **height is exact** (`round(h*f)`) — there is no vertical divide to protect~~ ⛔ **CORRECTED 2026-08-16 — THAT IS THE ENGINE CONTRACT, NOT WHAT THE UPSCALER SHIPS.** **Width:** the snap unit is `CellUnit(v)` = the LCM of whichever of `{3,4}` divide the **1x** dimension (`tools\upscale\Upscale2x.cs:846`, `:798-807`, `:677`). `CellUnit` takes only the dimension and **never sees N**, so it can over-snap and it can miss entirely: a 4-state sheet whose width also divides by 3 snaps on **12** — Zoom Out's 84px sheet → 132, cell **33** against a 32px window (`_tests\REGRESSION.md:10431-10439`, **#171**) — and the corpus's two **8**-state strips (`cell-strips.txt:8`, `:154`) are never snapped to a multiple of N at all, since 8 ∉ `{3,4}` (`Upscale2x.cs:684-688` works that case out). **Height:** exact only when `sNoHeightSnap` is set (`:876`), and only `--height-exact-group` / `--height-exact-strips` set it (`:361`, `:417`). `tools\upscale\Rebuild-Corpus.ps1`, the declared single source for the corpus command (`:3-4`), passes **neither** (`:69-73`, `:101-102`) — so **button and checkbox heights ARE cell-snapped**. Only **ItemIcons** take the exact height, via `--height-exact-group 6A386D26` in `tools\itemicons\build_uncovered_icons.py:569` and `rebuild_namicons.py:43`. Measured today, `gate_btn_undercover.py --tier 15x`: `{(0,1):1, (1,0):1, (0,2):347, (0,6):3}` — **351 of 352 are the cell TALLER than the window; exactly one is width.** ⛔ **DO NOT "FIX" THE HEIGHT HALF FROM THIS ROW — IT WAS TRIED AND REVERTED.** `--height-exact-strips` shipped 2026-08-15, but the user reported the two **#162** hairlines *unchanged* and the "?" button `{46a006b0,14415860}` newly broken; removing it restored the "?" (`_tests\REGRESSION.md:9790`, `:9817`; now a forbidden cure at `_tests\TRIAGE-PLAYBOOK.md:650`). **#162 is NOT this gap** — those buttons are runtime-swept and their widths already agree under both rules (`REGRESSION.md:10441-10445`). The flag remains armed with no producer and no list file (`_tests\HARDENING-PROPOSALS.md:890-914`). | `upscale\find_cell_strips.py` — reads **the `.UI` that BINDS each sheet**. 193 of 2206. ⚠ Added 2026-08-16: that derived list reaches the per-state **SAMPLER** (`Upscale2x.cs:317-327` → `:734`) and the unpassed `--height-exact-strips` **only**. It never reaches `CellUnit`, so N does not drive the width snap — `Upscale2x.cs:403-409` says so outright, and that separation is deliberate |
-| **9-slice frame** (`blttype=edge`, `edgeimage=yes`) | `cell = (img->Width()/3, img->Height()/3)`, ~~VA `0x00794100`~~; corners unstretched, edges stretch only *along* the run. ⛔ **VA CORRECTED 2026-08-18 — `0x00794100` IS THE WRONG DRAWER FOR THIS ROW.** It is `cSC4WinAlertBorder`'s own slot-88 draw, a code-created full-screen window that appears in **no `.UI` script at all**, so it can never be the owner of a role derived *from* the `.UI` corpus. The drawer for this row is the widget's own slot-88 draw: **`GZWinBMP` → `0x009BC325`** (EDGE branch, entered on flag bit 8 of the holder at `[this+0xD8]` via its `vt[10]`), **`GZWinBtn` → `0x009B05E0`** (its draw's nine-slice branch). ⭐ **Each of the three drawers performs the `/3` ITSELF and hands an already-cut cell to a blitter that contains no divide** — `0x008D9550` for the alert border (one caller image-wide), `0x008D8800` for `GZWinBMP` and `GZWinBtn`. The arithmetic in this row is unchanged: `0x009BC325` divides the *source rect*, which for a sheet with no `imagerect` **is** the image's natural rect. Full derivation + the one residual open question (which operands the EDGE branch divides) in `_tests\REGRESSION.md` §"RESOLVED 2026-08-18 — three addresses, three different JOBS" | snap to a multiple of **3, and 3 alone** | `upscale\find_nine_slice.py` (#157) |
-| **Tiled background** (`blttype=tiled`) | src-follows-dst: the source is **repeated** across the destination. No divide at all | ⛔ **snap NOTHING.** Its only contract is with its WINDOW, and the window scales by a plain round | ~~`upscale\find_tiled.py` → `no-snap.txt` (#160)~~ **CORRECTED 2026-08-16:** `no-snap.txt` is generated by **`upscale\find_no_snap.py`** (`no-snap.txt:2`, `find_no_snap.py:124`), and its scope is **#160 + #162** — `blttype=tiled` **OR** a sheet a `.UI` binds 1:1 to a window of exactly its 1x size, in either case only if no `.UI` ever draws it as a `GZWinBtn` state or a 9-slice and it is absent from `cell-strips.txt`/`nine-slice.txt` (`find_no_snap.py:22-28`). **121 entries**, and this is the file bound to `--no-snap` (`Rebuild-Corpus.ps1:72`). `find_tiled.py` writes `tiled.txt` (**10** entries, a proper subset of `no-snap.txt`), which has **no `Upscale2x` flag of its own** (`Rebuild-Corpus.ps1:27-28`; the exe parses only `--cell-strips`/`--nine-slice`/`--no-snap`, `Upscale2x.cs:146,182,214`) and is read only by the offline emulator (`uimap\emu\scale_rules.py:321,343`). Regenerating the shipped list with the tool formerly named here shrinks it 121 → 10 |
+| **N-state strip** (buttons, ItemIcons, checkboxes) | `cell = imageWidth / N`, state selected by index. Cut **HORIZONTALLY ONLY** | **Width:** the snap unit is `CellUnit(v)` = the LCM of whichever of `{3,4}` divide the **1x** dimension (`tools\upscale\Upscale2x.cs:846`, `:798-807`, `:677`). `CellUnit` takes only the dimension and **never sees N**, so it can over-snap and it can miss entirely: a 4-state sheet whose width also divides by 3 snaps on **12** — Zoom Out's 84px sheet → 132, cell **33** against a 32px window (`_tests\REGRESSION.md:10431-10439`, **#171**) — and the corpus's two **8**-state strips (`cell-strips.txt:8`, `:154`) are never snapped to a multiple of N at all, since 8 ∉ `{3,4}` (`Upscale2x.cs:684-688` works that case out). **Height:** exact only when `sNoHeightSnap` is set (`:876`), and only `--height-exact-group` / `--height-exact-strips` set it (`:361`, `:417`). `tools\upscale\Rebuild-Corpus.ps1`, the declared single source for the corpus command (`:3-4`), passes **neither** (`:69-73`, `:101-102`) — so **button and checkbox heights ARE cell-snapped**. Only **ItemIcons** take the exact height, via `--height-exact-group 6A386D26` in `tools\itemicons\build_uncovered_icons.py:569` and `rebuild_namicons.py:43`. Measured today, `gate_btn_undercover.py --tier 15x`: `{(0,1):1, (1,0):1, (0,2):347, (0,6):3}` — **351 of 352 are the cell TALLER than the window; exactly one is width.** **Law: DO NOT "FIX" THE HEIGHT HALF FROM THIS ROW — IT WAS TRIED AND REVERTED.** `--height-exact-strips` shipped 2026-08-15, but the user reported the two **#162** hairlines *unchanged* and the "?" button `{46a006b0,14415860}` newly broken; removing it restored the "?" (`_tests\REGRESSION.md:9790`, `:9817`; now a forbidden cure at `_tests\TRIAGE-PLAYBOOK.md:650`). **#162 is NOT this gap** — those buttons are runtime-swept and their widths already agree under both rules (`REGRESSION.md:10441-10445`). The flag remains armed with no producer and no list file (`_tests\HARDENING-PROPOSALS.md:890-914`). | `upscale\find_cell_strips.py` — reads **the `.UI` that BINDS each sheet**. 193 of 2206. Note: that derived list reaches the per-state **SAMPLER** (`Upscale2x.cs:317-327` → `:734`) and the unpassed `--height-exact-strips` **only**. It never reaches `CellUnit`, so N does not drive the width snap — `Upscale2x.cs:403-409` says so outright, and that separation is deliberate |
+| **9-slice frame** (`blttype=edge`, `edgeimage=yes`) | `cell = (img->Width()/3, img->Height()/3)`; corners unstretched, edges stretch only *along* the run. **Note on the drawer:** `0x00794100` is the WRONG drawer for this row — it is `cSC4WinAlertBorder`'s own slot-88 draw, a code-created full-screen window that appears in **no `.UI` script at all**, so it can never be the owner of a role derived *from* the `.UI` corpus. The drawer for this row is the widget's own slot-88 draw: **`GZWinBMP` → `0x009BC325`** (EDGE branch, entered on flag bit 8 of the holder at `[this+0xD8]` via its `vt[10]`), **`GZWinBtn` → `0x009B05E0`** (its draw's nine-slice branch). **Note: each of the three drawers performs the `/3` ITSELF and hands an already-cut cell to a blitter that contains no divide** — `0x008D9550` for the alert border (one caller image-wide), `0x008D8800` for `GZWinBMP` and `GZWinBtn`. The arithmetic in this row is unchanged: `0x009BC325` divides the *source rect*, which for a sheet with no `imagerect` **is** the image's natural rect. Full derivation + the one residual open question (which operands the EDGE branch divides) in `_tests\REGRESSION.md` §"RESOLVED 2026-08-18 — three addresses, three different JOBS" | snap to a multiple of **3, and 3 alone** | `upscale\find_nine_slice.py` (#157) |
+| **Tiled background** (`blttype=tiled`) | src-follows-dst: the source is **repeated** across the destination. No divide at all | **Law: snap NOTHING.** Its only contract is with its WINDOW, and the window scales by a plain round | `no-snap.txt` is generated by **`upscale\find_no_snap.py`** (`no-snap.txt:2`, `find_no_snap.py:124`), and its scope is **#160 + #162** — `blttype=tiled` **OR** a sheet a `.UI` binds 1:1 to a window of exactly its 1x size, in either case only if no `.UI` ever draws it as a `GZWinBtn` state or a 9-slice and it is absent from `cell-strips.txt`/`nine-slice.txt` (`find_no_snap.py:22-28`). **121 entries**, and this is the file bound to `--no-snap` (`Rebuild-Corpus.ps1:72`). `find_tiled.py` writes `tiled.txt` (**10** entries, a proper subset of `no-snap.txt`), which has **no `Upscale2x` flag of its own** (`Rebuild-Corpus.ps1:27-28`; the exe parses only `--cell-strips`/`--nine-slice`/`--no-snap`, `Upscale2x.cs:146,182,214`) and is read only by the offline emulator (`uimap\emu\scale_rules.py:321,343`). Regenerating the shipped list with the tool formerly named here shrinks it 121 → 10 |
 
-⛔ **DERIVED LISTS, NEVER HAND-LISTS.** Every one of those three lists is
+**Law: DERIVED LISTS, NEVER HAND-LISTS.** Every one of those three lists is
 generated from the `.UI` corpus. The counter-example is measured: scoping the
 cell-aligned sampler by `CellUnit`'s *guess* instead of the derived list moved
 **1186 of 2206** sheets and displaced an advisor aperture (#156).
 
-⛔ **THE LCM IS A THIRD ANSWER THAT IS WRONG FOR BOTH.** A 9-slice frame whose
+**Law: THE LCM IS A THIRD ANSWER THAT IS WRONG FOR BOTH.** A 9-slice frame whose
 width happens to divide by 4 is not a 4-state strip; taking `LCM{3,4}` satisfies
 neither consumer:
 
@@ -1480,13 +1482,13 @@ At 276 the NineSlice cell is 92 while every geometry number in the `.UI` was
 scaled for 90 — the corner art overshoots and the rounded corner never reaches
 the window corner. Measured: **418 uncovered px at 276, 4 px at 270** (#157).
 
-⚠ **THE PROPORTIONALITY GUARD, and why it is not a fudge.** A 16px icon divides
+**Warning — THE PROPORTIONALITY GUARD, and why it is not a fudge.** A 16px icon divides
 by 16, but it is an ICON, not a 16-cell strip. `ScaleDim` therefore abandons the
 snap when the correction would exceed **12.5%** of the dimension: a genuine cell
 sheet is far larger than its cell count, so real cases are 2–6 px corrections on
 100–5000 px sheets and pass easily.
 
-⛔ **EVERY RULE ON THIS PAGE IS A PROVABLE NO-OP AT AN INTEGER FACTOR** —
+**Law: EVERY RULE ON THIS PAGE IS A PROVABLE NO-OP AT AN INTEGER FACTOR** —
 `ScaleDim` returns before `CellUnit` is ever consulted when `f` is whole, so 2x
 and 3x output is **byte-identical** with and without all of it, and the build
 asserts that. **This is the house control**: a new sheet-sizing metric that
@@ -1494,7 +1496,7 @@ reads nonzero at 2x or 3x is measuring itself, not a defect. Measured spread of
 the underlying breakage: **31% of `/3` sheets and 43% of `/4` sheets break at
 1.5x; 0% at both integer tiers.**
 
-⛔ **NEVER REACH FOR THE RESAMPLER.** Nearest-neighbour only copies source
+**Law: NEVER REACH FOR THE RESAMPLER.** Nearest-neighbour only copies source
 pixels, so it **cannot introduce a colour the 1x art lacks** — a white seam
 absent from the source can never be an NN artifact, which rules the upscaler out
 of any seam investigation in one sentence. And interpolation moves magenta off
@@ -1518,7 +1520,7 @@ PORTED VERBATIM"* and carries the worked example that forced it (#158):
 **TIE**, and ties go **UP** to 68 — the same 68 the offline build reaches from
 its 88-tall stage art via 0.75. *Different starting point, identical answer.*
 
-⚠ **UNVERIFIED — the two copies are not identical, and nothing gates the
+**Note — UNVERIFIED: the two copies are not identical, and nothing gates the
 difference.** The runtime copy has `kCellCounts = {3,4}` and **no** equivalent
 of the offline `sNineSliceOnly` / `sNoSnapThis` / `sNoHeightSnap` role scoping —
 i.e. it is the **pre-#157/#160 form of the rule**. That is probably harmless
@@ -1528,7 +1530,7 @@ no measurement in this repo covers it.** Treat as HYPOTHESIS. Whoever picks this
 up: the positive control is that the two `ScaleDim`s must agree on every sheet
 the runtime path touches, at 1.5x, and must both be no-ops at 2x/3x.
 
-⚠ The runtime path also carries **its own** per-cell resampler,
+The runtime path also carries **its own** per-cell resampler,
 `ResampleCells` (`src\ScaleTier.cpp:1040`) — #156's rule ("a 4-state strip is
 four independent images that happen to share a texture") implemented a second
 time. Same drift risk, same absent gate.
@@ -1556,7 +1558,7 @@ pre-scale all failed on it: every one of them operates on windows.
 
 **Builder: `sub_7EAEB0`** (`0x007EAEB0..0x007EB320`), the only code in the
 image that pushes either id (`0x007EB11A` / `0x007EB1F4`); runs fresh on every
-open (`operator new(0x150)` @ `0x7EB0DD`). ⚠ **Twin: `sub_7E7270` builds the
+open (`operator new(0x150)` @ `0x7EB0DD`). **Warning — twin: `sub_7E7270` builds the
 FIRST-LEVEL flyout from the same two classes with its own copies of every
 constant** — and the first-level one is already scaled after birth. `sub_7F4690`
 calls both. **Patch by VA, never by pattern.**
@@ -1588,7 +1590,7 @@ Setters: `vf10 = 0x0079AC60` stores the fields; `vf14 = 0x0079AD00` is the only
 clamps 1/8/6, and `cmp eax,0x258` @ `0x007EAF3D` which is **600 decimal**, a
 view-height rule — a false friend for anyone grepping "258".
 
-**⚠⚠ THE COUPLING THAT BROKE THE UI TWICE.** The bar is a 9-slice whose
+**Law — THE COUPLING THAT BROKE THE UI TWICE.** The bar is a 9-slice whose
 middle segment is computed from the art:
 ```
 [+0xEC] = artHeight - 2 x [+0xE8]
@@ -1650,7 +1652,7 @@ change, and only the first 1–2 frames differ. The hook point is whichever call
 finishes the layout — for this family `Place` (`0x0079AD00`), which is also the
 only `SetArea` in it.
 
-⚠ **A BORN-CORRECT WINDOW NEEDS ITS DRAW-HOOK STATE BORN TOO** (v2.36.2, the
+**Warning: A BORN-CORRECT WINDOW NEEDS ITS DRAW-HOOK STATE BORN TOO** (v2.36.2, the
 law this family finally taught). Getting the *geometry* right at birth is only
 half the job: for a code-painted control the chrome is drawn by transforms that
 read PER-WINDOW state — the promoted `[0xE0]`, the latched `gClaimOrig`, the
@@ -1666,7 +1668,7 @@ dual-use (hit-claim width AND a Plot layout inset) and `SlotThunk<88>` is what
 presents the 1x value to the draw group — promote the field before installing
 the thunk and the game paints a SECOND bar (v2.11.24).
 
-⚠ **Four things a row-4 fix must not forget** (1-2 learned in one hour on
+**Warning: four things a row-4 fix must not forget** (1-2 learned in one hour on
 2026-07-30, 3-4 paid for by the v2.39.4 eyes-on failing both its checks):
 1. **Register the window as already-scaled.** `ScaleSubtree` is idempotent via
    `scaleMap`, keyed on the window POINTER. A window you scaled at birth is a
@@ -1720,7 +1722,7 @@ the thunk and the game paints a SECOND bar (v2.11.24).
   late (the message loop is busy finishing the load), so no cadence change can
   win the race. Remove the race instead of trying to win it.
 
-⚠ **A RE-LAY IS NOT A BUILD — AND ONLY PART OF IT IS A 1x CONSTANT** (v2.37.0,
+**Warning: A RE-LAY IS NOT A BUILD — AND ONLY PART OF IT IS A 1x CONSTANT** (v2.37.0,
 the Data Views legend). A panel can be built once from its `.UI` and then
 **re-laid by code on every user action**. There the row-3 patch applies to the
 re-lay routine, and the constant to scale is only the **ORIGIN**: SC4 composes
@@ -1769,7 +1771,7 @@ else. `sub_779660` never calls `SetWinTextFlag` — only `cIGZWin::SetFlag` for
 `GetW() - 2*gutter - scrollbarW`, clamped at 0 (`sub_9BCBC5` @ `0x009BCBC5`);
 the gutter default is **5** (`0x009BFFCC`), so in practice **`GetW() - 10`**.
 
-> ⚠ **`scrollbarW` is read LIVE, not baked** — `[this+0x1d4]` holds the
+> **Warning: `scrollbarW` is read LIVE, not baked** — `[this+0x1d4]` holds the
 > scrollbar object and `sub_9BCBC5` calls its `AsIGZWin` (vt+`0x0C`) then
 > `GetW` (vt+`0xA4`) on every recompute. So **a pane's usable content width
 > shrinks when its scrollbar is scaled**, and any fixed right-hand reserve a
@@ -1779,7 +1781,7 @@ the gutter default is **5** (`0x009BFFCC`), so in practice **`GetW() - 10`**.
 > sight while arithmetic against the raw pane width said it was still inside.
 > See §5.1 and `_tests\REGRESSION.md` "ADVICE/NEWS ROW COLUMN BUDGET".
 
-> ⚠ **The other half of the wrap story, and it is the half that bites.**
+> **Warning: the other half of the wrap story, and it is the half that bites.**
 > Whichever regime is in force, when the engine *does* wrap, **the box width
 > is an INPUT and only the HEIGHT comes back** (`sub_896957`, font `vt+0xB8`,
 > read-only on `r->left`/`r->right` at `0x00896979` — §5.4.5). So a layout
@@ -1839,26 +1841,24 @@ S(f) = round(18f) + 18 + 9 + round(16f)      f=1 → 61 EXACTLY
 trustworthy** — the constant is reproduced from its parts. If an edit ever
 stops reducing to 61, the split is wrong.
 
-⚠ **This is why an advice list must be tested EXPANDED as well as collapsed.**
+**Warning: this is why an advice list must be tested EXPANDED as well as collapsed.**
 A collapsed list has no scrollbar and 15px to spare, so it passes with a wrong
 reserve; expand a row and the scrollbar appears, usable width drops by another
 `round(16f)`, and the last column goes over the edge. v2.40.0 shipped a flat
 reserve, passed collapsed, and clipped the X on expand.
 
 `83 EE ib` **sign-extends**, so S must stay ≤ 127. All sixteen glyphs fit at
-1.5x/2x (S = 113) but would need 165 at 3x, so the X column is a **per-tier
-data split**: the four X glyphs (…53/57/5B/5F) ship SCALED at 1.5x and 2x and
-STOCK at 3x only.
+1.5x/2x (S = 113); at 3x the formula wants 165 and the wide re-encode carries
+it (S = 129, ~2px of X clipped, logged). Since #136 (v2.88.0) all sixteen
+glyphs ship scaled at every tier — the earlier per-tier split (12 glyphs at
+3x) is repealed.
 
-> ⚠ **CORRECTED 2026-08-01 (SDK-law audit).** The sentence here used to read
-> "the four X glyphs are held at stock 18 **at every tier**", immediately
-> followed by the 3x split that contradicts it — retired v2.40.0 wording left
-> behind when v2.40.2 scaled the X. The SHIPPED DATA is the authority and it
-> agrees with the corrected text: `DbpfPack --list` gives SelectiveArt
-> **655 / 655 / 651** entries with **16 / 16 / 12** row glyphs at 1.5x / 2x /
-> 3x. The DLL mirrors the same rule (`CodePatches.cpp` `kAdviceXScaleMaxFactor
-> = 2.0f`). This matters because `TRIAGE.md` routes the shared-width-budget
-> symptom straight into §5.1, so a reader hit the false sentence first.
+> **Settled (SDK-law audit + #136).** The X glyphs are NOT held at stock at
+> every tier: since #136 (v2.88.0) the X scales with the tier — the builder's
+> `FACTOR <= 2.0` filter is gone and `ApplyAdviceRowScale` hardcodes
+> `xScaled = true`, and SelectiveArt ships **655 entries at every tier**
+> (the old 651 at 3x came from the repealed per-tier split). The wide
+> re-encode (`lea esi,[eax-imm32]`) carries the >127 values.
 
 **It is recomputed on EVERY `SetArea`.** The class overrides `SetArea` at
 `0x009BFCA5`: base `SetArea` (`0x0099C837`) → recompute wrap width → store
@@ -1888,7 +1888,7 @@ width `w` produces neither. Both together mean `flags & 0x0002` is clear.
 > the screen is 2,400 px. It also shows why an extent inferred from a
 > screenshot (~920 px was the standing guess) can be wrong by 6x.
 
-**⚠ Do NOT reach for `cIGZFontSys` to measure text.** It declares three
+**Law: do NOT reach for `cIGZFontSys` to measure text.** It declares three
 `FontAcquire` overloads and two `AddFont` overloads before
 `EnumerateFontInfo`; MSVC reverses overloaded groups in the vtable (§1.4), so
 calls through the community header dispatch to the wrong slots — observed as
@@ -1924,8 +1924,8 @@ the next. The regime switch above removes any need for it.
   copy. Deployment is **whole-file replacement, not a merge** — every style
   must be present.
 
-⛔ **`ChartLabel` and `Legend` differ in the last nibble and are NOT
-interchangeable** (corrected 2026-08-03, byte-verified). The **Graphs chart
+**Law: `ChartLabel` and `Legend` differ in the last nibble and are NOT
+interchangeable** (byte-verified). The **Graphs chart
 legend** is `ChartLabel`; the **Data Views** legend is `Legend`. Our
 `make_fontstyle.py` carries `SIZE_SQUEEZE = {"Legend": 0.92}`, so that squeeze
 **has never applied to the Graphs chart** — it renders at ChartLabel's raw
@@ -1940,7 +1940,7 @@ keeps growing: it is not cosmetic polish, it is the necessary other half of
 
 ### 5.2 System B: the built-in HTML engine (all rich text)
 
-> ⛔ **FontStyle can NEVER reach this path.** This is exactly why the
+> **Law: FontStyle can NEVER reach this path.** This is exactly why the
 > community's DAT font mods report "font size does not work for news".
 
 **Everything rich is HTML**: ticker roll items, news-reader headline rows,
@@ -1960,12 +1960,12 @@ support) — and **189 locale LTEXTs embed their own `<font size="N">`**.
 | FONT (`<FONT SIZE=n>`) | **`0xACD4A0`** | `{8,10,12,14,18,24,36}` | `push 7; push 0xacd4a0; call 0x8FEEB8` at `0x905C82` |
 | HEADING (`<H1>..<H7>`) | **`0xAB4AD0`** | `{8,10,12,16,19,24,48}` | news builder `push 0xab4ad0; call [vt+0x84]` at `0x76A1FD` |
 
-⛔ **Each rich window COPIES the tables at creation** — setter **`0x8FEEB8`** →
+**Law: each rich window COPIES the tables at creation** — setter **`0x8FEEB8`** →
 `this+0x1A8`. That is what makes a **PostAppInit** patch of the `.rdata` source
 reach *every* instance the game will ever build, and it is verify-before-write
 against the stock values above (a different exe build logs and skips).
 
-⛔ **The popup index derivation.** The advisor/message popup builders derive
+**Law — the popup index derivation.** The advisor/message popup builders derive
 their HTML size index from a *style's* point size:
 
 ```
@@ -1984,7 +1984,7 @@ index sources:
 | `0x762F85` | `0x4A809914` | `0x5C4B0914` |
 | `0x762F98` | `0x4A809915` | `0x5C4B0915` |
 
-⛔ **The three parts are COUPLED — breaking one regresses the others:**
+**Law: the three parts are COUPLED — breaking one regresses the others:**
 (1) the table patch, (2) the stock-size `*Html` clone styles present in **all**
 FontStyle files at **every** tier, (3) the Credits LTEXT size maps recalibrated
 so they do not compound against the scaled tables.
@@ -2016,7 +2016,8 @@ This section is the general case, not one panel's anatomy: it is the clearest
 worked example in the codebase of a **shared right-margin budget** (§5.1 is
 the other) and of the rule that **a wrapped text box's width is an INPUT**.
 
-> ⚠ **SCOPE OF THIS SECTION — OPEN TENSION, ADDED 2026-08-03.** Everything
+> **Scope note — two measured objects, one unresolved identity (reference gap
+> G33, `SDK-GAPS.md` §13).** Everything
 > below describes the legend as a **per-row right-margin COLUMN**, measured by
 > disassembling `sub_76D3D0`. There is a **second measured object** this
 > section does not account for: the chart's own **full-width TOP BAND** at
@@ -2028,11 +2029,11 @@ the other) and of the rule that **a wrapped text box's width is an INPUT**.
 > live `CHARTGEO` dump — each measured something real, and **nothing in the
 > doc set proves they are the same object**. It is UNKNOWN which pixels the
 > band rect owns. Neither reading may be dropped to tidy the other up.
-> **THE MEASUREMENT THAT WOULD SETTLE IT:** dump `chart+0x108` and the legend
+> **The measurement that would settle it:** dump `chart+0x108` and the legend
 > child rects in ONE `CHARTGEO` line at the same instant, or disassemble what
 > reads `chart+0x108` inside the draw path `sub_9B5ADE`. Also recorded in
-> `VERSION-HISTORY.txt` (v2.53.x, "⚠ OPEN, AND SAY SO"), `HANDOFF.md` (the #57
-> letter) and `tools\research\SCALING-AXES.md` rows **M6** and **R2**.
+> `VERSION-HISTORY.txt` (v2.53.x) and `tools\research\SCALING-AXES.md` rows
+> **M6** and **R2**.
 
 #### 5.4.1 Ownership — one builder, two allocation sites, a draw-only list
 
@@ -2063,7 +2064,7 @@ jump**: the panel destroys and rebuilds the chart on **every graph switch**
 switch. This is the same shape as the Data Views legend (§6.2 / v2.37.0):
 *scale the origin inside the game's own layout, never the step.*
 
-⚠ **The diagnostic that would have saved four builds.** If a control's rect is
+**Warning: the diagnostic that would have saved four builds.** If a control's rect is
 wrong and every attempt to correct it after the fact just relocates the
 problem, stop probing the OUTPUT and disassemble the **BUILDER**. A constant
 that no instrument ever prints is still a constant — the 110 px gutter below
@@ -2164,7 +2165,7 @@ nibble and had been used interchangeably in our own notes:
 | **ChartLabel** | `0xE9C86B5E` | **the Graphs chart legend** (`0x0076DD91`) |
 | **Legend** | `0xE9C86B5F` | the **Data Views** legend (`0x007A0747`) |
 
-⛔ **Consequence, and it invalidated a standing calculation.**
+**Consequence.**
 `tools\fonts\make_fontstyle.py` carries `SIZE_SQUEEZE = {"Legend": 0.92}` —
 and **that squeeze has never applied to the Graphs chart at all.** The chart
 renders at ChartLabel's **raw** size (13 pt stock, 26 pt at 2x, 20 / 39 at
@@ -2179,23 +2180,22 @@ The ratio is **2.13** and never 2.00: Crime 28→59, Garbage 42→88,
 Income 33→70, "Population by Age" 87→185. Per-point advance is ~6 % larger at
 26 pt than at 13 pt (glyph-advance rounding inside the font).
 
-> ⚠ **CORRECTED 2026-08-03 (post-session audit) — this heading said ×2.121 ± 0.03
-> and that was the wrong statistic.** `2.121` is **one string's ratio**: `Income`
-> 33 → 70 (`emu_text_extent.py:157`, and `numbers_audit_bornlegend.py:50` records
-> it as such). Over the full n=17 pair set (`emu_text_extent.py:140-158`) the
-> figures are **mean 2.130, sd 0.026**, pooled **2080/975 = 2.133**, spread
-> **2.085 (`Air Pollution`) .. 2.188 (`Commute Time`)** — and
-> `emu_text_extent.py:37` has always said **"2.13 ± 0.03"**. The ± 0.03 band
-> belongs to the mean; pinning it to a single sample detached an error bar from
-> its own statistic. `src\CodePatches.cpp:589` still carries 2.121 — the source is
-> final and user-confirmed, so read it as the single-string figure. **Nothing
-> downstream changes**: the load-bearing fact is only that the ratio is not 2.00.
+> **The ×2.13 figure is a population mean, not a single sample.** `2.121` is
+> one string's ratio: `Income` 33 → 70 (`emu_text_extent.py:157`, and
+> `numbers_audit_bornlegend.py:50` records it as such). Over the full n=17
+> pair set (`emu_text_extent.py:140-158`) the figures are **mean 2.130, sd
+> 0.026**, pooled **2080/975 = 2.133**, spread **2.085 (`Air Pollution`) ..
+> 2.188 (`Commute Time`)** — and `emu_text_extent.py:37` says **"2.13 ±
+> 0.03"**: the ± 0.03 band belongs to the mean. `src\CodePatches.cpp:589`
+> carries 2.121 — the source is final and user-confirmed, so read it as the
+> single-string figure. **Nothing downstream changes**: the load-bearing fact
+> is only that the ratio is not 2.00.
 
 > **Therefore a box of `round(stockBox * f)` WRAPS MORE THAN STOCK.** Boxes
 > must be sized from the FONT, not from `f`. That 6 % is also exactly the
 > "Expense / s" shortfall the 0.92 `SIZE_SQUEEZE` was invented to hide.
 
-⚠ **Why every one of those numbers is a pixel measurement and not a font
+**Warning: why every one of those numbers is a pixel measurement and not a font
 query.** The shipped fonts are `<install>\Fonts\*.mxf` — Monotype MicroType
 Express, magic `MXFN`. There is **no `.ttf`/`.otf` anywhere in the install**,
 so PIL/FreeType cannot be pointed at Arta and no offline tool can ask the real
@@ -2237,8 +2237,8 @@ false at `f=1`, **true at every shipped tier** (1.5, 2, 3); at `f=3` the
 checkbox eats the text column as well. That is why each rect-patch inside the
 unchanged budget merely relocated the collision.
 
-⛔ **UNPROVEN, AND STILL UNIDENTIFIED: what turns the game's 16x16 checkbox
-into the measured 32x32.** The builder's own `SetArea` at `0x0076E168` writes
+**UNPROVEN, AND STILL UNIDENTIFIED: what turns the game's 16x16 checkbox
+into the measured 32x32** (reference gap G35, `SDK-GAPS.md` §13). The builder's own `SetArea` at `0x0076E168` writes
 `16x16` at every tier (`0x0076E151` / `0x0076E159`), yet the live window is
 32 wide at 2x. **Every named hypothesis was refuted by disassembly.** Do not
 write down a culprit; two survive:
@@ -2270,7 +2270,7 @@ byte-for-byte the same LENGTH as stock, bought by dropping loads proven dead
 across the seam. `B2` writes the checkbox WIDTH exactly once, as `L+16`, so
 the left edge and the width can never split (law 15/43).
 
-⛔ **COUPLED PAIR (law 43) with EARLYCHART's plot right margin.** The legend
+**Law — COUPLED PAIR (law 43) with EARLYCHART's plot right margin.** The legend
 column and the plot's right edge budget the *same* gutter. Both arm together
 behind the one `[Flyout] ChartScale` flag, and
 `CodePatches::GraphLegendPlotRightMargin()` **returns 0 unless all 8 sites
@@ -2278,7 +2278,7 @@ took**, so EARLYCHART cannot adopt the new margin against an unpatched legend.
 Taking one half without the other is the acceptance oracle's `H-EARLYCHART`
 candidate, and it paints the plot border **inside** the checkbox column.
 
-⛔ **THE STRIP IS TABLED FROM THE ORACLE, NEVER COMPUTED.**
+**Law: THE STRIP IS TABLED FROM THE ORACLE, NEVER COMPUTED.**
 `f=1 → 108` (= stock), `1.5 → 178`, `2 → 240`, `3 → 371`. The oracle derives
 it as `strip(f) = sc(16,f)+sc(2,f)+sc(10,f)+sc(4,f)+box(f)+sc(4,f)` with
 `box(f)` sized from a provable glyph bound rather than from `f` (§5.4.7).
@@ -2316,37 +2316,31 @@ non-overlap, I2 visibility, I3 fit, I4 containment, I5 `f=1` reduction, I6
 monotonicity + northstar, I7 round-half-up consistency, I8 coupled pair,
 **I9 ROW PITCH**, **I10 FRAME**.
 
-> ⚠ **CORRECTED 2026-08-03, twice in one paragraph.**
-> * **TEN, not eight.** `I9 ROW PITCH` (`prove_chart_legend.py:166` — consecutive
->   checkbox child windows must not overlap; its falsifier `J-TAPTARGET` is at
->   `:699`) and `I10 FRAME` (`:168` — the chart-local coordinate frame, asserted
->   at f=1/2/3, reasoning at `:229`) were added in the same session that wrote
->   the "eight" shorthand. `tools\uimap\emu\README.md:13` had it right; this
->   file and `HANDOFF.md` did not.
-> * **±3.8 px, not ±4.** ±3.8 is the measured, stated residual (§5.4.7 above and
->   `tools\packages\PACKAGES.md:216`). "±4" was a rounded restatement presented
->   as the model's own figure — harmless here, but it is the small version of
->   writing an inference down as a measurement.
+> Settled details: the oracle has **TEN** invariants, not eight — `I9 ROW
+> PITCH` (`prove_chart_legend.py:166` — consecutive checkbox child windows
+> must not overlap; its falsifier `J-TAPTARGET` is at `:699`) and `I10
+> FRAME` (`:168` — the chart-local coordinate frame, asserted at f=1/2/3,
+> reasoning at `:229`) — and the text model's residual is **±3.8 px**, not
+> ±4 (`tools\packages\PACKAGES.md:216`).
 
-⛔ **CALIBRATION IS MANDATORY, and `f=1` reduction is NOT sufficient.**
+**Law: CALIBRATION IS MANDATORY, and `f=1` reduction is NOT sufficient.**
 Candidate `A-FROZEN` reproduces the live v2.54.4 layout 11/11 exact and then
 **fails six of the ten invariants** — an oracle that cannot flag the known
 defect cannot certify a fix. And **all seven original candidates, including
 every failed patch the oracle models, reduce to stock byte-exactly at `f=1`**
-(⚠ *scope corrected 2026-08-03: that is `A-FROZEN`/`B-v2544`/`C-v2542`/
-`D-v2543` — four candidate entries but only **three distinct versions**, since
-`A-FROZEN` and `B-v2544` both model v2.54.4. `v2.50.0`/`v2.51.0`/`v2.52.0` are
-not candidates; #57 cost **six** failed patches in total, not four*): the §5.1
+(that is `A-FROZEN`/`B-v2544`/`C-v2542`/`D-v2543` — four candidate entries
+but only **three distinct versions**, since `A-FROZEN` and `B-v2544` both
+model v2.54.4; #57 cost **six** failed patches in total): the §5.1
 self-check that a form "reduces to the game's own constant" is necessary but
 worthless on its own here. Every expectation is therefore measured at `f≥1.5`.
 
-⚠ **Two gates certifying different targets is worse than one gate** (law 47).
+**Warning: two gates certifying different targets is worse than one gate** (law 47).
 The byte gate originally used `round(108*f)` — the candidate the oracle calls
 `E-STRIPxf` and **rejects**. Whichever gate ran last would have decided what
 shipped. Reconcile gates onto ONE number before building, and make the loser's
 target unreachable.
 
-⚠ **Verify your own emitted bytes against the gate's** (law 50). The first
+**Warning: verify your own emitted bytes against the gate's** (law 50). The first
 draft of the C++ wrote B3's imm32 at offset 26 instead of 25 — *inside* the
 preceding instruction. That is a crash, not a layout bug, and it was caught
 only by diffing the C++ output against `gate … --emit`. Any hand-encoded
@@ -2398,7 +2392,7 @@ It also explains the special case the god constant table needed: the shared
 window `0xCA35CBED` needs two offsets (terrain-fx 40 / day-night 160) because
 **swapping the SCRIPT moves its marker**.
 
-⛔⛔ **NEVER SCALE A MARKER — not at runtime, and not in shipped data.**
+**Law: NEVER SCALE A MARKER — not at runtime, and not in shipped data.**
 `double_subtree_areas` doubled the advisor strip's marker (229,63) along with
 the rest of the subtree, and the strip was born shifted by exactly
 `−(229,63)`: native (209,1412) → **(−20,1349)**, proven live. The builder now
@@ -2425,7 +2419,7 @@ skips `id=0x0000AAAA` tags (19 edits per script instead of 20).
 marker (3,27)). A single fixed offset can never serve both — a **mode gate** is
 what separates them, and the only gate verified in all three states
 (pre-founding god / founded god / founded mayor) is **"mayor HUD `0xE9889775`
-is visible"**. ⛔ Do **not** use the toolbar button's ENABLED flag: it reads
+is visible"**. **Warning:** do **not** use the toolbar button's ENABLED flag: it reads
 true in pre-founding god mode and flickers between sweep and dump.
 
 ### 6.2 Never scale what the game already computed
@@ -2483,7 +2477,7 @@ f <= min(width/800, height/600)                             the DENSITY CAP
 `z_SC4UIScale_SelectiveArt<tag>.dat`, live **or** `.x1-disabled`. No match ⇒
 `return 1.0f` = true stock, every scaling subsystem off.
 
-⛔ **THE DENSITY CAP IS NOT REDUNDANT WITH THE TWO DESIGN MINIMA.** The two
+**Law: THE DENSITY CAP IS NOT REDUNDANT WITH THE TWO DESIGN MINIMA.** The two
 minima only assert that the widest and tallest *individual* design elements fit.
 The cap asserts the whole screen still holds an 800x600-equivalent workspace.
 Dropping it admits resolutions with **no slack** — that was #101, where a panel
@@ -2491,7 +2485,7 @@ crossed `frameW/4` and flipped `ScalePanelRoot` to the centre-anchor branch,
 shearing the polls panel over the RCI meter (measured −256px at 1400x1050,
 −385px at 1920x1080).
 
-⚠ **`kPackages` declares FOUR tiers, not three** (`src\ScaleTier.cpp:43`):
+**Warning: `kPackages` declares FOUR tiers, not three** (`src\ScaleTier.cpp:43`):
 `4.0f/-4x`, `3.0f/-3x`, `2.0f/-2x`, `1.5f/-15x`. **No `-4x` package is built**,
 so `PackageInstalled` always rejects it and 4x is unreachable today — but the
 table is the thing `Decide` iterates, so anyone who stages a `-4x` art dat turns
@@ -2509,11 +2503,11 @@ expressible at any layer* — not in settings, not at runtime, not in packaging.
 |---|---|---|
 | window geometry | `ScaleRound(v, f)` = `RoundHalfUp(v*f)` (`src\UiSpike.cpp:5385`) — **children round inside the PARENT's design frame**, not independently (#161) | exact |
 | art sheet dimensions | `ScaleDim` + the ROLE rules (§4.6c) | **provable no-op** |
-| blit destination extents | ⛔ **FLOOR, never round up** — `RoundHalfUp(srcExtent*f)` with an odd source at f=1.5 manufactures a destination column that has no source pixel (the stray line down the right edge of the sun/moon rings) | exact |
+| blit destination extents | **Law: FLOOR, never round up** — `RoundHalfUp(srcExtent*f)` with an odd source at f=1.5 manufactures a destination column that has no source pixel (the stray line down the right edge of the sun/moon rings) | exact |
 | byte-patched exe constants | re-encoded per tier by `CodePatches.cpp`; each must **reduce exactly to the stock byte at f=1** | that reduction is the control |
 | a few things that are **NOT** tier-derived | the alignment marker `0x0000AAAA` (§6.1); the Graphs checkbox at `16x16` (`0x0076E151`/`0x0076E159`); `CamGraphLabels.dat`; `WebText.dat`; `MenuFix.dat` | n/a |
 
-⛔ **THE HOUSE CONTROL, stated once so every new metric inherits it.** An
+**Law — THE HOUSE CONTROL, stated once so every new metric inherits it.** An
 integer factor is *structurally* immune to the whole fractional-tier defect
 family — `v*f` is already whole, so floor, round-half-up and round-half-away all
 agree and every snap short-circuits. **Therefore any new metric or gate MUST
@@ -2527,15 +2521,13 @@ TIER ONLY is the defect, not a residual.**
 
 ### 7.1 Windows are BORN 1x
 
-~~`.UI` scripts carry stock geometry **by design** — `build_selective_safe.py`
-deliberately never edits `area=`. So **every window the game creates or
-re-creates arrives at script-declared 1x size** (§3.2)~~, and anything the
-engine rebuilds mid-session reverts to script-declared size until something
-scales it again.
-
-⛔ **CORRECTED 2026-08-16 — "BORN 1x" IS THE DEFAULT, NOT THE RULE, AND THE
-EXCEPTIONS ARE THE ONES THAT BITE.** TWO builders write `area=` into the
-scripts we ship, so a window is born 1x only if NEITHER of them owns it:
+`.UI` scripts carry stock geometry **by design** as the DEFAULT — so
+**every window the game creates or re-creates arrives at script-declared 1x
+size** (§3.2), and anything the engine rebuilds mid-session reverts to
+script-declared size until something scales it again. **"Born 1x" is the
+default, not the rule, and the exceptions are the ones that bite.** TWO
+builders write `area=` into the scripts we ship, so a window is born 1x only
+if NEITHER of them owns it:
 
 1. `build_selective_safe.py::double_subtree_areas` (`:646`) rewrites `area=` on
    every descendant — never the root, and alignment markers `0x0000AAAA` are
@@ -2562,7 +2554,7 @@ scripts we ship, so a window is born 1x only if NEITHER of them owns it:
 running the sweep on top of the doubled script double-scales it — measured
 868x468 -> 1736x936 (`:4803`). See also `build_dialog_static.py:755-757`.
 
-⚠ **So for these windows the answer to "the sweep will fix it" is NO.** A
+**Warning: so for these windows the answer to "the sweep will fix it" is NO.** A
 wrong number a builder writes there ships exactly as written — that is #170
 (the advisor row) and #171 (the 132 pre-scaled buttons). The 1x-birth rule
 above still holds for every window OUTSIDE those two builders' scope.
@@ -2575,7 +2567,7 @@ comment). It re-walks the 3D-view subtree idempotently: new panels get the full
 treatment, known panels get a descendant sweep, already-scaled windows are
 skipped by `Classify()`.
 
-> ⛔ **MEASURED MECHANISM of the 1x mode-transition flash: it is the VISIBILITY
+> **Law — MEASURED MECHANISM of the 1x mode-transition flash: it is the VISIBILITY
 > GATE in `ScalePanelsUnder`, not sweep latency.** A hidden panel is skipped, so
 > a panel that spends city-load hidden is still 1x when a mode switch shows it.
 > It paints 1x, and only the NEXT tick scales it.
@@ -2609,8 +2601,8 @@ Safety engineering the sweep depends on, all learned the hard way:
 |---|---|---|
 | **1. DATA pre-scale** | `double_subtree_areas` ships the subtree already 2x in the `.UI`; the root stays runtime-scaled (so HUD edge-anchoring still works at any resolution) and is made **root-only** via `kDataScaledSubtreeIds` | **The game reads the geometry before any sweep can run.** Advisor strip: the briefing portrait always rendered correctly because its head binds when the briefing is first OPENED (after scaling), while the strip's 7 heads bind during **CITY LOAD** — framing is fixed at **BIND TIME** from the then-current geometry. Verified exact: 16/16 children match `2 × design` |
 | **2. Pre-scale while HIDDEN** | `kAlwaysScaleCityIds` — scale by id even at `vis=0`, gate only the *dock MOVE* on visibility | The panel exists but is hidden until a mode switch/open. The principled rule that also keeps the layers coupled: **IF WE SHIP 2x ART FOR A PANEL, IT MUST BE PRE-SCALED WHILE HIDDEN.** Proven five times (region flyouts, news reader, budget popups, advisors, and the v2.22.4 batch) |
-| **3. Scale at birth** (the general fix) | ✅ **SOLVED for city-load panels (#89, v2.41.19): the settle-gated `SetFlag` detour** — generation 9. Fire from `cGZWin::SetFlag` (base impl `0x0099DB6B`, hooked once, on the game's own stack, still firing after city init returns) the moment the subtree reports its **full design child count**; scale via `ScalePanelRoot` so scaleMap makes the sweep a no-op; run any one-shot-surface recreate **in the same action**. Measured +109–328ms vs the sweep's +968ms; FLASHSET fell silent for the dock | The three refuted routes, so nobody retries them: the visibility setter as a *transition* hook (windows are BORN visible — the `[+0xC8]=0x8903` fact below); the message queue (never pumps during the load tail); geometry mutation inside `PostCityInit` (crashes at ~25 windows; two byte writes are fine). The `.UI` deserializer completion path remains unexplored and unnecessary |
-| ⛔ **BANNED: paint suppression** | — | `FlashGuard=1` suppressed Plot for descendants of the god parent — but that parent is an ancestor of far more than the flyouts, so HUD windows went unpainted (black box, bottom-left panel). **Kept permanently at 0. Fix the TIMING, never the PAINTING.** |
+| **3. Scale at birth** (the general fix) | **SOLVED for city-load panels (#89, v2.41.19): the settle-gated `SetFlag` detour** — generation 9. Fire from `cGZWin::SetFlag` (base impl `0x0099DB6B`, hooked once, on the game's own stack, still firing after city init returns) the moment the subtree reports its **full design child count**; scale via `ScalePanelRoot` so scaleMap makes the sweep a no-op; run any one-shot-surface recreate **in the same action**. Measured +109–328ms vs the sweep's +968ms; FLASHSET fell silent for the dock | The three refuted routes, so nobody retries them: the visibility setter as a *transition* hook (windows are BORN visible — the `[+0xC8]=0x8903` fact below); the message queue (never pumps during the load tail); geometry mutation inside `PostCityInit` (crashes at ~25 windows; two byte writes are fine). The `.UI` deserializer completion path remains unexplored and unnecessary |
+| **Law — BANNED: paint suppression** | — | `FlashGuard=1` suppressed Plot for descendants of the god parent — but that parent is an ancestor of far more than the flyouts, so HUD windows went unpainted (black box, bottom-left panel). **Kept permanently at 0. Fix the TIMING, never the PAINTING.** |
 
 **For runtime-painted content the lever is the BUFFER, not the window:**
 
@@ -2619,7 +2611,7 @@ Safety engineering the sweep depends on, all learned the hard way:
   Self-stabilising. This is what took the disaster flyout from a stale 141x339
   buffer to a correct 282x678.
 - **destroy-and-recreate the display surface** — for any instance holding a
-  one-shot surface (MINIMAP / DVMAP / UDMAP). ⛔ **The recreate is only half of
+  one-shot surface (MINIMAP / DVMAP / UDMAP). **Law: the recreate is only half of
   it: the recompute that follows MARKS the map dirty and the paint is
   message-driven, so it lands after the panel is visible.** Drive the game's own
   bake synchronously in the same action, while hidden (§2.4.3).
@@ -2627,13 +2619,13 @@ Safety engineering the sweep depends on, all learned the hard way:
   context and re-blit it bigger (§2.3).
 - **byte patch** — for geometry that exists only as an immediate.
 
-⛔ **ONE-SHOT CAPTURES ARE FRAGILE.** The Plot hook captures the strip's
+**Law: ONE-SHOT CAPTURES ARE FRAGILE.** The Plot hook captures the strip's
 natural field values once; any other writer that runs first poisons it (a
 sweep-side write captured 88 as "natural" → forced 176 → 4x pitch everywhere,
 most menus broken). **Sweep-side code may INVALIDATE, never write**
 (`SUBHEAL`).
 
-⛔ **Idempotency must survive birth-scaling**: the sweep WILL revisit a
+**Law: idempotency must survive birth-scaling**: the sweep WILL revisit a
 birth-scaled window and `scaleMap` must recognise its own work — that is the 4x
 lesson in general form.
 
@@ -2656,7 +2648,7 @@ then subsystems.
 | `0x0099DFA9` | **`GetChildWindowFromCursorPoint`** (router, inherited by ~90 classes) | hit-test path §2.2 |
 | `0x0099C97C` | base **`IsPointInMe`** | hit-test path |
 | `0x0099BBBE` | refined mask dispatcher (slot 149) | hit-test path |
-| `0x0099BE4C` | base `GZPaint` (slot 87) | vtable diffing baseline |
+| `0x0099BE4C` | `GetNotificationTarget` (slot 87; the per-class draw `GZPaint` is slot 88, §2.1) | vtable diffing baseline |
 | `0x00AC1400` | **cIGZBuffer class vtable**; `Init 0x8269B0`, `GetW 0x808620`, `GetBufferArea 0x8268C0`, **`Blt 0x826AD0`** (delegate `0x826210`) | §2.3 |
 | `0x602B00` | the standard image loader (TGI → image) | every code-bound art path |
 | `0x5FD480` | `GetProperty` (exemplars) | ItemIcons |
@@ -2666,7 +2658,7 @@ then subsystems.
 | VA | What |
 |---|---|
 | `0x94E516` | **`GZWinText` `.UI` deserializer** — honours only GUID-valued `font=` (registered at `0x951D29`) |
-| `0x94B995` | `<LEGACY>` tag-handler registration (the unproven tokenizer suspect) |
+| `0x94B995` | `<LEGACY>` tag registration site (not a handler; the tokenizer suspect is ruled out — §3.4) |
 | `0x95BC5F` | round-trip serializer — writes `font=0x%08x` |
 | `0x99D7C8` | main `vt+0x1C8` generic property store (where a string `font=` dead-ends, property `0xFAA4AE85`, zero consumers) |
 | `0x94CF0A`, `0x94F9E4`, `0x950657`, `0x950C94`, `0x959491` | other deserializers that DO call `GetStyleFromName` |
@@ -2738,7 +2730,7 @@ then subsystems.
 | **`0x7A7840`**; `0x7A8B57`; `0x7A8C18–0x7A8C61` | minimap recompute (**MARKS dirty, does not paint** — §2.4.3); the game's own init call site; the destroy+recreate pattern to replicate |
 | **`0x7A8640`**; `0x7A8721` | minimap **message handler** (`__thiscall` on `this+0xD8`; server `[0xB43CCC]`, ids `0x99EF1142`/`0x99EF1143`) → the bake's **only** call site (§2.4.4) |
 | **`0x7A7FF0`**; `0x7A66F0` / `0x7A67F0` | the **terrain bake**, one pass per 16x16-cell tile (§2.4.5); the raster→surface transfer |
-| **`0x7A8560`** (15 B) / `0x7A856F` (0x21 B) / **`0x7A8628`** (5 dwords) | the bake's zoom **dispatch** / its five stubs / the jump table — blitters `0x7A6EE0` x4, `0x7A6E60` x2, `0x7A6A70` 1:1, `0x7A6AD0` /2, `0x7A6BD0` /4. ⛔ `cmp ecx,4 / ja` is **UNSIGNED**, so `zoom=-3` skips every tile silently (§2.4.6). Patched in memory by `ApplyMiniMapX8Bake`; gated by `_tests\Test-MiniMapX8Bake.py` |
+| **`0x7A8560`** (15 B) / `0x7A856F` (0x21 B) / **`0x7A8628`** (5 dwords) | the bake's zoom **dispatch** / its five stubs / the jump table — blitters `0x7A6EE0` x4, `0x7A6E60` x2, `0x7A6A70` 1:1, `0x7A6AD0` /2, `0x7A6BD0` /4. **Law:** `cmp ecx,4 / ja` is **UNSIGNED**, so `zoom=-3` skips every tile silently (§2.4.6). Patched in memory by `ApplyMiniMapX8Bake`; gated by `_tests\Test-MiniMapX8Bake.py` |
 | `0x7A8590`–`0x7A85AA` | the shared blitter call tail — `cdecl(dst, blitSize*4, src16x16, 0x40, side, side)` |
 | `0x7A882A` | the data-**CELL** loop (`shl`/`shr` by `zoom+4`) — **no table, no bound**, which is why cells paint at zoom −3 while the terrain base does not |
 | `0x7A7570`; `0x7A6590` | raster `{ptr,w,h}` free+malloc (`0x5E5620` / `0x5E55E0`, store `0x7A75BB`); the handler's raster validity test |
@@ -2776,7 +2768,7 @@ then subsystems.
 | `0x007A0747` | the **Data Views** legend's style fetch — `Legend 0xE9C86B5F`, a **different** style from ChartLabel |
 | B1 `0x0076E0E8` (25 B) · B2 `0x0076E145` (41 B) · B3 `0x0076E1D6` (42 B) | the three EQUAL-LENGTH block re-encodings of `ApplyGraphLegendBudgetScale`; branch targets that must survive: `jbe 0x0076E200`, `call 0x00602BE0` |
 
-⛔ **Every patch is verify-before-write**: an unexpected byte pattern skips that
+**Law: every patch is verify-before-write**: an unexpected byte pattern skips that
 patch and logs, so a different exe build **degrades instead of corrupting**.
 No game file is ever modified — all patches are in-memory. The eight
 graph-legend sites go further and are **verify-ALL-before-write-ANY**: a
@@ -2791,22 +2783,21 @@ wrong copy. **Resolution given where the evidence is decisive.**
 
 ### 9.0 Found by the 2026-08-15 doc audit — newest first
 
-14. **⛔ THE `cIGZWin` DRAW-SLOT TABLE WAS OFF BY ONE IN THIS FILE AND IN
-    `GOD-MODE-FLYOUTS.md`.** It omitted **slot 89 `Draw`**, shifting every name
+14. **THE `cIGZWin` DRAW-SLOT TABLE WAS OFF BY ONE IN THIS FILE AND IN
+    `GOD-MODE-FLYOUTS.md`.** It omitted **slot 89**, shifting every name
     after it, so `GetDrawContext` read as 92 (returns NULL) and
     `GetBufferToDrawTo` as 93 (returns `[+0x6c]`, the draw context). It cost a
     probe build on #89. **Resolution: the exe wins** — `src\UiSpike.cpp:130-148`
     carries the table re-derived from `SimCity 4.exe` on 2026-08-01, and §2.1
-    above is now that table. ⚠ Two secondary items survive it: (a)
-    `src\UiSpike.cpp` ~~~:3380~~ ~:3669–3677 (re-measured 2026-08-16; quoted
-    sentence at :3673–3674 — anchor on `grep "off by one"`, per item 15 below)
+    above is now that table. Two secondary items survive it: (a)
+    `src\UiSpike.cpp` (anchor on `grep "off by one"`, per item 15 below)
     still says "the slot list in this file's header comment is off by one",
     which was true at v2.41.6 and is not true now;
-    (b) `TRIAGE.md`'s row repeating that claim is corrected. **Slots 95–97 are
-    still UNNAMED** — the community names for 94–97 were guesses and some of
-    those functions take arguments, so "87..97 are exactly the zero-arg group"
-    was never a true sentence.
-15. **⛔ `SCALING-AXES.md`'s `file:line` citations are 92% STALE — MEASURED.**
+    (b) `TRIAGE.md`'s row repeating that claim is corrected. Slots 95–98 are
+    named from their base implementations (§2.1); the community header's names
+    for that band included argument-taking guesses, so "87..97 are exactly the
+    zero-arg group" was never a true sentence.
+15. **`SCALING-AXES.md`'s `file:line` citations are 92% STALE — MEASURED.**
     Of its 63 table rows pairing a symbol with a `src\...:NNN` citation, the
     symbol is within ±20 lines of the cited line in **5** and absent in **58**.
     `UiSpike.cpp` was ~8.9k lines when that file was written and is **17,113**
@@ -2816,7 +2807,7 @@ wrong copy. **Resolution given where the evidence is decisive.**
     citation apparatus that decayed while every claim above it stayed true —
     and it is the more dangerous failure, because a wrong line number reads as
     a measurement.
-16. **✅ RESOLVED — "two rounding streams".** `SCALING-AXES.md` §1.1a and §7
+16. **Resolved — "two rounding streams".** `SCALING-AXES.md` §1.1a and §7
     both described `ScaleRound` (`llround`) and `RoundHalfUp` as two divergent
     rounding streams with task #75's 824-pair 1.5x divergence living between
     them. **Both halves are now false**: #162 made `ScaleRound` delegate to
@@ -2869,9 +2860,10 @@ wrong copy. **Resolution given where the evidence is decisive.**
    code fact and a later measurement. §7.2 follows the code.
 3. **Is the flash open or fixed?** `REGRESSION.md` still heads task #50 "OPEN —
    SYSTEMIC #1"; `UiSpike.cpp` v2.22.4 ships "THE MODE-TRANSITION FLASH FIX"
-   (19 ids pre-scaled while hidden). **Unresolved by evidence** — the code
-   shipped a fix, the runbook has not recorded eyes-on. Treat as *fix shipped,
-   verification pending*.
+   (19 ids pre-scaled while hidden). **Resolution: the mechanism is measured**
+   — the flash is the visibility gate, not sweep latency (§7.2), and the
+   cure is pre-scale-while-hidden (cure 2, §7.3), since extended by
+   generation 9 (cure 3) for city-load panels.
 4. **`0x0A78827A` — an actively harmful stale instruction.** `GOD-MODE-FLYOUTS.md`
    states twice ("Dead ends", "Known regression to fix later") that it is a
    hidden inert god sub-tool strip, that "docking/scaling it changes nothing on
@@ -2916,9 +2908,9 @@ wrong copy. **Resolution given where the evidence is decisive.**
     as a new mechanism.
 12. **Deployed version.** `README.md` said `SC4UIScale` **v2.20.4**;
     `HANDOFF.md` said **v2.22.2-simdetail**; `SC4UIScaleDllDirector.cpp` said
-    **`2.22.4-flash`**. **Resolution: the source string** —
-    `UISCALE_VERSION_STR` in `src\SC4UIScaleDllDirector.cpp:49`. ⚠ **Every
-    version above is long dead; the string reads `3.0.0` today.** And the rule
+     **`2.22.4-flash`**. **Resolution: the source string** —
+     `UISCALE_VERSION_STR` in `src\SC4UIScaleDllDirector.cpp:49`. **Every
+     quoted version goes stale; the string is the only live reference.** And the rule
     has its own scar recorded at that line: the string *"sat at 2.93.1 through
     v2.94, v2.95 and v2.96 while those builds shipped"*, so **the source string
     is the authority only if it is bumped in the same commit as the

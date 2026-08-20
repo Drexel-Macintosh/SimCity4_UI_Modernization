@@ -50,7 +50,7 @@ class) — reads current state, self-resolves the placeable/render object
 **kSC4MessageOccupantHighlightChange = GUID `0xA2D1C5B9`** (string .rdata
 `0xA8AE74`, name→guid pair .data `0xB0871C`; message object alloc 0x2C +
 GUID push at `0x80D600` — the ONLY code ref to that GUID in the exe).
-⚠ Reading `0x80D580` as `cSC4Occupant::SetHighlight` is PLAUSIBLE, not
+Reading `0x80D580` as `cSC4Occupant::SetHighlight` is PLAUSIBLE, not
 slot-proven: my vtable walk-back start (`0xABEA98`) may have fused with a
 preceding table, so its slot index is unadjudicated. The renderer-side
 mode→tint mapping (what color mode 5 vs 7 paints) was NOT located this

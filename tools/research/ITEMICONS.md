@@ -96,8 +96,8 @@ The icon is drawn by a **GZWinBtn** (the menu-item button template, clsid **0x49
 GZWinBtn class iid `0x00008810`, descriptor at VA 0xAD5CAC). GZWinBtn draws a **4-state
 strip**: it divides image width by 4 to select the cell (`UI-ART-BINDING.md` §3 proves this
 is proportional with no pixel constants). For **standard-style** buttons the state cell is
-fit/stretched to the button rect at least horizontally (that doc's open question O1 — the
-vertical-stretch case — is still the one untested variable). Practical upshot: whether the
+fit/stretched to the button rect at least horizontally (that doc's open question O1 of `UI-ART-BINDING.md` is now reference gap G27 in
+`SDK-GAPS.md` §13 — the vertical-stretch case remains the one untested variable). Practical upshot: whether the
 44x44 cell is blitted 1:1-centered or fit-to-rect, a **doubled button slot needs a doubled
 (88x88-cell) strip** to look right, and the 4-state math never clamps or crops.
 

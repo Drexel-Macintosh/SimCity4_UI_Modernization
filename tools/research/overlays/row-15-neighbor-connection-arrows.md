@@ -92,7 +92,7 @@ flipped, code identical). All file offsets are into the named archives of the
     (9 logs, `_tests\captures\SC4UIScale-2026-08-17-18*.log` +
     `-REGRESSION-mayorhat.log`) contain no arrow-ish name. Positive control:
     81 `white_blinking_light_fast` + the 12-effect offer family are recorded.
-    ⚠ SCOPE: those runs were UDI scenes/city loads with a 40-line cap; a
+    Scope: those runs were UDI scenes/city loads with a 40-line cap; a
     city-edge arrow spawn may simply never have been in frame — this null
     ALONE would prove nothing; it merely corroborates the data-side null.
 - **Signpost quad (§2.3) / marker strip (§2.5).** The ConnectArrow visual is
@@ -102,11 +102,11 @@ flipped, code identical). All file offsets are into the named archives of the
   dispatch lollipops) `[R:12084]`, and the marker-strip table 0xAA523C has a
   proven sole consumer 0x5F6067 `[R:11596]`. No pixel constant appears
   anywhere on the ConnectArrow path found here.
-  ⚠ The hoped-for two-gap close did NOT happen: 0x4A24D0's "kind table" is
+  The two-gap close did NOT happen: 0x4A24D0's "kind table" is
   the marker CLASS-selector switch on exemplar prop 0x2977AA47 (values →
   ctors 0x5EE050/0x5F0210/0x5EE360, already minted at `[R:11861]`), and the
-  §2.3 signpost kinds table at [this+0x70] remains UNKNOWN — the owed SPTEX
-  capture still owns that gap.
+  §2.3 signpost kinds table at [this+0x70] remains UNKNOWN — the SPTEX
+  capture is the adjudicator for that gap.
 - **Named S3D prop route.** No arrow/connection-named S3D in the 1,957-row
   sweep (grep = 0; positive control above). Explained by the TGI-referenced,
   unnamed 244-byte model — the sweep cannot see it, exactly per its scope
@@ -148,7 +148,7 @@ and the out-pointer written by the [edx+0x3C] call.
   pixel-fixed predicts equal px. The prediction-vs-measurement pair is the
   #188-law acceptance test.
 
-## 6. Dead ends / unknowns left open
+## 6. Dead ends and unknowns
 
 - The meaning of edi ∈ {3,7,0xB} (network types? edges?) — unproven.
 - The owning class's NAME: `cSC4NeighborConnection` exists at .rdata 0xA896B0

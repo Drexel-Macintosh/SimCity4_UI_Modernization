@@ -4,7 +4,7 @@
 SimCity 4 Deluxe 1.1.641, image base 0x400000, fileOffset = VA − 0x400000.
 Every address, byte string and constant below was read out of
 `C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe`
-during this pass. Guesses are flagged `⚠ UNSURE`.
+during this pass. Guesses are flagged `Unsure`.
 
 ---
 
@@ -98,7 +98,7 @@ extensions/refinements and item 1 is a caveat that materially changes the
 | Offset | Type | Evidence | Meaning |
 |---|---|---|---|
 | +0x0E0 | ptr | 0x7ACA73, 0x7ACAEF | `cSC4WinRegionView*` (GT ✓) |
-| +0x0E4 | ptr | 0x7ACA91 | second view-ish object; `sub_7A98A0(&POINT)` target ⚠ |
+| +0x0E4 | ptr | 0x7ACA91 | second view-ish object; `sub_7A98A0(&POINT)` target Note: |
 | +0x158 | ptr | 0x7ACCA3, 0x7ACAAD | `cSC4AnimationTickManager` (clsid 0xA9C73857, iid 0x86AD10ED); ticked each frame via `vt+0x24` |
 | +0x15C | ptr | 0x7AD0FD | `cSC4EffectsManager` (clsid 0x49822F75, iid 0xC97CF5CD) → also `[0xB43D1C]` |
 | +0x160 | ptr | 0x7ACDB7 | renderer (clsid==iid `0xE9C6262A`; fallback `new(0x1A8) sub_7FF930`) |
@@ -113,7 +113,7 @@ extensions/refinements and item 1 is a caveat that materially changes the
 | +0x18C | int | 0x7AC96D | scroll clamp **maxY** |
 | +0x1A0 | byte | 0x7ACAD8, 0x7ACC5B | "click armed / a tile is selected" latch |
 | +0x1A4 | int | 0x7ACCE1, 0x7ADBBD | **current region index** into the region manager |
-| +0x1A8 | int | 0x7ACBF7 | mode; `(x == 1)` is passed to `view->sub_7B30B0` ⚠ |
+| +0x1A8 | int | 0x7ACBF7 | mode; `(x == 1)` is passed to `view->sub_7B30B0` Note: |
 | +0x1B8 | obj | 0x7AC85E | frame stopwatch (see § timer API) |
 | +0x1D0 | obj | 0x7ACB16, 0x7ACC55 | double-click stopwatch |
 | +0x1E8 | int | 0x7AC838 | countdown; on reaching 0 → `this->vt+0x110(0x200000, 0)` |
@@ -144,7 +144,7 @@ Derived twice independently: destructor `sub_7ADA00` and copy-assign `sub_7ADFA0
 |---|---|---|---|
 | +0x00 | 4 | dword | copied verbatim |
 | +0x04 | 4 | dword | copied verbatim |
-| +0x08 | 4 | **int** | region cell **X** — pushed to `regionMgr->GetCityAt` at 0x7ACC13/0x7ACC19 ⚠ (order X/Y not independently proven) |
+| +0x08 | 4 | **int** | region cell **X** — pushed to `regionMgr->GetCityAt` at 0x7ACC13/0x7ACC19 Note: (order X/Y not independently proven) |
 | +0x0C | 4 | **int** | region cell **Y** |
 | +0x10 | 4 | **float** | precomputed screen X (GT ✓, written at 0x7B15D8) |
 | +0x14 | 4 | **float** | precomputed screen Y (GT ✓, written at 0x7B15EF) |
@@ -176,7 +176,7 @@ Destructor order (0x7ADA00): free `+0x74.begin`, clear list `+0x70`, free
 |---|---|
 | `0xB43C94` | app/director. `vt+0x88()` → region manager; `vt+0x30(bool)` → bool; `vt+0x34(str*,ptr)`; `vt+0x9C()` → a struct with a refptr at `+0x200`; `vt+0x18(ptr)` |
 | `0xB43C9C` | GZCOM factory; `vt+0x00(clsid, void**)` used for `0xC47B747C` |
-| `0xB43CB8` | optional service; `vt+0x2C(1, 0x2A5C322B, 0,0,0)` on city launch ⚠ (sound/effect trigger?) |
+| `0xB43CB8` | optional service; `vt+0x2C(1, 0x2A5C322B, 0,0,0)` on city launch Note: (sound/effect trigger?) |
 | `0xB43CCC` | message server; `vt+0x10(msg, 0)` |
 | `0xB43CF8` | terrain grid (mirror of screen `+0x16C`) — GT ✓ |
 | `0xB43D1C` | `cSC4EffectsManager` (mirror of `+0x15C`) |
@@ -251,7 +251,7 @@ void* sub_7AC7D0(T* this /*ecx*/) {
 ```
 The 14 pushes in program order (0x7AC7E4..0x7AC812, i.e. *last* pushed is the
 first argument): `-1, -1, 0xBF800000, -1, 1, 0, 7, 0, 0, 1, 0, 1, 1, 1`.
-⚠ UNSURE what `sub_7D2B50` is; the shape (a −1.0f plus a small enum `7` plus a
+Unsure what `sub_7D2B50` is; the shape (a −1.0f plus a small enum `7` plus a
 bag of 0/1 flags) reads like a render-state / material descriptor init.
 
 **FIELDS** — `[this+0x00]` primary vtable, `[this+0x04]` secondary vtable,
@@ -319,7 +319,7 @@ clamp:
         { this->m_scrollY_17C = (float)this->m_maxY_18C; this->m_scrolling_1FC = 0; }
 
     sub_7AC1A0(this);                           // pushes 178/17C into the camera
-    this->m_scene_168->vt_0xB4(&tmpA, &tmpB);   // ⚠ results never read
+    this->m_scene_168->vt_0xB4(&tmpA, &tmpB);   // Note: results never read
 
     // ---- (d) camera -> integer view pan ------------------------------
     int panX = ROUND(this->m_camera_164->x_98)  - this->GetWidth() /2;   // vt+0xA4
@@ -400,7 +400,7 @@ bool cSC4WinRegionScreen::OnMouse(int x, int y, int /*unused*/)   // vt+0x218
             int    elapsed  = this->m_dblclk_1D0.ElapsedMs();
             uint32 interval = sys->vt_0xA0();                    // dbl-click ms
             if (elapsed < interval) {
-                this->vt_0x23C(0x287259F6, 0x4A560000);          // ⚠ launch/verb
+                this->vt_0x23C(0x287259F6, 0x4A560000);          // Note: launch/verb
                 return true;
             }
         }
@@ -415,7 +415,7 @@ bool cSC4WinRegionScreen::OnMouse(int x, int y, int /*unused*/)   // vt+0x218
     Item* sel = sub_74C6E0(this->m_view_0E0);
     if (!sel) return true;
 
-    if (g_B43CB8) g_B43CB8->vt_0x2C(1, 0x2A5C322B, 0, 0, 0);     // ⚠ sound/fx
+    if (g_B43CB8) g_B43CB8->vt_0x2C(1, 0x2A5C322B, 0, 0, 0);     // Note: sound/fx
 
     void* regionMgr = g_B43C94->vt_0x88();
     void* region    = regionMgr->vt_0x20();
@@ -446,15 +446,15 @@ bool cSC4WinRegionScreen::OnMouse(int x, int y, int /*unused*/)   // vt+0x218
   compare at 0x7ACB35 is `elapsed >= interval → not a double click`.
 * 0x7ACB40/0x7ACB3B `push 0x287259F6; push 0x4A560000` → `this->vt+0x23C(...)`.
   `0x4A560000` is `3506176.0f` as a float; neither id resolves in the registry.
-  ⚠ UNSURE whether this is (msgId, data) or (verb, param).
+  Unsure whether this is (msgId, data) or (verb, param).
 * 0x7ACC10/0x7ACC13 `mov eax,[edi+0xC]; mov ecx,[edi+8]` → the two ints pushed to
   `region->vt+0x2C`. That is the only place the item's `+0x08/+0x0C` ints are used
-  in this slice, which is why they are read as **cell X / cell Y**. ⚠ The X↔Y
+  in this slice, which is why they are read as **cell X / cell Y**. Note: The X↔Y
   assignment is by convention only.
 * 0x7ACC34/0x7ACC39 vs 0x7ACC40/0x7ACC45 — the *only* difference between the
   established and unestablished branch is `0xCA539340` vs `0x0A8CD184`; the second
   argument `0x0A551C50` is identical on both paths, so it is almost certainly a
-  **group** id and the first an **instance** id. ⚠
+  **group** id and the first an **instance** id. (note)
 
 **FIELDS** — `+0x1A0`, `+0x0E0`, `+0x1D0`, `+0x1A8`.
 **VTABLE CALLS** — `this->vt+0x23C`; `sys->vt+0xA0`; `g_B43CB8->vt+0x2C`;
@@ -701,15 +701,15 @@ first two are used. Returns `bool` (`al = 1`).
 ```c
 bool T::OnMouse(int a, int b, int /*unused*/)      // vt+0x21C
 {
-    void* o = this->vt_0x88(0x48E945B4);           // ⚠ GetChildFromID / GetIface
+    void* o = this->vt_0x88(0x48E945B4);           // Note: GetChildFromID / GetIface
     if (o) this->vt_0x40(o);
     this->vt_0x110(0x200000, 0);                   // clear the same flag as sub_7AC830
-    ((T2*)this->m_04)->vt_0x74(this);              // ⚠ [this+4] treated as an object
+    ((T2*)this->m_04)->vt_0x74(this);              // Note: [this+4] treated as an object
     sub_7AC620(this, a, b);
     return true;
 }
 ```
-⚠ UNSURE: `[this+4]` as an object pointer is unusual for a `cGZWin` (where +4 is
+Unsure: `[this+4]` as an object pointer is unusual for a `cGZWin` (where +4 is
 often the refcount); it is what the bytes do (`mov ecx,[esi+4]; mov edx,[ecx];
 push esi; call [edx+0x74]` at 0x7AD3DD..0x7AD3E3) but the field's identity is a guess.
 
@@ -821,7 +821,7 @@ void BuildRunList@<esi>(vector<u32>* v, cIGZBitmap* bmp, int shift, BOOL emitVal
 `xEnd − xStart` further dwords each holding one channel byte (`0..0xFF`).
 
 **INTERPRETATION** — shifts 0 / 8 / 0x10 are the B / G / R byte lanes of an
-ARGB dword; there is **no** shift-24 (alpha) call. ⚠ UNSURE whether the source at
+ARGB dword; there is **no** shift-24 (alpha) call. Unsure whether the source at
 `item+0x20` is a genuine colour image (in which case these are three colour
 planes) or a purpose-built mask image whose three low bytes carry three different
 masks. The fact that lane 0 is stored **without** values (a pure span index) and
@@ -944,7 +944,7 @@ returns early (already current) or switches to it.
 Returns `bool`.
 
 ```c
-bool cSC4WinRegionScreen::SelectRegionByName(cIGZString* name)   // ⚠ name is a guess
+bool cSC4WinRegionScreen::SelectRegionByName(cIGZString* name)   // Note: name is a guess
 {
     void* mgr = g_B43C94->vt_0x88();
     uint32 n  = mgr->vt_0x18();                       // count
@@ -996,7 +996,7 @@ bool T::Enter(Obj** pp)
     this->AddRef();                             // vt+0x04
     sub_7AC2D0(this);
     void* app = g_B43C94;
-    app->vt_0x88()->vt_0x20();                  // ⚠ result discarded
+    app->vt_0x88()->vt_0x20();                  // Note: result discarded
 
     Obj* o = *pp;  if (o) o->AddRef();
 
@@ -1020,7 +1020,7 @@ generic:
     return ok;
 }
 ```
-⚠ UNSURE about `vt_0x34` / `vt_0x18` naming; the *shape* (name first, generic
+Unsure about `vt_0x34` / `vt_0x18` naming; the *shape* (name first, generic
 fallback second, with a cache invalidation in between) is solid.
 
 **CALLERS** — 3 sites: `0x007AF5E1` and `0x007AF66F` in `sub_7AF4B0`,
@@ -1241,7 +1241,7 @@ and initialises the destination to **`(srcW + 2, srcH + 2)`** with format
 0x7AE443 `call [edx+0xC]` — then makes the single `sub_7AE160` call. Both doubles
 are **negated inside `sub_7AE160`** (`fchs` at 0x7AE169 and 0x7AE1E4).
 
-⚠ **Best reading**, stated as an inference: this is a **sub-pixel shift** with a
+Note: **Best reading**, stated as an inference: this is a **sub-pixel shift** with a
 bilinear kernel, not a scale — the scale argument handed to `sub_7AA860` is the
 literal `1.0f` (`0x3F800000` at 0x7AE186 / 0x7AE1FD), and the +2-pixel canvas is
 exactly the border a unit-support filter needs to carry a fractional offset. That

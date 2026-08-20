@@ -86,14 +86,14 @@ visible-cell walk; INFERENCE, not byte-proven semantics).
   path/direction fn `0x564A60`.
 - QIs the texture manager at `0x56355A` with iids
   **{0x1AC0E11A, 0xFAC0E219}** (same pair the region cloud emitter uses,
-  `FINAL-3-PERCENT.md` §3.1), then **loads the six sheets by TGI
+  `SDK-GAPS.md` §10.1), then **loads the six sheets by TGI
   `{7AB50E44, 1ABE787D, 0x6BE09921..26}`** via vt+0x18 →
   **this+0x2C..0x40**. Sites (sole refs to these ids in the whole image):
   `0x563587, 0x5635A9, 0x5635CB, 0x5635ED, 0x56360F, 0x563631`.
 - Then loads TWO S3D models `{5AD0E817, BADB57F1, 0x8BB70000/0x8BB80000}`
   via `0x7FEDE0` → this+0x44/+0x48. Their FSH twins are named
   **`8bb70000_TrainSwitch_Normal` / `8bb80000_TrainSwitch_Depressed`** —
-  ⚠ this is the very code §2.5's dead-end list met as "the TrainSwitch pair
+  this is the very code §2.5's dead-end list met as "the TrainSwitch pair
   at `0x563572`" [R:11573] (0x563571 is the `mov edi,0x7AB50E44` type-imm
   right before the first arrow-sheet store). The dismissal was correct for
   the BALLOON; the same function is the row-8 drawer's loader. The UDI
@@ -125,7 +125,7 @@ they are guidance paint on the road, not screen furniture. No patch.
 - BUBBLEALL (unfiltered CreateEffectByName census, 2026-08-17 captures):
   **no arrow-family effect name ever spawned** (positive control: 16
   distinct names logged in the same captures, incl. `mission_selection_red`
-  on a click [R:11568]). ⚠ WEAK null — no UDI mission was DRIVEN in any
+  on a click [R:11568]). Weak null — no UDI mission was DRIVEN in any
   captured session — but moot: the drawer found consumes textures directly,
   not via the effects manager.
 - exe ASCII scan: no `bubble`/`bubblefsh` string (positive control: the
@@ -137,7 +137,7 @@ they are guidance paint on the road, not screen furniture. No patch.
 - EFFDIR extract: no arrow record consulted — not needed once the direct
   code path was found.
 
-## 6. Live probe (owed before DOCUMENTED)
+## 6. Live probe (verification procedure)
 
 Log-only naked hook on **`0x5633C0`** (one-shot; fires at most once per
 control lifetime). Log: this-ptr, then after-original the six dwords at

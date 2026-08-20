@@ -137,7 +137,7 @@ all in `SimCity_2.dat`, T=0x7AB50E44 G=0x1ABE787D (offsets 119150191/
   `0x4D8230/0x4D8236`), then **creates the signpost occupant at
   `0x4D82C0–0x4D82D9`** (`new 0x590` → `push 1` → ctor `0x5F5510`).
   Pick-miss fallback continues at `0x4D8272` via `[0xB21920]`.
-- ⚠ #188 caution applies: the 0x4D7xxx VIC cluster was proven DORMANT for
+- **Caution (#188):** the 0x4D7xxx VIC cluster was proven DORMANT for
   balloon clicks in idle mayor view (SPHOVER=0). This VIC is a TOOL control;
   the claim here is only that it runs when its tool is active (route/query),
   which no capture has ever exercised.
@@ -203,7 +203,7 @@ allowed, add a log-only naked hook on init `0x5F73A0` (prologue
 `83 EC 0C 56 8B F1`, byte-verified) logging `this` — one line per occupant
 created per route query via `0x4D82C0`.
 
-## DEAD ENDS / OPEN
+## Dead ends and unknowns
 
 - `0x7D2B50` config args (1,1,1,0,1,1,0,3,4,5,-1,-1.0f,1,-1) on obj+0x580 —
   semantics unknown.

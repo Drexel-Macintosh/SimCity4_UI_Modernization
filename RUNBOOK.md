@@ -4,7 +4,7 @@ Assumes you have **this repository and nothing else**. No prior machine state,
 no author to ask. Every step below is reproducible from a clean Windows box
 plus a legally-owned copy of the game.
 
-Read `CONTINUITY.md` first for what the project *is*. This file is how you
+Read `README.md` first for what the project *is*. This file is how you
 *operate* it.
 
 ---
@@ -52,10 +52,10 @@ read but the repo cannot carry:
 Add `-Force` to redo work already on disk, `-GameDir` / `-PluginsDir` if they
 are not where it looks.
 
-⚠ **This step did not exist until 2026-08-18.** A cold-clone test ran the
-builders from a fresh checkout and five of nine failed — every one of them on a
-missing input, not missing code. The audit before it had verified that all the
-builders were *present* and called that done. Presence is not execution.
+**Presence is not execution.** A cold-clone test once ran the builders from a
+fresh checkout and five of nine failed — every one on a missing input, not
+missing code — after an audit had verified that all the builders were
+*present* and called that done. Run the bootstrap; do not assume the inputs.
 
 The one input the bootstrap cannot always finish is the ItemIconsSub 1x source
 set: 129 icons owned by other mods. Run
@@ -178,11 +178,12 @@ why this repository is clean; keep it in the path.
 
 In this order, because this order is what the project learned the hard way:
 
-1. **Search `research/_tests/REGRESSION.md` first.** Every refuted hypothesis is
+1. **Search `_tests/REGRESSION.md` first.** Every refuted hypothesis is
    in there with a date. A surprising share of "new" defects are already
    answered, including ones already proven *not* to be defects.
-2. **Check `research/laws/feedback-sc4-scaling-laws.md`.** 105 numbered laws.
-   If your situation matches one, the answer is already written.
+2. **Check `research/laws/feedback-sc4-scaling-laws.md`.** The numbered
+   scaling laws. If your situation matches one, the answer is already
+   written.
 3. **Measure — do not infer, and do not judge sizes from a screenshot.** A
    screenshot reliably proves presence, colour and gross change; it does not
    measure ratios.

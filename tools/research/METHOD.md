@@ -50,7 +50,7 @@ Three rules, in order. They are not advice.
    entry-count change.
 3. The mechanism doc (`SC4-UI-ENGINE.md` or the family's own file).
 4. A new `TRIAGE.md` symptom row if one was earned; a new LAW in the laws
-   memory if one was earned; `HANDOFF.md` for current state.
+   memory if one was earned; a ledger entry in `VERSION-HISTORY.txt`.
 5. **Correct everything the fix proved wrong.** Say "refuted", name the
    replacement, and leave the old claim visible with its correction - a stale
    note left standing is the next wrong theory. (On 2026-07-31 four theories
@@ -88,7 +88,7 @@ level-5 action taken while a level-1 fact (`1000 − textWidth`, already in
 `BUDGET-DETAIL-ANATOMY.md` §1) and a level-2 fact (the SDK's own wrap API)
 sat unread.
 
-### ⛔ 2026-08-06 — THE WORST LEVEL-1 SKIP YET (#143)
+### 2026-08-06 — THE WORST LEVEL-1 SKIP YET (#143)
 
 A level-5 build shipped a change that **level 1 had already evaluated and
 rejected in writing, in the row describing the very tool being edited**:
@@ -129,7 +129,7 @@ land** — read the tool's own banner, not your diff.
 
 ## 2. PRE-FLIGHT — the canonical checklist
 
-`HANDOFF.md` and `README.md` both point here. Before any fix to any UI
+`START-HERE.md` and `README.md` both point here. Before any fix to any UI
 element:
 
 1. **Re-read the element's own section** — `tools\research\SC4-UI-ENGINE.md`
@@ -150,7 +150,7 @@ element:
    **output**. Before patching it, find the code that *wrote* it — for a
    child window that means finding its **allocation site** (a whole-`.text`
    scan for the entry allocator; #57's had exactly one call site each), and
-   whoever allocates it is whoever lays it out. ⚠ **A constant that no
+   whoever allocates it is whoever lays it out. **A constant that no
    instrument ever prints is still a constant**: #57's six-constant, 110 px
    right-margin budget was invisible to every probe we owned because every
    probe printed resulting rects. If a family survives a second fix, stop
@@ -159,11 +159,11 @@ element:
    an anchor formula — and show it reduces to stock at `f = 1`. If it cannot
    be written as math, it is a guess, and it will not survive the other
    tiers (1.5x / 3x) even if it looks right at 2x.
-   ⚠ **Reducing to stock at `f = 1` is NECESSARY BUT NOT SUFFICIENT** — every
+   **Reducing to stock at `f = 1` is NECESSARY BUT NOT SUFFICIENT** — every
    failed #57 patch the oracle models did, byte-exactly (*that is three of the
    six: v2.54.2/.3/.4. The other three were field-level writes and are not
    candidates*). Prove the form at `f ≥ 1.5`.
-   ⚠ **And if the thing you are sizing must CONTAIN RENDERED TEXT, `round(stock
+   **And if the thing you are sizing must CONTAIN RENDERED TEXT, `round(stock
    × f)` is the wrong form** (law 48): ink grows ×2.13 per doubling, not
    ×2.00, so size the box from the FONT. Tier-math still governs geometry and
    art; it does not govern a text box.
@@ -188,12 +188,11 @@ discovered. One fact, one home; everything else links.
 | How the engine behaves in general — window model, widget classes, `.UI` format, art binding, HTML text engine, placement/timing laws, exe VAs | `tools\research\SC4-UI-ENGINE.md` (the SDK guide) |
 | **A symptom → family → first-move mapping** | `tools\research\TRIAGE.md` (the index the standing order routes every new defect through — a law that changes how you *triage* belongs here as well as in the LAWS row below) |
 | Anatomy of ONE panel family — window tree, builder VAs, constants, failed attempts | that family's doc: `BUDGET-DETAIL-ANATOMY.md`, `GOD-MODE-FLYOUTS.md`, `MAYOR-MODE.md`, `DYNAMIC-CONTROLS.md`, `REGION-SWITCH.md`, `ITEMICONS.md`, `UI-ART-BINDING.md`, `FONTS-AND-DIALOGS.md` |
-| A rule that decides future fixes | `README.md` → *LAWS* (short form) **and** `_tests\REGRESSION.md` → *LAWS MINTED* (numbered, with the regression it cost) |
+| A rule that decides future fixes | `research\laws\` (the named-law memory) **and** `_tests\REGRESSION.md` → *LAWS MINTED* (numbered, with the regression it cost) |
 | Per-fix history, expected startup/log lines, trap signature | `_tests\REGRESSION.md` |
 | A test axis a bug escaped through | `_tests\SCENARIOS.md` |
-| Current state, what is open, standing constraints | `HANDOFF.md` |
-| The next in-game sitting as an ordered script | `_tests\RUN-SHEET-NEXT-SESSION.md` |
-| Work in progress by an agent, audit digests, bug intake | `tools\research\_checkpoints\` (**never** the scratchpad — it gets wiped) |
+| Known limitations and open defects | `research\KNOWN-LIMITATIONS.md` |
+| Audit digests, bug intake, working checkpoints | `tools\research\_checkpoints\` (**never** the scratchpad — it gets wiped) |
 | A third-party mod whose data we override | `tools\research\UPSTREAM-*.md` (standing order: every override gets a report) |
 | Shipped behaviour change | `VERSION-HISTORY.txt` |
 | How we are allowed to work | **this file** |
@@ -288,13 +287,13 @@ storage — this repo is.
 
 ---
 
-## 6. WHERE THIS IS GOING — THE OFFLINE MODEL (user direction, 2026-07-30)
+## 6. THE OFFLINE MODEL — map the game before touching it
 
 > *"You built a simulator before — you should have enough data points now to
 > essentially map out the entire game."*
 
-Correct, and it is the logical end of rules 1-2. We already own every
-ingredient:
+That direction is the logical end of rules 1-2, and it is built. The model
+lives in `tools\uimap\` and stands on ingredients we own:
 
 - an **offline emulation harness** (capstone 5.x + Unicorn) that was used to
   crack the flyout hit-test router without launching the game;
@@ -306,11 +305,11 @@ ingredient:
   check any prediction against;
 - **stock captures** at 1024x768 to anchor `f = 1`.
 
-**The target:** a machine-readable map of the game's UI that can predict a
+**The product:** a machine-readable map of the game's UI that predicts a
 panel's window tree and rects at any factor **without launching the game**,
 so an in-game session becomes CONFIRMATION rather than discovery.
 
-Staged, each stage useful alone:
+Four stages, each useful alone:
 
 | Stage | Deliverable | Kills |
 |---|---|---|
@@ -319,15 +318,13 @@ Staged, each stage useful alone:
 | 3 | **Layout emulation** — run a builder under Unicorn with stubbed window/font APIs, recording every create/SetArea; output = predicted tree + rects for a given factor and font metrics | "measure by shipping a build"; predicts UNSEEN panels |
 | 4 | **Diff harness** — predicted tree vs the live dump vs the stock capture, as a `_tests\` suite | silent regressions; makes tier generality (1.5x/3x) provable offline |
 
-**First application, and the acceptance test:** the ordinance description
-popup. Stage 3 on `sub_779660` answers §POPUP question 2 outright — emulate
-the call with the real font metrics and READ the width the layout wraps
-against, instead of shipping a fourth guess. If the model reproduces the
-measured 795x75 (City Lottery) and 750x25 (Smoke Detector) bodies, it is
-trustworthy; if it does not, the model is wrong and we learn that offline
-for free.
+**The acceptance test that validated it:** the ordinance description popup.
+Stage 3 on `sub_779660` emulates the call with the real font metrics and
+READS the width the layout wraps against, instead of shipping a fourth guess.
+The model reproduces the measured 795x75 (City Lottery) and 750x25 (Smoke
+Detector) bodies — see `tools\uimap\emu\POPUP-VERDICT.md`.
 
-Standing rule for the build: **the model is never the authority — the live
+Standing rule for the model: **the model is never the authority — the live
 dump is.** Every prediction ships with the measurement that confirmed it, or
 it is labelled `HYPOTHESIS` (§ evidence rules, `SC4-UI-ENGINE.md`).
 

@@ -2,8 +2,9 @@
 
 **Scope.** Everything below is extracted from log files this project already
 captured. Nothing here is disassembly, art extraction, or simulation — those
-belong to the sibling agents (`SUBFLYOUT-BUILDER.md`, `SUBFLYOUT-ART-VERDICT.md`,
-`SUBFLYOUT-CONSTANTS.md`). This file is the LIVE oracle only.
+belong to the sibling documents (`SUBFLYOUT-BUILDER.md`,
+`SUBFLYOUT-ART-VERDICT.md`, `SUBFLYOUT-CONSTANTS.md`). This file is the LIVE
+oracle only.
 
 Every row cites **log file + line number + timestamp**. Rows that are derived
 rather than read off a line are labelled **HYPOTHESIS**.
@@ -180,16 +181,16 @@ different tier or is a transcription of a 1x value.)
 
 | Open | 1x sighting | 1x rect | 2x sighting | 2x rect | W×2? | H×2? | L×2? | T×2? |
 |---|---|---|---|---|---|---|---|---|
-| A (presblt, Zones) | L4392 `[23:45:32.408]` | abs(178,274) **129x241** | L4433 `[23:45:32.432]` | abs(178,274) **258x482** | ✅ | ✅ | ❌ held | ❌ held |
-| 1 (prerings, Zones) | L4427 `[23:58:48.308]` | abs(178,274) 129x241 | L4468 `[23:58:48.334]` | abs(178,274) 258x482 | ✅ | ✅ | ❌ held | ❌ held |
-| 2 (Transport) | L39382 `[23:59:25.399]` | abs(178,374) 129x241 | L39404 `[23:59:25.419]` | abs(178,374) 258x482 | ✅ | ✅ | ❌ held | ❌ held |
-| 3 (Utilities) | L67719 `[23:59:55.635]` | abs(178,498) 129x192 | L67738 `[23:59:55.671]` | abs(178,498) 258x384 | ✅ | ✅ | ❌ held | ❌ held |
-| 4 (Utilities) | L69636 `[23:59:57.743]` | abs(178,525) 129x339 | L69662 `[23:59:57.763]` | abs(178,525) 258x678 | ✅ | ✅ | ❌ held | ❌ held |
-| 5 (Utilities) | L70624 `[23:59:58.953]` | abs(178,698) 129x192 | L70642 `[23:59:58.988]` | abs(178,698) 258x384 | ✅ | ✅ | ❌ held | ❌ held |
+| A (presblt, Zones) | L4392 `[23:45:32.408]` | abs(178,274) **129x241** | L4433 `[23:45:32.432]` | abs(178,274) **258x482** | yes | yes | held | held |
+| 1 (prerings, Zones) | L4427 `[23:58:48.308]` | abs(178,274) 129x241 | L4468 `[23:58:48.334]` | abs(178,274) 258x482 | yes | yes | held | held |
+| 2 (Transport) | L39382 `[23:59:25.399]` | abs(178,374) 129x241 | L39404 `[23:59:25.419]` | abs(178,374) 258x482 | yes | yes | held | held |
+| 3 (Utilities) | L67719 `[23:59:55.635]` | abs(178,498) 129x192 | L67738 `[23:59:55.671]` | abs(178,498) 258x384 | yes | yes | held | held |
+| 4 (Utilities) | L69636 `[23:59:57.743]` | abs(178,525) 129x339 | L69662 `[23:59:57.763]` | abs(178,525) 258x678 | yes | yes | held | held |
+| 5 (Utilities) | L70624 `[23:59:58.953]` | abs(178,698) 129x192 | L70642 `[23:59:58.988]` | abs(178,698) 258x384 | yes | yes | held | held |
 
 **Position is held on purpose, not missed.** `src\UiSpike.cpp` L2554: *"scale the
 size, KEEP the game's position (SubDock=0, default)"*. At v2.13.7/v2.14.0
-`SubDockDX/DY` were 0, so the dock branch (L5783) never ran. Do not read `❌ held`
+`SubDockDX/DY` were 0, so the dock branch (L5783) never ran. Do not read `no held`
 as a defect at this version.
 
 The **contrast case** proves what happens if you *do* let the generic sweep move
@@ -209,12 +210,12 @@ branch). That is exactly the bug `IsSubFlyoutId` was introduced to stop.
 
 | Open | 1x rect (abs) | 2x rect (abs) | W×2? | H×2? | rel pos ×2? |
 |---|---|---|---|---|---|
-| A | (258,299) **44x191** | (338,324) **88x382** | ✅ | ✅ | ✅ (80,25)→(160,50) |
-| 1 | (258,299) 44x191 | (338,324) 88x382 | ✅ | ✅ | ✅ |
-| 2 | (258,399) 44x191 | (338,424) 88x382 | ✅ | ✅ | ✅ |
-| 3 | (258,523) 44x142 | (338,548) 88x284 | ✅ | ✅ | ✅ |
-| 4 | (258,550) 44x289 | (338,575) 88x578 | ✅ | ✅ | ✅ |
-| 5 | (258,723) 44x142 | (338,748) 88x284 | ✅ | ✅ | ✅ |
+| A | (258,299) **44x191** | (338,324) **88x382** | yes | yes | yes (80,25)→(160,50) |
+| 1 | (258,299) 44x191 | (338,324) 88x382 | yes | yes | yes |
+| 2 | (258,399) 44x191 | (338,424) 88x382 | yes | yes | yes |
+| 3 | (258,523) 44x142 | (338,548) 88x284 | yes | yes | yes |
+| 4 | (258,550) 44x289 | (338,575) 88x578 | yes | yes | yes |
+| 5 | (258,723) 44x142 | (338,748) 88x284 | yes | yes | yes |
 
 Unlike the container, the strip's **relative** position doubles (it is a child, so
 `ScaleSubtree` scales it), which is why its absolute x moves 258→338 while the
@@ -286,9 +287,10 @@ is only **176x44** — the read is out of bounds in both axes. The strip fields 
 doubled (§2d) but the art behind that menu was not.
 
 This is *live confirmation* of the class of defect `REGRESSION.md` L288–293 calls
-"an un-overridden 176x44 icon". **Interpretation is the art agent's call** — I am
-only reporting that the 1x/2x atlas pair is directly observable, is
-**menu-specific**, and that Utilities is the menu that exhibits it in this corpus.
+"an un-overridden 176x44 icon". **Interpretation belongs to the art
+analysis** — this file only reports that the 1x/2x atlas pair is directly
+observable, is **menu-specific**, and that Utilities is the menu that
+exhibits it in this corpus.
 
 ---
 
@@ -379,7 +381,7 @@ survived task #50.
 
 ### 4b. Windows that appear in dumps but never in any "scaled" line
 
-You asked specifically for these. The answer:
+The answer for the sub-flyout ids:
 
 - **`0x8A6E61E0` and `0x8A2CAD8B` produce NO scale-event line in any modern log.**
   `ScaleGodFlyouts` calls `ScaleSubtree` directly and emits **no** `panel … -> …`
@@ -526,7 +528,7 @@ matters: **`DOBS`'s `srcBuf` must equal the window rect on Plot #1, not Plot #2.
 
 ---
 
-*Evidence agent. Sources: `Plugins\SC4UIScale.log*` (all), `Plugins\SC4TouchControls.log.bak-dialogtest`,
+*Sources: `Plugins\SC4UIScale.log*` (all), `Plugins\SC4TouchControls.log.bak-dialogtest`,
 `_tests\last-selective-2x.log`, `tools\research\_checkpoints\pds-cache\SC4UIScale-snapshot.log`,
 `src\UiSpike.cpp` (read-only), `tools\uimap\diff\parse_log.py` (re-used),
 `_tests\REGRESSION.md`, `tools\research\MAYOR-MODE.md`. Nothing was launched, modified, or deleted.*

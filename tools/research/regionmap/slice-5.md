@@ -1,7 +1,7 @@
 # SC4 Region Screen — Slice 5 of 8: `0x007B0470 .. 0x007B2320`
 
 SimCity 4 Deluxe 1.1.641, image base 0x400000. Every VA below was read out of
-`SimCity 4.exe` in this pass; anything inferred is tagged `⚠ UNSURE`.
+`SimCity 4.exe` in this pass; anything inferred is tagged `Unsure`.
 
 This slice is the **lifecycle spine** of `cSC4WinRegionScreen`: its constructor,
 destructor, `Init`, `Shutdown`, `DoMessage`, the chrome-construction pass, the
@@ -66,7 +66,7 @@ creates one item per city and computes its screen position.**
 |---|---|---|
 | `0x00B43C94` | `0x00601C04` (a setter) | the app / game singleton. `vt+0x88` → region manager, `vt+0x98` → user-preferences object |
 | `0x00B43C9C` | `0x00602384` | `cIGZGraphicSystem` (`GetClass(0xC416025C, iid 0x0073283C)`) |
-| `0x00B43CA8` | `0x006023E8` | system service `GetClass(0x056B906E, iid 0x656B8EFC)` — the resource/UI-script loader ⚠ |
+| `0x00B43CA8` | `0x006023E8` | system service `GetClass(0x056B906E, iid 0x656B8EFC)` — the resource/UI-script loader Note: |
 | `0x00B43CB0` | `0x006022D6` | **`kGZCommandServerSysServiceID` (0xEB903A32)** — the command server (`vt+0x18` = AddCommand, `vt+0x24` = RemoveCommand) |
 | `0x00B43CCC` | `0x006024BB` | **`kDefaultSysServiceID` (0x04FA845B)** — the message server (`vt+0x10` = MessageSend) |
 | `0x00B43CD8` | `0x00602310` | cached `[0xB43C94]->vt+0x98()` = the **user-preferences** object |
@@ -120,7 +120,7 @@ callbacks, bind the three view-mode radio buttons, and push the saved view mode 
 
 So the region screen's chrome is **two `.UI` resources, group `0x96A006B0`,
 instances `0xAA920991` and `0xABC0ED33`**, given window ids `0x09EBE9EE` and `0x0BB0F5E7`.
-⚠ `sub_5F9390` is inferred to be "create-child-window-from-UI-script"; the evidence is that its
+Note: `sub_5F9390` is inferred to be "create-child-window-from-UI-script"; the evidence is that its
 return value is used exclusively as a `cIGZWin*` (SetPosition / SetFlag / AddNotification / Release).
 
 ### Pseudo-C
@@ -129,7 +129,7 @@ return value is used exclusively as a `cIGZWin*` (SetPosition / SetFlag / AddNot
 void cSC4WinRegionScreen::BuildChrome()
 {
     ListHdr* saved = new_list_header(0x14);        // 0x90CF54 = operator new
-    sub_78E990(this, &saved);                      // cdecl(this, &list) — snapshot current chrome ⚠
+    sub_78E990(this, &saved);                      // cdecl(this, &list) — snapshot current chrome (note)
 
     // ---- panel A ---------------------------------------------------------
     GZTGI tgiA = { 0, 0x96A006B0, 0xAA920991 };
@@ -142,7 +142,7 @@ void cSC4WinRegionScreen::BuildChrome()
         int x  = ((W > 3*H) ? (W/3) : 0) + 5;   // 0x007B0517: magic-div 0xAAAAAAAB, shr edx,1
         int y  = (H - ah) + 2;
         a->vt_0xE0(x, y);                       // SetPosition
-        a->vt_0x5C();                           // relayout / commit ⚠
+        a->vt_0x5C();                           // relayout / commit (note)
         a->vt_0x80(0x22BA0121, 0x007AAB10, this);   // AddNotification(kind, callback, ctx)
         a->vt_0x110(0x800, 0);                  // SetFlag(0x800 /*visible*/, false)
         a->vt_0x08();                           // Release
@@ -153,7 +153,7 @@ void cSC4WinRegionScreen::BuildChrome()
 
     // two other panels get the same notification hookup
     for (id in { 0x6A91DC16, 0x6A91DC15 }) {
-        cIGZWin* w = this->vt_0x8C(id);         // GetChildWindowFromIDRecursive ⚠
+        cIGZWin* w = this->vt_0x8C(id);         // GetChildWindowFromIDRecursive (note)
         if (w) w->vt_0x80(0x22BA0121, 0x007AAB10, this);
     }
 
@@ -211,7 +211,7 @@ void cSC4WinRegionScreen::BuildChrome()
         c->vt_0x118();
     }
 
-    sub_7AEC00(this);                                // ⚠ (neighbouring slice)
+    sub_7AEC00(this);                                // Note: (neighbouring slice)
 
     // ---- push the saved view mode into the view --------------------------
     void* region = rm->vt_0x2C(this->field_1A4);      // region for the current region id
@@ -239,7 +239,7 @@ void cSC4WinRegionScreen::BuildChrome()
     sub_9AFCFE(this, 0x0BB0F5E7, (this->byte_1FD && mode != 0), 1);
     sub_9AFCFE(this, 0x6BB92BCA, (this->byte_1FD && mode != 0), 1);
 
-    sub_7AC110(this);                                 // ⚠ (neighbouring slice)
+    sub_7AC110(this);                                 // Note: (neighbouring slice)
     ...free the saved-chrome list...
 }
 ```
@@ -377,8 +377,8 @@ cSC4WinRegionScreen::cSC4WinRegionScreen()
     sub_88FEDF(this + 0x1B8, 4);                   // container, elem/bucket = 4
     sub_88FEDF(this + 0x1D0, 4);                   // container, elem/bucket = 4
     +0x1E8 = 0;
-    +0x1EC = 0x40A00000f  =    5.0f;               // ⚠ looks like a min zoom / near clip
-    +0x1F0 = 0x44960000f  = 1200.0f;               // ⚠ looks like a max zoom / far clip
+    +0x1EC = 0x40A00000f  =    5.0f;               // Note: looks like a min zoom / near clip
+    +0x1F0 = 0x44960000f  = 1200.0f;               // Note: looks like a max zoom / far clip
     +0x1F4 = 0;  +0x1F8 = 0;
     +0x1FC = (byte)0;  +0x1FD = (byte)0;
     sub_99DB6B(this, 0x200000, 1);                 // base SetFlag(0x200000, true)
@@ -404,7 +404,7 @@ cSC4WinRegionScreen::cSC4WinRegionScreen()
 [16] 0x6A935CF1 kCommandID_Cancel
 ```
 
-⚠ `0x00B0DBBC/0x00B0DBC0` (0.088388/0.018306) sit two dwords past the iso basis and are **not**
+Note: `0x00B0DBBC/0x00B0DBC0` (0.088388/0.018306) sit two dwords past the iso basis and are **not**
 referenced by this slice.
 
 ---
@@ -438,8 +438,8 @@ grow path). **This is where the item stride 0x80 is proven**: `sar eax,7` at `0x
 
 **CONVENTION** — `__thiscall void _Insert_n(ItemVec* this /*ecx*/, Item* _Where, const Item& _Val,
 <unused>, size_t _Count, uint8 noTail)`, `ret 0x14` (5 stack args).
-⚠ the 3rd stack arg (`[esp+0xC]` at entry) is never read.
-⚠ the 5th arg is passed **by value** but its *stack address* is handed to the copy helpers
+Note: the 3rd stack arg (`[esp+0xC]` at entry) is never read.
+Note: the 5th arg is passed **by value** but its *stack address* is handed to the copy helpers
 (`lea ecx,[esp+0x28]; push ecx` at `0x007B0EAD`), and its low byte is re-read at `0x007B0EF4`
 to decide whether to copy the tail. `sub_7B13C0` passes the literal `1` — i.e. "appending at the
 end, there is no tail", which is correct for a `push_back`.
@@ -490,7 +490,7 @@ bool cSC4WinRegionScreen::Shutdown()
     sub_7ABB00(this, 0x8BB5BB46);                    // kSC4MessagePreRegionShutdown
 
     for (f in { +0xE8, +0xE0 }) {                    // in that order
-        if (this->f) { this->vt_0x40(this->f); RELEASE_AND_NULL(this->f); }   // vt+0x40 = RemoveChildWindow ⚠
+        if (this->f) { this->vt_0x40(this->f); RELEASE_AND_NULL(this->f); }   // vt+0x40 = RemoveChildWindow (note)
     }
     sub_91359F(this + 0x10C, this + 0xDC, 0);        // unregister all 17 notification ids
 
@@ -513,7 +513,7 @@ bool cSC4WinRegionScreen::Shutdown()
     }                                                 // 14 commands, exactly ids [3..16] of the ctor table
 
     ItemVec_erase(this+0x118, this->items_first, this->items_last);   // sub_7B0BB0 — drop ALL items
-    sub_7AC380(this);                                                // ⚠ neighbouring slice
+    sub_7AC380(this);                                                // Note: neighbouring slice
 
     RELEASE_AND_NULL(+0x154);   // graphic system
     RELEASE_AND_NULL(+0xE4);
@@ -660,7 +660,7 @@ for (CityEnt* e = cities.first; e != cities.last; ++e)
   With basis `screen(a,b) = (a*90.51 + b*(-37.49), a*18.75 + b*45.25)`, the stored X is the
   **leftmost** corner of the diamond (`a=min, b=max`) and the stored Y is the value at
   (`a=max, b=max`), i.e. the **maximum** Y of the diamond.
-  ⚠ UNSURE: I could not reconcile "stored Y = bottom of the diamond" with `sub_7B3110`
+  Unsure: I could not reconcile "stored Y = bottom of the diamond" with `sub_7B3110`
   treating `+0x10/+0x14` as the top-left of the blit rect. Either the drawn bitmap's own
   origin compensates, or the region view's Y axis runs upward at this stage. **The formula
   above is measured; the *interpretation* of the Y anchor is not.**
@@ -673,7 +673,7 @@ for (CityEnt* e = cities.first; e != cities.last; ++e)
 ```c
     // --- load the four bitmaps out of the city's savegame ------------------
     void* city = region->vt_0x2C(e->x, e->y);         // 2 args — the city record
-    sub_7ABB80(this, it);                             // ⚠ "use the default tile for this item"
+    sub_7ABB80(this, it);                             // Note: "use the default tile for this item"
     if (!city) goto composite;
 
     cRZString path;                                   // vtable 0x00A80810, ctor'd on stack
@@ -796,7 +796,7 @@ bool cSC4WinRegionScreen::Init()
 
     // ---- 4. size myself to my parent -------------------------------------
     a = this->vt_0x28(); b = this->vt_0x28();
-    this->vt_0xDC(0, 0, b->vt_0xA4(), a->vt_0xA8());      // SetArea(0,0,W,H) ⚠
+    this->vt_0xDC(0, 0, b->vt_0xA4(), a->vt_0xA8());      // SetArea(0,0,W,H) (note)
 
     // ---- 5. take a reference on the graphic system ------------------------
     REPLACE_REF(this->f_154, *(void**)0x00B43C9C);        // cIGZGraphicSystem
@@ -807,13 +807,13 @@ bool cSC4WinRegionScreen::Init()
     REPLACE_REF(this->f_E8, obj);
     this->f_E8->vt_0xDC(0, 0, this->vt_0xA4(), this->vt_0xA8());
     this->f_E8->vt_0x110(0x10000, 0);
-    this->vt_0x38(this->f_E8);                            // AddChildWindow ⚠
+    this->vt_0x38(this->f_E8);                            // AddChildWindow (note)
     this->f_E8->vt_0x60();
     this->f_E8->vt_0x110(0x800, 0);
     this->f_E8->vt_0x110(0x200000, 1);
     this->f_E8->vt_0x110(1, 0);
 
-    obj = operator new(0x128);  sub_7B4090(obj);          // ⚠ some overlay/controller
+    obj = operator new(0x128);  sub_7B4090(obj);          // Note: some overlay/controller
     REPLACE_REF(this->f_E0, obj);                         // <-- THE cSC4WinRegionView
     this->vt_0x38(this->f_E0);
     this->f_E0->vt_0xDC(0, 0, this->vt_0xA4(), this->vt_0xA8());
@@ -826,7 +826,7 @@ bool cSC4WinRegionScreen::Init()
     this->f_E0->field_FC = this->f_1B4;                   // 0x00FFFF00
 ```
 
-> ⚠ `operator new(0x128)` + `sub_7B4090` for `+0xE0`, and `operator new(0x140)` + `sub_7A9AE0`
+> Note: `operator new(0x128)` + `sub_7B4090` for `+0xE0`, and `operator new(0x140)` + `sub_7A9AE0`
 > for `+0xE4` below. Ground truth says `+0xE0` is the region VIEW object; the ctor called here
 > is `sub_7B4090`, not `sub_7C9B10`. **If `+0xE0` really is `cSC4WinRegionView` (clsid
 > 0x2BA6BB97 / vtable 0x00AB9658), then `sub_7B4090` is its constructor** — that is what the
@@ -915,7 +915,7 @@ The 12 instance ids (type `0x856DDBAC` = PNG, group `0x6A1EED2C`) are:
 0x007B1F91:  8b 15 a4 db b0 00   mov edx, [0x00B0DBA4]   ; 90.51f  (pushed 1st -> arg0)
 0x007B1F9F:  e8 dc 79 ff ff      call 0x007A9980
 ```
-> Only the **X-row** of the basis (`90.51`, `18.75`) is passed. ⚠ Whatever `+0xE4` is
+> Only the **X-row** of the basis (`90.51`, `18.75`) is passed. Note: Whatever `+0xE4` is
 > (`sub_7A9AE0`, 0x140 bytes — the scroll/minimap overlay?) it is configured with the
 > half-basis, not all four floats.
 
@@ -1030,7 +1030,7 @@ Nothing in this slice contradicts the ground truth. Confirmations and one refine
    The item vector is `+0x118 / +0x11C / +0x120` (first / last / **capacity end**).
 7. **REFINEMENT** — the region screen keeps its own pan at `+0x178/+0x17C` (floats), set in
    Init; the view's `+0xE8/+0xEC` pan from ground truth is a separate copy.
-8. **NEW / ⚠** — ground truth says the scene ctor is `sub_7C9B10` for `+0x168`. Init constructs
+8. **NEW / Note:** — ground truth says the scene ctor is `sub_7C9B10` for `+0x168`. Init constructs
    `+0xE0` with `sub_7B4090` (0x128 bytes) and `+0xE4` with `sub_7A9AE0` (0x140 bytes);
    `+0x168` is **not** written by Init in this slice. Slice 6/7 should resolve `sub_7B4090`.
 
