@@ -19035,14 +19035,33 @@ namespace
 	// than once is pure waste.
 	SelRes gSelModeCache[64];
 	int  gSelModeCacheN = 0;
-	bool gSelModeCacheDone = false;
+	// Tri-state so a BACKGROUND thread can warm the cache at DLL load while
+	// the UI thread stays safe to ask at any time: 0 = idle, 1 = enumerating,
+	// 2 = done. v3.13.2 MEASURED the enumeration at 3,264ms on this machine
+	// (dgVoodoo sits between us and the driver), all of it spent on the first
+	// dialog open - the one moment the user is guaranteed to be watching.
+	// USER DIRECTION 2026-08-20: "load the resolutions during game startup
+	// when the DLL loads versus waiting for the user to click the box."
+	volatile LONG gSelEnumState = 0;
 	int  gSelCapW = 0, gSelCapH = 0;      // largest mode the panel reports
 	int  gSelDeskW = 0, gSelDeskH = 0;    // the registry desktop mode
 
 	void SelEnumOnce()
 	{
-		if (gSelModeCacheDone) { return; }
-		gSelModeCacheDone = true;
+		if (gSelEnumState == 2) { return; }
+		const LONG prev = InterlockedCompareExchange(&gSelEnumState, 1, 0);
+		if (prev == 2) { return; }
+		if (prev == 1)
+		{
+			// The warm thread is mid-enumeration. WAIT for its answer rather
+			// than race it into the same arrays - this can only happen if the
+			// dialog is opened within ~3s of DLL load, which the game's own
+			// load screens make practically impossible; the wait is a
+			// correctness net, not an expected path.
+			while (gSelEnumState != 2) { Sleep(5); }
+			return;
+		}
+		const unsigned long long t0 = PerfProbe::NowUs();
 		DEVMODEW dm = {};
 		dm.dmSize = sizeof(dm);
 		for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm); i++)
@@ -19081,11 +19100,26 @@ namespace
 			gSelCapH = GetSystemMetrics(SM_CYSCREEN);
 		}
 		if (gSelDeskW <= 0) { gSelDeskW = gSelCapW; gSelDeskH = gSelCapH; }
+		// PUBLISH LAST: every reader gates on ==2, so the arrays above are
+		// complete before anyone is allowed to see them.
+		InterlockedExchange(&gSelEnumState, 2);
 		Logger::Get().WriteLine(LogLevel::Info,
-			"UiSpike: SELRES display enumerated ONCE - %d distinct mode(s), "
-			"panel max %dx%d, desktop %dx%d. Re-asking per row is what made "
-			"the dialog lock up on a click.",
+			"UiSpike: SELRES display enumerated ONCE in %llums - %d distinct "
+			"mode(s), panel max %dx%d, desktop %dx%d. This ran on the warm "
+			"thread at DLL load unless the time above is part of a SELPERF "
+			"pass - v3.13.2 measured it at 3,264ms ON THE FIRST CLICK.",
+			(PerfProbe::NowUs() - t0) / 1000ull,
 			gSelModeCacheN, gSelCapW, gSelCapH, gSelDeskW, gSelDeskH);
+	}
+
+	// The warm thread: USER DIRECTION - enumerate at DLL load, not at the
+	// first click. EnumDisplaySettingsW is a plain system API with no game
+	// state, so a worker thread is safe; the tri-state above makes the UI
+	// thread wait out the (practically impossible) race instead of racing.
+	DWORD WINAPI SelEnumWarmThread(LPVOID)
+	{
+		SelEnumOnce();
+		return 0;
 	}
 
 	bool SelModeSupported(int w, int h)
@@ -19346,6 +19380,17 @@ namespace
 
 	const int kSelModeCount = 3;
 
+	// ONE familiar-size table for every branch that offers resolutions. It
+	// lived inside the Fullscreen branch, which is part of how Windowed ended
+	// up with no branch at all - the data a branch would need was private to
+	// its sibling. (Law 94: hand-lists rot fastest when duplicated.)
+	const SelRes kSelFamiliar[] = {
+		{ 3840, 2160 }, { 2560, 1600 }, { 2560, 1440 }, { 2400, 1600 },
+		{ 1920, 1200 }, { 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 },
+		{ 1024, 768 }, { 800, 600 }
+	};
+	const int kSelFamiliarN =
+		static_cast<int>(sizeof(kSelFamiliar) / sizeof(kSelFamiliar[0]));
 
 	void SelBuildResList()
 	{
@@ -19394,24 +19439,17 @@ namespace
 			// Sorting the raw enumeration and keeping "the largest at each
 			// tier" was tried first and chose 1856x1392 over 1920x1200 -
 			// correct by area, and not a size anyone would pick from a menu.
-			const SelRes kFamiliar[] = {
-				{ 3840, 2160 }, { 2560, 1600 }, { 2560, 1440 }, { 2400, 1600 },
-				{ 1920, 1200 }, { 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 },
-				{ 1024, 768 }, { 800, 600 }
-			};
-			const int nFam =
-				static_cast<int>(sizeof(kFamiliar) / sizeof(kFamiliar[0]));
-			for (int f = 0; f < nFam && gSelResCount < 7; f++)
+			for (int f = 0; f < kSelFamiliarN && gSelResCount < 7; f++)
 			{
-				if (dw > 0 && (kFamiliar[f].w > dw || kFamiliar[f].h > dh))
+				if (dw > 0 && (kSelFamiliar[f].w > dw || kSelFamiliar[f].h > dh))
 				{
 					continue;
 				}
-				if (!SelModeSupported(kFamiliar[f].w, kFamiliar[f].h))
+				if (!SelModeSupported(kSelFamiliar[f].w, kSelFamiliar[f].h))
 				{
 					continue;
 				}
-				gSelResList[gSelResCount] = kFamiliar[f];
+				gSelResList[gSelResCount] = kSelFamiliar[f];
 				gSelResCount++;
 			}
 			// The desktop mode is always legal even if it is not in the list
@@ -19433,6 +19471,39 @@ namespace
 					gSelResList[gSelResCount].h = deskH;
 					gSelResCount++;
 				}
+			}
+		}
+		else   // WINDOWED - and this branch MUST exist.
+		{
+			// ⛔ v3.13.2 MEASURED "built 0 row(s) for Windowed": there was NO
+			// Windowed branch at all - Borderless returns early, Fullscreen
+			// has its block, and Windowed fell through both ifs to the sort
+			// with an empty list. The user's screenshot of an open, empty
+			// drop list was the list being empty at birth, not a repaint
+			// defect (which is what it was first theorised to be - the
+			// measurement retired that theory in one line).
+			//
+			// The rules here differ from Fullscreen on purpose:
+			//   * NO SelModeSupported check. A window needs no display mode -
+			//     any size draws inside a window, so the panel's mode table
+			//     is the wrong question here.
+			//   * The DESKTOP-EQUAL size is EXCLUDED. A desktop-sized window
+			//     is taller than the screen the moment its title bar exists,
+			//     and "fill the screen with a window" is Borderless's job -
+			//     offering it here duplicates that mode, badly.
+			for (int f = 0; f < kSelFamiliarN && gSelResCount < 7; f++)
+			{
+				if (deskW > 0
+					&& (kSelFamiliar[f].w > deskW || kSelFamiliar[f].h > deskH))
+				{
+					continue;   // does not fit the desktop at all
+				}
+				if (kSelFamiliar[f].w == deskW && kSelFamiliar[f].h == deskH)
+				{
+					continue;   // desktop-equal: that is Borderless
+				}
+				gSelResList[gSelResCount] = kSelFamiliar[f];
+				gSelResCount++;
 			}
 		}
 		// Largest first, so the list reads the way the stock one does.
@@ -19950,6 +20021,25 @@ namespace
 void UiSpike::DumpSelectorPerf(const char* why)
 {
 	SelPerfDump(why);
+}
+
+void UiSpike::WarmSelectorCaches()
+{
+	HANDLE h = CreateThread(nullptr, 0, SelEnumWarmThread, nullptr, 0, nullptr);
+	if (h != nullptr)
+	{
+		CloseHandle(h);   // fire and forget; the tri-state is the handshake
+	}
+	else
+	{
+		// No thread, no warm - the first open pays the old price, which is
+		// slow but correct. Say so, so a stall with this line present has an
+		// explanation on file.
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELRES warm thread FAILED to start (err %lu) - the "
+			"first Graphic Options open will enumerate synchronously.",
+			GetLastError());
+	}
 }
 
 void UiSpike::ServiceScaleSelector()

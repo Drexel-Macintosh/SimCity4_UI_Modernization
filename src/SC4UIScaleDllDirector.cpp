@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.13.2"
+#define UISCALE_VERSION_STR "3.13.3"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -105,6 +105,11 @@ public:
 		Logger& logger = Logger::Get();
 		logger.Init(logPath, static_cast<LogLevel>(settings.logLevel));
 		logger.WriteHeader(UISCALE_NAME_STR " v" UISCALE_VERSION_STR);
+		// USER DIRECTION 2026-08-20: enumerate the display's modes NOW, on a
+		// background thread, not on the first Graphic Options click - v3.13.2
+		// measured that enumeration at 3.3s (dgVoodoo between us and the
+		// driver), all of it spent while the user watched a frozen dialog.
+		uiSpike.WarmSelectorCaches();
 		// #188 ARTFETCH armed AS EARLY AS THE DLL EXISTS. This constructor
 		// runs during the plugin scan, long before PostAppInit - and that
 		// matters: a PostAppInit-armed build saw ZERO fetches of the signpost

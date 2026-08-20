@@ -1,3 +1,43 @@
+2026-08-20  v3.13.3  THE INSTRUMENT NAMED BOTH IN ONE LAUNCH: the freeze was
+                     the display enumeration itself, and Windowed had NO BRANCH
+
+  One measuring session (v3.13.2) closed a two-day argument with the freeze:
+
+  ⭐ 1. THE FREEZE = EnumDisplaySettingsW, 3,264ms, ONCE. SELPERF: "pass took
+  3266ms. In-pass: sel.buildResList=3264ms/1" - the first enumeration through
+  dgVoodoo's virtualized display costs 3.3 SECONDS on this machine, and
+  v3.13.1's cache had correctly made it once-per-session... scheduled at the
+  one moment the user is guaranteed to be watching: the first click. Every
+  suspect the theories favoured measured INNOCENT - the OneDrive logger
+  (361 writes = 7ms), the message path (13,203 messages = 6ms), the tree
+  walks (100 = 1.3ms).
+  CURE (user direction: "load the resolutions during game startup when the
+  DLL loads"): SelEnumOnce is now tri-state (idle/enumerating/done) and a
+  warm thread kicks it in the DIRECTOR CONSTRUCTOR, during plugin scan. The
+  first open finds the cache warm; the UI thread's only race path is a
+  correctness net that waits. The enumerated-ONCE log line now carries its
+  own duration, so the cure is measurable in the same line that proved the
+  defect.
+
+  ⛔ 2. "SELRES built 0 row(s) for Windowed" - SelBuildResList HAD NO
+  WINDOWED BRANCH. Borderless returns early, Fullscreen has its block,
+  Windowed fell through both ifs to the sort with an empty list. The user's
+  screenshot of an open-and-empty drop list was the list being empty AT
+  BIRTH - the mid-drop-mutation theory died in one measured line. The
+  familiar-size table was also PRIVATE to the Fullscreen branch (part of how
+  a sibling branch could not exist); hoisted to kSelFamiliar, one copy.
+  The new branch's rules differ from Fullscreen on purpose: NO display-mode
+  check (a window needs no mode), and the DESKTOP-EQUAL size is excluded
+  (chrome overflows the screen; that job is Borderless). The existing
+  largest-that-fits fallback then stages 1920x1200 as pending - already
+  measured doing so.
+
+  Test-SelectorDerive grew both rules (windowed desktop-exclusion + the
+  no-mode-table question) and a self-counting pass line: 23 checks green.
+
+  Files: src\UiSpike.{h,cpp}, src\SC4UIScaleDllDirector.cpp,
+  _tests\Test-SelectorDerive.py.
+
 2026-08-20  v3.13.2  THE FREEZE GETS AN INSTRUMENT, NOT A THIRD GUESS - and
                      the v3.14 selector rule is now a gate written BEFORE its code
 

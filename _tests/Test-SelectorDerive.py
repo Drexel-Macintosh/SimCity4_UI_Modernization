@@ -87,7 +87,14 @@ def res_rows(st, eff_mode):
     if eff_mode == MODE_B:
         return [st.desk]                 # the desktop, and only that
     cap = st.cap if eff_mode == MODE_F else st.desk
-    return [m for m in st.modes if m[0] <= cap[0] and m[1] <= cap[1]]
+    rows = [m for m in st.modes if m[0] <= cap[0] and m[1] <= cap[1]]
+    if eff_mode == MODE_W:
+        # A desktop-sized WINDOW overflows the screen the moment its title
+        # bar exists - "fill the screen with a window" is Borderless's job.
+        # (v3.13.2 also measured the C++ had NO windowed branch at all -
+        # zero rows - which this rule now pins against.)
+        rows = [m for m in rows if m != st.desk]
+    return rows
 
 
 def derive(st):
@@ -197,9 +204,11 @@ def commit(st):
 
 # ==== the rows =============================================================
 FAILURES = []
+CHECKS = [0]
 
 
 def check(name, cond, detail=""):
+    CHECKS[0] += 1
     print("  [%s] %s" % ("ok  " if cond else "FAIL", name))
     if not cond:
         FAILURES.append(name + (" - " + detail if detail else ""))
@@ -249,6 +258,10 @@ def main():
     check("windowed staged: mode tagged on-restart, current stays marked",
           ui["mode_rows"][MODE_W] == "Windowed - on restart"
           and ui["mode_rows"][MODE_F] == "Fullscreen (current)")
+    check("windowed offers rows, none of them desktop-sized, largest wins",
+          len(ui["res_rows"]) > 0
+          and all(not r.startswith("2400x1600") for r in ui["res_rows"])
+          and ui["res_rows"][ui["res_sel"]].startswith("2048x1536"), str(ui))
 
     st = S(dll=False, s_scale=2)
     ui = derive(st)
@@ -383,7 +396,7 @@ def main():
         for f in FAILURES:
             print("  - %s" % f)
         return 1
-    print("ALL PASS (15 transition rows + 6 swept invariants)")
+    print("ALL PASS (%d checks: transition rows + swept invariants)" % CHECKS[0])
     return 0
 
 

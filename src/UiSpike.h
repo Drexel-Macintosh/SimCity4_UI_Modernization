@@ -31,6 +31,10 @@ public:
 	// selector calls it on dialog close; the director at shutdown, so a
 	// session where the dialog never closes cleanly still reports.
 	void DumpSelectorPerf(const char* why);
+	// Kicks the display-mode enumeration onto a background thread at DLL
+	// load, so the first Graphic Options open finds the cache already warm
+	// (v3.13.2 measured the enumeration at 3.3s, all on the first click).
+	void WarmSelectorCaches();
 	// v2.32.0 SHOWHOOK (task #50): scale a subtree at the instant the game
 	// makes it visible, BEFORE its first paint. PUBLIC because the SetFlag
 	// detour is a free function in the GAME's call stack.
