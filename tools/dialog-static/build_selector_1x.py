@@ -64,20 +64,23 @@ def main():
     # PROVE the ids are present and their rects are the AUTHORED stock ones.
     # A silent scale here would put the selector somewhere else in a dialog
     # whose every other widget stayed 1x - the half-patched shape of law 108.
-    # Since 2026-08-20 the Scale caption (0x5ca1e003) is back on the readout
-    # row and the combo sits one row lower, moved down 22px to make room for
-    # it (the #192 readout label stays retired - the closed combo IS the
-    # readout). This assertion is the reason a reshape cannot ship half-done
+    # Since 2026-08-20 the Scale caption (0x5ca1e003) is back, on the
+    # Renderer rail (x=267) in the band between Software's bottom (314) and
+    # the panel clip (356) - exactly one label band plus one combo row, so
+    # the combo sits at 333 and its frame clears the clip by 1px (the first
+    # attempt put the frame at 364, past the 356 clip, and shipped cutoff).
+    # The #192 readout label stays retired - the closed combo IS the
+    # readout. This assertion is the reason a reshape cannot ship half-done
     # here - it fails the moment the shapes diverge.
     # The four stock resolution labels carry OUR ids so the DLL can reach
     # them, but they are the game's nodes at the game's rects - not ours to
     # assert.
     RELABELLED_STOCK = {"0x5ca1e010", "0x5ca1e011", "0x5ca1e012", "0x5ca1e013"}
     want = {
-        "0x5ca1e003": (293, 320, 457, 341),   # "Scale" caption, readout row
-        "0x5ca1e002": (270, 342, 286, 358),   # radio, beside the scale combo
-        "0x5ca1e005": (292, 341, 458, 364),   # frame around the scale combo
-        "0x5ca1e004": (293, 342, 457, 363),   # scale combo, below its caption
+    "0x5ca1e003": (267, 313, 439, 334),   # "Scale" caption, Renderer rail
+    "0x5ca1e002": (270, 333, 286, 349),   # radio, beside the scale combo
+    "0x5ca1e005": (292, 332, 458, 355),   # frame around the scale combo
+    "0x5ca1e004": (293, 333, 457, 354),   # scale combo, below its caption
         "0x5ca1e007": (4, 255, 246, 276),     # "Window Mode" caption (top)
         "0x5ca1e00a": (29, 274, 248, 297),    # frame, Window Mode
         "0x5ca1e008": (30, 275, 247, 296),    # Window Mode combo

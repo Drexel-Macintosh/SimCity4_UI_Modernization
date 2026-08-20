@@ -1,3 +1,35 @@
+2026-08-20  v3.14.2  SCALE ROW GEOMETRY FROM THE CLIP ARITHMETIC, not the
+                     eye: rail = Renderer's x, row moved up, cutoff gone
+
+  v3.14.1's row shipped CUTOFF at the bottom and the caption indented off
+  the right-column rail. Both were arithmetic errors in the builder, and
+  both are now derived from the stock script (user direction: never read
+  pixels, compute):
+    * the panel GZWinBMP is (15,37,479,393) as l,t,r,b, so its children
+      clip at 464 wide x 356 tall LOCAL. v3.14.1 put the frame bottom at
+      364 - 8px PAST the clip - by reading the area as l,t,w,h ("29px
+      inside the parent" was the wrong model). The frame now ends at 355,
+      1px inside.
+    * the right column's outer rail is the RENDERER label's x0 = 267
+      (Hardware/Software indent to 293). The Scale caption now starts at
+      267, on that rail, per the user's "Scale and Renderer left aligned
+      on the same rail".
+    * the free band under Software is 314..356 = exactly one 21px label
+      band plus one 21px combo row, so the row moved UP: caption
+      (267,313,439,334), combo (293,333,457,354), frame (292,332,458,355),
+      radio (270,333,286,349) - the left column's label/frame/combo
+      pattern, right edges kept inside the 464 inner width (the old
+      right-edge clip class).
+  build_selector_1x.py's rect assertion (the paired gate) carries the new
+  rects, so a future reshape fails loud instead of shipping half-done.
+  Data-only change; DLL re-stamped 3.14.2 so the log header names what is
+  running. Eyes-on owed: the Scale row sits on the Renderer rail, whole,
+  above the panel edge.
+
+  Files: tools\dialog-static\build_dialog_static.py,
+  tools\dialog-static\build_selector_1x.py (+ stages, REPORTs, dats),
+  src\SC4UIScaleDllDirector.cpp (3.14.2).
+
 2026-08-20  v3.14.1  THE DESTROYED-DIALOG CRASH, GUARDED; the combo chrome
                      two-tone cured in data; the Scale caption added
 

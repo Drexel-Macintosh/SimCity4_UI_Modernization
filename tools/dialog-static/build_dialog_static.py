@@ -638,27 +638,32 @@ def inject_res_readout(text, fn):
     # selected row as "1.5x @ 2400x1600", which is the readout line the #192
     # text label used to carry, so nothing was lost by retiring that label.
     #
-    # LAYOUT (2026-08-20, user direction): the re-introduced Scale caption
-    # (0x5ca1e003) occupies the readout row directly under Software, and the
-    # combo + radio + frame sit on the row below it, moved down 22px to make
-    # room. The parent GZWinBMP is (15,37,479,393) (measured in the stock
-    # script), so the frame's bottom edge at y=364 is 29px inside the parent.
-    #
-    # ⭐ THE RIGHT EDGE IS THE ONE THAT WAS CLIPPED, and it is arithmetic, not
-    # judgement. The parent's INNER width is 479-15 = 464, and the nodes ran to
-    # 465 (combo) and 466 (border) - one and two pixels PAST it - so the right
-    # border was cut away. The #192 label this row inherited its width from had
-    # the same 465 and got away with it because a text node has no right-hand
-    # edge to lose.
-    #
-    # They stop at 457, which is where the dialog's OWN labels stop
-    # ("Hardware", "Software" at (293,...,457,...)). Matching the stock margin
-    # beats inventing one.
+    # LAYOUT (2026-08-20, user direction, ALL ARITHMETIC): the children of
+    # the panel GZWinBMP sit in LOCAL coordinates and clip to the BMP's own
+    # rect. The BMP is (15,37,479,393) as l,t,r,b, so the clip is
+    # 464 wide x 356 tall - the first version of this row put the frame
+    # bottom at 364 and read "29px inside the parent" by treating the area
+    # as l,t,w,h; it was 8px PAST the clip, which is the cutoff the user
+    # saw. Every number below comes from the stock script, not the eye:
+    #   rail x      = 267   the Renderer label's x0 (267,255,439,276); the
+    #                         Scale caption sits on that rail (user: "Scale
+    #                         and Renderer left aligned on the same rail"),
+    #                         while Hardware/Software indent to 293.
+    #   free band   = 314..356  Software's bottom (314) to the clip (356):
+    #                         exactly 21 + 21, one label band and one combo
+    #                         row, so the row moves UP to 313 and fits with
+    #                         1px to spare (the stock's own Renderer/
+    #                         Hardware bands overlap 4-6px the same way).
+    #   row pattern = the left column's: label (y, y+21), frame one pixel
+    #                 larger than the combo, combo (y+20, y+41), radio
+    #                 top-aligned with the combo.
+    #   right edge  = 457/458, inside the 464 inner width - the old 465/466
+    #                 right-edge clip (documented below) must not return.
     #
     # Radio: byte-for-byte the Software radio (0x6a57da58) attribute set with
     # our id. It MUST take clicks (ignoremouse=no, unlike the old labels).
     radio = ('<LEGACY clsid=GZWinBtn iid=IGZWinBtn id=%s '
-             'area=(270,342,286,358) fillcolor=(204,204,204) '
+             'area=(270,333,286,349) fillcolor=(204,204,204) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=yes winflag_pbufferase=yes '
@@ -707,7 +712,7 @@ def inject_res_readout(text, fn):
     # highlight bar with white text on the selected row, inside the black
     # drop-down outline.
     combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-             'area=(293,342,457,363) fillcolor=(255,255,255) '
+             'area=(293,333,457,354) fillcolor=(255,255,255) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=no winflag_pbufferase=yes '
@@ -733,8 +738,8 @@ def inject_res_readout(text, fn):
     # runtime by the DLL (SelApplyStatics), matching the Window Mode /
     # Resolution captions. A caption names its control; it does not repeat
     # the value. Empty here, so a missing DLL half shows blank, never stale.
-    scale_label = (tmpl % (SEL_LABEL_ID, 320, 341)).replace(
-                      'area=(293,320,465,341)', 'area=(293,320,457,341)')
+    scale_label = (tmpl % (SEL_LABEL_ID, 313, 334)).replace(
+                      'area=(293,313,465,334)', 'area=(267,313,439,334)')
     # ---- THE BORDER -----------------------------------------------------
     # The stock combos in the screenshot the user pointed at have a dark 1px
     # frame around the field; ours had none, because `outlinecolor` on a
@@ -760,7 +765,7 @@ def inject_res_readout(text, fn):
     # decoration. It is emitted BEFORE the combo so the combo paints on top
     # (.UI order is add order is paint order).
     border = ('<LEGACY clsid=GZWinFlatRect iid=IGZWinFlatRect id=%s '
-              'area=(292,341,458,364) fillcolor=(63,73,103) '
+              'area=(292,332,458,355) fillcolor=(63,73,103) '
               'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
               'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
               'winflag_pbufftrans=no winflag_pbufferase=yes '
