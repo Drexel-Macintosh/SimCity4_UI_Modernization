@@ -66,7 +66,7 @@ all four pass criteria met, see the ledger entry at VERSION-HISTORY.txt:1):**
 dialog close and shutdown; a >500ms frame-gap watchdog and a >25ms pass
 watchdog name their contributors. Read it after every launch.
 
-## The v3.14 rewrite — SHIPPED & VERIFIED v3.14.0 (2026-08-20)
+## The v3.14 rewrite — SHIPPED & VERIFIED v3.14.0, patched v3.14.1 (2026-08-20)
 
 **Executed, deployed, and user-verified on screen 2026-08-20.** The
 ~1,400-line per-250ms `ServiceScaleSelector` is now a state machine:
@@ -75,9 +75,15 @@ watchdog name their contributors. Read it after every launch.
 `Test-DatIntegrity` is green. The user ran the click-through at the real
 tier (2x Borderless 2400x1600, BootState COHERENT) and reported "all
 working"; the log confirms the warm thread, two clean ACCEPT commit
-cycles, a 0.2ms no-event tick, and no frame-gap. The plan below is kept as
-the record of what shipped; the ledger entry (VERSION-HISTORY.txt:1) names
-what was stripped, what was kept, the verification numbers, and the two
+cycles, a 0.2ms no-event tick, and no frame-gap. **v3.14.1 (same day,
+deployed 15:19):** a city-loaded unchanged Accept CRASHED — the close
+re-read touched a dialog the game DESTROYS (not hides) with a city loaded;
+now liveness-guarded (pointer found this pass, or skip). Same build cured
+the combo chrome two-tone (fields now white like stock) and added the
+"Scale" caption. One launch owed: city + unchanged Accept (the crash
+repro) + eyes on the dropdowns. The plan below is kept as the record of
+what shipped; the ledger entry (VERSION-HISTORY.txt:1) names what was
+stripped, what was kept, the verification numbers, and the two
 pre-existing red tools gates that are NOT this build's doing.
 
 The selector grew by accretion into a ~1,400-line per-250ms function

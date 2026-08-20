@@ -1,3 +1,50 @@
+2026-08-20  v3.14.1  THE DESTROYED-DIALOG CRASH, GUARDED; the combo chrome
+                     two-tone cured in data; the Scale caption added
+
+  THE CRASH (user report: city loaded, Graphic Options opened, NOTHING
+  changed, Accept -> dead). The log tail is the measurement: Accept click
+  14:41:55.971, MWKID saw the dialog LEAVE the main-window tree at
+  14:41:56.049, the log ends 14:41:56.127 - no SELCLOSE line, no shutdown
+  SELPERF dump, and NO exception report on disk (the game's handler never
+  wrote one). The close handler's control re-read ran against the stored
+  dialog pointer on the strength of "hidden, not destroyed" - true for
+  every main-menu close ever measured, FALSE with a city loaded, where
+  Accept DESTROYS the dialog: the pointer dangled and the re-read faulted.
+  CURE (liveness guard): the close branch passes the pointer IT found this
+  pass. Non-null = still in the tree (hidden) -> re-read + detach exactly
+  as before. Null = destroyed -> the re-read is skipped (the staged values
+  the 250ms tick already collected stand) and the button filters are
+  zeroed WITHOUT RemoveMessageFilter on windows that no longer exist.
+  Structurally safe under both outcomes; the crash repro is owed one
+  launch (city + unchanged Accept).
+
+  THE TWO-TONE (user: "lighter around the edges like a square in a
+  square", white arrow button): the engine's combo chrome - down-arrow
+  button and drop-list frame - draws in a hardcoded white-ish family no
+  .UI attribute can recolor; our fields painted (218,224,229) to blend
+  into the panel, so the white chrome read as lighter squares at 2x. Stock
+  combos hide it by being white-on-white. CURE in data: all three combo
+  fields now fillcolor=(255,255,255), opaque, dark 1px frames kept - the
+  stock input-box look. build_dialog_static.py + build_selector_1x.py
+  (its paired gate) rebuilt every tier's DialogStatic + SelectorUI-1x.
+
+  THE SCALE CAPTION (user request): the retired 0x5ca1e003 label is
+  re-introduced above the scale combo (row moved down 22px at 1x to make
+  room); the DLL captions it "Scale", matching "Window Mode" /
+  "Resolution".
+
+  NOTED, NOT THE CRASH: the crash session carried 5,217 "MINIMAP snap"
+  lines from city load to the crash - the pre-existing per-call snap
+  instrument invoked per tick while a city is loaded. Present since city
+  load, ~4 minutes before the fault; daily 2x city sessions have always
+  carried it. Log noise to quiet later, recorded here so nobody bisects
+  the crash into it.
+
+  Files: src\UiSpike.cpp (liveness guard + "Scale" caption),
+  src\SC4UIScaleDllDirector.cpp (3.14.1), tools\dialog-static\
+  build_dialog_static.py + build_selector_1x.py (+ regenerated stages,
+  REPORTs, dats).
+
 2026-08-20  v3.14.0 VERIFIED ON SCREEN: the state machine's first launch,
                      at the REAL tier, user click-through all working
 

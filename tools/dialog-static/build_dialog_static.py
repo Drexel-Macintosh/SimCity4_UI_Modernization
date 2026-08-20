@@ -526,18 +526,18 @@ RES_READOUT_IDS = ("0x5ca1e000", "0x5ca1e001")
 # ---- IN-GAME SCALE SELECTOR (2026-08-19, user request) ---------------------
 # Three more nodes ride the same injection point, same rules (empty captions,
 # DLL fills; blank on screen = the DLL half is missing, never a stale value):
-#   0x5ca1e002  radio beside the readout row, lit when the custom resolution
-#               is the active one. Clone of the Software radio idiom
-#               (16x16 style=radiocheck at x=270; the readout text is x=293).
-#   0x5ca1e003  "UI Scale" caption row. The right column band y=211..253 is
-#               the ONLY free space inside the clipping parent (479x356): the
-#               resolution list is full (4 rows to y=351) and the readout row
-#               [325,346) is the last row that fits below Software.
-#   0x5ca1e004  GZWinCombo with the five tiers. Grammar cloned from the stock
-#               combos in I-e9263de5 (listelement= repeats). The drop list
-#               opens DOWNWARD from y=253: 5 items x ~20px = ~100px, reaching
-#               ~353 <= 356, so it stays inside the parent clip. Do not move
-#               this row lower - the #192 second-row clip is the proof.
+#   0x5ca1e002  radio beside the scale combo row, lit when the custom
+#               resolution is the active one. Clone of the Software radio
+#               idiom (16x16 style=radiocheck at x=270; the text column is
+#               x=293).
+#   0x5ca1e003  "Scale" caption row, directly under Software. RE-INTRODUCED
+#               2026-08-20 after the #192 reshape retired it: the combo
+#               below needs a caption like its Window Mode / Resolution
+#               siblings. Caption is empty here; the DLL sets the text.
+#   0x5ca1e004  GZWinCombo with the five tiers, on the row below its caption
+#               (moved down 22px on 2026-08-20 to make room for it). Grammar
+#               cloned from the stock combos in I-e9263de5 (listelement=
+#               repeats).
 # The DLL maps the combo index to the ini: 0=Auto (AutoScale=1), 1..4 =
 # manual 1 / 1.5 / 2 / 3 (AutoScale=0 + ScaleFactor). initselection=0 is a
 # placeholder; the DLL sets the true selection every time the dialog appears.
@@ -633,15 +633,16 @@ def inject_res_readout(text, fn):
             'notify=no wrapped=no opaque=no forecolor=(63,73,103) '
             'bkgcolor=(0,0,0) gutters=(2,2) textoffsets=(0,0) >')
     # ---- THE COMBO IS THE READOUT (2026-08-19, user direction) ------------
-    # It sits ON the readout row - (293,325,465,346), the slot the #192 text
-    # label occupied - so ONE control both shows the live setting and changes
-    # it, instead of a readout in one place and a picker in another. The DLL
-    # writes the selected row as "1.5x @ 2400x1600", which is the readout line
-    # the label used to carry, so nothing is lost by retiring it.
+    # ONE control both shows the live setting and changes it, instead of a
+    # readout in one place and a picker in another. The DLL writes the
+    # selected row as "1.5x @ 2400x1600", which is the readout line the #192
+    # text label used to carry, so nothing was lost by retiring that label.
     #
-    # The row still has to be down HERE: the parent GZWinBMP is (15,37,479,393)
-    # so children clip at height 356, and this is the last full 21px row that
-    # fits. The second row #192 tried at y=345..366 was clipped outright.
+    # LAYOUT (2026-08-20, user direction): the re-introduced Scale caption
+    # (0x5ca1e003) occupies the readout row directly under Software, and the
+    # combo + radio + frame sit on the row below it, moved down 22px to make
+    # room. The parent GZWinBMP is (15,37,479,393) (measured in the stock
+    # script), so the frame's bottom edge at y=364 is 29px inside the parent.
     #
     # ⭐ THE RIGHT EDGE IS THE ONE THAT WAS CLIPPED, and it is arithmetic, not
     # judgement. The parent's INNER width is 479-15 = 464, and the nodes ran to
@@ -650,19 +651,14 @@ def inject_res_readout(text, fn):
     # the same 465 and got away with it because a text node has no right-hand
     # edge to lose.
     #
-    # They now stop at 457, which is where the dialog's OWN labels stop
+    # They stop at 457, which is where the dialog's OWN labels stop
     # ("Hardware", "Software" at (293,...,457,...)). Matching the stock margin
     # beats inventing one.
-    #
-    # (The row also moved up 5px earlier in the same session. That was aimed at
-    # the BOTTOM edge, which measurement then showed was never clipped - it had
-    # 10px of room. Kept for the extra margin, but it was not the fix, and
-    # saying so is cheaper than leaving a wrong reason in the file.)
     #
     # Radio: byte-for-byte the Software radio (0x6a57da58) attribute set with
     # our id. It MUST take clicks (ignoremouse=no, unlike the old labels).
     radio = ('<LEGACY clsid=GZWinBtn iid=IGZWinBtn id=%s '
-             'area=(270,320,286,336) fillcolor=(204,204,204) '
+             'area=(270,342,286,358) fillcolor=(204,204,204) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=yes winflag_pbufferase=yes '
@@ -678,32 +674,40 @@ def inject_res_readout(text, fn):
              'gutters=(0,0,0,0) tiptext="" tipoffsets=(0,0) '
              'tipflag=0x01000000 align=center '
              'btnclicksnd={ca4d1943,2a5c322b} >' % SEL_RADIO_ID)
-    # ---- STYLING: MEASURED, NOT MATCHED BY EYE -------------------------
-    # User direction: blend 100% when closed, and let the new colours appear
-    # when the list opens.
+    # ---- STYLING: WHITE, LIKE THE STOCK INPUT BOXES (2026-08-20) --------
+    # ⭐ THE ENGINE'S COMBO CHROME IS HARDCODED. The down-arrow button and the
+    # drop-list frame GZWinCombo draws come out in a hardcoded white-ish
+    # family that NO .UI attribute recolors - fillcolor paints the field,
+    # never that chrome.
     #
-    # ⭐ THE PANEL COLOUR IS A MEASUREMENT. The dialog's background is the art
-    # {46a006b0,144161ee}, a 180x180 edge-blit sheet, and its interior is
-    # ONE FLAT COLOUR - (218,224,229) across 100% of the sampled interior
-    # (tools/dbpf/extracted/SimCity_1/T-856ddbac_G-46a006b0_I-144161ee.png).
-    # So the panel CAN be matched exactly with an opaque fill, and every
-    # earlier attempt to approximate it by eye was guessing at a number that
-    # was sitting in the art all along.
+    # The first version painted the field the panel's own colour to blend in:
+    # (218,224,229), a MEASUREMENT of the dialog background art
+    # {46a006b0,144161ee} (one flat colour across 100% of the sampled
+    # interior). Against that grey blend the white chrome stood out as
+    # lighter edges - a "square in a square" (user-reported at 2x,
+    # 2026-08-20).
     #
-    # ⛔ NO `transparent`. THAT is what produced the two-tone the user saw:
-    # "white center and it has a blue square around it". With transparency on,
-    # the field paints fillcolor in the middle and lets the blue panel art
-    # through at the edges, so the closed control reads as a white block in a
-    # blue frame. It also made the OPEN list composite whatever it overhangs -
+    # Stock combos hide the very same chrome by being WHITE-ON-WHITE: the
+    # stock input box is white, so the white arrow button and drop-list frame
+    # disappear into it. Our fields therefore paint (255,255,255) too - the
+    # stock input-box look - with the dark 1px GZWinFlatRect frame (below)
+    # kept, because a white field still needs separation from the panel.
+    #
+    # ⛔ NO `transparent`. THAT produced the EARLIER two-tone the user saw:
+    # "white center and it has a blue square around it". With transparency
+    # on, the field paints fillcolor in the middle and lets the panel art
+    # through at the edges, so the closed control reads as a block in a
+    # frame. It also made the OPEN list composite whatever it overhangs -
     # and this list extends past the dialog's own edge, so it straddled two
     # different backgrounds. One flag, two symptoms, and the cure for both is
-    # to paint the measured colour opaquely instead of borrowing it.
+    # to paint the field opaquely (winflag_pbufftrans=no stays) instead of
+    # borrowing the background.
     #
-    # The "new colours on open" are then exactly the stock ones: the
-    # (24,32,106) highlight bar with white text on the selected row, inside
-    # the black drop-down outline. The field itself disappears into the panel.
+    # The open-list colours are exactly the stock ones: the (24,32,106)
+    # highlight bar with white text on the selected row, inside the black
+    # drop-down outline.
     combo = ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-             'area=(293,320,457,341) fillcolor=(218,224,229) '
+             'area=(293,342,457,363) fillcolor=(255,255,255) '
              'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
              'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
              'winflag_pbufftrans=no winflag_pbufferase=yes '
@@ -722,9 +726,15 @@ def inject_res_readout(text, fn):
              # widget still has a sane shape if the code half is missing.
              'listelement="Auto" listelement="1x" listelement="1.5x" '
              'listelement="2x" listelement="3x" >' % SEL_COMBO_ID)
-    # The #192 readout label and the separate "UI Scale" caption are both
-    # RETIRED: the combo occupies the readout row and its selected row IS the
-    # readout. Two widgets showing one fact is how they drift apart.
+    # The #192 readout label is still RETIRED - the combo's selected row IS
+    # the readout; two widgets showing one fact is how they drift apart. The
+    # separate caption is RE-INTRODUCED (2026-08-20) as the Scale label,
+    # id 0x5ca1e003, on the readout row above the combo: its text is set at
+    # runtime by the DLL (SelApplyStatics), matching the Window Mode /
+    # Resolution captions. A caption names its control; it does not repeat
+    # the value. Empty here, so a missing DLL half shows blank, never stale.
+    scale_label = (tmpl % (SEL_LABEL_ID, 320, 341)).replace(
+                      'area=(293,320,465,341)', 'area=(293,320,457,341)')
     # ---- THE BORDER -----------------------------------------------------
     # The stock combos in the screenshot the user pointed at have a dark 1px
     # frame around the field; ours had none, because `outlinecolor` on a
@@ -750,7 +760,7 @@ def inject_res_readout(text, fn):
     # decoration. It is emitted BEFORE the combo so the combo paints on top
     # (.UI order is add order is paint order).
     border = ('<LEGACY clsid=GZWinFlatRect iid=IGZWinFlatRect id=%s '
-              'area=(292,319,458,342) fillcolor=(63,73,103) '
+              'area=(292,341,458,364) fillcolor=(63,73,103) '
               'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
               'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
               'winflag_pbufftrans=no winflag_pbufferase=yes '
@@ -860,7 +870,7 @@ def inject_res_readout(text, fn):
     # this file now states in one place so it is not repeated per control.
     def _combo(cid, x0, y0, x1, y1, items):
         return ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
-                'area=(%d,%d,%d,%d) fillcolor=(218,224,229) '
+                'area=(%d,%d,%d,%d) fillcolor=(255,255,255) '
                 'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
                 'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
                 'winflag_pbufftrans=no winflag_pbufferase=yes '
@@ -900,9 +910,10 @@ def inject_res_readout(text, fn):
     mode_combo  = _combo(SEL_MODE_COMBO_ID, 30, 275, 247, 296,
                          ["Fullscreen", "Windowed"])
 
-    new = [indent + radio, indent + border, indent + combo,
-           indent + mode_label, indent + mode_border, indent + mode_combo,
-           indent + res_label, indent + res_border, indent + res_combo]
+    new = [indent + scale_label, indent + radio, indent + border,
+           indent + combo, indent + mode_label, indent + mode_border,
+           indent + mode_combo, indent + res_label, indent + res_border,
+           indent + res_combo]
     lines[at + 1:at + 1] = new
     return "\n".join(lines), len(new)
 

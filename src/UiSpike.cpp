@@ -19976,18 +19976,37 @@ namespace
 		gSelBounced = ui.bounced;
 	}
 
-	void SelOnClose()
+	void SelOnClose(cIGZWin* gfxDlg)
 	{
 		PerfProbe::Scope perf_("sel.close");
-		// ⭐ THE CLOSE RE-READS THE CONTROLS. Everything above is polled on
-		// a 250ms beat, so a choice made in the last tick before Accept was
-		// simply never seen. The windows still exist at this point - hidden,
-		// not destroyed. If a read fails the staged value stands.
-		if (gSelDlgLast != nullptr)
+		// ⛔ LIVENESS-GUARDED (v3.14.1, after a crash). The close re-read used
+		// to run against gSelDlgLast unconditionally, on the strength of "the
+		// windows still exist at this point - hidden, not destroyed". That
+		// held for every main-menu close ever measured, but with a city
+		// loaded an unchanged Accept DESTROYED the dialog instead of hiding
+		// it (MWKID saw it leave the tree), the stored pointer dangled, and
+		// the re-read crashed the game ~150ms after the click - no SELCLOSE
+		// line, no exception report. So: the caller passes the pointer IT
+		// found this pass. Non-null means the dialog is still in the tree
+		// (hidden) and every read below is safe. Null means destroyed - the
+		// re-read is skipped (the staged values the tick already collected
+		// stand), and the button filters are zeroed WITHOUT calling
+		// RemoveMessageFilter on windows that no longer exist.
+		const bool alive = (gfxDlg != nullptr);
+		if (!alive)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELCLOSE the dialog was DESTROYED, not hidden - "
+				"skipping the close re-read (the staged values the 250ms "
+				"tick collected stand) and detaching the button filters by "
+				"zeroing; RemoveMessageFilter on destroyed windows would be "
+				"a wild call.");
+		}
+		if (alive)
 		{
 			int scaleSel = -1, modeSel = -1, resSel = -1;
 			cIGZWin* sc =
-				gSelDlgLast->GetChildWindowFromIDRecursive(kSelComboId);
+				gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
 			if (sc != nullptr)
 			{
 				cIGZWinCombo* c = nullptr;
@@ -20001,7 +20020,7 @@ namespace
 			if (gSelState.dll)
 			{
 				cIGZWin* mc =
-					gSelDlgLast->GetChildWindowFromIDRecursive(kSelModeComboId);
+					gfxDlg->GetChildWindowFromIDRecursive(kSelModeComboId);
 				if (mc != nullptr)
 				{
 					cIGZWinCombo* c = nullptr;
@@ -20013,7 +20032,7 @@ namespace
 					}
 				}
 				cIGZWin* rc =
-					gSelDlgLast->GetChildWindowFromIDRecursive(kSelResComboId);
+					gfxDlg->GetChildWindowFromIDRecursive(kSelResComboId);
 				if (rc != nullptr)
 				{
 					cIGZWinCombo* c = nullptr;
@@ -20102,7 +20121,20 @@ namespace
 			SelWriteDgVoodooFullScreen(ui.effMode == kModeFullscreen);
 		}
 
-		SelDetachButtonFilters();
+		if (alive)
+		{
+			SelDetachButtonFilters();
+		}
+		else
+		{
+			// The buttons died with the dialog: there is nothing to detach,
+			// and RemoveMessageFilter on a freed window is a wild call.
+			// Zero our slots so no later DoMessage can match a dangling
+			// pointer; the next open re-attaches fresh.
+			for (int i = 0; i < kSelBtnCount; i++) { gSelBtns[i].win = nullptr; }
+			gSelFiltersOn = false;
+			gSelLastBtn = -1;
+		}
 		gSelDlgUp = false;
 		gSelDlgLast = nullptr;
 		gSelState.sMode = -1;
@@ -20162,7 +20194,10 @@ namespace
 				settings.spikeAutoScale ? "auto" : "manual");
 		}
 		SelSetCaption(gfxDlg, kSelReadoutId, l1);
-		SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
+		// The Scale caption, matching the "Window Mode" / "Resolution"
+		// captions the data ships beside the other two combos. The "- on
+		// restart" half of the old text lives in the combo rows now.
+		SelSetCaption(gfxDlg, kSelLabelId, "Scale");
 		if (!gSelState.dll) { return; }
 		// BOTH column captions are ours: the stock "Resolution" header is
 		// hidden, because the column leads with Window Mode and a fixed
@@ -20475,7 +20510,9 @@ void UiSpike::ServiceScaleSelector()
 	if (gfxDlg == nullptr || !gfxDlg->IsVisible())
 	{
 		// Closed. With Cancel and Default disabled, a close IS the commit.
-		if (gSelDlgUp) { SelOnClose(); }
+		// gfxDlg is non-null iff the dialog is still IN THE TREE (hidden);
+		// null means the game destroyed it, and SelOnClose must not touch it.
+		if (gSelDlgUp) { SelOnClose(gfxDlg); }
 		return;
 	}
 
