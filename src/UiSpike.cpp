@@ -20043,12 +20043,27 @@ void UiSpike::ServiceScaleSelector()
 						_snprintf_s(row, sizeof(row), _TRUNCATE,
 							"%s - on restart", kSelLabels[k]);
 					}
-					else if (k == live && gReadoutW > 0 && gReadoutH > 0)
+					else if (k == live)
 					{
-						// The ACTIVE row carries the resolution, so the closed
-						// combo shows the whole readout line.
-						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s @ %dx%d",
-							kSelLabels[k], gReadoutW, gReadoutH);
+						// ⭐ THE EFFECTIVE RESOLUTION, NOT THE RUNNING ONE.
+						// This row read gReadoutW/H, so after staging
+						// 1024x768 it still said "Auto @ 2400x1600" - naming
+						// a pairing that will never exist. The two controls
+						// have to describe the SAME future: whatever
+						// resolution is in force next launch is the one this
+						// tier will be applied at.
+						int rw = 0, rh = 0;
+						SelEffectiveRes(&rw, &rh);
+						if (rw > 0 && rh > 0)
+						{
+							_snprintf_s(row, sizeof(row), _TRUNCATE,
+								"%s @ %dx%d", kSelLabels[k], rw, rh);
+						}
+						else
+						{
+							_snprintf_s(row, sizeof(row), _TRUNCATE, "%s",
+								kSelLabels[k]);
+						}
 					}
 					else
 					{
