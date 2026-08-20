@@ -18791,10 +18791,54 @@ namespace
 	// Can THIS resolution carry the tier on row k? Auto and 1x always can.
 	// Delegated to ScaleTier::Fits so the answer shown to the player is the
 	// answer the next launch will actually give.
+	// Offered resolutions, largest first. The monitor's own mode is inserted
+	// at runtime if it is not already here - the useful list depends on the
+	// panel and only the panel knows it.
+	struct SelRes { int w, h; };
+	SelRes gSelResList[10] = {
+		{ 3840, 2160 }, { 2560, 1600 }, { 2400, 1600 }, { 1920, 1200 },
+		{ 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 }, { 1024, 768 },
+		{ 800, 600 }, { 0, 0 }
+	};
+	// 800x600 is the game's own documented minimum and a perfectly real
+	// windowed size - it was missing, and "the smallest thing we offer" is
+	// not the same question as "the smallest thing that works".
+	int gSelResCount = 9;
+	int gSelResPushed = -1, gSelResStaged = -1;
+	int gSelModePushed = -1, gSelModeStaged = -1;
+	bool gSelScaleNeedsRebuild = false;
+	int  gSelResShown = 0;          // rows actually offered
+	int  gSelResShownIdx[10] = {0}; // shown row -> gSelResList index
+
+	// ⭐ THE TWO DROPDOWNS MUST JUDGE THE SAME RESOLUTION.
+	// Without this a player can pick 1024x768 AND 1.5x in one visit and
+	// Accept both: the scale list is built from the resolution that was LIVE
+	// when the dialog opened, so it offers tiers the STAGED resolution
+	// cannot carry. The next launch then bounces the scale to Auto with no
+	// explanation, having accepted it a moment earlier - the control would
+	// be lying about what it had just agreed to.
+	//
+	// Every "does this tier fit" question is therefore asked against the
+	// resolution that will ACTUALLY be in force next launch: the staged one
+	// if the player changed it, the live one otherwise.
+	void SelEffectiveRes(int* w, int* h)
+	{
+		if (gSelResStaged >= 0 && gSelResStaged < gSelResCount)
+		{
+			*w = gSelResList[gSelResStaged].w;
+			*h = gSelResList[gSelResStaged].h;
+			return;
+		}
+		*w = gReadoutW;
+		*h = gReadoutH;
+	}
+
 	bool SelRowUsable(int k)
 	{
 		if (k <= 1) { return true; }             // Auto, 1x
-		if (gReadoutW <= 0 || gReadoutH <= 0)
+		int ew = 0, eh = 0;
+		SelEffectiveRes(&ew, &eh);
+		if (ew <= 0 || eh <= 0)
 		{
 			// We were never handed a render size, so the FIT question cannot
 			// be answered - a missing measurement is not evidence of a small
@@ -18808,7 +18852,7 @@ namespace
 		// than one that does not offer it. Same predicate the boot path uses,
 		// so the selector and the validator can never disagree.
 		return ScaleTier::PackageAvailable(kSelFactors[k])
-			&& ScaleTier::Fits(kSelFactors[k], gReadoutW, gReadoutH);
+			&& ScaleTier::Fits(kSelFactors[k], ew, eh);
 	}
 
 	void SelSetCaption(cIGZWin* parent, uint32_t id, const char* text)
@@ -18898,18 +18942,6 @@ namespace
 	const uint32_t kSelModeLabelId = 0x5CA1E007;
 	const uint32_t kSelModeComboId = 0x5CA1E008;
 
-	// Offered resolutions, largest first. The monitor's own mode is inserted
-	// at runtime if it is not already here - the useful list depends on the
-	// panel and only the panel knows it.
-	struct SelRes { int w, h; };
-	SelRes gSelResList[10] = {
-		{ 3840, 2160 }, { 2560, 1600 }, { 2400, 1600 }, { 1920, 1200 },
-		{ 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 }, { 1024, 768 },
-		{ 0, 0 }, { 0, 0 }
-	};
-	int gSelResCount = 8;
-	int gSelResPushed = -1, gSelResStaged = -1;
-	int gSelModePushed = -1, gSelModeStaged = -1;
 
 	// dgVoodoo.conf sits BESIDE THE EXE (Apps\), not beside the DLL.
 	void SelDgVoodooPath(wchar_t* out, size_t outLen)
@@ -19901,11 +19933,21 @@ void UiSpike::ServiceScaleSelector()
 		if (comboWin->QueryInterface(GZIID_cIGZWinCombo,
 				reinterpret_cast<void**>(&c)) && c)
 		{
-			if (justOpened)
+			if (justOpened || gSelScaleNeedsRebuild)
 			{
 				// The PENDING choice wins if there is one - see gSelPendingRow.
-				const int live = (gSelPendingRow >= 0)
+				// REBUILT when the resolution changes, not only on open. The row
+				// captions say "needs WxH" and the usable set is derived from the
+				// resolution - both are wrong the moment a different one is staged.
+				const bool resRebuild = gSelScaleNeedsRebuild && !justOpened;
+				gSelScaleNeedsRebuild = false;
+				int live = (gSelPendingRow >= 0)
 					? gSelPendingRow : SelRowFromSettings(settings);
+				if (resRebuild)
+				{
+					// Keep whatever the player chose this visit...
+					live = (gSelStagedRow >= 0) ? gSelStagedRow : gSelPushed;
+				}
 				for (int k = 0; k < kSelCount; k++)
 				{
 					gSelUsable[k] = SelRowUsable(k);
@@ -19944,6 +19986,24 @@ void UiSpike::ServiceScaleSelector()
 					}
 					cRZBaseString rs(row);
 					c->InsertString(rs, k);
+				}
+				// ...unless the new resolution cannot carry it. Then bounce to Auto
+				// and SAY SO, rather than letting Accept agree to a pair the next
+				// launch would silently undo.
+				if (resRebuild && live > 1 && live < kSelCount && !gSelUsable[live])
+				{
+					int mw = 0, mh = 0;
+					SelMinimumFor(live, &mw, &mh);
+					int ew = 0, eh = 0;
+					SelEffectiveRes(&ew, &eh);
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELECTOR %s no longer fits the staged %dx%d "
+						"(needs %dx%d) - the scale is bounced to Auto. This is the "
+						"1024x768-plus-1.5x pair, refused at the moment it stops "
+						"being possible instead of at the next launch.",
+						kSelLabels[live], ew, eh, mw, mh);
+					live = 0;
+					gSelStagedRow = 0;
 				}
 				if (live >= 0) { c->SetSelection(live, false); }
 				gSelPushed = live;
@@ -20088,44 +20148,71 @@ void UiSpike::ServiceScaleSelector()
 			{
 				if (justOpened)
 				{
+					// ⭐ NEVER OFFER MORE THAN THE DISPLAY CAN SHOW.
+					// A resolution above the desktop mode is not something the
+					// player can choose their way out of: fullscreen presents
+					// at the desktop mode regardless, and a window bigger than
+					// the screen puts its own edges - and this dialog - out of
+					// reach. The list is capped rather than the choice
+					// refused, because a row you cannot pick needs no
+					// explanation.
+					const int monW = GetSystemMetrics(SM_CXSCREEN);
+					const int monH = GetSystemMetrics(SM_CYSCREEN);
 					c->RemoveAllStrings();
+					gSelResShown = 0;
 					int live = -1;
 					for (int i = 0; i < gSelResCount; i++)
 					{
+						if (monW > 0 && monH > 0
+							&& (gSelResList[i].w > monW || gSelResList[i].h > monH))
+						{
+							continue;   // the display cannot show it
+						}
+						gSelResShownIdx[gSelResShown] = i;
 						char row[64];
-						const int monW = GetSystemMetrics(SM_CXSCREEN);
-						const int monH = GetSystemMetrics(SM_CYSCREEN);
-						// Name what each row IS. "native" is the one the
-						// wrapper will present at anyway, and above 2048 the
-						// wrapper is doing the work - say so rather than let
-						// the player wonder why 3840 is even offered.
+						// "Current", not "native": they are not the same
+						// question. The player wants to know which one they
+						// are running, and on a desktop set below its panel's
+						// native mode those differ.
 						_snprintf_s(row, sizeof(row), _TRUNCATE, "%dx%d%s",
 							gSelResList[i].w, gSelResList[i].h,
-							(gSelResList[i].w == monW && gSelResList[i].h == monH)
-								? " (native)" : "");
+							(gSelResList[i].w == gReadoutW
+								&& gSelResList[i].h == gReadoutH)
+								? " (current)" : "");
 						cRZBaseString rs(row);
-						c->InsertString(rs, i);
+						c->InsertString(rs, gSelResShown);
 						if (gSelResList[i].w == gReadoutW
 							&& gSelResList[i].h == gReadoutH)
 						{
-							live = i;
+							live = gSelResShown;
 						}
+						gSelResShown++;
 					}
 					if (live >= 0) { c->SetSelection(live, false); }
 					gSelResPushed = live;
 					gSelResStaged = -1;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELRES offering %d of %d resolutions - the "
+						"display is %dx%d and nothing larger is shown.",
+						gSelResShown, gSelResCount, monW, monH);
 				}
 				else
 				{
 					const int sel = c->GetSelection();
-					if (sel >= 0 && sel < gSelResCount && sel != gSelResPushed)
+					if (sel >= 0 && sel < gSelResShown && sel != gSelResPushed)
 					{
 						gSelResPushed = sel;
-						gSelResStaged = sel;
+						gSelResStaged = gSelResShownIdx[sel];
+						// THE SCALE LIST IS NOW STALE. It was built against
+						// the old resolution, so rebuild it before the player
+						// can Accept a pair that cannot both be true.
+						gSelScaleNeedsRebuild = true;
 						Logger::Get().WriteLine(LogLevel::Info,
 							"UiSpike: SELRES staged %dx%d - applies at the "
-							"next launch.",
-							gSelResList[sel].w, gSelResList[sel].h);
+							"next launch; the scale list will be re-checked "
+							"against it.",
+							gSelResList[gSelResStaged].w,
+							gSelResList[gSelResStaged].h);
 						ShowRestartNotice(gfxDlg);
 					}
 				}
