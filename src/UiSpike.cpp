@@ -18883,17 +18883,42 @@ namespace
 		*h = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, p);
 	}
 
+	// ⭐ THREE MODES, ALPHABETICAL, AND NAMED - not positional.
+	//   0 Borderless  a window covering the screen. NO display-mode change,
+	//                 so nothing needs restoring on exit and alt-tab is
+	//                 instant. The game's own ini says WindowWidth/Height
+	//                 are IGNORED here - which is why the resolution
+	//                 control offers a single row in this mode. Recommended.
+	//   1 Fullscreen  exclusive; CHANGES THE DISPLAY MODE to the chosen
+	//                 resolution, which is why the desktop visibly resizes.
+	//                 Windows restores it on a clean exit - and does not get
+	//                 the chance after a crash.
+	//   2 Windowed    a plain window at the chosen size.
+	//
+	// The order changed once (Borderless to the top) and this table is
+	// indexed from eight places; a reorder updating seven of them writes the
+	// wrong window mode and reads as a data bug. The names are the contract,
+	// and the raw 0/1/2 appear nowhere.
+	const int kModeBorderless = 0;
+	const int kModeFullscreen = 1;
+	const int kModeWindowed   = 2;
+	const char* const kSelModeLabels[] = { "Borderless", "Fullscreen", "Windowed" };
+
 	int SelLiveModeIndex()
+
 	{
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
 		wchar_t mode[40] = {};
 		GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
 			L"FullScreen", mode, 40, p);
-		if (_wcsicmp(mode, L"Windowed") == 0) { return 2; }
+		if (_wcsicmp(mode, L"Windowed") == 0) { return kModeWindowed; }
 		if (_wcsicmp(mode, L"Borderless") == 0
-			|| _wcsicmp(mode, L"BorderlessFullScreen") == 0) { return 1; }
-		return 0;
+			|| _wcsicmp(mode, L"BorderlessFullScreen") == 0)
+		{
+			return kModeBorderless;
+		}
+		return kModeFullscreen;
 	}
 
 	// ⭐ THE RENDER SIZE IS A FUNCTION OF THE MODE, NOT JUST THE RESOLUTION.
@@ -18919,7 +18944,7 @@ namespace
 	{
 		// BORDERLESS: the desktop, whatever the resolution control says. The
 		// game's own ini documents WindowWidth/Height as ignored here.
-		if (SelEffectiveModeIdx() == 1)
+		if (SelEffectiveModeIdx() == kModeBorderless)
 		{
 			const int dw = GetSystemMetrics(SM_CXSCREEN);
 			const int dh = GetSystemMetrics(SM_CYSCREEN);
@@ -19135,17 +19160,6 @@ namespace
 		return wrote;
 	}
 
-	// ⭐ THREE MODES, and Borderless is the one worth recommending.
-	//   0 Fullscreen  exclusive; CHANGES THE DISPLAY MODE to the chosen
-	//                 resolution, which is why the desktop visibly resizes.
-	//                 Windows restores it on a clean exit - and does not get
-	//                 the chance after a crash.
-	//   1 Borderless  a window covering the screen. No mode change, nothing to
-	//                 restore, instant alt-tab; the game's own ini says
-	//                 WindowWidth/Height are IGNORED here, so the resolution
-	//                 choice does not apply.
-	//   2 Windowed    a plain window at the chosen size.
-	const char* const kSelModeLabels[] = { "Fullscreen", "Borderless", "Windowed" };
 	const int kSelModeCount = 3;
 
 	// ⭐ THE RESOLUTION LIST IS BUILT PER MODE, because "resolution" means a
@@ -19172,7 +19186,7 @@ namespace
 		const int mode = SelEffectiveModeIdx();
 		gSelResCount = 0;
 
-		if (mode == 1)          // Borderless: the desktop, and only that
+		if (mode == kModeBorderless)   // the desktop, and only that
 		{
 			if (dw > 0 && dh > 0)
 			{
@@ -19183,60 +19197,77 @@ namespace
 			return;
 		}
 
-		if (mode == 0)          // Fullscreen: modes the display really has
+		if (mode == kModeFullscreen)
 		{
-			DEVMODEW dm = {};
-			dm.dmSize = sizeof(dm);
-			for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm)
-				&& gSelResCount < kSelResMax; i++)
-			{
-				const int w = static_cast<int>(dm.dmPelsWidth);
-				const int h = static_cast<int>(dm.dmPelsHeight);
-				if (w < 800 || h < 600) { continue; }   // the game's own floor
-				if (dw > 0 && (w > dw || h > dh)) { continue; }
-				bool dup = false;
-				for (int k = 0; k < gSelResCount; k++)
-				{
-					if (gSelResList[k].w == w && gSelResList[k].h == h)
-					{
-						dup = true;
-						break;
-					}
-				}
-				if (dup) { continue; }
-				gSelResList[gSelResCount].w = w;
-				gSelResList[gSelResCount].h = h;
-				gSelResCount++;
-			}
-		}
-		else                    // Windowed: must fit INSIDE the desktop
-		{
-			// The frame a resizable window actually costs. Measured from the
-			// system rather than guessed, so a themed or high-DPI desktop does
-			// not silently break the cap.
-			const int frameW = 2 * GetSystemMetrics(SM_CXSIZEFRAME);
-			const int frameH = 2 * GetSystemMetrics(SM_CYSIZEFRAME)
-				+ GetSystemMetrics(SM_CYCAPTION);
-			const int maxW = (dw > 0) ? dw - frameW : 0;
-			const int maxH = (dh > 0) ? dh - frameH : 0;
-			const SelRes kCommon[] = {
+			// ⭐ FAMILIAR SIZES, INTERSECTED WITH WHAT THE DISPLAY REPORTS.
+			// Two failures to avoid at once:
+			//   * offering a mode the panel does not have. In EXCLUSIVE
+			//     fullscreen that is a real mode change, so "unsupported" is a
+			//     black screen, not a cosmetic problem.
+			//   * offering everything it DOES have. EnumDisplaySettings
+			//     returns every legacy mode the driver will admit - 1856x1392,
+			//     1792x1344 and a dozen more - and a list that long grows a
+			//     SCROLLBAR, which draws magenta-pink because 0xFF00FF is this
+			//     engine's colour key and the scrollbar art no longer carries
+			//     it exactly. Shortening the list removes the scrollbar, so
+			//     the broken art is never asked for - and nobody wanted
+			//     1856x1392 anyway.
+			//
+			// Taking the intersection answers both: every row is a size a
+			// player recognises AND one the display has told us it can do.
+			// Sorting the raw enumeration and keeping "the largest at each
+			// tier" was tried first and chose 1856x1392 over 1920x1200 -
+			// correct by area, and not a size anyone would pick from a menu.
+			const SelRes kFamiliar[] = {
 				{ 3840, 2160 }, { 2560, 1600 }, { 2560, 1440 }, { 2400, 1600 },
-				{ 1920, 1200 }, { 1920, 1080 }, { 1600, 1200 }, { 1440, 900 },
-				{ 1280, 1024 }, { 1024, 768 }, { 800, 600 }
+				{ 1920, 1200 }, { 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 },
+				{ 1024, 768 }, { 800, 600 }
 			};
-			const int nCommon =
-				static_cast<int>(sizeof(kCommon) / sizeof(kCommon[0]));
-			for (int i = 0; i < nCommon && gSelResCount < kSelResMax; i++)
+			const int nFam =
+				static_cast<int>(sizeof(kFamiliar) / sizeof(kFamiliar[0]));
+			for (int f = 0; f < nFam && gSelResCount < 7; f++)
 			{
-				if (maxW > 0 && (kCommon[i].w > maxW || kCommon[i].h > maxH))
+				if (dw > 0 && (kFamiliar[f].w > dw || kFamiliar[f].h > dh))
 				{
 					continue;
 				}
-				gSelResList[gSelResCount] = kCommon[i];
+				bool supported = false;
+				DEVMODEW dm = {};
+				dm.dmSize = sizeof(dm);
+				for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm); i++)
+				{
+					if (static_cast<int>(dm.dmPelsWidth) == kFamiliar[f].w
+						&& static_cast<int>(dm.dmPelsHeight) == kFamiliar[f].h)
+					{
+						supported = true;
+						break;
+					}
+				}
+				if (!supported) { continue; }
+				gSelResList[gSelResCount] = kFamiliar[f];
 				gSelResCount++;
 			}
+			// The desktop mode is always legal even if it is not in the list
+			// above - a 3:2 panel's native size is in nobody's familiar table.
+			if (dw > 0 && dh > 0)
+			{
+				bool have = false;
+				for (int k = 0; k < gSelResCount; k++)
+				{
+					if (gSelResList[k].w == dw && gSelResList[k].h == dh)
+					{
+						have = true;
+						break;
+					}
+				}
+				if (!have && gSelResCount < kSelResMax)
+				{
+					gSelResList[gSelResCount].w = dw;
+					gSelResList[gSelResCount].h = dh;
+					gSelResCount++;
+				}
+			}
 		}
-
 		// Largest first, so the list reads the way the stock one does.
 		for (int a = 0; a < gSelResCount; a++)
 		{
@@ -19260,8 +19291,8 @@ namespace
 	{
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
-		const wchar_t* modeStr = (modeIdx == 0) ? L"FullScreen"
-			: (modeIdx == 1) ? L"Borderless" : L"Windowed";
+		const wchar_t* modeStr = (modeIdx == kModeFullscreen) ? L"FullScreen"
+			: (modeIdx == kModeBorderless) ? L"Borderless" : L"Windowed";
 		wchar_t num[24] = {};
 		if (w > 0 && h > 0)
 		{
@@ -19276,7 +19307,7 @@ namespace
 			"UiSpike: SELMODE SC4GraphicsOptions.ini -> WindowMode=%ls "
 			"WindowWidth=%d WindowHeight=%d.%ls",
 			modeStr, w, h,
-			(modeIdx == 1)
+			(modeIdx == kModeBorderless)
 				? L" (borderless ignores the size by the game's own rule - it "
 				  L"is written so switching back to fullscreen or windowed "
 				  L"still has one.)"
@@ -19908,7 +19939,8 @@ void UiSpike::ServiceScaleSelector()
 					// exclusive under borderless or windowed is exactly what
 					// makes a "windowed" setting come up fullscreen anyway -
 					// the two-file trap this control exists to close.
-					SelWriteDgVoodooFullScreen(modeIdx == 0);
+					// EXCLUSIVE only for Fullscreen.
+					SelWriteDgVoodooFullScreen(modeIdx == kModeFullscreen);
 					gSelResStaged = -1;
 					gSelModeStaged = -1;
 				}
@@ -20696,7 +20728,7 @@ void UiSpike::ServiceScaleSelector()
 						const char* tag =
 							(m == gSelModeRunning) ? " (current)"
 							: (m == chosen) ? " - on restart"
-							: (m == 1) ? " (recommended)" : "";
+							: (m == kModeBorderless) ? " (recommended)" : "";
 						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s%s",
 							kSelModeLabels[m], tag);
 						cRZBaseString rs(row);
