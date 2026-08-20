@@ -19027,10 +19027,45 @@ namespace
 		return wrote;
 	}
 
-	void SelWriteGraphicsIni(bool fullscreen, int w, int h)
+	// ⭐ THREE MODES, and Borderless is the one worth recommending.
+	//   0 Fullscreen  exclusive; CHANGES THE DISPLAY MODE to the chosen
+	//                 resolution, which is why the desktop visibly resizes.
+	//                 Windows restores it on a clean exit - and does not get
+	//                 the chance after a crash.
+	//   1 Borderless  a window covering the screen. No mode change, nothing to
+	//                 restore, instant alt-tab; the game's own ini says
+	//                 WindowWidth/Height are IGNORED here, so the resolution
+	//                 choice does not apply.
+	//   2 Windowed    a plain window at the chosen size.
+	const char* const kSelModeLabels[] = { "Fullscreen", "Borderless", "Windowed" };
+	const int kSelModeCount = 3;
+
+	// dgVoodoo takes EXCLUSIVE fullscreen only for mode 0. Borderless and
+	// windowed are both ordinary windows as far as the wrapper is concerned,
+	// and asking it for exclusive there is what makes a "windowed" setting
+	// come up fullscreen anyway.
+	// The live mode is READ, not inferred. gReqResIgnored only answers
+	// "is it borderless", and a control that shows the wrong current value is
+	// how a player ends up changing something they never touched.
+	int SelLiveModeIndex()
 	{
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
+		wchar_t mode[40] = {};
+		GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
+			L"FullScreen", mode, 40, p);
+		if (_wcsicmp(mode, L"Windowed") == 0) { return 2; }
+		if (_wcsicmp(mode, L"Borderless") == 0
+			|| _wcsicmp(mode, L"BorderlessFullScreen") == 0) { return 1; }
+		return 0;
+	}
+
+	void SelWriteGraphicsIni(int modeIdx, int w, int h)
+	{
+		wchar_t p[MAX_PATH] = {};
+		SelGfxIniPath(p, MAX_PATH);
+		const wchar_t* modeStr = (modeIdx == 0) ? L"FullScreen"
+			: (modeIdx == 1) ? L"Borderless" : L"Windowed";
 		wchar_t num[24] = {};
 		if (w > 0 && h > 0)
 		{
@@ -19040,11 +19075,16 @@ namespace
 			WritePrivateProfileStringW(L"GraphicsOptions", L"WindowHeight", num, p);
 		}
 		WritePrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
-			fullscreen ? L"FullScreen" : L"Windowed", p);
+			modeStr, p);
 		Logger::Get().WriteLine(LogLevel::Info,
 			"UiSpike: SELMODE SC4GraphicsOptions.ini -> WindowMode=%ls "
-			"WindowWidth=%d WindowHeight=%d.",
-			fullscreen ? L"FullScreen" : L"Windowed", w, h);
+			"WindowWidth=%d WindowHeight=%d.%ls",
+			modeStr, w, h,
+			(modeIdx == 1)
+				? L" (borderless ignores the size by the game's own rule - it "
+				  L"is written so switching back to fullscreen or windowed "
+				  L"still has one.)"
+				: L"");
 	}
 
 	void SelCommit(int row)
@@ -19439,9 +19479,10 @@ void UiSpike::ServiceScaleSelector()
 				{
 					const int rIdx = (gSelResStaged >= 0)
 						? gSelResStaged : gSelResPushed;
-					const bool full = (gSelModeStaged >= 0)
-						? (gSelModeStaged == 0)
-						: (gSelModePushed == 0 || gSelModePushed < 0);
+					const int modeIdx = (gSelModeStaged >= 0)
+						? gSelModeStaged
+						: (gSelModePushed >= 0 ? gSelModePushed
+						                       : SelLiveModeIndex());
 					int w = 0, h = 0;
 					if (rIdx >= 0 && rIdx < gSelResCount)
 					{
@@ -19450,9 +19491,13 @@ void UiSpike::ServiceScaleSelector()
 					}
 					Logger::Get().WriteLine(LogLevel::Info,
 						"UiSpike: SELCLOSE committing %s at %dx%d (closed via "
-						"%s).", full ? "Fullscreen" : "Windowed", w, h, btn);
-					SelWriteGraphicsIni(full, w, h);
-					SelWriteDgVoodooFullScreen(full);
+						"%s).", kSelModeLabels[modeIdx], w, h, btn);
+					SelWriteGraphicsIni(modeIdx, w, h);
+					// EXCLUSIVE only for mode 0. Asking the wrapper for
+					// exclusive under borderless or windowed is exactly what
+					// makes a "windowed" setting come up fullscreen anyway -
+					// the two-file trap this control exists to close.
+					SelWriteDgVoodooFullScreen(modeIdx == 0);
 					gSelResStaged = -1;
 					gSelModeStaged = -1;
 				}
@@ -20246,14 +20291,18 @@ void UiSpike::ServiceScaleSelector()
 				if (justOpened)
 				{
 					c->RemoveAllStrings();
-					cRZBaseString a("Fullscreen");
-					cRZBaseString b("Windowed");
-					c->InsertString(a, 0);
-					c->InsertString(b, 1);
-					// gReqResIgnored is the director's own answer to "is the
-					// wrapper presenting fullscreen", which is the same
-					// question this control sets.
-					const int live = gReqResIgnored ? 0 : 1;
+					for (int m = 0; m < kSelModeCount; m++)
+					{
+						char row[48];
+						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s%s",
+							kSelModeLabels[m],
+							m == 1 ? " (recommended)" : "");
+						cRZBaseString rs(row);
+						c->InsertString(rs, m);
+					}
+					// Which one is live is read from the file, not inferred:
+					// gReqResIgnored only distinguishes borderless.
+					const int live = SelLiveModeIndex();
 					c->SetSelection(live, false);
 					gSelModePushed = live;
 					gSelModeStaged = -1;
@@ -20261,14 +20310,14 @@ void UiSpike::ServiceScaleSelector()
 				else
 				{
 					const int sel = c->GetSelection();
-					if ((sel == 0 || sel == 1) && sel != gSelModePushed)
+					if (sel >= 0 && sel < kSelModeCount && sel != gSelModePushed)
 					{
 						gSelModePushed = sel;
 						gSelModeStaged = sel;
 						Logger::Get().WriteLine(LogLevel::Info,
 							"UiSpike: SELMODE staged %s - applies at the next "
 							"launch, and writes BOTH files.",
-							sel == 0 ? "Fullscreen" : "Windowed");
+							kSelModeLabels[sel]);
 						ShowRestartNotice(gfxDlg);
 					}
 				}

@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.7.1"
+#define UISCALE_VERSION_STR "3.8.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -194,10 +194,33 @@ public:
 			wchar_t mode[40] = {};
 			GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode", L"FullScreen", mode, 40, gfxIni);
 			const bool windowed = _wcsicmp(mode, L"Windowed") == 0;
+			// BORDERLESS covers the whole screen and the game's own ini says
+			// outright that WindowWidth/Height are "ignored for the borderless
+			// full screen mode" - so that mode, and only that mode, renders at
+			// the desktop's size no matter what was requested.
+			const bool borderless =
+				_wcsicmp(mode, L"Borderless") == 0
+				|| _wcsicmp(mode, L"BorderlessFullScreen") == 0;
 
 			int gfxW = reqW;
 			int gfxH = reqH;
-			if (!software && !windowed)
+			// ⭐ CORRECTED 2026-08-20: EXCLUSIVE FULLSCREEN HONOURS THE
+			// REQUEST. This branch used to cover every non-windowed mode on
+			// the strength of one measurement (request 1600x1200 -> tree came
+			// back 2400x1600), and that measurement was taken under a
+			// different wrapper configuration. dgVoodoo.conf here reads
+			// `Resolution = unforced`, which passes the game's requested mode
+			// straight through - and the user OBSERVED the desktop mode change
+			// when they picked a resolution, which is the same fact from the
+			// other side.
+			//
+			// So only BORDERLESS ignores the request now. Exclusive fullscreen
+			// performs a real mode change and renders at what was asked for,
+			// exactly like windowed. If a wrapper is ever configured to force
+			// a resolution instead, UiSpike's RESMISMATCH check measures the
+			// window the game actually laid out and corrects the tier - the
+			// assumption is no longer the only line of defence.
+			if (!software && borderless)
 			{
 				const int monW = GetSystemMetrics(SM_CXSCREEN);
 				const int monH = GetSystemMetrics(SM_CYSCREEN);
@@ -208,14 +231,19 @@ public:
 				}
 				logger.WriteLine(
 					LogLevel::Info,
-					"AutoScale: DirectX %ls - render res = monitor %dx%d (requested %dx%d ignored by wrapper).",
-					mode, gfxW, gfxH, reqW, reqH);
+					"AutoScale: DirectX %ls - render res = desktop %dx%d "
+					"(requested %dx%d is ignored in borderless by the game's "
+					"own rule).", mode, gfxW, gfxH, reqW, reqH);
 			}
-			else if (windowed && !software)
+			else if (!software)
 			{
+				// Windowed AND exclusive fullscreen both render at the
+				// requested size - fullscreen by changing the display mode to
+				// match, which is why the desktop resolution visibly changes.
 				logger.WriteLine(
 					LogLevel::Info,
-					"AutoScale: DirectX Windowed - render res = window %dx%d.", gfxW, gfxH);
+					"AutoScale: DirectX %ls - render res = requested %dx%d.",
+					mode, gfxW, gfxH);
 			}
 			else
 			{
@@ -233,7 +261,7 @@ public:
 			// WindowWidth/Height are ignored, so Graphic Options' four
 			// resolution rows are inert controls. Told once, here, because
 			// this is the only place that works it out.
-			UiSpike::SetRequestedResIgnored(!software && !windowed);
+			UiSpike::SetRequestedResIgnored(!software && borderless);
 
 			// ⚠ CAPTURED BEFORE ANYTHING FORCES IT. spikeScaleAll is set to
 			// false in two places below (the auto-path's !tierActive block and
