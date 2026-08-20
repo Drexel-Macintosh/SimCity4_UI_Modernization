@@ -18661,27 +18661,44 @@ void UiSpike::ScaleTarget(cIGZWin* pMainWindow)
 		count, target->GetW(), target->GetH());
 }
 
-// ============ IN-GAME SCALE SELECTOR (2026-08-19) ======================
-// USER REQUEST: a radio beside our resolution/scale readout in Graphic
-// Options, shown selected, plus a picker for Auto / 1x / 1.5x / 2x / 3x.
+// ============ IN-GAME SCALE SELECTOR (v3.14 STATE MACHINE) ==============
+// One source of truth, one pure derivation, event-driven application.
 //
-// SHAPE: the widgets ship in DATA with our ids and EMPTY captions
-// (build_dialog_static.py inject_res_readout); this code fills the text,
-// pushes the current state, and reads the player's choice back. Empty in
-// data is deliberate and unchanged from #192 - if this code never runs the
-// player sees blank space, never a stale or invented number.
+// The v3.13 selector grew by accretion into a ~1,400-line per-250ms
+// function carrying six generations of mechanism, several measured dead
+// but still executing. v3.14 replaces it with:
 //
-//   0x5CA1E000  readout text  "<W>x<H> @ <f>x <auto|manual>"
-//   0x5CA1E002  radio         lit when NO stock resolution radio is lit
-//   0x5CA1E003  label         "UI Scale (applies on restart)"
-//   0x5CA1E004  combo         Auto / 1x / 1.5x / 2x / 3x
+//   SelState   ALL facts, read at defined moments: session facts cached
+//              once per session (display enumeration, live mode, package
+//              census), visit facts read ONCE per dialog open (the two
+//              inis, the dll, the render size), and the player's staged
+//              requests, reset per visit.
+//   SelDerive  ONE pure function state -> the entire UI. No side effects,
+//              no syscalls, no logging. Every rule lives here and only
+//              here. SPEC: _tests\Test-SelectorDerive.py was written
+//              FIRST and this function mirrors it row for row.
+//   SelApply   DIFF-APPLY: a combo is rebuilt only when its derived rows
+//              differ from what was last pushed, and only on a tick where
+//              a selection changed - which implies every drop list is
+//              closed, so a rebuild can never mutate an open drop.
+//   SelOnClose COMMIT AT CLOSE: Accept is the only exit (Cancel and
+//              Default ship disabled), so a close re-reads the controls
+//              and writes only keys whose values changed.
 //
-// THE TIER APPLIES ON RESTART, and that is not a shortcut. Switching tier
-// renames nine dat packages AND the FontStyle.ini the game probes once at
-// startup, so nothing short of a relaunch can move it. This dialog already
-// carries the game's OWN notice - "Resolution, UI translucency, color
-// quality and rendering mode changes will not take effect until the next
-// time you start..." - which is exactly why the control belongs here.
+// THE PINNED DESIGN: the player's scale pick is a REQUEST that is never
+// overwritten; the EFFECTIVE row derives fresh every pass as "request if
+// usable else Auto". Bounce and un-bounce need no state machine at all.
+//
+// SHAPE GATE: _tests\Test-SelectorContract.py asserts the structure above
+// on this source (writes only at close, no syscalls in the tick path,
+// RemoveAllStrings only in the diff-apply).
+//
+// STRIPPED in v3.14, each measured dead in the v3.13.x logs (ledger):
+// the SELHIT coordinate trace, the SELMSG message trace, the SELCAL
+// calibration, the chained SelectorWinProc (its only outputs fed dead
+// paths), and the gfx-ini-stamp Accept detector (3 Accepts, 3 "no write
+// ever seen"). KEPT, quieted: the SELBTN button filters - they name the
+// closing button in SELCLOSE.
 namespace
 {
 	// Row order MUST match the listelement order the builder writes.
@@ -18689,19 +18706,15 @@ namespace
 	const char* const kSelLabels[] = { "Auto", "1x", "1.5x", "2x", "3x" };
 	const int   kSelCount =
 		static_cast<int>(sizeof(kSelFactors) / sizeof(kSelFactors[0]));
-	// ⛔ THE "needs WxH" NUMBERS ARE NO LONGER COMPUTED HERE. They used to be
-	// 880*f and 558*f - this file's own copy of the fit arithmetic - and when
-	// that arithmetic was replaced by an explicit per-tier minimum table the
-	// caption would have gone on quoting the old numbers at the player. A
-	// second copy of a rule is a second rule, and this one is displayed as a
-	// promise. ScaleTier::TierMinimum reads the table the boot path enforces.
+	// ⛔ THE "needs WxH" NUMBERS ARE READ FROM ScaleTier's table, never a
+	// second copy of the arithmetic - the caption is a promise to the
+	// player, and the boot path enforces the table (law: two copies of a
+	// rule are two rules).
 	void SelMinimumFor(int k, int* w, int* h)
 	{
 		*w = 0; *h = 0;
 		ScaleTier::TierMinimum(kSelFactors[k], w, h);
 	}
-	bool  gSelUsable[8] = { true, true, true, true, true, true, true, true };
-	int   gSelCommitted = -1;       // row currently written to the ini
 
 	// The four stock resolution radios. Our radio means "none of these" -
 	// i.e. the resolution came from SC4GraphicsOptions.ini rather than this
@@ -18709,206 +18722,21 @@ namespace
 	const uint32_t kStockResRadios[] = {
 		0x6A57DA5A, 0x6A57DA5B, 0x6A57DA5C, 0x6A57DA5D
 	};
-	const uint32_t kSelAcceptId = 0xEA57DA59;   // Accept (the 3-button row)
-	const uint32_t kSelCancelId = 0x6A57DA48;   // Cancel
 	const uint32_t kSelDlgId    = 0x2A57CB82;   // Graphic Options root (GZWinGen)
 	const uint32_t kSelReadoutId = 0x5CA1E000;
 	const uint32_t kSelRadioId   = 0x5CA1E002;
 	const uint32_t kSelLabelId   = 0x5CA1E003;
 	const uint32_t kSelComboId   = 0x5CA1E004;
+	const uint32_t kSelResComboId  = 0x5CA1E006;
+	const uint32_t kSelModeLabelId = 0x5CA1E007;
+	const uint32_t kSelModeComboId = 0x5CA1E008;
+	const uint32_t kSelResLabelId  = 0x5CA1E00B;
 	// The game's OWN "takes effect next restart" popup, born hidden inside
-	// this dialog, and its Accept button.
+	// this dialog. We never show it (the information lives in the combo
+	// captions instead - a popup at the moment of CHANGE appears before the
+	// player has agreed to anything); the watch below only ever sees a rise
+	// the GAME caused, and the 10s net guarantees it cannot trap the player.
 	const uint32_t kSelNoticeId  = 0x2A57CB83;
-	// The four stock resolution LABELS, re-identified in data because they
-	// all ship sharing 0xca57da80 (build_dialog_static RES_LABEL_IDS).
-	const uint32_t kStockResLabels[] = {
-		0x5CA1E010, 0x5CA1E011, 0x5CA1E012, 0x5CA1E013
-	};
-	bool gSelResRowsHidden = false;
-	unsigned int gSelNoticeShownMs = 0;
-	unsigned int gSelClickMs = 0;      // last message seen by the winproc
-	int  gSelLastX = -1, gSelLastY = -1;  // last pointer position seen
-	int  gSelStagedRow = -1;          // chosen, not yet confirmed
-	// ⭐ THE POINTER AND THE WALKED RECTS ARE IN DIFFERENT SPACES, AND THE
-	// MAPPING IS MEASURED, NEVER ASSUMED. A centring hypothesis was tried and
-	// its own arithmetic refuted it: with the dialog centred, neither observed
-	// close-pointer lands in either button. So the offset is CALIBRATED from
-	// a click whose target we know exactly - our own radio, which the engine
-	// toggles on click (proven) and which is only 16 design px wide, so the
-	// pointer must be within half that of its centre.
-	int  gSelCalDx = 0, gSelCalDy = 0;
-	bool gSelCalibrated = false;
-	// ACCEPT TRACE (2026-08-19). We cannot tell from a message WHICH
-	// control was clicked - no id is carried - so the rects of the two
-	// buttons that close this dialog are captured when it opens and every
-	// click is tested against them. One Accept click settles whether a
-	// coordinate hit-test is a sound basis for real Accept semantics.
-	int  gSelAcceptRect[4] = { 0, 0, 0, 0 };   // L,T,W,H absolute
-	int  gSelCancelRect[4] = { 0, 0, 0, 0 };
-	bool gSelRectsOk = false;
-	bool gSelNoticeWasUp = false;    // last observed notice visibility
-	// RADIO TRACE. The user wants OUR radio to be selectable - clicking it
-	// should make the custom resolution the one that applies on restart. Before
-	// building that, one measurement is needed: does clicking a GZWinBtn we
-	// injected actually CHECK it? It is style=radiocheck but it belongs to no
-	// group the game knows about, so whether the engine toggles it on click,
-	// or whether only the dialog's own handler does that for ITS radios, is an
-	// open question - and guessing it is how a handler keyed on a field the
-	// message does not carry got written earlier today.
-	int  gSelRadioState = -1;        // bitmask: b0..b3 stock radios, b4 ours
-	int  gSelRadioLogs = 0;
-	bool gSelOursWas = false;        // our radio last service
-	int  gSelStockWas = 0;           // stock radio mask last service
-	bool gSelResRescued = false;      // resolution mismatch handled once
-	unsigned long long gSelGfxStamp = 0;  // SC4GraphicsOptions.ini mtime
-	bool gSelNoticePending = false;   // a change is waiting for Accept
-	bool gSelAcceptSeen = false;      // this appearance
-	int  gSelTraceLogs = 0;
-
-	int   gSelPushed = -2;          // last row we pushed or observed
-	bool  gSelDlgUp = false;        // dialog visible at the last service
-	int   gSelLogs = 0;
-	int   gSelMsgLogs = 0;          // bounded instrument budget
-	unsigned int gSelLastMs = 0;
-	void* gSelProcOn = nullptr;     // dialog our proc is currently chained on
-
-	// Set when a runtime repair has written AutoScale=1 to the ini. The combo
-	// seeds from `settings`, which still holds the value read at BOOT, so
-	// without this the dialog showed the opposite of the file for the rest of
-	// the session - and could show a tier the screen cannot carry.
-	bool gSelAutoOverride = false;
-	// The mode the game BOOTED with, captured once. SelLiveModeIndex reads
-	// the ini, and the ini changes the moment a choice is committed - so it
-	// answers "what will apply", never "what am I running". The
-	// "(current)" marker needs the second question, exactly as the
-	// resolution combo does.
-	int  gSelModeRunning = -1;
-	bool gSelModeUserChanged = false;
-	bool gSelModeNeedsRebuild = false;
-	bool gSelNoGfxDllLogged = false;
-	bool gSelGfxDllMissing = false;
-
-	int SelRowFromSettings(const Settings& s)
-	{
-		// A runtime repair beats the boot-time reading: the ini has moved on.
-		if (gSelAutoOverride) { return 0; }
-		if (s.spikeAutoScale) { return 0; }
-		for (int k = 1; k < kSelCount; k++)
-		{
-			// Tier factors are exact halves/wholes; 0.01 sits far inside the
-			// smallest gap between any two of them.
-			if (s.spikeScaleFactor > kSelFactors[k] - 0.01f &&
-				s.spikeScaleFactor < kSelFactors[k] + 0.01f)
-			{
-				return k;
-			}
-		}
-		return -1;   // a factor no row can express: say nothing, claim nothing
-	}
-
-	// Can THIS resolution carry the tier on row k? Auto and 1x always can.
-	// Delegated to ScaleTier::Fits so the answer shown to the player is the
-	// answer the next launch will actually give.
-	// Offered resolutions, largest first. The monitor's own mode is inserted
-	// at runtime if it is not already here - the useful list depends on the
-	// panel and only the panel knows it.
-	struct SelRes { int w, h; };
-	const int kSelResMax = 24;
-	SelRes gSelResList[kSelResMax] = {
-		{ 3840, 2160 }, { 2560, 1600 }, { 2400, 1600 }, { 1920, 1200 },
-		{ 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 }, { 1024, 768 },
-		{ 800, 600 }, { 0, 0 }
-	};
-	// 800x600 is the game's own documented minimum and a perfectly real
-	// windowed size - it was missing, and "the smallest thing we offer" is
-	// not the same question as "the smallest thing that works".
-	int gSelResCount = 9;
-	int gSelResPushed = -1, gSelResStaged = -1;
-	int gSelModePushed = -1, gSelModeStaged = -1;
-	bool gSelScaleNeedsRebuild = false;
-	// ⭐ SESSION-SCOPED. On the FIRST open the combo shows what the game is
-	// RUNNING, not what the ini happens to hold - because the ini can hold a
-	// value from a previous session that was never applied, and opening a
-	// dialog should tell you where you are before it tells you where you are
-	// going. Only once the player changes it does the pending value take over
-	// the display on reopen.
-	//
-	// This also clears stale state as a side effect: a first Accept writes the
-	// running resolution back, so a 1024x768 left over from an earlier visit
-	// cannot survive a later mode switch that the player never connected to it.
-	bool gSelResUserChanged = false;
-	bool gSelResNeedsRebuild = false;  // the mode changed
-	// ⛔ TWO INDEX SPACES, AND THE COMMIT MIXED THEM. gSelResPushed is a
-	// SHOWN-list index (the filtered rows the combo displays);
-	// gSelResStaged is a FULL-list index. The close path fell back to
-	// gSelResPushed when only the MODE had changed, and used it to index
-	// the FULL list - writing a resolution the player never picked. Four
-	// independent review passes found this one, which is what a genuinely
-	// reachable defect looks like.
-	//
-	// This holds the FULL index of whatever is currently selected, set
-	// wherever the selection is, so the commit never has to convert.
-	int  gSelResSelFull = -1;
-	cIGZWin* gSelDlgLast = nullptr;   // for the close-time re-read
-	int  gSelResShown = 0;          // rows actually offered
-	int  gSelResShownIdx[kSelResMax] = {0}; // shown row -> list index
-
-	// SC4GraphicsOptions.ini sits beside the DLL, same as our own ini.
-	void SelGfxIniPath(wchar_t* out, size_t outLen)
-	{
-		wchar_t path[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
-		wchar_t* lastSlash = wcsrchr(path, L'\\');
-		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
-		swprintf_s(out, outLen, L"%sSC4GraphicsOptions.ini", path);
-	}
-
-	// dgVoodoo takes EXCLUSIVE fullscreen only for mode 0. Borderless and
-	// windowed are both ordinary windows as far as the wrapper is concerned,
-	// and asking it for exclusive there is what makes a "windowed" setting
-	// come up fullscreen anyway.
-	// The live mode is READ, not inferred. gReqResIgnored only answers
-	// "is it borderless", and a control that shows the wrong current value is
-	// how a player ends up changing something they never touched.
-	// ⭐ WHAT THE COMBO SHOWS IS WHAT WILL APPLY, NOT WHAT IS RUNNING.
-	// It used to seed from gReadoutW/H - the resolution the game is rendering
-	// at right now - so after Accept the ini held the new value while the
-	// control snapped back to the old one on reopen, exactly the way the SCALE
-	// combo did before it learned to show its pending choice. The ini is the
-	// answer to "what did I choose"; gReadoutW/H is the answer to "what am I
-	// running", and only the second deserves the "(current)" marker.
-	// ⭐ THE INI IS READ ONCE PER SERVICE PASS, NOT PER CALL.
-	// SelEffectiveRes is called from inside row-building loops, and each call
-	// was doing a GetPrivateProfileInt - a file open, parse and close - so a
-	// single rebuild hit the disk dozens of times. Together with the nested
-	// display enumeration that is what froze the dialog for seconds on a
-	// click. The ini cannot change under us mid-pass: WE are the only writer,
-	// and we write at close.
-	int  gSelIniResW = -1, gSelIniResH = -1;
-	int  gSelIniModeCache = -1;
-	void SelInvalidateIniCache()
-	{
-		gSelIniResW = -1;
-		gSelIniResH = -1;
-		gSelIniModeCache = -1;
-	}
-
-	void SelIniRes(int* w, int* h)
-	{
-		if (gSelIniResW >= 0)
-		{
-			*w = gSelIniResW;
-			*h = gSelIniResH;
-			return;
-		}
-		PerfProbe::Scope perf_("sel.iniRead");
-		wchar_t p[MAX_PATH] = {};
-		SelGfxIniPath(p, MAX_PATH);
-		gSelIniResW = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, p);
-		gSelIniResH = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, p);
-		*w = gSelIniResW;
-		*h = gSelIniResH;
-	}
 
 	// ⭐ THREE MODES, ALPHABETICAL, AND NAMED - not positional.
 	//   0 Borderless  a window covering the screen. NO display-mode change,
@@ -18918,133 +18746,38 @@ namespace
 	//                 control offers a single row in this mode. Recommended.
 	//   1 Fullscreen  exclusive; CHANGES THE DISPLAY MODE to the chosen
 	//                 resolution, which is why the desktop visibly resizes.
-	//                 Windows restores it on a clean exit - and does not get
-	//                 the chance after a crash.
 	//   2 Windowed    a plain window at the chosen size.
-	//
-	// The order changed once (Borderless to the top) and this table is
-	// indexed from eight places; a reorder updating seven of them writes the
-	// wrong window mode and reads as a data bug. The names are the contract,
-	// and the raw 0/1/2 appear nowhere.
+	// The names are the contract, and the raw 0/1/2 appear nowhere.
 	const int kModeBorderless = 0;
 	const int kModeFullscreen = 1;
 	const int kModeWindowed   = 2;
 	const char* const kSelModeLabels[] = { "Borderless", "Fullscreen", "Windowed" };
+	const int kSelModeCount = 3;
 
-	// ⭐ WINDOW MODE AND RESOLUTION BELONG TO A THIRD-PARTY DLL.
-	// SC4GraphicsOptions.ini is not the game's - it configures
-	// SC4GraphicsOptions.dll, a community plugin. Its first section is that
-	// DLL's own on/off switch ("[Admin] Enabled=true - setting this to false
-	// stops the game from loading the DLL"), which settles the ownership
-	// question: stock SC4 from 2003 takes -w / -f on the command line, keeps
-	// no such ini, and has no borderless mode at all. dgVoodoo is a third
-	// component again - it lifts the DirectX 7 2048 cap and takes exclusive
-	// fullscreen when asked.
-	//
-	// So on an install WITHOUT that DLL, WindowMode and WindowWidth/Height are
-	// read by nobody and BOTH controls are inert - not just Borderless, which
-	// is only the mode that DLL adds. A control that looks live and does
-	// nothing is the failure this whole feature has been hunting; ask the disk
-	// rather than assume.
-	bool SelGraphicsDllPresent()
-	{
-		PerfProbe::Scope perf_("sel.dllStat");
-		wchar_t dir[MAX_PATH] = {};
-		SelGfxIniPath(dir, MAX_PATH);
-		wchar_t* slash = wcsrchr(dir, L'\\');
-		if (slash == nullptr) { return false; }
-		*(slash + 1) = 0;
-		wchar_t dll[MAX_PATH] = {};
-		swprintf_s(dll, L"%sSC4GraphicsOptions.dll", dir);
-		return GetFileAttributesW(dll) != INVALID_FILE_ATTRIBUTES;
-	}
+	struct SelRes { int w, h; };
+	const int kSelResMax = 24;
 
-	int SelLiveModeIndex()
+	// ONE familiar-size table for every branch that offers resolutions.
+	// (Law 94: hand-lists rot fastest when duplicated.)
+	const SelRes kSelFamiliar[] = {
+		{ 3840, 2160 }, { 2560, 1600 }, { 2560, 1440 }, { 2400, 1600 },
+		{ 1920, 1200 }, { 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 },
+		{ 1024, 768 }, { 800, 600 }
+	};
+	const int kSelFamiliarN =
+		static_cast<int>(sizeof(kSelFamiliar) / sizeof(kSelFamiliar[0]));
 
-	{
-		if (gSelIniModeCache >= 0) { return gSelIniModeCache; }
-		PerfProbe::Scope perf_("sel.iniRead");
-		wchar_t p[MAX_PATH] = {};
-		SelGfxIniPath(p, MAX_PATH);
-		wchar_t mode[40] = {};
-		GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
-			L"FullScreen", mode, 40, p);
-		gSelIniModeCache =
-			(_wcsicmp(mode, L"Windowed") == 0) ? kModeWindowed
-			: (_wcsicmp(mode, L"Borderless") == 0
-				|| _wcsicmp(mode, L"BorderlessFullScreen") == 0)
-				? kModeBorderless : kModeFullscreen;
-		return gSelIniModeCache;
-	}
-
-	// ⭐ THE RENDER SIZE IS A FUNCTION OF THE MODE, NOT JUST THE RESOLUTION.
-	// This is the piece that was missing and it is why the control could lie:
-	// in BORDERLESS the game ignores WindowWidth/Height entirely and renders
-	// at the desktop, so a player who picked 1024x768 was shown
-	// "1024x768 - on restart", restarted, and got 2400x1600. The dialog made a
-	// promise the game never intended to keep - measured in the user's own
-	// log, not deduced.
-	//
-	// So one function answers "what will the game actually render at next
-	// launch", taking the STAGED MODE into account, and everything that needs
-	// that answer - the tier's usable set, its "needs WxH" captions, its
-	// "@ WxH" readout - asks it rather than reading a resolution directly.
-	int SelEffectiveModeIdx()
-	{
-		if (gSelModeStaged >= 0) { return gSelModeStaged; }
-		if (gSelModePushed >= 0) { return gSelModePushed; }
-		return SelLiveModeIndex();
-	}
-
-	// ⭐ THE RESOLUTION LIST IS BUILT PER MODE, because "resolution" means a
-	// different thing in each one and offering the same rows everywhere is how
-	// the control ended up promising something the game ignores.
-	//
-	//   BORDERLESS  the game renders at the DESKTOP and documents
-	//               WindowWidth/Height as ignored. One row, the desktop, and
-	//               nothing to choose - a control with no effect must not look
-	//               like a choice.
-	//   FULLSCREEN  a real display-mode change. Only modes the display ACTUALLY
-	//               REPORTS are offered (EnumDisplaySettingsW), because an
-	//               unsupported mode in exclusive fullscreen is a black screen,
-	//               not a cosmetic problem. A 16:10 size on a 3:2 panel is
-	//               exactly that trap.
-	//   WINDOWED    a window, which needs room for its own title bar and
-	//               borders. Capped BELOW the desktop by the real frame size,
-	//               or the bottom of the window - including this dialog's
-	//               Accept button - lands off-screen.
-	// ⭐ THE PANEL'S CAPABILITY, NOT THE MODE THE GAME IS CURRENTLY IN.
-	// GetSystemMetrics reports the CURRENT display mode, and in exclusive
-	// fullscreen that is the mode THE GAME SET. Capping the list at it makes
-	// the control a ONE-WAY RATCHET: pick 800x600 fullscreen, and the next
-	// visit reports an 800x600 "desktop", filters everything larger, and
-	// offers exactly one row. There is then no way back up from inside the
-	// game. Measured 2026-08-20:
-	//     AutoScale: DirectX FullScreen - render res = requested 800x600
-	//     SELRES built 1 row(s) for Fullscreen on a 800x600 desktop
-	//
-	// ENUM_CURRENT_SETTINGS has the same flaw. The two questions that do not
-	// move are: what is the panel's LARGEST mode (its capability), and what is
-	// the mode stored in the registry (the user's actual desktop, which a
-	// fullscreen game does not rewrite).
-	// ⭐ ENUMERATED ONCE. EnumDisplaySettingsW is a system call, and the
-	// fullscreen list was calling it INSIDE A NESTED LOOP - once per familiar
-	// size, over every mode the driver reports - so a rebuild cost hundreds of
-	// them, and the game visibly locked up for seconds on a click. The modes a
-	// display supports do not change while the game is running, so asking more
-	// than once is pure waste.
+	// ---- SESSION FACTS: the display, enumerated ONCE -------------------
+	// EnumDisplaySettingsW costs 3,264ms on this machine (dgVoodoo sits
+	// between us and the driver) - measured by the v3.13.2 instrument, all
+	// of it on the first click. The warm thread kicks it at DLL load
+	// (user direction 2026-08-20); the tri-state handshake keeps the UI
+	// thread safe at any moment.
 	SelRes gSelModeCache[64];
 	int  gSelModeCacheN = 0;
-	// Tri-state so a BACKGROUND thread can warm the cache at DLL load while
-	// the UI thread stays safe to ask at any time: 0 = idle, 1 = enumerating,
-	// 2 = done. v3.13.2 MEASURED the enumeration at 3,264ms on this machine
-	// (dgVoodoo sits between us and the driver), all of it spent on the first
-	// dialog open - the one moment the user is guaranteed to be watching.
-	// USER DIRECTION 2026-08-20: "load the resolutions during game startup
-	// when the DLL loads versus waiting for the user to click the box."
-	volatile LONG gSelEnumState = 0;
-	int  gSelCapW = 0, gSelCapH = 0;      // largest mode the panel reports
-	int  gSelDeskW = 0, gSelDeskH = 0;    // the registry desktop mode
+	volatile LONG gSelEnumState = 0;   // 0 = idle, 1 = enumerating, 2 = done
+	int  gSelCapW = 0, gSelCapH = 0;   // largest mode the panel reports
+	int  gSelDeskW = 0, gSelDeskH = 0; // the registry desktop mode
 
 	void SelEnumOnce()
 	{
@@ -19055,8 +18788,8 @@ namespace
 		{
 			// The warm thread is mid-enumeration. WAIT for its answer rather
 			// than race it into the same arrays - this can only happen if the
-			// dialog is opened within ~3s of DLL load, which the game's own
-			// load screens make practically impossible; the wait is a
+			// dialog is opened within seconds of DLL load, which the game's
+			// own load screens make practically impossible; the wait is a
 			// correctness net, not an expected path.
 			while (gSelEnumState != 2) { Sleep(5); }
 			return;
@@ -19112,27 +18845,10 @@ namespace
 			gSelModeCacheN, gSelCapW, gSelCapH, gSelDeskW, gSelDeskH);
 	}
 
-	// The warm thread: USER DIRECTION - enumerate at DLL load, not at the
-	// first click. EnumDisplaySettingsW is a plain system API with no game
-	// state, so a worker thread is safe; the tri-state above makes the UI
-	// thread wait out the (practically impossible) race instead of racing.
 	DWORD WINAPI SelEnumWarmThread(LPVOID)
 	{
 		SelEnumOnce();
 		return 0;
-	}
-
-	bool SelModeSupported(int w, int h)
-	{
-		SelEnumOnce();
-		for (int k = 0; k < gSelModeCacheN; k++)
-		{
-			if (gSelModeCache[k].w == w && gSelModeCache[k].h == h)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	void SelDisplayMax(int* w, int* h)
@@ -19142,8 +18858,10 @@ namespace
 		*h = gSelCapH;
 	}
 
-	// The user's desktop mode - unaffected by whatever mode a fullscreen game
-	// has temporarily put the display into.
+	// The user's desktop mode - unaffected by whatever mode a fullscreen
+	// game has temporarily put the display into (ENUM_REGISTRY_SETTINGS,
+	// never the current metrics: in exclusive fullscreen those are the mode
+	// THE GAME SET, which made the list a one-way ratchet).
 	void SelDesktopMode(int* w, int* h)
 	{
 		SelEnumOnce();
@@ -19151,96 +18869,20 @@ namespace
 		*h = gSelDeskH;
 	}
 
-	void SelEffectiveRes(int* w, int* h)
+	// ---- PATHS -----------------------------------------------------------
+	// SC4GraphicsOptions.ini sits beside the DLL, same as our own ini.
+	void SelGfxIniPath(wchar_t* out, size_t outLen)
 	{
-		// BORDERLESS: the desktop, whatever the resolution control says. The
-		// game's own ini documents WindowWidth/Height as ignored here.
-		if (SelEffectiveModeIdx() == kModeBorderless)
-		{
-			// The DESKTOP mode, not GetSystemMetrics - see SelDesktopMode. In
-			// exclusive fullscreen the current metrics are the mode the GAME
-			// set, so borderless would inherit whatever the last fullscreen
-			// choice happened to be.
-			int dw = 0, dh = 0;
-			SelDesktopMode(&dw, &dh);
-			if (dw > 0 && dh > 0) { *w = dw; *h = dh; return; }
-		}
-		// Fullscreen and Windowed both render at the requested size.
-		// Staged beats committed beats running: a resolution chosen this
-		// visit, one chosen earlier this session, and the one actually
-		// rendering can all differ, and the tier must be judged against
-		// whichever will be in force at the next launch.
-		if (gSelResStaged >= 0 && gSelResStaged < gSelResCount)
-		{
-			*w = gSelResList[gSelResStaged].w;
-			*h = gSelResList[gSelResStaged].h;
-			return;
-		}
-		int iniW = 0, iniH = 0;
-		SelIniRes(&iniW, &iniH);
-		// The ini counts only once the player has chosen this session; before
-		// that it is history.
-		if (gSelResUserChanged && iniW > 0 && iniH > 0)
-		{
-			*w = iniW;
-			*h = iniH;
-			return;
-		}
-		*w = gReadoutW;
-		*h = gReadoutH;
+		wchar_t path[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
+		wchar_t* lastSlash = wcsrchr(path, L'\\');
+		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
+		swprintf_s(out, outLen, L"%sSC4GraphicsOptions.ini", path);
 	}
 
-	bool SelRowUsable(int k)
-	{
-		if (k <= 1) { return true; }             // Auto, 1x
-		int ew = 0, eh = 0;
-		SelEffectiveRes(&ew, &eh);
-		if (ew <= 0 || eh <= 0)
-		{
-			// We were never handed a render size, so the FIT question cannot
-			// be answered - a missing measurement is not evidence of a small
-			// screen. The PACKAGE question needs no screen and still runs.
-			return ScaleTier::PackageAvailable(kSelFactors[k]);
-		}
-		// ⭐ PACKAGE FIRST, THEN FIT. Offering a tier whose art is not
-		// installed makes the escape hatch WRITE THE TRAP: the player picks
-		// it, and the next boot's validator bounces it straight back to Auto.
-		// A control that offers a choice it knows will be refused is worse
-		// than one that does not offer it. Same predicate the boot path uses,
-		// so the selector and the validator can never disagree.
-		return ScaleTier::PackageAvailable(kSelFactors[k])
-			&& ScaleTier::Fits(kSelFactors[k], ew, eh);
-	}
-
-	void SelSetCaption(cIGZWin* parent, uint32_t id, const char* text)
-	{
-		PerfProbe::Scope perf_("sel.caption");
-		cIGZWin* w = parent->GetChildWindowFromIDRecursive(id);
-		if (!w) { return; }
-		cIGZWinText* t = nullptr;
-		if (w->QueryInterface(GZIID_cIGZWinText,
-				reinterpret_cast<void**>(&t)) && t)
-		{
-			cIGZString* cur = w->GetCaption();
-			const bool same = (cur != nullptr && cur->ToChar() != nullptr
-				&& strcmp(cur->ToChar(), text) == 0);
-			if (!same)
-			{
-				cRZBaseString want(text);
-				t->SetCaption(want);
-			}
-			t->Release();
-		}
-	}
-
-	// COMMIT. One writer for the tier keys, and it writes the SAME two keys
-	// Set-Tier.ps1 writes, to the SAME ini Settings::Load reads. Win32 profile
-	// writes never emit a BOM, which is the one thing that must stay true of
-	// this file: a BOM makes the game's own ini parser miss every key.
 	// The ini beside THIS dll - the same file Settings::Load read at startup.
-	// Resolved here rather than reusing the director's helper because that one
-	// is file-static to the director; duplicating four lines beats exporting a
-	// path helper across the module boundary for one call.
+	// Resolved here rather than reusing the director's helper because that
+	// one is file-static to the director.
 	void SelIniPath(wchar_t* out, size_t outLen)
 	{
 		wchar_t path[MAX_PATH] = {};
@@ -19249,49 +18891,6 @@ namespace
 		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
 		swprintf_s(out, outLen, L"%sSC4UIScale.ini", path);
 	}
-
-	// Last-write time of that file, 0 if it cannot be read.
-	unsigned long long SelGfxIniStamp()
-	{
-		PerfProbe::Scope perf_("sel.gfxStamp");
-		wchar_t p[MAX_PATH] = {};
-		SelGfxIniPath(p, MAX_PATH);
-		WIN32_FILE_ATTRIBUTE_DATA fad = {};
-		if (!GetFileAttributesExW(p, GetFileExInfoStandard, &fad)) { return 0ull; }
-		ULARGE_INTEGER u;
-		u.LowPart = fad.ftLastWriteTime.dwLowDateTime;
-		u.HighPart = fad.ftLastWriteTime.dwHighDateTime;
-		return u.QuadPart;
-	}
-
-	// ⭐ WHAT WE COMMITTED, FOR DISPLAY ONLY - and it is why the control
-	// looked broken. SelCommit writes the INI; it deliberately does not touch
-	// the live `settings`, because spikeScaleFactor is read all over the
-	// running game and changing it mid-session would move geometry that the
-	// art cannot follow until the next launch.
-	//
-	// But the combo seeded itself from `settings` on every open, so the moment
-	// the dialog was reopened it snapped back to whatever was RUNNING - Auto -
-	// and every deliberate choice looked like it had been thrown away. The
-	// user reported exactly that: "no matter the resolution I select it just
-	// jumps back to auto". The commits were all in the log; only the display
-	// was lying.
-	//
-	// So the display reads the PENDING choice when there is one, and the live
-	// settings otherwise. Nothing about the running game changes.
-	int gSelPendingRow = -1;
-
-	// ============ RESOLUTION + WINDOW MODE ================================
-	// ⭐ ONE CONTROL, TWO FILES, BECAUSE THE SETTING GENUINELY LIVES IN TWO.
-	// SC4GraphicsOptions.ini's WindowMode does NOTHING on its own: dgVoodoo's
-	// FullScreenMode overrides it, so a player who edits the documented file
-	// gets no effect and no explanation. Writing one without the other is the
-	// bug, not a shortcut.
-	const uint32_t kSelResComboId  = 0x5CA1E006;
-	const uint32_t kSelModeLabelId = 0x5CA1E007;
-	const uint32_t kSelModeComboId = 0x5CA1E008;
-	const uint32_t kSelResLabelId  = 0x5CA1E00B;
-
 
 	// dgVoodoo.conf sits BESIDE THE EXE (Apps\), not beside the DLL.
 	void SelDgVoodooPath(wchar_t* out, size_t outLen)
@@ -19303,13 +18902,69 @@ namespace
 		swprintf_s(out, outLen, L"%sdgVoodoo.conf", exe);
 	}
 
+	// ---- VISIT FACTS, READ ONCE PER OPEN ----------------------------------
+	// ⭐ SC4GraphicsOptions.ini belongs to a THIRD-PARTY DLL (SC4Graphics-
+	// Options.dll, a community plugin); dgVoodoo is a third component again.
+	// On an install WITHOUT that DLL, WindowMode and WindowWidth/Height are
+	// read by nobody - so the dll's presence is a visit fact and both
+	// controls hide when it is absent. The scale selector is unaffected: it
+	// writes our own ini, which we own.
+	int SelReadGfxMode()
+	{
+		PerfProbe::Scope perf_("sel.iniRead");
+		wchar_t p[MAX_PATH] = {};
+		SelGfxIniPath(p, MAX_PATH);
+		wchar_t mode[40] = {};
+		GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
+			L"FullScreen", mode, 40, p);
+		return (_wcsicmp(mode, L"Windowed") == 0) ? kModeWindowed
+			: (_wcsicmp(mode, L"Borderless") == 0
+				|| _wcsicmp(mode, L"BorderlessFullScreen") == 0)
+				? kModeBorderless : kModeFullscreen;
+	}
+
+	void SelReadGfxRes(int* w, int* h)
+	{
+		PerfProbe::Scope perf_("sel.iniRead");
+		wchar_t p[MAX_PATH] = {};
+		SelGfxIniPath(p, MAX_PATH);
+		*w = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, p);
+		*h = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, p);
+	}
+
+	// Our own ini's scale keys. Defaults mirror Settings::Load's.
+	void SelReadOurScale(bool* autoScale, float* factor)
+	{
+		PerfProbe::Scope perf_("sel.iniRead");
+		wchar_t p[MAX_PATH] = {};
+		SelIniPath(p, MAX_PATH);
+		*autoScale = GetPrivateProfileIntW(L"UiSpike", L"AutoScale", 1, p) != 0;
+		wchar_t f[32] = {};
+		GetPrivateProfileStringW(L"UiSpike", L"ScaleFactor", L"2", f, 32, p);
+		*factor = static_cast<float>(_wtof(f));
+	}
+
+	bool SelGraphicsDllPresent()
+	{
+		PerfProbe::Scope perf_("sel.dllStat");
+		wchar_t dir[MAX_PATH] = {};
+		SelGfxIniPath(dir, MAX_PATH);
+		wchar_t* slash = wcsrchr(dir, L'\\');
+		if (slash == nullptr) { return false; }
+		*(slash + 1) = 0;
+		wchar_t dll[MAX_PATH] = {};
+		swprintf_s(dll, L"%sSC4GraphicsOptions.dll", dir);
+		return GetFileAttributesW(dll) != INVALID_FILE_ATTRIBUTES;
+	}
+
+	// ---- THE WRITERS (close path only - the contract gate asserts it) ----
 	// ⛔ NOT WritePrivateProfileString. dgVoodoo.conf is ini-SHAPED but its
-	// keys are column-aligned ("FullScreenMode   = true") and the file carries
-	// comments the wrapper's own tooling expects. A profile write would
-	// reformat the line and could reorder the section. This rewrites exactly
-	// the value token on the FullScreenMode line and touches nothing else -
-	// and never adds a BOM, which is a standing law in this project for every
-	// ini the game or a wrapper reads.
+	// keys are column-aligned ("FullScreenMode   = true") and the file
+	// carries comments the wrapper's own tooling expects. A profile write
+	// would reformat the line and could reorder the section. This rewrites
+	// exactly the value token on the FullScreenMode line and touches
+	// nothing else - and never adds a BOM, a standing law for every ini the
+	// game or a wrapper reads.
 	bool SelWriteDgVoodooFullScreen(bool fullscreen)
 	{
 		PerfProbe::Scope perf_("sel.dgWrite");
@@ -19378,153 +19033,6 @@ namespace
 		return wrote;
 	}
 
-	const int kSelModeCount = 3;
-
-	// ONE familiar-size table for every branch that offers resolutions. It
-	// lived inside the Fullscreen branch, which is part of how Windowed ended
-	// up with no branch at all - the data a branch would need was private to
-	// its sibling. (Law 94: hand-lists rot fastest when duplicated.)
-	const SelRes kSelFamiliar[] = {
-		{ 3840, 2160 }, { 2560, 1600 }, { 2560, 1440 }, { 2400, 1600 },
-		{ 1920, 1200 }, { 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 },
-		{ 1024, 768 }, { 800, 600 }
-	};
-	const int kSelFamiliarN =
-		static_cast<int>(sizeof(kSelFamiliar) / sizeof(kSelFamiliar[0]));
-
-	void SelBuildResList()
-	{
-		PerfProbe::Scope perf_("sel.buildResList");
-		// FULLSCREEN is bounded by what the PANEL can do; WINDOWED and
-		// BORDERLESS by the user's DESKTOP, which is a different question and
-		// the one that does not move when the game changes mode.
-		int capW = 0, capH = 0;
-		SelDisplayMax(&capW, &capH);
-		int deskW = 0, deskH = 0;
-		SelDesktopMode(&deskW, &deskH);
-		const int mode = SelEffectiveModeIdx();
-		const int dw = (mode == kModeFullscreen) ? capW : deskW;
-		const int dh = (mode == kModeFullscreen) ? capH : deskH;
-		gSelResCount = 0;
-
-		if (mode == kModeBorderless)   // the desktop, and only that
-		{
-			if (deskW > 0 && deskH > 0)
-			{
-				gSelResList[0].w = deskW;
-				gSelResList[0].h = deskH;
-				gSelResCount = 1;
-			}
-			return;
-		}
-
-		if (mode == kModeFullscreen)
-		{
-			// ⭐ FAMILIAR SIZES, INTERSECTED WITH WHAT THE DISPLAY REPORTS.
-			// Two failures to avoid at once:
-			//   * offering a mode the panel does not have. In EXCLUSIVE
-			//     fullscreen that is a real mode change, so "unsupported" is a
-			//     black screen, not a cosmetic problem.
-			//   * offering everything it DOES have. EnumDisplaySettings
-			//     returns every legacy mode the driver will admit - 1856x1392,
-			//     1792x1344 and a dozen more - and a list that long grows a
-			//     SCROLLBAR, which draws magenta-pink because 0xFF00FF is this
-			//     engine's colour key and the scrollbar art no longer carries
-			//     it exactly. Shortening the list removes the scrollbar, so
-			//     the broken art is never asked for - and nobody wanted
-			//     1856x1392 anyway.
-			//
-			// Taking the intersection answers both: every row is a size a
-			// player recognises AND one the display has told us it can do.
-			// Sorting the raw enumeration and keeping "the largest at each
-			// tier" was tried first and chose 1856x1392 over 1920x1200 -
-			// correct by area, and not a size anyone would pick from a menu.
-			for (int f = 0; f < kSelFamiliarN && gSelResCount < 7; f++)
-			{
-				if (dw > 0 && (kSelFamiliar[f].w > dw || kSelFamiliar[f].h > dh))
-				{
-					continue;
-				}
-				if (!SelModeSupported(kSelFamiliar[f].w, kSelFamiliar[f].h))
-				{
-					continue;
-				}
-				gSelResList[gSelResCount] = kSelFamiliar[f];
-				gSelResCount++;
-			}
-			// The desktop mode is always legal even if it is not in the list
-			// above - a 3:2 panel's native size is in nobody's familiar table.
-			if (deskW > 0 && deskH > 0)
-			{
-				bool have = false;
-				for (int k = 0; k < gSelResCount; k++)
-				{
-					if (gSelResList[k].w == deskW && gSelResList[k].h == deskH)
-					{
-						have = true;
-						break;
-					}
-				}
-				if (!have && gSelResCount < kSelResMax)
-				{
-					gSelResList[gSelResCount].w = deskW;
-					gSelResList[gSelResCount].h = deskH;
-					gSelResCount++;
-				}
-			}
-		}
-		else   // WINDOWED - and this branch MUST exist.
-		{
-			// ⛔ v3.13.2 MEASURED "built 0 row(s) for Windowed": there was NO
-			// Windowed branch at all - Borderless returns early, Fullscreen
-			// has its block, and Windowed fell through both ifs to the sort
-			// with an empty list. The user's screenshot of an open, empty
-			// drop list was the list being empty at birth, not a repaint
-			// defect (which is what it was first theorised to be - the
-			// measurement retired that theory in one line).
-			//
-			// The rules here differ from Fullscreen on purpose:
-			//   * NO SelModeSupported check. A window needs no display mode -
-			//     any size draws inside a window, so the panel's mode table
-			//     is the wrong question here.
-			//   * The DESKTOP-EQUAL size is EXCLUDED. A desktop-sized window
-			//     is taller than the screen the moment its title bar exists,
-			//     and "fill the screen with a window" is Borderless's job -
-			//     offering it here duplicates that mode, badly.
-			for (int f = 0; f < kSelFamiliarN && gSelResCount < 7; f++)
-			{
-				if (deskW > 0
-					&& (kSelFamiliar[f].w > deskW || kSelFamiliar[f].h > deskH))
-				{
-					continue;   // does not fit the desktop at all
-				}
-				if (kSelFamiliar[f].w == deskW && kSelFamiliar[f].h == deskH)
-				{
-					continue;   // desktop-equal: that is Borderless
-				}
-				gSelResList[gSelResCount] = kSelFamiliar[f];
-				gSelResCount++;
-			}
-		}
-		// Largest first, so the list reads the way the stock one does.
-		for (int a = 0; a < gSelResCount; a++)
-		{
-			for (int b = a + 1; b < gSelResCount; b++)
-			{
-				if (gSelResList[b].w * gSelResList[b].h
-					> gSelResList[a].w * gSelResList[a].h)
-				{
-					const SelRes t = gSelResList[a];
-					gSelResList[a] = gSelResList[b];
-					gSelResList[b] = t;
-				}
-			}
-		}
-		Logger::Get().WriteLine(LogLevel::Info,
-			"UiSpike: SELRES built %d row(s) for %s on a %dx%d desktop.",
-			gSelResCount, kSelModeLabels[mode], dw, dh);
-	}
-
 	void SelWriteGraphicsIni(int modeIdx, int w, int h)
 	{
 		PerfProbe::Scope perf_("sel.iniWrite");
@@ -19542,7 +19050,6 @@ namespace
 		}
 		WritePrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
 			modeStr, p);
-		SelInvalidateIniCache();   // we are the writer; the cache is now stale
 		Logger::Get().WriteLine(LogLevel::Info,
 			"UiSpike: SELMODE SC4GraphicsOptions.ini -> WindowMode=%ls "
 			"WindowWidth=%d WindowHeight=%d.%ls",
@@ -19554,95 +19061,386 @@ namespace
 				: L"");
 	}
 
-	void SelCommit(int row)
+	// ---- THE STATE --------------------------------------------------------
+	struct SelState
 	{
-		if (row < 0 || row >= kSelCount) { return; }
-		PerfProbe::Scope perf_("sel.commit");
-		gSelPendingRow = row;
-		wchar_t ini[MAX_PATH] = {};
-		SelIniPath(ini, MAX_PATH);
-		if (ini[0] == 0) { return; }
+		// session facts (cached once per session, never re-read mid-session)
+		int capW, capH;            // panel max mode
+		int deskW, deskH;          // registry desktop mode
+		const SelRes* modes;       // the panel's reported modes (cached)
+		int modeN;
+		bool pkg[8];               // tier package on disk (Auto/1x: always)
+		int liveMode;              // the mode the game BOOTED with
+		// visit facts (read ONCE per dialog open)
+		int liveW, liveH;          // measured render size
+		int iniMode, iniW, iniH;   // SC4GraphicsOptions.ini
+		bool ourAuto; float ourFactor;   // our ini (AutoScale/ScaleFactor)
+		bool dll;                  // SC4GraphicsOptions.dll present
+		// the player's staged requests (this visit only; -1 = untouched)
+		int sMode, sRes, sScale;   // sScale is a REQUEST, never overwritten
+	};
 
-		// ⭐ ScaleAll IS WRITTEN TOO, AND THAT CLOSES THE WORST TRAP FOUND.
-		// The art and font layer is armed from the FACTOR, while every
-		// geometry consumer is gated on ScaleAll - so with ScaleAll=0 (or the
-		// key deleted, or written as a word, all of which parse to 0) every
-		// choice made here was committed and then silently voided at the next
-		// boot, forever. The dialog was reachable and NO combination inside it
-		// could repair the state, because the selector wrote AutoScale and
-		// ScaleFactor and never the key that was actually off. Three review
-		// passes flagged it independently.
-		//
-		// Picking a scale from this control IS a request for scaling, so the
-		// switch that enables it is part of the request. Stock (row 1) is the
-		// one case that must not touch it: 1x is meant to be inert, and a
-		// reference capture taken with ScaleAll=0 must stay that way.
-		if (row != 1)
+	struct SelUi
+	{
+		int effMode, effW, effH;   // the one future the commit will write
+		int effScale;
+		bool bounced;              // the request does not fit; Auto derived
+		int modeSel;
+		int resCount, resSel;
+		SelRes res[kSelResMax];    // THE list - one index space, no dual
+		char modeRows[kSelModeCount][80];
+		char resRows[kSelResMax][80];
+		char scaleRows[kSelCount][80];
+	};
+
+	// ---- THE PURE FUNCTION ------------------------------------------------
+	// The FULL res list for a mode, largest first. ONE index space - the UI
+	// shows exactly this, and the commit indexes exactly this (the v3.13
+	// two-index-space defect is structurally gone).
+	//   BORDERLESS  the desktop, and only that - the game documents
+	//               WindowWidth/Height as ignored here; a control with no
+	//               effect must not look like a choice.
+	//   FULLSCREEN  familiar sizes INTERSECTED with what the panel reports
+	//               (an unsupported mode in exclusive fullscreen is a black
+	//               screen, not a cosmetic problem; and the raw enumeration
+	//               grows a scrollbar that draws magenta). The desktop mode
+	//               is always legal even if no familiar table carries it -
+	//               a 3:2 panel's native size is in nobody's list.
+	//   WINDOWED    familiar sizes that fit the desktop, EXCLUDING the
+	//               desktop-equal size: a desktop-sized window overflows the
+	//               screen once its title bar exists, and "fill the screen
+	//               with a window" is Borderless's job. No mode check - a
+	//               window needs no display mode. (v3.13.2 measured the old
+	//               C++ had NO windowed branch at all; the spec pins this.)
+	int SelBuildResRows(const SelState& st, int mode, SelRes* out)
+	{
+		int n = 0;
+		if (mode == kModeBorderless)
 		{
-			wchar_t cur[16] = {};
-			GetPrivateProfileStringW(L"UiSpike", L"ScaleAll", L"1", cur, 16, ini);
-			if (_wtoi(cur) == 0)
+			if (st.deskW > 0 && st.deskH > 0)
 			{
-				WritePrivateProfileStringW(L"UiSpike", L"ScaleAll", L"1", ini);
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELECTOR ScaleAll was %ls - written back as 1. "
-					"Without it the tier's art and fonts arm while every "
-					"geometry patch stays off, and nothing in this dialog "
-					"could have repaired that.", cur);
+				out[0].w = st.deskW;
+				out[0].h = st.deskH;
+				n = 1;
+			}
+			return n;
+		}
+		if (mode == kModeFullscreen)
+		{
+			for (int f = 0; f < kSelFamiliarN && n < 7; f++)
+			{
+				const int w = kSelFamiliar[f].w;
+				const int h = kSelFamiliar[f].h;
+				if (st.capW > 0 && (w > st.capW || h > st.capH)) { continue; }
+				bool supported = false;
+				for (int k = 0; k < st.modeN; k++)
+				{
+					if (st.modes[k].w == w && st.modes[k].h == h)
+					{
+						supported = true;
+						break;
+					}
+				}
+				if (!supported) { continue; }
+				out[n].w = w;
+				out[n].h = h;
+				n++;
+			}
+			if (st.deskW > 0 && st.deskH > 0 && n < kSelResMax)
+			{
+				bool have = false;
+				for (int k = 0; k < n; k++)
+				{
+					if (out[k].w == st.deskW && out[k].h == st.deskH)
+					{
+						have = true;
+						break;
+					}
+				}
+				if (!have) { out[n].w = st.deskW; out[n].h = st.deskH; n++; }
 			}
 		}
-		if (row == 0)
+		else   // WINDOWED - and this branch MUST exist (v3.13.2 measured 0 rows).
 		{
-			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1", ini);
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELECTOR committed AutoScale=1 (Auto) to %ls. "
-				"Applies at the next launch.", ini);
+			for (int f = 0; f < kSelFamiliarN && n < 7; f++)
+			{
+				const int w = kSelFamiliar[f].w;
+				const int h = kSelFamiliar[f].h;
+				if (st.deskW > 0 && (w > st.deskW || h > st.deskH)) { continue; }
+				if (w == st.deskW && h == st.deskH) { continue; }
+				out[n].w = w;
+				out[n].h = h;
+				n++;
+			}
+		}
+		// Largest first, so the list reads the way the stock one does.
+		for (int a = 0; a < n; a++)
+		{
+			for (int b = a + 1; b < n; b++)
+			{
+				if (out[b].w * out[b].h > out[a].w * out[a].h)
+				{
+					const SelRes t = out[a];
+					out[a] = out[b];
+					out[b] = t;
+				}
+			}
+		}
+		return n;
+	}
+
+	// SelDerive: state -> the entire UI. PURE - no side effects, no
+	// syscalls, no logging (the contract gate asserts the shape). Mirrors
+	// _tests\Test-SelectorDerive.py, which was written first.
+	void SelDerive(const SelState& st, SelUi* ui)
+	{
+		ui->effMode = 0; ui->effW = 0; ui->effH = 0;
+		ui->effScale = 0; ui->bounced = false; ui->modeSel = 0;
+		ui->resCount = 0; ui->resSel = 0;
+		for (int i = 0; i < kSelModeCount; i++) { ui->modeRows[i][0] = 0; }
+		for (int i = 0; i < kSelResMax; i++) { ui->resRows[i][0] = 0; }
+		for (int i = 0; i < kSelCount; i++) { ui->scaleRows[i][0] = 0; }
+
+		// -- the pending future already in the files -----------------------
+		// In F/W the game renders the requested size, so ini != live means a
+		// restart-pending change (an earlier Accept, or a hand edit - same
+		// thing). In B the ini size is documented-ignored, so only the MODE
+		// can be pending.
+		const bool pending = (st.iniMode != st.liveMode)
+			|| (st.iniMode != kModeBorderless
+				&& (st.iniW != st.liveW || st.iniH != st.liveH));
+		const int baseMode = pending ? st.iniMode : st.liveMode;
+		ui->effMode = (st.sMode >= 0) ? st.sMode : baseMode;
+		ui->modeSel = ui->effMode;
+
+		ui->resCount = SelBuildResRows(st, ui->effMode, ui->res);
+
+		// -- effective resolution ------------------------------------------
+		if (ui->effMode == kModeBorderless)
+		{
+			// The DESKTOP, whatever the resolution control says.
+			ui->effW = st.deskW;
+			ui->effH = st.deskH;
+			ui->resSel = 0;
 		}
 		else
 		{
-			// %g so 1.5 stays "1.5" and 2 stays "2" - the same literals the
-			// ini already carries and Set-Tier.ps1 writes.
-			wchar_t val[32] = {};
-			swprintf_s(val, L"%g", kSelFactors[row]);
-			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"0", ini);
-			WritePrivateProfileStringW(L"UiSpike", L"ScaleFactor", val, ini);
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELECTOR committed AutoScale=0 ScaleFactor=%ls to "
-				"%ls. Applies at the next launch.", val, ini);
+			if (st.sRes >= 0 && st.sRes < ui->resCount)
+			{
+				ui->resSel = st.sRes;
+			}
+			else
+			{
+				const bool useIni = pending && st.iniMode == ui->effMode;
+				const int baseW = useIni ? st.iniW : st.liveW;
+				const int baseH = useIni ? st.iniH : st.liveH;
+				int found = -1;
+				for (int i = 0; i < ui->resCount; i++)
+				{
+					if (ui->res[i].w == baseW && ui->res[i].h == baseH)
+					{
+						found = i;
+						break;
+					}
+				}
+				// The base is not offered by this mode (switching to Windowed
+				// at the desktop size is exactly that). The LARGEST the mode
+				// offers is the closest thing to what the player had - rows
+				// are largest-first, so row 0. Refusing to move here IS the
+				// defect: the mode made the current value invalid.
+				ui->resSel = (found >= 0) ? found : (ui->resCount - 1);
+			}
+			if (ui->resSel >= 0 && ui->resSel < ui->resCount)
+			{
+				ui->effW = ui->res[ui->resSel].w;
+				ui->effH = ui->res[ui->resSel].h;
+			}
+		}
+		// No owning dll: mode/res are hidden and the scale's fit question is
+		// asked against what is RUNNING (spec mirror: eff_res = live).
+		if (!st.dll)
+		{
+			ui->effW = st.liveW;
+			ui->effH = st.liveH;
+		}
+
+		// -- scale: the REQUEST is never overwritten; effective is derived --
+		int iniRow = 0;
+		if (!st.ourAuto)
+		{
+			for (int k = 1; k < kSelCount; k++)
+			{
+				// Tier factors are exact halves/wholes; 0.01 sits far inside
+				// the smallest gap between any two of them.
+				if (st.ourFactor > kSelFactors[k] - 0.01f
+					&& st.ourFactor < kSelFactors[k] + 0.01f)
+				{
+					iniRow = k;
+					break;
+				}
+			}
+		}
+		const int request = (st.sScale >= 0) ? st.sScale : iniRow;
+		bool usable[kSelCount];
+		for (int k = 0; k < kSelCount; k++)
+		{
+			// ⭐ PACKAGE FIRST, THEN FIT - offering a tier whose art is not
+			// installed makes the escape hatch WRITE THE TRAP (the boot
+			// validator bounces it back to Auto). Same predicate the boot
+			// path uses, so the selector and the validator never disagree.
+			// An unmeasured render size is not evidence of a small screen.
+			usable[k] = (k <= 1) ? true
+				: st.pkg[k] && (ui->effW <= 0 || ui->effH <= 0
+					|| ScaleTier::Fits(kSelFactors[k], ui->effW, ui->effH));
+		}
+		const bool requestValid =
+			(request >= 0 && request < kSelCount && usable[request]);
+		ui->effScale = requestValid ? request : 0;   // bounce is DERIVED
+		ui->bounced = (request != ui->effScale);
+
+		// -- captions: "(current)" = running now, "- on restart" = chosen --
+		for (int m = 0; m < kSelModeCount; m++)
+		{
+			const char* tag = (m == st.liveMode) ? " (current)"
+				: (m == ui->effMode && (st.sMode >= 0 || pending))
+					? " - on restart"
+				: (m == kModeBorderless) ? " (recommended)" : "";
+			_snprintf_s(ui->modeRows[m], _TRUNCATE, "%s%s",
+				kSelModeLabels[m], tag);
+		}
+		for (int i = 0; i < ui->resCount; i++)
+		{
+			const SelRes& r = ui->res[i];
+			const bool isCurrent = (ui->effMode != kModeBorderless)
+				&& r.w == st.liveW && r.h == st.liveH
+				&& st.liveMode == ui->effMode;
+			const bool isChosen = (i == ui->resSel)
+				&& (st.sRes >= 0 || pending);
+			_snprintf_s(ui->resRows[i], _TRUNCATE, "%dx%d%s", r.w, r.h,
+				isCurrent ? " (current)" : (isChosen ? " - on restart" : ""));
+		}
+		for (int k = 0; k < kSelCount; k++)
+		{
+			if (!usable[k])
+			{
+				// Say WHAT IT NEEDS, not just "no". A control that refuses
+				// without explaining itself is a bug report.
+				int mw = 0, mh = 0;
+				SelMinimumFor(k, &mw, &mh);
+				_snprintf_s(ui->scaleRows[k], _TRUNCATE, "%s - needs %dx%d",
+					kSelLabels[k], mw, mh);
+			}
+			else if (k == ui->effScale)
+			{
+				// THE EFFECTIVE RESOLUTION, NOT THE RUNNING ONE: the two
+				// controls must describe the SAME future.
+				_snprintf_s(ui->scaleRows[k], _TRUNCATE, "%s @ %dx%d",
+					kSelLabels[k], ui->effW, ui->effH);
+			}
+			else
+			{
+				_snprintf_s(ui->scaleRows[k], _TRUNCATE, "%s", kSelLabels[k]);
+			}
 		}
 	}
 
-	// ⛔ THE RESTART NOTICE IS GONE, AND IT CANNOT BE PUT WHERE IT BELONGS.
-	// The user asked for it on Accept, which is where the game puts its own.
-	// It cannot go there: the notice window is a CHILD of this dialog, and
-	// the dialog closes about 120ms after the Accept click (measured -
-	// click 19.358, close 19.478), taking the notice with it. The only
-	// moment it can actually render is the CHANGE, which is precisely the
-	// timing that was reported as wrong: a modal appearing before the player
-	// has agreed to anything.
-	//
-	// So the information moved into the control instead of a popup. Every
-	// combo captions its pending row "- on restart" and its live row
-	// "(current)", permanently and in place. That says the same thing,
-	// says it for all three settings at once, and cannot appear at the
-	// wrong moment because it does not appear at all - it just IS.
+	// ---- DIFF-APPLY --------------------------------------------------------
+	// What we last pushed into each combo. A rebuild happens ONLY when the
+	// derived rows differ from this cache, and RemoveAllStrings exists in
+	// exactly one function (the contract gate asserts both).
+	char gSelPushedScale[kSelCount][80];
+	int  gSelPushedScaleN = 0;
+	char gSelPushedRes[kSelResMax][80];
+	int  gSelPushedResN = 0;
+	char gSelPushedMode[kSelModeCount][80];
+	int  gSelPushedModeN = 0;
+	// The selections we last applied - the poll's baseline. A GetSelection
+	// that differs from this is the player's event.
+	int  gSelAppliedScale = -1, gSelAppliedRes = -1, gSelAppliedMode = -1;
 
+	bool SelRowsDiffer(const char (*pushed)[80], int pushedN,
+		const char (*rows)[80], int n)
+	{
+		if (pushedN != n) { return true; }
+		for (int i = 0; i < n; i++)
+		{
+			if (strcmp(pushed[i], rows[i]) != 0) { return true; }
+		}
+		return false;
+	}
 
-	// ============ THE BUTTONS, ASKED DIRECTLY ============================
-	// Two coordinate-based attempts failed and a third (centring) refuted
-	// itself on paper. The mistake was reasoning about WHERE a click landed
-	// when the SDK can say WHICH WINDOW received it.
-	//
+	void SelPushCombo(cIGZWinCombo* c, const char (*rows)[80], int n,
+		char (*cache)[80], int* cacheN, int sel, int* appliedSel)
+	{
+		if (SelRowsDiffer(cache, *cacheN, rows, n))
+		{
+			PerfProbe::Scope perf_("sel.rebuild");
+			// Safe to rebuild: this runs on OPEN (nothing is down yet) or on
+			// the tick a selection CHANGED - which implies this combo's drop
+			// list just closed, and only one drop can be open at a time.
+			c->RemoveAllStrings();
+			for (int i = 0; i < n; i++)
+			{
+				cRZBaseString rs(rows[i]);
+				c->InsertString(rs, i);
+			}
+			for (int i = 0; i < n; i++)
+			{
+				strcpy_s(cache[i], 80, rows[i]);
+			}
+			*cacheN = n;
+			if (sel >= 0 && sel < n) { c->SetSelection(sel, false); }
+			*appliedSel = sel;
+		}
+		else
+		{
+			const int cur = c->GetSelection();
+			if (sel >= 0 && sel < n && cur != sel)
+			{
+				c->SetSelection(sel, false);
+				*appliedSel = sel;
+			}
+			else
+			{
+				*appliedSel = cur;
+			}
+		}
+	}
+
+	// ---- VISIT STATE -------------------------------------------------------
+	SelState gSelState;
+	bool gSelDlgUp = false;
+	cIGZWin* gSelDlgLast = nullptr;
+	unsigned int gSelLastMs = 0;
+	int  gSelLogs = 0;
+	bool gSelNoGfxDllLogged = false;
+	bool gSelBounced = false;      // last apply ended with the request bounced
+	// Session facts captured lazily on first open.
+	int  gSelLiveMode = -1;        // the mode the game BOOTED with: the ini
+	                               // changes the moment a choice commits, so
+	                               // only a first-open read answers "what am
+	                               // I running", never "what will apply".
+	bool gSelPkg[8] = { true, true, false, false, false, false, false, false };
+	bool gSelPkgCached = false;
+	// The radio's transition state (the engine toggles injected radiocheck
+	// buttons on click - measured - but does NOT group ours with the stock
+	// four, so the grouping is ours to enforce).
+	int  gSelRadioState = -1;      // bitmask: b0..b3 stock radios, b4 ours
+	int  gSelRadioLogs = 0;
+	bool gSelOursWas = false;
+	int  gSelStockWas = 0;
+	// Notice watch + net.
+	bool gSelNoticeWasUp = false;
+	unsigned int gSelNoticeShownMs = 0;
+	// The pre-dialog resolution rescue (RESMISMATCH), once per session.
+	bool gSelResRescued = false;
+
+	// ---- THE BUTTONS, ASKED DIRECTLY ---------------------------------------
 	// cIGZWin::AddMessageFilter attaches to ANY window - including each
-	// button - and cIGZWinMessageFilter::DoMessage is handed the window the
-	// message went to. So a click identifies its own button by POINTER
-	// IDENTITY. No rects, no offsets, no assumptions about where the game put
-	// the dialog.
-	//
-	// One filter instance serves all four buttons; the pWin argument
-	// distinguishes them. It never consumes anything - DoMessage returns
-	// false so the game's own handling runs exactly as before, and this stays
-	// an observer that happens to also record the last button touched.
+	// button - and DoMessage is handed the window the message went to, so a
+	// click identifies its own button by POINTER IDENTITY. One filter serves
+	// all four buttons; it never consumes anything (returns false), and
+	// gSelLastBtn is what SELCLOSE reads to name the closing button.
 	struct SelBtnSlot { uint32_t id; const char* name; cIGZWin* win; };
 	SelBtnSlot gSelBtns[] = {
 		{ 0xEA57DA59u, "ACCEPT",           nullptr },
@@ -19653,7 +19451,7 @@ namespace
 	const int kSelBtnCount =
 		static_cast<int>(sizeof(gSelBtns) / sizeof(gSelBtns[0]));
 
-	int  gSelLastBtn = -1;        // index of the last button to get a message
+	int  gSelLastBtn = -1;
 	int  gSelBtnLogs = 0;
 	bool gSelFiltersOn = false;
 
@@ -19689,16 +19487,19 @@ namespace
 
 		bool DoMessage(cIGZWin* pWin, cGZMessage& msg) override
 		{
-			// Behaviour deliberately UNCHANGED for the measuring build - the
-			// noisy logging here is itself a suspect, and quieting it before
-			// measuring would cure the symptom without naming the cause.
 			PerfProbe::Scope perf_("sel.btnFilter");
 			for (int i = 0; i < kSelBtnCount; i++)
 			{
 				if (gSelBtns[i].win != nullptr && gSelBtns[i].win == pWin)
 				{
+					// EVERY message updates the tracker - SELCLOSE needs the
+					// last button touched whatever the type. The LOG is
+					// quieted (v3.14): enter and click only, never the move
+					// storm, tiny budget.
 					gSelLastBtn = i;
-					if (gSelBtnLogs < 60)
+					if ((msg.dwMessageType == 0x13
+							|| msg.dwMessageType == 0x10)
+						&& gSelBtnLogs < 20)
 					{
 						gSelBtnLogs++;
 						Logger::Get().WriteLine(LogLevel::Info,
@@ -19721,9 +19522,6 @@ namespace
 
 	SelBtnFilter gSelBtnFilter;
 
-	// Attach on every fresh appearance, and report exactly which buttons were
-	// found - a missing one is the difference between "the player did not
-	// click it" and "we were never listening".
 	void SelAttachButtonFilters(cIGZWin* gfxDlg)
 	{
 		int found = 0;
@@ -19742,8 +19540,8 @@ namespace
 		Logger::Get().WriteLine(LogLevel::Info,
 			"UiSpike: SELBTN attached a message filter to %d of %d buttons "
 			"(Accept 0x%08X, Cancel 0x%08X, Default 0x%08X, notice-Accept "
-			"0x%08X). Every message any of them receives is now named in the "
-			"log - which button, not which pixel.",
+			"0x%08X). Enter and click are named in the log; the closing "
+			"button is named by SELCLOSE.",
 			found, kSelBtnCount, gSelBtns[0].id, gSelBtns[1].id,
 			gSelBtns[2].id, gSelBtns[3].id);
 	}
@@ -19762,169 +19560,18 @@ namespace
 		gSelFiltersOn = false;
 	}
 
-	// Our WinProc CHAINS - it never replaces the dialog's own handler. The
-	// game's Accept/Cancel/radio logic lives behind GetWinProc(); dropping it
-	// would break the dialog outright, so every message is forwarded and our
-	// return value is whatever the game's proc said.
-	class SelectorWinProc : public cIGZWinProc
-	{
-	public:
-		SelectorWinProc() : refCount(0), next(nullptr) {}
-
-		void SetNext(cIGZWinProc* p) { next = p; }
-
-		bool QueryInterface(uint32_t riid, void** ppvObj) override
-		{
-			if (riid == GZIID_cIGZWinProc)
-			{
-				*ppvObj = static_cast<cIGZWinProc*>(this);
-				AddRef();
-				return true;
-			}
-			if (riid == GZIID_cIGZUnknown)
-			{
-				*ppvObj = static_cast<cIGZUnknown*>(this);
-				AddRef();
-				return true;
-			}
-			return false;
-		}
-		uint32_t AddRef() override { return ++refCount; }
-		uint32_t Release() override
-		{
-			// Deliberately NEVER self-deletes. This object is a singleton
-			// owned by the DLL for the process lifetime; the dialog can be
-			// created and destroyed many times, and a use-after-free here
-			// would be a crash inside the game's own message pump.
-			if (refCount > 0) { --refCount; }
-			return refCount;
-		}
-
-		bool DoWinProcMessage(cIGZWin* pWin, cGZMessage& pMsg) override
-		{
-			Observe(pMsg.dwMessageType, pMsg.dwData1, pMsg.dwData2,
-				pMsg.dwData3);
-			return next ? next->DoWinProcMessage(pWin, pMsg) : false;
-		}
-
-		bool DoWinMsg(cIGZWin* pWin, uint32_t id, uint32_t d1, uint32_t d2,
-			uint32_t d3) override
-		{
-			Observe(id, d1, d2, d3);
-			return next ? next->DoWinMsg(pWin, id, d1, d2, d3) : false;
-		}
-
-	private:
-		// INSTRUMENT AND ARM TOGETHER. We do not know which message id a
-		// button click arrives as, so the commit is keyed on the CONTROL ID
-		// appearing in either data slot rather than on a guessed message
-		// type - those ids are unique to this dialog, so it cannot fire on
-		// anything else, and it does not depend on which of the two message
-		// shapes the engine uses. The bounded log beside it is what proves
-		// which shape actually arrived.
-		void Observe(uint32_t id, uint32_t d1, uint32_t d2, uint32_t d3)
-		{
-			// Runs on the dialog's EVERY message - if the stall lives in the
-			// message path, this bucket is where it shows.
-			PerfProbe::Scope perf_("sel.observe");
-			const bool accept = (d1 == kSelAcceptId || d2 == kSelAcceptId);
-			const bool cancel = (d1 == kSelCancelId || d2 == kSelCancelId);
-			// ⛔ THE HOVER TYPES ARE EXCLUDED ON PURPOSE. The first capture
-			// spent 96 of its 120 lines on three message types that repeat on
-			// every mouse move (0xA2BF8ACD/CE/CF, each carrying one unchanging
-			// window pointer), which is how a bounded instrument can fill up
-			// with noise and MISS the one event it was armed for. Same shape
-			// as a grep that filters out the adjacent line holding the answer.
-			const bool hoverNoise = (id == 0xA2BF8ACDu || id == 0xA2BF8ACEu
-				|| id == 0xA2BF8ACFu);
-			if (!hoverNoise && gSelMsgLogs < 80)
-			{
-				gSelMsgLogs++;
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELMSG type=0x%08X d1=0x%08X d2=0x%08X "
-					"d3=0x%08X%s", id, d1, d2, d3,
-					accept ? "  <- ACCEPT id" :
-					cancel ? "  <- CANCEL id" :
-					(d1 == kSelComboId || d2 == kSelComboId) ? "  <- our COMBO" :
-					(d1 == kSelRadioId || d2 == kSelRadioId) ? "  <- our RADIO" : "");
-			}
-			// THE ACCEPT TRACE. Type 0x0D carries x in d1 and y in d2 - the
-			// one directly usable fact the first capture established. Test it
-			// against the two closing buttons and SAY SO, so a single click
-			// tells us whether their coordinates and ours share a space.
-			if (id == 0x0000000Du && gSelRectsOk && gSelTraceLogs < 40)
-			{
-				gSelTraceLogs++;
-				const int x = static_cast<int>(d1), y = static_cast<int>(d2);
-				const bool inAcc =
-					x >= gSelAcceptRect[0] && x < gSelAcceptRect[0] + gSelAcceptRect[2] &&
-					y >= gSelAcceptRect[1] && y < gSelAcceptRect[1] + gSelAcceptRect[3];
-				const bool inCan =
-					x >= gSelCancelRect[0] && x < gSelCancelRect[0] + gSelCancelRect[2] &&
-					y >= gSelCancelRect[1] && y < gSelCancelRect[1] + gSelCancelRect[3];
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELHIT click (%d,%d) accept=[%d,%d %dx%d]->%s "
-					"cancel=[%d,%d %dx%d]->%s", x, y,
-					gSelAcceptRect[0], gSelAcceptRect[1], gSelAcceptRect[2],
-					gSelAcceptRect[3], inAcc ? "HIT" : "miss",
-					gSelCancelRect[0], gSelCancelRect[1], gSelCancelRect[2],
-					gSelCancelRect[3], inCan ? "HIT" : "miss");
-			}
-			// ⛔ NO COMMIT HERE ANY MORE. This used to fire when a message
-			// carried the Accept button's id, and the instrument below proved
-			// no such message exists - 120 captured messages, every one a
-			// mouse coordinate pair or a repeated window pointer, not one
-			// control id in any slot. The commit moved to the selection
-			// change itself, which is observable. Kept as an INSTRUMENT: if a
-			// message ever does carry one of these ids, the log says so and
-			// real Accept/Cancel semantics become available.
-			(void)accept;
-			(void)cancel;
-			// The ONE fact this instrument established that is directly
-			// usable: type 0x0000000D is a mouse click, carrying x in d1 and
-			// y in d2. We cannot tell WHICH control was hit - no id is
-			// present in any slot - but "a click happened" is enough for the
-			// restart notice's safety net below.
-			if (id == 0x0000000Du)
-			{
-				gSelClickMs = GetTickCount();
-				// The one thing the message layer gives us reliably: WHERE
-				// the pointer is. Accept itself cannot be seen, but the
-				// pointer's last position before the dialog vanishes says
-				// which button made it vanish - see the close handler.
-				gSelLastX = static_cast<int>(d1);
-				gSelLastY = static_cast<int>(d2);
-			}
-		}
-
-		uint32_t refCount;
-		cIGZWinProc* next;
-	};
-
-	SelectorWinProc gSelProc;
-
-	// ============ PHASE-0 FREEZE INSTRUMENT ==============================
-	// The user reports multi-second lockups on selection changes, and two
-	// "fixes" (v3.13.0, v3.13.1) have already shipped on inference. This
-	// build NAMES the stall instead of guessing at it: every suspect path is
-	// bracketed into PerfProbe buckets - in-memory only, because the leading
-	// suspect IS synchronous file I/O and an instrument must not be made of
-	// the thing it measures - and two watchdogs read them:
-	//
-	//   FRAME GAP  entry-to-entry stride of the caller's loop. A stall shows
-	//              here WHOEVER caused it, and the in-gap bucket deltas say
-	//              how much of it was ours. A big gap with quiet buckets
-	//              convicts code outside these brackets (the game's own
-	//              handling included) - that is a finding, not a failure.
-	//   PASS TIME  one service pass over 25ms, with its own deltas.
+	// ---- THE FREEZE INSTRUMENT (kept in the build) -------------------------
+	// v3.13.2's instrument named the freeze in one launch; it stays armed.
+	// In-memory buckets only (the leading suspect WAS synchronous file I/O -
+	// an instrument must not be made of the thing it measures). FRAME GAP:
+	// entry-to-entry stride while the dialog is up. PASS: one service pass
+	// over 25ms names its contributors. Table dumped on close + shutdown.
 	int gSelPerfGapLogs = 0;
 	int gSelPerfPassLogs = 0;
 	unsigned long long gSelPerfPrevCallUs = 0;
 	PerfProbe::Row gSelPerfPrevRows[32];
 	int gSelPerfPrevRowN = 0;
 
-	// Renders " name=XXms/N" for every bucket that grew >=1ms since `prev`.
-	// Returns chars written; 0 means nothing bracketed grew that much.
 	int SelPerfDelta(const PerfProbe::Row* prev, int prevN, char* out, int cap)
 	{
 		PerfProbe::Row now[32];
@@ -20016,6 +19663,679 @@ namespace
 			}
 		}
 	};
+
+	// ---- COMMIT (close handler only) ----------------------------------------
+	void SelCommitScale(int row)
+	{
+		if (row < 0 || row >= kSelCount) { return; }
+		PerfProbe::Scope perf_("sel.commit");
+		wchar_t ini[MAX_PATH] = {};
+		SelIniPath(ini, MAX_PATH);
+		if (ini[0] == 0) { return; }
+
+		// ⭐ ScaleAll IS WRITTEN TOO, AND THAT CLOSES THE WORST TRAP FOUND.
+		// The art and font layer is armed from the FACTOR, while every
+		// geometry consumer is gated on ScaleAll - so with ScaleAll=0 every
+		// choice made here was committed and then silently voided at the
+		// next boot, forever. Picking a scale IS a request for scaling, so
+		// the switch that enables it is part of the request. Stock (row 1)
+		// is the one case that must not touch it: 1x is meant to be inert,
+		// and a reference capture taken with ScaleAll=0 must stay that way.
+		// Written only if off - the commit writes only changed keys.
+		if (row != 1)
+		{
+			wchar_t cur[16] = {};
+			GetPrivateProfileStringW(L"UiSpike", L"ScaleAll", L"1", cur, 16, ini);
+			if (_wtoi(cur) == 0)
+			{
+				WritePrivateProfileStringW(L"UiSpike", L"ScaleAll", L"1", ini);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELECTOR ScaleAll was %ls - written back as 1. "
+					"Without it the tier's art and fonts arm while every "
+					"geometry patch stays off, and nothing in this dialog "
+					"could have repaired that.", cur);
+			}
+		}
+		if (row == 0)
+		{
+			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1", ini);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR committed AutoScale=1 (Auto) to %ls. "
+				"Applies at the next launch.", ini);
+		}
+		else
+		{
+			// %g so 1.5 stays "1.5" and 2 stays "2" - the same literals the
+			// ini already carries and Set-Tier.ps1 writes.
+			wchar_t val[32] = {};
+			swprintf_s(val, L"%g", kSelFactors[row]);
+			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"0", ini);
+			WritePrivateProfileStringW(L"UiSpike", L"ScaleFactor", val, ini);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR committed AutoScale=0 ScaleFactor=%ls to "
+				"%ls. Applies at the next launch.", val, ini);
+		}
+	}
+
+	// ---- THE THREE EVENTS ---------------------------------------------------
+	void SelApply(cIGZWin* gfxDlg, const SelUi& ui)
+	{
+		PerfProbe::Scope perf_("sel.apply");
+		cIGZWin* sc = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
+		if (sc != nullptr)
+		{
+			cIGZWinCombo* c = nullptr;
+			if (sc->QueryInterface(GZIID_cIGZWinCombo,
+					reinterpret_cast<void**>(&c)) && c)
+			{
+				SelPushCombo(c, ui.scaleRows, kSelCount, gSelPushedScale,
+					&gSelPushedScaleN, ui.effScale, &gSelAppliedScale);
+				c->Release();
+			}
+		}
+		if (!gSelState.dll) { return; }   // mode/res hidden without the dll
+		cIGZWin* mc = gfxDlg->GetChildWindowFromIDRecursive(kSelModeComboId);
+		if (mc != nullptr)
+		{
+			cIGZWinCombo* c = nullptr;
+			if (mc->QueryInterface(GZIID_cIGZWinCombo,
+					reinterpret_cast<void**>(&c)) && c)
+			{
+				SelPushCombo(c, ui.modeRows, kSelModeCount, gSelPushedMode,
+					&gSelPushedModeN, ui.modeSel, &gSelAppliedMode);
+				c->Release();
+			}
+		}
+		cIGZWin* rc = gfxDlg->GetChildWindowFromIDRecursive(kSelResComboId);
+		if (rc != nullptr)
+		{
+			cIGZWinCombo* c = nullptr;
+			if (rc->QueryInterface(GZIID_cIGZWinCombo,
+					reinterpret_cast<void**>(&c)) && c)
+			{
+				SelPushCombo(c, ui.resRows, ui.resCount, gSelPushedRes,
+					&gSelPushedResN, ui.resSel, &gSelAppliedRes);
+				c->Release();
+			}
+		}
+	}
+
+	void SelOnOpen(cIGZWin* gfxDlg)
+	{
+		PerfProbe::Scope perf_("sel.open");
+		gSelDlgUp = true;
+		gSelDlgLast = gfxDlg;
+		SelAttachButtonFilters(gfxDlg);
+
+		// THE COMBO'S LIVE GEOMETRY vs ITS PARENT'S CLIP, once per open -
+		// the user reported the box "cut off"; the margin is a number, not
+		// an impression.
+		{
+			cIGZWin* cg = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
+			if (cg != nullptr)
+			{
+				int cl = 0, ct = 0, cw = 0, ch = 0;
+				cIGZWin* par = cg->GetParentWin();
+				int pl = 0, pt = 0, pw = 0, ph = 0;
+				if (SafeAbsRect(cg, &cl, &ct, &cw, &ch)
+					&& par != nullptr && SafeAbsRect(par, &pl, &pt, &pw, &ph))
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELGEOM combo [%d,%d %dx%d] parent [%d,%d "
+						"%dx%d] - bottom margin %d px (combo bottom %d, "
+						"parent bottom %d). A negative or tiny margin is the "
+						"box being clipped.",
+						cl, ct, cw, ch, pl, pt, pw, ph,
+						(pt + ph) - (ct + ch), ct + ch, pt + ph);
+				}
+			}
+		}
+
+		// ---- session facts (cached once, never re-read mid-session) ----
+		SelEnumOnce();   // correctness net: waits out a still-warming thread
+		SelDisplayMax(&gSelState.capW, &gSelState.capH);
+		SelDesktopMode(&gSelState.deskW, &gSelState.deskH);
+		gSelState.modes = gSelModeCache;
+		gSelState.modeN = gSelModeCacheN;
+		if (!gSelPkgCached)
+		{
+			for (int k = 2; k < kSelCount; k++)
+			{
+				gSelPkg[k] = ScaleTier::PackageAvailable(kSelFactors[k]);
+			}
+			gSelPkgCached = true;
+		}
+		for (int k = 0; k < kSelCount && k < 8; k++)
+		{
+			gSelState.pkg[k] = gSelPkg[k];
+		}
+		if (gSelLiveMode < 0) { gSelLiveMode = SelReadGfxMode(); }
+		gSelState.liveMode = gSelLiveMode;
+
+		// ---- visit facts: each read ONCE, here -------------------------
+		gSelState.iniMode = SelReadGfxMode();
+		SelReadGfxRes(&gSelState.iniW, &gSelState.iniH);
+		SelReadOurScale(&gSelState.ourAuto, &gSelState.ourFactor);
+		gSelState.dll = SelGraphicsDllPresent();
+		gSelState.liveW = gReadoutW;
+		gSelState.liveH = gReadoutH;
+		gSelState.sMode = -1;
+		gSelState.sRes = -1;
+		gSelState.sScale = -1;
+
+		if (!gSelState.dll)
+		{
+			// NO OWNING DLL, NO CONTROLS. Hidden rather than greyed: a
+			// disabled combo reads as a setting the player is missing out
+			// on, and on such an install this is not a setting at all.
+			if (!gSelNoGfxDllLogged)
+			{
+				gSelNoGfxDllLogged = true;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELMODE SC4GraphicsOptions.dll is NOT installed "
+					"- Window Mode and Resolution are HIDDEN. That DLL owns "
+					"SC4GraphicsOptions.ini, so without it WindowMode and "
+					"WindowWidth/Height are read by nothing. The scale "
+					"selector is unaffected: it writes our own ini.");
+			}
+			const uint32_t hideIds[4] = { kSelResComboId, kSelModeComboId,
+				kSelResLabelId, kSelModeLabelId };
+			for (int hi = 0; hi < 4; hi++)
+			{
+				cIGZWin* hw = gfxDlg->GetChildWindowFromIDRecursive(hideIds[hi]);
+				if (hw != nullptr && hw->IsVisible()) { hw->HideWindow(); }
+			}
+		}
+
+		SelUi ui;
+		SelDerive(gSelState, &ui);
+		SelApply(gfxDlg, ui);
+		gSelBounced = ui.bounced;
+
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELRES offering %d row(s) for %s - one index space, "
+			"the list the commit reads.",
+			ui.resCount, kSelModeLabels[ui.effMode]);
+		if (gSelLogs < 2)
+		{
+			gSelLogs++;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR serviced Graphic Options (v3.14 state "
+				"machine: state -> derive -> diff-apply, commit at close). "
+				"Absent combo means the DATA half is missing for this tier: "
+				"rebuild and deploy DialogStatic.");
+		}
+	}
+
+	void SelOnTick(cIGZWin* gfxDlg)
+	{
+		// THE TICK DOES ONE THING: poll the three combos. A selection change
+		// is the only event; no-event ticks cost three GetSelection calls
+		// and nothing else - no syscalls, no file I/O, no logging, no list
+		// mutation (the contract gate asserts the shape).
+		PerfProbe::Scope perf_("sel.poll");
+		int scaleSel = -1, modeSel = -1, resSel = -1;
+		cIGZWin* sc = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
+		if (sc != nullptr)
+		{
+			cIGZWinCombo* c = nullptr;
+			if (sc->QueryInterface(GZIID_cIGZWinCombo,
+					reinterpret_cast<void**>(&c)) && c)
+			{
+				scaleSel = c->GetSelection();
+				c->Release();
+			}
+		}
+		if (gSelState.dll)
+		{
+			cIGZWin* mc = gfxDlg->GetChildWindowFromIDRecursive(kSelModeComboId);
+			if (mc != nullptr)
+			{
+				cIGZWinCombo* c = nullptr;
+				if (mc->QueryInterface(GZIID_cIGZWinCombo,
+						reinterpret_cast<void**>(&c)) && c)
+				{
+					modeSel = c->GetSelection();
+					c->Release();
+				}
+			}
+			cIGZWin* rc = gfxDlg->GetChildWindowFromIDRecursive(kSelResComboId);
+			if (rc != nullptr)
+			{
+				cIGZWinCombo* c = nullptr;
+				if (rc->QueryInterface(GZIID_cIGZWinCombo,
+						reinterpret_cast<void**>(&c)) && c)
+				{
+					resSel = c->GetSelection();
+					c->Release();
+				}
+			}
+		}
+
+		const bool modeChanged = gSelState.dll && modeSel >= 0
+			&& modeSel < kSelModeCount && modeSel != gSelAppliedMode;
+		// A mode change rebuilds the res list, so a same-tick res reading
+		// would index the OLD rows - it is ignored and re-polled next tick.
+		const bool resChanged = gSelState.dll && !modeChanged && resSel >= 0
+			&& resSel < gSelPushedResN && resSel != gSelAppliedRes;
+		const bool scaleChanged =
+			scaleSel >= 0 && scaleSel < kSelCount
+			&& scaleSel != gSelAppliedScale;
+		if (!modeChanged && !resChanged && !scaleChanged) { return; }
+
+		if (modeChanged)
+		{
+			gSelState.sMode = modeSel;
+			gSelState.sRes = -1;   // the old index belonged to the old list
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELMODE staged %s - applies at the next launch, "
+				"and writes BOTH files.", kSelModeLabels[modeSel]);
+		}
+		if (resChanged)
+		{
+			gSelState.sRes = resSel;
+		}
+		if (scaleChanged)
+		{
+			// The pick is a REQUEST, never overwritten - the effective row
+			// is derived as "request if usable else Auto".
+			gSelState.sScale = scaleSel;
+		}
+
+		SelUi ui;
+		SelDerive(gSelState, &ui);
+		SelApply(gfxDlg, ui);
+
+		if (resChanged && ui.resSel >= 0 && ui.resSel < ui.resCount)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELRES staged %dx%d - applies at the next launch; "
+				"the scale list was re-checked against it.",
+				ui.res[ui.resSel].w, ui.res[ui.resSel].h);
+		}
+		// Bounce and un-bounce, logged on the transition only.
+		if (ui.bounced && !gSelBounced && gSelState.sScale >= 0
+			&& gSelState.sScale < kSelCount)
+		{
+			int mw = 0, mh = 0;
+			SelMinimumFor(gSelState.sScale, &mw, &mh);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR %s no longer fits the staged %dx%d (needs "
+				"%dx%d) - the effective scale is DERIVED back to Auto. The "
+				"request stands: stage a resolution it fits and it returns.",
+				kSelLabels[gSelState.sScale], ui.effW, ui.effH, mw, mh);
+		}
+		else if (!ui.bounced && gSelBounced && gSelState.sScale >= 0
+			&& gSelState.sScale < kSelCount)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR the staged %s fits the staged %dx%d again "
+				"- the request stands, no state machine needed.",
+				kSelLabels[gSelState.sScale], ui.effW, ui.effH);
+		}
+		gSelBounced = ui.bounced;
+	}
+
+	void SelOnClose()
+	{
+		PerfProbe::Scope perf_("sel.close");
+		// ⭐ THE CLOSE RE-READS THE CONTROLS. Everything above is polled on
+		// a 250ms beat, so a choice made in the last tick before Accept was
+		// simply never seen. The windows still exist at this point - hidden,
+		// not destroyed. If a read fails the staged value stands.
+		if (gSelDlgLast != nullptr)
+		{
+			int scaleSel = -1, modeSel = -1, resSel = -1;
+			cIGZWin* sc =
+				gSelDlgLast->GetChildWindowFromIDRecursive(kSelComboId);
+			if (sc != nullptr)
+			{
+				cIGZWinCombo* c = nullptr;
+				if (sc->QueryInterface(GZIID_cIGZWinCombo,
+						reinterpret_cast<void**>(&c)) && c)
+				{
+					scaleSel = c->GetSelection();
+					c->Release();
+				}
+			}
+			if (gSelState.dll)
+			{
+				cIGZWin* mc =
+					gSelDlgLast->GetChildWindowFromIDRecursive(kSelModeComboId);
+				if (mc != nullptr)
+				{
+					cIGZWinCombo* c = nullptr;
+					if (mc->QueryInterface(GZIID_cIGZWinCombo,
+							reinterpret_cast<void**>(&c)) && c)
+					{
+						modeSel = c->GetSelection();
+						c->Release();
+					}
+				}
+				cIGZWin* rc =
+					gSelDlgLast->GetChildWindowFromIDRecursive(kSelResComboId);
+				if (rc != nullptr)
+				{
+					cIGZWinCombo* c = nullptr;
+					if (rc->QueryInterface(GZIID_cIGZWinCombo,
+							reinterpret_cast<void**>(&c)) && c)
+					{
+						resSel = c->GetSelection();
+						c->Release();
+					}
+				}
+			}
+			if (gSelState.dll && modeSel >= 0 && modeSel < kSelModeCount
+				&& modeSel != gSelAppliedMode)
+			{
+				gSelState.sMode = modeSel;
+				gSelState.sRes = -1;
+			}
+			if (gSelState.dll && resSel >= 0 && resSel < gSelPushedResN
+				&& resSel != gSelAppliedRes)
+			{
+				gSelState.sRes = resSel;
+			}
+			if (scaleSel >= 0 && scaleSel < kSelCount
+				&& scaleSel != gSelAppliedScale)
+			{
+				gSelState.sScale = scaleSel;
+			}
+		}
+
+		// One final derive from the re-read state. The pair it produces is
+		// coherent BY CONSTRUCTION - the effective scale was checked against
+		// the effective resolution inside SelDerive, so the old close-time
+		// re-check has no condition left to guard.
+		SelUi ui;
+		SelDerive(gSelState, &ui);
+
+		const char* btn = (gSelLastBtn >= 0)
+			? gSelBtns[gSelLastBtn].name : "(none seen)";
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELCLOSE the last button to receive a message was %s. "
+			"staged scale=%d mode=%d res=%d",
+			btn, gSelState.sScale, gSelState.sMode, gSelState.sRes);
+
+		// ⭐ ACCEPT IS THE ONLY WAY OUT: Cancel and Default Settings ship
+		// DISABLED (build_dialog_static DISABLED_BTNS), so a dialog close IS
+		// the commit. SCALE: written only if it changed against our ini.
+		int iniRow = 0;
+		if (!gSelState.ourAuto)
+		{
+			for (int k = 1; k < kSelCount; k++)
+			{
+				if (gSelState.ourFactor > kSelFactors[k] - 0.01f
+					&& gSelState.ourFactor < kSelFactors[k] + 0.01f)
+				{
+					iniRow = k;
+					break;
+				}
+			}
+		}
+		if (ui.effScale != iniRow)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELCLOSE committing the staged scale (closed via "
+				"%s; Cancel and Default are disabled, so this can only be "
+				"Accept).", btn);
+			SelCommitScale(ui.effScale);
+		}
+		// MODE + RESOLUTION: the PAIR, to BOTH files, only if either changed
+		// against the gfx ini. WindowMode without FullScreenMode is the
+		// exact half-applied state that makes the game ignore the setting -
+		// writing the pair is the whole point of this control. An unchanged
+		// visit writes nothing.
+		if (gSelState.dll
+			&& (ui.effMode != gSelState.iniMode
+				|| (ui.effMode != kModeBorderless
+					&& (ui.effW != gSelState.iniW
+						|| ui.effH != gSelState.iniH))))
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELCLOSE committing %s at %dx%d (closed via %s).",
+				kSelModeLabels[ui.effMode], ui.effW, ui.effH, btn);
+			SelWriteGraphicsIni(ui.effMode, ui.effW, ui.effH);
+			// EXCLUSIVE only for Fullscreen. Asking the wrapper for
+			// exclusive under borderless or windowed is exactly what makes
+			// a "windowed" setting come up fullscreen anyway.
+			SelWriteDgVoodooFullScreen(ui.effMode == kModeFullscreen);
+		}
+
+		SelDetachButtonFilters();
+		gSelDlgUp = false;
+		gSelDlgLast = nullptr;
+		gSelState.sMode = -1;
+		gSelState.sRes = -1;
+		gSelState.sScale = -1;
+		gSelAppliedScale = -1;
+		gSelAppliedRes = -1;
+		gSelAppliedMode = -1;
+		gSelPushedScaleN = 0;
+		gSelPushedResN = 0;
+		gSelPushedModeN = 0;
+		gSelBounced = false;
+		// The full timing table, now that a whole visit's work is in the
+		// buckets.
+		SelPerfDump("dialog closed");
+	}
+
+	// ---- PER-PASS COMPANIONS (dialog up) ------------------------------------
+	void SelSetCaption(cIGZWin* parent, uint32_t id, const char* text)
+	{
+		cIGZWin* w = parent->GetChildWindowFromIDRecursive(id);
+		if (!w) { return; }
+		cIGZWinText* t = nullptr;
+		if (w->QueryInterface(GZIID_cIGZWinText,
+				reinterpret_cast<void**>(&t)) && t)
+		{
+			cIGZString* cur = w->GetCaption();
+			const bool same = (cur != nullptr && cur->ToChar() != nullptr
+				&& strcmp(cur->ToChar(), text) == 0);
+			if (!same)
+			{
+				cRZBaseString want(text);
+				t->SetCaption(want);
+			}
+			t->Release();
+		}
+	}
+
+	// The readout line (#192) and the fixed captions. SelSetCaption diffs
+	// internally, so this is write-rare even though it runs per pass.
+	void SelApplyStatics(cIGZWin* gfxDlg, const Settings& settings)
+	{
+		PerfProbe::Scope perf_("sel.caption");
+		char l1[96];
+		if (gReadoutW > 0 && gReadoutH > 0)
+		{
+			_snprintf_s(l1, sizeof(l1), _TRUNCATE, "%dx%d @ %.2fx %s",
+				gReadoutW, gReadoutH, settings.spikeScaleFactor,
+				settings.spikeAutoScale ? "auto" : "manual");
+		}
+		else
+		{
+			// Honest rather than blank-but-wrong: only claim a render size we
+			// were actually handed.
+			_snprintf_s(l1, sizeof(l1), _TRUNCATE, "res ? @ %.2fx %s",
+				settings.spikeScaleFactor,
+				settings.spikeAutoScale ? "auto" : "manual");
+		}
+		SelSetCaption(gfxDlg, kSelReadoutId, l1);
+		SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
+		if (!gSelState.dll) { return; }
+		// BOTH column captions are ours: the stock "Resolution" header is
+		// hidden, because the column leads with Window Mode and a fixed
+		// caption above the wrong control is worse than none.
+		const uint32_t capIds[2] = { kSelModeLabelId, kSelResLabelId };
+		const char* const capTxt[2] = { "Window Mode", "Resolution" };
+		for (int ci = 0; ci < 2; ci++)
+		{
+			cIGZWin* lw = gfxDlg->GetChildWindowFromIDRecursive(capIds[ci]);
+			if (lw == nullptr) { continue; }
+			cIGZWinText* t = nullptr;
+			if (lw->QueryInterface(GZIID_cIGZWinText,
+					reinterpret_cast<void**>(&t)) && t)
+			{
+				cIGZString* cur = lw->GetCaption();
+				const bool same = (cur != nullptr && cur->ToChar() != nullptr
+					&& strcmp(cur->ToChar(), capTxt[ci]) == 0);
+				if (!same)
+				{
+					cRZBaseString want(capTxt[ci]);
+					t->SetCaption(want);
+				}
+				t->Release();
+			}
+		}
+	}
+
+	// The game's OWN restart notice: we never show it (its information lives
+	// in the captions), so a rise is the game's own doing - reported, and
+	// retired by a 10s net if the game's handler leaves it up. A timeout
+	// cannot be wrong about what a message means; the net guarantees the box
+	// can never become a trap.
+	void SelNoticeTick(cIGZWin* gfxDlg, unsigned int now)
+	{
+		PerfProbe::Scope perf_("sel.notice");
+		cIGZWin* nw = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
+		const bool up = (nw != nullptr && nw->IsVisible());
+		if (up != gSelNoticeWasUp)
+		{
+			gSelNoticeWasUp = up;
+			gSelNoticeShownMs = up ? now : 0;   // arm the net on a rise
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELNOTICE %s - a rise we did not cause is the "
+				"game's own notice; the 10s net retires it if the game's "
+				"Accept does not.", up ? "VISIBLE" : "hidden");
+		}
+		if (gSelNoticeShownMs != 0 && nw != nullptr
+			&& static_cast<int>(now - gSelNoticeShownMs) > 10000)
+		{
+			if (nw->IsVisible()) { nw->HideWindow(); }
+			gSelNoticeShownMs = 0;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELECTOR retired the restart notice after 10s - "
+				"the game's own Accept had not hidden it, so the net did.");
+		}
+	}
+
+	// THE STOCK RESOLUTION RADIOS. Our radio means "none of the stock four"
+	// - the resolution came from SC4GraphicsOptions.ini, the state every
+	// scaled tier runs in. MEASURED 2026-08-19: the engine DOES toggle our
+	// injected radiocheck button when it is clicked, but does NOT group ours
+	// with the stock four (1024x768 AND ours lit simultaneously), so the
+	// grouping is ours to enforce - by TRANSITION, not by state: whichever
+	// side just turned ON wins, because state alone cannot say which the
+	// user actually clicked.
+	// ⭐ THIS IS ALSO HOW THE CHOICE SURVIVES ACCEPT: the game writes
+	// SC4GraphicsOptions.ini from ITS OWN radio state, and with no stock
+	// resolution selected there is nothing for it to write, so the custom
+	// WindowWidth/Height already in the file simply stays.
+	void SelRadioTick(cIGZWin* gfxDlg, bool justOpened)
+	{
+		PerfProbe::Scope perf_("sel.radio");
+		int mask = 0;
+		bool anyStock = false;
+		for (int k = 0; k < 4; k++)
+		{
+			cIGZWin* w =
+				gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
+			if (!w) { continue; }
+			cIGZWinBtn* b = nullptr;
+			if (w->QueryInterface(GZIID_cIGZWinBtn,
+					reinterpret_cast<void**>(&b)) && b)
+			{
+				if (b->IsChecked()) { anyStock = true; mask |= (1 << k); }
+				b->Release();
+			}
+		}
+		cIGZWin* w = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
+		bool oursChecked = false;
+		if (w)
+		{
+			cIGZWinBtn* b = nullptr;
+			if (w->QueryInterface(GZIID_cIGZWinBtn,
+					reinterpret_cast<void**>(&b)) && b)
+			{
+				oursChecked = b->IsChecked();
+				if (oursChecked) { mask |= (1 << 4); }
+				// ? ONLY SEEDED ON OPEN. Forcing it every service would make
+				// the control unclickable: the player checks it, 250ms later
+				// we overwrite it from the stock radios, and the click looks
+				// ignored. On open we state the truth; after that the player
+				// owns it.
+				if (justOpened)
+				{
+					const bool want = !anyStock;
+					if (oursChecked != want)
+					{
+						b->SetChecked(want);
+						oursChecked = want;
+						mask = (mask & 0x0F) | (want ? (1 << 4) : 0);
+					}
+				}
+				b->Release();
+			}
+		}
+		const bool oursNow = oursChecked;
+		const int  stockNow = mask & 0x0F;
+		if (oursNow && !gSelOursWas && stockNow != 0)
+		{
+			// The player just chose OUR resolution: clear the stock four.
+			for (int k = 0; k < 4; k++)
+			{
+				cIGZWin* w2 =
+					gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
+				if (!w2) { continue; }
+				cIGZWinBtn* b2 = nullptr;
+				if (w2->QueryInterface(GZIID_cIGZWinBtn,
+						reinterpret_cast<void**>(&b2)) && b2)
+				{
+					if (b2->IsChecked()) { b2->SetChecked(false); }
+					b2->Release();
+				}
+			}
+			mask &= ~0x0F;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELRADIO custom resolution re-selected - cleared "
+				"the stock resolution radios so the game has nothing to "
+				"write over %dx%d on Accept.", gReadoutW, gReadoutH);
+		}
+		else if (stockNow != 0 && gSelStockWas == 0 && oursNow)
+		{
+			// A stock resolution just won: ours must go dark, or two radios
+			// claim the same choice.
+			cIGZWin* w2 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
+			if (w2)
+			{
+				cIGZWinBtn* b2 = nullptr;
+				if (w2->QueryInterface(GZIID_cIGZWinBtn,
+						reinterpret_cast<void**>(&b2)) && b2)
+				{
+					b2->SetChecked(false);
+					b2->Release();
+				}
+			}
+			mask &= ~(1 << 4);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELRADIO a stock resolution was chosen - our "
+				"custom radio cleared.");
+		}
+		gSelOursWas = (mask & (1 << 4)) != 0;
+		gSelStockWas = mask & 0x0F;
+		// SELRADIO: one line per CHANGE, never per service.
+		if (mask != gSelRadioState && gSelRadioLogs < 30)
+		{
+			gSelRadioLogs++;
+			gSelRadioState = mask;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELRADIO stock[800x600=%d 1024=%d 1280=%d 1600=%d] "
+				"ours=%d (mask 0x%02X).",
+				(mask >> 0) & 1, (mask >> 1) & 1, (mask >> 2) & 1,
+				(mask >> 3) & 1, (mask >> 4) & 1, mask);
+		}
+	}
 }
 
 void UiSpike::DumpSelectorPerf(const char* why)
@@ -20069,8 +20389,8 @@ void UiSpike::ServiceScaleSelector()
 	}
 
 	// Throttle. The dialog is almost never open, so a 250ms beat is
-	// imperceptible and turns a per-frame recursive id search into a rounding
-	// error against the ~16ms tick.
+	// imperceptible and turns a per-frame recursive id search into a
+	// rounding error against the ~16ms tick.
 	const unsigned int now = GetTickCount();
 	if (gSelLastMs != 0 && (now - gSelLastMs) < 250u) { return; }
 	gSelLastMs = now;
@@ -20084,30 +20404,20 @@ void UiSpike::ServiceScaleSelector()
 	if (!pMainWindow) { return; }
 
 	// ⛔ THIS RUNS BEFORE THE DIALOG GATE, AND THAT IS THE POINT.
-	// It used to sit after it, so the only defence against a mispredicted
-	// render resolution could fire ONLY while Graphic Options was open -
-	// a safety net that needs the player to go looking for the problem is
-	// not a safety net. Four review passes flagged it independently.
-	//
-	// It needs nothing from the dialog: pMainWindow is the window whose real
-	// size it measures.
+	// A safety net that needs the player to go looking for the problem is
+	// not a safety net. It needs nothing from the dialog: pMainWindow is
+	// the window whose real size it measures.
 	// ---- 0. THE RESOLUTION THE GAME ACTUALLY LAID OUT AT -----------------
 	// ⭐ THE TIER IS DECIDED FROM AN INFERENCE; THIS IS THE MEASUREMENT.
 	// At PreAppInit there is no window yet, so the director must PREDICT the
-	// render size from two SC4GraphicsOptions.ini keys plus a rule about what
-	// the wrapper does with them ("DirectX + FullScreen -> monitor native,
-	// requested size ignored"). That rule is right for this machine's current
-	// setup and it is still an inference about someone else's software.
-	//
-	// pMainWindow->GetW()/GetH() is the size the UI was ACTUALLY laid out at.
-	// If it disagrees with what the tier was decided from, the tier was chosen
-	// from a number that never happened - which is what the user hit after
-	// changing resolution here: the resolution moved and the text stayed
-	// scaled, because the prediction still said the old size.
-	//
-	// Per the standing instruction for this case, a disagreement flips to Auto
-	// for the NEXT launch rather than trying to rescale a live game: the tier
-	// packages and the font are chosen once, at startup, and cannot move now.
+	// render size from two SC4GraphicsOptions.ini keys plus a rule about
+	// what the wrapper does with them. That rule is right for this machine
+	// and still an inference about someone else's software.
+	// pMainWindow->GetW()/GetH() is the size the UI was ACTUALLY laid out
+	// at. If it disagrees with what the tier was decided from, the tier was
+	// chosen from a number that never happened. A disagreement flips to
+	// Auto for the NEXT launch rather than trying to rescale a live game:
+	// the tier packages and the font are chosen once, at startup.
 	{
 		const int32_t realW = pMainWindow->GetW();
 		const int32_t realH = pMainWindow->GetH();
@@ -20145,21 +20455,8 @@ void UiSpike::ServiceScaleSelector()
 							"factor that cannot fit the size actually being "
 							"rendered is exactly the trap the boot rescue "
 							"exists for, and the next launch now picks the "
-							"tier from the real resolution.");
-						// ⭐ AND THE IN-MEMORY STATE FOLLOWS THE FILE.
-						// This wrote the ini and left `settings` holding the
-						// manual factor, so the Scale combo - which seeds from
-						// settings - showed the opposite of what the ini said
-						// for the rest of the session, and could show a tier
-						// the screen cannot carry. A repair that leaves two
-						// sources of truth disagreeing has moved the defect
-						// rather than fixed it.
-						// `settings` is const here, and casting that away to patch
-						// one field would hide the divergence rather than record
-						// it. An explicit override says what happened, and is what
-						// the row derivation consults.
-						gSelAutoOverride = true;
-						gSelPendingRow = -1;   // re-derive on the next open
+							"tier from the real resolution. The selector's "
+							"next open reads the ini and follows it.");
 					}
 				}
 			}
@@ -20175,1072 +20472,18 @@ void UiSpike::ServiceScaleSelector()
 		gfxDlg = pMainWindow->GetChildWindowFromIDRecursive(kSelDlgId);
 	}
 	if (gfxDlg != nullptr) { gSelDlgLast = gfxDlg; }
-	// One read per pass: drop last pass's answers.
-	SelInvalidateIniCache();
 	if (gfxDlg == nullptr || !gfxDlg->IsVisible())
 	{
-		// Closed. Forget the staged choice: a dialog dismissed without Accept
-		// must commit nothing, and the next open re-reads the live settings.
-		if (gSelDlgUp)
-		{
-			PerfProbe::Scope perf_("sel.close");
-			// Closed. Drop the per-appearance state so the next open re-reads
-			// the live settings and re-derives which tiers this resolution
-			// can carry - the player may have changed the resolution in the
-			// same visit.
-			// ⭐ DECIDED BY WHICH BUTTON RECEIVED THE MESSAGE.
-			// Not by coordinates. Two coordinate attempts failed and a third
-			// refuted itself on paper; the SDK can simply say which window a
-			// message went to, and gSelLastBtn is the last button that got
-			// one before the dialog vanished.
-			{
-				// ⭐ THE CLOSE RE-READS THE CONTROLS. Everything above is
-				// polled on a 250ms beat, so a choice made in the last tick
-				// before Accept was simply never seen - the player picked,
-				// clicked, and watched it not happen. Re-reading here removes
-				// the whole class rather than shortening the window.
-				//
-				// The windows still exist at this point; they are hidden, not
-				// destroyed. If a read fails the staged value stands, which is
-				// the behaviour this replaces.
-				if (gSelDlgLast != nullptr)
-				{
-					cIGZWin* rc2 =
-						gSelDlgLast->GetChildWindowFromIDRecursive(kSelResComboId);
-					if (rc2 != nullptr)
-					{
-						cIGZWinCombo* c2 = nullptr;
-						if (rc2->QueryInterface(GZIID_cIGZWinCombo,
-								reinterpret_cast<void**>(&c2)) && c2)
-						{
-							const int sel = c2->GetSelection();
-							if (sel >= 0 && sel < gSelResShown)
-							{
-								gSelResSelFull = gSelResShownIdx[sel];
-								if (sel != gSelResPushed)
-								{
-									gSelResStaged = gSelResSelFull;
-								}
-							}
-							c2->Release();
-						}
-					}
-					cIGZWin* mc2 =
-						gSelDlgLast->GetChildWindowFromIDRecursive(kSelModeComboId);
-					if (mc2 != nullptr)
-					{
-						cIGZWinCombo* c3 = nullptr;
-						if (mc2->QueryInterface(GZIID_cIGZWinCombo,
-								reinterpret_cast<void**>(&c3)) && c3)
-						{
-							const int sel = c3->GetSelection();
-							if (sel >= 0 && sel < kSelModeCount
-								&& sel != gSelModePushed)
-							{
-								gSelModeStaged = sel;
-							}
-							c3->Release();
-						}
-					}
-					cIGZWin* sc2 =
-						gSelDlgLast->GetChildWindowFromIDRecursive(kSelComboId);
-					if (sc2 != nullptr)
-					{
-						cIGZWinCombo* c4 = nullptr;
-						if (sc2->QueryInterface(GZIID_cIGZWinCombo,
-								reinterpret_cast<void**>(&c4)) && c4)
-						{
-							const int sel = c4->GetSelection();
-							if (sel >= 0 && sel < kSelCount && sel != gSelPushed
-								&& gSelUsable[sel])
-							{
-								gSelStagedRow = sel;
-							}
-							c4->Release();
-						}
-					}
-				}
-				const char* btn = (gSelLastBtn >= 0)
-					? gSelBtns[gSelLastBtn].name : "(none seen)";
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELCLOSE the last button to receive a message "
-					"was %s. staged=%d", btn, gSelStagedRow);
-				// ⭐ ACCEPT IS THE ONLY WAY OUT, so there is nothing to infer.
-				// Cancel and Default Settings ship DISABLED (see
-				// build_dialog_static DISABLED_BTNS), which is what finally
-				// closed this out: a day of trying to tell the three buttons
-				// apart from outside - coordinates, an ini side-effect, a
-				// message filter, a reset fanout - and the answer was that two
-				// of them did not need to exist for this control. A staged
-				// scale is committed when the dialog closes, because the only
-				// thing that can close it is Accept.
-				if (gSelStagedRow >= 0)
-				{
-					// ⭐ THE PAIR IS RE-CHECKED HERE, not only on the 250ms
-					// rebuild. Accepting within one tick of a resolution
-					// change skipped that rebuild entirely and committed a
-					// pair that cannot both be true - 1024x768 with 1.5x, say.
-					// The rebuild is a courtesy that keeps the display honest
-					// while the dialog is open; THIS is the check that decides
-					// what gets written, and a guard on the write cannot be
-					// outrun by a fast click.
-					int cw = 0, ch = 0;
-					SelEffectiveRes(&cw, &ch);
-					if (gSelStagedRow > 1 && cw > 0 && ch > 0
-						&& !ScaleTier::Fits(kSelFactors[gSelStagedRow], cw, ch))
-					{
-						int mw = 0, mh = 0;
-						SelMinimumFor(gSelStagedRow, &mw, &mh);
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SELCLOSE %s cannot fit the committed "
-							"%dx%d (needs %dx%d) - committing Auto instead. "
-							"The pair was accepted faster than the list could "
-							"be rebuilt.",
-							kSelLabels[gSelStagedRow], cw, ch, mw, mh);
-						gSelStagedRow = 0;
-					}
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELCLOSE committing the staged scale "
-						"(closed via %s; Cancel and Default are disabled, so "
-						"this can only be Accept).", btn);
-					SelCommit(gSelStagedRow);
-					gSelStagedRow = -1;
-				}
-				// RESOLUTION + WINDOW MODE, committed together and to BOTH
-				// files. They are written even when only one of them changed,
-				// because WindowMode without FullScreenMode is the exact
-				// half-applied state that makes the game ignore the setting -
-				// writing the pair is the whole point of this control.
-				if (gSelResStaged >= 0 || gSelModeStaged >= 0)
-				{
-					// ONE INDEX SPACE. Both of these are FULL-list indices.
-					const int rIdx = (gSelResStaged >= 0)
-						? gSelResStaged : gSelResSelFull;
-					const int modeIdx = (gSelModeStaged >= 0)
-						? gSelModeStaged
-						: (gSelModePushed >= 0 ? gSelModePushed
-						                       : SelLiveModeIndex());
-					int w = 0, h = 0;
-					if (rIdx >= 0 && rIdx < gSelResCount)
-					{
-						w = gSelResList[rIdx].w;
-						h = gSelResList[rIdx].h;
-					}
-					else
-					{
-						// No row selected at all. Prefer the largest row this
-						// mode DOES offer over the running size, because the
-						// usual reason nothing matched is that the running
-						// size is invalid in the mode being committed - and
-						// writing it back is how a Windowed switch produced a
-						// window bigger than the screen.
-						if (gSelResShown > 0)
-						{
-							const int f = gSelResShownIdx[0];
-							w = gSelResList[f].w;
-							h = gSelResList[f].h;
-							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: SELCLOSE no row was selected - the "
-								"running %dx%d is not valid in this mode, so "
-								"writing the largest that is, %dx%d.",
-								gReadoutW, gReadoutH, w, h);
-						}
-						else
-						{
-							w = gReadoutW;
-							h = gReadoutH;
-							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: SELCLOSE no rows at all - writing "
-								"the running %dx%d unchanged.", w, h);
-						}
-					}
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELCLOSE committing %s at %dx%d (closed via "
-						"%s).", kSelModeLabels[modeIdx], w, h, btn);
-					SelWriteGraphicsIni(modeIdx, w, h);
-					// EXCLUSIVE only for mode 0. Asking the wrapper for
-					// exclusive under borderless or windowed is exactly what
-					// makes a "windowed" setting come up fullscreen anyway -
-					// the two-file trap this control exists to close.
-					// EXCLUSIVE only for Fullscreen.
-					SelWriteDgVoodooFullScreen(modeIdx == kModeFullscreen);
-					gSelResStaged = -1;
-					gSelModeStaged = -1;
-				}
-			}
-			SelDetachButtonFilters();
-			gSelDlgUp = false;
-			gSelPushed = -2;
-			gSelCommitted = -1;
-			if (gSelNoticePending)
-			{
-				// The change is committed and WILL apply; only the notice was
-				// missed. Say that plainly - a detector that silently never
-				// fires is indistinguishable from one that works.
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELACCEPT the dialog closed with a scale change "
-					"pending and NO write to SC4GraphicsOptions.ini was ever "
-					"seen. The change is committed and applies next launch; "
-					"the notice did not show because Accept could not be "
-					"detected this way either.");
-			}
-			gSelNoticePending = false;
-			gSelAcceptSeen = false;
-			// The full timing table, now that a whole visit's work - opens,
-			// rebuilds, polls, commit writes - is in the buckets.
-			SelPerfDump("dialog closed");
-		}
+		// Closed. With Cancel and Default disabled, a close IS the commit.
+		if (gSelDlgUp) { SelOnClose(); }
 		return;
 	}
+
 	const bool justOpened = !gSelDlgUp;
-	gSelDlgUp = true;
+	if (justOpened) { SelOnOpen(gfxDlg); }
+	else { SelOnTick(gfxDlg); }
 
-	// ---- 0a. ACCEPT TRACE: capture the closing buttons' absolute rects ----
-	// Captured on OPEN, because that is when they exist and are laid out, and
-	// re-captured every open in case the tier (and therefore the geometry)
-	// changed. SafeAbsRect walks the parent chain under SEH - the same helper
-	// the sweep uses - so a bad pointer cannot take the game down.
-	if (justOpened)
-	{
-		PerfProbe::Scope perf_("sel.open");
-		// ⭐ ACCEPT IS DETECTED BY ITS SIDE EFFECT, NOT BY A MESSAGE.
-		// The notice belongs on Accept, and the message layer provably cannot
-		// deliver that: 36 traced messages, none touching the Accept rect,
-		// and none arriving at all at the moment it was pressed. So watch
-		// what Accept DOES instead - the game applies its graphics settings,
-		// which rewrites SC4GraphicsOptions.ini. A change to that file's
-		// timestamp while this dialog is open is Accept happening.
-		//
-		// Snapshotted per APPEARANCE: Set-Tier.ps1 writes the same file
-		// between sessions, and a stale baseline would read as an Accept the
-		// instant the dialog opened.
-		gSelGfxStamp = SelGfxIniStamp();
-		gSelAcceptSeen = false;
-		SelAttachButtonFilters(gfxDlg);
-		gSelRectsOk = false;
-		cIGZWin* acc = gfxDlg->GetChildWindowFromIDRecursive(kSelAcceptId);
-		cIGZWin* can = gfxDlg->GetChildWindowFromIDRecursive(kSelCancelId);
-		if (acc && can
-			&& SafeAbsRect(acc, &gSelAcceptRect[0], &gSelAcceptRect[1],
-				&gSelAcceptRect[2], &gSelAcceptRect[3])
-			&& SafeAbsRect(can, &gSelCancelRect[0], &gSelCancelRect[1],
-				&gSelCancelRect[2], &gSelCancelRect[3]))
-		{
-			gSelRectsOk = true;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELHIT rects captured - Accept=[%d,%d %dx%d] "
-				"Cancel=[%d,%d %dx%d]. Click coordinates are compared against "
-				"these; if a click ON Accept reports miss, the two are in "
-				"different coordinate spaces and a hit-test is the wrong "
-				"mechanism.",
-				gSelAcceptRect[0], gSelAcceptRect[1], gSelAcceptRect[2],
-				gSelAcceptRect[3], gSelCancelRect[0], gSelCancelRect[1],
-				gSelCancelRect[2], gSelCancelRect[3]);
-		}
-		else
-		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELHIT could not resolve the Accept/Cancel rects "
-				"(accept=%p cancel=%p) - the trace cannot run this visit.",
-				static_cast<void*>(acc), static_cast<void*>(can));
-		}
-	}
-
-	// ---- 0c. DOES THE GAME RAISE ITS OWN RESTART NOTICE? -----------------
-	// The user reports the stock box appears only AFTER Accept. If the game
-	// raises it by itself when a restart-relevant setting changed, that
-	// transition is a FREE, exact Accept signal - better than any hit-test.
-	// Report every transition either way, so one Accept click says which.
-	{
-		PerfProbe::Scope perf_("sel.notice");
-		cIGZWin* nw = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
-		const bool up = (nw != nullptr && nw->IsVisible());
-		if (up != gSelNoticeWasUp)
-		{
-			gSelNoticeWasUp = up;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELNOTICE %s (weShowedItAt=%u) - a rise we did not "
-				"cause is the game's own Accept handler, and that transition "
-				"is the Accept signal we lack.",
-				up ? "VISIBLE" : "hidden", gSelNoticeShownMs);
-		}
-	}
-
-	// ---- 0. chain our WinProc onto the dialog ---------------------------
-	// Re-checked whenever the dialog POINTER changes, not once ever: the
-	// dialog can be destroyed and rebuilt, and a rebuilt one carries none of
-	// our state.
-	if (gSelProcOn != gfxDlg)
-	{
-		cIGZWinGen* gen = nullptr;
-		if (gfxDlg->QueryInterface(GZIID_cIGZWinGen,
-				reinterpret_cast<void**>(&gen)) && gen)
-		{
-			cIGZWinProc* prev = gen->GetWinProc();
-			if (prev != static_cast<cIGZWinProc*>(&gSelProc))
-			{
-				gSelProc.SetNext(prev);
-				gen->SetWinProc(&gSelProc);
-				gSelProcOn = gfxDlg;
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELECTOR winproc chained on Graphic Options "
-					"(previous proc %s).", prev ? "kept" : "was none");
-			}
-			gen->Release();
-		}
-		else
-		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELECTOR could not get cIGZWinGen on the dialog - "
-				"clicks will not be seen.");
-			gSelProcOn = gfxDlg;   // do not retry on every service
-		}
-	}
-
-	// ---- 0aa. DID ACCEPT JUST HAPPEN? -----------------------------------
-	// One file stat per 250ms, and only while a dialog nobody leaves open is
-	// up. If the game does NOT rewrite that file on Accept this simply never
-	// fires - and the close-time line below says so out loud, so a dead
-	// detector cannot pass for a working one.
-	if (!gSelAcceptSeen)
-	{
-		const unsigned long long nowStamp = SelGfxIniStamp();
-		if (nowStamp != 0 && gSelGfxStamp != 0 && nowStamp != gSelGfxStamp)
-		{
-			gSelAcceptSeen = true;
-			gSelGfxStamp = nowStamp;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELACCEPT SC4GraphicsOptions.ini was rewritten while "
-				"Graphic Options is open - that is the game applying its "
-				"settings, i.e. Accept. noticePending=%d",
-				gSelNoticePending ? 1 : 0);
-			if (gSelNoticePending)
-			{
-				gSelNoticePending = false;
-			}
-		}
-	}
-
-	// ---- 0b. THE RESTART NOTICE MUST NOT BE ABLE TO TRAP THE PLAYER -----
-	// We show the game's own notice; its Accept button is the game's, and we
-	// cannot see its clicks. If the game's handler does not hide the box then
-	// nothing else would, so there is a net - but it is a TIMER, not a click.
-	//
-	// ⛔ IT USED TO DISMISS ON "A CLICK", AND THAT SILENTLY KILLED THE
-	// FEATURE. The net fired on message type 0x0D, which the FIRST capture -
-	// two occurrences, arriving with a button press - made look like a click.
-	// The SECOND capture showed the truth: 36 of them in one continuous sweep
-	// as the pointer moved. It is a mouse MOVE. So the notice was dismissed
-	// within ~250ms of appearing, every time, by nothing more than the user
-	// moving the mouse. Measured 2026-08-19:
-	//     15:21:03.433 showed the game's own restart notice
-	//     15:21:03.896 dismissed the restart notice on a click (safety net)
-	// and the user reported, correctly, that no notice ever appeared.
-	//
-	// ⭐ MY OWN INSTRUMENT HAD ALREADY CORRECTED THE LABEL AND I KEPT THE
-	// CONCLUSION DRAWN FROM THE FIRST READING. A second measurement that
-	// contradicts the first is a RETRACTION, not extra confidence.
-	//
-	// A timeout cannot be wrong about what a message means. Ten seconds is
-	// long enough to read one sentence and reach the button, and it still
-	// guarantees the box can never become a trap.
-	if (gSelNoticeShownMs != 0)
-	{
-		cIGZWin* notice = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
-		if (notice == nullptr || !notice->IsVisible())
-		{
-			gSelNoticeShownMs = 0;   // dismissed - by the game, or by us
-		}
-		else if (static_cast<int>(now - gSelNoticeShownMs) > 10000)
-		{
-			notice->HideWindow();
-			gSelNoticeShownMs = 0;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELECTOR retired the restart notice after 10s - the "
-				"game's own Accept had not hidden it, so the net did. If this "
-				"line appears every time, that button is not wired to a notice "
-				"WE raised and the net is the only way it ever closes.");
-		}
-	}
-
-	// ---- 0d. THE COMBO'S LIVE GEOMETRY vs ITS PARENT'S CLIP -------------
-	// The user reports the box "cut off". Rather than adjust it by eye a
-	// second time, print what the game actually laid out: the combo's own
-	// rect and its parent's, so the margin at the bottom is a number instead
-	// of an impression. Once per appearance.
-	if (justOpened)
-	{
-		cIGZWin* cg = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
-		if (cg != nullptr)
-		{
-			int cl = 0, ct = 0, cw = 0, ch = 0;
-			cIGZWin* par = cg->GetParentWin();
-			int pl = 0, pt = 0, pw = 0, ph = 0;
-			if (SafeAbsRect(cg, &cl, &ct, &cw, &ch)
-				&& par != nullptr && SafeAbsRect(par, &pl, &pt, &pw, &ph))
-			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELGEOM combo [%d,%d %dx%d] parent [%d,%d %dx%d] "
-					"- bottom margin %d px (combo bottom %d, parent bottom "
-					"%d). A negative or tiny margin is the box being clipped.",
-					cl, ct, cw, ch, pl, pt, pw, ph,
-					(pt + ph) - (ct + ch), ct + ch, pt + ph);
-			}
-		}
-	}
-
-	// ---- 1. the readout line (#192 behaviour, unchanged) ----------------
-	char l1[96];
-	if (gReadoutW > 0 && gReadoutH > 0)
-	{
-		_snprintf_s(l1, sizeof(l1), _TRUNCATE, "%dx%d @ %.2fx %s",
-			gReadoutW, gReadoutH, settings.spikeScaleFactor,
-			settings.spikeAutoScale ? "auto" : "manual");
-	}
-	else
-	{
-		// Honest rather than blank-but-wrong: only claim a render size we
-		// were actually handed.
-		_snprintf_s(l1, sizeof(l1), _TRUNCATE, "res ? @ %.2fx %s",
-			settings.spikeScaleFactor,
-			settings.spikeAutoScale ? "auto" : "manual");
-	}
-	SelSetCaption(gfxDlg, kSelReadoutId, l1);
-	SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
-
-	// ---- 1b. THE STOCK RESOLUTION ROWS STAY HIDDEN ----------------------
-	// They used to be restored when the wrapper was not overriding. That is
-	// gone: our own Resolution combo now occupies that column and supersedes
-	// them in EVERY mode. Keeping both would give the player two controls for
-	// one setting, and the stock one tops out at 1600x1200 - which reaches
-	// 1.5x and no further, so three of its four choices turn this mod off.
-
-	// ---- 2. the radio: is the live resolution one of the stock four? ----
-	// DERIVED every service, never tracked: ask the four stock radios what
-	// they are rather than remembering what we last saw.
-	{
-		PerfProbe::Scope perf_("sel.radio");
-		int mask = 0;
-		bool anyStock = false;
-		for (int k = 0; k < 4; k++)
-		{
-			cIGZWin* w =
-				gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
-			if (!w) { continue; }
-			cIGZWinBtn* b = nullptr;
-			if (w->QueryInterface(GZIID_cIGZWinBtn,
-					reinterpret_cast<void**>(&b)) && b)
-			{
-				if (b->IsChecked()) { anyStock = true; mask |= (1 << k); }
-				b->Release();
-			}
-		}
-		cIGZWin* w = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
-		bool oursChecked = false;
-		if (w)
-		{
-			cIGZWinBtn* b = nullptr;
-			if (w->QueryInterface(GZIID_cIGZWinBtn,
-					reinterpret_cast<void**>(&b)) && b)
-			{
-				oursChecked = b->IsChecked();
-				if (oursChecked) { mask |= (1 << 4); }
-				// ⚠ ONLY SEEDED ON OPEN. Forcing it every service would make
-				// the control unclickable: the player checks it, 250ms later
-				// we overwrite it from the stock radios, and the click looks
-				// ignored. On open we state the truth; after that the player
-				// owns it - and the trace below records what their click did.
-				if (justOpened)
-				{
-					const bool want = !anyStock;
-					if (oursChecked != want)
-					{
-						b->SetChecked(want);
-						oursChecked = want;
-						mask = (mask & 0x0F) | (want ? (1 << 4) : 0);
-					}
-				}
-				b->Release();
-			}
-		}
-		// ---- MUTUAL EXCLUSION, ENFORCED BY US -------------------------
-		// MEASURED 2026-08-19: the engine DOES toggle our injected
-		// radiocheck button when it is clicked (mask went 0x02 -> 0x12 on the
-		// user's click), so the choice is readable directly - no click
-		// detection needed, which matters because Accept clicks provably
-		// never reach us. But the engine does NOT group ours with the stock
-		// four: the same trace caught 1024x768 AND ours lit simultaneously
-		// (mask 0x12). Radio buttons that can both be on are not radio
-		// buttons, so the grouping is ours to enforce.
-		//
-		// The rule is by TRANSITION, not by state: whichever one just turned
-		// ON wins, and the other side is cleared. Deciding from state alone
-		// cannot tell which the user actually clicked.
-		const bool oursNow = oursChecked;
-		const int  stockNow = mask & 0x0F;
-		if (oursNow && !gSelOursWas && stockNow != 0)
-		{
-			// The player just chose OUR resolution: clear the stock four.
-			//
-			// ⭐ THIS IS ALSO HOW THE CHOICE SURVIVES ACCEPT. The game writes
-			// SC4GraphicsOptions.ini from ITS OWN radio state, and we cannot
-			// see the Accept click to intervene. With no stock resolution
-			// selected there is nothing for it to write, so the custom
-			// WindowWidth/Height already in the file simply stays - which is
-			// exactly what "keep my resolution" means.
-			for (int k = 0; k < 4; k++)
-			{
-				cIGZWin* w2 =
-					gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
-				if (!w2) { continue; }
-				cIGZWinBtn* b2 = nullptr;
-				if (w2->QueryInterface(GZIID_cIGZWinBtn,
-						reinterpret_cast<void**>(&b2)) && b2)
-				{
-					if (b2->IsChecked()) { b2->SetChecked(false); }
-					b2->Release();
-				}
-			}
-			mask &= ~0x0F;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELRADIO custom resolution re-selected - cleared the "
-				"stock resolution radios so the game has nothing to write over "
-				"%dx%d on Accept.", gReadoutW, gReadoutH);
-		}
-		else if (stockNow != 0 && gSelStockWas == 0 && oursNow)
-		{
-			// A stock resolution just won: ours must go dark, or two radios
-			// claim the same choice.
-			cIGZWin* w2 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
-			if (w2)
-			{
-				cIGZWinBtn* b2 = nullptr;
-				if (w2->QueryInterface(GZIID_cIGZWinBtn,
-						reinterpret_cast<void**>(&b2)) && b2)
-				{
-					b2->SetChecked(false);
-					b2->Release();
-				}
-			}
-			mask &= ~(1 << 4);
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELRADIO a stock resolution was chosen - our custom "
-				"radio cleared.");
-		}
-		// CALIBRATION POINT. `ours` going 0 -> 1 is a click WE did not make,
-		// on a 16x16 design-px target - the most precisely located event
-		// available to us. The difference between where the pointer was and
-		// where the walked geometry says that radio is IS the mapping.
-		if (oursNow && !gSelOursWas && gSelLastX >= 0)
-		{
-			int rl = 0, rt = 0, rw = 0, rh = 0;
-			cIGZWin* rw2 = gfxDlg->GetChildWindowFromIDRecursive(kSelRadioId);
-			if (rw2 && SafeAbsRect(rw2, &rl, &rt, &rw, &rh) && rw > 0)
-			{
-				gSelCalDx = gSelLastX - (rl + rw / 2);
-				gSelCalDy = gSelLastY - (rt + rh / 2);
-				gSelCalibrated = true;
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELCAL our radio was clicked at pointer (%d,%d); "
-					"its walked rect is [%d,%d %dx%d] centre (%d,%d). OFFSET "
-					"= (%+d,%+d). Accept/Cancel now testable in the pointer's "
-					"own space.",
-					gSelLastX, gSelLastY, rl, rt, rw, rh,
-					rl + rw / 2, rt + rh / 2, gSelCalDx, gSelCalDy);
-			}
-		}
-		gSelOursWas = (mask & (1 << 4)) != 0;
-		gSelStockWas = mask & 0x0F;
-
-		// SELRADIO: one line per CHANGE, never per service.
-		if (mask != gSelRadioState && gSelRadioLogs < 30)
-		{
-			gSelRadioLogs++;
-			gSelRadioState = mask;
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELRADIO stock[800x600=%d 1024=%d 1280=%d 1600=%d] "
-				"ours=%d (mask 0x%02X). If `ours` flips to 1 after a click we "
-				"did not make, the engine toggles injected radiocheck buttons "
-				"and the custom-resolution choice is readable directly.",
-				(mask >> 0) & 1, (mask >> 1) & 1, (mask >> 2) & 1,
-				(mask >> 3) & 1, (mask >> 4) & 1, mask);
-		}
-	}
-
-	// ---- 3. the combo IS the readout ------------------------------------
-	// On open: REBUILD the list, then select the live row. After that the
-	// combo owns the value - re-pushing every service would fight the
-	// player's own selection.
-	//
-	// THE LIST IS BUILT AT RUNTIME because both facts it shows are runtime
-	// facts. Whether a tier is usable depends on the resolution, which no .UI
-	// can know; and the ACTIVE row carries the live resolution so the closed
-	// control reads "1.5x @ 2400x1600" - the readout line this row used to
-	// hold before the combo took its place. A row the screen cannot carry
-	// says what it would need, and selecting it is REFUSED, so the control
-	// can never promise a tier that would silently fall back to stock at the
-	// next launch. The rule is ScaleTier::Fits, the same predicate the boot
-	// path uses; a second copy of 880/558 here would be a second rule.
-	cIGZWin* comboWin = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
-	if (comboWin)
-	{
-		PerfProbe::Scope perf_("sel.scaleCombo");
-		cIGZWinCombo* c = nullptr;
-		if (comboWin->QueryInterface(GZIID_cIGZWinCombo,
-				reinterpret_cast<void**>(&c)) && c)
-		{
-			if (justOpened || gSelScaleNeedsRebuild)
-			{
-				// The PENDING choice wins if there is one - see gSelPendingRow.
-				// REBUILT when the resolution changes, not only on open. The row
-				// captions say "needs WxH" and the usable set is derived from the
-				// resolution - both are wrong the moment a different one is staged.
-				const bool resRebuild = gSelScaleNeedsRebuild && !justOpened;
-				gSelScaleNeedsRebuild = false;
-				int live = (gSelPendingRow >= 0)
-					? gSelPendingRow : SelRowFromSettings(settings);
-				if (resRebuild)
-				{
-					// Keep whatever the player chose this visit...
-					live = (gSelStagedRow >= 0) ? gSelStagedRow : gSelPushed;
-				}
-				for (int k = 0; k < kSelCount; k++)
-				{
-					gSelUsable[k] = SelRowUsable(k);
-				}
-				c->RemoveAllStrings();
-				for (int k = 0; k < kSelCount; k++)
-				{
-					char row[80];
-					if (!gSelUsable[k])
-					{
-						// Say WHAT IT NEEDS, not just "no". A control that
-						// refuses without explaining itself is a bug report.
-						int mw = 0, mh = 0;
-						SelMinimumFor(k, &mw, &mh);
-						_snprintf_s(row, sizeof(row), _TRUNCATE,
-							"%s - needs %dx%d", kSelLabels[k], mw, mh);
-					}
-					else if (k == live && k == gSelPendingRow)
-					{
-						// Chosen this session: say that it is queued, so the
-						// player can tell a pending choice from the live one.
-						_snprintf_s(row, sizeof(row), _TRUNCATE,
-							"%s - on restart", kSelLabels[k]);
-					}
-					else if (k == live)
-					{
-						// ⭐ THE EFFECTIVE RESOLUTION, NOT THE RUNNING ONE.
-						// This row read gReadoutW/H, so after staging
-						// 1024x768 it still said "Auto @ 2400x1600" - naming
-						// a pairing that will never exist. The two controls
-						// have to describe the SAME future: whatever
-						// resolution is in force next launch is the one this
-						// tier will be applied at.
-						int rw = 0, rh = 0;
-						SelEffectiveRes(&rw, &rh);
-						if (rw > 0 && rh > 0)
-						{
-							_snprintf_s(row, sizeof(row), _TRUNCATE,
-								"%s @ %dx%d", kSelLabels[k], rw, rh);
-						}
-						else
-						{
-							_snprintf_s(row, sizeof(row), _TRUNCATE, "%s",
-								kSelLabels[k]);
-						}
-					}
-					else
-					{
-						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s",
-							kSelLabels[k]);
-					}
-					cRZBaseString rs(row);
-					c->InsertString(rs, k);
-				}
-				// ...unless the new resolution cannot carry it. Then bounce to Auto
-				// and SAY SO, rather than letting Accept agree to a pair the next
-				// launch would silently undo.
-				if (resRebuild && live > 1 && live < kSelCount && !gSelUsable[live])
-				{
-					int mw = 0, mh = 0;
-					SelMinimumFor(live, &mw, &mh);
-					int ew = 0, eh = 0;
-					SelEffectiveRes(&ew, &eh);
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELECTOR %s no longer fits the staged %dx%d "
-						"(needs %dx%d) - the scale is bounced to Auto. This is the "
-						"1024x768-plus-1.5x pair, refused at the moment it stops "
-						"being possible instead of at the next launch.",
-						kSelLabels[live], ew, eh, mw, mh);
-					live = 0;
-					gSelStagedRow = 0;
-				}
-				if (live >= 0) { c->SetSelection(live, false); }
-				gSelPushed = live;
-				gSelCommitted = live;
-			}
-			else
-			{
-				const int row = c->GetSelection();
-				if (row >= 0 && row < kSelCount && row != gSelPushed)
-				{
-					if (!gSelUsable[row])
-					{
-						// REFUSED -> BOUNCE TO AUTO (user direction,
-						// 2026-08-19). Auto is the only row that always fits
-						// by construction, and it answers what the player was
-						// reaching for: "give me the biggest scale this
-						// screen can take". Snapping back to the PREVIOUS row
-						// would have been the timid choice and leaves someone
-						// who just moved to a smaller screen stuck on a tier
-						// that no longer fits.
-						//
-						// It COMMITS Auto too, deliberately. A bounce that
-						// only moved the highlight would leave the ini
-						// holding the old value while the closed control read
-						// "Auto" - the control would be lying, which is the
-						// one thing it must never do.
-						int bounceMinW = 0, bounceMinH = 0;
-						SelMinimumFor(row, &bounceMinW, &bounceMinH);
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SELECTOR refused row %d (%s) - %dx%d "
-							"cannot carry it (needs %dx%d). Bounced to Auto.",
-							row, kSelLabels[row], gReadoutW, gReadoutH,
-							bounceMinW, bounceMinH);
-						c->SetSelection(0, false);
-						gSelPushed = 0;
-						gSelCommitted = 0;
-						gSelStagedRow = 0;
-							}
-					else
-					{
-						// COMMIT ON CHANGE, not on Accept.
-						//
-						// ⭐ MEASURED, NOT CHOSEN (2026-08-19). The first
-						// build staged the choice and committed when a
-						// message carrying the Accept button's id arrived.
-						// The SELMSG instrument proved no such message
-						// exists: across 120 captured messages every one was
-						// either a mouse coordinate pair (type 0x0D /
-						// 0xA2BF8AD4) or one repeated WINDOW POINTER
-						// (0xA2BF8ACD/CE/CF) - not a single control id in any
-						// data slot. That commit path could never have fired,
-						// and only the instrument could have said so.
-						//
-						// Committing on change is safe HERE specifically
-						// because the tier applies at the next launch: the
-						// write changes nothing about the running game, and
-						// picking another row overwrites it.
-						gSelPushed = row;
-						gSelCommitted = row;
-						// ⛔ SHOWN ON THE CHANGE, AND THAT IS NOT THE
-						// PREFERRED TIMING - it is the only one left.
-						// The user asked for it on Accept, twice, and
-						// Accept has now been eliminated by two
-						// independent measurements:
-						//   1. MESSAGES - 36 traced with the dialog
-						//      open, none touching the Accept rect, and
-						//      none arriving at all at the moment it was
-						//      pressed. The winproc does not see it.
-						//   2. SIDE EFFECT - the game does NOT rewrite
-						//      SC4GraphicsOptions.ini on Accept. Three
-						//      Accepts in one session, three
-						//      "NO write ... was ever seen" lines.
-						// The detector below stays armed anyway: it costs
-						// one file stat, and if a future build of the
-						// game (or another setting changed in the same
-						// visit) does move that file, the log will say
-						// so and the timing can move with it.
-						// STAGED, not committed - see the close handler.
-						// The user hit Cancel and the change stuck anyway,
-						// which is the one thing a Cancel button must not do.
-						gSelStagedRow = row;
-							}
-				}
-			}
-			c->Release();
-		}
-	}
-
-	// ---- 4. RESOLUTION + WINDOW MODE ------------------------------------
-	// Same shape as the scale combo above: the list is built on open, the
-	// selection is read on later ticks, and the choice is STAGED until the
-	// dialog closes - which, with Cancel and Default disabled, can only be
-	// Accept.
-	//
-	// Both apply at the next launch, exactly like the scale, because the game
-	// reads its resolution and window mode once at startup.
-	{
-		PerfProbe::Scope perf_("sel.resMode");
-		// The list depends on the MODE, so it is rebuilt on open and again
-		// whenever the mode changes - a Borderless list and a Fullscreen list
-		// are not the same rows, and showing yesterday's is how the control
-		// ends up offering something the game will ignore.
-		// ⛔ NO OWNING DLL, NO CONTROLS. Hidden rather than greyed: a
-		// disabled combo reads as a setting the player is missing out on,
-		// and on such an install this is not a setting at all. The SCALE
-		// selector is unaffected - it writes our own ini, which we own.
-		if (justOpened && !SelGraphicsDllPresent())
-		{
-			gSelGfxDllMissing = true;
-			if (!gSelNoGfxDllLogged)
-			{
-				gSelNoGfxDllLogged = true;
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELMODE SC4GraphicsOptions.dll is NOT installed - "
-					"Window Mode and Resolution are HIDDEN. That DLL owns "
-					"SC4GraphicsOptions.ini, so without it WindowMode and "
-					"WindowWidth/Height are read by nothing. The scale selector "
-					"is unaffected: it writes our own ini.");
-			}
-			const uint32_t hideIds[4] = { kSelResComboId, kSelModeComboId,
-				kSelResLabelId, kSelModeLabelId };
-			for (int hi = 0; hi < 4; hi++)
-			{
-				cIGZWin* hw = gfxDlg->GetChildWindowFromIDRecursive(hideIds[hi]);
-				if (hw != nullptr && hw->IsVisible()) { hw->HideWindow(); }
-			}
-		}
-		if (gSelGfxDllMissing) { return; }
-
-		const bool listRebuilt = justOpened || gSelResNeedsRebuild;
-		if (listRebuilt)
-		{
-			gSelResNeedsRebuild = false;
-			SelBuildResList();
-		}
-
-		cIGZWin* rc = gfxDlg->GetChildWindowFromIDRecursive(kSelResComboId);
-		if (rc != nullptr)
-		{
-			cIGZWinCombo* c = nullptr;
-			if (rc->QueryInterface(GZIID_cIGZWinCombo,
-					reinterpret_cast<void**>(&c)) && c)
-			{
-				if (listRebuilt)
-				{
-					// ⭐ NEVER OFFER MORE THAN THE DISPLAY CAN SHOW.
-					// A resolution above the desktop mode is not something the
-					// player can choose their way out of: fullscreen presents
-					// at the desktop mode regardless, and a window bigger than
-					// the screen puts its own edges - and this dialog - out of
-					// reach. The list is capped rather than the choice
-					// refused, because a row you cannot pick needs no
-					// explanation.
-					// Capability for fullscreen, desktop otherwise - the same
-					// distinction the builder makes, and for the same reason:
-					// the CURRENT metrics are whatever mode the game is in.
-					int capW2 = 0, capH2 = 0;
-					SelDisplayMax(&capW2, &capH2);
-					int deskW2 = 0, deskH2 = 0;
-					SelDesktopMode(&deskW2, &deskH2);
-					const bool fsNow =
-						(SelEffectiveModeIdx() == kModeFullscreen);
-					const int monW = fsNow ? capW2 : deskW2;
-					const int monH = fsNow ? capH2 : deskH2;
-					// The SELECTED row is what the ini says will apply; the
-					// "(current)" marker is what is rendering now. After an
-					// Accept those differ, and showing the running one would
-					// discard the choice the player just made.
-					int iniW = 0, iniH = 0;
-					SelIniRes(&iniW, &iniH);
-					c->RemoveAllStrings();
-					gSelResShown = 0;
-					int live = -1;
-					for (int i = 0; i < gSelResCount; i++)
-					{
-						if (monW > 0 && monH > 0
-							&& (gSelResList[i].w > monW || gSelResList[i].h > monH))
-						{
-							continue;   // the display cannot show it
-						}
-						gSelResShownIdx[gSelResShown] = i;
-						char row[64];
-						// "Current", not "native": they are not the same
-						// question. The player wants to know which one they
-						// are running, and on a desktop set below its panel's
-						// native mode those differ.
-						const bool isRunning = (gSelResList[i].w == gReadoutW
-							&& gSelResList[i].h == gReadoutH);
-						// A row is "chosen" only if the player picked one THIS
-						// session. Before that the ini is just history.
-						const bool isChosen = gSelResUserChanged
-							&& gSelResList[i].w == iniW
-							&& gSelResList[i].h == iniH;
-						_snprintf_s(row, sizeof(row), _TRUNCATE, "%dx%d%s",
-							gSelResList[i].w, gSelResList[i].h,
-							isRunning ? " (current)"
-								: (isChosen ? " - on restart" : ""));
-						cRZBaseString rs(row);
-						c->InsertString(rs, gSelResShown);
-						if (isChosen && !isRunning) { live = gSelResShown; }
-						else if (isRunning && live < 0) { live = gSelResShown; }
-						gSelResShown++;
-					}
-					// ⭐ IF THE RUNNING RESOLUTION IS NOT IN THIS MODE'S LIST,
-					// THE RESOLUTION MUST MOVE. Switching to Windowed at
-					// 2400x1600 on a 2400x1600 desktop is exactly that: the
-					// size cannot be a window, so it is not offered, nothing
-					// matched, and the commit fell back to "write what is
-					// running" - which is the one value that cannot work in
-					// the mode just chosen. Measured 2026-08-20:
-					//     SELRES built 7 row(s) for Windowed
-					//     SELCLOSE no resolution row was selected - writing
-					//     the running 2400x1600 unchanged
-					// "Do not move what the player did not touch" is right
-					// until the mode makes the current value invalid; then
-					// refusing to move IS the defect. Row 0 is the largest
-					// that fits, which is the closest thing to what they had.
-					if (live < 0 && gSelResShown > 0)
-					{
-						live = 0;
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SELRES %dx%d is not available in %s - "
-							"selecting the largest that is, %dx%d.",
-							gReadoutW, gReadoutH,
-							kSelModeLabels[SelEffectiveModeIdx()],
-							gSelResList[gSelResShownIdx[0]].w,
-							gSelResList[gSelResShownIdx[0]].h);
-						// It differs from what is running, so it IS a pending
-						// change and must be committed like one.
-						gSelResUserChanged = true;
-						gSelResStaged = gSelResShownIdx[0];
-					}
-					if (live >= 0) { c->SetSelection(live, false); }
-					gSelResPushed = live;
-					gSelResSelFull = (live >= 0 && live < gSelResShown)
-						? gSelResShownIdx[live] : -1;
-					if (gSelResStaged < 0) { gSelResStaged = -1; }
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELRES offering %d of %d resolutions - the "
-						"display is %dx%d and nothing larger is shown.",
-						gSelResShown, gSelResCount, monW, monH);
-				}
-				else
-				{
-					const int sel = c->GetSelection();
-					if (sel >= 0 && sel < gSelResShown && sel != gSelResPushed)
-					{
-						gSelResPushed = sel;
-						gSelResStaged = gSelResShownIdx[sel];
-						gSelResSelFull = gSelResStaged;
-						gSelResUserChanged = true;
-						// THE SCALE LIST IS NOW STALE. It was built against
-						// the old resolution, so rebuild it before the player
-						// can Accept a pair that cannot both be true.
-						gSelScaleNeedsRebuild = true;
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SELRES staged %dx%d - applies at the "
-							"next launch; the scale list will be re-checked "
-							"against it.",
-							gSelResList[gSelResStaged].w,
-							gSelResList[gSelResStaged].h);
-							}
-				}
-				c->Release();
-			}
-		}
-
-		// BOTH captions are ours now: the stock "Resolution" header is hidden,
-		// because the column leads with Window Mode and a fixed caption above
-		// the wrong control is worse than none.
-		const uint32_t capIds[2] = { kSelModeLabelId, kSelResLabelId };
-		const char* const capTxt[2] = { "Window Mode", "Resolution" };
-		for (int ci = 0; ci < 2; ci++)
-		{
-			cIGZWin* lw = gfxDlg->GetChildWindowFromIDRecursive(capIds[ci]);
-			if (lw == nullptr) { continue; }
-			cIGZWinText* t = nullptr;
-			if (lw->QueryInterface(GZIID_cIGZWinText,
-					reinterpret_cast<void**>(&t)) && t)
-			{
-				cIGZString* cur = lw->GetCaption();
-				const bool same = (cur != nullptr && cur->ToChar() != nullptr
-					&& strcmp(cur->ToChar(), capTxt[ci]) == 0);
-				if (!same)
-				{
-					cRZBaseString want(capTxt[ci]);
-					t->SetCaption(want);
-				}
-				t->Release();
-			}
-		}
-
-		cIGZWin* mc = gfxDlg->GetChildWindowFromIDRecursive(kSelModeComboId);
-		if (mc != nullptr)
-		{
-			cIGZWinCombo* c = nullptr;
-			if (mc->QueryInterface(GZIID_cIGZWinCombo,
-					reinterpret_cast<void**>(&c)) && c)
-			{
-				if (justOpened || gSelModeNeedsRebuild)
-				{
-					gSelModeNeedsRebuild = false;
-					if (gSelModeRunning < 0)
-					{
-						gSelModeRunning = SelLiveModeIndex();
-					}
-					const int chosen = (gSelModeStaged >= 0)
-						? gSelModeStaged
-						: (gSelModeUserChanged ? SelLiveModeIndex() : -1);
-					c->RemoveAllStrings();
-					for (int m = 0; m < kSelModeCount; m++)
-					{
-						char row[56];
-						// Same vocabulary as the other two combos: "(current)"
-						// is what is running, "- on restart" is what was
-						// chosen. Without them this control alone gave no sign
-						// that a pick had registered.
-						const char* tag =
-							(m == gSelModeRunning) ? " (current)"
-							: (m == chosen) ? " - on restart"
-							: (m == kModeBorderless) ? " (recommended)" : "";
-						_snprintf_s(row, sizeof(row), _TRUNCATE, "%s%s",
-							kSelModeLabels[m], tag);
-						cRZBaseString rs(row);
-						c->InsertString(rs, m);
-					}
-					const int live = (chosen >= 0) ? chosen : gSelModeRunning;
-					c->SetSelection(live, false);
-					gSelModePushed = live;
-					gSelModeStaged = -1;
-				}
-				else
-				{
-					const int sel = c->GetSelection();
-					if (sel >= 0 && sel < kSelModeCount && sel != gSelModePushed)
-					{
-						gSelModePushed = sel;
-						gSelModeStaged = sel;
-						gSelModeUserChanged = true;
-						gSelModeNeedsRebuild = true;
-						// The mode decides what "resolution" MEANS, so both
-						// the resolution list and the scale's fit set are now
-						// stale. Rebuild both rather than let either keep an
-						// answer that belonged to the previous mode.
-						gSelResNeedsRebuild = true;
-						gSelResStaged = -1;
-						gSelResUserChanged = false;
-						gSelScaleNeedsRebuild = true;
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: SELMODE staged %s - applies at the next "
-							"launch, and writes BOTH files.",
-							kSelModeLabels[sel]);
-							}
-				}
-				c->Release();
-			}
-		}
-	}
-
-	if (gSelLogs < 2)
-	{
-		gSelLogs++;
-		Logger::Get().WriteLine(LogLevel::Info,
-			"UiSpike: SELECTOR serviced Graphic Options - readout \"%s\", "
-			"combo %s. Absent means the DATA half is missing for this tier: "
-			"rebuild and deploy DialogStatic.", l1,
-			comboWin ? "present" : "ABSENT");
-	}
+	SelApplyStatics(gfxDlg, settings);
+	SelNoticeTick(gfxDlg, now);
+	SelRadioTick(gfxDlg, justOpened);
 }

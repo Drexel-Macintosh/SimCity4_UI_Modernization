@@ -1,3 +1,83 @@
+2026-08-20  v3.14.0  THE SELECTOR REWRITE: six generations of mechanism
+                     become ONE pure function - derive, diff-apply, commit
+                     at close
+
+  The approved plan (CONTINUITY.md "the v3.14 rewrite", full text in the
+  plan file) executed in one build. The ~1,400-line per-250ms
+  ServiceScaleSelector is gone; the selector is now a state machine.
+
+  PHASE 1 - STRIPPED, each measured dead in the v3.13.x logs (each one a
+  syscall or a per-message log the tick no longer pays for):
+    * SELHIT coordinate trace (logged every click twice, anywhere).
+    * SELMSG bounded message trace (its question was answered).
+    * SELCAL pointer calibration (fed only the dead coordinate paths).
+    * the chained SelectorWinProc - its only live outputs were gSelClickMs
+      (no reader left; the notice net is a timer) and gSelLastX/Y (consumed
+      only by SELCAL).
+    * the gfx-ini-stamp Accept detector (measured dead: 3 Accepts, 3 "no
+      write ever seen").
+  KEPT but quieted: the SELBTN button filters - they name the closing
+  button in SELCLOSE; they now log enter/click only, never the move storm.
+
+  PHASE 2 - REBUILT as state machine:
+    * SelState: ALL facts, read at defined moments. Session facts cached
+      once (display enumeration from the v3.13.3 warm thread, boot mode,
+      package census); visit facts read ONCE per open (both inis, the dll,
+      the render size); staged requests reset per visit.
+    * SelDerive(state) -> SelUi: ONE pure function, no side effects, no
+      syscalls, no logging. Every rule lives here and only here.
+    * Diff-apply (SelApply/SelPushCombo): a combo is rebuilt only when its
+      derived rows differ from what was last pushed, and only on a tick a
+      selection changed - which implies every drop list is closed, so a
+      rebuild can never mutate an open drop. RemoveAllStrings now exists in
+      exactly ONE function.
+    * Commit at close (SelOnClose): Accept is the only exit (Cancel and
+      Default ship disabled), so a close re-reads the three controls and
+      writes only keys whose values changed. An untouched visit writes
+      nothing.
+
+  THE PINNED DESIGN (now code): the player's scale pick is a REQUEST that
+  is never overwritten; the EFFECTIVE row derives fresh each pass as
+  "request if usable else Auto". Bounce AND un-bounce need no state
+  machine - stage a small res and the row falls to Auto, stage the old res
+  back and the request fits again. Closes the audit finding "the bounce
+  never undoes" by construction.
+
+  PHASE 3 - THE SPEC WAS ALREADY GREEN: _tests\Test-SelectorDerive.py (23
+  checks: transition rows + 6 swept invariants) was written BEFORE this C++
+  and the C++ mirrors it row for row. NEW: _tests\Test-SelectorContract.py
+  - a source-shape gate (same family as Test-StockTierContract) asserting
+  the tick is a poll (no syscalls/mutations), the derive is pure,
+  RemoveAllStrings lives in one function, the commit writers are called
+  only at close, and the RESMISMATCH rescue write sits pre-dialog. Its
+  negative controls trip (an injected write is caught; a commented one is
+  stripped).
+
+  KEPT UNCHANGED (load-bearing, not on the strip list): the v3.13.3 warm
+  thread + tri-state enumeration (the freeze cure), the whole PerfProbe
+  instrument (SELPERF table, frame-gap + pass watchdogs), the RESMISMATCH
+  pre-dialog rescue, the stock-radio mutual exclusion, the restart-notice
+  10s net, the once-per-open SELGEOM line.
+
+  GATES: all ten _tests\ python gates PASS (incl. the two selector gates);
+  Test-DatIntegrity ALL PASS after deploy (29 deployed==built hashes).
+  ⚠ TWO PRE-EXISTING REDS, NOT CAUSED BY THIS BUILD (measured, not
+  assumed): tools\uimap\emu\gate_namicons.py and
+  gate_patch_families_combined.py both fail on the PRE-v3.14 source too
+  (proven by git-stash A/B). gate_namicons reacts to the live Plugins
+  resting at the stock tier (icon packages .x1-disabled, so CAM wins the
+  load order for icons we would normally override); gate_patch_families
+  flags CodePatches tables unregistered in its WIDTHS map since v3.1.2.
+  Recorded so the next seat does not chase either as a v3.14 regression.
+
+  VERIFICATION OWED: a user click-through (matrix below the ledger entry's
+  deploy note). The instrument is still in the build - read the SELPERF
+  table after the launch.
+
+  Files: src\UiSpike.cpp (the selector section, rewritten),
+  src\SC4UIScaleDllDirector.cpp (version -> 3.14.0),
+  _tests\Test-SelectorContract.py (new).
+
 2026-08-20  v3.13.3 VERIFIED ON SCREEN: one launch, full click-through, all
                      four pass criteria met - the freeze is closed
 

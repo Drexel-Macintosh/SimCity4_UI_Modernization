@@ -66,7 +66,20 @@ all four pass criteria met, see the ledger entry at VERSION-HISTORY.txt:1):**
 dialog close and shutdown; a >500ms frame-gap watchdog and a >25ms pass
 watchdog name their contributors. Read it after every launch.
 
-## The approved plan not yet executed: the v3.14 rewrite
+## The v3.14 rewrite — SHIPPED v3.14.0 (2026-08-20, deployed, eyes-on owed)
+
+**Executed and deployed 2026-08-20.** The ~1,400-line per-250ms
+`ServiceScaleSelector` is now a state machine: `SelState` -> pure
+`SelDerive` -> diff-apply, commit at close. All ten `_tests\` python gates
+pass (incl. the two selector gates) and `Test-DatIntegrity` is green. The
+plan below is kept as the record of what shipped; the ledger entry
+(VERSION-HISTORY.txt:1) names what was stripped, kept, and the two
+pre-existing red tools gates that are NOT this build's doing. **What is
+owed: a user click-through** — open Graphic Options (instant), change each
+combo rapidly (no stall), open each drop and hover (never empty), stage a
+small res + a big scale (refused, bounces to Auto), switch mode to
+Borderless (res list caps to the one desktop row), Accept, reopen (shows
+"- on restart" tags), relaunch (BootState logs COHERENT).
 
 The selector grew by accretion into a ~1,400-line per-250ms function
 (`UiSpike::ServiceScaleSelector`, near `src/UiSpike.cpp:19900`) carrying six
@@ -91,12 +104,13 @@ summarized here so this repo is self-sufficient):
   scale pick is a REQUEST never overwritten; the EFFECTIVE row derives
   fresh as `request if usable else Auto` — bounce and un-bounce need no
   state machine.**
-- **Phase 3 — the spec is already written and green:**
+- **Phase 3 — the spec is written and green, and the C++ mirrors it:**
   `_tests/Test-SelectorDerive.py` (23 checks: transition rows + 6 swept
-  invariants) was written BEFORE the C++ as its specification. The C++ must
-  mirror it. Still to write: `Test-SelectorContract.py` (source-shape gate:
-  writes only in the close handler, no syscalls in the tick path, negative
-  controls that trip).
+  invariants) was written BEFORE the C++ as its specification.
+  `_tests/Test-SelectorContract.py` is ALSO written now (source-shape gate:
+  tick is a poll with no syscalls, derive is pure, RemoveAllStrings in one
+  function, commit writers called only at close, rescue write pre-dialog;
+  negative controls trip).
 - Phase 4 (async logger) was **dropped** — the logger measured innocent.
 
 ## Open defects / next actions, in order
@@ -113,8 +127,11 @@ summarized here so this repo is self-sufficient):
    launch ran at the STOCK tier (800x600 fullscreen); the session ended
    Borderless 2400x1600 + AutoScale=1, so the next launch derives a real
    tier — routine SELPERF read after it, as always.
-2. **The v3.14 rewrite** (Phases 1–3 above) — now the first open item. One
-   build, full gate set, then the click-through matrix in the plan.
+2. ~~**The v3.14 rewrite**~~ **SHIPPED v3.14.0 (2026-08-20, deployed).**
+   Phases 1–3 done in one build; all ten `_tests\` gates + DatIntegrity
+   green. **Owed: the user click-through matrix** (in the v3.14 section
+   above) and the routine SELPERF read after that launch. If it hesitates,
+   the frame-gap watchdog names whether the stall is inside our brackets.
 3. **Production scrub, remainder**: strikethrough sweep across research/ and
    _tests/ docs. Already done 2026-08-20: START-HERE.md's rotted version
    preamble and §6 state graveyard replaced with rot-proof pointers,
