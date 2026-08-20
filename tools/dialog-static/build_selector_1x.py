@@ -76,11 +76,12 @@ def main():
         "0x5ca1e002": (270, 320, 286, 336),   # radio, beside the scale row
         "0x5ca1e005": (292, 319, 458, 342),   # frame around the scale combo
         "0x5ca1e004": (293, 320, 457, 341),   # scale combo, on the readout row
-        "0x5ca1e009": (29, 274, 248, 297),    # frame, Resolution
-        "0x5ca1e006": (30, 275, 247, 296),    # Resolution combo
-        "0x5ca1e007": (4, 303, 246, 324),     # "Window Mode" caption
-        "0x5ca1e00a": (29, 322, 248, 345),    # frame, Window Mode
-        "0x5ca1e008": (30, 323, 247, 344),    # Window Mode combo
+        "0x5ca1e007": (4, 255, 246, 276),     # "Window Mode" caption (top)
+        "0x5ca1e00a": (29, 274, 248, 297),    # frame, Window Mode
+        "0x5ca1e008": (30, 275, 247, 296),    # Window Mode combo
+        "0x5ca1e00b": (4, 303, 246, 324),     # "Resolution" caption
+        "0x5ca1e009": (29, 322, 248, 345),    # frame, Resolution
+        "0x5ca1e006": (30, 323, 247, 344),    # Resolution combo
     }
     seen = {}
     for ln in text.split("\n"):

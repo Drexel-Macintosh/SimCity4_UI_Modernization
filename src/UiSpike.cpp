@@ -18810,6 +18810,38 @@ namespace
 	int  gSelResShown = 0;          // rows actually offered
 	int  gSelResShownIdx[10] = {0}; // shown row -> gSelResList index
 
+	// SC4GraphicsOptions.ini sits beside the DLL, same as our own ini.
+	void SelGfxIniPath(wchar_t* out, size_t outLen)
+	{
+		wchar_t path[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
+		wchar_t* lastSlash = wcsrchr(path, L'\\');
+		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
+		swprintf_s(out, outLen, L"%sSC4GraphicsOptions.ini", path);
+	}
+
+	// dgVoodoo takes EXCLUSIVE fullscreen only for mode 0. Borderless and
+	// windowed are both ordinary windows as far as the wrapper is concerned,
+	// and asking it for exclusive there is what makes a "windowed" setting
+	// come up fullscreen anyway.
+	// The live mode is READ, not inferred. gReqResIgnored only answers
+	// "is it borderless", and a control that shows the wrong current value is
+	// how a player ends up changing something they never touched.
+	// ⭐ WHAT THE COMBO SHOWS IS WHAT WILL APPLY, NOT WHAT IS RUNNING.
+	// It used to seed from gReadoutW/H - the resolution the game is rendering
+	// at right now - so after Accept the ini held the new value while the
+	// control snapped back to the old one on reopen, exactly the way the SCALE
+	// combo did before it learned to show its pending choice. The ini is the
+	// answer to "what did I choose"; gReadoutW/H is the answer to "what am I
+	// running", and only the second deserves the "(current)" marker.
+	void SelIniRes(int* w, int* h)
+	{
+		wchar_t p[MAX_PATH] = {};
+		SelGfxIniPath(p, MAX_PATH);
+		*w = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, p);
+		*h = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, p);
+	}
+
 	// ⭐ THE TWO DROPDOWNS MUST JUDGE THE SAME RESOLUTION.
 	// Without this a player can pick 1024x768 AND 1.5x in one visit and
 	// Accept both: the scale list is built from the resolution that was LIVE
@@ -18823,10 +18855,23 @@ namespace
 	// if the player changed it, the live one otherwise.
 	void SelEffectiveRes(int* w, int* h)
 	{
+		// Staged beats committed beats running. All three can differ - a
+		// resolution chosen this visit, one chosen last visit and not yet
+		// applied, and the one actually rendering - and the tier must be
+		// judged against whichever will be in force at the next launch, which
+		// is the first of those that exists.
 		if (gSelResStaged >= 0 && gSelResStaged < gSelResCount)
 		{
 			*w = gSelResList[gSelResStaged].w;
 			*h = gSelResList[gSelResStaged].h;
+			return;
+		}
+		int iniW = 0, iniH = 0;
+		SelIniRes(&iniW, &iniH);
+		if (iniW > 0 && iniH > 0)
+		{
+			*w = iniW;
+			*h = iniH;
 			return;
 		}
 		*w = gReadoutW;
@@ -18892,16 +18937,6 @@ namespace
 		swprintf_s(out, outLen, L"%sSC4UIScale.ini", path);
 	}
 
-	// SC4GraphicsOptions.ini sits beside the DLL, same as our own ini.
-	void SelGfxIniPath(wchar_t* out, size_t outLen)
-	{
-		wchar_t path[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
-		wchar_t* lastSlash = wcsrchr(path, L'\\');
-		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
-		swprintf_s(out, outLen, L"%sSC4GraphicsOptions.ini", path);
-	}
-
 	// Last-write time of that file, 0 if it cannot be read.
 	unsigned long long SelGfxIniStamp()
 	{
@@ -18941,6 +18976,7 @@ namespace
 	const uint32_t kSelResComboId  = 0x5CA1E006;
 	const uint32_t kSelModeLabelId = 0x5CA1E007;
 	const uint32_t kSelModeComboId = 0x5CA1E008;
+	const uint32_t kSelResLabelId  = 0x5CA1E00B;
 
 
 	// dgVoodoo.conf sits BESIDE THE EXE (Apps\), not beside the DLL.
@@ -19040,13 +19076,6 @@ namespace
 	const char* const kSelModeLabels[] = { "Fullscreen", "Borderless", "Windowed" };
 	const int kSelModeCount = 3;
 
-	// dgVoodoo takes EXCLUSIVE fullscreen only for mode 0. Borderless and
-	// windowed are both ordinary windows as far as the wrapper is concerned,
-	// and asking it for exclusive there is what makes a "windowed" setting
-	// come up fullscreen anyway.
-	// The live mode is READ, not inferred. gReqResIgnored only answers
-	// "is it borderless", and a control that shows the wrong current value is
-	// how a player ends up changing something they never touched.
 	int SelLiveModeIndex()
 	{
 		wchar_t p[MAX_PATH] = {};
@@ -19115,37 +19144,21 @@ namespace
 		}
 	}
 
-	// ⭐ THE GAME ALREADY OWNS THIS BOX (user direction, 2026-08-19).
-	// 0x2A57CB83 is a GZWinGen born hidden inside Graphic Options carrying the
-	// stock text "Resolution, UI translucency, color quality, color cursor and
-	// rendering mode changes will not take effect until the next time you
-	// start the game." - which is EXACTLY true of a tier change, for exactly
-	// the same reason (the setting is read once, at startup). Showing the
-	// game's own notice beats inventing a second one that says the same thing
-	// in our words: same wording, same art, same place the player already
-	// learned to expect it.
+	// ⛔ THE RESTART NOTICE IS GONE, AND IT CANNOT BE PUT WHERE IT BELONGS.
+	// The user asked for it on Accept, which is where the game puts its own.
+	// It cannot go there: the notice window is a CHILD of this dialog, and
+	// the dialog closes about 120ms after the Accept click (measured -
+	// click 19.358, close 19.478), taking the notice with it. The only
+	// moment it can actually render is the CHANGE, which is precisely the
+	// timing that was reported as wrong: a modal appearing before the player
+	// has agreed to anything.
 	//
-	// Its Accept button (0xEA57DA6F) is the game's, and so is whatever hides
-	// the box again. We only ever SHOW it - see the dismissal safety net in
-	// the winproc, which exists because we cannot see that button's clicks.
-	void ShowRestartNotice(cIGZWin* gfxDlg)
-	{
-		cIGZWin* notice = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
-		if (!notice)
-		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELECTOR restart notice %08X not found - the scale "
-				"still changed, the player just was not told.", kSelNoticeId);
-			return;
-		}
-		if (!notice->IsVisible())
-		{
-			notice->ShowWindow();
-			gSelNoticeShownMs = GetTickCount();
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELECTOR showed the game's own restart notice.");
-		}
-	}
+	// So the information moved into the control instead of a popup. Every
+	// combo captions its pending row "- on restart" and its live row
+	// "(current)", permanently and in place. That says the same thing,
+	// says it for all three settings at once, and cannot appear at the
+	// wrong moment because it does not appear at all - it just IS.
+
 
 	// ============ THE BUTTONS, ASKED DIRECTLY ============================
 	// Two coordinate-based attempts failed and a third (centring) refuted
@@ -19707,7 +19720,6 @@ void UiSpike::ServiceScaleSelector()
 			if (gSelNoticePending)
 			{
 				gSelNoticePending = false;
-				ShowRestartNotice(gfxDlg);
 			}
 		}
 	}
@@ -20086,8 +20098,7 @@ void UiSpike::ServiceScaleSelector()
 						gSelPushed = 0;
 						gSelCommitted = 0;
 						gSelStagedRow = 0;
-						ShowRestartNotice(gfxDlg);
-					}
+							}
 					else
 					{
 						// COMMIT ON CHANGE, not on Accept.
@@ -20131,8 +20142,7 @@ void UiSpike::ServiceScaleSelector()
 						// The user hit Cancel and the change stuck anyway,
 						// which is the one thing a Cancel button must not do.
 						gSelStagedRow = row;
-						ShowRestartNotice(gfxDlg);
-					}
+							}
 				}
 			}
 			c->Release();
@@ -20203,6 +20213,12 @@ void UiSpike::ServiceScaleSelector()
 					// explanation.
 					const int monW = GetSystemMetrics(SM_CXSCREEN);
 					const int monH = GetSystemMetrics(SM_CYSCREEN);
+					// The SELECTED row is what the ini says will apply; the
+					// "(current)" marker is what is rendering now. After an
+					// Accept those differ, and showing the running one would
+					// discard the choice the player just made.
+					int iniW = 0, iniH = 0;
+					SelIniRes(&iniW, &iniH);
 					c->RemoveAllStrings();
 					gSelResShown = 0;
 					int live = -1;
@@ -20219,18 +20235,18 @@ void UiSpike::ServiceScaleSelector()
 						// question. The player wants to know which one they
 						// are running, and on a desktop set below its panel's
 						// native mode those differ.
+						const bool isRunning = (gSelResList[i].w == gReadoutW
+							&& gSelResList[i].h == gReadoutH);
+						const bool isChosen = (gSelResList[i].w == iniW
+							&& gSelResList[i].h == iniH);
 						_snprintf_s(row, sizeof(row), _TRUNCATE, "%dx%d%s",
 							gSelResList[i].w, gSelResList[i].h,
-							(gSelResList[i].w == gReadoutW
-								&& gSelResList[i].h == gReadoutH)
-								? " (current)" : "");
+							isRunning ? " (current)"
+								: (isChosen ? " - on restart" : ""));
 						cRZBaseString rs(row);
 						c->InsertString(rs, gSelResShown);
-						if (gSelResList[i].w == gReadoutW
-							&& gSelResList[i].h == gReadoutH)
-						{
-							live = gSelResShown;
-						}
+						if (isChosen) { live = gSelResShown; }
+						else if (isRunning && live < 0) { live = gSelResShown; }
 						gSelResShown++;
 					}
 					if (live >= 0) { c->SetSelection(live, false); }
@@ -20258,25 +20274,33 @@ void UiSpike::ServiceScaleSelector()
 							"against it.",
 							gSelResList[gSelResStaged].w,
 							gSelResList[gSelResStaged].h);
-						ShowRestartNotice(gfxDlg);
-					}
+							}
 				}
 				c->Release();
 			}
 		}
 
-		cIGZWin* ml = gfxDlg->GetChildWindowFromIDRecursive(kSelModeLabelId);
-		if (ml != nullptr)
+		// BOTH captions are ours now: the stock "Resolution" header is hidden,
+		// because the column leads with Window Mode and a fixed caption above
+		// the wrong control is worse than none.
+		const uint32_t capIds[2] = { kSelModeLabelId, kSelResLabelId };
+		const char* const capTxt[2] = { "Window Mode", "Resolution" };
+		for (int ci = 0; ci < 2; ci++)
 		{
+			cIGZWin* lw = gfxDlg->GetChildWindowFromIDRecursive(capIds[ci]);
+			if (lw == nullptr) { continue; }
 			cIGZWinText* t = nullptr;
-			if (ml->QueryInterface(GZIID_cIGZWinText,
+			if (lw->QueryInterface(GZIID_cIGZWinText,
 					reinterpret_cast<void**>(&t)) && t)
 			{
-				cRZBaseString want("Window Mode");
-				cIGZString* cur = ml->GetCaption();
+				cIGZString* cur = lw->GetCaption();
 				const bool same = (cur != nullptr && cur->ToChar() != nullptr
-					&& strcmp(cur->ToChar(), "Window Mode") == 0);
-				if (!same) { t->SetCaption(want); }
+					&& strcmp(cur->ToChar(), capTxt[ci]) == 0);
+				if (!same)
+				{
+					cRZBaseString want(capTxt[ci]);
+					t->SetCaption(want);
+				}
 				t->Release();
 			}
 		}
@@ -20318,8 +20342,7 @@ void UiSpike::ServiceScaleSelector()
 							"UiSpike: SELMODE staged %s - applies at the next "
 							"launch, and writes BOTH files.",
 							kSelModeLabels[sel]);
-						ShowRestartNotice(gfxDlg);
-					}
+							}
 				}
 				c->Release();
 			}

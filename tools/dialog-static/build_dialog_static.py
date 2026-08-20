@@ -568,6 +568,7 @@ SEL_MODE_LABEL_ID  = "0x5ca1e007"
 SEL_MODE_COMBO_ID  = "0x5ca1e008"
 SEL_RES_BORDER_ID  = "0x5ca1e009"
 SEL_MODE_BORDER_ID = "0x5ca1e00a"
+SEL_RES_LABEL_ID   = "0x5ca1e00b"
 
 # THE FOUR STOCK RESOLUTION LABELS, MADE ADDRESSABLE.
 # Every text node in this dialog ships with id 0xca57da80, so the DLL cannot
@@ -799,6 +800,17 @@ def inject_res_readout(text, fn):
     # ⚠ IN DATA, NOT AT RUNTIME. Disabling these on a timer tick would let the
     # player see them live and then go grey, which is the flicker that got
     # the hidden resolution rows moved into data too.
+    # The stock "Resolution" header is hidden: the left column now leads with
+    # Window Mode and puts Resolution second, so a fixed caption sitting above
+    # the wrong control would be worse than none. Ours are set at runtime.
+    for i, ln in enumerate(lines):
+        if 'caption="Resolution"' in ln and 'id=0xca57da80 ' in ln:
+            lines[i] = ln.replace('winflag_visible=yes', 'winflag_visible=no', 1)
+            break
+    else:
+        sys.exit("FATAL: the stock 'Resolution' header was not found in %s - "
+                 "the dialog changed; do not guess a replacement." % fn)
+
     DISABLED_BTNS = {
         "0x6a57da48": "Cancel",
         "0xea5e99d9": "Default Settings",
@@ -876,18 +888,21 @@ def inject_res_readout(text, fn):
 
     # Placeholder rows only - the DLL rebuilds both lists at runtime, because
     # the useful resolutions depend on the monitor and only it knows that.
-    res_border  = _frame(SEL_RES_BORDER_ID, 29, 274, 248, 297)
-    res_combo   = _combo(SEL_RES_COMBO_ID, 30, 275, 247, 296,
+    res_border  = _frame(SEL_RES_BORDER_ID, 29, 322, 248, 345)
+    res_combo   = _combo(SEL_RES_COMBO_ID, 30, 323, 247, 344,
                          ["2400x1600", "1920x1200", "1600x1200"])
-    mode_label  = (tmpl % (SEL_MODE_LABEL_ID, 303, 324)).replace(
+    # Window Mode leads the column, Resolution follows it.
+    mode_label  = (tmpl % (SEL_MODE_LABEL_ID, 255, 276)).replace(
+                      'area=(293,255,465,276)', 'area=(4,255,246,276)')
+    res_label   = (tmpl % (SEL_RES_LABEL_ID, 303, 324)).replace(
                       'area=(293,303,465,324)', 'area=(4,303,246,324)')
-    mode_border = _frame(SEL_MODE_BORDER_ID, 29, 322, 248, 345)
-    mode_combo  = _combo(SEL_MODE_COMBO_ID, 30, 323, 247, 344,
+    mode_border = _frame(SEL_MODE_BORDER_ID, 29, 274, 248, 297)
+    mode_combo  = _combo(SEL_MODE_COMBO_ID, 30, 275, 247, 296,
                          ["Fullscreen", "Windowed"])
 
     new = [indent + radio, indent + border, indent + combo,
-           indent + res_border, indent + res_combo,
-           indent + mode_label, indent + mode_border, indent + mode_combo]
+           indent + mode_label, indent + mode_border, indent + mode_combo,
+           indent + res_label, indent + res_border, indent + res_combo]
     lines[at + 1:at + 1] = new
     return "\n".join(lines), len(new)
 
