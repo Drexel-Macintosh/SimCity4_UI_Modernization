@@ -18795,7 +18795,8 @@ namespace
 	// at runtime if it is not already here - the useful list depends on the
 	// panel and only the panel knows it.
 	struct SelRes { int w, h; };
-	SelRes gSelResList[10] = {
+	const int kSelResMax = 24;
+	SelRes gSelResList[kSelResMax] = {
 		{ 3840, 2160 }, { 2560, 1600 }, { 2400, 1600 }, { 1920, 1200 },
 		{ 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 }, { 1024, 768 },
 		{ 800, 600 }, { 0, 0 }
@@ -18818,8 +18819,9 @@ namespace
 	// running resolution back, so a 1024x768 left over from an earlier visit
 	// cannot survive a later mode switch that the player never connected to it.
 	bool gSelResUserChanged = false;
+	bool gSelResNeedsRebuild = false;  // the mode changed
 	int  gSelResShown = 0;          // rows actually offered
-	int  gSelResShownIdx[10] = {0}; // shown row -> gSelResList index
+	int  gSelResShownIdx[kSelResMax] = {0}; // shown row -> list index
 
 	// SC4GraphicsOptions.ini sits beside the DLL, same as our own ini.
 	void SelGfxIniPath(wchar_t* out, size_t outLen)
@@ -18853,24 +18855,53 @@ namespace
 		*h = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, p);
 	}
 
-	// ⭐ THE TWO DROPDOWNS MUST JUDGE THE SAME RESOLUTION.
-	// Without this a player can pick 1024x768 AND 1.5x in one visit and
-	// Accept both: the scale list is built from the resolution that was LIVE
-	// when the dialog opened, so it offers tiers the STAGED resolution
-	// cannot carry. The next launch then bounces the scale to Auto with no
-	// explanation, having accepted it a moment earlier - the control would
-	// be lying about what it had just agreed to.
+	int SelLiveModeIndex()
+	{
+		wchar_t p[MAX_PATH] = {};
+		SelGfxIniPath(p, MAX_PATH);
+		wchar_t mode[40] = {};
+		GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
+			L"FullScreen", mode, 40, p);
+		if (_wcsicmp(mode, L"Windowed") == 0) { return 2; }
+		if (_wcsicmp(mode, L"Borderless") == 0
+			|| _wcsicmp(mode, L"BorderlessFullScreen") == 0) { return 1; }
+		return 0;
+	}
+
+	// ⭐ THE RENDER SIZE IS A FUNCTION OF THE MODE, NOT JUST THE RESOLUTION.
+	// This is the piece that was missing and it is why the control could lie:
+	// in BORDERLESS the game ignores WindowWidth/Height entirely and renders
+	// at the desktop, so a player who picked 1024x768 was shown
+	// "1024x768 - on restart", restarted, and got 2400x1600. The dialog made a
+	// promise the game never intended to keep - measured in the user's own
+	// log, not deduced.
 	//
-	// Every "does this tier fit" question is therefore asked against the
-	// resolution that will ACTUALLY be in force next launch: the staged one
-	// if the player changed it, the live one otherwise.
+	// So one function answers "what will the game actually render at next
+	// launch", taking the STAGED MODE into account, and everything that needs
+	// that answer - the tier's usable set, its "needs WxH" captions, its
+	// "@ WxH" readout - asks it rather than reading a resolution directly.
+	int SelEffectiveModeIdx()
+	{
+		if (gSelModeStaged >= 0) { return gSelModeStaged; }
+		if (gSelModePushed >= 0) { return gSelModePushed; }
+		return SelLiveModeIndex();
+	}
+
 	void SelEffectiveRes(int* w, int* h)
 	{
-		// Staged beats committed beats running. All three can differ - a
-		// resolution chosen this visit, one chosen last visit and not yet
-		// applied, and the one actually rendering - and the tier must be
-		// judged against whichever will be in force at the next launch, which
-		// is the first of those that exists.
+		// BORDERLESS: the desktop, whatever the resolution control says. The
+		// game's own ini documents WindowWidth/Height as ignored here.
+		if (SelEffectiveModeIdx() == 1)
+		{
+			const int dw = GetSystemMetrics(SM_CXSCREEN);
+			const int dh = GetSystemMetrics(SM_CYSCREEN);
+			if (dw > 0 && dh > 0) { *w = dw; *h = dh; return; }
+		}
+		// Fullscreen and Windowed both render at the requested size.
+		// Staged beats committed beats running: a resolution chosen this
+		// visit, one chosen earlier this session, and the one actually
+		// rendering can all differ, and the tier must be judged against
+		// whichever will be in force at the next launch.
 		if (gSelResStaged >= 0 && gSelResStaged < gSelResCount)
 		{
 			*w = gSelResList[gSelResStaged].w;
@@ -18880,8 +18911,7 @@ namespace
 		int iniW = 0, iniH = 0;
 		SelIniRes(&iniW, &iniH);
 		// The ini counts only once the player has chosen this session; before
-		// that it is history, and the tier must be judged against what is
-		// actually running.
+		// that it is history.
 		if (gSelResUserChanged && iniW > 0 && iniH > 0)
 		{
 			*w = iniW;
@@ -19090,17 +19120,112 @@ namespace
 	const char* const kSelModeLabels[] = { "Fullscreen", "Borderless", "Windowed" };
 	const int kSelModeCount = 3;
 
-	int SelLiveModeIndex()
+	// ⭐ THE RESOLUTION LIST IS BUILT PER MODE, because "resolution" means a
+	// different thing in each one and offering the same rows everywhere is how
+	// the control ended up promising something the game ignores.
+	//
+	//   BORDERLESS  the game renders at the DESKTOP and documents
+	//               WindowWidth/Height as ignored. One row, the desktop, and
+	//               nothing to choose - a control with no effect must not look
+	//               like a choice.
+	//   FULLSCREEN  a real display-mode change. Only modes the display ACTUALLY
+	//               REPORTS are offered (EnumDisplaySettingsW), because an
+	//               unsupported mode in exclusive fullscreen is a black screen,
+	//               not a cosmetic problem. A 16:10 size on a 3:2 panel is
+	//               exactly that trap.
+	//   WINDOWED    a window, which needs room for its own title bar and
+	//               borders. Capped BELOW the desktop by the real frame size,
+	//               or the bottom of the window - including this dialog's
+	//               Accept button - lands off-screen.
+	void SelBuildResList()
 	{
-		wchar_t p[MAX_PATH] = {};
-		SelGfxIniPath(p, MAX_PATH);
-		wchar_t mode[40] = {};
-		GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
-			L"FullScreen", mode, 40, p);
-		if (_wcsicmp(mode, L"Windowed") == 0) { return 2; }
-		if (_wcsicmp(mode, L"Borderless") == 0
-			|| _wcsicmp(mode, L"BorderlessFullScreen") == 0) { return 1; }
-		return 0;
+		const int dw = GetSystemMetrics(SM_CXSCREEN);
+		const int dh = GetSystemMetrics(SM_CYSCREEN);
+		const int mode = SelEffectiveModeIdx();
+		gSelResCount = 0;
+
+		if (mode == 1)          // Borderless: the desktop, and only that
+		{
+			if (dw > 0 && dh > 0)
+			{
+				gSelResList[0].w = dw;
+				gSelResList[0].h = dh;
+				gSelResCount = 1;
+			}
+			return;
+		}
+
+		if (mode == 0)          // Fullscreen: modes the display really has
+		{
+			DEVMODEW dm = {};
+			dm.dmSize = sizeof(dm);
+			for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm)
+				&& gSelResCount < kSelResMax; i++)
+			{
+				const int w = static_cast<int>(dm.dmPelsWidth);
+				const int h = static_cast<int>(dm.dmPelsHeight);
+				if (w < 800 || h < 600) { continue; }   // the game's own floor
+				if (dw > 0 && (w > dw || h > dh)) { continue; }
+				bool dup = false;
+				for (int k = 0; k < gSelResCount; k++)
+				{
+					if (gSelResList[k].w == w && gSelResList[k].h == h)
+					{
+						dup = true;
+						break;
+					}
+				}
+				if (dup) { continue; }
+				gSelResList[gSelResCount].w = w;
+				gSelResList[gSelResCount].h = h;
+				gSelResCount++;
+			}
+		}
+		else                    // Windowed: must fit INSIDE the desktop
+		{
+			// The frame a resizable window actually costs. Measured from the
+			// system rather than guessed, so a themed or high-DPI desktop does
+			// not silently break the cap.
+			const int frameW = 2 * GetSystemMetrics(SM_CXSIZEFRAME);
+			const int frameH = 2 * GetSystemMetrics(SM_CYSIZEFRAME)
+				+ GetSystemMetrics(SM_CYCAPTION);
+			const int maxW = (dw > 0) ? dw - frameW : 0;
+			const int maxH = (dh > 0) ? dh - frameH : 0;
+			const SelRes kCommon[] = {
+				{ 3840, 2160 }, { 2560, 1600 }, { 2560, 1440 }, { 2400, 1600 },
+				{ 1920, 1200 }, { 1920, 1080 }, { 1600, 1200 }, { 1440, 900 },
+				{ 1280, 1024 }, { 1024, 768 }, { 800, 600 }
+			};
+			const int nCommon =
+				static_cast<int>(sizeof(kCommon) / sizeof(kCommon[0]));
+			for (int i = 0; i < nCommon && gSelResCount < kSelResMax; i++)
+			{
+				if (maxW > 0 && (kCommon[i].w > maxW || kCommon[i].h > maxH))
+				{
+					continue;
+				}
+				gSelResList[gSelResCount] = kCommon[i];
+				gSelResCount++;
+			}
+		}
+
+		// Largest first, so the list reads the way the stock one does.
+		for (int a = 0; a < gSelResCount; a++)
+		{
+			for (int b = a + 1; b < gSelResCount; b++)
+			{
+				if (gSelResList[b].w * gSelResList[b].h
+					> gSelResList[a].w * gSelResList[a].h)
+				{
+					const SelRes t = gSelResList[a];
+					gSelResList[a] = gSelResList[b];
+					gSelResList[b] = t;
+				}
+			}
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELRES built %d row(s) for %s on a %dx%d desktop.",
+			gSelResCount, kSelModeLabels[mode], dw, dh);
 	}
 
 	void SelWriteGraphicsIni(int modeIdx, int w, int h)
@@ -20187,40 +20312,15 @@ void UiSpike::ServiceScaleSelector()
 	// Both apply at the next launch, exactly like the scale, because the game
 	// reads its resolution and window mode once at startup.
 	{
-		// The monitor's own mode belongs in the list and only the monitor
-		// knows it. Inserted once, in size order, if not already present.
-		if (justOpened)
+		// The list depends on the MODE, so it is rebuilt on open and again
+		// whenever the mode changes - a Borderless list and a Fullscreen list
+		// are not the same rows, and showing yesterday's is how the control
+		// ends up offering something the game will ignore.
+		const bool listRebuilt = justOpened || gSelResNeedsRebuild;
+		if (listRebuilt)
 		{
-			const int monW = GetSystemMetrics(SM_CXSCREEN);
-			const int monH = GetSystemMetrics(SM_CYSCREEN);
-			bool have = false;
-			for (int i = 0; i < gSelResCount; i++)
-			{
-				if (gSelResList[i].w == monW && gSelResList[i].h == monH)
-				{
-					have = true;
-					break;
-				}
-			}
-			if (!have && monW > 0 && monH > 0 && gSelResCount < 10)
-			{
-				int at = gSelResCount;
-				for (int i = 0; i < gSelResCount; i++)
-				{
-					if (monW * monH > gSelResList[i].w * gSelResList[i].h)
-					{
-						at = i;
-						break;
-					}
-				}
-				for (int i = gSelResCount; i > at; i--)
-				{
-					gSelResList[i] = gSelResList[i - 1];
-				}
-				gSelResList[at].w = monW;
-				gSelResList[at].h = monH;
-				gSelResCount++;
-			}
+			gSelResNeedsRebuild = false;
+			SelBuildResList();
 		}
 
 		cIGZWin* rc = gfxDlg->GetChildWindowFromIDRecursive(kSelResComboId);
@@ -20230,7 +20330,7 @@ void UiSpike::ServiceScaleSelector()
 			if (rc->QueryInterface(GZIID_cIGZWinCombo,
 					reinterpret_cast<void**>(&c)) && c)
 			{
-				if (justOpened)
+				if (listRebuilt)
 				{
 					// ⭐ NEVER OFFER MORE THAN THE DISPLAY CAN SHOW.
 					// A resolution above the desktop mode is not something the
@@ -20371,6 +20471,14 @@ void UiSpike::ServiceScaleSelector()
 					{
 						gSelModePushed = sel;
 						gSelModeStaged = sel;
+						// The mode decides what "resolution" MEANS, so both
+						// the resolution list and the scale's fit set are now
+						// stale. Rebuild both rather than let either keep an
+						// answer that belonged to the previous mode.
+						gSelResNeedsRebuild = true;
+						gSelResStaged = -1;
+						gSelResUserChanged = false;
+						gSelScaleNeedsRebuild = true;
 						Logger::Get().WriteLine(LogLevel::Info,
 							"UiSpike: SELMODE staged %s - applies at the next "
 							"launch, and writes BOTH files.",
