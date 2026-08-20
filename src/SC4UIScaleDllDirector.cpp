@@ -46,7 +46,7 @@
 // header in that window named a build that was not running - and a log that
 // lies about its own version poisons every later bisection that trusts it.
 // Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.13.1"
+#define UISCALE_VERSION_STR "3.13.2"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -860,6 +860,9 @@ public:
 		// hypothesis: the CodePatches BYTE PATCHES in the game's .text are
 		// never reverted, and UiSpike's per-instance VTABLE COPIES are never
 		// restored. Neither is touched by this probe.
+		// The freeze instrument's last chance to report: a session where
+		// Graphic Options never closed cleanly still gets its table.
+		uiSpike.DumpSelectorPerf("shutdown");
 		Logger::Get().WriteLine(
 			LogLevel::Info, "SHUTDOWN 1/3 timer+subclass (subclassed=%d hwnd=%p)",
 			subclassed ? 1 : 0, static_cast<void*>(gameWindow));

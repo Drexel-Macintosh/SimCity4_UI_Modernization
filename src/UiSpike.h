@@ -27,6 +27,10 @@ public:
 	// stock tier is exactly where the player needs a way back UP. Cheap by
 	// construction: throttled internally, one id lookup per service.
 	void ServiceScaleSelector();
+	// Freeze instrument: writes the PerfProbe bucket table to the log. The
+	// selector calls it on dialog close; the director at shutdown, so a
+	// session where the dialog never closes cleanly still reports.
+	void DumpSelectorPerf(const char* why);
 	// v2.32.0 SHOWHOOK (task #50): scale a subtree at the instant the game
 	// makes it visible, BEFORE its first paint. PUBLIC because the SetFlag
 	// detour is a free function in the GAME's call stack.

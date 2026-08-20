@@ -1,3 +1,52 @@
+2026-08-20  v3.13.2  THE FREEZE GETS AN INSTRUMENT, NOT A THIRD GUESS - and
+                     the v3.14 selector rule is now a gate written BEFORE its code
+
+  User report after v3.13.1: "It still isn't working / is still freezing up"
+  - plus a screenshot of the Resolution drop list OPEN AND EMPTY. Two freeze
+  "fixes" (v3.13.0, v3.13.1) have now shipped on inference; this build ships
+  measurement instead. No behaviour changes.
+
+  WHAT THE LOG ALREADY PROVED before this build:
+  - v3.13.1 was the running build; the caches worked ("display enumerated
+    ONCE - 28 distinct modes").
+  - The SELHIT coordinate trace - superseded days ago - still logs every
+    click TWICE, anywhere on screen. Six generations of mechanism are live
+    in the tick at once, several measured dead.
+  - The whole Plugins tree (DLL, ini, LOG) sits under a OneDrive-redirected
+    Documents; every synchronous fflush and profile write crosses the sync
+    filter. A suspect, NOT a verdict.
+  - Rebuild flags carry across ticks, so the 250ms beat can RemoveAllStrings
+    a combo while its drop list is open - the empty list in the screenshot.
+
+  THE INSTRUMENT (PerfProbe, Logger.h/.cpp + UiSpike.cpp):
+  - In-memory named buckets only - the leading suspect IS file I/O, so the
+    instrument must not be made of the thing it measures.
+  - Brackets: log.WriteLine (the fflush itself), sel.findDlg (the full-tree
+    walk), sel.open/close/notice/radio/caption, sel.scaleCombo, sel.resMode,
+    sel.buildResList, sel.iniRead/iniWrite/dgWrite/commit, sel.gfxStamp,
+    sel.dllStat, sel.observe + sel.btnFilter (the message paths).
+  - FRAME-GAP watchdog: entry-to-entry stride; a >500ms gap with the dialog
+    up logs the in-gap bucket deltas. Big gap + quiet buckets = the stall is
+    OUTSIDE our bracketed code, and that would be a finding, not a failure.
+  - PASS watchdog: any single pass >25ms names its in-pass contributors.
+  - Table dumped on dialog close and at shutdown (SELPERF lines).
+
+  AND THE v3.14 REWRITE'S RULE IS ALREADY PINNED: the selector becomes ONE
+  pure function, SelDerive(state)->UI, and _tests\Test-SelectorDerive.py
+  (NEW, ALL PASS: 16 transition rows + 6 swept invariants) was written first
+  as its specification. Key design: the player's scale pick is a REQUEST
+  that is never overwritten - the EFFECTIVE row derives fresh each pass as
+  "request if usable else Auto", so bounce AND un-bounce need no state
+  machine (closes the audit finding that the bounce never undoes). Commit
+  writes only keys whose values changed; an untouched visit writes nothing.
+
+  LEDGER GAP NOTED: entries v3.3.0..v3.13.1 exist only as git commit
+  messages - the ledger habit broke during the selector sprint. Backfill is
+  owned by the queued production-scrub task.
+
+  Files: src\Logger.{h,cpp}, src\UiSpike.{h,cpp},
+  src\SC4UIScaleDllDirector.cpp, _tests\Test-SelectorDerive.py (new).
+
 2026-08-19  v3.2.3   ⭐ CHOOSING 1x LEFT THE 2x ART ARMED, AND THE STOCK-TIER
                      SELECTOR WAS STASHED IN THE ONE STATE IT EXISTS FOR
 

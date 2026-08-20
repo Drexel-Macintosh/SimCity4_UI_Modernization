@@ -18901,6 +18901,7 @@ namespace
 			*h = gSelIniResH;
 			return;
 		}
+		PerfProbe::Scope perf_("sel.iniRead");
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
 		gSelIniResW = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, p);
@@ -18947,6 +18948,7 @@ namespace
 	// rather than assume.
 	bool SelGraphicsDllPresent()
 	{
+		PerfProbe::Scope perf_("sel.dllStat");
 		wchar_t dir[MAX_PATH] = {};
 		SelGfxIniPath(dir, MAX_PATH);
 		wchar_t* slash = wcsrchr(dir, L'\\');
@@ -18961,6 +18963,7 @@ namespace
 
 	{
 		if (gSelIniModeCache >= 0) { return gSelIniModeCache; }
+		PerfProbe::Scope perf_("sel.iniRead");
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
 		wchar_t mode[40] = {};
@@ -19177,6 +19180,7 @@ namespace
 
 	void SelSetCaption(cIGZWin* parent, uint32_t id, const char* text)
 	{
+		PerfProbe::Scope perf_("sel.caption");
 		cIGZWin* w = parent->GetChildWindowFromIDRecursive(id);
 		if (!w) { return; }
 		cIGZWinText* t = nullptr;
@@ -19215,6 +19219,7 @@ namespace
 	// Last-write time of that file, 0 if it cannot be read.
 	unsigned long long SelGfxIniStamp()
 	{
+		PerfProbe::Scope perf_("sel.gfxStamp");
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
 		WIN32_FILE_ATTRIBUTE_DATA fad = {};
@@ -19273,6 +19278,7 @@ namespace
 	// ini the game or a wrapper reads.
 	bool SelWriteDgVoodooFullScreen(bool fullscreen)
 	{
+		PerfProbe::Scope perf_("sel.dgWrite");
 		wchar_t path[MAX_PATH] = {};
 		SelDgVoodooPath(path, MAX_PATH);
 		HANDLE h = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr,
@@ -19343,6 +19349,7 @@ namespace
 
 	void SelBuildResList()
 	{
+		PerfProbe::Scope perf_("sel.buildResList");
 		// FULLSCREEN is bounded by what the PANEL can do; WINDOWED and
 		// BORDERLESS by the user's DESKTOP, which is a different question and
 		// the one that does not move when the game changes mode.
@@ -19449,6 +19456,7 @@ namespace
 
 	void SelWriteGraphicsIni(int modeIdx, int w, int h)
 	{
+		PerfProbe::Scope perf_("sel.iniWrite");
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
 		const wchar_t* modeStr = (modeIdx == kModeFullscreen) ? L"FullScreen"
@@ -19478,6 +19486,7 @@ namespace
 	void SelCommit(int row)
 	{
 		if (row < 0 || row >= kSelCount) { return; }
+		PerfProbe::Scope perf_("sel.commit");
 		gSelPendingRow = row;
 		wchar_t ini[MAX_PATH] = {};
 		SelIniPath(ini, MAX_PATH);
@@ -19609,6 +19618,10 @@ namespace
 
 		bool DoMessage(cIGZWin* pWin, cGZMessage& msg) override
 		{
+			// Behaviour deliberately UNCHANGED for the measuring build - the
+			// noisy logging here is itself a suspect, and quieting it before
+			// measuring would cure the symptom without naming the cause.
+			PerfProbe::Scope perf_("sel.btnFilter");
 			for (int i = 0; i < kSelBtnCount; i++)
 			{
 				if (gSelBtns[i].win != nullptr && gSelBtns[i].win == pWin)
@@ -19740,6 +19753,9 @@ namespace
 		// which shape actually arrived.
 		void Observe(uint32_t id, uint32_t d1, uint32_t d2, uint32_t d3)
 		{
+			// Runs on the dialog's EVERY message - if the stall lives in the
+			// message path, this bucket is where it shows.
+			PerfProbe::Scope perf_("sel.observe");
 			const bool accept = (d1 == kSelAcceptId || d2 == kSelAcceptId);
 			const bool cancel = (d1 == kSelCancelId || d2 == kSelCancelId);
 			// ⛔ THE HOVER TYPES ARE EXCLUDED ON PURPOSE. The first capture
@@ -19815,16 +19831,162 @@ namespace
 	};
 
 	SelectorWinProc gSelProc;
+
+	// ============ PHASE-0 FREEZE INSTRUMENT ==============================
+	// The user reports multi-second lockups on selection changes, and two
+	// "fixes" (v3.13.0, v3.13.1) have already shipped on inference. This
+	// build NAMES the stall instead of guessing at it: every suspect path is
+	// bracketed into PerfProbe buckets - in-memory only, because the leading
+	// suspect IS synchronous file I/O and an instrument must not be made of
+	// the thing it measures - and two watchdogs read them:
+	//
+	//   FRAME GAP  entry-to-entry stride of the caller's loop. A stall shows
+	//              here WHOEVER caused it, and the in-gap bucket deltas say
+	//              how much of it was ours. A big gap with quiet buckets
+	//              convicts code outside these brackets (the game's own
+	//              handling included) - that is a finding, not a failure.
+	//   PASS TIME  one service pass over 25ms, with its own deltas.
+	int gSelPerfGapLogs = 0;
+	int gSelPerfPassLogs = 0;
+	unsigned long long gSelPerfPrevCallUs = 0;
+	PerfProbe::Row gSelPerfPrevRows[32];
+	int gSelPerfPrevRowN = 0;
+
+	// Renders " name=XXms/N" for every bucket that grew >=1ms since `prev`.
+	// Returns chars written; 0 means nothing bracketed grew that much.
+	int SelPerfDelta(const PerfProbe::Row* prev, int prevN, char* out, int cap)
+	{
+		PerfProbe::Row now[32];
+		const int n = PerfProbe::Snapshot(now, 32);
+		int off = 0;
+		out[0] = 0;
+		for (int i = 0; i < n && off < cap - 40; i++)
+		{
+			unsigned long long pTot = 0;
+			unsigned int pCnt = 0;
+			for (int j = 0; j < prevN; j++)
+			{
+				if (prev[j].name == now[i].name)
+				{
+					pTot = prev[j].totalUs;
+					pCnt = prev[j].count;
+					break;
+				}
+			}
+			const unsigned long long dUs = now[i].totalUs - pTot;
+			if (dUs >= 1000ull)
+			{
+				off += _snprintf_s(out + off, static_cast<size_t>(cap - off),
+					_TRUNCATE, " %s=%llums/%u", now[i].name, dUs / 1000ull,
+					now[i].count - pCnt);
+			}
+		}
+		return off;
+	}
+
+	void SelPerfDump(const char* why)
+	{
+		PerfProbe::Row rows[32];
+		const int n = PerfProbe::Snapshot(rows, 32);
+		// Insertion sort by total, descending - 32 rows, no allocator.
+		for (int i = 1; i < n; i++)
+		{
+			const PerfProbe::Row r = rows[i];
+			int j = i - 1;
+			while (j >= 0 && rows[j].totalUs < r.totalUs)
+			{
+				rows[j + 1] = rows[j];
+				j--;
+			}
+			rows[j + 1] = r;
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELPERF table (%s), per bucket since launch. A stall "
+			"appearing in NO bucket happened outside the bracketed code.",
+			why);
+		for (int i = 0; i < n && i < 14; i++)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELPERF   %-16s n=%-6u total=%llu.%03llums "
+				"max=%llu.%03llums",
+				rows[i].name, rows[i].count,
+				rows[i].totalUs / 1000ull, rows[i].totalUs % 1000ull,
+				rows[i].maxUs / 1000ull, rows[i].maxUs % 1000ull);
+		}
+	}
+
+	// RAII: times a whole service pass across its many early returns, and
+	// names the in-pass contributors when a single pass stalls.
+	struct SelPassWatch
+	{
+		unsigned long long t0;
+		PerfProbe::Row rows[32];
+		int n;
+		SelPassWatch()
+		{
+			t0 = PerfProbe::NowUs();
+			n = PerfProbe::Snapshot(rows, 32);
+		}
+		~SelPassWatch()
+		{
+			const unsigned long long dUs = PerfProbe::NowUs() - t0;
+			PerfProbe::Add("sel.pass", dUs);
+			if (dUs > 25000ull && gSelPerfPassLogs < 40)
+			{
+				gSelPerfPassLogs++;
+				char detail[512];
+				const int len = SelPerfDelta(rows, n, detail, sizeof(detail));
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELPERF pass took %llums. In-pass:%s",
+					dUs / 1000ull,
+					len ? detail
+						: " (no bracket >=1ms - the time is in unbracketed "
+						"code inside this pass)");
+			}
+		}
+	};
+}
+
+void UiSpike::DumpSelectorPerf(const char* why)
+{
+	SelPerfDump(why);
 }
 
 void UiSpike::ServiceScaleSelector()
 {
+	// FRAME-GAP watchdog: entry-to-entry stride of the caller's loop, checked
+	// BEFORE the throttle because the gap is the thing being measured. Only
+	// logged while the dialog is up - that is when the user feels the stall.
+	{
+		const unsigned long long callUs = PerfProbe::NowUs();
+		if (gSelPerfPrevCallUs != 0 && gSelDlgUp
+			&& (callUs - gSelPerfPrevCallUs) > 500000ull
+			&& gSelPerfGapLogs < 40)
+		{
+			gSelPerfGapLogs++;
+			char detail[512];
+			const int len = SelPerfDelta(gSelPerfPrevRows, gSelPerfPrevRowN,
+				detail, sizeof(detail));
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELPERF frame gap %llums with Graphic Options up. "
+				"In-gap:%s", (callUs - gSelPerfPrevCallUs) / 1000ull,
+				len ? detail
+					: " (none of ours >=1ms - the stall is OUTSIDE this "
+					"DLL's bracketed code)");
+		}
+		gSelPerfPrevCallUs = callUs;
+		gSelPerfPrevRowN = PerfProbe::Snapshot(gSelPerfPrevRows, 32);
+	}
+
 	// Throttle. The dialog is almost never open, so a 250ms beat is
 	// imperceptible and turns a per-frame recursive id search into a rounding
 	// error against the ~16ms tick.
 	const unsigned int now = GetTickCount();
 	if (gSelLastMs != 0 && (now - gSelLastMs) < 250u) { return; }
 	gSelLastMs = now;
+
+	// Everything from here to any return is one bracketed pass.
+	SelPassWatch selPassWatch_;
 
 	cISC4AppPtr pSC4App;
 	if (!pSC4App) { return; }
@@ -19914,7 +20076,14 @@ void UiSpike::ServiceScaleSelector()
 		}
 	}
 
-	cIGZWin* gfxDlg = pMainWindow->GetChildWindowFromIDRecursive(kSelDlgId);
+	cIGZWin* gfxDlg = nullptr;
+	{
+		// Bracketed: this walks the ENTIRE window tree from the main window,
+		// every pass, dialog open or not - the widest recursive search in
+		// this function.
+		PerfProbe::Scope perf_("sel.findDlg");
+		gfxDlg = pMainWindow->GetChildWindowFromIDRecursive(kSelDlgId);
+	}
 	if (gfxDlg != nullptr) { gSelDlgLast = gfxDlg; }
 	// One read per pass: drop last pass's answers.
 	SelInvalidateIniCache();
@@ -19924,6 +20093,7 @@ void UiSpike::ServiceScaleSelector()
 		// must commit nothing, and the next open re-reads the live settings.
 		if (gSelDlgUp)
 		{
+			PerfProbe::Scope perf_("sel.close");
 			// Closed. Drop the per-appearance state so the next open re-reads
 			// the live settings and re-derives which tiers this resolution
 			// can carry - the player may have changed the resolution in the
@@ -20126,6 +20296,9 @@ void UiSpike::ServiceScaleSelector()
 			}
 			gSelNoticePending = false;
 			gSelAcceptSeen = false;
+			// The full timing table, now that a whole visit's work - opens,
+			// rebuilds, polls, commit writes - is in the buckets.
+			SelPerfDump("dialog closed");
 		}
 		return;
 	}
@@ -20139,6 +20312,7 @@ void UiSpike::ServiceScaleSelector()
 	// the sweep uses - so a bad pointer cannot take the game down.
 	if (justOpened)
 	{
+		PerfProbe::Scope perf_("sel.open");
 		// ⭐ ACCEPT IS DETECTED BY ITS SIDE EFFECT, NOT BY A MESSAGE.
 		// The notice belongs on Accept, and the message layer provably cannot
 		// deliver that: 36 traced messages, none touching the Accept rect,
@@ -20188,6 +20362,7 @@ void UiSpike::ServiceScaleSelector()
 	// transition is a FREE, exact Accept signal - better than any hit-test.
 	// Report every transition either way, so one Accept click says which.
 	{
+		PerfProbe::Scope perf_("sel.notice");
 		cIGZWin* nw = gfxDlg->GetChildWindowFromIDRecursive(kSelNoticeId);
 		const bool up = (nw != nullptr && nw->IsVisible());
 		if (up != gSelNoticeWasUp)
@@ -20354,6 +20529,7 @@ void UiSpike::ServiceScaleSelector()
 	// DERIVED every service, never tracked: ask the four stock radios what
 	// they are rather than remembering what we last saw.
 	{
+		PerfProbe::Scope perf_("sel.radio");
 		int mask = 0;
 		bool anyStock = false;
 		for (int k = 0; k < 4; k++)
@@ -20518,6 +20694,7 @@ void UiSpike::ServiceScaleSelector()
 	cIGZWin* comboWin = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
 	if (comboWin)
 	{
+		PerfProbe::Scope perf_("sel.scaleCombo");
 		cIGZWinCombo* c = nullptr;
 		if (comboWin->QueryInterface(GZIID_cIGZWinCombo,
 				reinterpret_cast<void**>(&c)) && c)
@@ -20705,6 +20882,7 @@ void UiSpike::ServiceScaleSelector()
 	// Both apply at the next launch, exactly like the scale, because the game
 	// reads its resolution and window mode once at startup.
 	{
+		PerfProbe::Scope perf_("sel.resMode");
 		// The list depends on the MODE, so it is rebuilt on open and again
 		// whenever the mode changes - a Borderless list and a Fullscreen list
 		// are not the same rows, and showing yesterday's is how the control
