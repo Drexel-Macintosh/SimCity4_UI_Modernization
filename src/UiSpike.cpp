@@ -18820,6 +18820,18 @@ namespace
 	// cannot survive a later mode switch that the player never connected to it.
 	bool gSelResUserChanged = false;
 	bool gSelResNeedsRebuild = false;  // the mode changed
+	// ⛔ TWO INDEX SPACES, AND THE COMMIT MIXED THEM. gSelResPushed is a
+	// SHOWN-list index (the filtered rows the combo displays);
+	// gSelResStaged is a FULL-list index. The close path fell back to
+	// gSelResPushed when only the MODE had changed, and used it to index
+	// the FULL list - writing a resolution the player never picked. Four
+	// independent review passes found this one, which is what a genuinely
+	// reachable defect looks like.
+	//
+	// This holds the FULL index of whatever is currently selected, set
+	// wherever the selection is, so the commit never has to convert.
+	int  gSelResSelFull = -1;
+	cIGZWin* gSelDlgLast = nullptr;   // for the close-time re-read
 	int  gSelResShown = 0;          // rows actually offered
 	int  gSelResShownIdx[kSelResMax] = {0}; // shown row -> list index
 
@@ -19582,102 +19594,14 @@ void UiSpike::ServiceScaleSelector()
 	cIGZWin* pMainWindow = pSC4App->GetMainWindow();
 	if (!pMainWindow) { return; }
 
-	cIGZWin* gfxDlg = pMainWindow->GetChildWindowFromIDRecursive(kSelDlgId);
-	if (gfxDlg == nullptr || !gfxDlg->IsVisible())
-	{
-		// Closed. Forget the staged choice: a dialog dismissed without Accept
-		// must commit nothing, and the next open re-reads the live settings.
-		if (gSelDlgUp)
-		{
-			// Closed. Drop the per-appearance state so the next open re-reads
-			// the live settings and re-derives which tiers this resolution
-			// can carry - the player may have changed the resolution in the
-			// same visit.
-			// ⭐ DECIDED BY WHICH BUTTON RECEIVED THE MESSAGE.
-			// Not by coordinates. Two coordinate attempts failed and a third
-			// refuted itself on paper; the SDK can simply say which window a
-			// message went to, and gSelLastBtn is the last button that got
-			// one before the dialog vanished.
-			{
-				const char* btn = (gSelLastBtn >= 0)
-					? gSelBtns[gSelLastBtn].name : "(none seen)";
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELCLOSE the last button to receive a message "
-					"was %s. staged=%d", btn, gSelStagedRow);
-				// ⭐ ACCEPT IS THE ONLY WAY OUT, so there is nothing to infer.
-				// Cancel and Default Settings ship DISABLED (see
-				// build_dialog_static DISABLED_BTNS), which is what finally
-				// closed this out: a day of trying to tell the three buttons
-				// apart from outside - coordinates, an ini side-effect, a
-				// message filter, a reset fanout - and the answer was that two
-				// of them did not need to exist for this control. A staged
-				// scale is committed when the dialog closes, because the only
-				// thing that can close it is Accept.
-				if (gSelStagedRow >= 0)
-				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELCLOSE committing the staged scale "
-						"(closed via %s; Cancel and Default are disabled, so "
-						"this can only be Accept).", btn);
-					SelCommit(gSelStagedRow);
-					gSelStagedRow = -1;
-				}
-				// RESOLUTION + WINDOW MODE, committed together and to BOTH
-				// files. They are written even when only one of them changed,
-				// because WindowMode without FullScreenMode is the exact
-				// half-applied state that makes the game ignore the setting -
-				// writing the pair is the whole point of this control.
-				if (gSelResStaged >= 0 || gSelModeStaged >= 0)
-				{
-					const int rIdx = (gSelResStaged >= 0)
-						? gSelResStaged : gSelResPushed;
-					const int modeIdx = (gSelModeStaged >= 0)
-						? gSelModeStaged
-						: (gSelModePushed >= 0 ? gSelModePushed
-						                       : SelLiveModeIndex());
-					int w = 0, h = 0;
-					if (rIdx >= 0 && rIdx < gSelResCount)
-					{
-						w = gSelResList[rIdx].w;
-						h = gSelResList[rIdx].h;
-					}
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: SELCLOSE committing %s at %dx%d (closed via "
-						"%s).", kSelModeLabels[modeIdx], w, h, btn);
-					SelWriteGraphicsIni(modeIdx, w, h);
-					// EXCLUSIVE only for mode 0. Asking the wrapper for
-					// exclusive under borderless or windowed is exactly what
-					// makes a "windowed" setting come up fullscreen anyway -
-					// the two-file trap this control exists to close.
-					SelWriteDgVoodooFullScreen(modeIdx == 0);
-					gSelResStaged = -1;
-					gSelModeStaged = -1;
-				}
-			}
-			SelDetachButtonFilters();
-			gSelDlgUp = false;
-			gSelPushed = -2;
-			gSelCommitted = -1;
-			if (gSelNoticePending)
-			{
-				// The change is committed and WILL apply; only the notice was
-				// missed. Say that plainly - a detector that silently never
-				// fires is indistinguishable from one that works.
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELACCEPT the dialog closed with a scale change "
-					"pending and NO write to SC4GraphicsOptions.ini was ever "
-					"seen. The change is committed and applies next launch; "
-					"the notice did not show because Accept could not be "
-					"detected this way either.");
-			}
-			gSelNoticePending = false;
-			gSelAcceptSeen = false;
-		}
-		return;
-	}
-	const bool justOpened = !gSelDlgUp;
-	gSelDlgUp = true;
-
+	// ⛔ THIS RUNS BEFORE THE DIALOG GATE, AND THAT IS THE POINT.
+	// It used to sit after it, so the only defence against a mispredicted
+	// render resolution could fire ONLY while Graphic Options was open -
+	// a safety net that needs the player to go looking for the problem is
+	// not a safety net. Four review passes flagged it independently.
+	//
+	// It needs nothing from the dialog: pMainWindow is the window whose real
+	// size it measures.
 	// ---- 0. THE RESOLUTION THE GAME ACTUALLY LAID OUT AT -----------------
 	// ⭐ THE TIER IS DECIDED FROM AN INFERENCE; THIS IS THE MEASUREMENT.
 	// At PreAppInit there is no window yet, so the director must PREDICT the
@@ -19738,6 +19662,182 @@ void UiSpike::ServiceScaleSelector()
 			}
 		}
 	}
+
+	cIGZWin* gfxDlg = pMainWindow->GetChildWindowFromIDRecursive(kSelDlgId);
+	if (gfxDlg != nullptr) { gSelDlgLast = gfxDlg; }
+	if (gfxDlg == nullptr || !gfxDlg->IsVisible())
+	{
+		// Closed. Forget the staged choice: a dialog dismissed without Accept
+		// must commit nothing, and the next open re-reads the live settings.
+		if (gSelDlgUp)
+		{
+			// Closed. Drop the per-appearance state so the next open re-reads
+			// the live settings and re-derives which tiers this resolution
+			// can carry - the player may have changed the resolution in the
+			// same visit.
+			// ⭐ DECIDED BY WHICH BUTTON RECEIVED THE MESSAGE.
+			// Not by coordinates. Two coordinate attempts failed and a third
+			// refuted itself on paper; the SDK can simply say which window a
+			// message went to, and gSelLastBtn is the last button that got
+			// one before the dialog vanished.
+			{
+				// ⭐ THE CLOSE RE-READS THE CONTROLS. Everything above is
+				// polled on a 250ms beat, so a choice made in the last tick
+				// before Accept was simply never seen - the player picked,
+				// clicked, and watched it not happen. Re-reading here removes
+				// the whole class rather than shortening the window.
+				//
+				// The windows still exist at this point; they are hidden, not
+				// destroyed. If a read fails the staged value stands, which is
+				// the behaviour this replaces.
+				if (gSelDlgLast != nullptr)
+				{
+					cIGZWin* rc2 =
+						gSelDlgLast->GetChildWindowFromIDRecursive(kSelResComboId);
+					if (rc2 != nullptr)
+					{
+						cIGZWinCombo* c2 = nullptr;
+						if (rc2->QueryInterface(GZIID_cIGZWinCombo,
+								reinterpret_cast<void**>(&c2)) && c2)
+						{
+							const int sel = c2->GetSelection();
+							if (sel >= 0 && sel < gSelResShown)
+							{
+								gSelResSelFull = gSelResShownIdx[sel];
+								if (sel != gSelResPushed)
+								{
+									gSelResStaged = gSelResSelFull;
+								}
+							}
+							c2->Release();
+						}
+					}
+					cIGZWin* mc2 =
+						gSelDlgLast->GetChildWindowFromIDRecursive(kSelModeComboId);
+					if (mc2 != nullptr)
+					{
+						cIGZWinCombo* c3 = nullptr;
+						if (mc2->QueryInterface(GZIID_cIGZWinCombo,
+								reinterpret_cast<void**>(&c3)) && c3)
+						{
+							const int sel = c3->GetSelection();
+							if (sel >= 0 && sel < kSelModeCount
+								&& sel != gSelModePushed)
+							{
+								gSelModeStaged = sel;
+							}
+							c3->Release();
+						}
+					}
+					cIGZWin* sc2 =
+						gSelDlgLast->GetChildWindowFromIDRecursive(kSelComboId);
+					if (sc2 != nullptr)
+					{
+						cIGZWinCombo* c4 = nullptr;
+						if (sc2->QueryInterface(GZIID_cIGZWinCombo,
+								reinterpret_cast<void**>(&c4)) && c4)
+						{
+							const int sel = c4->GetSelection();
+							if (sel >= 0 && sel < kSelCount && sel != gSelPushed
+								&& gSelUsable[sel])
+							{
+								gSelStagedRow = sel;
+							}
+							c4->Release();
+						}
+					}
+				}
+				const char* btn = (gSelLastBtn >= 0)
+					? gSelBtns[gSelLastBtn].name : "(none seen)";
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELCLOSE the last button to receive a message "
+					"was %s. staged=%d", btn, gSelStagedRow);
+				// ⭐ ACCEPT IS THE ONLY WAY OUT, so there is nothing to infer.
+				// Cancel and Default Settings ship DISABLED (see
+				// build_dialog_static DISABLED_BTNS), which is what finally
+				// closed this out: a day of trying to tell the three buttons
+				// apart from outside - coordinates, an ini side-effect, a
+				// message filter, a reset fanout - and the answer was that two
+				// of them did not need to exist for this control. A staged
+				// scale is committed when the dialog closes, because the only
+				// thing that can close it is Accept.
+				if (gSelStagedRow >= 0)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELCLOSE committing the staged scale "
+						"(closed via %s; Cancel and Default are disabled, so "
+						"this can only be Accept).", btn);
+					SelCommit(gSelStagedRow);
+					gSelStagedRow = -1;
+				}
+				// RESOLUTION + WINDOW MODE, committed together and to BOTH
+				// files. They are written even when only one of them changed,
+				// because WindowMode without FullScreenMode is the exact
+				// half-applied state that makes the game ignore the setting -
+				// writing the pair is the whole point of this control.
+				if (gSelResStaged >= 0 || gSelModeStaged >= 0)
+				{
+					// ONE INDEX SPACE. Both of these are FULL-list indices.
+					const int rIdx = (gSelResStaged >= 0)
+						? gSelResStaged : gSelResSelFull;
+					const int modeIdx = (gSelModeStaged >= 0)
+						? gSelModeStaged
+						: (gSelModePushed >= 0 ? gSelModePushed
+						                       : SelLiveModeIndex());
+					int w = 0, h = 0;
+					if (rIdx >= 0 && rIdx < gSelResCount)
+					{
+						w = gSelResList[rIdx].w;
+						h = gSelResList[rIdx].h;
+					}
+					else
+					{
+						// No row is selected - the running resolution is not
+						// in the offered list. WRITE WHAT IS RUNNING rather
+						// than a zero or a guessed row: the player did not ask
+						// to change the resolution, so it must not move.
+						w = gReadoutW;
+						h = gReadoutH;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELCLOSE no resolution row was selected "
+							"- writing the running %dx%d unchanged.", w, h);
+					}
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELCLOSE committing %s at %dx%d (closed via "
+						"%s).", kSelModeLabels[modeIdx], w, h, btn);
+					SelWriteGraphicsIni(modeIdx, w, h);
+					// EXCLUSIVE only for mode 0. Asking the wrapper for
+					// exclusive under borderless or windowed is exactly what
+					// makes a "windowed" setting come up fullscreen anyway -
+					// the two-file trap this control exists to close.
+					SelWriteDgVoodooFullScreen(modeIdx == 0);
+					gSelResStaged = -1;
+					gSelModeStaged = -1;
+				}
+			}
+			SelDetachButtonFilters();
+			gSelDlgUp = false;
+			gSelPushed = -2;
+			gSelCommitted = -1;
+			if (gSelNoticePending)
+			{
+				// The change is committed and WILL apply; only the notice was
+				// missed. Say that plainly - a detector that silently never
+				// fires is indistinguishable from one that works.
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELACCEPT the dialog closed with a scale change "
+					"pending and NO write to SC4GraphicsOptions.ini was ever "
+					"seen. The change is committed and applies next launch; "
+					"the notice did not show because Accept could not be "
+					"detected this way either.");
+			}
+			gSelNoticePending = false;
+			gSelAcceptSeen = false;
+		}
+		return;
+	}
+	const bool justOpened = !gSelDlgUp;
+	gSelDlgUp = true;
 
 	// ---- 0a. ACCEPT TRACE: capture the closing buttons' absolute rects ----
 	// Captured on OPEN, because that is when they exist and are laid out, and
@@ -20383,6 +20483,8 @@ void UiSpike::ServiceScaleSelector()
 					}
 					if (live >= 0) { c->SetSelection(live, false); }
 					gSelResPushed = live;
+					gSelResSelFull = (live >= 0 && live < gSelResShown)
+						? gSelResShownIdx[live] : -1;
 					gSelResStaged = -1;
 					Logger::Get().WriteLine(LogLevel::Info,
 						"UiSpike: SELRES offering %d of %d resolutions - the "
@@ -20396,6 +20498,7 @@ void UiSpike::ServiceScaleSelector()
 					{
 						gSelResPushed = sel;
 						gSelResStaged = gSelResShownIdx[sel];
+						gSelResSelFull = gSelResStaged;
 						gSelResUserChanged = true;
 						// THE SCALE LIST IS NOW STALE. It was built against
 						// the old resolution, so rebuild it before the player
