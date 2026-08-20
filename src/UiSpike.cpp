@@ -18888,6 +18888,133 @@ namespace
 	// settings otherwise. Nothing about the running game changes.
 	int gSelPendingRow = -1;
 
+	// ============ RESOLUTION + WINDOW MODE ================================
+	// ⭐ ONE CONTROL, TWO FILES, BECAUSE THE SETTING GENUINELY LIVES IN TWO.
+	// SC4GraphicsOptions.ini's WindowMode does NOTHING on its own: dgVoodoo's
+	// FullScreenMode overrides it, so a player who edits the documented file
+	// gets no effect and no explanation. Writing one without the other is the
+	// bug, not a shortcut.
+	const uint32_t kSelResComboId  = 0x5CA1E006;
+	const uint32_t kSelModeLabelId = 0x5CA1E007;
+	const uint32_t kSelModeComboId = 0x5CA1E008;
+
+	// Offered resolutions, largest first. The monitor's own mode is inserted
+	// at runtime if it is not already here - the useful list depends on the
+	// panel and only the panel knows it.
+	struct SelRes { int w, h; };
+	SelRes gSelResList[10] = {
+		{ 3840, 2160 }, { 2560, 1600 }, { 2400, 1600 }, { 1920, 1200 },
+		{ 1920, 1080 }, { 1600, 1200 }, { 1280, 1024 }, { 1024, 768 },
+		{ 0, 0 }, { 0, 0 }
+	};
+	int gSelResCount = 8;
+	int gSelResPushed = -1, gSelResStaged = -1;
+	int gSelModePushed = -1, gSelModeStaged = -1;
+
+	// dgVoodoo.conf sits BESIDE THE EXE (Apps\), not beside the DLL.
+	void SelDgVoodooPath(wchar_t* out, size_t outLen)
+	{
+		wchar_t exe[MAX_PATH] = {};
+		GetModuleFileNameW(nullptr, exe, MAX_PATH);
+		wchar_t* slash = wcsrchr(exe, L'\\');
+		if (slash) { *(slash + 1) = L'\0'; }
+		swprintf_s(out, outLen, L"%sdgVoodoo.conf", exe);
+	}
+
+	// ⛔ NOT WritePrivateProfileString. dgVoodoo.conf is ini-SHAPED but its
+	// keys are column-aligned ("FullScreenMode   = true") and the file carries
+	// comments the wrapper's own tooling expects. A profile write would
+	// reformat the line and could reorder the section. This rewrites exactly
+	// the value token on the FullScreenMode line and touches nothing else -
+	// and never adds a BOM, which is a standing law in this project for every
+	// ini the game or a wrapper reads.
+	bool SelWriteDgVoodooFullScreen(bool fullscreen)
+	{
+		wchar_t path[MAX_PATH] = {};
+		SelDgVoodooPath(path, MAX_PATH);
+		HANDLE h = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr,
+			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+		if (h == INVALID_HANDLE_VALUE) { return false; }
+		DWORD size = GetFileSize(h, nullptr);
+		if (size == INVALID_FILE_SIZE || size > (1u << 20))
+		{
+			CloseHandle(h);
+			return false;
+		}
+		char* buf = new char[size + 1];
+		DWORD got = 0;
+		const BOOL ok = ReadFile(h, buf, size, &got, nullptr);
+		CloseHandle(h);
+		if (!ok) { delete[] buf; return false; }
+		buf[got] = 0;
+
+		// Find the FullScreenMode line - the one that ASSIGNS it, not the
+		// commented ";InheritColorProfileInFullScreenMode:" nor
+		// "InheritColorProfileInFullScreenMode", both of which contain the
+		// same substring. Anchor on a line START.
+		const char* want = "FullScreenMode";
+		bool wrote = false;
+		for (DWORD i = 0; i < got && !wrote; i++)
+		{
+			const bool atLineStart = (i == 0 || buf[i - 1] == '\n');
+			if (!atLineStart) { continue; }
+			if (strncmp(buf + i, want, 14) != 0) { continue; }
+			// the '=' for this key
+			DWORD j = i + 14;
+			while (j < got && (buf[j] == ' ' || buf[j] == '\t')) { j++; }
+			if (j >= got || buf[j] != '=') { continue; }
+			j++;
+			while (j < got && (buf[j] == ' ' || buf[j] == '\t')) { j++; }
+			DWORD vEnd = j;
+			while (vEnd < got && buf[vEnd] != '\r' && buf[vEnd] != '\n') { vEnd++; }
+			const char* val = fullscreen ? "true" : "false";
+			const size_t vLen = strlen(val);
+			const size_t oldLen = vEnd - j;
+			char* out = new char[got + vLen + 1];
+			memcpy(out, buf, j);
+			memcpy(out + j, val, vLen);
+			memcpy(out + j + vLen, buf + vEnd, got - vEnd);
+			const DWORD outLen = static_cast<DWORD>(got - oldLen + vLen);
+			HANDLE hw = CreateFileW(path, GENERIC_WRITE, 0, nullptr,
+				CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+			if (hw != INVALID_HANDLE_VALUE)
+			{
+				DWORD put = 0;
+				wrote = WriteFile(hw, out, outLen, &put, nullptr) != 0;
+				CloseHandle(hw);
+			}
+			delete[] out;
+		}
+		delete[] buf;
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELMODE dgVoodoo FullScreenMode -> %ls in %ls (%ls). "
+			"This is the setting that actually decides windowing; the game's "
+			"own WindowMode does nothing without it.",
+			fullscreen ? L"true" : L"false", path,
+			wrote ? L"written" : L"FAILED - the value stays as it was");
+		return wrote;
+	}
+
+	void SelWriteGraphicsIni(bool fullscreen, int w, int h)
+	{
+		wchar_t p[MAX_PATH] = {};
+		SelGfxIniPath(p, MAX_PATH);
+		wchar_t num[24] = {};
+		if (w > 0 && h > 0)
+		{
+			swprintf_s(num, L"%d", w);
+			WritePrivateProfileStringW(L"GraphicsOptions", L"WindowWidth", num, p);
+			swprintf_s(num, L"%d", h);
+			WritePrivateProfileStringW(L"GraphicsOptions", L"WindowHeight", num, p);
+		}
+		WritePrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
+			fullscreen ? L"FullScreen" : L"Windowed", p);
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: SELMODE SC4GraphicsOptions.ini -> WindowMode=%ls "
+			"WindowWidth=%d WindowHeight=%d.",
+			fullscreen ? L"FullScreen" : L"Windowed", w, h);
+	}
+
 	void SelCommit(int row)
 	{
 		if (row < 0 || row >= kSelCount) { return; }
@@ -19271,6 +19398,32 @@ void UiSpike::ServiceScaleSelector()
 					SelCommit(gSelStagedRow);
 					gSelStagedRow = -1;
 				}
+				// RESOLUTION + WINDOW MODE, committed together and to BOTH
+				// files. They are written even when only one of them changed,
+				// because WindowMode without FullScreenMode is the exact
+				// half-applied state that makes the game ignore the setting -
+				// writing the pair is the whole point of this control.
+				if (gSelResStaged >= 0 || gSelModeStaged >= 0)
+				{
+					const int rIdx = (gSelResStaged >= 0)
+						? gSelResStaged : gSelResPushed;
+					const bool full = (gSelModeStaged >= 0)
+						? (gSelModeStaged == 0)
+						: (gSelModePushed == 0 || gSelModePushed < 0);
+					int w = 0, h = 0;
+					if (rIdx >= 0 && rIdx < gSelResCount)
+					{
+						w = gSelResList[rIdx].w;
+						h = gSelResList[rIdx].h;
+					}
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SELCLOSE committing %s at %dx%d (closed via "
+						"%s).", full ? "Fullscreen" : "Windowed", w, h, btn);
+					SelWriteGraphicsIni(full, w, h);
+					SelWriteDgVoodooFullScreen(full);
+					gSelResStaged = -1;
+					gSelModeStaged = -1;
+				}
 			}
 			SelDetachButtonFilters();
 			gSelDlgUp = false;
@@ -19569,34 +19722,12 @@ void UiSpike::ServiceScaleSelector()
 	SelSetCaption(gfxDlg, kSelReadoutId, l1);
 	SelSetCaption(gfxDlg, kSelLabelId, "UI Scale (applies on restart)");
 
-	// ---- 1b. RESTORE THE STOCK RESOLUTION ROWS IF THEY STILL WORK -------
-	// They now ship HIDDEN (build_dialog_static), because at runtime the
-	// player watched them appear and then vanish - "it's jumping when I open
-	// options". A widget that will be absent has to be absent in the FIRST
-	// paint, and only data runs before the first paint.
-	//
-	// So this is the INVERSE of what it was: the rows are gone by default and
-	// come back when the wrapper is NOT overriding the resolution, i.e. when
-	// picking one would actually do something. A player without dgVoodoo sees
-	// the stock list, one tick late; a player with it sees no flicker at all.
-	if (justOpened && !gReqResIgnored)
-	{
-		int shown = 0;
-		for (int k = 0; k < 4; k++)
-		{
-			cIGZWin* r = gfxDlg->GetChildWindowFromIDRecursive(kStockResRadios[k]);
-			if (r && !r->IsVisible()) { r->ShowWindow(); shown++; }
-			cIGZWin* t = gfxDlg->GetChildWindowFromIDRecursive(kStockResLabels[k]);
-			if (t && !t->IsVisible()) { t->ShowWindow(); shown++; }
-		}
-		if (shown > 0)
-		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"UiSpike: SELRES restored %d node(s) of the stock resolution "
-				"list - the wrapper is NOT overriding the resolution here, so "
-				"those rows can still change something.", shown);
-		}
-	}
+	// ---- 1b. THE STOCK RESOLUTION ROWS STAY HIDDEN ----------------------
+	// They used to be restored when the wrapper was not overriding. That is
+	// gone: our own Resolution combo now occupies that column and supersedes
+	// them in EVERY mode. Keeping both would give the player two controls for
+	// one setting, and the stock one tops out at 1600x1200 - which reaches
+	// 1.5x and no further, so three of its four choices turn this mod off.
 
 	// ---- 2. the radio: is the live resolution one of the stock four? ----
 	// DERIVED every service, never tracked: ask the four stock radios what
@@ -19900,6 +20031,162 @@ void UiSpike::ServiceScaleSelector()
 				}
 			}
 			c->Release();
+		}
+	}
+
+	// ---- 4. RESOLUTION + WINDOW MODE ------------------------------------
+	// Same shape as the scale combo above: the list is built on open, the
+	// selection is read on later ticks, and the choice is STAGED until the
+	// dialog closes - which, with Cancel and Default disabled, can only be
+	// Accept.
+	//
+	// Both apply at the next launch, exactly like the scale, because the game
+	// reads its resolution and window mode once at startup.
+	{
+		// The monitor's own mode belongs in the list and only the monitor
+		// knows it. Inserted once, in size order, if not already present.
+		if (justOpened)
+		{
+			const int monW = GetSystemMetrics(SM_CXSCREEN);
+			const int monH = GetSystemMetrics(SM_CYSCREEN);
+			bool have = false;
+			for (int i = 0; i < gSelResCount; i++)
+			{
+				if (gSelResList[i].w == monW && gSelResList[i].h == monH)
+				{
+					have = true;
+					break;
+				}
+			}
+			if (!have && monW > 0 && monH > 0 && gSelResCount < 10)
+			{
+				int at = gSelResCount;
+				for (int i = 0; i < gSelResCount; i++)
+				{
+					if (monW * monH > gSelResList[i].w * gSelResList[i].h)
+					{
+						at = i;
+						break;
+					}
+				}
+				for (int i = gSelResCount; i > at; i--)
+				{
+					gSelResList[i] = gSelResList[i - 1];
+				}
+				gSelResList[at].w = monW;
+				gSelResList[at].h = monH;
+				gSelResCount++;
+			}
+		}
+
+		cIGZWin* rc = gfxDlg->GetChildWindowFromIDRecursive(kSelResComboId);
+		if (rc != nullptr)
+		{
+			cIGZWinCombo* c = nullptr;
+			if (rc->QueryInterface(GZIID_cIGZWinCombo,
+					reinterpret_cast<void**>(&c)) && c)
+			{
+				if (justOpened)
+				{
+					c->RemoveAllStrings();
+					int live = -1;
+					for (int i = 0; i < gSelResCount; i++)
+					{
+						char row[64];
+						const int monW = GetSystemMetrics(SM_CXSCREEN);
+						const int monH = GetSystemMetrics(SM_CYSCREEN);
+						// Name what each row IS. "native" is the one the
+						// wrapper will present at anyway, and above 2048 the
+						// wrapper is doing the work - say so rather than let
+						// the player wonder why 3840 is even offered.
+						_snprintf_s(row, sizeof(row), _TRUNCATE, "%dx%d%s",
+							gSelResList[i].w, gSelResList[i].h,
+							(gSelResList[i].w == monW && gSelResList[i].h == monH)
+								? " (native)" : "");
+						cRZBaseString rs(row);
+						c->InsertString(rs, i);
+						if (gSelResList[i].w == gReadoutW
+							&& gSelResList[i].h == gReadoutH)
+						{
+							live = i;
+						}
+					}
+					if (live >= 0) { c->SetSelection(live, false); }
+					gSelResPushed = live;
+					gSelResStaged = -1;
+				}
+				else
+				{
+					const int sel = c->GetSelection();
+					if (sel >= 0 && sel < gSelResCount && sel != gSelResPushed)
+					{
+						gSelResPushed = sel;
+						gSelResStaged = sel;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELRES staged %dx%d - applies at the "
+							"next launch.",
+							gSelResList[sel].w, gSelResList[sel].h);
+						ShowRestartNotice(gfxDlg);
+					}
+				}
+				c->Release();
+			}
+		}
+
+		cIGZWin* ml = gfxDlg->GetChildWindowFromIDRecursive(kSelModeLabelId);
+		if (ml != nullptr)
+		{
+			cIGZWinText* t = nullptr;
+			if (ml->QueryInterface(GZIID_cIGZWinText,
+					reinterpret_cast<void**>(&t)) && t)
+			{
+				cRZBaseString want("Window Mode");
+				cIGZString* cur = ml->GetCaption();
+				const bool same = (cur != nullptr && cur->ToChar() != nullptr
+					&& strcmp(cur->ToChar(), "Window Mode") == 0);
+				if (!same) { t->SetCaption(want); }
+				t->Release();
+			}
+		}
+
+		cIGZWin* mc = gfxDlg->GetChildWindowFromIDRecursive(kSelModeComboId);
+		if (mc != nullptr)
+		{
+			cIGZWinCombo* c = nullptr;
+			if (mc->QueryInterface(GZIID_cIGZWinCombo,
+					reinterpret_cast<void**>(&c)) && c)
+			{
+				if (justOpened)
+				{
+					c->RemoveAllStrings();
+					cRZBaseString a("Fullscreen");
+					cRZBaseString b("Windowed");
+					c->InsertString(a, 0);
+					c->InsertString(b, 1);
+					// gReqResIgnored is the director's own answer to "is the
+					// wrapper presenting fullscreen", which is the same
+					// question this control sets.
+					const int live = gReqResIgnored ? 0 : 1;
+					c->SetSelection(live, false);
+					gSelModePushed = live;
+					gSelModeStaged = -1;
+				}
+				else
+				{
+					const int sel = c->GetSelection();
+					if ((sel == 0 || sel == 1) && sel != gSelModePushed)
+					{
+						gSelModePushed = sel;
+						gSelModeStaged = sel;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SELMODE staged %s - applies at the next "
+							"launch, and writes BOTH files.",
+							sel == 0 ? "Fullscreen" : "Windowed");
+						ShowRestartNotice(gfxDlg);
+					}
+				}
+				c->Release();
+			}
 		}
 	}
 

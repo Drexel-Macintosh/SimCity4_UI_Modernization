@@ -68,14 +68,30 @@ def main():
     # separate readout label + "UI Scale" caption were retired, so the closed
     # combo IS the readout. This assertion is the reason that reshape could
     # not ship half-done here - it failed the moment the shapes diverged.
+    # The four stock resolution labels carry OUR ids so the DLL can reach
+    # them, but they are the game's nodes at the game's rects - not ours to
+    # assert.
+    RELABELLED_STOCK = {"0x5ca1e010", "0x5ca1e011", "0x5ca1e012", "0x5ca1e013"}
     want = {
-        "0x5ca1e002": (270, 320, 286, 336),   # radio, beside the row
-        "0x5ca1e005": (292, 319, 458, 342),   # 1px frame around the combo
-        "0x5ca1e004": (293, 320, 457, 341),   # combo, ON the readout row
+        "0x5ca1e002": (270, 320, 286, 336),   # radio, beside the scale row
+        "0x5ca1e005": (292, 319, 458, 342),   # frame around the scale combo
+        "0x5ca1e004": (293, 320, 457, 341),   # scale combo, on the readout row
+        "0x5ca1e009": (29, 274, 248, 297),    # frame, Resolution
+        "0x5ca1e006": (30, 275, 247, 296),    # Resolution combo
+        "0x5ca1e007": (4, 303, 246, 324),     # "Window Mode" caption
+        "0x5ca1e00a": (29, 322, 248, 345),    # frame, Window Mode
+        "0x5ca1e008": (30, 323, 247, 344),    # Window Mode combo
     }
     seen = {}
     for ln in text.split("\n"):
-        m = re.search(r"id=(0x5ca1e00\d)\b", ln)
+        # ⚠ HEX, NOT \d. The first version matched "0x5ca1e00" + a DIGIT, so
+        # 0x5ca1e00a - the Window Mode frame - was invisible to it and the
+        # assertion silently checked seven of the eight nodes. An id pattern
+        # that cannot express its own id space is a gate with a hole in it,
+        # and it would have skipped every future node from 00a onward.
+        m = re.search(r"id=(0x5ca1e0[0-9a-f]{2})\b", ln)
+        if m and m.group(1) in RELABELLED_STOCK:
+            continue        # re-identified stock labels, not injected nodes
         if not m:
             continue
         a = re.search(r"area=\((\d+),(\d+),(\d+),(\d+)\)", ln)

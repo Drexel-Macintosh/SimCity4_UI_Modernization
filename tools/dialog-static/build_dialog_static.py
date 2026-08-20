@@ -548,6 +548,27 @@ SEL_COMBO_ID = "0x5ca1e004"
 # the DROP-DOWN LIST, not the closed field).
 SEL_BORDER_ID = "0x5ca1e005"
 
+# ---- RESOLUTION + WINDOW MODE (2026-08-19, user request) -------------------
+# WHY THESE EXIST AT ALL, since the dialog already has a Resolution list:
+#   * SC4 is a DirectX 7 game and D3D7 is capped at 2048x2048. The game's own
+#     ini says so. Every resolution this mod is FOR is above that cap, which is
+#     why a wrapper (dgVoodoo) is present and not optional.
+#   * The stock list tops out at 1600x1200, which reaches 1.5x and no further.
+#     Restoring it would hand the player four choices, three of which turn the
+#     mod off and none of which reach 2x.
+#   * WINDOW MODE WAS NEVER IN THIS DIALOG. Stock SC4 sets it from the ini or
+#     the command line only, so this is new rather than restored.
+#   * And the setting is split across TWO FILES in two folders:
+#     SC4GraphicsOptions.ini's WindowMode does NOTHING on its own, because
+#     dgVoodoo.conf's FullScreenMode overrides it. A player who edits only the
+#     documented one gets no effect and no explanation. One control writing
+#     both is the only way that setting is ever correct.
+SEL_RES_COMBO_ID   = "0x5ca1e006"
+SEL_MODE_LABEL_ID  = "0x5ca1e007"
+SEL_MODE_COMBO_ID  = "0x5ca1e008"
+SEL_RES_BORDER_ID  = "0x5ca1e009"
+SEL_MODE_BORDER_ID = "0x5ca1e00a"
+
 # THE FOUR STOCK RESOLUTION LABELS, MADE ADDRESSABLE.
 # Every text node in this dialog ships with id 0xca57da80, so the DLL cannot
 # reach one of them: GetChildWindowFromIDRecursive returns the LAST match.
@@ -816,7 +837,57 @@ def inject_res_readout(text, fn):
                  "dialog changed, so do NOT guess: re-measure it."
                  % (relabelled, len(RES_LABEL_IDS), fn))
 
-    new = [indent + radio, indent + border, indent + combo]
+    # The stock resolution rows are hidden (above), so their column is free.
+    # Our Resolution combo takes the first of those rows, directly under the
+    # dialog's own "Resolution" header at (4,255,246,276) - the group it
+    # belongs to. Window Mode gets a caption and a combo below it, in the
+    # space the remaining three stock rows occupied.
+    #
+    # Right edges stop at 247, far inside the parent's 464 inner width; the
+    # scale row's 465 ran PAST it and lost its border, which is the mistake
+    # this file now states in one place so it is not repeated per control.
+    def _combo(cid, x0, y0, x1, y1, items):
+        return ('<LEGACY clsid=GZWinCombo iid=IGZWinCombo id=%s '
+                'area=(%d,%d,%d,%d) fillcolor=(218,224,229) '
+                'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
+                'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
+                'winflag_pbufftrans=no winflag_pbufferase=yes '
+                'winflag_pbuffvid=no winflag_mousetrans=no '
+                'winflag_ignoremouse=no font=GenBodyMedium '
+                'colorfontnormal=(63,73,103) colorfontdisabled=(140,148,168) '
+                'colorfonthilited=(255,255,255) highlightcolor=(24,32,106) '
+                'editable=no outlinecolor=(0,0,0) initselection=0 '
+                'combodownarrowrect=(0,0,64,15) combodowncolor=(197,197,197) '
+                'buttongutter=1 gutters=(6,2) %s >'
+                % (cid, x0, y0, x1, y1,
+                   " ".join('listelement="%s"' % i for i in items)))
+
+    def _frame(fid, x0, y0, x1, y1):
+        return ('<LEGACY clsid=GZWinFlatRect iid=IGZWinFlatRect id=%s '
+                'area=(%d,%d,%d,%d) fillcolor=(63,73,103) '
+                'winflag_visible=yes winflag_enabled=yes winflag_moveable=yes '
+                'winflag_sizeable=no winflag_sortable=no winflag_pbuff=yes '
+                'winflag_pbufftrans=no winflag_pbufferase=yes '
+                'winflag_pbuffvid=no winflag_alphablend=no '
+                'winflag_acceptfocus=no winflag_mousetrans=no '
+                'winflag_ignoremouse=yes colorleft=(63,73,103) '
+                'colortop=(63,73,103) colorright=(63,73,103) '
+                'colorbottom=(63,73,103) >' % (fid, x0, y0, x1, y1))
+
+    # Placeholder rows only - the DLL rebuilds both lists at runtime, because
+    # the useful resolutions depend on the monitor and only it knows that.
+    res_border  = _frame(SEL_RES_BORDER_ID, 29, 274, 248, 297)
+    res_combo   = _combo(SEL_RES_COMBO_ID, 30, 275, 247, 296,
+                         ["2400x1600", "1920x1200", "1600x1200"])
+    mode_label  = (tmpl % (SEL_MODE_LABEL_ID, 303, 324)).replace(
+                      'area=(293,303,465,324)', 'area=(4,303,246,324)')
+    mode_border = _frame(SEL_MODE_BORDER_ID, 29, 322, 248, 345)
+    mode_combo  = _combo(SEL_MODE_COMBO_ID, 30, 323, 247, 344,
+                         ["Fullscreen", "Windowed"])
+
+    new = [indent + radio, indent + border, indent + combo,
+           indent + res_border, indent + res_combo,
+           indent + mode_label, indent + mode_border, indent + mode_combo]
     lines[at + 1:at + 1] = new
     return "\n".join(lines), len(new)
 
