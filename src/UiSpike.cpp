@@ -18785,6 +18785,8 @@ namespace
 	int  gSelModeRunning = -1;
 	bool gSelModeUserChanged = false;
 	bool gSelModeNeedsRebuild = false;
+	bool gSelNoGfxDllLogged = false;
+	bool gSelGfxDllMissing = false;
 
 	int SelRowFromSettings(const Settings& s)
 	{
@@ -18903,6 +18905,33 @@ namespace
 	const int kModeFullscreen = 1;
 	const int kModeWindowed   = 2;
 	const char* const kSelModeLabels[] = { "Borderless", "Fullscreen", "Windowed" };
+
+	// ⭐ WINDOW MODE AND RESOLUTION BELONG TO A THIRD-PARTY DLL.
+	// SC4GraphicsOptions.ini is not the game's - it configures
+	// SC4GraphicsOptions.dll, a community plugin. Its first section is that
+	// DLL's own on/off switch ("[Admin] Enabled=true - setting this to false
+	// stops the game from loading the DLL"), which settles the ownership
+	// question: stock SC4 from 2003 takes -w / -f on the command line, keeps
+	// no such ini, and has no borderless mode at all. dgVoodoo is a third
+	// component again - it lifts the DirectX 7 2048 cap and takes exclusive
+	// fullscreen when asked.
+	//
+	// So on an install WITHOUT that DLL, WindowMode and WindowWidth/Height are
+	// read by nobody and BOTH controls are inert - not just Borderless, which
+	// is only the mode that DLL adds. A control that looks live and does
+	// nothing is the failure this whole feature has been hunting; ask the disk
+	// rather than assume.
+	bool SelGraphicsDllPresent()
+	{
+		wchar_t dir[MAX_PATH] = {};
+		SelGfxIniPath(dir, MAX_PATH);
+		wchar_t* slash = wcsrchr(dir, L'\\');
+		if (slash == nullptr) { return false; }
+		*(slash + 1) = 0;
+		wchar_t dll[MAX_PATH] = {};
+		swprintf_s(dll, L"%sSC4GraphicsOptions.dll", dir);
+		return GetFileAttributesW(dll) != INVALID_FILE_ATTRIBUTES;
+	}
 
 	int SelLiveModeIndex()
 
@@ -20546,6 +20575,33 @@ void UiSpike::ServiceScaleSelector()
 		// whenever the mode changes - a Borderless list and a Fullscreen list
 		// are not the same rows, and showing yesterday's is how the control
 		// ends up offering something the game will ignore.
+		// ⛔ NO OWNING DLL, NO CONTROLS. Hidden rather than greyed: a
+		// disabled combo reads as a setting the player is missing out on,
+		// and on such an install this is not a setting at all. The SCALE
+		// selector is unaffected - it writes our own ini, which we own.
+		if (justOpened && !SelGraphicsDllPresent())
+		{
+			gSelGfxDllMissing = true;
+			if (!gSelNoGfxDllLogged)
+			{
+				gSelNoGfxDllLogged = true;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SELMODE SC4GraphicsOptions.dll is NOT installed - "
+					"Window Mode and Resolution are HIDDEN. That DLL owns "
+					"SC4GraphicsOptions.ini, so without it WindowMode and "
+					"WindowWidth/Height are read by nothing. The scale selector "
+					"is unaffected: it writes our own ini.");
+			}
+			const uint32_t hideIds[4] = { kSelResComboId, kSelModeComboId,
+				kSelResLabelId, kSelModeLabelId };
+			for (int hi = 0; hi < 4; hi++)
+			{
+				cIGZWin* hw = gfxDlg->GetChildWindowFromIDRecursive(hideIds[hi]);
+				if (hw != nullptr && hw->IsVisible()) { hw->HideWindow(); }
+			}
+		}
+		if (gSelGfxDllMissing) { return; }
+
 		const bool listRebuilt = justOpened || gSelResNeedsRebuild;
 		if (listRebuilt)
 		{
