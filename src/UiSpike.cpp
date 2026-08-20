@@ -18807,6 +18807,17 @@ namespace
 	int gSelResPushed = -1, gSelResStaged = -1;
 	int gSelModePushed = -1, gSelModeStaged = -1;
 	bool gSelScaleNeedsRebuild = false;
+	// ⭐ SESSION-SCOPED. On the FIRST open the combo shows what the game is
+	// RUNNING, not what the ini happens to hold - because the ini can hold a
+	// value from a previous session that was never applied, and opening a
+	// dialog should tell you where you are before it tells you where you are
+	// going. Only once the player changes it does the pending value take over
+	// the display on reopen.
+	//
+	// This also clears stale state as a side effect: a first Accept writes the
+	// running resolution back, so a 1024x768 left over from an earlier visit
+	// cannot survive a later mode switch that the player never connected to it.
+	bool gSelResUserChanged = false;
 	int  gSelResShown = 0;          // rows actually offered
 	int  gSelResShownIdx[10] = {0}; // shown row -> gSelResList index
 
@@ -18868,7 +18879,10 @@ namespace
 		}
 		int iniW = 0, iniH = 0;
 		SelIniRes(&iniW, &iniH);
-		if (iniW > 0 && iniH > 0)
+		// The ini counts only once the player has chosen this session; before
+		// that it is history, and the tier must be judged against what is
+		// actually running.
+		if (gSelResUserChanged && iniW > 0 && iniH > 0)
 		{
 			*w = iniW;
 			*h = iniH;
@@ -20237,15 +20251,18 @@ void UiSpike::ServiceScaleSelector()
 						// native mode those differ.
 						const bool isRunning = (gSelResList[i].w == gReadoutW
 							&& gSelResList[i].h == gReadoutH);
-						const bool isChosen = (gSelResList[i].w == iniW
-							&& gSelResList[i].h == iniH);
+						// A row is "chosen" only if the player picked one THIS
+						// session. Before that the ini is just history.
+						const bool isChosen = gSelResUserChanged
+							&& gSelResList[i].w == iniW
+							&& gSelResList[i].h == iniH;
 						_snprintf_s(row, sizeof(row), _TRUNCATE, "%dx%d%s",
 							gSelResList[i].w, gSelResList[i].h,
 							isRunning ? " (current)"
 								: (isChosen ? " - on restart" : ""));
 						cRZBaseString rs(row);
 						c->InsertString(rs, gSelResShown);
-						if (isChosen) { live = gSelResShown; }
+						if (isChosen && !isRunning) { live = gSelResShown; }
 						else if (isRunning && live < 0) { live = gSelResShown; }
 						gSelResShown++;
 					}
@@ -20264,6 +20281,7 @@ void UiSpike::ServiceScaleSelector()
 					{
 						gSelResPushed = sel;
 						gSelResStaged = gSelResShownIdx[sel];
+						gSelResUserChanged = true;
 						// THE SCALE LIST IS NOW STALE. It was built against
 						// the old resolution, so rebuild it before the player
 						// can Accept a pair that cannot both be true.
