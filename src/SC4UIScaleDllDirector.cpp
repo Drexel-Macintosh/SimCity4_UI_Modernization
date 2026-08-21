@@ -83,30 +83,6 @@ namespace
 
 		swprintf_s(out, outLen, L"%s%s", path, fileName);
 	}
-
-	// cyclone-boom's "Web Button Improvement Mod" replaces/removes the region
-	// screen's web button (and already points it at Simtropolis). When it is
-	// installed our ShellExecute WebRedirect is redundant, so skip installing.
-	// Detection is by file name, searched recursively (sc4pac folder names carry
-	// the mod version, so a hard-coded path breaks on update).
-	bool WebButtonModPresent()
-	{
-		wchar_t dir[MAX_PATH] = {};
-		GetDllSiblingPath(L"", dir, MAX_PATH);
-		const wchar_t* needle = L"web button improvement mod";
-		try
-		{
-			for (const auto& entry : std::filesystem::recursive_directory_iterator(dir))
-			{
-				if (!entry.is_regular_file()) { continue; }
-				std::wstring name = entry.path().filename().wstring();
-				for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
-				if (name.find(needle) != std::wstring::npos) { return true; }
-			}
-		}
-		catch (...) { /* unreadable tree -> treat as absent */ }
-		return false;
-	}
 }
 
 class SC4UIScaleDllDirector final : public cRZMessage2COMDirector
@@ -801,14 +777,13 @@ public:
 		// the DLL and it installs a process-wide ShellExecuteA/W hook, so a
 		// user who wants strictly-scaling-and-nothing-else must be able to say
 		// no - [UiSpike] WebRedirect=0. Default stays on: the EA URL is dead.
-		if (settings.webRedirect && WebButtonModPresent())
+		if (settings.webRedirect)
 		{
-			logger.WriteLine(LogLevel::Info,
-				"SC4UIScale: WebRedirect skipped - the Web Button Improvement "
-				"Mod is installed and already owns the region website button.");
-		}
-		else if (settings.webRedirect)
-		{
+			// Installed regardless of the Web Button Improvement Mod: that
+			// mod is meant to disable the button's click, but when a click
+			// still happens it must land on the living Simtropolis hub, never
+			// the dead simcity.ea.com. The redirect only fires on an EA URL,
+			// so it is inert if the mod's click-prevention works.
 			WebRedirect::Install();
 		}
 		else

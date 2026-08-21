@@ -349,6 +349,13 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_WarriorUI-3x.dat" "$zzz\z_SC4UIS
 Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_NamIcons-2x.dat" "$zzz\z_SC4UIScale_NamIcons-2x.dat" -Force
 Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_NamIcons-15x.dat" "$zzz\z_SC4UIScale_NamIcons-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_NamIcons-3x.dat" "$zzz\z_SC4UIScale_NamIcons-3x.dat.x1-disabled" -Force
+# WebButtonUI (2026-08-21): 1.5x/2x/3x copies of the cyclone-boom Web Button
+# Improvement Mod's web-button bitmap {856DDBAC,46A006B0,14416302}, gated in
+# ScaleTier on the mod's presence. Same zzz- rule as its siblings. Generator is
+# tools\itemicons\rebuild_webbutton.py; output lands in tools\itemicons\out\.
+Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_WebButtonUI-2x.dat" "$zzz\z_SC4UIScale_WebButtonUI-2x.dat" -Force
+Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_WebButtonUI-15x.dat" "$zzz\z_SC4UIScale_WebButtonUI-15x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat" "$zzz\z_SC4UIScale_WebButtonUI-3x.dat.x1-disabled" -Force
 # FONT TIER SOURCES (#57 phase 4, 2026-08-02). These were NEVER in this
 # script - the three FontStyle-*.ini files in Plugins were placed BY HAND, and
 # they rotted exactly as task #58's dats did. MEASURED: the deployed
