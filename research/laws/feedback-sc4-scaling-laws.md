@@ -803,7 +803,7 @@ seed and heal "are fallbacks that must stand down when this is true" — and **t
 condition had never been wired**. A comment describing code that does not exist is
 the same defect as a lying log line.
 
-- When a real fix supersedes a workaround, gate the workaround off in the same
+- When a real fix replaces a workaround, gate the workaround off in the same
   commit and prove it with a log census; the acceptance evidence here was
   `SEEDED 0 / probes 0 / HEALED 0 / CLAMPED 0 / faults 0` alongside
   `x8bake=live blits=16 clips=0`.
@@ -1261,7 +1261,7 @@ Derived from the `.UI` that **binds** each sheet, never guessed from the number:
 |---|---|---|---|
 | N-state strip | `width/N` | window size == one cell | `cell-strips.txt` |
 | 9-slice frame | `width/3` | `blttype=edge` / `edgeimage=yes` | `nine-slice.txt` |
-| tiled background | nothing | `blttype=tiled` | `tiled.txt` |
+| tiled background | nothing | `blttype=tiled` | — |
 
 A tiled sheet is source-follows-destination: the engine repeats the source across
 the destination, so its only contract is that the scaled sheet still equals the
@@ -1269,7 +1269,7 @@ scaled **window** — and the window scales by a plain round. Snapping it protec
 divide it does not have and desynchronises the pair. Measured on the god toolbar
 rail `{46a006b0,14415876}`: 1x 74x351 equals the window; 2x 148x702 equals the
 window; at 1.5x art 528 against window 527, visible as a break in the white line
-on the left that is absent at 2x and in stock. Keep all three lists
+on the left that is absent at 2x and in stock. Keep every derived list
 exclusion-biased, so an unknown consumer can be missed but never broken.
 
 ### 87. Rule out your own last change first, by naming consumers — not by feeling

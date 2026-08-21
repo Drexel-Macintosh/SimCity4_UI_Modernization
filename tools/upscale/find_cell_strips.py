@@ -1,6 +1,6 @@
 r"""Emit the list of art TGIs that are PROVABLY horizontal state strips (#156).
 
-⛔ WHY THIS EXISTS. `Upscale2x::CellUnit` guesses "this width divides by 3 or 4,
+WHY THIS EXISTS. `Upscale2x::CellUnit` guesses "this width divides by 3 or 4,
 so it might be a cell strip". That guess is SAFE for its original job -
 preserving divisibility costs nothing when it is wrong - and UNSAFE the moment
 it is used to re-time pixels: scoped by CellUnit, cell-aligned sampling changed
@@ -126,7 +126,7 @@ def main():
                         if ct > 0 or cb < wh0[1]:
                             vsnap[(gid, iid)] = "partial-height crop %d..%d of %d in %s" % (
                                 ct, cb, wh0[1], fn)
-                # ⛔ MIXED CONSUMER = HANDS OFF. If a plain GZWinBMP anywhere
+                # MIXED CONSUMER = HANDS OFF. If a plain GZWinBMP anywhere
                 # draws this same sheet, it is not purely a state strip and
                 # re-timing it per cell would disturb that other consumer.
                 # Same shape as AXIS 10: an art change is scoped to the whole

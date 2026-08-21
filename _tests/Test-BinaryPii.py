@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 r"""Byte-scan a release bundle for personal data - ASCII **and UTF-16**.
 
-⛔ WHY THIS EXISTS. Every other privacy check in this repo reads files as TEXT,
+WHY THIS EXISTS. Every other privacy check in this repo reads files as TEXT,
 so all of them are blind to a compiled binary. On 2026-08-05 the v2.93.0 bundle
 was declared clean by two independent TEXT scanners and still carried this, in
 `.rdata`, as a UTF-16LE string:
@@ -45,7 +45,7 @@ PROJ = os.path.dirname(HERE)
 # Any absolute per-user path is a leak regardless of whose name is in it.
 PATH_RX = re.compile(rb"(?i)[A-Za-z]:\\Users\\[^\x00\s\"'<>|]{1,120}")
 
-# ⚠ NOT "OneDrive" on its own. The installer legitimately EXPLAINS that
+# NOT "OneDrive" on its own. The installer legitimately EXPLAINS that
 # Documents may be OneDrive-redirected, and flagging that word produced a false
 # positive that would have trained the operator to skip real hits. Flag paths
 # and identity literals; never flag a word that belongs in the product.
@@ -118,7 +118,7 @@ def main():
     bundle = sys.argv[1] if len(sys.argv) > 1 else None
     if not bundle:
         dist = os.path.join(PROJ, "dist")
-        # ⚠ DIRECTORIES ONLY. The first version of this picker took the last
+        # DIRECTORIES ONLY. The first version of this picker took the last
         # matching NAME, which sorted "SC4UIScale-v2.93.1.zip" above the folder
         # of the same name. os.walk() on a file yields nothing, so it scanned
         # ZERO files and printed "CLEAN" - a confident pass from an instrument
@@ -159,7 +159,7 @@ def main():
                     print("     %-16s %s" % (kind, safe(val[:130])))
 
     print("\nscanned %d file(s) in %s" % (nfiles, os.path.basename(bundle)))
-    # ⛔ ZERO FILES IS NOT A PASS. An instrument that looked at nothing must say
+    # ZERO FILES IS NOT A PASS. An instrument that looked at nothing must say
     # so, not report the absence of hits as evidence of absence.
     if nfiles == 0:
         print("RESULT: REFUSING TO PASS - scanned nothing. Wrong path?")

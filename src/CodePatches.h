@@ -25,7 +25,7 @@ namespace CodePatches
 	// high resolutions. Scales the two SetArea operands and the two centring
 	// subtrahends (all imm32, verify-before-write). Returns the number of
 	// sites patched (0..4).
-	// ⚠ MUST be called from the EARLY tier block, NOT PostAppInit - the game
+	// MUST be called from the EARLY tier block, NOT PostAppInit - the game
 	// creates the video screen during app-init, ~16s before PostAppInit runs.
 	int ApplyIntroVideoScale(float factor);
 	// News/rich-text (task #42): every news surface (ticker, reader
@@ -106,7 +106,7 @@ namespace CodePatches
 	// half to keep in sync (contrast law 43's usual coupled pairs).
 	// Verify-before-write identifies the site by the push imm32 AND the call
 	// target that consumes it. Never writes at factor 1. Returns 1 if it took.
-	// ⛔ DISARMED v2.78.4 - MEASURED DEAD, returns 0 without writing. The
+	// DISARMED v2.78.4 - MEASURED DEAD, returns 0 without writing. The
 	// camera at [regionScreen+0x164] accepted our scale, recomputed its
 	// projection, and pushed OUR frustum to its device - and the screen never
 	// moved across 20 samples / 5s. The region slab is not drawn through it.

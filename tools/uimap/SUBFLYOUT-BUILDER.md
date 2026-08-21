@@ -10,8 +10,7 @@
 > 1.1.641.0 (Steam).
 >
 > Companions: `SUBFLYOUT-ART-VERDICT.md` settles the art-versus-code question,
-> `SUBFLYOUT-CONSTANTS.md` holds the exe-wide constant scan, and
-> `SUBFLYOUT-LIVE-EVIDENCE.md` holds the live-instrument readings.
+> and `SUBFLYOUT-LIVE-EVIDENCE.md` holds the live-instrument readings.
 
 ---
 

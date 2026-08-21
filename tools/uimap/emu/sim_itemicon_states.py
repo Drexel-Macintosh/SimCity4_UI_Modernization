@@ -27,7 +27,7 @@ WHAT IT SWEEPS
 and reports, per state, the alignment of that state's content against state 0.
 Nonzero anywhere = the icon will visibly move when the button changes state.
 
-⛔ IT READS THE DEPLOYED DAT, NOT THE BUILD DIRECTORY. A build artefact proves
+IT READS THE DEPLOYED DAT, NOT THE BUILD DIRECTORY. A build artefact proves
 what was produced; only the deployed file proves what the game can load. Three
 packages in this project rotted precisely in that gap.
 
@@ -95,7 +95,7 @@ def state_drift(im, span=None):
     sees the icon move."""
     states = draw_states(im)
     if span is None:
-        # ⛔ A FIXED SPAN IS A SILENT CLAMP. At 1x the drift was 4px and +-10
+        # A FIXED SPAN IS A SILENT CLAMP. At 1x the drift was 4px and +-10
         # was ample; at 3x the SAME defect is 12px, the search hit its own
         # edge, and the result [0,3,9,9] then failed a linearity guard - so the
         # strip was reported "not a ramp" and left untouched. The instrument's
@@ -140,13 +140,13 @@ def icons_from_dat(path):
     for fn in sorted(os.listdir(tmp)):
         if not fn.lower().endswith(".png"):
             continue
-        # ⛔ GROUP-SCOPED, because the 4-state model is only TRUE for the menu
+        # GROUP-SCOPED, because the 4-state model is only TRUE for the menu
         # ItemIcon group. DbpfExtract filters by TYPE, and type 856DDBAC also
         # carries 768x600 backgrounds and 285x30 dialog bands - none of which
         # are strips. Judging those by width/4 is #156's exact mistake (a
         # structural guess applied outside the scope where it holds), and it
         # produced 60+ meaningless BAD lines the first time this ran wide.
-        # ⚠ lower-case BOTH sides. The first version compared "_G-..." against
+        # lower-case BOTH sides. The first version compared "_G-..." against
         # fn.lower(), so it matched NOTHING and every icon was filtered out -
         # and the sweep then printed "ALL OK" over an empty set. A VACUOUS PASS
         # IS THE WORST FAILURE A GATE HAS, because it looks exactly like
@@ -183,7 +183,7 @@ def report(label, name, im):
     w, h = im.size
     stride = w // 4
     drift = state_drift(im)
-    # ⛔ STATE 3 IS EXCLUDED FROM THE DRIFT TEST, AND THE CONTROL SAYS WHY.
+    # STATE 3 IS EXCLUDED FROM THE DRIFT TEST, AND THE CONTROL SAYS WHY.
     # State 3 carries the white hover border, which dominates the column
     # gradient - so correlating its SHAPE against state 0 measures the border,
     # not the icon's position. Measured on 80 known-good covered icons:
@@ -233,7 +233,7 @@ def main():
         # THE UNTOUCHED SOURCE - the control. If OUR art measures steady and
         # the screen still moves, the game is not drawing our art, and that is
         # a completely different bug from the one being fixed.
-        # ⛔ THE CONTROL MUST NOT BE HARDCODED TO ONE MOD. It matched "palm",
+        # THE CONTROL MUST NOT BE HARDCODED TO ONE MOD. It matched "palm",
         # which was fine while Lighted Palm Plaza was the only test case and
         # useless the moment another plugin is installed - a probe that can
         # only see the sample you already fixed.
@@ -259,7 +259,7 @@ def main():
             if not icons:
                 print("  (no ItemIcon entries)")
                 continue
-            # ⛔ THE UNTOUCHED SOURCE MUST NOT FAIL THE RUN. It is the CONTROL
+            # THE UNTOUCHED SOURCE MUST NOT FAIL THE RUN. It is the CONTROL
             # and it is SUPPOSED to move - that drift is the defect our package
             # exists to override. Counting it would make the gate permanently
             # red and therefore ignored, which is worse than no gate.
@@ -303,7 +303,7 @@ def main():
                                 "ALL OK in every combination simulated "
                                 "(tier x icon x state)"))
     if ctl_bad:
-        # ⛔ THE CONTROL IS SUPPOSED TO FAIL. It is the untouched mod art - the
+        # THE CONTROL IS SUPPOSED TO FAIL. It is the untouched mod art - the
         # defect our packages override - and its failure is what proves this
         # measurement can detect movement at all. Counting it in the verdict
         # would leave the gate permanently red, which is how a gate becomes

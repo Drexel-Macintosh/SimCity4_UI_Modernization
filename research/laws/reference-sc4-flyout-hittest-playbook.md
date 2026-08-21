@@ -68,8 +68,7 @@ Most of this work needs no game launch.
 1. Log the instance's vtable pointer, then read slots 40, 59, 62, 121, 149, and
    `GetFlag`.
 2. Disassemble any non-base slot with Capstone. Map virtual address to file
-   offset via the PE section table; there is a working template in
-   `tools/flyout-sim/emu_hittest.py`.
+   offset via the PE section table.
 3. Emulate the real code with Unicorn, stubbing virtual calls with the **exact**
    argument counts. A push followed by a matching pop after the call is a
    register save, not an argument — miscounting here produces plausible garbage.

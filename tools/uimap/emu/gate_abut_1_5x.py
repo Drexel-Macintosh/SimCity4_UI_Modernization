@@ -1,6 +1,6 @@
 r"""Find window pairs that ABUT at 1x but separate at 1.5x (#162).
 
-⛔ WHY THIS EXISTS, and why it should have been the FIRST instrument. A hairline
+WHY THIS EXISTS, and why it should have been the FIRST instrument. A hairline
 between two pieces of UI IS two abutting windows that stopped abutting. Four
 hypotheses were shipped before this was written - art snapping, tiled sizing,
 9-slice sizing, a runtime-bitmap underfill - each reasoned from a MECHANISM
@@ -19,7 +19,7 @@ This computes it directly and offline. For every `.UI`:
   * report every pair whose design edges are EQUAL (they touch) but whose scaled
     edges are not - that gap is the line.
 
-⚠ AN INTEGER FACTOR CANNOT PRODUCE ONE. R is exact there, so equal design edges
+AN INTEGER FACTOR CANNOT PRODUCE ONE. R is exact there, so equal design edges
 stay equal. 2x and 3x are run anyway as the POSITIVE CONTROL: if they report any
 separation, this model is wrong and nothing it says about 1.5x can be trusted.
 
@@ -140,7 +140,7 @@ def main():
         tag = "  <- POSITIVE CONTROL, must be 0" if f in (1.0, 2.0, 3.0) else "  <- the defect"
         print("   f=%-4s %6d%s" % (f, totals[f], tag))
     if totals[1.0] or totals[2.0] or totals[3.0]:
-        print("\n⛔ MODEL IS WRONG: an integer factor cannot separate equal edges. "
+        print("\nMODEL IS WRONG: an integer factor cannot separate equal edges. "
               "Nothing this says about 1.5x is usable until that reads 0.")
         return 1
 

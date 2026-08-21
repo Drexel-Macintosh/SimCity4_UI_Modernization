@@ -100,7 +100,7 @@ WIDTHS = {
     # (push, the SetArea w/h) and `2D imm32` (sub eax, the centring
     # subtrahends). Registered the day the table was written - the anti-rot
     # property caught it unregistered on its FIRST run, which is the property
-    # working. ⚠ The patch APPLIES 4/4 and produces no visible change, so this
+    # working. The patch APPLIES 4/4 and produces no visible change, so this
     # registration says the WRITES do not collide; it says nothing about the
     # feature, which is BACKLOG.
     "kIntroVidSites":            (5, "68 imm32 (push) or 2D imm32 (sub eax) - both 5"),

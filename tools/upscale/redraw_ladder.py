@@ -1,6 +1,6 @@
 r"""REDRAW the segmented rating ladders instead of RESAMPLING them (#180).
 
-⛔ WHY THIS EXISTS. The HUD Mayor Rating bar {46a006b0,14015549} is not a
+WHY THIS EXISTS. The HUD Mayor Rating bar {46a006b0,14015549} is not a
 picture - it is a DRAWN LADDER with exact integer geometry:
 
     25 cells: 12 red at origins 0,4..44 (3px wide, pitch 4),
@@ -15,7 +15,7 @@ bolder than the green half. At f=2 and f=3 NN is an exact block replicate and
 the ladder is perfectly even - which is exactly why 2x "looks way sharper".
 USER-REPORTED, repeatedly, and it is the last visible 1.5x defect on that panel.
 
-⭐ THE FIX IS TO STOP RESAMPLING IT. Scale the STRUCTURE, not the pixels:
+THE FIX IS TO STOP RESAMPLING IT. Scale the STRUCTURE, not the pixels:
 every cell is re-emitted at EDGE-DERIVED coordinates
 
     [ScaleRound(origin * f), ScaleRound((origin + width) * f) )
@@ -27,30 +27,30 @@ TOTAL - applied to a drawn ladder instead of a state strip.
 Result at f=1.5: 24 of 25 cells become a uniform 5px on a 6px pitch with clean
 1px gaps, instead of {4,5,6}/{1,2,3}.
 
-⚠ PROVABLE NO-OP AT AN INTEGER FACTOR, and the script ASSERTS it rather than
+PROVABLE NO-OP AT AN INTEGER FACTOR, and the script ASSERTS it rather than
 claiming it: at integer f, ScaleRound(o*f) and ScaleRound((o+w)*f) are exact, so
 every cell lands exactly where block replication puts it and the output must be
 byte-identical to the nearest-neighbour sheet. --verify checks that and exits
 non-zero if it ever stops being true.
 
-⚠ THE KEY IS WRITTEN EXACTLY, NEVER AVERAGED. This is the whole reason the
+THE KEY IS WRITTEN EXACTLY, NEVER AVERAGED. This is the whole reason the
 generic smooth path is wrong here: any filter that lets FF00FF into an average
 produces near-key pixels that the engine's exact-match test misses, and they
 PAINT PINK (#143, and again 2026-08-16 on the Options dialog). Here no
 arithmetic ever touches the key - gap pixels are assigned the constant.
 
-⚠ VERTICAL IS UNCHANGED. The sheet is a 26-row filmstrip, one row per rating
+VERTICAL IS UNCHANGED. The sheet is a 26-row filmstrip, one row per rating
 state, with no vertical sub-structure inside a row. Output row r takes source
 row floor(r/f), which is what NN already did.
 
-⚠ OUTPUT FORMAT MATCHES THE UPSCALER, NOT THE 1x SOURCE (F7, 2026-08-16):
+OUTPUT FORMAT MATCHES THE UPSCALER, NOT THE 1x SOURCE (F7, 2026-08-16):
 colour-type 6 (RGBA, alpha 255) with the tier's own sRGB/gAMA/pHYs chunks
 spliced in from a sibling Upscale2x output. The old ct=2 no-chunk output was
 the ONE format oddity in the corpus, and build_selective_safe.py's pixel
 reader (:1545) hard-refuses ct=2 if the TGI ever enters a pixel-read path.
 Pixels are unchanged - see save().
 
-⚠ EXIT DISCIPLINE (F5): at a FRACTIONAL factor every LADDERS sheet must
+EXIT DISCIPLINE (F5): at a FRACTIONAL factor every LADDERS sheet must
 actually be rewritten - a skip (missing 1x source, unreadable/wrong PNG
 type, target absent from the tier tree) exits 1 with the reason, because the
 Rebuild-Corpus.ps1 wiring would otherwise silently ship plain NN. At integer
@@ -214,7 +214,7 @@ def redraw(src_path, factor):
         # F7: output rows are ALWAYS RGBA (alpha 255) whatever the 1x source's
         # colour type - the source bpp only steers the sampling reads below.
         line = bytearray(ow * 4)
-        # ⛔ UNIFORM RE-LAY, NOT EDGE-DERIVED PLACEMENT. MEASURED 2026-08-16, and
+        # UNIFORM RE-LAY, NOT EDGE-DERIVED PLACEMENT. MEASURED 2026-08-16, and
         # it reversed the first attempt at this fix.
         #
         # Scaling each cell's own origin - the #171 rule - does NOT help here and
@@ -266,7 +266,7 @@ def redraw(src_path, factor):
                 if isKey:
                     col = KEY
                 else:
-                    # ⛔ SAMPLE PER OUTPUT PIXEL, NOT ONE COLOUR PER CELL. The
+                    # SAMPLE PER OUTPUT PIXEL, NOT ONE COLOUR PER CELL. The
                     # first version painted each cell with its middle pixel's
                     # colour, and the INTEGER CONTROL caught it: this ladder
                     # carries a GRADIENT along its length (FF0000 at x=0 grading
@@ -320,7 +320,7 @@ def main():
             skipped.append((g, i, "target missing from tier tree (%s)" % dst))
             continue
 
-        # ⛔ THE INTEGER CONTROL, ASSERTED NOT ARGUED. At an integer factor the
+        # THE INTEGER CONTROL, ASSERTED NOT ARGUED. At an integer factor the
         # redraw must reproduce nearest-neighbour byte for byte.
         if factor == int(factor):
             cur = load(dst)

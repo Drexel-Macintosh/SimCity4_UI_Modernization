@@ -8,7 +8,8 @@
   `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /optimize+ /platform:anycpu /out:DbpfExtract.exe DbpfExtract.cs`
 - Omit the filter to extract every entry. Filter used for this inventory: `0x856DDBAC` (PNG/UI images).
 - Output names: `T-<type>_G-<group>_I-<instance>.png` (lowercase hex, raw decompressed bytes).
-- Each run also writes `<outDir>\extract-manifest.csv` (TGI, offset, raw size, compressed?, out size, PNG magic?).
+- Each run also writes a manifest CSV beside the output with columns
+  `TypeID,GroupID,InstanceID,Offset,RawSize,Compressed,OutSize,PngMagic,File`.
 
 ## Format findings
 
@@ -37,7 +38,7 @@
 | SimCityLocale.DAT | 5,963 | 1,651 | 0 | 0 | — | — |
 
 **All UI image art lives in SimCity_1.dat.** 2,280 entries, no duplicate TGIs,
-zero extraction failures, ~31.3 MB total in `extracted\SimCity_1\`.
+zero extraction failures, ~31.3 MB total.
 
 ### Surprise: type 0x856DDBAC is not PNG-only
 
@@ -49,7 +50,7 @@ not extension):
 - 26 × EA SHPI (`SHPI` .fsh sprite/shape containers)
 - 7 × BMP (`BM`)
 
-The manifest CSV's `PngMagic` column flags which is which.
+The manifest's `PngMagic` column flags which is which.
 
 ### Validation
 
@@ -61,9 +62,3 @@ The manifest CSV's `PngMagic` column flags which is which.
   group `0x46a006b0`, 743 have a byte-identical (MD5-verified) twin at the same
   instance ID in `0x1abe787d`, 0 differ, 67 have no twin — when re-injecting 2x
   art, both groups likely need the replacement.
-
-## TGI list
-
-Full TGI list of every extracted entry: `extracted-png-tgi.csv` (copy of
-`extracted\SimCity_1\extract-manifest.csv`). Columns:
-`TypeID,GroupID,InstanceID,Offset,RawSize,Compressed,OutSize,PngMagic,File`.

@@ -1,6 +1,6 @@
 r"""RENDER A STATIC DIALOG OFFLINE, AT 1x AND AT A TIER, AND DIFF THEM.
 
-⛔ WHY THIS EXISTS. Twice on #155 the defect was described as "white lines" /
+WHY THIS EXISTS. Twice on #155 the defect was described as "white lines" /
 "tearing to the right of the population" and twice it could not be pinned to a
 control from the numbers alone. Every other instrument here reports GEOMETRY -
 `emu\README.md` says of the whole suite, "IT NEVER LOOKS AT A PIXEL". A hairline
@@ -21,7 +21,7 @@ with NEAREST (never a resampler - a smooth filter would invent the very
 hairlines we are hunting), and reports every pixel that is background in the
 tier render but covered in the reference. Those are the seams.
 
-⚠ WHAT THIS IS NOT. It is not the game. It ignores z-order subtleties, text,
+WHAT THIS IS NOT. It is not the game. It ignores z-order subtleties, text,
 edge/tiled blits and every runtime-drawn element. A CLEAN result here is NOT
 proof the screen is clean; a DIRTY result names a real uncovered pixel and
 where it is. Read it as a locator, not as a verdict.
@@ -89,7 +89,7 @@ def find_art(dirs, gid, iid):
 def nine_slice(im, dw, dh, cell):
     """The engine's 9-slice, mirrored: corners 1:1, edges and centre stretched.
 
-    ⛔ `cell` IS A SINGLE NUMBER AND IT COMES FROM THE WIDTH: `img->Width()/3`
+    `cell` IS A SINGLE NUMBER AND IT COMES FROM THE WIDTH: `img->Width()/3`
     (NineSlice at VA `0x00794100`, one caller). It is applied to BOTH axes, so a
     non-square source does NOT get a proportional vertical band - that is the
     engine's behaviour, not an approximation here. This is the same integer

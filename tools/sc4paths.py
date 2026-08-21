@@ -22,7 +22,7 @@ RESOLUTION ORDER, most explicit first:
                     -> the Steam default
                     -> the retail/EA default
 
-⚠ `Documents` IS NOT `%USERPROFILE%\Documents` ON EVERY MACHINE. OneDrive's
+`Documents` IS NOT `%USERPROFILE%\Documents` ON EVERY MACHINE. OneDrive's
 "back up your folders" moves it, and SC4 follows the shell's idea of My
 Documents, not the literal path. Both are tried, and the one that EXISTS wins -
 guessing wrong here produces an empty scan, which reads as "nothing found"
@@ -73,7 +73,7 @@ def user_sc4_dir(require=False):
 def plugins_dir(require=False):
     """The USER Plugins folder (<Documents>\\SimCity 4\\Plugins).
 
-    ⚠ This is only ONE of the two trees SC4 loads - the install also has
+    This is only ONE of the two trees SC4 loads - the install also has
     <game>\\Plugins, and both are scanned RECURSIVELY. Any census that claims
     coverage must walk both; see REGRESSION.md, 2026-08-05.
     """

@@ -4,7 +4,7 @@
     upscale command. Do not hand-type it; do not copy it into a doc.
 
 .DESCRIPTION
-    ⛔ WHY THIS EXISTS (#170, 2026-08-16). PACKAGES.md documented the corpus
+    WHY THIS EXISTS (#170, 2026-08-16). PACKAGES.md documented the corpus
     rebuild as:
 
         Upscale2x.exe dbpf\extracted\SimCity_1 upscale\preview-15x\SimCity_1 `
@@ -35,7 +35,7 @@
     The DAT builders (`build_selective_safe.py`, `build_dialog_static.py`) run
     afterwards and consume those trees - see PACKAGES.md.
 
-    ⚠ 2x is `preview\`, NOT `preview-2x\`. That name is load-bearing: the
+    2x is `preview\`, NOT `preview-2x\`. That name is load-bearing: the
     builders default to it when no --factor is passed.
 #>
 [CmdletBinding()]
@@ -63,7 +63,7 @@ if (-not (Test-Path $exe)) {
     throw "Upscale2x.exe not found. Build it first: upscale\Build.ps1"
 }
 
-# ⛔ ALL THREE ARE MANDATORY. An empty or missing list file is a SILENT
+# ALL THREE ARE MANDATORY. An empty or missing list file is a SILENT
 # regression - the upscaler prints "0 sheet(s)" and exits 0, so the failure
 # only ever shows up on a player's screen at a fractional tier.
 $lists = [ordered]@{
@@ -84,7 +84,7 @@ $lists = [ordered]@{
     '--height-exact-strips' = Join-Path $here 'height-exact-strips.txt'
 }
 foreach ($kv in $lists.GetEnumerator()) {
-    # ⚠ -f binds tighter than +, so the format call must wrap the WHOLE
+    # -f binds tighter than +, so the format call must wrap the WHOLE
     # concatenation - the deploy script paid for this exact idiom once
     # already ("pid {0} still running after {1}s" shipped literally).
     if (-not (Test-Path $kv.Value)) {
@@ -159,7 +159,7 @@ foreach ($f in $Factor) {
     # refuses any sheet whose key is 1-2px STRUCTURE rather than a region
     # (MEASURED: re-keying collapses a 1px/2px gap distinction that 2x keeps).
     # Of 465 keyed sheets only 48 qualify; the other 417 keep NEAREST.
-    # ⛔ REVERTED 2026-08-16, USER-REPORTED REGRESSION: "I hit options and a pink
+    # REVERTED 2026-08-16, USER-REPORTED REGRESSION: "I hit options and a pink
     # block appears". That is the #143 signature - the colour key DRAWING.
     # CAUSE (read out of our own code, not guessed): the belt-and-braces line at
     # the end of the resampler nudges an exact FF00FF result off the key
@@ -182,7 +182,7 @@ foreach ($f in $Factor) {
     # construction rather than even-by-blurring. It refuses itself at integer
     # factors, so 2x and 3x stay byte-identical.
     #
-    # ⛔ --smooth-keyed stays OFF and that is the whole point of this scoping.
+    # --smooth-keyed stays OFF and that is the whole point of this scoping.
     # With it on, the 48 eligible KEYED sheets also supersampled and
     # gate_key_integrity.py REJECTED the build (exit 1, 7+ sheets, both
     # directions) because the gate predicts NEAREST key placement and the
@@ -240,7 +240,7 @@ foreach ($f in $Factor) {
     & (Get-Command python).Source (Join-Path $PSScriptRoot 'gate_key_integrity.py') `
         --tier $f
     if ($LASTEXITCODE -ne 0) {
-        # ⚠ parens around the concatenation are LOAD-BEARING: -f binds tighter
+        # parens around the concatenation are LOAD-BEARING: -f binds tighter
         # than + in PowerShell, so without them only the last fragment is
         # formatted and the {0}/{1} would print literally.
         throw (("gate_key_integrity failed for factor {0} (exit {1}) - the " +
@@ -256,7 +256,7 @@ Write-Output "corpus rebuilt. NOW re-run the DAT builders (PACKAGES.md), then:"
 Write-Output "  python uimap\emu\gate_btn_undercover.py     # 0 BUILDER-WRONG at every tier"
 Write-Output "  _tests\Test-DatIntegrity.ps1                # deployed == built"
 Write-Output ""
-Write-Output "⚠ INTEGER-TIER CONTROL: 2x and 3x must come back with ZERO"
+Write-Output "INTEGER-TIER CONTROL: 2x and 3x must come back with ZERO"
 Write-Output "  differing ENTRY PAYLOADS vs what ships today. Compare payloads,"
 Write-Output "  never the file hash - a DBPF header carries a timestamp at"
 Write-Output "  offsets 25/29 and changes on every single build (#170)."

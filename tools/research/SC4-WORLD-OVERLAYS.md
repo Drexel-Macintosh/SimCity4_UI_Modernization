@@ -156,7 +156,7 @@ is scaled or needs to be (world-anchored).
 **WHAT IT DRAWS.** Nothing directly — it is the *database* §2.1 executes:
 effect definitions, child references, transforms, zoom ramps.
 
-**MECHANISM** (`tools\effdir\build_mission_bubble_fx.py` header).
+**MECHANISM.**
 
 - Resource TGI `{0xEA5118B0, 0xEA5118B1, 0x00000001}` in `SimCity_1.dat`,
   1,094,484 bytes decompressed (QFS). Names resolve through a **1,149-entry
@@ -188,15 +188,10 @@ nameEnd+53) is consumed into every spawn (§2.1 chain). All 406 shipped
 records carry scale 1.0. Zoom ramps/min/max gate per-zoom visibility.
 
 **SCALING COVERAGE.** None via data — the load law closes that route. The
-builder `tools\effdir\build_mission_bubble_fx.py` is kept as **format
-documentation** — fresh QFS extract per build, frozen 18-name set, FATAL
-gates, 72-byte predicted diff — do not redeploy its output as a fix; the
-runtime replacement is the §2.1 hook. Decoded extract + manifest:
-`tools\research\effdir\`.
+runtime replacement is the §2.1 hook.
 
 **INSTRUMENT.** None live: the parse happens once at startup, before the mod
-DLL can see anything useful. The builder's preflight asserts double as an
-offline format gate.
+DLL can see anything useful.
 
 ### 2.3 Signpost occupants (`cSC4SignpostOccupant`) + the route-dot sub-visual
 
@@ -383,8 +378,8 @@ screen, or the null is not a null.
 
 Columns: **owning system** (§2 ref) · **tier scaling** (correct / scaled by /
 n-a). The table was walked from the game's feature surface, not from a code
-enumeration — treat it like the archive inventory: **discover, don't trust
-the list**; add rows the moment a new in-world visual is reported.
+enumeration, so it is discovered rather than listed: **trust the sweep, not
+the table**; add rows the moment a new in-world visual is reported.
 
 | # | visual (player's words) | owning system | tier scaling |
 |---|---|---|---|
@@ -395,16 +390,16 @@ the list**; add rows the moment a new in-world visual is reported.
 | 5 | police/fire dispatch markers | **`cSC4DispatchVehicleView` — the dispatch-indicator system** (full write-up `tools\research\CITY-SITUATION-INDICATORS.md` §1). These markers are the OTHER categories of the same drawer whose **category 4** is row 1's UDI offer balloon (category test `cmp ecx, 4` @`0x0046DD6C`); `cSC4DispatchVehicleView::Draw` = **`0x0046D990`**. Byte-proof they reach the same pin quad: the eight ±32.0f inline immediates `0x0046EABD..0x0046EB6F` are **NOT category-guarded** — `cmp [esi+4],4 ; je 0x46E38E` @`0x0046E852` sends CSI down its own branch which **rejoins the common code** | pin quad co-scaled by **`ApplyCsiIndicatorScale`** (`src\CodePatches.cpp:4352`, shared uncategorised path); a dispatch marker renders correctly at 1.5x |
 | 6 | one-cell cursor hover quad (ground highlight) | UDI control hover quad (§2.4, 16.0f world) | n-a (world-anchored) — **never patch** |
 | 7 | zoom-gated grid decals (zone/cell grid at zoom 4/5) | effects manager records (§2.2) | n-a (world-anchored, zoom-ramped) |
-| 8 | orange/green guidance arrows (UDI drive mode) | **UDI DRIVING view-input control** singleton `.bss [0xB21D74]` — arrow drawer at owner+0x9C (ctor `0x5649D0`, vt `0xA9D974`/`0xA9D95C`), one-shot texture init **`0x5633C0`** holds the ONLY refs to all six sheets (`0x563587`–`0x563631`), registered via `[vt+0x80](drawer,5,0x3E8)` @`0x565D98`. Art: six 128×128 FSH `{7AB50E44,1ABE787D,0x6BE09921–26}` — orange 21/23/25, green 22/24/26. The same loader owns the TrainSwitch S3D pair. Notes: `overlays\row-08-guidance-arrows.md` | n-a (world units: 8.0/16.0 template `0x56340E`–`0x563481`; never calls px→world `0x7F6690`, control: the signpost builder does) |
+| 8 | orange/green guidance arrows (UDI drive mode) | **UDI DRIVING view-input control** singleton `.bss [0xB21D74]` — arrow drawer at owner+0x9C (ctor `0x5649D0`, vt `0xA9D974`/`0xA9D95C`), one-shot texture init **`0x5633C0`** holds the ONLY refs to all six sheets (`0x563587`–`0x563631`), registered via `[vt+0x80](drawer, 5, 0x3E8)` @`0x565D98`. Art: six 128×128 FSH `{7AB50E44,1ABE787D,0x6BE09921–26}` — orange 21/23/25, green 22/24/26. The same loader owns the TrainSwitch S3D pair | n-a (world units: 8.0/16.0 template `0x56340E`–`0x563481`; never calls px→world `0x7F6690`, control: the signpost builder does) |
 | 9 | disaster-flyout ring sprite | screen-space sprite, seat-scaled (§2.6) | correct |
 | 10 | building/lot selection glow (query & demolish hover) | **Occupant HIGHLIGHT FLAG** — `cISC4Occupant::SetHighlight(mode,sendNow)` at vt+0x44 (`cISC4Occupant.h:57-58`); the renderer tints the occupant's OWN model, so there is no separate visual. Query tool (clsid `0xC7AF928E`) sets mode **7** @`0x4CBF9D` (saves old at `[this+0x40]`, restores `0x4CBF65`); Demolish (`0x46DDB5F1`) sets **5** @`0x4B99F6`; mayor-default control sets 5 @`0x4DB34A`, clears @`0x4DAD7E` and spawns one `local_tile_outline` effect @`0x4DA77A`. Change posts `kSC4MessageOccupantHighlightChange` `0xA2D1C5B9` (`0x80D600`). Vtable `0xA901A0` is the DEMOLISH control's | n-a (the tint covers exactly the model) |
 | 11 | coverage-radius circle while placing civic buildings | **Effects manager (§2.1)** — named effect `PlopMode_<Family>_{Plop,Inactive,Existing}` (Police/Fire/Health/Education) via CreateEffectByName; drawable = EFFDIR children `<family>_coverage_circle_{existing,inactive,plop_collapse,plop_existing}_{normal,invert}` (type-1 ground-projected decal) | n-a (world-anchored decal) |
-| 12 | plop direction arrow on a held lot | **Effects manager (§2.1) + EFFDIR (§2.2)** — named effect `Lot_Direction_Arrow`, spawned by the Lot Plop tool's preview refresh; zoom-gated to close zooms by three per-zoom child copies. NOT an S3D prop (control: `s3d-name-sweep.txt` has 1,957 rows, zero arrow/direction/compass names) | n-a (world-anchored, zoom-ramped) |
+| 12 | plop direction arrow on a held lot | **Effects manager (§2.1) + EFFDIR (§2.2)** — named effect `Lot_Direction_Arrow`, spawned by the Lot Plop tool's preview refresh; zoom-gated to close zooms by three per-zoom child copies. NOT an S3D prop (control: a sweep of all 1,957 named S3Ds across the shipped archives found zero arrow/direction/compass names) | n-a (world-anchored, zoom-ramped) |
 | 13 | zone drag rectangle + zone color decals | **Lot-display CELL-QUAD BUILDER** (renderer world, code-generated — not effects, not a window): per-lot quads built by `0x6CC970` (vt slot 43 = +0xAC of vtable `0xAB1B98`; QI `0x6C3B80`) | n-a — world-anchoring derived from the builder |
 | 14 | god-mode terraform brush ring (in-world cursor circle) | **Effects manager (§2.1) — the cursor/brushEffect family, EFFDIR-defined (§2.2)**: named terrain-decal effects `mountain_tool_active` / `valley_tool_active` / `level_tool_active` / `smooth_tool_active` (+`_inactive` twins), each a parent with `_normal`/`_invert` decal children; `mayorlandscape_tool_*` = the mayor-mode landscape brush. Distinct from the WarriorUI terraform ring and the disaster-flyout ring sprite | n-a (world-anchored decal) |
 | 15 | neighbor-connection arrows at city edges | **THE MARKER-OCCUPANT FAMILY (§2.5) — and the family's Rosetta stone.** Exemplar **`UI8x1x3_ConnectArrow_29F1` {0x6534284A, 0xC977C536, 0x29F10000}** carrying **OccupantSize {8,3,1} m** at exemplar bytes 0x58/0x5C/0x60, read by the marker factory via property **`0x27812810` @`0x4A25D3`**; binds its own S3D `{0x5AD0E817,0xBADB57F1,0x29F10000}`; created by `0x6D4860` (push `0x29F10000` @`0x6D4A66`, +15.5f nudge `.rdata 0xAB1CA8`). **The name encodes the size**, and the size is exemplar data for this family — row 1's size, by contrast, is nine inline `imm32` floats inside `.text` | n-a (world units, no px imm, no zoom table on the path) |
 | 16 | traffic/commute route overlay (query route trace) | **Signpost-occupant module** — GZCOM clsid `0xAB72FBB3`, ONE 0x590-byte class (ctor `0x5F5510`). **Sizing:** quad px = per-item pixel size (item vt+0x14, read `0x5F69CB`) → px→world `0x7F6690` on live view `[0xB43DD8]` (call `0x5F69E8`) → × **`0xAA523C[zoom]`** (`fmul` `0x5F69ED`; table read `fld [ecx*4+0xAA523C]` @`0x5F6064`) | pixel-derived ⇒ co-scaled by MARKERZOOM (`ApplyMarkerZoomScale`) |
-| 17 | in-world lot signs (casino/highway/player signs) | S3D lot props (see `s3d-name-sweep.txt`) — world objects, not UI | n-a |
+| 17 | in-world lot signs (casino/highway/player signs) | S3D lot props — world objects, not UI | n-a |
 | 18 | ambient shadows (windmill, helicopter) | effects manager child transforms (§2.2) | n-a (world-anchored) |
 | 19 | news zeppelin / blimp | automaton (world object) | n-a |
 | 20 | pause/alert screen border | window `cSC4WinAlertBorder` id `0x6A5E44B6` (ENGINE §0 — window world, despite drawing over the view) | correct |
@@ -437,8 +432,6 @@ evidence.
 | **SPSTRIP** (`CodePatches.cpp:4276`, rides SPPROBE mode 3) | every marker-strip build at `0x5F5FB0`: this, current zoom, and the LIVE `0xAA523C` table value for that zoom — the positive control for the MARKERZOOM lever | "MARKERZOOM table x1.50" at install + SPSTRIP `table=1.125` at zoom 2 on the next launch | only builder `0x5F5FB0`; log cap 16 (counter uncapped); zoom read depends on the view object at `[0xB43DD8]` being non-null (logs zoom=0xFFFFFFFF/table=0 otherwise — that is a scope artifact, not a measurement) |
 | **SMALLWIN** census (`UiSpike.cpp:12454`, default OFF) | every VISIBLE <=80px window under the 3D view, every ~2s | the armed line, printed per run | **depth-3 walk, panel subtrees excluded, 200-line budget** — a depth-2 24-cap truncates on panel furniture and silently hides the answer; a census cap is a silent scope limit. WINDOW WORLD ONLY: proves "not a window", never "what it is" |
 | **BMPX / SEATPROBE** draw hooks (ENGINE §7, `UiSpike.cpp`) | every GZWinBMP draw under a **listed root** (`kBmpxCityRoots`) | the per-draw `img WxH win WxH -> dst` line | root-LIST scoped — an unlisted root hooks nothing; a root that IS the BMP hooks silently. WINDOW WORLD ONLY |
-| effdir extract + builder gates (`tools\effdir\`, `tools\research\effdir\`) | the EFFDIR bytes: record layout, name map, scale fields | frozen-set FATAL both directions; 72-byte predicted diff | OFFLINE — proves what the file says, never what the engine consumed (§2.2 load law: the engine reads the first provider in the list, which may be a different copy) |
-| `s3d-name-sweep.txt` | every named S3D across the nine archives | 1,957 rows present | names only — an unnamed or code-composed drawable is invisible (the CSI balloon is exactly this: geometry code-built, no S3D to find); the archive count is DISCOVERED per run, never listed |
 
 **The instrument lesson:** every lever on this side ships with its own
 positive-control probe in the same build — the MARKERZOOM lever shipped with

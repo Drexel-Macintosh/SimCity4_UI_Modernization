@@ -19,7 +19,7 @@ $EXPECTED = @(
 # texture side - so a 36x41 fallback beside a 72x82 named face cannot both
 # be right, and the fallback sims drew magnified. Staging the family, not
 # the set.
-  # ⭐ #190 (2026-08-19): 655 -> 693. The delta is EXACTLY 38 = the 19 runtime
+  # #190 (2026-08-19): 655 -> 693. The delta is EXACTLY 38 = the 19 runtime
   # Sim portraits (0xFA8CDFBF..0xFA8CDFD2, with 0xFA8CDFCF absent, so 19 not 20)
   # shipped under BOTH groups the archive carries, 0x46A006B0 and 0x1ABE787D.
   # That the arithmetic lands exactly on 38 with no remainder IS the check: a
@@ -27,9 +27,9 @@ $EXPECTED = @(
   # Verified from the DBPF ENTRY PAYLOADS, not the builder's own count (law:
   # presence is not execution) - 36x41 source, 54x62 / 72x82 / 108x123 at
   # 1.5x / 2x / 3x, i.e. exactly 36x41*f at every tier.
-  # ⛔ If this number moves again, the portraits are NOT the explanation twice.
+  # If this number moves again, the portraits are NOT the explanation twice.
   # Find the new delta before editing this line.
-  # ⚠ #136 (v2.88.0) ENDED THE TIER SPLIT. This block used to read "651 at 3x,
+  # #136 (v2.88.0) ENDED THE TIER SPLIT. This block used to read "651 at 3x,
   # THE TIER SPLIT IS DELIBERATE ... forced by an encoding ceiling", and that
   # was true only for as long as nobody widened the encoding.
   #   639 baseline
@@ -42,13 +42,13 @@ $EXPECTED = @(
   # turning `sub esi,imm8` into `lea esi,[eax-imm32]` and paying for the extra
   # bytes with a folded `mov` and a store proven dead by liveness. 1.5x and 2x
   # still take the untouched 3-byte path.
-  # ⚠ STILL A HARD COUPLING. build_selective_safe.py stages the X glyphs
+  # STILL A HARD COUPLING. build_selective_safe.py stages the X glyphs
   # unconditionally now, and that is only valid while the wide re-encode
   # actually applies. If it is removed, or the log says "advice row wide
   # re-encode REFUSED", the builder filter AND this count must go back to 651
   # for 3x in the SAME build - otherwise the budget describes art that did not
   # ship and the row X is clipped again.
-  # ⚠ THESE GLYPHS ARE INVALID WITHOUT CodePatches::ApplyAdviceRowScale.
+  # THESE GLYPHS ARE INVALID WITHOUT CodePatches::ApplyAdviceRowScale.
   # The row is a three-column HTML table [arrow | headline | X] whose middle
   # column is GetW() - 61, where 61 = 18 + 18 + 9 + 16 (arrow, X, fixed
   # chrome, and the STOCK SCROLLBAR CELL - the reserve is not one number).
@@ -127,7 +127,7 @@ $EXPECTED = @(
   # drew the Zone flyout's ring at half size in the WRONG button's band.
   # ALSO 2026-07-28: the stray UNTAGGED z_SC4UIScale_SelectiveArt.dat that had
   # been loading alongside -2x all along is retired to
-  # tools\selective-safe\superseded\ - exactly the shadowing hazard that the
+  # tools\selective-safe\replaced\ - exactly the shadowing hazard that the
   # untagged DialogStatic.dat had.
   # 240 SelectiveArt = 215 + god-mode toolbar cluster art (0xC991EDA8 twins
   # + terrain-fx/day-night flyouts) 2026-07-24 - the ghost-sun fix.
@@ -253,7 +253,7 @@ $EXPECTED = @(
   # project - it is however many uncovered icons this install has - so it is
   # asserted at the value the current build produced and must be updated when
   # build_uncovered_icons.py reports a different UNCOVERED number.
-  # ⛔ NO FIXED ENTRY COUNT FOR UncoveredIcons - IT IS NOT A CONSTANT.
+  # NO FIXED ENTRY COUNT FOR UncoveredIcons - IT IS NOT A CONSTANT.
   # This package holds however many uncovered icons THIS install has, so the
   # count changes the moment the player adds a lot. Asserting "2" would turn
   # a correct rebuild into a red gate and train us to ignore it. The property
@@ -271,7 +271,7 @@ $EXPECTED = @(
   # "Option Disabled" button survives. NO art: {46a006b0,144161e4/eb} are
   # already 2x in place in the root DialogStatic package and the mod does not
   # override them.
-  # ⚠ ScaleTier GATES this package on the mod still being installed and
+  # ScaleTier GATES this package on the mod still being installed and
   # unchanged (2408 bytes), so a "NOT FOUND (live or gated)" here after the mod
   # is removed is CORRECT behaviour, not a regression - the check below accepts
   # either the live or the .x1-disabled name.
@@ -327,26 +327,6 @@ foreach ($f in $FONT_SOURCES) {
 }
 
 # SC4UIScale.dll must be present.
-#
-# ⚠ THE SC4TouchControls QUARANTINE WAS LIFTED BY THE USER ON 2026-08-09.
-# This block used to assert its ABSENCE (task #133: "it does not go back in
-# until it is rebuilt independent of UI scaling"). The user reinstalled it
-# deliberately - the DLL reappeared in Plugins at 09-Aug 00:09 and
-# _touch-QUARANTINE-do-not-reinstall\ is now empty - and confirmed on being
-# asked that this was intentional. The absence assertion is therefore retired
-# IN THE SAME CHANGE as the reinstall, which is what the old comment demanded.
-#
-# ⛔ WHAT THIS COSTS, SO NOBODY IS SURPRISED LATER: SC4TouchControls is the one
-# component that was NOT independent of UI scaling, and its ini still carries
-# dead pre-split scaling keys the touch-only DLL never reads (law 50). It is
-# now a LIVE VARIABLE in every UI-scaling observation. When a scaling defect is
-# reported and the cause is not obvious, "is touch loaded?" belongs on the
-# triage list - see _tests\SCENARIOS.md AXIS 2 (mod state).
-#
-# We do NOT assert its presence either: the user may pull it again at any time,
-# and a red line for a file this project does not own would be exactly the
-# "trained to ignore a failure" problem the old comment warned about. It is
-# REPORTED, not gated.
 if (-not (Test-Path "$plugins\SC4UIScale.dll")) {
   $failures += "missing $plugins\SC4UIScale.dll"
 }
@@ -368,20 +348,17 @@ if (Test-Path $menuFix) {
     "Plugins (dated $mfDate). This deploy does not manage it and this suite " +
     "does not gate it. It rewrites CAM's gameplay submenu data - see #146.")
 }
-if (Test-Path "$plugins\SC4TouchControls.dll") {
-  Write-Host ("  note: SC4TouchControls.dll is loaded (quarantine lifted " +
-    "2026-08-09, user order). It is a live variable in any UI-scaling result.")
+# Any OTHER gzcom plugin in the same folder is a live variable in a UI-scaling
+# observation: it can add windows, replace art, or hook the same engine calls.
+# Discovered rather than listed - a written-down inventory of "mods to watch
+# for" is wrong the first time somebody installs one that is not on it.
+$others = @(Get-ChildItem $plugins -Filter *.dll -File -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -ne "SC4UIScale.dll" })
+if ($others.Count) {
+  Write-Host ("  note: " + $others.Count + " other plugin DLL(s) load from this " +
+    "folder (" + (($others | ForEach-Object { $_.Name }) -join ", ") + "). Any of " +
+    "them can affect a UI-scaling result; rule them out before blaming this mod.")
 }
-# ⛔ THE FROZEN-BUNDLE HASH ASSERTIONS WERE REMOVED 2026-08-06.
-# They checked another project's shipped artifacts, which now live in the
-# sibling folder ..\SC4Touch\dist\. A test suite that fails because a DIFFERENT
-# project's files moved is not testing this project - and a standing red makes
-# every later red look pre-excused, which is the failure mode this repo has
-# already paid for twice.
-# The freeze itself still stands; it is that project's to assert. The
-# quarantine check above stays here, because "is a foreign DLL sitting in the
-# Plugins folder we deploy into" IS this project's business.
-
 # DEPLOYED == BUILT (task #58 root cause, 2026-08-02). The ThirdPartyUI
 # package was absent from Deploy-OnGameClose.ps1, so its deployed copy froze
 # at the 2026-07-29 build epoch; when the art classification later changed,
@@ -419,7 +396,7 @@ $BUILT_PAIRS = @(
   @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-2x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-2x.dat" }
   @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-15x.dat";         d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-15x.dat" }
   @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-3x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-3x.dat" }
-  # ⛔ UncoveredIcons ROWS DELIBERATELY ABSENT FROM THIS LIST.
+  # UncoveredIcons ROWS DELIBERATELY ABSENT FROM THIS LIST.
   # Unlike every other package here, this one only EXISTS when the player has
   # third-party icons we do not cover. On a clean install there is nothing to
   # build and nothing to deploy - a built-vs-deployed row would then fail on a
@@ -437,7 +414,7 @@ $BUILT_PAIRS = @(
   # files were the raw .gen.ini side-outputs (62 styles, no HTML clone
   # styles) while the repo packages carried a stale ChartTickText. Same
   # lesson as #58, one family later.
-  # ⚠ 2x builds from tools\fonts\FontStyle.candidate.ini - there is no
+  # 2x builds from tools\fonts\FontStyle.candidate.ini - there is no
   # tools\packages\2x\. Do NOT add a row for the live FontStyle.ini: the DLL
   # writes that at boot from the active tier's file (ScaleTier::SyncFont), so
   # it is a runtime product, not a deployed artifact.
@@ -460,7 +437,7 @@ foreach ($pair in $BUILT_PAIRS) {
 # ---------------------------------------------------------------------------
 # #100 - THE 4x BUBBLE ASSERTION. A PAYLOAD CHECK, NOT A FILE CHECK.
 #
-# ⛔ THE HAZARD. The U-Drive-It mission bubble {856DDBAC,46A006B0,094AC89A} is
+# THE HAZARD. The U-Drive-It mission bubble {856DDBAC,46A006B0,094AC89A} is
 # 32x32 at 1x. #100 established that flipping its art flag alone would ship it
 # at 4x and, at the 2x tier, produce the exact 8x shape that #98 had already
 # cost a launch to diagnose. The investigation ended in "DO NOT SHIP" - a
@@ -469,22 +446,22 @@ foreach ($pair in $BUILT_PAIRS) {
 #
 # So this asserts the pixels, per tier, out of the SHIPPED package: the entry
 # must decode as a PNG whose width and height are both exactly 32 * factor.
-# ⚠ SUPERSEDED, kept only to date the change: the 2026-08-16 measurement
+# the 2026-08-16 measurement
 # below read 15x 48x48 / 2x 64x64 / 3x 96x96, i.e. 32*factor. The 2026-08-17
 # USER DECISION replaced that with the flat 96 pin the assertion now uses.
 # A stale comment that contradicts the assertion under it is how a correct
 # gate gets 'fixed' back into a wrong one.
 #
-# ⚠ It reads the DBPF INDEX and hashes nothing: a dat FILE hash is useless here
+# It reads the DBPF INDEX and hashes nothing: a dat FILE hash is useless here
 # because two builds of identical content differ in 2 bytes at offsets 25/29
 # (the header timestamp, #170). Payload or nothing.
-# ⚠ PARSE THESE UNSIGNED. PowerShell reads a hex literal above 0x7FFFFFFF as a
+# PARSE THESE UNSIGNED. PowerShell reads a hex literal above 0x7FFFFFFF as a
 # NEGATIVE Int32 (0x856DDBAC -> -2056159316), so comparing it against a UInt32
 # read out of the index matches NOTHING and the gate fails claiming the TGI is
 # absent - which is what it did on its first run here. A gate that fails for
 # its own reason is worse than no gate; it must be able to PASS before it is
 # allowed to fail (law 50b).
-# ⚠ #197 (2026-08-18) SUPERSEDES #186's PIN - AND IT SUPERSEDES A USER
+# #197 (2026-08-18) replaces #186's PIN - AND IT replaces A USER
 # DECISION, so it is spelled out rather than quietly swapped.
 #   #186, 2026-08-17, USER: "grow at all tiers for clickability" -> art pinned
 #     at 96px (3x design) in EVERY tier package.
@@ -501,7 +478,7 @@ foreach ($pair in $BUILT_PAIRS) {
 # The #100 hazard is still caught: a 4x flag would stage 128 at f=2 and fail
 # the 64 expected here.
 #
-# ⛔ IF CLICKABILITY IS NOW TOO SMALL AT 1.5x, that is a HIT-BOX question, not
+# IF CLICKABILITY IS NOW TOO SMALL AT 1.5x, that is a HIT-BOX question, not
 # a size question - grow the hit box, do not re-pin the art, or the arithmetic
 # breaks again and #100 comes back.
 $BUBBLE = @{ T = [Convert]::ToUInt32("856DDBAC", 16)
@@ -554,7 +531,7 @@ if (-not $psBlock.Success) {
 # ARMED-TIER AGREEMENT (added 2026-08-19 after CsiIcons shipped 1.5x art to a
 # 2x install for a day).
 #
-# ⭐ PRESENCE IS NOT ARMING. Every existing assertion here asks whether a
+# PRESENCE IS NOT ARMING. Every existing assertion here asks whether a
 # package EXISTS. CsiIcons existed at all three tiers, correct sizes, and was
 # still wrong - because the deploy armed the 15x file (plain .dat name) while
 # every other family armed 2x. No "is it present" test can see that, and the

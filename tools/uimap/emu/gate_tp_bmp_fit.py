@@ -1,6 +1,6 @@
 r"""GATE (#154): scaling a plugin's dialog must not CUT OFF anything new.
 
-⛔ THE OBVIOUS GATE IS THE WRONG GATE, and it took one build to find out.
+THE OBVIOUS GATE IS THE WRONG GATE, and it took one build to find out.
 `GZWinBMP blttype=normal` draws its bitmap at the window origin, at the
 bitmap's OWN size, and lets the window CLIP it - it never stretches to fit. So
 art and window do NOT scale to the same number and cannot be made to:
@@ -75,7 +75,7 @@ def bmp_nodes(text):
     node, while the TGI is NOT unique (five nodes share one strip) and can be
     rewritten to a clone id. Order is the only stable identity.
 
-    ⛔ `imagerect` IS NOT OPTIONAL DETAIL - IT IS WHAT ACTUALLY GETS DRAWN.
+    `imagerect` IS NOT OPTIONAL DETAIL - IT IS WHAT ACTUALLY GETS DRAWN.
     The first version of this gate ignored it, passed a build clean, and that
     build shipped stripes two thirds of the way across every row: the window
     was scaled to 428, the bitmap we ship was 429, and `imagerect=(0,0,285,30)`

@@ -1,7 +1,7 @@
 r"""FALSIFIED LAW, kept as an instrument: "a button's art cell must equal its
 window width". IT DOES NOT. Measured, 2026-08-06.
 
-⛔⛔ READ THE RESULT BEFORE THE THEORY.
+READ THE RESULT BEFORE THE THEORY.
 
     1.5x   709 state-strip buttons whose cell != edge-derived window width
     2x     420      "
@@ -68,7 +68,7 @@ MEASURED (2026-08-06), the Day/Night buttons 0xCA35CB74/76/78:
 `ScaleDim` snapped 188*1.5 = 282 to 284 rather than 280: `CellUnit(188) = 4`,
 the two candidates are equidistant, and the tie-break resolves UP.
 
-⚠ THIS GATE DOES NOT ASSERT ZERO. Some mismatch is UNAVOIDABLE at a fractional
+THIS GATE DOES NOT ASSERT ZERO. Some mismatch is UNAVOIDABLE at a fractional
 factor: one sheet serves buttons that may sit at different left-edge parities,
 and the two parities want cell widths that differ by 1. What it does is COUNT
 the mismatches under the shipped tie-break and under the opposite one, so the
@@ -252,7 +252,7 @@ def main():
         if r:
             res[tier] = r
 
-    # ⛔ NO ASSERTION HERE, ON PURPOSE. The first version of this tool failed
+    # NO ASSERTION HERE, ON PURPOSE. The first version of this tool failed
     # when the integer tiers were not exact - and they are NOT exact: 420
     # mismatches each, on tiers the user has confirmed perfect. GZWinBtn
     # stretches its cell to the window, so this quantity does not gate anything.

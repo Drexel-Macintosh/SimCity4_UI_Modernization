@@ -60,7 +60,7 @@ Distinct states, each capable of its own defect:
   state survives
 - region ↔ city transitions
 
-First-open bugs survive testing precisely because re-open works. A defect that
+A first-open defect survives testing precisely because re-open works. A defect that
 appears only on first use is an uninitialised latch, and a latched crop bound at
 first show never refreshes on later resizes.
 

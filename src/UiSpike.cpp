@@ -98,7 +98,7 @@ namespace
 // (QueryInterface/AddRef/Release) and NEITHER class declares a virtual
 // destructor (verified in the headers), so GZPaint is vtable INDEX 87.
 //
-// ⛔ CORRECTED 2026-08-14 (#149) - THE LINE ABOVE IS WRONG FOR BUILD
+// THE LINE ABOVE IS WRONG FOR BUILD
 // 1.1.641 AND HAS COST TWO WASTED LAUNCHES. Slot 87 is byte-IDENTICAL
 // across all 23 live UI class vtables and disassembles to
 //     mov eax,[ecx+0x4C]; ret        <- a two-instruction GETTER
@@ -134,7 +134,7 @@ namespace
 	// the wrong arg count would clean the wrong number of stack bytes and
 	// corrupt the stack.
 	//
-	// ⚠ THE SLOT TABLE BELOW WAS OFF BY ONE UNTIL 2026-08-01, and it also
+	// THE SLOT TABLE BELOW WAS OFF BY ONE UNTIL 2026-08-01, and it also
 	// omitted slot 89 entirely, which is what shifted everything after it. It
 	// cost a wasted probe build on task #89 (calling "93" as
 	// GetBufferToDrawTo returned [+0x6c], the DRAW CONTEXT). Corrected from
@@ -167,14 +167,14 @@ namespace
 	// gTierF mirrors settings.spikeScaleFactor for these namespace-scope
 	// hooks (settings is a UiSpike member and invisible here). Default 2.0f =
 	// the legacy compiled assumption.
-	// ⚠ CORRECTED 2026-08-01 (SDK-law audit): this comment used to claim
+	// this comment used to claim
 	// "hooks are only ever installed BY those sweeps", which has been false
 	// since v2.32.0 - ArmDeferred installs four at PostCityInit, BEFORE any
 	// sweep has written gTierF. Anything running from those hooks before the
 	// first pass therefore sees the COMPILED DEFAULT, not the live tier -
 	// which is why EarlyDockTick deliberately uses settings.spikeScaleFactor
 	// and not gTierF. Consult the tier from settings in pre-sweep code.
-	// ⛔ IDENTITY DEFAULT, NOT 2.0f. This was `= 2.0f` and that is a LIE
+	// IDENTITY DEFAULT, NOT 2.0f. This was `= 2.0f` and that is a LIE
 	// whenever the tier is not 2x. gTierF is the hook-visible mirror of the tier
 	// factor, read at 97 sites, but it was ASSIGNED at only two - inside
 	// ScaleGodFlyouts and ScaleMenuFlyouts. So:
@@ -188,7 +188,7 @@ namespace
 	//     2.0 regardless of the real factor. At 1.5x and 3x that is silently
 	//     wrong rather than visibly wrong, which is worse.
 	//
-	// ⭐ A DEFAULT THAT IS NOT THE IDENTITY TURNS "NOT YET KNOWN" INTO A
+	// A DEFAULT THAT IS NOT THE IDENTITY TURNS "NOT YET KNOWN" INTO A
 	// CONFIDENT WRONG ANSWER. 1.0f means "no scaling" - the only safe thing to
 	// believe before the tier is decided. The real value is now pushed in
 	// UNCONDITIONALLY by SetTierMirror() at the moment the tier is resolved,
@@ -206,7 +206,7 @@ namespace
 		return static_cast<int32_t>(std::floor(v + 0.5));
 	}
 
-	// ⛔ A BLIT EXTENT MUST FLOOR, NEVER ROUND UP.
+	// A BLIT EXTENT MUST FLOOR, NEVER ROUND UP.
 	//
 	// THE DEFECT (reported 2026-08-06, and the wording is the diagnosis):
 	// "the weird lines to the RIGHT and BOTTOM of the sun and moon". Right edge
@@ -222,13 +222,13 @@ namespace
 	// a stray line down the RIGHT edge. The height does the same on the BOTTOM.
 	// Rounding UP manufactures a pixel that has no source.
 	//
-	// ⚠ WHY 2x AND 3x ARE PERFECT, AND WHY THIS IS 1.5x-ONLY: at an integer
+	// WHY 2x AND 3x ARE PERFECT, AND WHY THIS IS 1.5x-ONLY: at an integer
 	// factor srcExtent*f is already whole, so floor and round agree exactly and
 	// no phantom column can exist. Same shape as #142 (font point sizes) and
 	// the strip step-extra (5*1.5 = 7.5): a rule that only misbehaves where the
 	// product is fractional. Integer tiers are BIT-IDENTICAL under this change.
 	//
-	// ⚠ MEASURED DEAD, DO NOT RETRY: the first attempt at this symptom rewrote
+	// MEASURED DEAD, DO NOT RETRY: the first attempt at this symptom rewrote
 	// the SAMPLER to map by the real size ratio (o*src/dst, the Upscale2x
 	// method). It compiled, shipped, and the player reported it made "a lot of
 	// fields worse" - it changes the duplication pattern across the WHOLE
@@ -449,7 +449,7 @@ namespace
 	unsigned gS20Cell = 0;
 	unsigned gS20Log = 24;
 
-	// ⛔ THE FIRST VERSION OF THIS CRASHED THE GAME (PRIV_INSTRUCTION at a
+	// THE FIRST VERSION OF THIS CRASHED THE GAME (PRIV_INSTRUCTION at a
 	// garbage EIP, EDX still holding 0x00AC1400 - a return into nowhere).
 	// It declared slot 20 as __fastcall with TWO stack args, inferred from
 	// two visible pushes. __thiscall is CALLEE-CLEANUP: guess the arity
@@ -534,7 +534,7 @@ namespace
 	int     gAdvisorHeal = 0;         // FALLBACK ONLY (default OFF as of
 	                                  // v2.20.0): one-shot advisor face
 	                                  // re-frame via synthesized face+back
-	                                  // clicks. Superseded by the data
+	                                  // clicks. Replaced by the data
 	                                  // pre-scale (kDataScaledSubtreeIds),
 	                                  // which needs no injected input and has
 	                                  // no visible flash. Kept as an escape
@@ -544,7 +544,7 @@ namespace
 	// 0 = MEASURE: never move a mayor flyout, just report its native placement
 	// and the derived offset via the MCAL log line. 1 = apply the dock for
 	// entries whose offsets have been measured (derived=true).
-	// Superseded LandDX/LandDY/LandDock, which were screenshot-tuned nudges
+	// Replaced LandDX/LandDY/LandDock, which were screenshot-tuned nudges
 	// layered on the WRONG anchor (the god toolbar) - see kMayorFlyoutDock.
 	// #95 PHASE 4 (2026-08-02): DEFAULT FLIPPED 0 -> 1. Every row in
 	// kMayorFlyoutDock is derived=true and has been confirmed on screen, and
@@ -612,7 +612,7 @@ namespace
 	int     gChartGeoLog = 0;
 
 	// ---- #57 PHASE 1: THE REPAINT PROOF. ini [Flyout] ChartProbe, default 0
-	// ⚠ THIS DELIBERATELY DEFACES THE CHART: it floods the plot area opaque
+	// THIS DELIBERATELY DEFACES THE CHART: it floods the plot area opaque
 	// green. It is a DIAGNOSTIC, not a fix, and it is two field writes plus
 	// one virtual call - ChartProbe=0 and a restart undoes it completely.
 	//
@@ -641,7 +641,7 @@ namespace
 	//                 field. Next is the +0x64 offscreen surface and the
 	//                 pbuff question (the v2.25.14 gauge precedent, where
 	//                 the cure was born-2x DATA, not repaints).
-	// ⛔ Proving it with an absurd rect at +0xE0 is worthless: that is the
+	// Proving it with an absurd rect at +0xE0 is worthless: that is the
 	//    write that already failed, so it cannot separate "no repaint" from
 	//    "field ignored". A colour CAN.
 	int     gChartProbe = 0;
@@ -825,7 +825,7 @@ namespace
 	// now scales the game's own MARGINS in place and does NOT re-arm the
 	// sentinel. History of the two failed attempts is kept below because each
 	// one killed a theory that looked right on paper.
-	// ⛔ v2.50.0's version (re-arm the sentinel) IS THE ONE THAT FAILED
+	// v2.50.0's version (re-arm the sentinel) IS THE ONE THAT FAILED
 	// THE SAME SESSION. It did exactly what it said (log: "CHARTSCALE band
 	// 32->64 tick 4->8 ... sentinel re-armed") and the screen did not change,
 	// because re-arming ONLY the plot sentinel [0xE0] is a half measure: the
@@ -839,12 +839,12 @@ namespace
 	//     stock plot (78,21,408,234)  ->  x2 = (156,42,816,468) in 976x512
 	// i.e. left gutter 156 (room for 20pt ticks), top 42 (room for the
 	// title), right 816 leaving a 160px legend gap (26pt "Expenses" needs
-	// ~113 and currently wraps in 110). ⚠ Do NOT hard-code that rect for
+	// ~113 and currently wraps in 110). Do NOT hard-code that rect for
 	// every chart: the bar charts (Population by Age) carry NO legend and
 	// their plot legitimately runs wider. The margins are text-derived, so
 	// the honest lever is to scale the TEXT and let the game re-derive them.
 	//
-	// ⛔ AND THAT SECOND THEORY DIED TOO (v2.51.0 -> v2.51.1, same hour).
+	// AND THAT SECOND THEORY DIED TOO (v2.51.0 -> v2.51.1, same hour).
 	// Unpinning ChartTickText 10 -> 20 did NOT move the gutter by one pixel:
 	//     10pt -> CHARTGEO PLOT(45,20,866,492)   gutter 45
 	//     20pt -> CHARTGEO PLOT(45,20,866,492)   gutter 45   (byte-identical)
@@ -855,7 +855,7 @@ namespace
 	// v2.52.0 therefore wrote the rect DIRECTLY (margins x f, once per
 	// object, no re-arm).
 	//
-	// ⛔ AND THAT DIED TOO - THIRD THEORY, SAME SESSION. The write STICKS:
+	// AND THAT DIED TOO - THIRD THEORY, SAME SESSION. The write STICKS:
 	//     CHARTSCALE plot (45,20,866,492) -> (90,40,756,472)  sane=1
 	//     CHARTGEO   PLOT[0xE0](90,40,756,472)   <- three ticks later, held
 	// and the screen did not change by one pixel. So chart+0xE0..0xEF is a
@@ -928,7 +928,7 @@ namespace
 	// and leaves its two border lines ending in mid-air: the junction seam.
 	// The alignment the old nudge was doing is now carried by SubDockDXEff(),
 	// which moves the WHOLE assembly and so keeps the weld intact.
-	// ⚠ Do not "restore" a non-zero default to re-seat a ring. If the ring is
+	// Do not "restore" a non-zero default to re-seat a ring. If the ring is
 	// off its button, the DOCK is wrong - fix that. An ini override still
 	// works for diagnosis, but it reopens the seam by construction.
 	inline int SubRingDXEff()
@@ -1036,7 +1036,7 @@ namespace
 	// (the ring is drawn at f x 80x53, so its half box is (40f, 26.5f); the
 	// button cell is f x 47x37, half (23.5f, 18.5f); the native law already
 	// contains SubNativeDX()/kSubPlaceBias).
-	// ⚠ #134: this block used to end "both factor-independent". kSubPlaceBias
+	// #134: this block used to end "both factor-independent". kSubPlaceBias
 	// is (re-verified at f=3); SubNativeDX is NOT, and believing that comment
 	// is what kept 3x broken. Do not restore the claim.
 	// kIniAuto = derive from the tier factor; a value in the ini overrides.
@@ -1107,7 +1107,7 @@ namespace
 	// 8-item aircraft picker hanging into the bottom HUD. Horizontally the
 	// fixed -53 should be -27, so it also sits 26px too far left.
 	//
-	// ⚠ MY FIRST CLOSED FORM WAS WRONG BY EXACTLY -2 AT EVERY n. The game
+	// MY FIRST CLOSED FORM WAS WRONG BY EXACTLY -2 AT EVERY n. The game
 	// does (F4>>1) - (contentH>>1), and (53*f)>>1 != (53>>1)*f - the
 	// truncation differs per factor. So this reproduces the game's INTEGER
 	// expression, it does not re-derive it. Validated 32/32 exact against the
@@ -1139,7 +1139,7 @@ namespace
 		if (top < floorT) { top = floorT; }
 		return top;
 	}
-	// [Flyout] SubMath. ⛔ DEFAULT 0 - REVERTED THE SAME SESSION IT SHIPPED
+	// [Flyout] SubMath. DEFAULT 0 - REVERTED THE SAME SESSION IT SHIPPED
 	// (v2.45.1). The math above is genuinely correct about the CONTAINER: it
 	// reproduces the game's own Place 32/32 at n=1..8 x f=1/1.5/2/3, and with
 	// it the 8-item picker stopped overlapping the bottom HUD. But the player's
@@ -1972,7 +1972,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 
 	// #162 THIN-BLIT PROBE. [Probe] ThinBlt=<lines>. Default OFF.
 	//
-	// ⛔ THE QUESTION IT ANSWERS, and nothing else in this file can: is the
+	// THE QUESTION IT ANSWERS, and nothing else in this file can: is the
 	// reported hairline DRAWN, or is it a GAP? Five hypotheses were shipped
 	// against these two lines by reasoning about mechanisms - art snapping,
 	// tiled sizing, 9-slice sizing, a runtime-bitmap underfill, button cells -
@@ -1989,7 +1989,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// fails to cover it) or it is outside the UI buffer entirely (the #59
 	// boundary). Either answer is worth more than a sixth guess.
 	//
-	// ⚠ A NULL HERE IS ONLY EVIDENCE WITH ITS POSITIVE CONTROL. The counter
+	// A NULL HERE IS ONLY EVIDENCE WITH ITS POSITIVE CONTROL. The counter
 	// below reports how many blits were SEEN as well as how many were thin, so
 	// "0 thin of 0 seen" (hook never ran) can never be misread as "0 thin of
 	// 40,000 seen" (hook ran, nothing thin).
@@ -2035,7 +2035,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 			// Art that already fits has srcW == stateW, so the condition is
 			// false and correct icons are never touched - it cannot fight the
 			// static packages or double-scale anything.
-			// ⛔ DEAD, DO NOT RE-ENABLE. This was the WRONG CHANNEL: these icons
+			// DEAD, DO NOT RE-ENABLE. This was the WRONG CHANNEL: these icons
 			// blit through BltStripThunk (the strip's draw-context slot 29),
 			// never through the class-wide buffer Blt. Left disabled because
 			// its gate also matched ordinary FULL-BITMAP draws (srcW == bmpW
@@ -2091,7 +2091,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 			if (gThinBlt > 0)
 			{
 				gThinSeen++;
-				// ⛔ THE HEARTBEAT IS THE POSITIVE CONTROL, AND THE FIRST VERSION
+				// THE HEARTBEAT IS THE POSITIVE CONTROL, AND THE FIRST VERSION
 				// OF THIS PROBE DID NOT HAVE ONE. It printed only on a hit, so a
 				// session with no thin blits produced an EMPTY LOG - byte-identical
 				// to the hook never running. That is the exact failure this file
@@ -2127,7 +2127,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 					// 54-wide sheet exists in the stock extract, so the sheet
 					// could not be found offline. Its WxH keys find_tgi across
 					// all NINE archives (the discover-don't-list law).
-					// ⛔ RAW RECT READS, NEVER VIRTUALS (adversarial review
+					// RAW RECT READS, NEVER VIRTUALS (adversarial review
 					// 2026-08-17): a1's identity is an explicit HYPOTHESIS
 					// (:1997 - source buffer vs draw context is UNRESOLVED),
 					// and __except cannot protect against a valid object of
@@ -2633,7 +2633,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	int    gStripProbe = 24;             // log first N strip item blits
 	// #149 CELLPROBE budgets - separate so a flood of correct draws can never
 	// starve the one line that names the defect.
-	// ⛔ THE FIRST VERSION OF THIS PROBE COULD NOT SEE ITS OWN SUBJECT.
+	// THE FIRST VERSION OF THIS PROBE COULD NOT SEE ITS OWN SUBJECT.
 	// It logged only `texW > 200`, but the icons under investigation were 176
 	// wide at the moment it ran - so the filter excluded exactly them, the six
 	// lines it did print were all UNAFFECTED icons, and "zero MISMATCH" was a
@@ -2669,7 +2669,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	int    gStripBaseC = 0;              // [0xfc] step extra
 	bool   gStripBaseCap = false;
 
-	// ⛔ THE STEP-EXTRA MUST FLOOR. ROUNDING IT UP COSTS A WHOLE ROW.
+	// THE STEP-EXTRA MUST FLOOR. ROUNDING IT UP COSTS A WHOLE ROW.
 	//
 	// The strip's own Plot (0x0079AA70) decides how many rows are visible with
 	//     visibleRows = (stripWinH + [0xFC]) / ([0xF8] + [0xFC])     // integer
@@ -2684,7 +2684,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// one row, and the last item of every flyout of 3+ items is unreachable
 	// until the player scrolls. USER-REPORTED 2026-08-06.
 	//
-	// ⚠ INTEGER TIERS ARE UNAFFECTED: 5*2 = 10 and 5*3 = 15 are already whole,
+	// INTEGER TIERS ARE UNAFFECTED: 5*2 = 10 and 5*3 = 15 are already whole,
 	// so floor and round agree exactly. Verified for n=2..12 at f=1.5/2/3 by
 	// tools\uimap\emu\gate_strip_visible_rows.py, which also carries the
 	// negative control (the old rule MUST fail at 1.5x).
@@ -2746,7 +2746,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// offline, so a synthesised icon is identical in character to every icon we
 	// already ship.
 	//
-	// ⛔ SCOPE. Fires ONLY on the over-read signature - a 4-state strip whose
+	// SCOPE. Fires ONLY on the over-read signature - a 4-state strip whose
 	// own cell (texW/4) is SMALLER than the cell the engine is drawing. Covered
 	// art has texW/4 == cell by definition, so the 318 correct icons cannot be
 	// touched by construction. This is not "the upscaler is on"; it is a repair
@@ -2775,7 +2775,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 
 	cIGZGraphicSystem* GetGraphicSystem()
 	{
-		// ⛔ THE FIRST VERSION PASSED THE IID AS THE SERVICE ID AND GOT NULL
+		// THE FIRST VERSION PASSED THE IID AS THE SERVICE ID AND GOT NULL
 		// (log: 'gs=00000000'). GetSystemService takes (srvid, riid, ...) and
 		// for the graphic system those are DIFFERENT numbers - the SDK's own
 		// typedef spells it out:
@@ -2876,7 +2876,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// stable at 2 entries, 0 failures) and the CORRECT icon renders. But an
 	// UNCORRECTED copy is drawn too, alternating with ours.
 	//
-	// ⛔ WHY THE PREVIOUS WATCH MISSED IT, and the rule this encodes: every
+	// WHY THE PREVIOUS WATCH MISSED IT, and the rule this encodes: every
 	// earlier probe was capped by a LINE BUDGET, so "no lines" could mean
 	// "never happened" OR "budget spent". Both readings were available and I
 	// took the wrong one twice today. COUNTERS CANNOT SATURATE THE WAY A LINE
@@ -2903,7 +2903,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 			gW_dump, why, gW_strip, gW_stripSub, gW_class, gW_s20, gW_present);
 	}
 
-	// ⛔ THE FIRST VERSION DECLARED THIS __stdcall AND CRASHED THE GAME:
+	// THE FIRST VERSION DECLARED THIS __stdcall AND CRASHED THE GAME:
 	// ACCESS_VIOLATION at 0x0099C4A1 - PlotPresent's first real instruction -
 	// with ECX = 1. PlotPresent is a VIRTUAL: __thiscall, `this` in ECX, no
 	// stack args. An __stdcall detour looks for `this` on the stack and leaves
@@ -2966,7 +2966,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 			if (InPlazaCell(d)) { gW_strip++; }
 
 			// ---- #162 THIN-BLIT PROBE, ON THE CHANNEL THAT ACTUALLY DRAWS --
-			// ⛔ THE SAME DETECTOR WAS FIRST PUT ON BltClassThunk, AND THE
+			// THE SAME DETECTOR WAS FIRST PUT ON BltClassThunk, AND THE
 			// COMMENT AT THE TOP OF THIS FILE NAMES THAT AS THE MISTAKE:
 			// "a DIFFERENT CHANNEL from the class-wide BltClassThunk on
 			// 0x00AC1400[29]. Scoping a fix to the wrong one of those two is
@@ -3080,7 +3080,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		// 2-3 and reads twice the texture height - the two-copies artefact.
 		// The copy count is the scale ratio.
 		//
-		// ⛔ WE DO NOT UPSCALE (user order 2026-08-14): a runtime upscaler
+		// NO RUNTIME UPSCALER: a runtime upscaler
 		// would be unbounded and would end the property that every scaled
 		// pixel comes from a diffable build step. AND THIS BLT CANNOT
 		// STRETCH ANYWAY - see gBltScale below: a 2538x6102 dest changed
@@ -3130,7 +3130,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 					}
 					// Only act when the read stride OVER-READS the real cell.
 					// Never widen a read; never touch already-correct art.
-					// ⛔ srcW != texW IS LOAD-BEARING. A full-bitmap 1:1 draw has
+					// srcW != texW IS LOAD-BEARING. A full-bitmap 1:1 draw has
 					// srcW == texW, which is trivially a whole multiple of
 					// texW/4, so without this the rule fires on ordinary UI art
 					// and clips it to a quarter - the white line, shipped once
@@ -3167,7 +3167,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 						// beautiful, but it is STABLE, and stability is what the
 						// flicker and the hover-blank actually are.
 						gTalCut++;
-						// ⛔ THE FIRST PRE-FILL USED THE ORIGINAL RECTS AND THAT WAS WRONG.
+						// THE FIRST PRE-FILL USED THE ORIGINAL RECTS AND THAT WAS WRONG.
 						// Those are the very rects that over-read: at state 3 the source is
 						// (264,0,352,88), entirely outside a 176-wide texture, so the fill
 						// drew NOTHING and the backdrop vanished on hover - user-observed,
@@ -3485,7 +3485,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// ---- #162 DRAWPROBE: slot 88 (Plot) - THE CHANNEL THAT IS ACTUALLY
 	// INSTALLED. [Probe] DrawProbe=<lines>. Default OFF.
 	//
-	// ⛔ THE TWO PREVIOUS PROBES WERE ON CHANNELS THAT NEVER RAN.
+	// THE TWO PREVIOUS PROBES WERE ON CHANNELS THAT NEVER RAN.
 	//   BltClassThunk  - buffer-class slot 29. Armed and executing, but a
 	//                    3m14s city session produced under 2000 blits: the
 	//                    shared buffer class barely draws the HUD at all.
@@ -3520,7 +3520,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		// "Mayor rating is broken and the overall ratings are broken look at
 		// their formatting" / "it's only half filled".
 		//
-		// ⚠ TWO DIFFERENT WIDGETS, and the docs are explicit that they are NOT
+		// TWO DIFFERENT WIDGETS, and the docs are explicit that they are NOT
 		// the same subsystem (build_selective_safe.py:401-404). Do not treat a
 		// reading from one as evidence about the other.
 		//
@@ -3540,7 +3540,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		0x8A517556,  // HUD Mayor Rating bar (GZWinBMP, vt already patched)
 
 		// (b) THE CITY OPINION POLLS BARS - listed so they report the moment
-		//     their class is reachable, but ⛔ THEY WILL NOT REPORT YET AND THAT
+		//     their class is reachable, but THEY WILL NOT REPORT YET AND THAT
 		//     IS NOT A NULL RESULT (law 91). cSC4WinTrendBar has its OWN vtable
 		//     0x00ABA430, and it is NOT among the 8 vtables PatchFlashGuardClass
 		//     patched in the last capture - class-scoped draw hooks are
@@ -3637,7 +3637,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 					wchar_t path[MAX_PATH];
 					if (ResolveShotPath(path, MAX_PATH))
 					{
-						// ⛔ FIRST ATTEMPT READ BACK BLANK (colours=1). The
+						// FIRST ATTEMPT READ BACK BLANK (colours=1). The
 						// slot table in this file is explicit that 94
 						// GetBufferToDrawTo is [ecx+0x68] and 93 GetDrawContext
 						// is [ecx+0x6c], and it records that confusing the two
@@ -3798,7 +3798,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 			fd = raw[0xFD];
 			fe = raw[0xFE];
 			zoom = *reinterpret_cast<int32_t*>(raw + 0x104);
-			// ⛔ [+0x114] IS NOT A COM OBJECT. It is a PLAIN 3-DWORD STRUCT -
+			// [+0x114] IS NOT A COM OBJECT. It is a PLAIN 3-DWORD STRUCT -
 			// {pixel pointer, w, h} - exactly as our own fallback uses it:
 			// 0x007A7570(raw + 0x114, w, h) treats ecx as that struct, and the
 			// bake reads it as a raw base (0x7A8550: mov esi,[ebx+0x114]).
@@ -3827,7 +3827,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		// black yet the player sees colour, the pixels have to come from
 		// somewhere - this says whether the raster holds real map data,
 		// uninitialised heap, or nothing. Reads only; no calls.
-		// ⚠ SAMPLE THE MIDDLE, ON A DIAGONAL - v2.41.11 fix to my own probe.
+		// SAMPLE THE MIDDLE, ON A DIAGONAL - v2.41.11 fix to my own probe.
 		// v2.41.8 sampled p[0], p[n/4], p[n/2], p[n-1]. For a 64-wide raster
 		// n/4=1024 and n/2=2048 are EXACT MULTIPLES OF THE WIDTH, so both land
 		// on COLUMN 0: three of four samples were the border. That produced
@@ -3863,7 +3863,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		}
 
 		// ===== MMGRID: ACTUALLY LOOK AT THE BUFFER (2026-08-06) =====
-		// ⛔ THE FIVE-POINT DIAGONAL ABOVE CANNOT LOCATE A BLOCK. It samples
+		// THE FIVE-POINT DIAGONAL ABOVE CANNOT LOCATE A BLOCK. It samples
 		// (32,32),(16,16),(48,48),(16,32),(48,16) - five pixels out of 4096 -
 		// and an hour was spent theorising about a corrupt corner from those
 		// five values, twice reaching a conclusion the buffer itself refutes.
@@ -4853,7 +4853,7 @@ namespace
 	// things WORSE until that art can be doubled. They stay stock size, and
 	// stock-positioned by the game (flyouts hug their spawn button).
 	//
-	// ⚠ READ THE NAME AS "NEVER SCALED **BY THE SWEEP**" (clarified v2.39.12,
+	// READ THE NAME AS "NEVER SCALED **BY THE SWEEP**" (clarified v2.39.12,
 	// task #85; consult sites CORRECTED v2.39.13). IsNeverScaleId is
 	// consulted in exactly two places - UiSpike::ScaleOnShow (dormant at the
 	// shipped ShowHook=1 log-only default) and the city sweep's panel loop
@@ -4968,7 +4968,7 @@ namespace
 		            // correct from the data-scaled I-6a9455c9
 		0x27DF05BF, // 46x97 tiled plaque (I-6a9455c9), backing image
 		            // {46a006b0,13f15214} + a 36x41 icon inset at (5,5).
-		            // ⚠ ONLY the ...BF twin. 0x27DF05BE is NOT here on
+		            // ONLY the ...BF twin. 0x27DF05BE is NOT here on
 		            // purpose: that id is ALSO the root of the Obliterate
 		            // City confirm (I-2a41436c), which we already ship
 		            // DATA-SCALED via build_dialog_static.py:280. One id,
@@ -5149,7 +5149,7 @@ namespace
 		//     tx = anchor.L + rhu(dLeft * f)
 		//     ty = (anchor.T + anchor.H) - child.H - rhu(gapBottom * f)
 		// offX/offY are therefore 1x DESIGN units here, not f=2 screen px.
-		// ⚠ ANCHOR LIFETIME IS PART OF THE DOCK. v2.89.0 briefly anchored this
+		// ANCHOR LIFETIME IS PART OF THE DOCK. v2.89.0 briefly anchored this
 		// to 0x8A8B5B72 - correct arithmetic, wrong window. ApplyPanelDocks
 		// bails on !pAnchor->IsVisible(), and the log shows 0x8A8B5B72 opening
 		// NINETEEN SECONDS after the band:
@@ -5251,7 +5251,7 @@ namespace
 		// Landscape is open (recursive search fails otherwise = no move,
 		// fail-safe). Marker (3,183) -> R(-3,-183). Marker-predicted like
 		// Emergency was; MCAL is the correction path if it docks wrong.
-		// ⚠ v2.39.5: this is the ONE flyout still on GENERATION 1 - it opens
+		// v2.39.5: this is the ONE flyout still on GENERATION 1 - it opens
 		// through sub_7E5D80 (exe site 0x7F50A7), a byte-identical TWIN of
 		// the sub_7E5C10 funnel (latch [edi+0x204] vs [edi+0x200], ret 0x14)
 		// that we never hooked, so OnFlyoutOpened does not fire for it and it
@@ -5341,7 +5341,7 @@ namespace
 		// wanted is the root's own geometry write, and that is suppressed
 		// inside ScalePanelRoot rather than by excluding the window here.
 		//
-		// ⛔ DO NOT MOVE THIS TO kNeverScaleIds. That was tried on
+		// DO NOT MOVE THIS TO kNeverScaleIds. That was tried on
 		// 2026-08-19. The panel loop's IsNeverScaleId test does `continue`,
 		// which skips the whole ScalePanelRoot CALL - and the CHILD WALK LIVES
 		// INSIDE ScalePanelRoot. Excluding the window drops the resize we want
@@ -5434,7 +5434,7 @@ namespace
 		// resident as a direct view child from city load, pos(489,894)
 		// 532x640 vis=0 (live script = CoriBoom's 36-slot 532x640, not stock
 		// 531x406; the #44 ThirdPartyUI gate still governs which art ships).
-		// Opened by button 0xABC54125 on composite 0xE9889775. ⚠ The panel
+		// Opened by button 0xABC54125 on composite 0xE9889775. The panel
 		// carries open #58 - this changes its birth timing, so #58 must be
 		// re-measured AFTER this, never from pre-v2.42.0 captures.
 		0xABC619D2, // Building Style Control
@@ -5513,7 +5513,7 @@ namespace
 		// not assumed: root area=(18,15,481,147) = 463x132, the exact
 		// console-family footprint the builder comments describe, and like
 		// them winflag_pbuff=yes.
-		// ⚠ THE MECHANISM, STATED NO STRONGER THAN THE EVIDENCE. The task
+		// THE MECHANISM, STATED NO STRONGER THAN THE EVIDENCE. The task
 		// called this an "uninsured v2.21.0 heap-overrun shape". The ROOT
 		// half of that is REFUTED by its own sibling: 0x4BCB938A is also
 		// 463x132 and also pbuff, and it has shipped for many versions
@@ -5529,7 +5529,7 @@ namespace
 		// TOGETHER (law 43): born 2x in DATA (added to SCALED_WINDOW_IDS in
 		// build_selective_safe.py in the same change) and the runtime sweep
 		// STOPS at the root, so it is never rescaled after first paint.
-		// ⚠ INSURANCE, NOT A SIGHTING. No dump in the repo contains this id
+		// INSURANCE, NOT A SIGHTING. No dump in the repo contains this id
 		// and no session has logged it, so which vehicle/mode spawns it is
 		// still unknown - the UDVAR probe below makes it report itself the
 		// first time it ever appears. Listing it is safe under BOTH
@@ -5546,7 +5546,7 @@ namespace
 		// build_selective_safe.py); the sweep scales + anchors each root
 		// and never descends. Full static doubling broke the composition
 		// ("undocked budget window"); runtime child passes never stuck.
-		// ⚠ #102 COMMENT-ONLY CORRECTION (2026-08-03). The three labels
+		// #102 COMMENT-ONLY CORRECTION (2026-08-03). The three labels
 		// below were wrong and contradicted kAlwaysScaleCityIds above, which
 		// calls 0xAA3AC002 the "Taxes editor popup". MEMBERSHIP AND
 		// TREATMENT ARE UNCHANGED - only the names.
@@ -5586,7 +5586,7 @@ namespace
 		// caption, so the only tell is its 0x8A4C34D4 spinner defaulting to
 		// "$5,000" - suggestive, not decisive. Do not quote either name as
 		// settled until a capture or the disassembly says which it is.
-		// ⛔ THE HUD DOCK 0x0987B48F IS **NOT** A MEMBER, AND MUST NEVER BE.
+		// THE HUD DOCK 0x0987B48F IS **NOT** A MEMBER, AND MUST NEVER BE.
 		// v2.41.1 added it and BROKE THE DOCK AND EVERY FLYOUT (reported,
 		// same session, reverted in v2.41.2). Membership makes ScalePanelRoot
 		// RETURN EARLY at the dock root - and the god/mayor flyout DOCKING
@@ -5595,7 +5595,7 @@ namespace
 		// The dock's minimap is instead born 2x as a SINGLE WINDOW; see
 		// kDataScaledWindowIds below.
 	};
-	// ⛔ THERE IS NO kDataScaledWindowIds, AND THE DOCK MUST NOT GET ONE.
+	// THERE IS NO kDataScaledWindowIds, AND THE DOCK MUST NOT GET ONE.
 	// v2.41.2 added a single-window form (minimap 0x0BC3B559 born 2x in data,
 	// sweep skips just that window, recursion continues) specifically to avoid
 	// v2.41.1's flyout breakage. It fixed the flyouts and BROKE THE MINIMAP A
@@ -5750,7 +5750,7 @@ namespace
 	// Rounding-correct scaling. Truncation happens to be exact at f=2.0
 	// (bit-identical results) but drifts at non-integer factors (1.5x).
 	//
-	// ⛔ HALF-UP, NOT HALF-AWAY-FROM-ZERO. THIS IS #162, AND THE FIX WAS
+	// HALF-UP, NOT HALF-AWAY-FROM-ZERO. THIS IS #162, AND THE FIX WAS
 	// ALREADY WRITTEN AT THE TOP OF THIS FILE - IT JUST NEVER REACHED HERE.
 	//
 	// This was std::llround. llround rounds half AWAY FROM ZERO, so a span
@@ -5888,7 +5888,7 @@ namespace
 	// subtree scale simply never reaches this child. Docking design units as
 	// if they were screen units left the ring 59px low, on the WRONG BUTTON.
 	//
-	// ⛔ THE FIRST FIX FOR THIS WAS A SIZE HEURISTIC, AND THE OFFLINE GATE
+	// THE FIRST FIX FOR THIS WAS A SIZE HEURISTIC, AND THE OFFLINE GATE
 	// KILLED IT BEFORE IT SHIPPED. The idea was to use the spawn button as a
 	// ruler, since the alignment-marker rule says the marker is "sized like
 	// the spawn button". MEASURED: that premise does not hold. S&L's marker
@@ -6012,7 +6012,7 @@ namespace
 		// Let the game store its stock values first, then overwrite - the
 		// original also stores the bitmap and computes [+0xec] from it, and
 		// we must not disturb either.
-		// ⚠ TWIN GUARD - the single most important line here. vf10 is a SHARED
+		// TWIN GUARD - the single most important line here. vf10 is a SHARED
 		// class method: sub_7EAEB0 builds the NESTED sub-flyout (ours) and
 		// sub_7E7270 builds the FIRST-LEVEL flyout from the same two classes
 		// with its own copies of every constant. The first-level one is
@@ -6360,7 +6360,7 @@ namespace
 		// SetArea), not assumed. SetID(0x8A6E61E0) ran at 0x7EB11A, i.e.
 		// BEFORE this call, so the id is already readable.
 		//
-		// ⚠ THE DISASTER CONTAINER HAS NO ID AT ALL - sub_7E7270 contains no
+		// THE DISASTER CONTAINER HAS NO ID AT ALL - sub_7E7270 contains no
 		// SetID call (scanned 0x7E7270..0x7E75B0). "same
 		// class, DIFFERENT id" is wrong and would send you to build the wrong
 		// guard. For that twin the return address IS the identification.
@@ -6420,7 +6420,7 @@ namespace
 		//     (:3593), which would kill this flyout's measured ring/bar offsets.
 		if (isDisaster)
 		{
-			// ⚠ v2.39.1 - THE HALF-FIX THAT SHIPPED IN v2.39.0, AND WHY.
+			// v2.39.1 - THE HALF-FIX THAT SHIPPED IN v2.39.0, AND WHY.
 			// v2.39.0 scaled the container and the strip RECT and marked the
 			// container born. That made Classify return AlreadyScaled, so the
 			// sweep SKIPPED THE WHOLE SUBTREE - including the strip item
@@ -6430,7 +6430,7 @@ namespace
 			// v2.36.2 law, which the v2.39.0 comment quoted and then did not
 			// apply. When born-scaling takes a window off the sweep, it
 			// inherits EVERYTHING the sweep was doing for it.
-			// ⛔ DO NOT WRITE THE ITEM METRICS HERE. v2.39.1 did, and it broke
+			// DO NOT WRITE THE ITEM METRICS HERE. v2.39.1 did, and it broke
 			// ICONS GAME-WIDE (regression of the task #55/#56 fix).
 			//
 			// SlotThunk2<88> (:1924) latches its 1x base from the strip's OWN
@@ -6514,7 +6514,7 @@ namespace
 			//    the layout ever changes) it becomes a logged no-op, never a
 			//    second scaling.
 			// Kill switch: [Disaster] BornMetrics=0 (EXACT key match, law 19).
-			// ⚠ OFFSET FRAME (v2.39.8 - the read-guard caught v2.39.7's error
+			// OFFSET FRAME (v2.39.8 - the read-guard caught v2.39.7's error
 			// and printed "metrics left to Plot" instead of corrupting a
 			// field). dstrip is the OUTER strip object from SetItemMetrics
 			// (vptr at +0, cIGZWin base at +4), so its metrics are
@@ -6573,7 +6573,7 @@ namespace
 					gDisStripBase4, gDisStripBase8, gDisStripBaseC,
 					RoundHalfUp(gDisStripBase4 * gTierF),
 					RoundHalfUp(gDisStripBase8 * gTierF),
-					// ⛔ THIS LINE USED TO REPORT RoundHalfUp AND IT WAS A LIE.
+					// THIS LINE USED TO REPORT RoundHalfUp AND IT WAS A LIE.
 					// The step-extra is the ONE half-pixel in the system
 					// (5*1.5 = 7.5) and the WRITE at :6432 deliberately FLOORS
 					// it to 7 - rounding to 8 makes the denominator 74 where
@@ -6735,7 +6735,7 @@ namespace
 // pre-scale while hidden to do". Correct - and the answer is the same one as
 // for the nested container: act at the OPEN, not on the next tick.
 //
-// THE HOOK POINT IS A SINGLE FUNNEL... ⚠ CORRECTED v2.39.6: it is TWO. The
+// THE HOOK POINT IS A SINGLE FUNNEL... CORRECTED v2.39.6: it is TWO. The
 // line above originally said "seven call sites, single funnel" - an exhaustive
 // E8-rel32 scan of the exe (2026-07-31) found ELEVEN sites calling sub_7E5C10
 // (0x7EC770, 0x7EDB16, 0x7EDC12, 0x7EDC73, 0x7EF6D9, 0x7F484E, 0x7F48B2,
@@ -6879,13 +6879,13 @@ void UiSpike::InstallFlyoutOpenHook()
 // claim promotion - just earlier, so the very first sub-flyout of a city does
 // not paint 9 frames of 1x bar while it waits.
 //
-// ⚠ THE TWO HALVES ARE ONE OPERATION. [0xE0] is DUAL-USE: the hit-claim width
+// THE TWO HALVES ARE ONE OPERATION. [0xE0] is DUAL-USE: the hit-claim width
 // AND a Plot layout inset. SlotThunk<88> presents the latched 1x value to the
 // draw group and re-arms the 2x claim after. Promote [0xE0] WITHOUT installing
 // that thunk first and the game paints a SECOND orange bar (v2.11.24, user
 // confirmed). Order here is: container thunks -> claim -> strip thunks.
 //
-// ⚠ THE CRASH GUARD IS NOT OPTIONAL (law 3, v2.22.1). These hooks were
+// THE CRASH GUARD IS NOT OPTIONAL (law 3, v2.22.1). These hooks were
 // validated only on the known parent menus; when U-Drive-It -> Earned Cars
 // (an 88-WIDE strip, a foreign layout) received them the game died. Positive
 // identification only.
@@ -7130,7 +7130,7 @@ void UiSpike::EdgeProbeTick(cIGZWin* pView)
 	int n = 0;
 	int smallWins = 0;   // 16..96px square candidates anywhere under the view
 
-	// ⚠ v2.36.5 CORRECTION TO THIS PROBE'S FIRST VERSION. It walked the VIEW
+	// v2.36.5 CORRECTION TO THIS PROBE'S FIRST VERSION. It walked the VIEW
 	// only and found 2 windows; the eight-window list that motivated it came
 	// from the view dump AND the MAIN-WINDOW dump, and the two anonymous
 	// prime suspects (vt 0x00AB8CD0 / 0x00AB8F50) are not under the view. The
@@ -7766,7 +7766,7 @@ namespace
 // WM_APP experiment. It tests [+0xFE] then [+0xFD]. Setting those two bytes
 // here means the next internal message bakes the city map, during load.
 //
-// ⚠ THIS IS THE ONE THING WE RUN INSIDE PostCityInit, and that is the region
+// THIS IS THE ONE THING WE RUN INSIDE PostCityInit, and that is the region
 // carrying the measured hang. It is kept as small as it can possibly be: two
 // non-recursive hops, one first-match recursive lookup, two BYTE WRITES and
 // one InvalidateSelf. No tree walk, no geometry, no surface allocation - none
@@ -7873,7 +7873,7 @@ void UiSpike::EarlyDockTick()
 	const float f = settings.spikeScaleFactor;
 	inPass = true;   // no timer walk on a nested pump while we mutate
 	const int n = ScalePanelRoot(pDock, pView->GetW(), pView->GetH(), f);
-	// ⚠ THE HALF THAT WAS MISSING WHEN v2.41.15 CRASHED. Scaling the dock
+	// THE HALF THAT WAS MISSING WHEN v2.41.15 CRASHED. Scaling the dock
 	// self-updates the minimap's blitSize to 128 while its one-shot display
 	// surface stays 64; the next bake is then a 128 render into a 64 surface -
 	// the v2.21.0 heap overrun. Scale and recreate are ONE action. This is
@@ -9155,7 +9155,7 @@ namespace
 						// it: these bitmaps are SUPPLIED AT RUNTIME and have no
 						// .UI art entry to resize.
 						//
-						// ⛔ SLACK OF 2px, AND THAT BOUND IS THE WHOLE SAFETY.
+						// SLACK OF 2px, AND THAT BOUND IS THE WHOLE SAFETY.
 						// A genuinely 1x bitmap in a scaled window is SHORT BY
 						// HALF, and stretching that to fit is the #55 disaster
 						// (1x art blown up inside a doubled frame). This may only
@@ -9202,7 +9202,7 @@ namespace
 					//                                  its own inset, and the
 					//                                  .UI must NOT be edited
 					//
-					// ⚠ INFO level, not Debug, and its OWN budget - the existing
+					// INFO level, not Debug, and its OWN budget - the existing
 					// BMPX rows are Debug and were invisible at the player's live
 					// logLevel. An instrument nobody can read is not evidence
 					// (law 54: no log line = did not run).
@@ -9718,7 +9718,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 	const int32_t curH = pMap->GetH();
 	const int32_t want = curW < ceiling ? curW : ceiling;
 
-	// ⛔ THE LEGAL SET IS terrainDim << k FOR ANY INTEGER k - MULTIPLES **AND
+	// THE LEGAL SET IS terrainDim << k FOR ANY INTEGER k - MULTIPLES **AND
 	// DIVISORS**. This search used to be a single ascending loop:
 	//
 	//     for (int32_t s = terrainDim; s <= want; s <<= 1) { snap = s; }
@@ -9730,7 +9730,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 	// window-vs-surface mismatch this helper exists to prevent, arrived at
 	// silently instead of by crashing.
 	//
-	// ⚠ THIS IS 1.5x's PROBLEM AND IT IS STRUCTURAL. The dock recess is 64px
+	// THIS IS 1.5x's PROBLEM AND IT IS STRUCTURAL. The dock recess is 64px
 	// of design, so the slot is 64*f:
 	//     f=2.0 -> 128 : terrainDim 64 and 128 both fit; 256 divides to 128.
 	//     f=3.0 -> 192 : 64 -> 128 fits.
@@ -9742,7 +9742,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 	// So on any city bigger than small, 1.5x left the dock minimap wholly
 	// uncorrected. Reported 2026-08-06 as a corrupt dashboard map.
 	//
-	// ⚠ SAFETY PROPERTY, and the reason this is shippable without re-verifying
+	// SAFETY PROPERTY, and the reason this is shippable without re-verifying
 	// the confirmed tiers: THE NEW BRANCH ONLY RUNS WHERE THE OLD CODE DID
 	// NOTHING. If terrainDim <= want the ascending loop is byte-for-byte the
 	// old one; the descending branch is reachable only when the old loop would
@@ -9782,7 +9782,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 		who, (long)terrainDim, (long)curW, (long)curH, (long)ceiling, (long)snap,
 		terrainDim <= want ? "multiple" : "DIVISOR");
 
-	// ⚠ LEAVING THE WINDOW OVERSIZED IS NOT AN OPTION. Tried 2026-08-06: skip
+	// LEAVING THE WINDOW OVERSIZED IS NOT AN OPTION. Tried 2026-08-06: skip
 	// the resize when only a divisor fits, on the theory that slot 88's stretch
 	// blit would fill the recess from the smaller map. It does not - the log's
 	// own buffer probe says so in as many words:
@@ -9795,7 +9795,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 
 	uint8_t* raw = reinterpret_cast<uint8_t*>(pMap);
 	const int32_t blitBefore = *reinterpret_cast<int32_t*>(raw + 0xe4);
-	// ⛔ GZWinMoveTo IS A RELATIVE MOVE. MEASURED 2026-08-06, THE HARD WAY.
+	// GZWinMoveTo IS A RELATIVE MOVE. MEASURED 2026-08-06, THE HARD WAY.
 	//
 	// The name and the header (`GZWinMoveTo(int32_t x, int32_t y)`,
 	// cIGZWin.h:137) both read like an absolute placement, so this was
@@ -9807,7 +9807,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 	// BELOW the recess, over the date field - i.e. it moved BY (43,124) from
 	// (27,108). The original delta form was right all along.
 	//
-	// ⚠ THE LESSON, and it is the expensive one: a header signature is not a
+	// THE LESSON, and it is the expensive one: a header signature is not a
 	// semantic. Two readings were possible, the shipped code already encoded
 	// the correct one, and it was changed on the strength of the NAME. The
 	// after-move read-back below exists so this is never ambiguous again -
@@ -9835,7 +9835,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 		typedef void (__thiscall* RecomputeFn)(void*);
 		reinterpret_cast<RecomputeFn>(0x007A7840)(pMap);
 
-		// ⛔ MARK THE WHOLE DIRTY MASK. THE GAME'S OWN "MARK ALL" ONLY MARKS A
+		// MARK THE WHOLE DIRTY MASK. THE GAME'S OWN "MARK ALL" ONLY MARKS A
 		// 64-CELL CITY, AND WE HAND IT A BRAND-NEW RASTER.
 		//
 		// MEASURED 2026-08-06 by dumping the buffer (MMGRID), after an hour of
@@ -9864,7 +9864,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 		// bake skips unmarked tiles (0x7A8165 test -> je 0x7A85B4). What shows
 		// through is old heap, which is the red block.
 		//
-		// ⚠ MARKING MORE THAN EXISTS IS SAFE: the bake iterates tilesX/tilesY
+		// MARKING MORE THAN EXISTS IS SAFE: the bake iterates tilesX/tilesY
 		// derived from the TERRAIN dims (0x7A8010-0x7A8032), so surplus mask
 		// bits are never consulted. This is a no-op at any size the game
 		// already covered, which is why it cannot regress 2x or 3x.
@@ -10192,7 +10192,7 @@ void UiSpike::TryRecreateMinimapSurface(cIGZWin* pDock)
 	if (!pDock) { return; }
 	cIGZWin* pMM = pDock
 		? pDock->GetChildWindowFromIDRecursive(0x0BC3B559) : nullptr;
-	// ⚠ WHAT THIS CHECK CAN AND CANNOT PROVE (corrected v2.41.7 by the
+	// WHAT THIS CHECK CAN AND CANNOT PROVE (corrected v2.41.7 by the
 	// SDK-law audit, against my own v2.41.0 wording). pMM was produced by
 	// pDock's OWN recursive search, so testing "is pMM under pDock" is
 	// very nearly a tautology: it CANNOT catch the U-Drive-It twin,
@@ -10227,7 +10227,7 @@ void UiSpike::TryRecreateMinimapSurface(cIGZWin* pDock)
 	// artwork is an ART defect and gets an ART fix - see #126.
 	if (pMM && pMM->GetW() > 64) { SnapMiniMapToBake(pMM, "MINIMAP"); }
 	if (pMM) { HookMiniMapDraw(pMM, "MINIMAP"); }
-	// ⛔ THE `> 64` WAS A MAGIC LITERAL THAT EXCLUDED EXACTLY ONE TIER.
+	// THE `> 64` WAS A MAGIC LITERAL THAT EXCLUDED EXACTLY ONE TIER.
 	//
 	// This block is the v2.41.9 (#89) repair: capture the old picture, destroy
 	// and recreate the display surface, CLEAR THE RASTER, restore. Its gate
@@ -10250,7 +10250,7 @@ void UiSpike::TryRecreateMinimapSurface(cIGZWin* pDock)
 	// >= admits the snapped-to-64 case. Stock is unaffected because the whole
 	// scaling path is gated on factor > 1.01 long before here.
 	//
-	// ⚠ HONEST STATUS: this is the best-supported hypothesis, not a proof. The
+	// HONEST STATUS: this is the best-supported hypothesis, not a proof. The
 	// raster's bad region is DETERMINISTIC (byte-identical across two separate
 	// sessions), so it is not uninitialised heap - which is what this repair
 	// guards against. If the red survives, the byte dump added below names it
@@ -10598,7 +10598,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 	const int32_t screenH = pRoot->GetH();
 	const float f = settings.spikeScaleFactor;
 
-	// ⚠ DRAIN BEFORE THE WALK (v2.39.0, task #5). Born-scale records were
+	// DRAIN BEFORE THE WALK (v2.39.0, task #5). Born-scale records were
 	// drained inside ScaleGodFlyouts (:6898), which runs AFTER this walk - fine
 	// for the nested sub-flyout, because the walk skips it by id
 	// (IsSubFlyoutId). The Create Disaster container is ANONYMOUS, so nothing
@@ -10891,7 +10891,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		// drew the top-left quarter magnified - user: "a purple circle shows
 		// which should have his face but it's only showing the top left 1/4".
 		//
-		// ⭐ LAW: WHEN THE ROOT HAS NO ID, THE FIX CANNOT BE AN ID LIST. Widen
+		// LAW: WHEN THE ROOT HAS NO ID, THE FIX CANNOT BE AN ID LIST. Widen
 		// a guard that is self-limiting rather than inventing a size or
 		// position heuristic to name the unnameable.
 		gRelatchArmed = true;
@@ -11157,7 +11157,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 				// last paint of the larger area stays on screen. vt+0x170 is
 				// the game's SetDirty-AND-propagate; plain InvalidateSelf
 				// does not reach cIGZWin+0x70 on an ancestor.
-				// ⚠ DUPLICATED ON PURPOSE, FOR NOW: this block cannot simply
+				// DUPLICATED ON PURPOSE, FOR NOW: this block cannot simply
 				// call SnapMiniMapToBake because it also publishes
 				// gDvMapClampBlit, which DVPIN reads (law 43, coupled pair).
 				// Consolidating the two needs that publish threaded through
@@ -11470,7 +11470,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		cIGZWin* pUdRoot = pRoot->GetChildWindowFromIDRecursive(0x4BCB938A);
 		// #93 UDVAR: the console VARIANT 0xEC1A5CBF has never been seen live
 		// - no dump in the repo holds it - so "which vehicle spawns it" has
-		// been an open question for weeks. Rather than making the player cycle
+		// no single obvious answer. Rather than making the player cycle
 		// every vehicle type against a DPROBE band, let it report ITSELF the
 		// first time it ever exists: id, rect, parent, and whether it is a
 		// SIBLING of the dashboard or a CHILD of it (the one fact that
@@ -11521,7 +11521,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 				pUdMap->GetW(), pUdMap->GetH(), blitSize,
 				static_cast<void*>(pUdMap), ParentIdOf(pUdMap));
 
-			// CARRY-OVER (v2.41.14). ⚠ UDMAP was the ONE block with NO
+			// CARRY-OVER (v2.41.14). UDMAP was the ONE block with NO
 			// pre-clear at all, so it never even had the black floor - a fresh
 			// surface here could show uninitialised VRAM outright. It now gets
 			// both: the black floor AND the carried-over picture.
@@ -11716,7 +11716,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 				// and it HOLDS at 92x194 for the rest of the session. The
 				// geometry was never the problem.
 				//
-				// ⭐ THEY DREW 1x ANYWAY BECAUSE A GZWinBMP DRAWS dst = src
+				// THEY DREW 1x ANYWAY BECAUSE A GZWinBMP DRAWS dst = src
 				// (law 83 / the BMPX rationale at :11655) and these roots were
 				// not in this list, so the blit hook never ran on them. A
 				// window at 92x194 showing a 46x97 source is exactly the player's
@@ -11724,7 +11724,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 				// aimed at sizes and constants could not move it - the size was
 				// already right and the BLIT was not following.
 				//
-				// ⛔ THE "IT IS NOT A WINDOW" VERDICT WAS A FALSE NULL OF MY
+				// THE "IT IS NOT A WINDOW" VERDICT WAS A FALSE NULL OF MY
 				// OWN MAKING. The 37-dump test compared the last 8 dumps
 				// against the FIRST FIVE - and these windows first appear in
 				// dump #5, so the things being hunted were absorbed into the
@@ -11734,7 +11734,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 				// show/hide widget. The positive control (the picker grid
 				// appearing for one tick) proved the dump sees TRANSIENTS; it
 				// never proved it could see THIS.
-				// ⭐ LAW: A DIFF NEEDS A BASELINE TAKEN BEFORE THE THING
+				// LAW: A DIFF NEEDS A BASELINE TAKEN BEFORE THE THING
 				// EXISTS. State when the target first appears relative to the
 				// window the baseline covers, or the diff hides it.
 				0x27DF05BE, 0x27DF05BF,
@@ -11862,7 +11862,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 							fld[0x180/4], fld[0x184/4], f);
 
 						// ---- #57 PHASE 1a: the fields that decide it -----
-						// ⚠ The painters use cIGZWin+0x24 (LOCAL rect), NOT
+						// The painters use cIGZWin+0x24 (LOCAL rect), NOT
 						// +0xA8 - the line above is kept for continuity with
 						// yesterday's captures, but +0x24 is the one the
 						// paint path actually reads (sub_9B38A5:
@@ -12007,7 +12007,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 							{
 								int32_t* obj = reinterpret_cast<int32_t*>(
 									static_cast<uintptr_t>(node[2]));
-								// ⛔ LOG BEFORE THE GATE. The accept path below is
+								// LOG BEFORE THE GATE. The accept path below is
 								// an EXACT equality (obj[9] == winW2-4) plus a
 								// non-empty-width test. Any row that misses either
 								// keeps its stock geometry and is never
@@ -12039,7 +12039,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 										obj ? obj[4] : 0, obj ? obj[5] : 0,
 										obj ? obj[7] : 0, obj ? obj[9] : 0,
 										winW2, plotR, why);
-									// ⛔ DUMP THE RAW FIELDS - DO NOT GUESS AGAIN.
+									// DUMP THE RAW FIELDS - DO NOT GUESS AGAIN.
 									// The L/T/R/B above came back as garbage
 									// (11012112 / 2017652148), so obj[2..5] are
 									// NOT a rect for this class, and the object's
@@ -12150,7 +12150,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 						// so scaling them needs NO byte patch and touches no
 						// shared engine code - which matters because the
 						// paint path is shared by every chart in the game.
-						// ⚠ The plot rect is computed ONCE: sub_9B3647 only
+						// The plot rect is computed ONCE: sub_9B3647 only
 						// recomputes while [0xE0] holds the sentinel
 						// 0x7FFFFFFF, and NOTHING in the module ever re-arms
 						// it (not even SetArea). So we re-arm it ourselves,
@@ -12177,7 +12177,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 							const int32_t winH = w[0xB4/4] - w[0xAC/4];
 							const int32_t l = w[0xE0/4], t = w[0xE4/4];
 							const int32_t r = w[0xE8/4], b = w[0xEC/4];
-							// ⚠ SCALE THE MARGINS, NEVER IMPOSE A RECT. The
+							// SCALE THE MARGINS, NEVER IMPOSE A RECT. The
 							// stock line chart is plot (78,21,408,234) in a
 							// 488x256 window, but the BAR charts (Population
 							// by Age) carry NO legend and their plot
@@ -12258,14 +12258,14 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 										cvt[0x170 / 4])(c);
 								}
 							}
-							// ⛔ NO SENTINEL RE-ARM. v2.50.0 re-armed
+							// NO SENTINEL RE-ARM. v2.50.0 re-armed
 							// [0xE0] to force a re-lay and the recompute came
 							// back as the FLAT 16px DEFAULTS (16,16,960,496),
 							// discarding the very margins we want to scale.
 							// The rect is computed once and nothing re-arms
 							// it, so writing it directly STICKS - that is the
 							// whole reason this lever works.
-							// ⚠ ONCE PER OBJECT (gChartScaled): the sweep
+							// ONCE PER OBJECT (gChartScaled): the sweep
 							// runs 4x/sec and this write is RELATIVE, so
 							// repeating it would compound 45 -> 90 -> 180.
 							// (gChartScaled retired v2.53.1 - the field
@@ -12663,7 +12663,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			if (b[0]) gEdgeBltLog = atoi(b);   // = how many lines to log
 			// #162: [Probe] ThinBlt = how many thin-dst blits to log.
 			//
-			// ⛔ ARM THE HOOK HERE, OR THE PROBE IS A GUARANTEED NULL.
+			// ARM THE HOOK HERE, OR THE PROBE IS A GUARANTEED NULL.
 			// BltClassThunk lives on the buffer class vtable and is installed
 			// ONLY by EnsureBufferClassBltHook(), which is called from the
 			// disaster/emergency flyout birth path and from the container's own
@@ -13264,7 +13264,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	// individually trackable - the exact flaw that made earlier diffs discard
 	// the very windows we were hunting.
 	//
-	// ⛔ v2.69.3: the v2.69.0 `if (gProbeOn)` gate around this WALK is REVERTED
+	// v2.69.3: the v2.69.0 `if (gProbeOn)` gate around this WALK is REVERTED
 	// (found by the adversarial review, verified in source, and REACHED on this
 	// very machine - the dev ini says [Probe] Enabled=0). The gate's stated
 	// justification - "verified zero mutations inside the block; it is pure
@@ -13916,7 +13916,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					// So: container to the MODEL, ring pinned to the LEGACY.
 					const int32_t legL = natL + subDockDX;
 					const int32_t legT = natT + subDockDY;
-					// ⚠ SubMath governs Y ONLY, and X deliberately stays on the
+					// SubMath governs Y ONLY, and X deliberately stays on the
 					// measured law. The model's X is not wrong, it is a
 					// DIFFERENT convention: the 80f-wide ring sprite has the
 					// stem built into its right half, so the game's own
@@ -14403,7 +14403,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// tug-of-war tombstone left by a previous instance at this
 			// address, which otherwise pins the whole flyout at raw 1x.
 			//
-			// ⚠ THE GATE IS THE ENTIRE SAFETY ARGUMENT. Purge ONLY when the
+			// THE GATE IS THE ENTIRE SAFETY ARGUMENT. Purge ONLY when the
 			// root is not already at its recorded scaled size. After
 			// ScaleSubtree the record carries scaledW == GetW(), so the gate
 			// is false on every subsequent tick and the purge fires exactly
@@ -14449,7 +14449,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				// circle" the player reported. The rule this file already
 				// documents above the table IS the general form:
 				//     target = spawnButtonAbs - markerOffset(live)
-				// ⚠ v2.47.0 CORRECTION: this comment used to end "and the
+				// v2.47.0 CORRECTION: this comment used to end "and the
 				// marker is scaled with the subtree we just scaled, so its
 				// live L/T are already in screen units". THAT IS NOT TRUE OF
 				// EVERY FLYOUT - see MarkerIsDesignUnits(), where the log
@@ -14604,7 +14604,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			int32_t targetL = tbLiveL + ScaleRound(d.offX, f);
 			int32_t targetT = tbLiveT + ScaleRound(offY, f);
 			// #95 PHASE 1 - MARKER-DRIFT ALARM (diagnostic only, no behaviour).
-			// ⛔ The plan proposed converting THIS path to the live-marker rule
+			// The plan proposed converting THIS path to the live-marker rule
 			// too. That premise did NOT survive the source: these offsets are
 			// (flyoutStock - toolbarStock) from the vanilla capture and they
 			// select by WHICH TOOL renders (offY 40 = terrain-fx ring btn2,
@@ -14993,7 +14993,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// CalcAbsoluteArea returns 0x06752001 (a packed value, not a
 			// rect pointer). Binary-patching Plot() is the next approach.
 
-			// ⚠ COMMENT CORRECTED v2.39.5 (the old text here was the premise
+			// COMMENT CORRECTED v2.39.5 (the old text here was the premise
 			// v2.39.4 was mis-reasoned from). It said "until both vtable
 			// swaps are in, every paint stays suppressed" - FALSE since
 			// v2.11.28: the suppression is behind gFlashGuard, which
@@ -15006,7 +15006,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			if (*reinterpret_cast<void***>(c) == gVtCopy && gOrigSlot2[88])
 			{
 				AddReadyWin(c);
-				// ⚠ v2.39.4's DIAGNOSIS WAS WRONG (measured 2026-07-31,
+				// v2.39.4's DIAGNOSIS WAS WRONG (measured 2026-07-31,
 				// session 17:21): this repaint fired correctly, once, and the
 				// arrow stayed missing - even after a hover repaint with all
 				// hooks live. The arrow was never "unpainted": the container's
@@ -15022,7 +15022,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				// for the first frames painted before the sweep's vtable
 				// swaps, and it is a FORCED REPAINT, never paint suppression.
 				//
-				// ⚠ ONE-SHOT PER CONTAINER. This block runs on EVERY sweep tick
+				// ONE-SHOT PER CONTAINER. This block runs on EVERY sweep tick
 				// while the flyout is open - 809 times in the measured session -
 				// so an unlatched invalidate would repaint the flyout ~60x a
 				// second for as long as it is on screen.
@@ -15096,7 +15096,7 @@ void UiSpike::SetRequestedResIgnored(bool ignored)
 // scaling paths, so they do not run when there is no scaling to do, and the
 // mirror kept its initialiser instead.
 //
-// ⛔ DO NOT GATE THIS ON factor > 1.01. That gate is what created the bug:
+// DO NOT GATE THIS ON factor > 1.01. That gate is what created the bug:
 // "no scaling" still has a correct factor (1.0), and 97 read sites need it.
 void UiSpike::SetTierMirror(float f)
 {
@@ -15191,7 +15191,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		}
 
 		// Edge-derived, rounded (see ScaleSubtree for why).
-		// ⛔ #166: A PANEL ROOT IS SIZED AS A LENGTH, NOT BY ITS EDGES.
+		// #166: A PANEL ROOT IS SIZED AS A LENGTH, NOT BY ITS EDGES.
 		//
 		// This was `ScaleRound(l + w, f) - ScaleRound(l, f)`, and that makes a
 		// window's scaled SIZE depend on its POSITION:
@@ -15215,7 +15215,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// panel computes 353 and is exact - which is why every offline gate
 		// reported it clean and eight hypotheses died on it.
 		//
-		// ⚠ THIS IS NOT A REVERSAL OF #161, AND THE DISTINCTION IS THE WHOLE
+		// THIS IS NOT A REVERSAL OF #161, AND THE DISTINCTION IS THE WHOLE
 		// FIX. #161 made CHILDREN round in the parent's ABSOLUTE DESIGN frame,
 		// because a child's edge must land exactly on its parent's and on its
 		// siblings'. That is still right and is untouched here (ScaleSubtree,
@@ -15224,14 +15224,14 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// for a child; length-derived is correct for a root. Same file, two
 		// roles, two rules (law 86).
 		//
-		// ⚠ PROVABLE NO-OP AT AN INTEGER FACTOR, by arithmetic rather than
+		// PROVABLE NO-OP AT AN INTEGER FACTOR, by arithmetic rather than
 		// hope: when v*f is exact for all v, R(l+w)-R(l) = (l+w)f - lf = wf =
 		// R(w*f). So 2x and 3x are bit-identical and the 530 above is 0 there.
-		// ⚠ emu_panel_anchor.py models the OLD law and reproduces 39/39 panels
+		// emu_panel_anchor.py models the OLD law and reproduces 39/39 panels
 		// from the captures. After this change it must be updated in step; a
 		// mismatch against a pre-#166 capture is the change working, NOT a
 		// regression - but it must be re-baselined deliberately, not ignored.
-		// ⚠ SCOPED TO ROOTS THAT OWN A BACKGROUND SHEET. The first cut of this
+		// SCOPED TO ROOTS THAT OWN A BACKGROUND SHEET. The first cut of this
 		// applied length-sizing to EVERY panel root - 627 of them at 1.5x - to
 		// correct the 5 that actually have art whose size must match. The other
 		// 622 carry no background image at all, so moving them a pixel is an
@@ -15374,18 +15374,18 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// Refuse the write and source == window, so the blit's clamp gives
 		// m = 1 and the marker draws at exactly 32*f.
 		//
-		// ⛔ THE MOVE GOES WITH IT. newX/newY are computed FROM newW/newH,
+		// THE MOVE GOES WITH IT. newX/newY are computed FROM newW/newH,
 		// so "size only" is not separable - and the measured teleport
 		// (934,700)->(902,668) is 32px off the world point the game had just
 		// set for it. A move derived from a size we refuse to write is
 		// incoherent.
 		//
-		// ⛔ THE RECORD IS STILL MANDATORY. Without one this root stays
+		// THE RECORD IS STILL MANDATORY. Without one this root stays
 		// Fresh, and PURGE-ON-FRESH-ROOT wipes every descendant record on every
 		// pass - the count child would classify Fresh and be re-scaled by f
 		// each sweep. Runaway growth, and the least obvious trap here.
 		//
-		// ⛔ count++ MUST NOT FIRE: nothing was mutated, and the log line
+		// count++ MUST NOT FIRE: nothing was mutated, and the log line
 		// would otherwise claim a write that did not happen. The invariant gate
 		// requires mutation -> increment, never the reverse.
 		const bool artSizedRoot = (win->GetID() == 0x48E945B4 && f > 1.01f);
@@ -15431,7 +15431,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// skipped entirely, and this one still NEEDS the resize, so it takes a
 		// size-only path rather than an exclusion.
 		//
-		// ⭐ LAW: A ROOT WHOSE POSITION IS AN OUTPUT MUST NOT BE RE-ANCHORED.
+		// LAW: A ROOT WHOSE POSITION IS AN OUTPUT MUST NOT BE RE-ANCHORED.
 		// Ask whether the game rewrites left/top every frame. If it does, its
 		// position is already in final screen space and scaling it is a second
 		// application - the positional twin of the born-at-art-size trap.
@@ -15441,14 +15441,14 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// Proven call order preserved: move the root to its anchor first,
 		// then resize. The move is RELATIVE, so the delta comes from the
 		// CURRENT position even when the anchor came from the recorded one.
-		// ⛔ A SEAT-ON-RESIZE WAS HERE AND IS REMOVED. It compensated the
+		// A SEAT-ON-RESIZE WAS HERE AND IS REMOVED. It compensated the
 		// growth against the marker's bottom-centre tip, which is the right
 		// ANCHOR - but it cannot work, because the tool re-places this window
 		// EVERY FRAME: 0x0043A26A / 0x00437ED5 call GZWinMoveTo with
 		// (mouseX - [ctrl+0x48], mouseY - [ctrl+0x44]). Anything we write is
 		// overwritten on the next tick.
 		//
-		// ⭐ THE REAL CAUSE IS A LATCH (the #176 shape again). Those two
+		// THE REAL CAUSE IS A LATCH (the #176 shape again). Those two
 		// offsets are captured AT INIT, at 0x0043A82D and 0x0043A841, as
 		//     [ctrl+0x44] = win->GetH()      -> 97
 		//     [ctrl+0x48] = win->GetW() / 2  -> 23
@@ -15457,7 +15457,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// with 1x offsets, so the tip lands half a marker down-and-right of the
 		// cursor - exactly "shifted down and to the right".
 		//
-		// ⭐ LAW: BEFORE COMPENSATING A POSITION, CHECK WHO WRITES IT LAST.
+		// LAW: BEFORE COMPENSATING A POSITION, CHECK WHO WRITES IT LAST.
 		// A per-frame writer beats any one-shot correction, and the fix has to
 		// go where the STALE INPUT is produced, not where the symptom appears.
 		count++;
@@ -15615,7 +15615,7 @@ void UiSpike::IncrementalPass()
 		// {990x471, 810x483, 810x486} never collide with any 1x base
 		// (330x157 / 270x161 / 270x162), so a genuinely-1x arrival still
 		// scales.
-		// ⚠ HONEST NOTE: v2.39.11's width threshold would have SKIPPED this
+		// HONEST NOTE: v2.39.11's width threshold would have SKIPPED this
 		// case correctly (540 >= 412). The exact-match guard is stricter and
 		// therefore fails LOUDLY when its data is wrong instead of silently
 		// getting it right - which is why the data must be complete, not why
@@ -15634,7 +15634,7 @@ void UiSpike::IncrementalPass()
 			// exactly RoundHalfUp(base*f), verified at 1.5x/2x/3x). Listed
 			// here: stock 330x157, stock 270x161, save-warning mod 270x162.
 			//
-			// ⛔ #102 COMMENT-ONLY CORRECTION (2026-08-03) - THIS BLOCK USED
+			// #102 COMMENT-ONLY CORRECTION (2026-08-03) - THIS BLOCK USED
 			// TO SAY "the confirm FAMILY's three ... Both ids carry all
 			// three", i.e. it CLAIMED THE SET WAS COMPLETE. IT IS NOT.
 			// THIS EDIT CHANGES NO CODE AND NO DATA - the table still holds
@@ -15654,7 +15654,7 @@ void UiSpike::IncrementalPass()
 			// its shared root id since it was written, and STAGES it at every
 			// tier: stage 660x218, stage-15x 495x164, stage-3x 990x327. So a
 			// data-born 660x218 arrival is a thing WE ship.
-			// ✅ FIXED v2.64.0 (2026-08-03). The consequence WAS: the
+			// FIXED v2.64.0 (2026-08-03). The consequence WAS: the
 			// exact-product guard loops over bw[]/bh[], so a data-born
 			// 660x218 matched no product, dataBorn stayed false, and the
 			// block fell through to SetW/SetH -> 1320x436. That is the
@@ -15664,7 +15664,7 @@ void UiSpike::IncrementalPass()
 			// kCityDialogBases. Arithmetically safe - 330x109's products
 			// (495x164 / 660x218 / 990x327) collide with no 1x base, so no
 			// existing member can start matching the new slot.
-			// ⚠ THIS IS HARDENING, NOT A VISIBLE FIX. Per the reachability
+			// THIS IS HARDENING, NOT A VISIBLE FIX. Per the reachability
 			// note below the variant is LATENT, so there is nothing to
 			// eyes-on: correct behaviour before and after is identical on
 			// every path we have ever observed. What changes is what happens
@@ -15801,7 +15801,7 @@ void UiSpike::IncrementalPass()
 		// them and a failed data load renders these dialogs at 1x with no
 		// mechanism left to catch it.
 		//
-		// ⛔ DO NOT "fix" this by consulting IsNeverScaleId here. That would
+		// DO NOT "fix" this by consulting IsNeverScaleId here. That would
 		// make the skip ABSOLUTE and throw away the belt-and-braces, to remove
 		// a double-scale that the Fresh+width guard already removes by
 		// MEASURED STATE (law 23: a state test must test the state).
@@ -15874,7 +15874,7 @@ void UiSpike::IncrementalPass()
 			// The two MODAL confirms. The rest of this list keeps
 			// preserve-the-old-centre.
 			//
-			// ⚠ v2.38.1 CORRECTION TO v2.37.5. These were forced to the true
+			// v2.38.1 CORRECTION TO v2.37.5. These were forced to the true
 			// screen centre. THAT WAS AN OVERRIDE OF THE GAME'S OWN RULE, and
 			// it is what produced the first-open jump: SC4 places the dialog,
 			// we moved it 213px a tick later, and opens #2+ only looked right
@@ -15916,7 +15916,7 @@ void UiSpike::IncrementalPass()
 			// as before, a 2x birth is left alone. That is what makes all
 			// three states correct without a single state test.
 			//
-			// ⚠ v2.39.9 - THE SCOPING ABOVE WAS THE BUG, AND IT SHIPPED.
+			// v2.39.9 - THE SCOPING ABOVE WAS THE BUG, AND IT SHIPPED.
 			// v2.38.0 scoped this guard to the two confirm ids "on purpose
 			// (law 29 - blast radius)", documenting the Save box 0xAA8DEF97
 			// as untested - and the "Saving Disabled" box arrived data-born
@@ -15935,7 +15935,7 @@ void UiSpike::IncrementalPass()
 			// When the guard's own test is on MEASURED STATE rather than
 			// identity, narrowing it by id adds risk instead of removing it.
 			//
-			// ⚠ v2.39.13 - AND A THRESHOLD IS THE WRONG SHAPE OF STATE TEST.
+			// v2.39.13 - AND A THRESHOLD IS THE WRONG SHAPE OF STATE TEST.
 			// The #85 mapping proved no width threshold can work for the Save
 			// box: its 1x candidate set {300 stock, 500 CAM} OVERLAPS its
 			// scaled set {450 stock-1.5x, 600 stock-2x}. The v2.39.9
@@ -15952,7 +15952,7 @@ void UiSpike::IncrementalPass()
 			// one of our product sizes would be wrongly skipped - that case
 			// is undecidable by size alone and was equally wrong before.
 			//
-			// ⚠ v2.39.11 - AND THE WIDTH TEST ALONE IS NOT "ARRIVED SCALED".
+			// v2.39.11 - AND THE WIDTH TEST ALONE IS NOT "ARRIVED SCALED".
 			// v2.39.9 fixed the 4x (confirmed on screen) but a 3-lens adversarial
 			// review caught what the eyes-on could not see: `w >= designW*5/4`
 			// is ALSO true of a window WE scaled on an earlier sweep. From the
@@ -16114,7 +16114,7 @@ void UiSpike::IncrementalPass()
 				// v2.37.3 THE CREEP FIX (task #2, measured). The quit / exit-to-region
 				// confirm is re-opened carrying its PREVIOUS POSITION while its SIZE is
 				// back at stock (270x162), so we re-scale it - and
-				// ⚠ CORRECTION (v2.38.0, measured): "RE-OPENED on the same window
+				// CORRECTION (v2.38.0, measured): "RE-OPENED on the same window
 				// object" - the original wording here - is WRONG. MWKID at
 				// 13:49:31.898 lists pMainWindow's children while the dialog is
 				// closed and 0xAA921F4F is NOT among them, so it is not simply
@@ -16453,7 +16453,7 @@ void UiSpike::IncrementalPass()
 				const int32_t comboDy =
 					RoundHalfUp(settings.spikeScaleFactor)
 					- static_cast<int32_t>(std::floor(settings.spikeScaleFactor));
-				// ⚠ COMPOUNDING GUARDRAIL (review 2026-08-17, finding 3): the
+				// COMPOUNDING GUARDRAIL (review 2026-08-17, finding 3): the
 				// dy is RELATIVE and its idempotence is borrowed from the
 				// width gate - safe only while nothing restores W to 120
 				// without also restoring T. The master column pin 15 lines
@@ -17052,7 +17052,7 @@ namespace
 {
 	// #131 PROBE (v2.78.1). The REGIONCAM byte patch TOOK - its log line
 	// prints `0.2500 -> 0.7500` - and the region did not move on screen, so
-	// the open question is no longer "is the value right" but "is this the
+	// the question is no longer "is the value right" but "is this the
 	// camera that draws the slab, and does our value survive to draw time".
 	// Reasoning further from the disassembly would be guessing; this reads
 	// the live object instead.
@@ -17414,13 +17414,13 @@ namespace
 	// follows, because everything downstream reads the buffer.
 	//
 	// WHY NOT A DETOUR ON sub_7B3300: it takes its source in EAX with an
-	// unverified stack cleanup, so hooking it needs naked asm built on a
+	// unread stack cleanup, so hooking it needs naked asm built on a
 	// guess. This runs in our own region tick in plain C++ and SELF-GATES ON
 	// THE DEFECT (law 56) - it acts only when the composite is not already
 	// the size we want, so a re-run by the game is simply re-fixed on the
 	// next tick and our own work is never redone.
 	//
-	// ⛔ CORRECTED v2.83.1. This block used to state that [item+0x1C] and
+	// CORRECTED v2.83.1. This block used to state that [item+0x1C] and
 	// [item+0x2C] "are both cIGZBuffer, vtable 0x00ADB418, verified on BOTH
 	// before any write". THAT IS FALSE AND WAS NEVER TRUE. The region tile
 	// buffers carry vtable **0x00AC1400** - measured on all nine items in
@@ -17453,7 +17453,7 @@ namespace
 	//   vt[9]  +0x24  Width   vt[10] +0x28  Height
 	//   vt[34] +0x88  GetBits vt[35] +0x8C  GetStride
 	//
-	// ⛔ v2.79.x called Init with THREE args plus a pointer to a {9,0x20} pair.
+	// v2.79.x called Init with THREE args plus a pointer to a {9,0x20} pair.
 	// The real function is __thiscall with FOUR dword args and cleans 0x10 -
 	// so every call popped 4 bytes more than we pushed. Nine per tick, and it
 	// never crashed only because Init bailed at its first instruction.
@@ -17606,7 +17606,7 @@ namespace
 // immediately; anything the game rebuilds afterwards lands at the new factor
 // because the hook's factor moved too. Both halves, always - law 43.
 //
-// ⛔ ROTATION IS NOT OFFERED and must not be faked. The tiles are thumbnails
+// ROTATION IS NOT OFFERED and must not be faked. The tiles are thumbnails
 // baked at a fixed angle when each city was last SAVED; rotating the region
 // would require re-rendering every city, which only the city view can do at
 // save time. A button that cannot work is worse than no button.
@@ -17614,7 +17614,7 @@ void UiSpike::RegionZoomStep(int dir)
 {
 	if (dir == 0 || settings.spikeRegionZoomLevels <= 0) { return; }
 
-	// ⚠ THE WHEEL ONLY RECORDS INTENT. Applying a zoom rebuilds 18 pixel
+	// THE WHEEL ONLY RECORDS INTENT. Applying a zoom rebuilds 18 pixel
 	// buffers (9 tiles x source + composite) with Shutdown/Init/resample,
 	// synchronously. Doing that per notch FROZE THE GAME when the player
 	// scrolled fast (2026-08-05) - every queued notch paid the full cost.
@@ -17835,7 +17835,7 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 		// Region screen gone (city entered) - reset so the next return to
 		// the region re-stabilizes before scaling.
 		//
-		// CORRECTED 2026-08-04: this used to claim "scaleMap keeps its
+		// this used to claim "scaleMap keeps its
 		// records, so persistent region UI is NOT re-scaled on return."
 		// MEASURED FALSE - nothing in the region host subtree persists. All
 		// nine panels re-scale from DESIGN geometry at boot-equal descendant
@@ -17932,7 +17932,7 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 	// spreads them apart with gaps, which is worse than the original defect.
 	// Self-gates on the composite's size, so it is idempotent and re-fixes
 	// any tile the game rebuilds.
-	// ⛔ #131: there is deliberately NO per-tick tile pass here. v2.80.0 had
+	// #131: there is deliberately NO per-tick tile pass here. v2.80.0 had
 	// one; it resized buffers the game OWNS and the game restored them every
 	// frame (counter 9/18/27/36, unbounded) while the click mask went stale
 	// and city tiles became unclickable. The growth now happens inside the
@@ -18078,7 +18078,7 @@ void UiSpike::DumpTree(cIGZWin* win, int depth, int* totalCount)
 
 	// Visibility annotation. IsVisible() and GetFlag() are single-name
 	// virtuals (trustworthy slots per the overload-pair rule), but still
-	// unverified on this binary - probe once with the log-before-call guard.
+	// not present in this binary's map - probe once with the log-before-call guard.
 	int visible = -1;
 	int enabled = -1;
 	if (visibilityProbeOk)
@@ -18132,12 +18132,12 @@ void UiSpike::DumpTree(cIGZWin* win, int depth, int* totalCount)
 // is the staged one, the guard skips, and the game's own SetImage latches
 // correctly against the enlarged window.
 //
-// ⚠ DELIBERATELY TIER-GENERAL - this is a runtime ordering fix, not art
+// DELIBERATELY TIER-GENERAL - this is a runtime ordering fix, not art
 // maths; the same stale latch fires at 2x/3x whenever a session gets no
 // post-sweep rating tick, so gating it to fractional factors would re-ship
 // the historical 2x half-bar. There is no arithmetic of ours in the path:
 // the values written are exactly what the game's next SetImage would write.
-// ⚠ ADVERSARIAL REVIEW 2026-08-16 NARROWED THE SCOPE, and the reasons are
+// ADVERSARIAL REVIEW 2026-08-16 NARROWED THE SCOPE, and the reasons are
 // load-bearing:
 //   * `crop == (0,0,oldW,oldH)` alone is NOT unique to the latch - 577 of 877
 //     authored .UI imagerects are full-area-at-origin, and 34 of those are the
@@ -18329,7 +18329,7 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		// 526 - exactly the parent's bottom. Siblings still abut, because they
 		// all share pAbs.
 		//
-		// ⚠ NO-OP AT AN INTEGER FACTOR BY CONSTRUCTION: ScaleRound is exact
+		// NO-OP AT AN INTEGER FACTOR BY CONSTRUCTION: ScaleRound is exact
 		// there, so R(a+b) - R(a) == R(b) for every a. 2x and 3x cannot move.
 		// Callers that pass no origin get pAbs = 0, which is the identity
 		// R(0+t) - R(0) == R(t) - i.e. exactly the previous behaviour.
@@ -18341,7 +18341,7 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		const int32_t baseT = ScaleRound(pAbsT, f);
 		const int32_t newL = ScaleRound(aL, f) - baseL;
 		const int32_t newT = ScaleRound(aT, f) - baseT;
-		// ⛔ #167: A STATE-STRIP BUTTON IS SIZED AS A LENGTH, NOT BY ITS EDGES.
+		// #167: A STATE-STRIP BUTTON IS SIZED AS A LENGTH, NOT BY ITS EDGES.
 		//
 		// MEASURED by DRAWPROBE (slot 88, the paint entry point) in a live
 		// 1.5x city session, and this is the first time these numbers have ever
@@ -18364,13 +18364,13 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		// Keying on the class is therefore derived from measurement and cannot
 		// rot the way a hand-list does (law 94).
 		//
-		// ⚠ THIS DOES NOT REVERSE #161. #161 governs a child's POSITION - newL
+		// THIS DOES NOT REVERSE #161. #161 governs a child's POSITION - newL
 		// and newT above still round in the parent's absolute design frame, so
 		// edges still land on their parent's and their siblings'. Only the
 		// EXTENT changes, and only for a window whose art cell must fit inside
 		// it. Position edge-derived, size length-derived.
 		//
-		// ⚠ PROVABLE NO-OP AT AN INTEGER FACTOR: when v*f is exact for all v,
+		// PROVABLE NO-OP AT AN INTEGER FACTOR: when v*f is exact for all v,
 		// R(a+w)-R(a) = wf = R(w*f) identically, so 2x and 3x cannot move.
 		bool stripBtnClass = false;
 		__try
@@ -18397,14 +18397,14 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		// one of five buttons at an odd l) and on the god-mode Day/Night sun
 		// and moon (all three at l=79).
 		//
-		// ⛔ WHY THE SIZE AND NOT THE POSITION. The first repair moved such
+		// WHY THE SIZE AND NOT THE POSITION. The first repair moved such
 		// buttons onto an even edge, in the .UI, at build time. It fixed the
 		// reported cases and SHIPPED A WORSE BUG: a nudge is up to 2px at 1.5x,
 		// and in the densest grid in the game ("Select A My Sim", 21 faces) the
 		// whole grid visibly slid left inside its own frame. Reverted the same
 		// day. Changing the WIDTH moves nothing and is bounded by one pixel.
 		//
-		// ⛔ WHY LEAVES ONLY. Edge-derived rounding exists so that abutting
+		// WHY LEAVES ONLY. Edge-derived rounding exists so that abutting
 		// pieces stay abutting - #143's white seams are what happens when they
 		// do not. A window WITH CHILDREN is a panel: it tiles with its
 		// neighbours and its edges are load-bearing. A LEAF is a discrete icon;
@@ -18412,7 +18412,7 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		// while a one-pixel art mismatch is not. Containers keep edge-derived
 		// rounding untouched, so the seams cannot come back.
 		//
-		// ⚠ NO-OP AT AN INTEGER FACTOR BY CONSTRUCTION: ScaleRound(l*2) is
+		// NO-OP AT AN INTEGER FACTOR BY CONSTRUCTION: ScaleRound(l*2) is
 		// exact for every l, so edge-derived and size-derived already agree.
 		// 2x and 3x are unaffected - the branch cannot fire there.
 		if (win->GetChildCount() == 0)
@@ -18705,7 +18705,7 @@ namespace
 	const char* const kSelLabels[] = { "Auto", "1x", "1.5x", "2x", "3x" };
 	const int   kSelCount =
 		static_cast<int>(sizeof(kSelFactors) / sizeof(kSelFactors[0]));
-	// ⛔ THE "needs WxH" NUMBERS ARE READ FROM ScaleTier's table, never a
+	// THE "needs WxH" NUMBERS ARE READ FROM ScaleTier's table, never a
 	// second copy of the arithmetic - the caption is a promise to the
 	// player, and the boot path enforces the table (law: two copies of a
 	// rule are two rules).
@@ -18736,7 +18736,7 @@ namespace
 	// the GAME caused, and the 10s net guarantees it cannot trap the player.
 	const uint32_t kSelNoticeId  = 0x2A57CB83;
 
-	// ⭐ THREE MODES, ALPHABETICAL, AND NAMED - not positional.
+	// THREE MODES, ALPHABETICAL, AND NAMED - not positional.
 	//   0 Borderless  a window covering the screen. NO display-mode change,
 	//                 so nothing needs restoring on exit and alt-tab is
 	//                 instant. The game's own ini says WindowWidth/Height
@@ -18769,7 +18769,7 @@ namespace
 	// EnumDisplaySettingsW costs 3,264ms on this machine (dgVoodoo sits
 	// between us and the driver) - measured by the v3.13.2 instrument, all
 	// of it on the first click. The warm thread kicks it at DLL load
-	// (user direction 2026-08-20); the tri-state handshake keeps the UI
+	//; the tri-state handshake keeps the UI
 	// thread safe at any moment.
 	SelRes gSelModeCache[64];
 	int  gSelModeCacheN = 0;
@@ -18901,7 +18901,7 @@ namespace
 	}
 
 	// ---- VISIT FACTS, READ ONCE PER OPEN ----------------------------------
-	// ⭐ SC4GraphicsOptions.ini belongs to a THIRD-PARTY DLL (SC4Graphics-
+	// SC4GraphicsOptions.ini belongs to a THIRD-PARTY DLL (SC4Graphics-
 	// Options.dll, a community plugin); dgVoodoo is a third component again.
 	// On an install WITHOUT that DLL, WindowMode and WindowWidth/Height are
 	// read by nobody - so the dll's presence is a visit fact and both
@@ -18956,7 +18956,7 @@ namespace
 	}
 
 	// ---- THE WRITERS (close path only - the contract gate asserts it) ----
-	// ⛔ NOT WritePrivateProfileString. dgVoodoo.conf is ini-SHAPED but its
+	// NOT WritePrivateProfileString. dgVoodoo.conf is ini-SHAPED but its
 	// keys are column-aligned ("FullScreenMode   = true") and the file
 	// carries comments the wrapper's own tooling expects. A profile write
 	// would reformat the line and could reorder the section. This rewrites
@@ -19282,7 +19282,7 @@ namespace
 		bool usable[kSelCount];
 		for (int k = 0; k < kSelCount; k++)
 		{
-			// ⭐ PACKAGE FIRST, THEN FIT - offering a tier whose art is not
+			// PACKAGE FIRST, THEN FIT - offering a tier whose art is not
 			// installed makes the escape hatch WRITE THE TRAP (the boot
 			// validator bounces it back to Auto). Same predicate the boot
 			// path uses, so the selector and the validator never disagree.
@@ -19664,7 +19664,7 @@ namespace
 		SelIniPath(ini, MAX_PATH);
 		if (ini[0] == 0) { return; }
 
-		// ⭐ ScaleAll IS WRITTEN TOO, AND THAT CLOSES THE WORST TRAP FOUND.
+		// ScaleAll IS WRITTEN TOO, AND THAT CLOSES THE WORST TRAP FOUND.
 		// The art and font layer is armed from the FACTOR, while every
 		// geometry consumer is gated on ScaleAll - so with ScaleAll=0 every
 		// choice made here was committed and then silently voided at the
@@ -19970,7 +19970,7 @@ namespace
 	void SelOnClose(cIGZWin* gfxDlg)
 	{
 		PerfProbe::Scope perf_("sel.close");
-		// ⛔ LIVENESS-GUARDED (v3.14.1, after a crash). The close re-read used
+		// LIVENESS-GUARDED (v3.14.1, after a crash). The close re-read used
 		// to run against gSelDlgLast unconditionally, on the strength of "the
 		// windows still exist at this point - hidden, not destroyed". That
 		// held for every main-menu close ever measured, but with a city
@@ -20067,7 +20067,7 @@ namespace
 			"staged scale=%d mode=%d res=%d",
 			btn, gSelState.sScale, gSelState.sMode, gSelState.sRes);
 
-		// ⭐ ACCEPT IS THE ONLY WAY OUT: Cancel and Default Settings ship
+		// ACCEPT IS THE ONLY WAY OUT: Cancel and Default Settings ship
 		// DISABLED (build_dialog_static DISABLED_BTNS), so a dialog close IS
 		// the commit. SCALE: written only if it changed against our ini.
 		int iniRow = 0;
@@ -20313,12 +20313,12 @@ void UiSpike::ServiceScaleSelector()
 	cIGZWin* pMainWindow = pSC4App->GetMainWindow();
 	if (!pMainWindow) { return; }
 
-	// ⛔ THIS RUNS BEFORE THE DIALOG GATE, AND THAT IS THE POINT.
+	// THIS RUNS BEFORE THE DIALOG GATE, AND THAT IS THE POINT.
 	// A safety net that needs the player to go looking for the problem is
 	// not a safety net. It needs nothing from the dialog: pMainWindow is
 	// the window whose real size it measures.
 	// ---- 0. THE RESOLUTION THE GAME ACTUALLY LAID OUT AT -----------------
-	// ⭐ THE TIER IS DECIDED FROM AN INFERENCE; THIS IS THE MEASUREMENT.
+	// THE TIER IS DECIDED FROM AN INFERENCE; THIS IS THE MEASUREMENT.
 	// At PreAppInit there is no window yet, so the director must PREDICT the
 	// render size from two SC4GraphicsOptions.ini keys plus a rule about
 	// what the wrapper does with them. That rule is right for this machine

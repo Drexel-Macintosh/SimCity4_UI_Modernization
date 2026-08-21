@@ -1,6 +1,6 @@
 r"""gate_tiled_seam.py - WHERE THE TILE BOUNDARY LANDS (#160).
 
-⛔ WHY THIS EXISTS, AND WHAT EVERY OTHER GATE IN THIS FOLDER WAS DOING INSTEAD.
+WHY THIS EXISTS, AND WHAT EVERY OTHER GATE IN THIS FOLDER WAS DOING INSTEAD.
 
 `gate_art_vs_window.py:195` reads, in full:
 
@@ -62,7 +62,7 @@ THREE PASS/FAIL METRICS, and one CHARACTERISATION that is deliberately not one:
                     failure would condemn the best possible build, which is a
                     broken model rather than a finding (law 88).
 
-⚠ A METRIC THIS GATE HAD AND THREW AWAY. Its first revision carried a
+A METRIC THIS GATE HAD AND THREW AWAY. Its first revision carried a
 "last-tile phase" check comparing `lastTile(winF, artF)` against
 `R(lastTile(win1x, art1x), f)`. It fired 10 times at 1.5x and zero times at 2x
 and 3x, which LOOKS like a defect metric passing its control. It was measuring
@@ -95,7 +95,7 @@ THE CONTROLS - and this gate is only worth reading because of them
              POSITIVE CONTROL AND IT IS MANDATORY BEFORE QUOTING A CLEAN RESULT.
 
 ────────────────────────────────────────────────────────────────────────────────
-⚠ ONE NUMBER IN #160'S WRITE-UP DOES NOT SURVIVE THIS MODEL, AND IT MATTERS
+ONE NUMBER IN #160'S WRITE-UP DOES NOT SURVIVE THIS MODEL, AND IT MATTERS
 
 `_tests\REGRESSION.md` #160 records the 1.5x window of the god toolbar strip as
 **527**, i.e. `R(351,1.5)`. That is the SIZE-DERIVED answer. The strip's `.UI`
@@ -177,7 +177,7 @@ for _f, _d, _div in TIERS:
     _idx = art_index(_d)
     ART[_f] = {k: (w // _div, h // _div) for k, (w, h) in _idx.items()}
 
-# ⛔ A SHEET IS ONLY COMPARED IF EVERY TIER CAN PRICE IT. gate_art_vs_window.py
+# A SHEET IS ONLY COMPARED IF EVERY TIER CAN PRICE IT. gate_art_vs_window.py
 # paid for this once: deriving 1x by halving inside each tier's own pass dropped
 # odd-sized (LEFT1X) sheets out of the f=1 scan while keeping them in the f=2
 # scan, and 32 phantom "new at f=2" shortfalls appeared - the control failing
@@ -210,7 +210,7 @@ def tiled_nodes(text):
     as a button or a 9-slice), so a node that literally says `blttype=tiled` is
     a tiled blit whatever the list decided about the sheet.
 
-    ⛔ is_leaf DECIDES WHICH SIZING RULE APPLIES (#148) and is therefore
+    is_leaf DECIDES WHICH SIZING RULE APPLIES (#148) and is therefore
     load-bearing, not decoration. A node is a leaf iff no node follows it at a
     greater `<CHILDREN>` depth - the static analogue of the DLL's
     `GetChildCount() == 0`.
@@ -248,7 +248,7 @@ def art_for(key, f, pre160):
 FAIL_METRICS = ("T2", "T4", "T5")
 
 #: How many DISTINCT window shapes each tiled sheet is bound to.
-#: ⛔ THIS IS THE REASON T5 IS HARD TO CURE AND THE GATE SAYS SO. The offline
+#: THIS IS THE REASON T5 IS HARD TO CURE AND THE GATE SAYS SO. The offline
 #: art pipeline sizes a sheet once, position-independently, as `R(w1x, f)`. A
 #: CONTAINER's window is edge-derived, so its extent depends on WHERE it sits.
 #: For a sheet bound to exactly one window the two can be made to agree; for a
@@ -260,7 +260,7 @@ BINDINGS = {}
 def scan(f, pre160=False, ui_filter=None):
     """-> (checked, findings, drift) ; findings are FAILURES, drift is T1.
 
-    ⛔ FINDINGS ARE KEYED BY (file, node, metric, AXIS), not by node. The
+    FINDINGS ARE KEYED BY (file, node, metric, AXIS), not by node. The
     sibling gates subtract their stock baseline per NODE, which is right for
     them and would be wrong here: sixteen of these sheets are already wider or
     taller than their window AT 1x (stock ships a 74px sheet in a 73px window),
@@ -416,7 +416,7 @@ def main():
             out("          %s"
                 % "  ".join("%s=%d" % (m, c[m]) for m in FAIL_METRICS if c[m]))
 
-    # ⛔ THE DRIFT CONTROL IS SEPARATE AND JUST AS HARD. At an integer factor
+    # THE DRIFT CONTROL IS SEPARATE AND JUST AS HARD. At an integer factor
     # artF == art1*f exactly and k*art1*f is already whole, so NO boundary can
     # move. A nonzero here is arithmetically impossible and condemns the model.
     for f in (2.0, 3.0):
@@ -464,7 +464,7 @@ def main():
              "stock (f=1) findings - NOT ours, subtracted from every row:")
 
     if pre160:
-        # ⛔ THE POSITIVE CONTROL. The pre-#160 sizing MUST resurrect the defect,
+        # THE POSITIVE CONTROL. The pre-#160 sizing MUST resurrect the defect,
         # on the sheet the USER named, via the metric that describes it (T4).
         god = SR.tgi_key("46a006b0", "14415876")
         hit = [k for k in new15

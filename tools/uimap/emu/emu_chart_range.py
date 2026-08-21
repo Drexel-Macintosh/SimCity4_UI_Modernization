@@ -106,7 +106,7 @@ SEED_NEG_FLT_MAX = 0x00ADDE24   # the float the max-scan itself fld's
 SEED_POS_FLT_MAX = 0x00ADDE28   # the float the min-scan itself fld's
 
 # instrumentation points INSIDE the real function (read-only hooks, no state
-# is changed): they let us read what the function computed, not what we think
+# is changed): they report what the function computed, not what a reader assumes
 # it computed.
 IP_AFTER_IDIV = 0x009B5EC9   # eax = series count, straight out of the idiv
 IP_ELEM_FLD   = 0x009B5EE4   # edx = address of the element about to be read

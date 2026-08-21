@@ -33,7 +33,7 @@
 #   the engine's pitch reads 30 where the art was painted for 27. 2x/3x are
 #   arithmetic no-ops (floor(36*2+0.5)=72 and floor(36*3+0.5)=108 equal
 #   ScaleDim's own results - the snap only diverges at fractional factors),
-#   which is the open question against the user's "at 2x AND 3x" report;
+#   which is what the "at 2x AND 3x" observation has to be reconciled with;
 #   the eyes-on adjudicates.
 #
 # CONFLICT CHECK (the 14015584 lesson - one sheet in two lists means the

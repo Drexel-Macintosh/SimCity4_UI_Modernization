@@ -46,7 +46,7 @@ sys.path.insert(0, os.path.dirname(_HERE))          # tools\uimap (common.py)
 
 import common                                        # noqa: E402
 
-# ⚠ RE-PINNED 2026-08-05 (was 1189720d5e15b0e1). The game was wiped and
+# RE-PINNED 2026-08-05 (was 1189720d5e15b0e1). The game was wiped and
 # reinstalled from Steam, and the new exe is a DIFFERENT binary of the same
 # size (7,876,608) - so the build this gate was originally derived from no
 # longer exists on disk and cannot be diffed against.

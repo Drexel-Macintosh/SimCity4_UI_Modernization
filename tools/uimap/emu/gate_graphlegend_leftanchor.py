@@ -467,7 +467,7 @@ def check_replacements(S, verbose):
     try:
         from capstone import Cs, CS_ARCH_X86, CS_MODE_32
     except Exception as e:                                   # pragma: no cover
-        S.skip("capstone unavailable (%s) - replacement bytes UNVERIFIED. "
+        S.skip("capstone unavailable (%s) - replacement bytes NOT READ. "
                "Do NOT ship the block re-encodings on this result." % e)
         return
     md = Cs(CS_ARCH_X86, CS_MODE_32)

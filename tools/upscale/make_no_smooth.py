@@ -1,7 +1,7 @@
 r"""DERIVE `no-smooth.txt`: sheets whose EXACT PIXEL EDGES are measured by a
 downstream builder, and which therefore must keep NEAREST-NEIGHBOUR.
 
-⛔ WHY THIS EXISTS (#175, 2026-08-16). The smooth resample was switched on for
+WHY THIS EXISTS (#175, 2026-08-16). The smooth resample was switched on for
 every sheet with no colour key, and `build_selective_safe.py` refused the build:
 
     FATAL seat 0x0A15C7D8: aperture 71x77 != face 72x78
@@ -14,7 +14,7 @@ have been seated wrong. The guard did exactly its job and stopped the build.
 
 So: art that is DRAWN can be smoothed; art that is MEASURED cannot.
 
-⚠ DERIVED, NOT HAND-WRITTEN (law 94). The list is generated from
+DERIVED, NOT HAND-WRITTEN (law 94). The list is generated from
 `ADVISOR_FACE_SEATS` in `build_selective_safe.py`, so if a seat is added or a
 frame's TGI changes, this list follows. A hand-list would silently rot and the
 failure mode is seven faces seated one pixel off - which is exactly the class of
@@ -44,7 +44,7 @@ ROW = re.compile(r"\(\s*0x([0-9A-Fa-f]{8})\s*,\s*0x([0-9A-Fa-f]{8})\s*,"
 # ---------------------------------------------------------------------------
 # ART THAT IS READ AS DATA, NOT DRAWN AS A PICTURE.
 #
-# ⛔ THE RULE, and it is the whole point of this file: a smooth resample is safe
+# THE RULE, and it is the whole point of this file: a smooth resample is safe
 # for art the engine BLITS and unsafe for art anything SAMPLES or MEASURES.
 # Interpolation changes the value returned at a coordinate, and these sheets are
 # consulted for values, not shown to the player.
@@ -70,9 +70,9 @@ ROW = re.compile(r"\(\s*0x([0-9A-Fa-f]{8})\s*,\s*0x([0-9A-Fa-f]{8})\s*,"
 # to derive them from - that is exactly why they were missed. Provenance is
 # tools\research\SC4-UI-ENGINE.md, widget catalogue, cSC4WinTrendBar row.
 #
-# ⚠ ADDING HERE IS CHEAP AND REMOVING IS EXPENSIVE. A sheet that stays NEAREST
+# ADDING HERE IS CHEAP AND REMOVING IS EXPENSIVE. A sheet that stays NEAREST
 # merely keeps today's look; a sampled sheet that gets smoothed returns wrong
-# values and the failure is silent. When unsure, list it.
+# values and the failure is silent. List it whenever the answer is not certain.
 DATA_ART = [
     (0x46A006B0, 0x14015580),   # cSC4WinTrendBar green->red lookup gradient
     (0x46A006B0, 0x14015584),   # cSC4WinTrendBar marker strip (keyed anyway)

@@ -1,6 +1,6 @@
 r"""RENDER a flyout offline, from the SHIPPED art, and LOOK AT IT.
 
-⛔ WHY THIS EXISTS. Every other gate in this directory is arithmetic - the
+WHY THIS EXISTS. Every other gate in this directory is arithmetic - the
 README says so itself: "IT NEVER LOOKS AT A PIXEL... 'the model passes' and
 'the screen is right' are different claims." That gap cost nine failed fixes on
 the 1.5x Day/Night trailing-edge lines, because every theory was checked against
@@ -196,7 +196,7 @@ def render(script, tier, rule, states, out):
         key_out(cell)
         canvas.alpha_composite(cell, (20 + cl, 20 + ct))
         # window box, so a size disagreement is VISIBLE
-        # ⛔ CLAMP BOTH ENDS, NOT JUST THE TOP-LEFT. `max(0, ct)` guarded the top
+        # CLAMP BOTH ENDS, NOT JUST THE TOP-LEFT. `max(0, ct)` guarded the top
         # edge but `min(H-1, cb-1)` can still go NEGATIVE for a window that sits
         # entirely above/left of the frame origin, and PIL then raises
         # IndexError. MEASURED 2026-08-16: this crashed the compositor on the

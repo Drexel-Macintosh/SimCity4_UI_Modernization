@@ -46,7 +46,7 @@ namespace
 	// before anything downstream can see it. USER-REPORTED: "look how it's
 	// cutoff when placing an object ... the display box is too small".
 	//
-	// ⛔ THE WINDOW IS NOT THE LEVER, THE BUFFER IS. The readout is a GZWinBMP
+	// THE WINDOW IS NOT THE LEVER, THE BUFFER IS. The readout is a GZWinBMP
 	// (vt 0x00ADF6A0) parented straight to the 3D view, and GZWinBMP is
 	// dst-follows-src: its draw computes dst from the SOURCE BITMAP and never
 	// reads the window rect (BLIT-BEHAVIOUR.md). The 128x32 WINDOW is a
@@ -70,7 +70,7 @@ namespace
 	//   0x7EEF54  68 80 00 00 00     push 128    <- width
 	//   0x7EEF59  FF 50 0C           call [eax+0xC] = cIGZBuffer::Init
 	//
-	// ⚠ THE HEIGHT SITE IS A 2-BYTE push imm8 AND CANNOT BE WIDENED IN PLACE.
+	// THE HEIGHT SITE IS A 2-BYTE push imm8 AND CANNOT BE WIDENED IN PLACE.
 	// 32*f must stay <= 0x7F or the patch is REFUSED, never truncated: at the
 	// shipped tiers 32*3 = 96 fits, but a hypothetical 4x would need 128, which
 	// is not encodable here. This is #136's lesson pointed the other way -
@@ -107,7 +107,7 @@ namespace
 	// x = +54, clean. Scaled the anchor is 124*f: 248 in a 256 buffer, 186 in
 	// 192, 372 in 384 - each keeping the same 4*f inset.
 	//
-	// ⛔ WHY A TRAMPOLINE AND NOT AN IMMEDIATE. `83 C3 7C` is `add r/m32, imm8`
+	// WHY A TRAMPOLINE AND NOT AN IMMEDIATE. `83 C3 7C` is `add r/m32, imm8`
 	// in THREE bytes; 186/248/372 all exceed the signed imm8 range and the
 	// imm32 form needs six. Neighbouring instructions leave no slack either
 	// (7 bytes available, 10 required). Unlike #136 there is nothing to widen,
@@ -158,7 +158,7 @@ namespace
 	// constants keeps it correct at any resolution: no new arithmetic.
 	// All four operands are imm32 - no imm8 ceiling (contrast #136).
 	//
-	// ⚠ TIMING (law 47, installed != executed): this MUST be applied before
+	// TIMING (law 47, installed != executed): this MUST be applied before
 	// the game's app-init runs 0x4E0C20, which is long before PostAppInit
 	// where every other patch lives. Measured 2026-08-05: PostAppInit ran
 	// +16.4s after the tier was decided. It is called from the tier block
@@ -290,7 +290,7 @@ namespace
 	// #131 shipped L1 alone, so this has been stale at 2x/3x all along; it goes
 	// unseen only because the overlay pass is gated on view+0x118 != 0 and the
 	// default view mode is 0. The zoom replay CALLS sub_7B5430, so fix it here.
-	// ⚠ NOT contiguous with L1: 0xB0DBB4/0xB0DBB8 in between hold POINTERS
+	// NOT contiguous with L1: 0xB0DBB4/0xB0DBB8 in between hold POINTERS
 	// (0x00A806E8 / 0x00A806E0), not floats. Read out of the .data section of
 	// the shipped 1.1.641 exe, not copied from a note.
 	const uintptr_t kRegionIso2Sites[] = {
@@ -376,7 +376,7 @@ namespace
 	// X's position. It is a RESTORE-THE-KNOWN-GOOD-TOTAL patch, which is
 	// why it does not depend on where precisely the content edge falls.
 	//
-	// ⚠ THE 25 IS NOT A MAGIC NUMBER, AND IT DOES NOT ALL STAY FIXED
+	// THE 25 IS NOT A MAGIC NUMBER, AND IT DOES NOT ALL STAY FIXED
 	// (v2.40.1, measured from a live eyes-on that v2.40.0's flat reserve
 	// could not survive). The pane's usable width is NOT GetW(): the text
 	// class computes it as `GetW() - 2*gutter - scrollbarW` (sub_9BCBC5 @
@@ -942,7 +942,7 @@ namespace
 	// label 2-4 lines until 2 of 9 rows fell off the bottom.
 	// The swatch never moved. Its BUDGET was eaten. Four previous fixes each
 	// rewrote an output rect inside that unchanged budget, so the collision
-	// only ever moved (v2.54.2/.3/.4, all reverted or superseded).
+	// only ever moved (v2.54.2/.3/.4, all reverted).
 	//
 	// THE STRIP IS TABLED, NEVER COMPUTED. The acceptance oracle
 	// (tools\uimap\emu\prove_chart_legend.py) derives it as
@@ -1373,7 +1373,7 @@ namespace CodePatches
 	//   * sub_7B3670 rebuilds the alpha run list from the composite's rect.
 	// No latch clearing, no per-tick pass, nothing to fight.
 	//
-	// ⚠ The game has a real 16.16 tent-filter resampler here (sub_7AE160) but
+	// The game has a real 16.16 tent-filter resampler here (sub_7AE160) but
 	// its scale is a literal push 0x3F800000 (1.0f) at 0x7AE186/0x7AE1FD and
 	// its step a literal add ecx,0x10000 - it can shift sub-pixel, never
 	// resize. We must write the pixels ourselves.
@@ -1453,7 +1453,7 @@ namespace CodePatches
 			const int32_t gh = *reinterpret_cast<const int32_t*>(b + 0x20);
 			if (!nb || gw != nw || gh != nh || np < nw * 4)
 			{
-				// ⛔ RETURNING FALSE IS NOT ENOUGH - PUT THE BUFFER BACK.
+				// RETURNING FALSE IS NOT ENOUGH - PUT THE BUFFER BACK.
 				// Init (0x008269B0) writes the new width and height at
 				// 0x008269CC/0x008269D3 and sets the ready latch at 0x008269F6
 				// even when AllocBits stored a NULL, because AllocBits returns
@@ -1646,7 +1646,7 @@ namespace CodePatches
 
 	float SetRegionIsoScaleLive(float factor)
 	{
-		// ⛔ ONLY EVER RE-WRITE FLOATS WE ALREADY OWN. ApplyRegionIsoScale
+		// ONLY EVER RE-WRITE FLOATS WE ALREADY OWN. ApplyRegionIsoScale
 		// verifies all ten sites against stock and declines the whole set if a
 		// third-party mod holds any of them - then logs "NOTHING written,
 		// region map stays stock". Without this guard the first wheel notch
@@ -2329,7 +2329,7 @@ namespace CodePatches
 			// rather than roll back over tiles that HAVE been rebuilt.
 			Logger::Get().WriteLine(
 				LogLevel::Info,
-				"CodePatches: ⚠ REGIONZOOM PARTIAL - %d rebuilt, %d skipped after"
+				"CodePatches: REGIONZOOM PARTIAL - %d rebuilt, %d skipped after"
 				" pre-validation passed. The map is now MIXED-SCALE; leave the"
 				" region and return to rebuild it cleanly.",
 				gRegionZoomRebuilt, gRegionZoomSkipped);
@@ -2466,7 +2466,7 @@ namespace CodePatches
 	{
 		gRegionCamScaleApplied = 0.0f;
 
-		// ⛔ DISARMED 2026-08-04, v2.78.4. MEASURED DEAD, do not re-arm.
+		// DISARMED 2026-08-04, v2.78.4. MEASURED DEAD, do not re-arm.
 		// The patch WORKED as a patch - the camera held our 0.7500, its
 		// [cam+0x134] held the correctly recomputed 3.4842, and its device
 		// ortho frustum held OUR halfW 6689.6 (stock 20068.8), all held
@@ -3231,7 +3231,7 @@ namespace CodePatches
 			// which would have shifted the operand into the middle of the
 			// instruction and produced a crash rather than a bad rect. Verify
 			// the two bytes in front of every immediate really are the
-			// sub-with-imm32 opcode we think we placed there.
+			// sub-with-imm32 opcode placed there.
 			{
 				const int immOff = (b.kind == kGlbCboxSwatch) ? 25 : 10;
 				const uint8_t r0 = repl[immOff - 2];
@@ -3493,7 +3493,7 @@ namespace CodePatches
 				// --- cave path -------------------------------------------
 				// Verify the stock bytes BEFORE allocating or writing
 				// anything: a different exe build must be left exactly as
-				// shipped, and an unverified site must not consume a cave.
+				// shipped, and a site whose bytes have not been read must not consume a cave.
 				const uint8_t* pchk = reinterpret_cast<const uint8_t*>(site + delta);
 				if (memcmp(pchk, expect, 7) != 0)
 				{
@@ -3650,7 +3650,7 @@ namespace CodePatches
 		// Both glyph columns scale, AND the scrollbar half of the right-hand
 		// reserve scales - see the constant block above.
 		//
-		// ⚠ THE X COLUMN IS SCALED ONLY AT factor <= 2.0, AND THIS CONDITION
+		// THE X COLUMN IS SCALED ONLY AT factor <= 2.0, AND THIS CONDITION
 		// IS MIRRORED IN build_selective_safe.py (the X ids are staged under
 		// the same test). The two MUST agree: the budget has to describe the
 		// art that actually shipped, or the X is clipped again. The reason is
@@ -3664,7 +3664,7 @@ namespace CodePatches
 		// the imm8 is not a law of nature, it is an ENCODING, and the encoding
 		// is now widened when it has to be (see the two-form write below). So
 		// the X column scales at EVERY tier and glyphX == glyph unconditionally.
-		// ⚠ The mirrored `FACTOR <= 2.0` test in build_selective_safe.py was
+		// The mirrored `FACTOR <= 2.0` test in build_selective_safe.py was
 		// removed in the SAME commit - that coupling is hard, and art without
 		// the patch (or patch without the art) is exactly the task-#88 defect.
 		// 3x SelectiveArt therefore goes 651 -> 655 entries, matching 1.5x/2x.
@@ -4102,7 +4102,7 @@ namespace CodePatches
 	void InstallRatingArrowAnchor(float factor, int mode)
 	{
 		if (mode <= 0) { return; }
-		// v2.77.0: 2x INCLUDED, by user direction after the 3x fix was confirmed
+		// v2.77.0: 2x INCLUDED, deliberately after the 3x fix was confirmed
 		// ("make sure you apply that fix to 2x as well"). The f>=2.5 gate was a
 		// v2.74.0 precaution for an UNPROVEN model; the model is now proven on
 		// screen at 3x, and the defect is tier-general by construction - the
@@ -4273,7 +4273,7 @@ namespace CodePatches
 		// the bits describe what the block holds (identity rot + our scale).
 		const uint8_t kInstFlagBits = 0x06;
 
-		// THE SIGNPOST FAMILY (attribution CORRECTED 2026-08-17 by screen
+		// THE SIGNPOST FAMILY (attribution by screen
 		// evidence): quad builder 0x5F20A0 does `push 44.0f` (0x5F20AF,
 		// 68 00 00 30 42) into the px->world helper 0x7F6690, with
 		// `push 150.0f` (0x5F20BF, 68 00 00 16 43) as the pole raise. The
@@ -4309,7 +4309,7 @@ namespace CodePatches
 		// WHOLE table, all-or-nothing, single-span VirtualProtect, and a loud
 		// refusal if any value is not what we measured - the table being
 		// exactly as dumped is the condition this patch depends on.
-		// ⭐ THE CSI CONSTANTS. The balloon is a City Situation Indicator
+		// THE CSI CONSTANTS. The balloon is a City Situation Indicator
 		// drawn by cSC4DispatchVehicleView::Draw (0x0046D990); the manager is
 		// cSC4CitySituationManager (vtable 0x00A97E58), and its view object is
 		// [0x00B43D04]->vt+0x58 = cISC4DispatchManager::GetDispatchVehicleView.
@@ -4326,7 +4326,7 @@ namespace CodePatches
 		// different zoom, identical balloon pixel size) independently prove the
 		// thing is pixel-fixed, which is what a raw px constant produces.
 		//
-		// ⛔ 0x00A881AC is a per-category STYLE BYTE TABLE (01 01 01 01 02 02
+		// 0x00A881AC is a per-category STYLE BYTE TABLE (01 01 01 01 02 02
 		// 03 FF) - never scale it.
 		const uintptr_t kPixTableVa = 0x00A88170;
 		const float kPixStock[10] =
@@ -4339,7 +4339,7 @@ namespace CodePatches
 			{ 0x00A881A0, 50.0f },   // orbit radius when >1 indicator on a vehicle
 			{ 0x00A88260, 43.0f },   // outline / leader offset
 			{ 0x00A88268, 21.0f },   // half of 42 - the centring offset
-			// ⭐ THE SECOND 21, AND IT IS READ THREE TIMES AS OFTEN.
+			// THE SECOND 21, AND IT IS READ THREE TIMES AS OFTEN.
 			// A float sweep of the drawer 0x0046D990..0x0046EFA8 shows the
 			// centring half-extent read from TWO different addresses:
 			//     [0x00A88268] = 21   read 2x   <- the .rdata copy, above
@@ -4352,7 +4352,7 @@ namespace CodePatches
 			// its half must become 31/42/63 and staying at 21 leaves the centre
 			// short by (42f - 21) px: 10.5 at 1.5x, 21 at 2x, 42 at 3x.
 			//
-			// ⛔ SCALING ONE COPY OF A CONSTANT AND NOT THE OTHER IS WORSE
+			// SCALING ONE COPY OF A CONSTANT AND NOT THE OTHER IS WORSE
 			// THAN SCALING NEITHER - it puts two derivations of the same
 			// quantity out of step, and the sweep that found it only looked at
 			// .rdata. A constant sweep scoped to one section is a FILTERED
@@ -4455,23 +4455,23 @@ namespace CodePatches
 		//     path and then split: 4 takes 35.0f, 3 takes 32.0f. The store at
 		//     0x0046CCB9 executes for category 3 and nothing else.
 		//
-		// ⛔ SO THE BLAST RADIUS IS CATEGORY 3 ALONE, not "every non-4 type".
+		// SO THE BLAST RADIUS IS CATEGORY 3 ALONE, not "every non-4 type".
 		// The wider claim came from eyeballing one `jne` and assuming the
 		// obvious control flow; it took enumerating every jcc target in the
 		// function to see that two categories merge before they split. Reading
 		// ONE branch tells you where that branch goes, never who arrives.
 		//
-		// ⛔ AND THIS IS NOT THE CURE FOR #195. The 3x run PROVED it: the
+		// AND THIS IS NOT THE CURE FOR #195. The 3x run PROVED it: the
 		// patch applied (log: "32.0 -> 96.0 px", 10 immediates) and the split
 		// marker did not change. #195 is the marker's ROOT being moved by
 		// ScalePanelRoot away from where the game places the count - see
 		// UiSpike.cpp's ARTSIZED-ROOT block. This entry stays because it is
 		// independently correct (category 3's plate scales while its icon did
 		// not), but it never was that defect.
-		// ⭐ A PATCH THAT PROVABLY RAN AND CHANGED NOTHING ON SCREEN
+		// A PATCH THAT PROVABLY RAN AND CHANGED NOTHING ON SCREEN
 		// ELIMINATES ITS WHOLE LAYER - worth more than most positive findings.
 		//
-		// ⭐ THE OLD NOTE HERE SAID TO LEAVE THIS ALONE - "it would resize
+		// THE OLD NOTE HERE SAID TO LEAVE THIS ALONE - "it would resize
 		// unrelated indicators". That reasoning inverted the day the pin quad
 		// was scaled: the pin verts live in cSC4DispatchVehicleView::Draw,
 		// which is SHARED by every indicator regardless of type, so once the
@@ -4480,12 +4480,12 @@ namespace CodePatches
 		// A caution written about one lever goes stale the moment a SECOND
 		// lever starts firing on the same object; re-read every such note when
 		// the set of patched sites grows.
-		// ⚠ But note what the old caution got RIGHT and this correction had
+		// But note what the old caution got RIGHT and this correction had
 		// to walk back: the affected set really is narrow (category 3), not
 		// "everything that is not 4". Being right about the direction of a
 		// change does not make you right about its reach.
 		//
-		// ⛔ 0x0046CCB9 IS THE OPCODE BYTE (B8). THE IMMEDIATE IS AT
+		// 0x0046CCB9 IS THE OPCODE BYTE (B8). THE IMMEDIATE IS AT
 		// 0x0046CCBA. This table stores IMMEDIATE addresses - 0x0046CC48 is the
 		// imm of the B8 at 0x0046CC47, one past it, same as here. Entering the
 		// opcode address instead would read 00 00 00 42 89 = 2.58e-43, miss the
@@ -4495,7 +4495,7 @@ namespace CodePatches
 		// the most expensive way to be wrong. Bytes were read out of the shipped
 		// exe, not out of this comment.
 		//
-		// ⭐ WHY THIS TOOK SO LONG, recorded so it is not repeated: every
+		// WHY THIS TOOK SO LONG, recorded so it is not repeated: every
 		// sweep searched .rdata for a constant. BOTH levers are inline
 		// immediates in .text. A ".rdata constant is inert" verdict is a
 		// FILTERED NULL unless inline immediates were scanned too.
@@ -4522,7 +4522,7 @@ namespace CodePatches
 			// at 2x the glyphs are twice as tall inside a quad that is still 14
 			// - and the number under the deployment hat disappears.
 			//
-			// ⭐ WHY THIS IS BACK AFTER BEING REVERTED. It was removed on the
+			// WHY THIS IS BACK AFTER BEING REVERTED. It was removed on the
 			// prediction that "scaling 14.0f alone stretches the digits
 			// vertically, because the UVs come from the power-of-two texture
 			// side, NOT from +0xD0/+0xD4". That is true for the IMAGE
@@ -4533,12 +4533,12 @@ namespace CodePatches
 			// the quad height makes the quad match the glyphs instead of
 			// stretching them.
 			//
-			// ⛔ THE LESSON, since the revert cost a round trip: a warning
+			// THE LESSON, since the revert cost a round trip: a warning
 			// about one code path does not transfer to a sibling path that
 			// derives the same quantity differently. Check whether the divisor
 			// is a CONSTANT or a CALL before applying the objection.
 			{ 0x0046CB09, 14.0f, "count plate height (text categories)" },
-			// ⛔ 0x0046CB09 (the text-indicator HEIGHT, 14.0f) WAS HERE AND WAS
+			// 0x0046CB09 (the text-indicator HEIGHT, 14.0f) WAS HERE AND WAS
 			// REMOVED THE SAME DAY. It is a real unscaled constant and it is
 			// still NOT a lever, for a reason worth keeping:
 			//
@@ -4555,7 +4555,7 @@ namespace CodePatches
 			// numbers have to move together and the width is not a constant at
 			// all, so no entry in this table can do it.
 			//
-			// ⭐ THIS WAS MEASURED BEFORE IT WAS SHIPPED, AND SHIPPED ANYWAY.
+			// THIS WAS MEASURED BEFORE IT WAS SHIPPED, AND SHIPPED ANYWAY.
 			// The finding that says "scaling 14.0f alone is a new defect, not a
 			// fix" was already written when the entry was added; it was applied
 			// off the first half of the report without reading to the end. The
@@ -4618,7 +4618,7 @@ namespace CodePatches
 				14.0f, 14.0f * factor, 64.0f * factor, n);
 		}
 
-		// ⛔ ApplyMySimIndicatorScale WAS HERE AND IS REVERTED. The field
+		// ApplyMySimIndicatorScale WAS HERE AND IS REVERTED. The field
 		// 0x0046F392 (`mov [esp+0x120], 1.0f`, the ONLY category-3-specific
 		// literal in AddIndicator) is NOT a scale. Measured: the patch applied
 		// at 2.00 - log "MYSIMSCALE x2.00 - category-3 (MySim) indicator scale
@@ -4858,7 +4858,7 @@ namespace CodePatches
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 			// Verify EVERY entry before touching any (both-or-neither).
-			// ⛔ COUNT DERIVED FROM THE ARRAY, NEVER TYPED. This loop said
+			// COUNT DERIVED FROM THE ARRAY, NEVER TYPED. This loop said
 			// `k < 4` while the table had grown to 5, so the fifth constant was
 			// silently never verified and never written - a change that looked
 			// applied (the log printed its usual line) and did nothing.
@@ -4891,7 +4891,7 @@ namespace CodePatches
 						static_cast<unsigned>(kCsiConsts[k].va));
 					return;
 				}
-				// ⭐ ROUND TO THE PROJECT'S ONE CONVENTION (law 89,
+				// ROUND TO THE PROJECT'S ONE CONVENTION (law 89,
 				// RoundHalfUp) instead of storing a raw product. These are
 				// SCREEN-PIXEL constants and 1.5x is the only tier that makes
 				// them fractional: 43*1.5 = 64.5, 21*1.5 = 31.5, and the
@@ -4899,7 +4899,7 @@ namespace CodePatches
 				// A/B-proven: with these patches off at 1.5x the number came
 				// back, with them on it did not, and 2x/3x were unaffected.
 				//
-				// ⛔ PROVABLE NO-OP AT AN INTEGER FACTOR by construction -
+				// PROVABLE NO-OP AT AN INTEGER FACTOR by construction -
 				// every one of these stocks times 2 or 3 is already whole, so
 				// this cannot move 2x or 3x (law 95: a fractional-tier fix must
 				// read exactly zero at the integer tiers first).
@@ -5251,7 +5251,7 @@ namespace CodePatches
 			// unlike the marker's byte-encoded SetSize, not obviously a
 			// spatial-index key.
 			//
-			// ⚠ READ ONLY FOR NOW, and the reading decides the next step:
+			// READ ONLY: the reading decides what follows:
 			// the pick can legitimately return the BALLOON or the occupant
 			// in the cell BENEATH it (the 16 m cell fallback is proven).
 			// A balloon floats: expect a small box well ABOVE terrain
@@ -5520,7 +5520,7 @@ namespace CodePatches
 		int gMarkerSizeHits = 0;
 		int gMarkerSizeLogs = 0;   // LOG budget only - never gates the work
 
-		// ⛔ WRITES DISABLED 2026-08-17 (v3.0.26) - THIS HUNG THE GAME.
+		// WRITES DISABLED 2026-08-17 (v3.0.26) - THIS HUNG THE GAME.
 		// v3.0.25 called the marker's own SetSize to push 15.0x9.0 up to the
 		// 25.5 byte cap. The size is not cosmetic: an occupant is registered
 		// with the view's occupant manager by its extent, so inflating it to
@@ -6160,7 +6160,7 @@ namespace CodePatches
 		void __stdcall ArtFetchLog(uint32_t ret, uint32_t t, uint32_t g,
 			uint32_t inst)
 		{
-			// ⛔ FILTER ON THE RESOURCE, NEVER ON THE CALLER. The first cut of
+			// FILTER ON THE RESOURCE, NEVER ON THE CALLER. The first cut of
 			// this probe gated on `ret` being inside 0x5F1000-0x5F2200 (the
 			// composer we had disassembled) and logged ZERO fetches - the
 			// same FILTERED NULL that cost this project months on BUBBLEFX.
@@ -6372,7 +6372,7 @@ namespace CodePatches
 		{
 			const uint32_t off = static_cast<uint32_t>(gSpriteOffset);
 			if (off == 0 || sprite == nullptr) { return; }
-			// ⛔ sprite+0x124 is 0x510360's OWN "already configured" guard
+			// sprite+0x124 is 0x510360's OWN "already configured" guard
 			// (`if (src[8] && this[0x124]==0)`). We only ever run AFTER the
 			// trampoline, so the game has finished its setup - but never
 			// move this call before it.
@@ -6834,12 +6834,12 @@ namespace CodePatches
 				// routine lines share the cap (the RATEANCHOR idiom).
 				const bool pristine = (*flag == 0 && *scale == 1.0f);
 				const bool arm = (gBubbleScale > 1.01f) && pristine;
-				// ⛔ THE CAP THAT BLINDED THE CLICK TEST (2026-08-17). This
+				// THE CAP THAT BLINDED THE CLICK TEST (2026-08-17). This
 				// read `gBubbleLogs < 12`, and city load spawns EXACTLY 12
 				// pristine effects - so the budget was spent before the player
 				// could click, and the mission_selection_red line at the
-				// click printed NOTHING. The user said "I clicked", the log
-				// showed no click, and I believed the log. It was wrong.
+				// click printed NOTHING. A click WAS made; the log showed
+				// none, and the log was the thing that was wrong.
 				//
 				// The cap only ever silenced the LOG; the scale write below
 				// still ran, which is why the click was a valid experiment
@@ -6862,7 +6862,7 @@ namespace CodePatches
 				}
 				if (!arm) { break; }
 				*scale = gBubbleScale;
-				// ⛔ DO NOT SET THE FLAG. Writing kInstFlagBits (0x06) here is
+				// DO NOT SET THE FLAG. Writing kInstFlagBits (0x06) here is
 				// what made every effect-scale attempt inert, and it was our
 				// own doing:
 				//   * activation 0x591DF5 branches on the CHILD's flags byte

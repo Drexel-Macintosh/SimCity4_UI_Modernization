@@ -6,7 +6,7 @@ tuples captured live by the DSTRIP probe, and asserts:
 
   * every blit whose art is already correct is left EXACTLY untouched
   * every over-reading blit is re-cut to ONE TRUE STATE and centred
-  * nothing is ever enlarged (we do not upscale - user order 2026-08-14)
+  * nothing is ever enlarged: there is no runtime upscaler
 
 WHY THIS FILE EXISTS. The first attempt at this cure shipped a white line
 through UI art because its predicate had never been run against a single real

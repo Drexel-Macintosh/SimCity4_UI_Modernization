@@ -207,7 +207,7 @@ public:
 
 			int gfxW = reqW;
 			int gfxH = reqH;
-			// ⭐ CORRECTED 2026-08-20: EXCLUSIVE FULLSCREEN HONOURS THE
+			// EXCLUSIVE FULLSCREEN HONOURS THE
 			// REQUEST. This branch used to cover every non-windowed mode on
 			// the strength of one measurement (request 1600x1200 -> tree came
 			// back 2400x1600), and that measurement was taken under a
@@ -266,7 +266,7 @@ public:
 			// this is the only place that works it out.
 			UiSpike::SetRequestedResIgnored(!software && borderless);
 
-			// ⚠ CAPTURED BEFORE ANYTHING FORCES IT. spikeScaleAll is set to
+			// CAPTURED BEFORE ANYTHING FORCES IT. spikeScaleAll is set to
 			// false in two places below (the auto-path's !tierActive block and
 			// the stock-factor block), so by the time the static-layer gate is
 			// reached it no longer answers "did the USER ask for this mod to be
@@ -274,7 +274,7 @@ public:
 			// different question and the wrong one for that gate.
 			const bool iniWantsScaling = settings.spikeScaleAll;
 
-			// ⭐ THE BOOT-STATE VALIDATOR (user request: "if a user manually
+			// THE BOOT-STATE VALIDATOR. The requirement: if a player manually
 			// adjusts the ini we need to run a check for resolution and scale
 			// combination correct, and if it flags false flip it back to
 			// auto, automatically").
@@ -337,7 +337,7 @@ public:
 					           : "untouched (ScaleAll=0 or stock factor)");
 			}
 
-			// ⛔ FACTOR 1 MEANS INERT, NO MATTER HOW THE FACTOR WAS CHOSEN.
+			// FACTOR 1 MEANS INERT, NO MATTER HOW THE FACTOR WAS CHOSEN.
 			// The "Tier 1 = TRUE stock" block above lives inside the AutoScale
 			// branch, so it never ran for a MANUAL tier 1 - and Set-Tier.ps1
 			// -Tier 1 sets AutoScale=0 + ScaleFactor=1, which is exactly how a
@@ -348,7 +348,7 @@ public:
 			// x2 item fields inside a 1x layout. That is the broken docking the
 			// user photographed at the 1x baseline, twice.
 			//
-			// ⭐ THIRD INSTANCE OF THIS EXACT SHAPE IN THIS ONE FUNCTION. The
+			// THIRD INSTANCE OF THIS EXACT SHAPE IN THIS ONE FUNCTION. The
 			// comments below already record #149 and #182 - both "AutoScale=0,
 			// a supported user setting, silently changed behaviour". Those two
 			// were fixed by moving a gate OUT of the AutoScale branch, and this
@@ -393,7 +393,7 @@ public:
 			// the proof - law 54). Manual + ScaleAll=0 keeps the untouched
 			// behaviour: Set-StockCompare owns that state with its own
 			// suffixes, and a dormant rig must not have its files renamed.
-			// ⭐ `|| iniWantsScaling` ADDED 2026-08-19 - CHOOSING 1x MUST UNLOAD
+			// `|| iniWantsScaling` ADDED 2026-08-19 - CHOOSING 1x MUST UNLOAD
 			// THE ART. Without it, a manual stock factor skipped this sync
 			// entirely and the PREVIOUS tier's dats stayed armed: geometry ran
 			// at 1x while the art was still 2x, so the whole UI was wrong on
@@ -435,7 +435,7 @@ public:
 				ScaleTier::SyncStaticLayers(settings.spikeScaleFactor);
 			}
 
-			// ⭐ UNCONDITIONAL, AND OUTSIDE EVERY BRANCH ABOVE. The stock-tier
+			// UNCONDITIONAL, AND OUTSIDE EVERY BRANCH ABOVE. The stock-tier
 			// scale selector's package is armed by the ABSENCE of a tier, so
 			// the one state it must reach is the state in which none of the
 			// branches above run at all.
@@ -636,7 +636,7 @@ public:
 			// pristine art on the way into sub_7AE510 - the one moment the
 			// un-shifted savegame thumbnail exists.
 			//
-			// ⛔ GATED ON THE TILE HOOK, and that is load-bearing (adversarial
+			// GATED ON THE TILE HOOK, and that is load-bearing (adversarial
 			// review, 2026-08-05, CONFIRMED). ApplyRegionTileScale installs
 			// nothing at factor <= 1.001, and RegionMapScale=1.0 reaches here
 			// because the gate above only tests != 0. Zoom would then move the

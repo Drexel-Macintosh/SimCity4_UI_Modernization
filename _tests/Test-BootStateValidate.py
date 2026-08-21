@@ -12,7 +12,7 @@ confirmed 26 such states, several of which trapped the user with no way back.
 ScaleTier::ValidateBootState answers "is [AutoScale, ScaleFactor, ScaleAll,
 packages, resolution] coherent?" and repairs it. This gate pins the answers.
 
-⚠ THIS MIRRORS THE PREDICATE, IT DOES NOT CALL IT - the same shape as
+THIS MIRRORS THE PREDICATE, IT DOES NOT CALL IT - the same shape as
 Test-ScaleTierDecide against Decide(). That is a real limitation and it is
 stated rather than hidden: this proves the RULE is what we intend and that it
 behaves on every case the audit found, not that the C++ says the same thing.
@@ -79,7 +79,7 @@ def validate(auto, factor, scale_all, installed, w, h, section_ok=True):
     if not scale_all and not math.isnan(effective) and effective > 1.01:
         return (False, False, 1.0, False)
     if auto:
-        # ⚠ THE EFFECTIVE FACTOR UNDER AUTO IS Decide(), NOT THE INI'S.
+        # THE EFFECTIVE FACTOR UNDER AUTO IS Decide(), NOT THE INI'S.
         # ValidateBootState returns early here without touching st.factor, and
         # the director's AutoScale branch then overwrites spikeScaleFactor with
         # Decide() on the very next lines. Modelling it as "the ini value

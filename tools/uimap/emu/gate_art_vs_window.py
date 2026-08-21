@@ -1,6 +1,6 @@
 r"""#162 - find every place where SHIPPED art cannot cover its SCALED window.
 
-⛔ WHY THIS EXISTS. Two hairlines (under the mayor's hat, under the advisor
+WHY THIS EXISTS. Two hairlines (under the mayor's hat, under the advisor
 portraits) survived five fixes and three probes. Every one of those reasoned
 from a MECHANISM - art snapping, tiled sizing, 9-slice sizing, a runtime-bitmap
 underfill - and every one was wrong. This asks the only question that decides
@@ -8,7 +8,7 @@ whether a hairline can exist, and it asks it of the FILES WE SHIP:
 
     does the art we ship COVER the window the sweep scales it into?
 
-⚠ THE .UI IS NOT SCALED. Verified: `stage`, `stage-15x` and `stage-3x` carry
+THE .UI IS NOT SCALED. Verified: `stage`, `stage-15x` and `stage-3x` carry
 BYTE-IDENTICAL rects to the 1x original (checked on id 0xca9df380 - all three
 read (719,87,847,124)). Only the ART is scaled offline; the WINDOW is scaled at
 runtime by UiSpike. A first version of this gate compared staged rects against
@@ -74,7 +74,7 @@ IMG = re.compile(r"\{([0-9a-fA-F]+),([0-9a-fA-F]+)\}")
 # carry its own copy; #162 changed ScaleRound in the DLL and every private
 # copy in this folder had to be found by hand. `scale_rules.py --drift`
 # hunts any that come back.
-# ⚠ To reproduce the #162 DEFECT (and re-prove this gate can still see it),
+# To reproduce the #162 DEFECT (and re-prove this gate can still see it),
 # swap the import below for `llround_scale as R` - the refuted pre-#162 rule,
 # kept named and exported in scale_rules.py for exactly this purpose. That must
 # put node #17 of I-0xc973b411 back on the 1.5x-only list with dH=+1, and must
@@ -131,7 +131,7 @@ def art_index(stage_dir):
     return idx
 
 
-# ⛔ THE COMPARABLE SET IS COMPUTED ONCE, FOR ALL THREE TIERS.
+# THE COMPARABLE SET IS COMPUTED ONCE, FOR ALL THREE TIERS.
 # The first run of this gate built a separate index per tier and derived 1x by
 # halving the 2x art INSIDE that pass. Any sheet the 2x package leaves at 1x
 # (the LEFT1X cases) has odd dimensions, so it silently dropped out of the f=1
@@ -251,7 +251,7 @@ def main():
     print("NEW at f=1.5 (the defect)             : %d" % len(new15))
 
     if new2:
-        print("\n⛔ CONTROL FAILED: f=2 invented %d shortfalls that stock does "
+        print("\nCONTROL FAILED: f=2 invented %d shortfalls that stock does "
               "not have. At an integer factor that is impossible, so the model "
               "is wrong and the 1.5x list below is not evidence." % len(new2))
         for k in list(new2)[:10]:

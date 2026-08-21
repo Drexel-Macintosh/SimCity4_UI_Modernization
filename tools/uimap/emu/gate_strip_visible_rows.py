@@ -15,7 +15,7 @@ emu_subflyout.py: 284/382/578 at 2x = 142/191/289 at 1x = 49*3-5 / 49*4-5 /
 
     (49n - 5 + 5) / 49 = n     exact, remainder 0, for every n
 
-⛔ THERE IS NO SPARE PIXEL ANYWHERE IN THIS CONTROL. The division is exact by
+THERE IS NO SPARE PIXEL ANYWHERE IN THIS CONTROL. The division is exact by
 construction, which means ANY upward drift in the denominator costs a whole row.
 
 We scale the three metrics with RoundHalfUp (UiSpike.cpp:2964-2966, 4977-4979,

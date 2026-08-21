@@ -4,9 +4,8 @@
 
 Offline analysis: the exe is opened read-only and the game is never launched.
 Every number below is measured, from the PE image or from the shipped PNG
-headers. Companion documents: `SUBFLYOUT-BUILDER.md` (the full decode),
-`SUBFLYOUT-LIVE-EVIDENCE.md` (the live oracle), `SUBFLYOUT-CONSTANTS.md` (the
-constant scan).
+headers. Companion documents: `SUBFLYOUT-BUILDER.md` (the full decode) and
+`SUBFLYOUT-LIVE-EVIDENCE.md` (the live oracle).
 
 ---
 
@@ -242,7 +241,7 @@ falsified by evidence, not by analogy.
 **Doubling the atlas still matters — for pixel density, not for size.** The
 `tools\research\MAYOR-MODE.md` items *"bar 1x"*, *"circle 1x"*, *"ring not
 2x-covering"* are exactly a 1x atlas blitting into a 2x window. The atlas and
-the constants move in lockstep, because `[+0xec] = artW − 2×25` recomputes
+the constants have to be changed in lockstep, because `[+0xec] = artW − 2×25` recomputes
 itself from the art while the 25 does not: a 584-wide atlas against an
 unpatched 25 mis-cuts the 9-slice.
 
@@ -284,7 +283,7 @@ Constraints on the patch:
   that one site.
 * The `1`/`8`/`6` item counts stay unscaled. The `600` at `0x007EAF3D` is a
   screen-height rule, not a geometry constant.
-* With born-2x in place the sweep is idempotent for `0x8A6E61E0`, or it doubles
+* With born-2x in place the sweep must be idempotent for `0x8A6E61E0`, or it doubles
   258 → 516. `IsSubFlyoutId` is the hook point.
 * The patch footprint is narrow: `sub_7EAEB0` is the *only* creator of
   `0x8A6E61E0`, and its seven callers are all sub-flyouts. `0x8A2CAD8B`,

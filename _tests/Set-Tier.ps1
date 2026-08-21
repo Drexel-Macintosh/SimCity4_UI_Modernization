@@ -1,6 +1,6 @@
 # Set-Tier.ps1 - force a specific scale tier for an eyes-on test, DATA AND ALL.
 #
-# ⛔ WHY THIS EXISTS. To test a tier by hand the obvious move is to set
+# WHY THIS EXISTS. To test a tier by hand the obvious move is to set
 # AutoScale=0 and ScaleFactor=1.5 in the ini. THAT DOES NOT WORK, and it fails
 # in the most misleading way available:
 #
@@ -28,13 +28,13 @@
 #   .\_tests\Set-Tier.ps1 -Tier 1 -Windowed -Width 1280 -Height 1024
 #   .\_tests\Set-Tier.ps1 -Auto -FullScreen -Width 2400 -Height 1600
 #
-# ⭐ WHY THE SCREEN IS PART OF THE TIER, and why this was three manual steps
+# WHY THE SCREEN IS PART OF THE TIER, and why this was three manual steps
 # and a wrong turn before it was one flag: a 1x baseline at 3840x2160 is NOT a
 # reference. Every stock widget is correct-but-tiny on a huge desktop, so it
 # answers nothing about FORMATTING - which is the only reason anyone asks for
 # 1x. The useful control is 1x at a resolution the stock UI was drawn for.
 #
-# ⛔ AND `WindowMode=Windowed` ALONE DOES NOTHING. dgVoodoo overrides it:
+# AND `WindowMode=Windowed` ALONE DOES NOTHING. dgVoodoo overrides it:
 # with FullScreenMode=true the game comes up borderless-fullscreen at panel
 # size, so the requested WxH never renders. -Windowed sets BOTH halves, plus
 # CaptureMouse=false (true traps the cursor so you cannot reach the title bar).
@@ -67,7 +67,7 @@ $ini = Join-Path $plug "SC4UIScale.ini"
 $TAG = @{ "1" = $null; "1.5" = "15x"; "2" = "2x"; "3" = "3x" }
 $ALLTAGS = @("15x", "2x", "3x")
 
-# ⛔ THIS RUNS BEFORE ANY TIER BRANCH, ON PURPOSE. It used to sit at the
+# THIS RUNS BEFORE ANY TIER BRANCH, ON PURPOSE. It used to sit at the
 # bottom and never executed for -Tier 1, because that path `exit 0`s at its
 # own banner - so the one transition most likely to want a window (the 1x
 # baseline) was the one that silently skipped the screen change. The screen
@@ -83,7 +83,7 @@ if ($Windowed -or $FullScreen -or $Width -or $Height) {
     if ($Windowed -and -not $Height) { $Height = 768  }
 
     function Set-IniKeyNoBom([string] $path, [hashtable] $pairs) {
-        # ⚠ NEVER a BOM (standing order for every SC4 ini) and never
+        # NEVER a BOM (standing order for every SC4 ini) and never
         # Set-Content, whose default encoding is the ANSI codepage. Read bytes,
         # assert, write UTF8 with no preamble.
         $bytes = [IO.File]::ReadAllBytes($path)
@@ -140,7 +140,7 @@ function Get-Families {
                     $tier = $Matches[2]
                     $isActive = -not $Matches[3]
                     if (-not $fam.ContainsKey($key)) { $fam[$key] = @{} }
-                    # ⛔ A TIER CAN HAVE BOTH FILES AT ONCE. Deploy-OnGameClose
+                    # A TIER CAN HAVE BOTH FILES AT ONCE. Deploy-OnGameClose
                     # writes the bare .dat AND refreshes the .x1-disabled twin,
                     # so "X-15x.dat" and "X-15x.dat.x1-disabled" routinely
                     # coexist. This slot used to be a plain assignment, and
@@ -181,7 +181,7 @@ function Show-State {
     if ($script:_dupTiers.Count -gt 0) {
         $u = $script:_dupTiers | Sort-Object -Unique
         Write-Output ""
-        # ⚠ -f BINDS TIGHTER THAN +. Build the whole string first, THEN format,
+        # -f BINDS TIGHTER THAN +. Build the whole string first, THEN format,
         # or only the last fragment gets the arguments and the rest prints its
         # literal {0}/{1} placeholders (which is exactly what shipped first).
         $msg = "{0} tier slot(s) have BOTH a .dat and a .dat.x1-disabled file: {1}. " +
@@ -214,7 +214,7 @@ if (-not $Tier -and -not $Auto) { throw "give -Tier 1|1.5|2|3, or -Auto, or -Sta
 $waited = 0
 while ($p = Get-Process -Name "SimCity 4" -ErrorAction SilentlyContinue) {
     if ($waited % 30 -eq 0) {
-        # ⚠ -f BINDS TIGHTER THAN +, so it formatted only the LAST string of the
+        # -f BINDS TIGHTER THAN +, so it formatted only the LAST string of the
         # parenthesised concatenation and the earlier {0}/{1} shipped through
         # LITERALLY - observed here 2026-08-15 as "pid {0} ... waiting {1}s".
         # Deploy-OnGameClose.ps1 already carried this exact fix and the note
@@ -230,7 +230,7 @@ while ($p = Get-Process -Name "SimCity 4" -ErrorAction SilentlyContinue) {
 }
 
 # --- ini ------------------------------------------------------------------
-# ⚠ NEVER write this file with a BOM (standing order).
+# NEVER write this file with a BOM (standing order).
 $raw = [System.IO.File]::ReadAllBytes($ini)
 if ($raw.Length -ge 3 -and $raw[0] -eq 0xEF -and $raw[1] -eq 0xBB -and $raw[2] -eq 0xBF) {
     throw "SC4UIScale.ini has a BOM - refusing to touch it"
@@ -275,7 +275,7 @@ $want = $TAG[$Tier]
 $fam = Get-Families
 $switched = 0; $gated = 0
 
-# ⛔ THE 1x BASELINE IS A ONE-WAY TRIP WITHOUT THIS MANIFEST.
+# THE 1x BASELINE IS A ONE-WAY TRIP WITHOUT THIS MANIFEST.
 # The loop below skips any family with NO active tier, reading that as
 # "the mod this package patches is not installed - leave it alone". That
 # heuristic is correct for dependency gating and WRONG after a 1x baseline,
@@ -304,7 +304,7 @@ if (-not $want) {
 foreach ($key in ($fam.Keys | Sort-Object)) {
     $tiers = $fam[$key]
     $name = $key.Split("|")[1]
-    # ⚠ IF NO TIER IS ACTIVE, THIS PACKAGE IS DEPENDENCY-GATED OFF (its mod is
+    # IF NO TIER IS ACTIVE, THIS PACKAGE IS DEPENDENCY-GATED OFF (its mod is
     # not installed). Leave it alone. Re-enabling it here would inject our
     # frozen copy of someone else's UI into a game that does not have that mod
     # - exactly what Test-ThirdPartyGates.ps1 exists to catch.
@@ -326,7 +326,7 @@ Write-Output ("packages: {0} rename(s); {1} family(ies) left dependency-gated of
 if ($want -and (Test-Path $restoreFile)) { Remove-Item $restoreFile -Force }
 
 # --- font -----------------------------------------------------------------
-# ⛔ THE GAME READS THE FONT TABLE FROM <install>\Plugins, **NOT** FROM
+# THE GAME READS THE FONT TABLE FROM <install>\Plugins, **NOT** FROM
 # Documents. This script's first version copied it next to the packages in
 # Documents - where nothing ever reads it - so two full 1.5x test launches ran
 # with the 2x table live: 2x point sizes inside 1.5x boxes, a 33% oversize.
@@ -337,7 +337,7 @@ if ($want -and (Test-Path $restoreFile)) { Remove-Item $restoreFile -Force }
 # ScaleTier::SyncFont has always written to the install root and says so in its
 # own comment. This script did not read it.
 #
-# ⚠ There are THREE probe sites and the order is
+# There are THREE probe sites and the order is
 # <install>\Plugins -> <install> (i.e. Apps) -> the DBPF. Writing the wrong one
 # leaves an older table winning silently.
 if (-not $want) {

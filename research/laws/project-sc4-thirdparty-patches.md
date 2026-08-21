@@ -37,9 +37,7 @@ Confirmed instances:
 - **CAM 4.0.1** replaces nine stock `.UI` scripts, six of which were static-dialog
   targets. Doubled copies of scripts the game never loads shipped for several
   releases (generic popup 300x166 versus CAM's 500x175; the startup splash; four
-  building-query panels, one of them growing 21 nodes to 45). Found by
-  `tools\uiscripts\winning_corpus.py`, which reports which script actually wins
-  per TGI.
+  building-query panels, one of them growing 21 nodes to 45).
 
 **A mod that replaces a stock `.UI` usually also ships the art that script
 references.** Check both. Fixing the script alone leaves 1x art winning, which
@@ -139,9 +137,9 @@ upstream, and each documented for the upstream author.
   exemplars: nine police/fire buildings shipped with `parent={0x00000000}` — Police
   Kiosk, the precincts, Jail, Prison and three fire stations, all unreachable in
   game — plus the Lifeguard Tower pointing at undefined submenu `0x1C3780E4`.
-  Built by `tools\itemicons\build_menu_patches.py`; found by
-  `tools\itemicons\scan_unreachable_items.py`, which parses both binary and text
-  exemplars and should be rerun after any plugin change.
+  Built by `tools\itemicons\build_menu_patches.py`. The unreachable set is found
+  by parsing both binary and text exemplars, and should be re-derived after any
+  plugin change.
 - **`z_SC4UIScale_ItemIconsSub-2x.dat`** — 125 entries of 2x icons owned by other
   mods: 55 from the submenus mod, 69 CAM and Maxis-landmark icons, plus the
   submenus DLL's Missing Thumb `0x144161EC`. That last one is never exemplar-bound,
@@ -159,13 +157,11 @@ they ship as overrides because the goal is a working install.
 
 ## Verifying a replaced panel both ways
 
-`_tests\Toggle-BuildingStylesUI.ps1` flips the Building Style panel between the
-mod's 36-slot layout and the stock four-style-with-previews panel by renaming
-files only, never editing them. It **must move the derived `zzz-` package too**, or
-the local copy of the mod's script keeps the mod layout alive and the "stock" state
-is a fiction. `_tests\Toggle-SaveWarningUI.ps1` does the same for the quit/exit
-confirms, and `_tests\Test-ThirdPartyGates.ps1` exercises the dependency gates
-directly.
+Toggling the Building Style panel between the mod's 36-slot layout and the stock
+four-style-with-previews panel is done by renaming files only, never editing them,
+and it **must move the derived `zzz-` package too**, or the local copy of the mod's
+script keeps the mod layout alive and the "stock" state is a fiction. The same
+holds for the quit/exit confirms.
 
 Note that the 36-slot layout has no style previews at all, where the stock panel
 has four 160x77 pictures. That is the mod's design, not a scaling defect.

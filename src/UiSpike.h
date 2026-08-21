@@ -17,7 +17,7 @@ public:
 	// one place that works this out.
 	static void SetRequestedResIgnored(bool ignored);
 	static void SetTierMirror(float f);   // resolved tier -> hook-visible mirror
-	// IN-GAME SCALE SELECTOR (2026-08-19, user request). Fills the readout,
+	// IN-GAME SCALE SELECTOR (2026-08-19). Fills the readout,
 	// pushes the radio/combo state, and services the click filter on the
 	// Graphic Options dialog.
 	//
@@ -131,7 +131,7 @@ public:
 	// how the family rots. Returns the snapped edge, or 0 if not needed.
 	int SnapMiniMapToBake(class cIGZWin* pMap, const char* who);
 
-	// ⛔ THE FIRST PASS CANNOT BE MADE EARLIER THROUGH THE MESSAGE QUEUE.
+	// THE FIRST PASS CANNOT BE MADE EARLIER THROUGH THE MESSAGE QUEUE.
 	// Measured and reverted 2026-08-01 (task #89): a posted WM_APP message
 	// arrived +2016ms after arm versus the timer's +2031ms - 15ms, one timer
 	// period. The game does not pump messages at all during the city load

@@ -41,7 +41,7 @@ namespace ScaleTier
 	// exists. kPackages even carries a 4.0 row no package was ever built for.
 	bool PackageAvailable(float factor);
 
-	// THE BOOT-STATE VALIDATOR (2026-08-19, user request: "run a check for
+	// THE BOOT-STATE VALIDATOR (2026-08-19: "run a check for
 	// resolution and scale combination correct, and if it flags false flip it
 	// back to auto, automatically").
 	//
@@ -77,7 +77,7 @@ namespace ScaleTier
 	// Arm or stash z_SC4UIScale_SelectorUI-1x - the stock-tier scale selector,
 	// the ONE package gated on the ABSENCE of a tier.
 	//
-	// ⛔ CALL THIS UNCONDITIONALLY. It must NOT be folded into
+	// CALL THIS UNCONDITIONALLY. It must NOT be folded into
 	// SyncStaticLayers: that function is not called at the stock tier, which
 	// is the only state this package is for, so folding it in makes it
 	// unreachable exactly when it is needed (measured 2026-08-19 - the dat sat
@@ -98,7 +98,7 @@ namespace ScaleTier
 	// #149 stage 1. Names the third-party ItemIcons no package of ours covers.
 	// MUST be called on EVERY path that ends with a factor > 1, not only the
 	// AutoScale one - it was originally folded into SyncStaticLayers, which
-	// manual-tier mode SKIPPED AT THE TIME (⚠ since v3.0.2/#182 manual tiers
+	// manual-tier mode SKIPPED AT THE TIME (since v3.0.2/#182 manual tiers
 	// with ScaleAll=1 sync too), so AutoScale=0 silently disabled the whole
 	// uncovered-icon cure.
 	void ScanUncoveredIcons(float factor);

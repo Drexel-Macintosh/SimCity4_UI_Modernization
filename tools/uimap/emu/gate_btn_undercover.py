@@ -1,6 +1,6 @@
 r"""GATE (#148): an art-sized button's SCALED WINDOW must equal its ART CELL.
 
-⛔ THE REVERSE L, and the one instrument that would have found it on day one.
+THE REVERSE L, and the one instrument that would have found it on day one.
 
 USER-VISIBLE: Mayor mode -> Landscape draws a line down the RIGHT edge and along
 the BOTTOM of exactly ONE of its five buttons. The five are identical 47x37
@@ -24,7 +24,7 @@ and only it - gets a 71px cell in a 70px window. The same arithmetic explains
 the god-mode Day/Night flyout, where all three buttons sit at l=79 (odd), which
 is why the artefact was reported on the sun AND the moon.
 
-⚠ AT AN INTEGER FACTOR THIS CANNOT HAPPEN: ScaleRound(l*2) is exact for every l,
+AT AN INTEGER FACTOR THIS CANNOT HAPPEN: ScaleRound(l*2) is exact for every l,
 so w = 2*(r-l) always. Nine earlier theories matched that same 1.5x-only tier
 signature and every one was wrong (law 60) - the difference here is that this
 one PREDICTED WHICH BUTTON OF THE FIVE before anything was looked at.
@@ -43,7 +43,7 @@ artefact rather than the intention.
 NEGATIVE CONTROL: run it against a build made before the fix and 1.5x must FAIL
 with Level Terrain and the three Day/Night buttons named.
 
-⛔ THREE POPULATIONS, NOT ONE (#170, 2026-08-16) - the file used to describe
+THREE POPULATIONS, NOT ONE (#170, 2026-08-16) - the file used to describe
 only the first and that is how it printed PASS over a user-visible tear:
 
   1. RUNTIME-SCALED  - staged `.UI` keeps its 1x area, `ScaleSubtree` scales it
@@ -111,7 +111,7 @@ def find_art(d, gid, iid):
 
 
 # ---------------------------------------------------------------------------
-# ⛔ #170: THIS GATE COULD NOT SEE THE PRE-SCALED SUBTREES, AND THAT IS WHERE
+# #170: THIS GATE COULD NOT SEE THE PRE-SCALED SUBTREES, AND THAT IS WHERE
 # THE USER-VISIBLE DEFECT WAS.
 #
 # The scan below reads the STAGED `.UI` and models what `ScaleSubtree` will do
@@ -213,7 +213,7 @@ def run(tier, limit, states=4):
             if not s:
                 continue
             checked += 1
-            # ⚠ MODEL THE RULE THE DLL ACTUALLY USES. Since v2.94.1 a LEAF
+            # MODEL THE RULE THE DLL ACTUALLY USES. Since v2.94.1 a LEAF
             # window takes its scaled size SIZE-DERIVED (ScaleSubtree,
             # GetChildCount()==0). A GZWinBtn bound to a state strip is a leaf.
             # Modelling the old edge-derived rule here would fail on 204
@@ -229,7 +229,7 @@ def run(tier, limit, states=4):
                 # number in the file is the number on screen - compare it
                 # verbatim, and do not credit a runtime rule that cannot run.
                 #
-                # ⚠ SPLIT THE VERDICT BY CAUSE, or the gate blames the builder
+                # SPLIT THE VERDICT BY CAUSE, or the gate blames the builder
                 # for the upscaler's arithmetic. `want` is what the art cell
                 # WOULD be if the sheet were built as `states * R(cell1x * f)`
                 # (law 64a). If the shipped cell equals `want`, the art is
@@ -442,15 +442,15 @@ def main():
         if ns:
             static_bad[tier] = ns
 
-    # ⛔ THE INTEGER TIERS ARE THE ASSERTION. At f=2 and f=3, ScaleRound is
+    # THE INTEGER TIERS ARE THE ASSERTION. At f=2 and f=3, ScaleRound is
     # exact and ScaleDim returns early, so BOTH causes are impossible: anything
     # here means the model or the rule broke. The 1.5x RESIDUAL is reported, not
     # failed - it needs an art-dimension change, and that was reverted on
     # measurement (runtime-created consumers; see SELECTIVE-SAFE.md #148).
-    # ⛔ THE STATIC HALF FAILS AT EVERY TIER (#155), not just integer ones:
+    # THE STATIC HALF FAILS AT EVERY TIER (#155), not just integer ones:
     # nothing downstream repairs a statically-served dialog, so a shipped
     # window that disagrees with its shipped art cell IS the tear.
-    # ⛔ PRE-SCALED SUBTREES FAIL AT EVERY TIER (#170), same reasoning as the
+    # PRE-SCALED SUBTREES FAIL AT EVERY TIER (#170), same reasoning as the
     # static half: `ScalePanelRoot` returns before it walks a
     # kDataScaledSubtreeIds subtree, so the shipped area is the final area and
     # no runtime rule repairs it. This is the check that was missing while the

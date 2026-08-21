@@ -1,6 +1,6 @@
 r"""GATE: an `imagerect` that was a PARTIAL crop at 1x must stay partial.
 
-⛔⛔ READ THIS BEFORE "FIXING" THE UNDER-READ NUMBER THIS GATE PRINTS.
+READ THIS BEFORE "FIXING" THE UNDER-READ NUMBER THIS GATE PRINTS.
 
 This gate was written to prove a theory about the 1.5x Day/Night trailing-edge
 lines. THE THEORY WAS WRONG, and acting on it broke the thumbnail flyouts twice
@@ -135,7 +135,7 @@ def run(tier, limit):
 
     # ---- 2. do any imagerects still describe the UNSNAPPED size? ------------
     bad = []
-    # ⛔ THE SECOND FAILURE MODE, ADDED AFTER SHIPPING IT (2026-08-06).
+    # THE SECOND FAILURE MODE, ADDED AFTER SHIPPING IT (2026-08-06).
     # The first repair used a "short by <= 24px must be a snap" tolerance to
     # decide whether to widen a rect to its art. On a SMALL atlas - 40px wide
     # holding two 20px cells - the first cell is short by 20, passes the
@@ -255,7 +255,7 @@ def main():
         if res is None:
             continue
         nbad, nsnap, nspread = res
-        # ⛔ nbad is REPORTED, NEVER FAILED ON. Closing that gap is what broke
+        # nbad is REPORTED, NEVER FAILED ON. Closing that gap is what broke
         # the thumbnails twice; see the header. Left visible so the number
         # cannot drift unnoticed.
         spread_by_tier[tier] = nspread
@@ -263,7 +263,7 @@ def main():
             fail.append("%s: ScaleDim snapped %d image(s) at an INTEGER factor - "
                         "it is supposed to return early there" % (tier, nsnap))
 
-    # ⛔ OVER-EXTENSION IS A TIER-RELATIVE TEST, NOT AN ABSOLUTE ONE.
+    # OVER-EXTENSION IS A TIER-RELATIVE TEST, NOT AN ABSOLUTE ONE.
     # A handful of rects have run to the full sheet at EVERY tier since long
     # before this gate existed - e.g. {13F15260} is 367 of a 590 sheet at 1x and
     # ships full-width at 1.5x, 2x AND 3x. 2x and 3x are user-confirmed working

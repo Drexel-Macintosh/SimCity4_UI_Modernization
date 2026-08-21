@@ -22,7 +22,7 @@ $TIER_FAMILIES = @(
     @{ Sub = "zzz-SC4UIScale";   Base = "z_SC4UIScale_CsiIcons"     },
     @{ Sub = "zzz-SC4UIScale";   Base = "z_SC4UIScale_UncoveredIcons" }
 )
-# ⛔ THE FILES ARE NOT A RELIABLE SOURCE FOR THIS. Reading "which tier is
+# THE FILES ARE NOT A RELIABLE SOURCE FOR THIS. Reading "which tier is
 # armed" off disk works only while exactly one is armed - and the very bug this
 # block exists to fix leaves TWO armed, at which point a first-match scan picks
 # whichever tier sorts first and locks in the wrong answer. That happened on the
@@ -68,7 +68,7 @@ foreach ($fam in $TIER_FAMILIES) {
         # Ambiguous AND no log to break the tie. Say so rather than guessing -
         # a silent pick here is what produced the wrong answer the first time.
         $ARMED_BEFORE[$fam.Base] = $live[0]
-        Write-Output ("  ⚠ " + $fam.Base + ": " + ($live -join "+") +
+        Write-Output ("  " + $fam.Base + ": " + ($live -join "+") +
                       " both armed and no log to arbitrate - keeping " + $live[0])
     }
 }
@@ -144,7 +144,7 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat" "$plug\z_SC
 # ("this package was NEVER in this list, so the deployed copy froze at the
 # 2026-07-29 build epoch"). A deploy script that is not a complete manifest is
 # a slow-acting bug generator: everything looks green and the artifact is old.
-# ⚠ SOURCE IS THE **UNTAGGED** FILE. tools\itemicons\ holds BOTH
+# SOURCE IS THE **UNTAGGED** FILE. tools\itemicons\ holds BOTH
 # z_SC4UIScale_ItemIcons.dat and z_SC4UIScale_ItemIcons-2x.dat, and they are
 # not the same build. Test-DatIntegrity treats the UNTAGGED one as canonical
 # (it is what SelectiveArt/DialogStatic do too - the 2x tier's source carries
@@ -174,7 +174,7 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ItemIconsSub-3x.dat" "$zzz\z_SC4
 # each looked fine locally and was simply absent on a clean install.
 # Tier suffixes follow the ItemIconsSub pattern: the ACTIVE tier keeps its
 # plain .dat name, the other two ship .x1-disabled and ScaleTier renames.
-# ⛔ THESE THREE LINES SHIPPED INVERTED (2026-08-18 -> 2026-08-19). 15x was
+# THESE THREE LINES SHIPPED INVERTED (2026-08-18 -> 2026-08-19). 15x was
 # copied to the PLAIN name and 2x to .x1-disabled, so a 2x install deployed
 # 1.5x offer-balloon icons. The comment above was right the whole time; the
 # code under it was written during a 1.5x test session and never swapped back.
@@ -187,7 +187,7 @@ foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
   Copy-Item ("$proj\tools\packages\" + $t[0] + "\z_SC4UIScale_CsiIcons-" + $t[0] + ".dat") `
             (Join-Path $zzz ("z_SC4UIScale_CsiIcons-" + $t[0] + ".dat" + $t[1])) -Force
 }
-# ⛔ A CsiIcons-specific "remove any armed 15x/3x" sweep used to sit here. It
+# A CsiIcons-specific "remove any armed 15x/3x" sweep used to sit here. It
 # was written when 2x was assumed to be the active tier always, and it DELETED
 # THE CORRECT FILE on a 3x install - the armed-tier restore at the end of this
 # script would re-arm 3x and this block would remove it again, every run. The
@@ -203,7 +203,7 @@ foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
 #     python tools\itemicons\build_uncovered_icons.py
 # which rediscovers the set from the player's OWN Plugins tree, so this is not
 # a list that can go stale - re-run it after installing new lots.
-# ⛔ OPTIONAL BY CONSTRUCTION - a hard Copy-Item here was a RELEASE BUG.
+# OPTIONAL BY CONSTRUCTION - a hard Copy-Item here was a RELEASE BUG.
 # This package holds however many uncovered third-party icons THIS install
 # has, so on a clean install - which is exactly what a first-time player and
 # the #148 vanilla check both are - it does not exist at all, and the deploy
@@ -223,7 +223,7 @@ foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
 # it would also stash the one control that lets a player LEAVE 1x. Without this
 # package the stock tier is a one-way door out of the mod.
 #
-# ⚠ IT MUST NOT BE LIVE AT A SCALED TIER. It lives in zzz-SC4UIScale\, and
+# IT MUST NOT BE LIVE AT A SCALED TIER. It lives in zzz-SC4UIScale\, and
 # SUBFOLDERS load AFTER root files, so a live copy would beat the root
 # DialogStatic-<tier> and hand a 2x player a 1x Graphic Options. The DLL's
 # SyncDat corrects the state at PreAppInit - before any dat is read - but the
@@ -231,7 +231,7 @@ foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
 # and trusting a later repair is precisely the shape #196 shipped.
 $selSrc = Join-Path $proj ("tools\packages\1x\z_SC4UIScale_SelectorUI-1x.dat")
 if (Test-Path $selSrc) {
-  # ⛔ NOT $TIER_FROM_LOG. That variable is null whenever no log line matched,
+  # NOT $TIER_FROM_LOG. That variable is null whenever no log line matched,
   # which is the common case - gating on it armed this package on a live 1.5x
   # install (2026-08-19), and because it sits in zzz-SC4UIScale\ it would have
   # beaten the root DialogStatic-15x and served a 1x Graphic Options at 1.5x.
@@ -249,7 +249,7 @@ if (Test-Path $selSrc) {
   Write-Output "  SelectorUI-1x source MISSING - run tools\dialog-static\build_selector_1x.py"
 }
 
-# ⛔ THE COMMENT THAT USED TO SIT HERE WAS FALSE ON BOTH COUNTS (2026-08-05).
+# THE COMMENT THAT USED TO SIT HERE WAS FALSE ON BOTH COUNTS (2026-08-05).
 # It said WebText and MenuFix were "hand-placed, no build source in the repo"
 # and could never be rebuilt. Both statements are wrong:
 #   tools\webtext\z_SC4UIScale_WebText.dat        + build_webtext.py that makes it
@@ -321,7 +321,7 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_WarriorUI-3x.dat" "$zzz\z_SC4UIS
 # Mod's OWN 392 menu ItemIcons, gated in ScaleTier on the presence of
 # NetworkAddonMod_Controller.dat. Same zzz- rule as its siblings - NAM lives
 # in 770-network-addon-mod\ and only zzz- sorts after it.
-# ⚠ THESE THREE FILES WERE PLACED BY HAND during the session that built them,
+# THESE THREE FILES WERE PLACED BY HAND during the session that built them,
 # and were caught missing here by Build-Dist.ps1 the same day: the bundle came
 # out without them. That is task #58 and task #116's failure verbatim - a
 # package outside this manifest freezes at the build epoch it was hand-copied
@@ -342,7 +342,7 @@ Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_NamIcons-3x.dat" "$zzz\z_SC4UI
 # v2.25.2. The DLL's ScaleTier::SyncFont copies the active tier's file over
 # FontStyle.ini at boot, so ONLY these three sources belong here; never copy
 # FontStyle.ini itself.
-# ⚠ The 2x source is tools\fonts\FontStyle.candidate.ini - there is no
+# The 2x source is tools\fonts\FontStyle.candidate.ini - there is no
 # tools\packages\2x\ directory. It is byte-identical to make_fontstyle.py's
 # factor-2 output apart from its hand-written ";;" banner (asserted by
 # --selfcheck).
@@ -365,7 +365,7 @@ Copy-Item "$proj\tools\packages\3x\FontStyle-3x.ini" "$plug\FontStyle-3x.ini" -F
 # So: wherever BOTH names exist, the unsuffixed one is live and must be
 # refreshed from the copy we just wrote.
 #
-# ⛔ .x1-disabled IS AN OVERLOADED SUFFIX, AND THAT BIT THIS LOOP (2026-08-05).
+# .x1-disabled IS AN OVERLOADED SUFFIX, AND THAT BIT THIS LOOP (2026-08-05).
 # The DLL writes it for TWO unrelated reasons:
 #   (a) TIER selection - "this is not the active tier"      -> only ever -15x/-3x
 #   (b) DEPENDENCY gate - "the mod this package patches is not installed"
@@ -397,9 +397,9 @@ foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
 # Test-ThirdPartyGates.ps1 exists to catch ("our frozen copy of another mod's
 # UI is still winning").
 #
-# ⚠ THE DEPLOY REFRESHES CONTENT. IT MUST NOT CHANGE GATE STATE. Those are two
+# THE DEPLOY REFRESHES CONTENT. IT MUST NOT CHANGE GATE STATE. Those are two
 # different authorities: this script owns "are the bytes current", the DLL owns
-# "should this be loaded at all". An earlier version of this block deleted the
+# "should this be loaded at all". A previous approach deleted the
 # disabled twin instead, which silently overrode the DLL's decision and turned
 # the third-party gate red - self-healing at the next launch, but red in the
 # meantime, and a standing red makes every later red look pre-excused.
@@ -407,7 +407,7 @@ foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
 # So: push the fresh bytes into the DISABLED name and remove the active one.
 # Content current, gate decision untouched. On a machine where the mod IS
 # installed there is no twin and none of this runs.
-# ⛔ MEMBERSHIP, NOT PATTERN. Only these packages have a DEPENDENCY gate in
+# MEMBERSHIP, NOT PATTERN. Only these packages have a DEPENDENCY gate in
 # ScaleTier.cpp - each is conditioned on a third-party mod being installed.
 # Every other package is TIER-gated only, and for those a -2x.x1-disabled twin
 # means "not the active tier" or "stale from an earlier deploy", never "turn it
@@ -458,7 +458,7 @@ foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
 # untouched - the same split of authority the dependency-gate block uses.
 # A family with nothing recorded was not armed before (clean install): its 2x
 # stays armed, which is the historical default.
-# ⛔ "NOTHING ARMED" IS A STATE, NOT A GAP. Set-Tier.ps1 -Tier 1 disarms every
+# "NOTHING ARMED" IS A STATE, NOT A GAP. Set-Tier.ps1 -Tier 1 disarms every
 # tier package on purpose - that IS the 1x baseline. This restore used to treat
 # an empty snapshot as "no information" and leave whatever the family blocks had
 # just armed (2x), so running a deploy during a 1x reference session silently

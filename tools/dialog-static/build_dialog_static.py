@@ -170,7 +170,7 @@ else:
 # the source mod still being installed. Building from the STOCK script here
 # would silently revert the mod's function.
 #
-# ⚠ Their art is NOT staged here: {46a006b0,144161e4} and {46a006b0,144161eb}
+# Their art is NOT staged here: {46a006b0,144161e4} and {46a006b0,144161eb}
 # are already 2x IN PLACE in the root DialogStatic package, which the mod does
 # not override, so the art is correct whichever script wins. The build ASSERTS
 # this (no left1x is tolerated on a third-party override).
@@ -290,7 +290,7 @@ if "--emit-inputs" in sys.argv:
     _emit_inputs()
 
 # ART THAT DOES NOT EXIST ANYWHERE - proven, not assumed (task #154).
-# ⛔ THE BAR FOR ADDING TO THIS SET IS DELIBERATELY HIGH, because v2.38.3 put
+# THE BAR FOR ADDING TO THIS SET IS DELIBERATELY HIGH, because v2.38.3 put
 # {46a006b0,ea7f0eae} here on a STOCK-ONLY null and shipped a splash tiled 2x2.
 # A stock-store miss is NOT evidence of absence. What is required is a null
 # from an instrument that reads the GAME ARCHIVES **AND THE WHOLE PLUGINS
@@ -523,10 +523,10 @@ RES_READOUT_IID = "8a7e052f"
 RES_READOUT_ANCHOR = 'caption="Software"'
 RES_READOUT_IDS = ("0x5ca1e000", "0x5ca1e001")
 
-# ---- IN-GAME SCALE SELECTOR (2026-08-19, user request) ---------------------
+# ---- IN-GAME SCALE SELECTOR (2026-08-19) ---------------------
 # Three more nodes ride the same injection point, same rules (empty captions,
 # DLL fills; blank on screen = the DLL half is missing, never a stale value):
-#   0x5ca1e002  RETIRED v3.14.3 (user direction): the radio beside the scale
+#   0x5ca1e002  RETIRED v3.14.3: the radio beside the scale
 #               combo was generation-1 furniture the state machine made dead
 #               (see the NO RADIO comment at the injection point).
 #   0x5ca1e003  "Scale" caption row, directly under Software. RE-INTRODUCED
@@ -546,7 +546,7 @@ SEL_COMBO_ID = "0x5ca1e004"
 # the DROP-DOWN LIST, not the closed field).
 SEL_BORDER_ID = "0x5ca1e005"
 
-# ---- RESOLUTION + WINDOW MODE (2026-08-19, user request) -------------------
+# ---- RESOLUTION + WINDOW MODE (2026-08-19) -------------------
 # WHY THESE EXIST AT ALL, since the dialog already has a Resolution list:
 #   * SC4 is a DirectX 7 game and D3D7 is capped at 2048x2048. The game's own
 #     ini says so. Every resolution this mod is FOR is above that cap, which is
@@ -599,7 +599,7 @@ def inject_res_readout(text, fn):
     """
     if not fn.endswith("_I-%s.ui" % RES_READOUT_IID):
         return text, 0
-    # ⚠ KEY THE GUARD ON A NODE WE STILL EMIT. It used to test for
+    # KEY THE GUARD ON A NODE WE STILL EMIT. It used to test for
     # RES_READOUT_IDS[0], the #192 readout label - which the combo REPLACED on
     # 2026-08-19, so the test could never match again and a second pass would
     # have injected a duplicate radio and combo. An idempotence check that
@@ -630,13 +630,13 @@ def inject_res_readout(text, fn):
             'winflag_ignoremouse=yes font=GenBodyMedium align=lefttop '
             'notify=no wrapped=no opaque=no forecolor=(63,73,103) '
             'bkgcolor=(0,0,0) gutters=(2,2) textoffsets=(0,0) >')
-    # ---- THE COMBO IS THE READOUT (2026-08-19, user direction) ------------
+    # ---- THE COMBO IS THE READOUT (2026-08-19) ------------
     # ONE control both shows the live setting and changes it, instead of a
     # readout in one place and a picker in another. The DLL writes the
     # selected row as "1.5x @ 2400x1600", which is the readout line the #192
     # text label used to carry, so nothing was lost by retiring that label.
     #
-    # LAYOUT (2026-08-20, user direction, ALL ARITHMETIC): the children of
+    # LAYOUT (2026-08-20, ALL ARITHMETIC): the children of
     # the panel GZWinBMP sit in LOCAL coordinates and clip to the BMP's own
     # rect. The BMP is (15,37,479,393) as l,t,r,b, so the clip is
     # 464 wide x 356 tall - the first version of this row put the frame
@@ -657,7 +657,7 @@ def inject_res_readout(text, fn):
     #   right edge  = 457/458, inside the 464 inner width - the old 465/466
     #                 right-edge clip (documented below) must not return.
     #
-    # ⛔ NO RADIO BESIDE THE SCALE COMBO (removed v3.14.3, user direction).
+    # NO RADIO BESIDE THE SCALE COMBO (removed v3.14.3).
     # It was generation-1 furniture: "lit when the custom resolution is
     # active", and the mutual-exclusion dance with the four stock resolution
     # radios was how a custom size survived a game-written ini. The state
@@ -667,7 +667,7 @@ def inject_res_readout(text, fn):
     # scale combo the radio only read as a stray control. The node, its DLL
     # watcher (SelRadioTick) and the id are gone together.
     # ---- STYLING: ONE COLOUR, THE ENGINE'S STANDARD (v3.14.4) -----------
-    # The dropdown must be ONE COLOUR (user direction, with a stock
+    # The dropdown must be ONE COLOUR (matched against a stock
     # reference image: the Budget dialog's "Initiate Deal" combo, open list
     # uniform). Three measured builds converged here:
     #
@@ -731,7 +731,7 @@ def inject_res_readout(text, fn):
     # The dialog draws its own separators with GZWinFlatRect (the three
     # 0x0a7e153d rules in this same script), so the frame is one of those.
     #
-    # ⛔ NOT style=nofill. That was the first attempt and it drew NOTHING, so
+    # NOT style=nofill. That was the first attempt and it drew NOTHING, so
     # the border never appeared. In this script `style=nofill` marks INVISIBLE
     # LAYOUT CONTAINERS - the (9,397,487,427) rect that groups the buttons is
     # one - while the rects you can actually see (the 1px dividers) simply
@@ -761,7 +761,7 @@ def inject_res_readout(text, fn):
     # Re-identify the four stock resolution labels so the DLL can reach them
     # individually (they all ship with the shared id 0xca57da80, and
     # GetChildWindowFromIDRecursive returns the LAST match).
-    # ⭐ BORN HIDDEN, NOT HIDDEN ON SIGHT. The first version hid these at
+    # BORN HIDDEN, NOT HIDDEN ON SIGHT. The first version hid these at
     # runtime, 250ms after the dialog opened, so the player watched the rows
     # appear and then vanish - "it's jumping when I open options". A widget
     # that is going to be absent must be absent in the FIRST paint, and the
@@ -783,7 +783,7 @@ def inject_res_readout(text, fn):
                 relabelled += 1
                 break
     # ---- CANCEL AND DEFAULT SETTINGS ARE DISABLED (user instruction) ----
-    # ⭐ THE SIMPLEST THING THAT REMOVES A WHOLE CLASS OF PROBLEM.
+    # THE SIMPLEST THING THAT REMOVES A WHOLE CLASS OF PROBLEM.
     # A day of work went into telling Accept, Cancel and Default apart from
     # the outside - coordinates, an ini side-effect, a message filter, a reset
     # fanout - and each mechanism was eliminated or misread in turn. The
@@ -796,7 +796,7 @@ def inject_res_readout(text, fn):
     # greys itself - the same treatment the save-warning mod uses on the quit
     # buttons it suppresses.
     #
-    # ⚠ IN DATA, NOT AT RUNTIME. Disabling these on a timer tick would let the
+    # IN DATA, NOT AT RUNTIME. Disabling these on a timer tick would let the
     # player see them live and then go grey, which is the flicker that got
     # the hidden resolution rows moved into data too.
     # The stock "Resolution" header is hidden: the left column now leads with
@@ -887,7 +887,7 @@ def inject_res_readout(text, fn):
 
     # Placeholder rows only - the DLL rebuilds both lists at runtime, because
     # the useful resolutions depend on the monitor and only it knows that.
-    # The Resolution row drops 10px (v3.14.3, user direction) so its caption
+    # The Resolution row drops 10px (v3.14.3) so its caption
     # and combo sit on the SAME horizontal band as the Scale caption and
     # combo (313/333): the two bottom rows read as one aligned pair. The
     # frame bottom lands at 355, the same 1px-inside-the-356-clip seat as
@@ -937,7 +937,7 @@ def target_out(iid_s):
 # collision-free. Discover them all from disk (group 96a006b0 only) instead
 # of hand-listing 117 iids; skip any already in TARGETS.
 #
-# ⚠ PARENTAGE WARNING (task #46, 2026-07-29): this rule ALSO enrols any
+# PARENTAGE WARNING (task #46, 2026-07-29): this rule ALSO enrols any
 # script that merely CONTAINS id=0x10000005 as an inner container - the
 # eleven U-Drive-It driving-status scripts (root 0x10000006) matched and
 # shipped doubled, and because THAT root parents at the 3D VIEW the city
@@ -1134,7 +1134,7 @@ def art_1x_dims(gid, iid):
     """1x source dimensions for a TGI, or None. Used ONLY to decide whether an
     imagerect crops the WHOLE sheet - a full-sheet crop must track the art's
     real scaled size, a partial crop must not be touched.
-    ⚠ the 1x extract uses BARE hex names (T-856ddbac_G-...), the upscale preview
+    the 1x extract uses BARE hex names (T-856ddbac_G-...), the upscale preview
     uses 0x-prefixed ones. Two conventions, one TGI."""
     name = "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid)
     if not os.path.isdir(EXTRACT_1X_ROOT):
@@ -1183,7 +1183,7 @@ def load_font_styles():
 def leaf_art_sized(nd):
     """Is this node a LEAF whose size is dictated by the art it draws? (#155)
 
-    ⛔ THE DEFECT THIS EXISTS FOR: `UiSpike::ScaleSubtree` has taken a LEAF's
+    THE DEFECT THIS EXISTS FOR: `UiSpike::ScaleSubtree` has taken a LEAF's
     scaled size SIZE-DERIVED since v2.94.1 (#148's cure - a leaf has no
     children to keep flush, so deriving its width from its neighbours' edges
     is what left a 1px strip of the art cell undrawn: the reverse L). This
@@ -1199,7 +1199,7 @@ def leaf_art_sized(nd):
     2x and 3x** - the positive control, because ScaleRound is exact and
     ScaleDim returns early at an integer factor.
 
-    ⚠ SCOPE, and why it is not "every leaf". The DLL applies its rule to all
+    SCOPE, and why it is not "every leaf". The DLL applies its rule to all
     leaves. Here it is restricted to leaves that BIND ART AND CARRY NO
     `imagerect`, because those are exactly the windows whose size the art
     dictates. Widening it to text leaves would move a wrap point in dialogs
@@ -1228,7 +1228,7 @@ def verify_doubled(fn, orig_roots, new_text, art_plan, styles, runtime2x=(),
                    seated=()):
     """Re-parse the edited script and assert every edit landed exactly.
 
-    ⚠ `seated` is the ONLY way an area is allowed to differ from an exact
+    `seated` is the ONLY way an area is allowed to differ from an exact
     scale, and it is NOT a bypass - it is a DIFFERENT, STRICTER assertion.
     A seated window (#153) must have been TRANSLATED by at most one pixel per
     axis and its SIZE must still be exactly scaled. That distinguishes a
@@ -1318,10 +1318,10 @@ def verify_doubled(fn, orig_roots, new_text, art_plan, styles, runtime2x=(),
 #     and 3x have never shown this family.
 #
 # These 22 portraits sit at 1x offset (3,2): x is ODD so it fails, y is EVEN
-# so it is safe. The user reported "shifted to the left". The advisor panel,
+# so it is safe. The defect reads as "shifted to the left". The advisor panel,
 # offset (2,1), fails on y instead and was reported as "high" (#152).
 #
-# ⚠ WHY THIS IS SAFE HERE, AND THE RUNTIME_BOUND_2X WARNING ABOVE IS NOT
+# WHY THIS IS SAFE HERE, AND THE RUNTIME_BOUND_2X WARNING ABOVE IS NOT
 # VIOLATED. That warning says scaling this script's RECTS would crop the
 # runtime-generated portraits, and it is about `imagerect`. This pass changes
 # NEITHER a rect nor a size - it TRANSLATES a window by one pixel.
@@ -1369,7 +1369,7 @@ MYSIM_FACE_SEATS = [
 def _seat_one_tag(text, wid):
     """The ONLY tag carrying this id, or FATAL.
 
-    ⚠ THE \\b HERE IS LOAD-BEARING and was lost once. The first version of this
+    THE \\b HERE IS LOAD-BEARING and was lost once. The first version of this
     file was generated through a Python string template, where \\b became a
     literal BACKSPACE (0x08) inside the regex - so the pattern demanded a 0x08
     byte after the id and matched nothing, and the build FATAL'd claiming the
@@ -1422,13 +1422,13 @@ def seat_faces_on_apertures(text, seats, factor, fn):
 
 
 # ---------------------------------------------------------------------------
-# ⛔ HISTORY, KEPT: THE FIRST ATTEMPT AT THE ABOVE WAS BACKED OUT 2026-08-13.
+# HISTORY, KEPT: THE FIRST ATTEMPT AT THE ABOVE WAS BACKED OUT 2026-08-13.
 #
 # The advisor faces were fixed by seating each face on its frame's measured art
 # aperture (#152, build_selective_safe.py). The same law predicts these:
 # the 22 portraits sit at 1x offset (3,2), x is ODD, so edge-derived rounding
 # loses it at f=1.5 and the face draws a pixel LEFT of its hole - which is
-# exactly what the user reported. The 22 (face, frame) pairs were derived
+# exactly what the report describes. The 22 (face, frame) pairs were derived
 # cleanly by resolving <CHILDREN> nesting to absolute coordinates; all 44 ids
 # are unique in the script. The arithmetic is not in doubt.
 #
@@ -1710,7 +1710,7 @@ def main():
     # Whichever builder ran last won, silently. That is how the framework's
     # default scrollbar/frame glyphs came to ship 2x (the open #4 News defect).
     #
-    # ⚠ THE NARROW SET IS THE POINT. 114 TGIs are "untouched" in refmap, but
+    # THE NARROW SET IS THE POINT. 114 TGIs are "untouched" in refmap, but
     # almost all of that is correct division of labour: art referenced only by
     # the 163 STATIC dialogs is legitimately unscaled to selective-safe and
     # legitimately exclusive to us. Honouring `untouched` wholesale would gut
@@ -1824,7 +1824,7 @@ def main():
     tp_dialog = []        # third-party overrides -> their own package
     unmapped_fonts = set()
     # ---- THE ART WE SHIP THAT art_plan CANNOT SEE (task #154 follow-up) ----
-    # ⛔ THIS IS WHY THE FIRST v2.97.0 BUILD SHIPPED HALF-WIDTH STRIPES.
+    # THIS IS WHY THE FIRST v2.97.0 BUILD SHIPPED HALF-WIDTH STRIPES.
     # `art_plan` is computed ONLY from the stock upscale preview set, so a
     # bitmap the MOD supplies - which we upscale through thirdparty-art\ - is
     # classified "left1x". `control_art_doubled` then stays False and the
@@ -1838,7 +1838,7 @@ def main():
     # way: the ref stays byte-identical, but the pixels behind it ARE scaled,
     # so the rect must scale with them.
     #
-    # ⚠ SCOPED TO THE OWNING PACKAGE ON PURPOSE. The scaled bitmap ships in
+    # SCOPED TO THE OWNING PACKAGE ON PURPOSE. The scaled bitmap ships in
     # the dat gated on ITS mod. Scaling an imagerect in the ROOT DialogStatic
     # package on the strength of art that only exists in a mod-gated package
     # would break the moment that mod is removed - the gate takes the art away
@@ -1892,7 +1892,7 @@ def main():
             if nd.area is not None:
                 (x1, y1, x2, y2), vs, ve = nd.area
                 na = scaled_area(nd)
-                # ⛔ THE INTEGER NO-OP IS ASSERTED, NOT ASSUMED (#155). For an
+                # THE INTEGER NO-OP IS ASSERTED, NOT ASSUMED (#155). For an
                 # integer N, scale_len(v) = vN exactly, so
                 # N*l + N*(r-l) == N*r and the size-derived leaf rule lands on
                 # the identical number. 2x and 3x are user-confirmed tiers; if
@@ -1940,7 +1940,7 @@ def main():
                 if nd.imagerect is not None:
                     (l, t, r, b), vs, ve = nd.imagerect
                     nr, nb = scale_len(r), scale_len(b)
-                    # ⛔ #157: THE CROP MUST FOLLOW THE ART, NOT THE ARITHMETIC.
+                    # #157: THE CROP MUST FOLLOW THE ART, NOT THE ARITHMETIC.
                     # Upscale2x::ScaleDim SNAPS a sheet's dimensions to a cell
                     # multiple at fractional factors, but scale_len here is a
                     # plain round - so at 1.5x the two disagree and the crop
@@ -2034,7 +2034,7 @@ def main():
             seated_ids = tuple(m[0] for m in seated)
             print("   my-sim faces seated x%g (%d of %d moved) in %s"
                   % (FACTOR, len(seated), len(MYSIM_FACE_SEATS), fn))
-            # ⛔ THE INTEGER NO-OP IS ASSERTED, NOT ASSUMED. For integer N,
+            # THE INTEGER NO-OP IS ASSERTED, NOT ASSUMED. For integer N,
             # scale_len(v) = vN exactly, so N*frame + N*(face-frame) == N*face
             # and every delta is (0,0). 2x/3x are user-confirmed: if one window
             # ever moves there, STOP THE BUILD.
@@ -2066,7 +2066,7 @@ def main():
         # reference art with no 2x asset; an override we hand-picked has no
         # such excuse, so this is fatal.
         if is_tp and left1x_controls:
-            # ⛔ THIS GUARD WAS WRONG ONCE AND IT SHIPPED A VISIBLE DEFECT.
+            # THIS GUARD WAS WRONG ONCE AND IT SHIPPED A VISIBLE DEFECT.
             # v2.38.3 classified a ref as "DANGLING - no source anywhere, so
             # nothing to scale" on the strength of tools\dbpf\find_tgi.py
             # reporting {46a006b0,ea7f0eae} absent. That tool scans the GAME
@@ -2079,7 +2079,7 @@ def main():
             # so a plugin-supplied ref must be checked against the plugin art
             # we ship (thirdparty-art\). Anything still unaccounted for is
             # FATAL: silence here is what produced the 4x splash.
-            # ⚠ `afn`, NOT `fn`: `fn` is the DIALOG being processed, and an
+            # `afn`, NOT `fn`: `fn` is the DIALOG being processed, and an
             # earlier draft of this loop rebound it - so the FATAL below named
             # a PNG instead of the script at fault. A diagnostic that points at
             # the wrong file is worse than none.
@@ -2090,7 +2090,7 @@ def main():
                                   r"_I-(?:0x)?([0-9a-f]{8})\.png", afn, re.I)
                     if m2:
                         tp_art_have.add((int(m2.group(2), 16), int(m2.group(3), 16)))
-            # ⚠ THE OLD MESSAGE OVER-CLAIMED, and this file has a law about
+            # THE OLD MESSAGE OVER-CLAIMED, and this file has a law about
             # that (#153: verify the failure message before believing its
             # implication). The condition is an OR, so a ref that is merely
             # UNACCOUNTED FOR was reported as one that "EXISTS at 1x" - which

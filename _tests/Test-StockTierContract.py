@@ -23,7 +23,7 @@ The project already records this shape twice (#149, #182) in comments beside
 the very call site that grew both of these. A comment did not stop the third
 and fourth instances; this gate is the version that can.
 
-⚠ THIS IS A SOURCE-SHAPE GATE, and it is honest about that: it proves the
+THIS IS A SOURCE-SHAPE GATE, and it is honest about that: it proves the
 CALLS ARE WIRED the way the contract requires. It cannot prove the runtime
 behaviour - only a boot can - so every assertion here is about structure that
 is necessary, never about a result that is sufficient. _tests/Test-BootMatrix
@@ -44,7 +44,7 @@ SCALETIER = os.path.join(REPO, "src", "ScaleTier.cpp")
 def strip_comments(src):
     """Remove // and /* */ comments.
 
-    ⚠ NECESSARY, NOT COSMETIC. Every invariant below is about what the CODE
+    NECESSARY, NOT COSMETIC. Every invariant below is about what the CODE
     does, and this file's comments quote the very call shapes being searched
     for - including the wrong ones they warn against. Matching prose would let
     a warning about a bug read as the bug, or worse, let the fix's own
@@ -125,7 +125,7 @@ def main():
             stripped = ln.strip()
             if not stripped:
                 continue
-            # ⚠ SKIP BARE BRACES. The first non-blank line above a call inside
+            # SKIP BARE BRACES. The first non-blank line above a call inside
             # an `if` block is the block's own `{`, which sits at the LOWER
             # indent - so treating it as "left the block" ended the walk one
             # line before the `if` it was looking for. The gate then passed on
@@ -182,7 +182,7 @@ def main():
         print("  [stock factor unloads art] *** GUARD NOT FOUND ***")
     else:
         cond = " ".join(m2.group(1).split())
-        # It needs a term that is TRUE when the user asked for the mod to be
+        # It needs a term that is TRUE when the request is for the mod to be
         # active but the resolved factor is stock. The captured pre-force copy
         # of the ini's ScaleAll is that term.
         if "iniWantsScaling" not in cond:

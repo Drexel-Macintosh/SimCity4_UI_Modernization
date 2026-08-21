@@ -1,7 +1,7 @@
 r"""Emit the art TGIs that must NOT be cell-snapped, because nothing divides
 them and their only contract is with their WINDOW (#160 + #162).
 
-⛔ THE RULE, stated once. `CellUnit` snaps a scaled sheet so a cell count keeps
+THE RULE, stated once. `CellUnit` snaps a scaled sheet so a cell count keeps
 dividing it evenly. That is right for exactly two roles and wrong for every
 other sheet in the game:
 
@@ -26,7 +26,7 @@ Qualifies here if:
 AND no .UI ever draws it as a GZWinBtn state or as a 9-slice;
 AND it is absent from cell-strips.txt and nine-slice.txt.
 
-⚠ EXCLUSION-BIASED, like both siblings. Art binds by TGI and some consumers are
+EXCLUSION-BIASED, like both siblings. Art binds by TGI and some consumers are
 created at runtime and appear in no script (REGRESSION.md #148), so a sheet
 nobody proved is snap-free keeps the sizing it has today. An unknown consumer
 can be MISSED by this list, never broken by it.
@@ -103,7 +103,7 @@ def scan():
                     if sz and sz == (r - l, b - t):
                         oneone.add(k)
 
-                # ⛔ FULL-SHEET CROP (#179, 2026-08-16). A node whose imagerect
+                # FULL-SHEET CROP (#179, 2026-08-16). A node whose imagerect
                 # is (0,0,artW,artH) has declared "READ THE WHOLE SHEET". That
                 # is a CONTRACT BETWEEN TWO NUMBERS, and the two are produced by
                 # DIFFERENT RULES: the builder pre-scales the crop with a plain
@@ -123,7 +123,7 @@ def scan():
                 # to the art (right <= artW, task #95) - it never expands one.
                 # The right-hand border fade lives in the 6 lost columns.
                 #
-                # ⚠ WHY `oneone` DOES NOT ALREADY CATCH IT, and why this is a
+                # WHY `oneone` DOES NOT ALREADY CATCH IT, and why this is a
                 # SECOND rule rather than a widening of the first: `oneone` keys
                 # on area == art size. This node's area is 585x130 against 516x130
                 # art - the window is deliberately WIDER than the bitmap. Keying
@@ -161,7 +161,7 @@ def listed():
 # ---------------------------------------------------------------------------
 # CODE-BOUND SHEETS THE .UI SCAN CANNOT REACH.
 #
-# ⛔ EVERYTHING ELSE IN THIS FILE IS DERIVED FROM A `.UI` BINDING, WHICH MEANS
+# EVERYTHING ELSE IN THIS FILE IS DERIVED FROM A `.UI` BINDING, WHICH MEANS
 # ART WITH NO `.UI` REFERENCE IS INVISIBLE TO IT BY CONSTRUCTION. That is not a
 # hypothetical: `cSC4WinTrendBar` (clsid 0xAA5C2F86, Draw 0x7BF0A0) is handed
 # its two sheets by the polls controller at 0x7ED4AC via SetImages, and they
@@ -179,7 +179,7 @@ def listed():
 # USER-REPORTED: "Mayor rating is broken ... the green bars don't extend top to
 # bottom", and "Looks perfect at 2x" - the exact 1.5x-only signature.
 #
-# ⚠ CORRECTED 2026-08-16 (same day): "NOTHING divides these sheets" was
+# "NOTHING divides these sheets" was
 # written BEFORE the cSC4WinTrendBar draw was disassembled, and it is wrong
 # for the fill strip. Draw 0x7BF0A0 computes bandW = fillW/6 (0x7BF0E4 imul
 # 0xAAAAAAAB / 0x7BF0F5 shr 2) - **14015584 IS a six-cell strip and the draw

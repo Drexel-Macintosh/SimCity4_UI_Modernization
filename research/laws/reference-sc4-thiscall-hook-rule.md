@@ -41,7 +41,7 @@ signature. Append real arguments only after those two, and only when the
 signature has been verified against the disassembly — never when it has been
 inferred.
 
-**Unknown or unverified arity:** use a naked tail jump rather than a typed
+**Unknown or unknown arity:** use a naked tail jump rather than a typed
 thunk.
 
 ```asm

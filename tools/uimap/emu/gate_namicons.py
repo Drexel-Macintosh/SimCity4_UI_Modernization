@@ -140,7 +140,7 @@ def main():
               % (tag, len(bad_quad)))
 
     print("\n2. NO ORPHANS - every TGI we override is really supplied by SOMEONE")
-    # ⛔ THE PREMISE OF THIS CHECK WAS STALE AND IT MADE THE GATE PERMANENTLY
+    # THE PREMISE OF THIS CHECK WAS STALE AND IT MADE THE GATE PERMANENTLY
     # RED (392 "orphans"). It used to assert `set(src) <= nam` - every icon we
     # override must exist in the NAM folder - which was the right invariant
     # back when our ItemIcons override was built FROM NAM and nothing else.
@@ -176,7 +176,7 @@ def main():
         orphans = set(src) - supply_all
         print("   info supply: %d icon TGIs on disk (%d of them from %s); "
               "we override %d" % (len(supply_all), len(nam), NAM_FOLDER, len(src)))
-        # ⛔ GATE ON THE CONDITION YOU DEPEND ON, AND MEASURE IT BY CONTENT.
+        # GATE ON THE CONDITION YOU DEPEND ON, AND MEASURE IT BY CONTENT.
         # The old guard was `os.path.isdir(<NAM folder>)`, which is TRUE on
         # this machine while the folder holds ZERO .dat files - NAM is not
         # actually installed. So the orphan check ran against an empty supply

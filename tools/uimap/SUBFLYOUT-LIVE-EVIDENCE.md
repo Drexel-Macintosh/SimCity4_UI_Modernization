@@ -2,15 +2,15 @@
 
 **Scope.** Everything below is extracted from captured log files. Nothing here is
 disassembly, art extraction, or simulation — those belong to the sibling
-documents (`SUBFLYOUT-BUILDER.md`, `SUBFLYOUT-ART-VERDICT.md`,
-`SUBFLYOUT-CONSTANTS.md`). This file is the LIVE oracle only.
+documents (`SUBFLYOUT-BUILDER.md`, `SUBFLYOUT-ART-VERDICT.md`). This file is the
+LIVE oracle only.
 
 Every row cites **log file + line number + timestamp**.
 
-Method: `tools\uimap\diff\parse_log.py` (its regexes are transcribed from the
-printf sites in `src\UiSpike.cpp`), re-used as a library, plus targeted greps for
-the `SUB*` / `SCAL` / `SVT` / `DOBS` / `DSTRIP` / `DPOS` instruments, whose
-grammar sits outside `parse_log.py`'s model.
+Method: the log lines were parsed with regexes transcribed from the printf sites
+in `src\UiSpike.cpp`, plus targeted greps for the `SUB*` / `SCAL` / `SVT` /
+`DOBS` / `DSTRIP` / `DPOS` instruments, whose grammar those regexes do not
+cover.
 
 ---
 
@@ -355,8 +355,8 @@ window to exist before it is shown.
 
 - **`0x8A6E61E0` and `0x8A2CAD8B` produce NO scale-event line in any modern log.**
   `ScaleGodFlyouts` calls `ScaleSubtree` directly and emits **no** `panel … -> …`
-  line, no `dialog … scaled` line, no `menu flyout … scaled` line. The parser
-  found **0 scale events** for these ids across all 11 files.
+  line, no `dialog … scaled` line, no `menu flyout … scaled` line. Parsing found
+  **0 scale events** for these ids across all 11 files.
   The only `panel` lines that ever named the container are the two v2.5.5 lines
   from *before* the skip existed (§2a).
 - Practical effect: the two most-used diagnostic greps on this project
@@ -486,5 +486,4 @@ Generalise via §1d for other item counts. The acceptance criterion that matters
 ---
 
 *Sources: `Plugins\SC4UIScale.log*` (all), the v2.5.5, v2.27.3 and selective-2x
-captures listed in §0, `src\UiSpike.cpp` (read-only), and
-`tools\uimap\diff\parse_log.py` (re-used as a library).*
+captures listed in §0, and `src\UiSpike.cpp` (read-only).*

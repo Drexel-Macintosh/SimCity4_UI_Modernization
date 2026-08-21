@@ -205,9 +205,9 @@ is:**
 |---|---|---|
 | `SelectiveArt`, `DialogStatic`, `ItemIcons` | SimCity 4 Deluxe's own archives | **Maxis / Electronic Arts** |
 | `WebText` | three EA locale strings with the domain swapped (see above) | **Maxis / Electronic Arts** |
-| `ItemIconsSub` | **mostly plugin artwork, not stock art.** 130 entries: **55 from memo33's Submenus DLL**, 69 from the Colossus Addon Mod's System Integration Module and from Maxis landmark-building plugins, 5 from Maxis *Buildings* `.SC4Lot` files, and **1** stock image — the Submenus DLL's "Missing Thumb", which ships in `SimCity_1.dat`. Sources: `tools\itemicons\build_itemicons_sub.py`, `tools\itemicons\REPORT.md` | **memo33**, **the CAM team**, **Maxis / Electronic Arts** |
+| `ItemIconsSub` | **mostly plugin artwork, not stock art.** 130 entries: **55 from memo33's Submenus DLL**, 69 from the Colossus Addon Mod's System Integration Module and from Maxis landmark-building plugins, 5 from Maxis *Buildings* `.SC4Lot` files, and **1** stock image — the Submenus DLL's "Missing Thumb", which ships in `SimCity_1.dat`. Source: `tools\itemicons\build_itemicons_sub.py` | **memo33**, **the CAM team**, **Maxis / Electronic Arts** |
 | `CamUI` | Colossus Addon Mod's UI scripts + art — **9 scripts and 13 bitmaps** as of v2.97.1: the six stock dialogs CAM replaces, CAM's **own** city info screen and its civic + school query panels, and the strips, badges and splash they draw | **the CAM team** |
-| `CamGraphLabels` | **not derived — authored by us.** One 20-byte caption record at a resource id CAM's Power and Water chart exemplars bind but which exists in no installed file, so that row draws with no caption. The word matches CAM's own `Exported` label with its trailing CRLF omitted. CAM's files are never modified. `tools\itemicons\build_cam_graph_labels.py` | **ours** (CC0), supplied for the Colossus Addon Mod |
+| `CamGraphLabels` | **not derived — authored by us.** One 20-byte caption record at a resource id CAM's Power and Water chart exemplars bind but which exists in no installed file, so that row draws with no caption. The word matches CAM's own `Exported` label with its trailing CRLF omitted. CAM's files are never modified. | **ours** (CC0), supplied for the Colossus Addon Mod |
 | `NamIcons` | Network Addon Mod's menu ItemIcons (392) | **the NAM team** |
 | `WarriorUI` | *God Terraforming in Mayor Mode* scripts + art | **warrior** |
 | `SaveWarningUI` | *Save Warning*'s dialog scripts | **cyclone-boom** |
@@ -228,8 +228,6 @@ claim:
   CAM or the landmark plugins are installed. Its entries are keyed to resource
   ids those plugins introduce, so with the plugin removed nothing looks them up
   and they are inert — but that is inertness, not a gate.
-  (`tools\packages\PACKAGES.md`: "`ItemIconsSub` is in `zzz-` but is not
-  gated.")
 * **`CamGraphLabels` has no gate row.** It supplies one resource id that only
   CAM's chart exemplars bind, so it is likewise inert without CAM.
 

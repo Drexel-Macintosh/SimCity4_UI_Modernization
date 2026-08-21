@@ -89,7 +89,7 @@ CONTROL_TEXT_IDS = [
     0x8BB9130F,  # Sub/El Train
     0xEBB912FE,  # Freight Truck
     0x6BB91308,  # Freight Train
-    0x2BB0F616,  # Passenger Train (⚠ id ALSO used by a text and a button in
+    0x2BB0F616,  # Passenger Train (id ALSO used by a text and a button in
                  #    the same script - collision, see note in report())
 ]
 
@@ -236,7 +236,7 @@ def positive_control(nodes, panels):
     else:
         print("  legend BODY 0x%08X ABSENT" % BODY_ROOT)
     if PHANTOM_ROOT in nodes:
-        print("  ⚠ 0x%08X APPEARS IN THIS LOG - the phantom finding is wrong, "
+        print("  0x%08X APPEARS IN THIS LOG - the phantom finding is wrong, "
               "re-open it" % PHANTOM_ROOT)
     swept = [p for p in panels if p[0] in (BODY_ROOT, MIN_ROOT)]
     for pid, sw, sh, dw, dh in swept:
@@ -256,7 +256,7 @@ def positive_control(nodes, panels):
 def adjudicate(nodes, expect, first_seen):
     """Two discriminators, because the two classes need different ones.
 
-    ⚠ THE TRAP THIS PROBE ALREADY FELL INTO ONCE. The first version scored
+    THE TRAP THIS PROBE ALREADY FELL INTO ONCE. The first version scored
     every node against 2 x its DESIGN area and produced 10 false FAILs on the
     golden log. The game RE-LAYS this panel: the "Pedestrian" label is
     111x18 in the script but 60x17 live, because GZWinText is re-sized to its

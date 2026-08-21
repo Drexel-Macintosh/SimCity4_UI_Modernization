@@ -1,6 +1,6 @@
 r"""#181 - COLOUR-KEY INTEGRITY GATE. Magenta-key damage goes RED at build time.
 
-⛔ WHY THIS EXISTS. Magenta 0xFF00FF is this game's TRANSPARENCY KEY, and the
+WHY THIS EXISTS. Magenta 0xFF00FF is this game's TRANSPARENCY KEY, and the
 engine's key test is EXACT-MATCH ONLY. Two failure classes have now each cost
 real time:
 
@@ -18,7 +18,7 @@ WHAT IS ASSERTED, per output sheet, against the 1x extract as ground truth:
 
   R1  NEAR-KEY = 0. No pixel may sit within 8 of the key on every channel
       (|R-255|<=8, G<=8, |B-255|<=8) without BEING the exact key.
-      ⚠ STOCK IS EXEMPT BY MEASUREMENT, NOT BY HOPE (law 88 - a model that
+      STOCK IS EXEMPT BY MEASUREMENT, NOT BY HOPE (law 88 - a model that
       would condemn stock is broken). Censused 2026-08-16 over all 2280 1x
       sources: ZERO keyed sources carry a near-key pixel, and exactly ONE
       unkeyed sheet does ({6a386d26,00001111}, 4556 px of stock (252,0,255)
@@ -79,7 +79,7 @@ THE THREE DELIBERATE EXCEPTION CLASSES (each measured, none exempted blindly):
     trees alike. If either side ever grows a key pixel the gate goes red
     demanding a real model of the clamp (review finding F2, 2026-08-16).
 
-⚠ IF --smooth-keyed EVER COMES BACK (Rebuild-Corpus.ps1 reverted it
+IF --smooth-keyed EVER COMES BACK (Rebuild-Corpus.ps1 reverted it
 2026-08-16): a coverage-re-keyed sheet has a key set that is NOT the NN
 prediction, so this gate will go red on every sheet that path touches. That
 is deliberate - re-enabling it must be a decision made against this gate,
@@ -139,7 +139,7 @@ NEAR = 8    # the R1 window: within 8 of FF/00/FF per channel, but not exact
 def load_ladders():
     """redraw_ladder.py's LADDERS list, read from the file itself.
 
-    ⛔ PARSED, NOT IMPORTED. That module runs sys.exit(main()) at module level
+    PARSED, NOT IMPORTED. That module runs sys.exit(main()) at module level
     (it is a script), so `import redraw_ladder` would execute a redraw. The
     AST of its LADDERS assignment is the same single source of truth without
     running anything."""
@@ -364,7 +364,7 @@ def gate_dir(out_dir, factor, src_index, strips, ladders, label):
                 if rest.any():
                     # UNKEYED exemption (b): the 1x source itself carries
                     # near-key -> INHERITED, counted, never fatal.
-                    # ⛔ SHEET-LEVEL, NOT PER-PIXEL - MEASURED, NOT PREFERRED
+                    # SHEET-LEVEL, NOT PER-PIXEL - MEASURED, NOT PREFERRED
                     # (review finding F4, attempted 2026-08-16 and reverted
                     # the same night): the per-pixel form - fail on
                     # out_near & ~src_near[my][:,mx] - condemns the STOCK
@@ -450,7 +450,7 @@ def gate_dir(out_dir, factor, src_index, strips, ladders, label):
 
 
 def selftest(src_index, strips, ladders):
-    """⛔ PROVE THE GATE CAN GO RED (thresholds-from-controls law). Copy a real
+    """PROVE THE GATE CAN GO RED (thresholds-from-controls law). Copy a real
     keyed sheet, damage it three ways, and require every damage to be caught.
     A gate that has never failed is a gate that may not be able to."""
     factor, tier_dir = TIERS["1.5"][0], TIERS["1.5"][1]

@@ -22,11 +22,10 @@ from the target list cannot see it. A gate is only as honest as its scope.
 Direction one is "is what was built still correct?". Direction two is
 "enumerate what exists, subtract what is handled, name the remainder." The
 second direction needs its own instrument that enumerates from the live plugin
-tree, not from the build's own inputs. `tools\uiscripts\winning_corpus.py` is
-that instrument here: it lists third-party script holders that nothing handles.
-A report of unhandled holders is only useful if it is read — the target state
-is zero third-party winners, and any nonzero count is a coverage gap, not a
-note.
+tree, not from the build's own inputs, and lists the third-party script holders
+that nothing handles. A report of unhandled holders is only useful if it is
+read — the target state is zero third-party winners, and any nonzero count is a
+coverage gap, not a note.
 
 ## The crop is a third number and it does not scale itself
 

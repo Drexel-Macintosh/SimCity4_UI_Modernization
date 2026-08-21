@@ -205,8 +205,7 @@ width in every 3rd slot, so the width scales and the two index slots never do.
 
 ## The U-Drive-It gauge class 0xCBCBF1E0
 
-The clsid with 134 .UI uses is the U-Drive-It gauge dial. It is mapped offline with
-`exe_scan.py`, `disasm_fn.py`, and the Unicorn harness `tools/flyout-sim/emu_gauge.py`.
+The clsid with 134 .UI uses is the U-Drive-It gauge dial.
 
 **Identity:** registration `push 0x466220; push 0xcbcbf1e0` @ 0x004663DA
 (the clsid's ONLY .text hit is 0x004663E0). Factory **0x00466220**
@@ -235,7 +234,7 @@ dst = {0, 0, cellW, H};                          // <- ART-derived, window IGNOR
 **Geometry source = ART (like cSC4WinTrendBar), NOT window, NOT a cached
 buffer.** There is no equivalent of the minimap's [+0xE4]/[+0xF0] or the
 disaster container's [0xdc]/[buf+0x1c] — the force-recreate-buffer lever
-does not apply to this class; there is nothing to recreate. Emulator measurement:
+does not apply to this class; there is nothing to recreate. Measured offline:
 1x art (928x62/16) in a doubled 116x124 window -> dst (0,0,58,62) = the
 exact top-left-quadrant symptom; 2x art -> dst (0,0,116,124).
 

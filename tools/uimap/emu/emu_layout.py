@@ -103,7 +103,7 @@ def exe_fingerprint():
     """(sha256(exe)[:16], byteSize). 64 bits is far past collision risk for
     'is this the same build?'; size is free and catches a truncated read.
 
-    ⚠ The LAA bit (0x0020 in the PE COFF Characteristics) is MASKED OUT before
+    The LAA bit (0x0020 in the PE COFF Characteristics) is MASKED OUT before
     hashing - the 4GB patch flips it and it cannot change an instruction. See
     the long note on tools\\uimap\\common.py:exe_fingerprint; this is the same
     function and the two MUST agree or the pins diverge."""

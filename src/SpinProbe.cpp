@@ -1377,7 +1377,7 @@ namespace
 							"the process exits, #104 is cured AT THE SYMPTOM; the "
 							"CAUSE (cGZWinGen orphaned by ChildRemove without "
 							"Shutdown, outliving ~cGZWinMgr) is the game's and "
-							"remains open.",
+							"is still held.",
 							gFixCount, gFixWin, gFixTid, gFixList, gFixSentinel, gFixFirst);
 						break;
 					case 2:

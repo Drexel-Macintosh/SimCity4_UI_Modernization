@@ -549,7 +549,7 @@ namespace
 			{
 				wchar_t aside[MAX_PATH];
 				swprintf_s(aside, L"%sFontStyle.ini%s", liveDir, kDisabledSuffix);
-				// ⭐ A STALE STASH MADE THE STOCK TIER KEEP ITS SCALED FONT.
+				// A STALE STASH MADE THE STOCK TIER KEEP ITS SCALED FONT.
 				// MoveFileExW with no flags REFUSES when the destination
 				// exists (err 183), and the destination survives every
 				// previous visit to stock - so the SECOND time a player
@@ -653,7 +653,7 @@ namespace
 // to enlarge" - breaks. Our packages supply 485 icon TGIs; anything a user
 // downloads later is outside that set.
 //
-// ⛔ NO BLIT-LAYER FIX EXISTS - measured, do not re-attempt. The engine needs
+// NO BLIT-LAYER FIX EXISTS - measured, do not re-attempt. The engine needs
 // CELL SIZE AND ART SIZE TO AGREE; the cell is per-STRIP while coverage is
 // per-TGI, and a real strip mixes both. Every rect patch was rejected on
 // screen: re-cut source -> flickers; + centre -> flickers; + tile the whole
@@ -714,7 +714,7 @@ namespace IconSynth
 		uint64_t newest;
 	};
 
-	// ⛔ MAX_PATH IS NOT ENOUGH HERE - #139, TRAP 1, PAID FOR IN TEN MISSED
+	// MAX_PATH IS NOT ENOUGH HERE - #139, TRAP 1, PAID FOR IN TEN MISSED
 	// ICONS THE USER FOUND BY EYE. NAM nests its dats 283-298 characters deep
 	// (`...\Legacy Road Viaduct Puzzle Piece Menu Button Access#\...`), so a
 	// MAX_PATH (260) buffer truncates and the file "does not exist" - the walk
@@ -752,7 +752,7 @@ namespace IconSynth
 				// Deeper than even the long-path buffer. Say so - a silent
 				// skip here reads as "no icons in that folder".
 				Logger::Get().WriteLine(LogLevel::Info,
-					"IconSynth: ⚠ path too long even for %d wchars under %ls - "
+					"IconSynth: path too long even for %d wchars under %ls - "
 					"SKIPPED, so UNCOVERED is a lower bound.", kLongPath, dir);
 				continue;
 			}
@@ -791,7 +791,7 @@ namespace IconSynth
 		if (ReadFile(f, hdr, sizeof(hdr), &got, nullptr) && got == sizeof(hdr)
 			&& hdr[0] == 'D' && hdr[1] == 'B' && hdr[2] == 'P' && hdr[3] == 'F')
 		{
-			// ⛔ THESE OFFSETS WERE WRONG IN THE FIRST BUILD AND THE SCAN WENT
+			// THESE OFFSETS WERE WRONG IN THE FIRST BUILD AND THE SCAN WENT
 			// SILENT RATHER THAN LOUD: it read count from 0x38 and offset from
 			// 0x40, both of which are 0 in a real SC4 DBPF, so the `count > 0`
 			// guard rejected EVERY file and the boot line reported ours=0
@@ -842,7 +842,7 @@ namespace IconSynth
 	// other DBPF supplies the candidate set, and the difference is the icons we
 	// break. Bounded, allocation-light, index-reads only.
 	//
-	// ⚠ ORDER IS NOT GUARANTEED by the directory walk, so coverage cannot be
+	// ORDER IS NOT GUARANTEED by the directory walk, so coverage cannot be
 	// decided on the fly - collect ours FIRST, then diff. Deciding per-file as
 	// they arrive would mark an icon uncovered simply because our package had
 	// not been walked yet.
@@ -978,7 +978,7 @@ namespace IconSynth
 			// exact shape of a report that is wrong in the safe-looking
 			// direction. Say it loudly instead.
 			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth: ⚠ TGI CAP HIT - %d entries dropped, so UNCOVERED is "
+				"IconSynth: TGI CAP HIT - %d entries dropped, so UNCOVERED is "
 				"a LOWER BOUND. Raise kMaxTgi (%d).", gScan->dropped, kMaxTgi);
 		}
 
@@ -1011,14 +1011,14 @@ namespace IconSynth
 	// and every consumer - every strip, every state, every frame, including
 	// paths we have never instrumented - gets correct art with no hook at all.
 	//
-	// ⛔ THIS IS NOT "THE UPSCALER IS ON". It touches ONLY the instances the
+	// THIS IS NOT "THE UPSCALER IS ON". It touches ONLY the instances the
 	// scan proved are UNCOVERED - art some plugin shipped at 1x that no
 	// package of ours enlarges. Covered icons are never fetched, never
 	// re-registered, never resampled. The resample itself is the same exact
 	// nearest-neighbour pixel copy Upscale2x.cs performs offline, so a
 	// synthesised icon is identical in character to every icon we ship.
 	//
-	// ⚠ ONE-WAY DOOR AVOIDED DELIBERATELY: nothing here modifies the game's
+	// ONE-WAY DOOR AVOIDED DELIBERATELY: nothing here modifies the game's
 	// object. A new buffer is built, and only a complete, verified one is
 	// registered. Any failure at any step leaves the original registration
 	// untouched, so the worst case is the old broken-but-stable rendering.
@@ -1124,7 +1124,7 @@ namespace IconSynth
 	// every state gets the enlarged art with no registration, no factory and
 	// no hook. Same born-correct outcome, one less moving part.
 	//
-	// ⚠ ORDER IS LOAD-BEARING: Init reallocates, so the pixels must be read
+	// ORDER IS LOAD-BEARING: Init reallocates, so the pixels must be read
 	// out BEFORE it is called. And if Init fails the object is left smaller
 	// than the game expects, which is worse than the defect - so a failure
 	// restores the original size and contents from the snapshot, and says so
@@ -1199,7 +1199,7 @@ namespace IconSynth
 			else
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
-					"IconSynth:   ⚠ THE ORIGINAL COULD NOT BE RESTORED after a "
+					"IconSynth:   THE ORIGINAL COULD NOT BE RESTORED after a "
 					"failed in-place resize (%dx%d). This icon is now in an "
 					"unknown state - do not ship this path until the cause is "
 					"understood.", sw, sh);
@@ -1274,7 +1274,7 @@ namespace IconSynth
 	cIGZPersistResource* BuildEnlarged(cIGZGraphicSystem* gs, cIGZBuffer* src,
 		int newW, int newH, int cell, int newCell)
 	{
-		// ⚠ ONE LINE PER STEP, ON PURPOSE. The first build of this function
+		// ONE LINE PER STEP, ON PURPOSE. The first build of this function
 		// logged a single "could not build" for three different failures, so
 		// the launch that ran it proved the diagnosis and then refused to say
 		// WHICH call said no - a probe that answers half a question costs a
@@ -1361,7 +1361,7 @@ namespace IconSynth
 	// resource cache was the wrong channel; the FACTORY is the right one,
 	// because both fetches build their object through it.
 	//
-	// ⛔ NOT by implementing cIGZPersistResourceFactory. It declares two
+	// NOT by implementing cIGZPersistResourceFactory. It declares two
 	// CreateInstance overloads, and MSVC lays overloaded virtuals out in
 	// REVERSE declaration order - the trap already documented at the top of
 	// UiSpike.cpp, which cost this project a wrong-slot call once. Instead the
@@ -1714,10 +1714,10 @@ namespace ScaleTier
 	// carrying its own copy of 880/558/800/600 - a second copy would be a
 	// second rule, and this one is shown to the player as a promise about
 	// what will happen at the next launch.
-	// ⭐ EXPLICIT MINIMUM RESOLUTIONS PER TIER (user instruction 2026-08-19:
+	// EXPLICIT MINIMUM RESOLUTIONS PER TIER (user instruction 2026-08-19:
 	// "you need to have minimum resolutions for all the scaling coded in").
 	//
-	// ⛔ THE OLD RULE PASSED A CONFIGURATION THAT DEMONSTRABLY DOES NOT WORK.
+	// THE OLD RULE PASSED A CONFIGURATION THAT DEMONSTRABLY DOES NOT WORK.
 	// It was three inequalities - 880*f <= w, 558*f <= h, and f <= the density
 	// cap min(w/800, h/600) - and at 1920x1200 the cap is EXACTLY 2.00, so 2x
 	// passed by sitting precisely on the boundary. On screen it does not fit:
@@ -2073,7 +2073,7 @@ namespace ScaleTier
 	// because 1x without the selector is a one-way door: every other package
 	// is stashed, so the only way back up would be editing the ini by hand.
 	//
-	// ⛔ IT LIVED INSIDE SyncStaticLayers FOR ONE BUILD AND THAT WAS THE BUG.
+	// IT LIVED INSIDE SyncStaticLayers FOR ONE BUILD AND THAT WAS THE BUG.
 	// SyncStaticLayers is not called at the stock tier - the director's own log
 	// says "static layers untouched (ScaleAll=0 or stock factor)" - so the
 	// package could never be armed in THE EXACT STATE IT EXISTS FOR. Measured
@@ -2081,7 +2081,7 @@ namespace ScaleTier
 	// on disk, the DLL logged that the selector "IS serviced", and the dialog
 	// had no selector in it. The code half ran and the data half was stashed.
 	//
-	// ⭐ THIRD RECORDING OF THIS SHAPE IN THIS FILE'S NEIGHBOURHOOD (#149 and
+	// THIRD RECORDING OF THIS SHAPE IN THIS FILE'S NEIGHBOURHOOD (#149 and
 	// #182 are the others, both in SC4UIScaleDllDirector.cpp beside the call
 	// site). BOLTING WORK ONTO A CONVENIENT NEIGHBOUR MAKES IT INHERIT THAT
 	// NEIGHBOUR'S GATE SILENTLY. The condition this depends on is "is the tier
@@ -2110,8 +2110,8 @@ namespace ScaleTier
 
 	// ICONSYNTH stage 1 (task #149) - SEPARATE FROM SyncStaticLayers ON PURPOSE.
 	//
-	// ⛔ IT USED TO LIVE INSIDE SyncStaticLayers AND THAT WAS A REAL BUG.
-	// SyncStaticLayers RAN ONLY on the AutoScale path back then (⚠ NO LONGER
+	// IT USED TO LIVE INSIDE SyncStaticLayers AND THAT WAS A REAL BUG.
+	// SyncStaticLayers RAN ONLY on the AutoScale path back then (NO LONGER
 	// TRUE since v3.0.2/#182 - manual tiers with ScaleAll=1 sync too; the
 	// second instance of this exact lesson). The icon SCAN has nothing to do
 	// with package placement, so riding along in there meant that with
@@ -2286,7 +2286,7 @@ namespace ScaleTier
 			// builds exist and carry the same 16 instances, so this was never
 			// a build gap - the file was simply never renamed.
 			//
-			// ⭐ THIRD TIME THIS SHAPE HAS SHIPPED. #119 was WarriorUI missing
+			// THIRD TIME THIS SHAPE HAS SHIPPED. #119 was WarriorUI missing
 			// its SyncDat call; the deploy block above records three more
 			// packages that rotted by being hand-placed and never wired. The
 			// standing law is "a package is not done until it is in the

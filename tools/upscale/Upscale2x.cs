@@ -61,7 +61,7 @@ internal static class Upscale2x
 
     private static int Main(string[] args)
     {
-        // ⛔ NEAREST-NEIGHBOUR IS THE DEFAULT AT EVERY FACTOR. DO NOT MAKE --hq
+        // NEAREST-NEIGHBOUR IS THE DEFAULT AT EVERY FACTOR. DO NOT MAKE --hq
         // AUTOMATIC. THIS HAS NOW BEEN DECIDED TWICE.
         //
         // README.md line 505 has said so since the 2x pipeline was written:
@@ -79,7 +79,7 @@ internal static class Upscale2x
         // Rating bar went pink and pink outlines appeared around the news
         // reader. Both are colour-key art. See _tests/REGRESSION.md #143.
         //
-        // ⚠ THE STRUCTURAL POINT THAT SHOULD HAVE STOPPED THIS BEFORE THE
+        // THE STRUCTURAL POINT THAT SHOULD HAVE STOPPED THIS BEFORE THE
         // BUILD: nearest-neighbour only ever COPIES source pixels. It cannot
         // introduce a colour that is not already in the source. So a WHITE
         // line that is not in the 1x art can never be an NN resampling
@@ -102,7 +102,7 @@ internal static class Upscale2x
             else if (string.Equals(a, "--normalize-names", StringComparison.OrdinalIgnoreCase)) normalizeNames = true;
             else if (string.Equals(a, "--height-exact-group", StringComparison.OrdinalIgnoreCase))
             {
-                // ⛔ SCOPED BY TGI GROUP ON PURPOSE. A global "never snap the
+                // SCOPED BY TGI GROUP ON PURPOSE. A global "never snap the
                 // height" moves 791 of the 2280 pristine sheets and puts #143's
                 // white-seam fix back in play across the whole game. Naming the
                 // group keeps it to the horizontal state-strip families.
@@ -151,7 +151,7 @@ internal static class Upscale2x
             }
             else if (string.Equals(a, "--cell-strips", StringComparison.OrdinalIgnoreCase))
             {
-                // ⛔ A DERIVED LIST, NOT A HEURISTIC - and that distinction is
+                // A DERIVED LIST, NOT A HEURISTIC - and that distinction is
                 // the whole of #156. Scoping cell-aligned sampling by
                 // CellUnit's guess changed 1186 of 2206 sheets and displaced
                 // an advisor aperture. This file is produced by
@@ -223,7 +223,7 @@ internal static class Upscale2x
                 // #175 SECOND HALF (2026-08-16). Extends --smooth-unkeyed to the
                 // 465 sheets that carry the FF00FF key and were being refused.
                 //
-                // ⛔ THIS IS STILL NOT --hq, AND THE DIFFERENCE IS THE WHOLE
+                // THIS IS STILL NOT --hq, AND THE DIFFERENCE IS THE WHOLE
                 // POINT. --hq let Graphics.DrawImage average an exact FF00FF with
                 // its neighbours; the result was 0xFE01FE, the key test missed
                 // it, and the key DREW - that is what turned the Mayor Rating bar
@@ -237,12 +237,12 @@ internal static class Upscale2x
                 // even or odd, so the HUD Mayor Rating ladder renders its red
                 // half bolder than its green half at 1.5x. At 2x NN is an exact
                 // block replicate and the same sheet is perfectly crisp - which
-                // is exactly the "2x looks way sharper" the user reported.
+                // is exactly the "2x looks way sharper" the report describes.
                 sSmoothKeyed = true;
             }
             else if (string.Equals(a, "--nine-slice", StringComparison.OrdinalIgnoreCase))
             {
-                // ⛔ ALSO A DERIVED LIST (#157), and for the same reason as
+                // ALSO A DERIVED LIST (#157), and for the same reason as
                 // --cell-strips: CellUnit's {3,4} guess RESIZES sheets, and
                 // "180 divides by 4" is not evidence of four states. Produced by
                 // find_nine_slice.py from the .UI scripts that BIND each sheet.
@@ -274,7 +274,7 @@ internal static class Upscale2x
             }
             else if (string.Equals(a, "--no-smooth", StringComparison.OrdinalIgnoreCase))
             {
-                // ⛔ #175 - SHEETS WHOSE EDGES ARE MEASURED, NOT JUST DRAWN.
+                // #175 - SHEETS WHOSE EDGES ARE MEASURED, NOT JUST DRAWN.
                 // The advisor FRAME sheets are scanned pixel-by-pixel by
                 // build_selective_safe.py::seat_faces_on_apertures to locate the
                 // aperture the 3D head sits in (#152). Catmull-Rom turns that
@@ -311,7 +311,7 @@ internal static class Upscale2x
             }
             else if (string.Equals(a, "--no-snap", StringComparison.OrdinalIgnoreCase))
             {
-                // ⛔ THE THIRD DERIVED LIST (#160). A blttype=tiled background
+                // THE THIRD DERIVED LIST (#160). A blttype=tiled background
                 // has NO cell divide to preserve - the engine repeats the source
                 // across the destination, so the ONLY thing that matters is that
                 // the scaled sheet still equals the scaled WINDOW. Snapping it
@@ -360,7 +360,7 @@ internal static class Upscale2x
             }
             else positional.Add(a);
         }
-        // ⛔ THERE IS NO FACTOR-DERIVED DEFAULT. hq stays false unless the
+        // THERE IS NO FACTOR-DERIVED DEFAULT. hq stays false unless the
         // caller passes --hq explicitly. See the block above: interpolation
         // fringes the magenta colour key at EVERY factor, so there is no
         // factor for which turning it on automatically is correct.
@@ -470,7 +470,7 @@ internal static class Upscale2x
                     sNoHeightSnap = true;
                 }
             }
-            // ⛔ #162: EVERY DERIVED STATE STRIP IS HEIGHT-EXACT, NOT JUST THE
+            // #162: EVERY DERIVED STATE STRIP IS HEIGHT-EXACT, NOT JUST THE
             // GROUPS SOMEONE HAPPENED TO LIST.
             //
             // --height-exact-group above takes a hand-written set of GROUP ids
@@ -495,21 +495,21 @@ internal static class Upscale2x
             // Rotate CW/CCW and Zoom In, which is the same +1 seen from the
             // window side. A sheet taller than its window re-registers every
             // feature inside it vertically: the picture sits low and the band
-            // it vacates reads as the bright hairline the user reported under
+            // it vacates reads as the bright hairline the report describes under
             // the mayor's hat and the people button (#150's own words: "the
             // picture sat low with a light band above it").
             //
-            // ⚠ THIS IS NOT THE GLOBAL DEFAULT THE COMMENT AT sNoHeightSnap
+            // THIS IS NOT THE GLOBAL DEFAULT THE COMMENT AT sNoHeightSnap
             // WARNS AGAINST. That warning is about dropping the height snap for
             // ALL 2280 sheets, which moves 791 of them and reopens #143. This
             // is scoped to the 193 sheets a .UI proves are state strips, and
             // #143's cure - the WIDTH divide by N - is untouched.
             //
-            // ⚠ NO-OP AT AN INTEGER FACTOR, and that is arithmetic rather than
+            // NO-OP AT AN INTEGER FACTOR, and that is arithmetic rather than
             // hope: ScaleDim returns before CellUnit is consulted when the
             // factor is whole, so 2x and 3x come out byte-identical and the
             // rebuild must hash-match. Assert it, do not argue it.
-            // ⚠ ITS OWN FLAG, NOT --cell-strips, AND THAT IS DELIBERATE.
+            // ITS OWN FLAG, NOT --cell-strips, AND THAT IS DELIBERATE.
             // --cell-strips ALSO switches on #156's per-state horizontal
             // sampling. Riding this change in on that flag would change two
             // things at 1.5x in one build, and after six missed fixes on this
@@ -609,7 +609,7 @@ internal static class Upscale2x
         Console.WriteLine("Mode        : " + (hq ? "high-quality (HighQualityBicubic)" : "nearest-neighbor (default)"));
         if (sSmoothUnkeyed)
         {
-            // ⚠ REPORT THE REFUSALS, NOT JUST THE WORK. A pass that prints only
+            // REPORT THE REFUSALS, NOT JUST THE WORK. A pass that prints only
             // what it did lets a silent skip read as coverage.
             // Law 54: the summary must name the resampler that actually ran.
             // "Catmull-Rom" printed unconditionally would let a supersampled
@@ -642,7 +642,7 @@ internal static class Upscale2x
                 + " A sheet cannot both equal its window and divide into N cells."
                 + " Decide which it is and remove it from the other list.");
         }
-        // ⛔ THE MANDATORY INTEGER CONTROL (law 95). ScaleDim returns before the
+        // THE MANDATORY INTEGER CONTROL (law 95). ScaleDim returns before the
         // cell-first branch at an integer factor, so this counter is zero there
         // BY CONSTRUCTION. If it is ever non-zero, the early return moved and the
         // 2x/3x packages are no longer provably byte-identical - which is exactly
@@ -791,10 +791,10 @@ internal static class Upscale2x
     // 774; the game computes cell = 774/4 = 193 and 4*193 = 772, so the true
     // cell boundary (193.5) drifts half a pixel further out of step in every
     // cell and each state draws a sliver of the NEXT state. The next state is
-    // the bright hover art - which is the WHITE SEAM the user reported on the
+    // the bright hover art - which is the WHITE SEAM the report describes on the
     // flyout thumbnails, 2026-08-06.
     //
-    // ⛔ WHY THIS IS 1.5x-ONLY, AND WHY 2x/3x COULD NEVER HAVE CAUGHT IT:
+    // WHY THIS IS 1.5x-ONLY, AND WHY 2x/3x COULD NEVER HAVE CAUGHT IT:
     // an INTEGER factor preserves divisibility automatically (if N | v then
     // N | k*v for integer k). MEASURED over the 2,206 extracted sources:
     //     factor 1.5 -> 31.0% of /3-eligible and 42.9% of /4-eligible
@@ -808,10 +808,10 @@ internal static class Upscale2x
     // no per-TGI table and so cannot silently miss a sheet. The adjustment is
     // bounded by k/2, i.e. at most 6px and usually 0-2.
     //
-    // ⚠ INTEGER FACTORS ARE RETURNED UNTOUCHED, so 2x and 3x output stays
+    // INTEGER FACTORS ARE RETURNED UNTOUCHED, so 2x and 3x output stays
     // BYTE-IDENTICAL. That is the safety property; verify it, don't assume it.
     //
-    // ⚠ This no longer always equals the builders' scale_len(). It does not
+    // This no longer always equals the builders' scale_len(). It does not
     // need to: build_selective_safe.py::clamp_rect_to_art reads the REAL PNG
     // header (png_wh) and clamps imagerect to the art that actually exists,
     // logging every clamp. Over-read is the failure it already guards.
@@ -829,7 +829,7 @@ internal static class Upscale2x
     //   6, 16, 24 are included as plausible siblings; they cost nothing when
     //   they do not divide the source, and the proportionality guard below
     //   stops them from wrecking a small icon that merely happens to divide.
-    // ⛔ THE SET IS {3,4}, AND IT WAS MEASURED. DO NOT WIDEN IT.
+    // THE SET IS {3,4}, AND IT WAS MEASURED. DO NOT WIDEN IT.
     //
     // These are the counts the game ACTUALLY cell-divides by in the paths that
     // matter: NineSlice borders take img->Width()/3 (VA 0x00794100) and a
@@ -837,7 +837,7 @@ internal static class Upscale2x
     // scrollbar (cGZWinScrollbar::SetImage, art width / 12), because a sheet
     // divisible by both 3 and 4 gets LCM = 12 from this very list.
     //
-    // ⚠ IT USED TO BE {2,3,4,6,8,12,16,24} AND THAT WAS A BUG WITH A
+    // IT USED TO BE {2,3,4,6,8,12,16,24} AND THAT WAS A BUG WITH A
     // PLAUSIBLE STORY. The reasoning was "take the LCM of every count that
     // divides the width, then any divide is safe". It is not safe, it is
     // OVERSHOOT: a 200px FOUR-state sheet (cell 50) has CellUnit = LCM(2,4,8)
@@ -866,7 +866,7 @@ internal static class Upscale2x
 
     private static int Gcd(int a, int b) { while (b != 0) { int t = a % b; a = b; b = t; } return a; }
 
-    // ⛔ THE UNIT IS THE LCM OF EVERY COUNT THAT DIVIDES v, NOT THE FIRST ONE.
+    // THE UNIT IS THE LCM OF EVERY COUNT THAT DIVIDES v, NOT THE FIRST ONE.
     // The first version returned the first match of 12/4/3, which silently
     // under-protected any sheet cut by a count it checked later or not at all.
     // Worked example that shipped broken: an 8-state strip 88px wide takes
@@ -874,7 +874,7 @@ internal static class Upscale2x
     // - but 132/8 = 16.5 and every state still mis-cuts. lcm gives k=8 there
     // and the snap lands on 136. USER-REPORTED 2026-08-06: "#143 isn't fixed
     // 100%, you need to do a deeper scan." They were right.
-    // ⛔ CELL-ALIGNED SAMPLING (#156). USER-REPORTED: three bright slivers at
+    // CELL-ALIGNED SAMPLING (#156). USER-REPORTED: three bright slivers at
     // the right-hand end of the region bubble's three population rows, at 1.5x
     // only - clean at stock AND clean at 2x, both confirmed on screen.
     //
@@ -900,13 +900,13 @@ internal static class Upscale2x
     // had, so its output is byte-identical and the blast radius is only the
     // sheets that carry the defect.
     //
-    // ⚠ PROVABLE NO-OP AT AN INTEGER FACTOR. There ScaleDim returns before
+    // PROVABLE NO-OP AT AN INTEGER FACTOR. There ScaleDim returns before
     // CellUnit is consulted, so `snapped` is false and this never engages -
     // and even if it did, blockOut == blockSrc * factor exactly, making the
     // per-block ratio map identical to the factor map. 2x and 3x must come out
     // byte-identical, and the build asserts it.
     //
-    // ⚠ NOT the #151 mistake. That was a GLOBAL size-ratio map, which re-timed
+    // NOT the #151 mistake. That was a GLOBAL size-ratio map, which re-timed
     // every sheet's contents against itself. This is a ratio map WITHIN one
     // cell, which is the only frame in which a cell's contents are defined.
     private static int[] BuildSampleMap(int src, int outLen, double factor, int states)
@@ -914,7 +914,7 @@ internal static class Upscale2x
         var map = new int[outLen];
         // factor < 0 marks "height snap suppressed" (--height-exact-group):
         // there is no cell divide on that axis, so never block it.
-        // ⛔ THE SCOPE IS THE FIX. `states` comes from find_cell_strips.py,
+        // THE SCOPE IS THE FIX. `states` comes from find_cell_strips.py,
         // which reads the .UI that BINDS this sheet - so it is 0 for every
         // sheet nobody proved is a strip, and those keep the exact map they
         // have today. Scoping this by CellUnit's guess instead moved 1186 of
@@ -945,7 +945,7 @@ internal static class Upscale2x
         return map;
     }
 
-    // ⛔ A 9-SLICE FRAME HAS ONE CELL COUNT AND IT IS THREE (#157).
+    // A 9-SLICE FRAME HAS ONE CELL COUNT AND IT IS THREE (#157).
     //
     // Set per file from --nine-slice (find_nine_slice.py). When true CellUnit
     // consults {3} alone, because the /4 in kCellCounts is not a property of
@@ -961,13 +961,13 @@ internal static class Upscale2x
     // corner. USER-REPORTED on the Reconcile Edges dialog: "look how the light
     // blue interior box is overlapping". 418 uncovered px at 1.5x, 4 at 270.
     //
-    // ⚠ NO-OP AT AN INTEGER FACTOR, like every other snap here: ScaleDim
+    // NO-OP AT AN INTEGER FACTOR, like every other snap here: ScaleDim
     // returns before CellUnit is consulted, so 2x and 3x are byte-identical and
     // the build asserts it. 6 of 30 listed sheets actually move at 1.5x.
     private static bool sNineSliceOnly = false;         // set PER FILE, above
     private static readonly int[] kNineSliceCounts = { 3 };
 
-    // ⛔ A TILED BACKGROUND HAS NO CELL DIVIDE AT ALL (#160). Set per file from
+    // A TILED BACKGROUND HAS NO CELL DIVIDE AT ALL (#160). Set per file from
     // --no-snap (find_tiled.py). `blttype=tiled` is src-follows-dst: the engine
     // repeats the source across the destination, so the sheet's ONLY contract
     // is with its WINDOW, and the window scales by a plain round. Snapping the
@@ -994,7 +994,7 @@ internal static class Upscale2x
         return k;
     }
 
-    // ⛔ A FOUR-STATE STRIP IS CUT HORIZONTALLY. IT HAS NO VERTICAL CELL DIVIDE.
+    // A FOUR-STATE STRIP IS CUT HORIZONTALLY. IT HAS NO VERTICAL CELL DIVIDE.
     //
     // When true, ScaleDim's cell snap is applied to the WIDTH only and the
     // height is plain RoundHalfUp. Set by --no-height-snap, and used by the
@@ -1015,7 +1015,7 @@ internal static class Upscale2x
     // 176x44 at 1.5 that is 264x66. The gate has been RED on the 15x row since
     // 15:04 today, green on 2x and 3x throughout - a built-in positive control.
     //
-    // ⚠ DO NOT MAKE THIS THE GLOBAL DEFAULT. Measured across the 2280 pristine
+    // DO NOT MAKE THIS THE GLOBAL DEFAULT. Measured across the 2280 pristine
     // PNGs, dropping the height snap everywhere moves 791 sheets (176x44 x326,
     // 87x93 x120, 129x129 x24, 160x36 x23) and puts #143's white-seam fix back
     // in play across the whole game. It is scoped to the strip families on
@@ -1048,7 +1048,7 @@ internal static class Upscale2x
     private static int sSmoothedKeyed = 0;
     private static int sSmoothSkippedFineKey = 0;
 
-    // ⛔ CELL-FIRST STRIP SIZING (#171 / #165, 2026-08-16). SCALE THE UNIT AND
+    // CELL-FIRST STRIP SIZING (#171 / #165, 2026-08-16). SCALE THE UNIT AND
     // MULTIPLY - NEVER SCALE THE TOTAL. This is the #170 leaf rule transposed
     // from windows to art, and it is the cure the comment above kCellCounts
     // already named ("states * ScaleRound(w,f)") and then rejected:
@@ -1062,7 +1062,7 @@ internal static class Upscale2x
     // v / states, where states already arrives per-file as sStripStates from
     // find_cell_strips.py. No window is ever consulted.
     //
-    // ⚠ THIS IS NOT THE REVERTED fit_state_strips_to_windows (#148). That one
+    // THIS IS NOT THE REVERTED fit_state_strips_to_windows (#148). That one
     // sized strips from their CONSUMER'S WINDOW and died because runtime-created
     // consumers appear in NO .UI, so its conflict check reported 0 falsely and it
     // broke the disaster flyout thumbnails on hover. This rule never looks at a
@@ -1078,12 +1078,12 @@ internal static class Upscale2x
     //                        and BuildSampleMap DECLINED SILENTLY (outLen%k!=0).
     //                   new: 8 * R(17*1.5) = 8 * 26 = 208, cell 26.  EXACT.
     //
-    // ⚠ PROVABLE NO-OP AT AN INTEGER FACTOR, and the early return below is the
+    // PROVABLE NO-OP AT AN INTEGER FACTOR, and the early return below is the
     // proof rather than a claim: for integer k, R(c*k)*n == c*k*n == R(c*n*k),
     // so cell-first and total-first agree exactly and this branch is never even
     // reached. 2x and 3x must come back with ZERO differing entry payloads.
     //
-    // ⚠ THE SNAP IS SKIPPED, NOT APPLIED AFTERWARDS. CellUnit exists to protect
+    // THE SNAP IS SKIPPED, NOT APPLIED AFTERWARDS. CellUnit exists to protect
     // a cell divide; here the divide is exact BY CONSTRUCTION, so snapping could
     // only move the sheet back off the cell it just landed on.
     private static int ScaleDim(int v, double factor, bool stripAxis = false)
@@ -1114,7 +1114,7 @@ internal static class Upscale2x
         // destination, and under-coverage is the gap that shows as a seam.
         int snapped = (s - down < up - s) ? down : up;
         if (snapped < k) { snapped = k; }
-        // ⚠ PROPORTIONALITY GUARD. A 16px icon is divisible by 16, but it is an
+        // PROPORTIONALITY GUARD. A 16px icon is divisible by 16, but it is an
         // ICON, not a 16-cell strip; snapping it to the nearest multiple of 16
         // would move it by 8px - a 33% distortion - to satisfy a cut that sheet
         // does not have. If the correction exceeds 12.5% of the dimension the
@@ -1152,7 +1152,7 @@ internal static class Upscale2x
                 s[y] = new int[w];
                 Marshal.Copy(Ofs(sd.Scan0, (long)y * sd.Stride), s[y], 0, w);
             }
-            // ⛔ MAP BY THE FACTOR, NOT BY THE SIZE RATIO. (#151, 2026-08-09.)
+            // MAP BY THE FACTOR, NOT BY THE SIZE RATIO. (#151, 2026-08-09.)
             //
             // This used to be `sx = ox * w / ow` unconditionally - the ACTUAL
             // SIZE RATIO - on the reasoning that when ScaleDim snaps the output
@@ -1179,7 +1179,7 @@ internal static class Upscale2x
             // faces sitting high and left inside frames that are themselves the
             // right size. USER-CONFIRMED, and user-confirmed cured by this.
             //
-            // ⚠ ZERO DIMENSIONS CHANGE HERE. Every consumer's cut arithmetic
+            // ZERO DIMENSIONS CHANGE HERE. Every consumer's cut arithmetic
             // (width/4, width/3, width/12) sees exactly the numbers it saw
             // before. This changes only WHICH SOURCE PIXEL each output pixel
             // copies - which is why it is safe where an art-DIMENSION change is
@@ -1225,9 +1225,9 @@ internal static class Upscale2x
     //  - ImageAttributes TileFlipXY  : edge texels are mirrored instead of
     //                                  sampling transparent black outside the
     //                                  image, so borders don't get dark fringes
-    // ⛔ #175 - SMOOTH RESAMPLE, BUT ONLY WHERE IT PROVABLY CANNOT FRINGE.
+    // #175 - SMOOTH RESAMPLE, BUT ONLY WHERE IT PROVABLY CANNOT FRINGE.
     //
-    // WHY THIS IS NOT --hq COMING BACK. The ⛔ block at the top of Main rejects
+    // WHY THIS IS NOT --hq COMING BACK. The block at the top of Main rejects
     // --hq twice, and it is right about what it measured: Graphics.DrawImage
     // over the RAW keyed bitmap lets magenta 0xFF00FF - this game's
     // TRANSPARENCY KEY, not a colour - take part in a colour average, so an
@@ -1246,20 +1246,20 @@ internal static class Upscale2x
     // where 2x is 2px x216 and 3x is 3px x216, both perfectly uniform. Half the
     // strokes come out one pixel wide and half two, so every curve and bevel has
     // inconsistent thickness. Nothing is blended, yet it reads as blur. That is
-    // the "softness at 1.5x" the user reported, and it is inherent to 3/2.
+    // the "softness at 1.5x" the report describes, and it is inherent to 3/2.
     //
-    // ⚠ THE OUTPUT DIMENSIONS DO NOT CHANGE. ScaleDim still decides them,
+    // THE OUTPUT DIMENSIONS DO NOT CHANGE. ScaleDim still decides them,
     // exactly as for the nearest path. Changing art dimensions has the scope of
     // the WHOLE GAME (law 66) and is what #143 and the #156 backout were; this
     // changes pixel CONTENT only, at identical sizes and identical cell
     // boundaries.
     //
-    // ⚠ FRACTIONAL FACTORS ONLY. At an integer factor nearest-neighbour is
+    // FRACTIONAL FACTORS ONLY. At an integer factor nearest-neighbour is
     // already an exact NxN block replicate - there is nothing to improve and
     // everything to lose, because 2x and 3x are user-confirmed. Refusing here
     // is what keeps their entry payloads identical.
     //
-    // ⚠ PER-CELL, ALWAYS. A state strip's cells are independent images that
+    // PER-CELL, ALWAYS. A state strip's cells are independent images that
     // happen to share a PNG. Filtering across a cell boundary would blend state
     // N+1 into state N - which is exactly the defect #169 removed. Each block is
     // resampled from its own source block only, so a cell can never see its
@@ -1289,7 +1289,7 @@ internal static class Upscale2x
         return false;
     }
 
-    // ⛔ FINE-KEY GUARD (#175, 2026-08-16). MEASURED, and it reversed a decision.
+    // FINE-KEY GUARD (#175, 2026-08-16). MEASURED, and it reversed a decision.
     //
     // Key-aware smoothing is right for a sheet whose key is a large REGION - an
     // icon on a transparent field, a silhouette. It is WRONG for a sheet whose
@@ -1340,7 +1340,7 @@ internal static class Upscale2x
         return 0.0;
     }
 
-    // ⛔ KEY-AWARE MODE (#175 second half, 2026-08-16). `keyed == true` lets this
+    // KEY-AWARE MODE (#175 second half, 2026-08-16). `keyed == true` lets this
     // run on a sheet that CONTAINS the FF00FF colour key, which the unkeyed path
     // refuses outright.
     //
@@ -1362,10 +1362,10 @@ internal static class Upscale2x
     // The key colour therefore never appears in a sum, and no intermediate value
     // can drift onto or off the key by accident.
     //
-    // ⚠ STILL DO NOT PREMULTIPLY - see the block below. That lesson is
+    // STILL DO NOT PREMULTIPLY - see the block below. That lesson is
     // independent of this one and cost its own build.
     //
-    // ⚠ INTEGER FACTORS ARE UNAFFECTED: the caller refuses smoothing outright at
+    // INTEGER FACTORS ARE UNAFFECTED: the caller refuses smoothing outright at
     // an integer factor (nearest is already an exact NxN replicate), so this
     // cannot move 2x or 3x by a single byte.
     // GH5: LOSSLESS x3, then an AREA reduction onto the final grid.
@@ -1493,7 +1493,7 @@ internal static class Upscale2x
         }
         finally { src.UnlockBits(sd); }
 
-        // ⛔ DO NOT PREMULTIPLY. THIS COST A BUILD - 2026-08-16.
+        // DO NOT PREMULTIPLY. THIS COST A BUILD - 2026-08-16.
         //
         // The first version of this function premultiplied RGB by alpha, which
         // is the textbook right answer for an ALPHA-composited image. SC4 is
@@ -1603,7 +1603,7 @@ internal static class Upscale2x
                     }
                     double vden = (kw != 0.0) ? kw : 1.0;
                     aa /= vden; rr /= vden; gg /= vden; bb /= vden;
-                    // ⭐ RE-KEY BY COVERAGE. Below half coverage the destination
+                    // RE-KEY BY COVERAGE. Below half coverage the destination
                     // pixel is more absence than picture, so it becomes an EXACT
                     // FF00FF again. This is what keeps a transparent region
                     // exactly transparent and its outline crisp - without it a
@@ -1623,7 +1623,7 @@ internal static class Upscale2x
                     if (G < 0) G = 0; else if (G > 255) G = 255;
                     if (B < 0) B = 0; else if (B > 255) B = 255;
                     if (A < 0) A = 0; else if (A > 255) A = 255;
-                    // ⛔ BELT AND BRACES. This path never runs on a sheet that
+                    // BELT AND BRACES. This path never runs on a sheet that
                     // contains the key, so it cannot BLEED one - but Catmull-Rom
                     // overshoot could in principle MANUFACTURE an exact FF00FF
                     // out of neighbouring reds and blues. If that ever happens

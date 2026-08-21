@@ -172,7 +172,7 @@ immediate before every vtable hook, without exception.
 
 ---
 
-## 2. `GZWinBMP` — the complete class (no `cIGZWinBMP.h` exists)
+## 2. `GZWinBMP` — the complete class
 
 **Gap.** gzcom-dll ships no header for the `cIGZWinBMP` interface at all.
 The entire interface, object layout and draw law were recovered offline;

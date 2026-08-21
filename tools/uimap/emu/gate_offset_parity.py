@@ -1,6 +1,6 @@
 r"""gate_offset_parity.py - THE OFFSET-PARITY LAW, machine-checked (#152).
 
-⛔ WHAT THIS LAW IS, AND WHY IT DESERVES A GATE RATHER THAN A PARAGRAPH.
+WHAT THIS LAW IS, AND WHY IT DESERVES A GATE RATHER THAN A PARAGRAPH.
 
 `_tests\REGRESSION.md` #152 states it in closed form:
 
@@ -31,7 +31,7 @@ FOUR PARTS, in increasing order of how much they can be wrong about
                       t in [-2048,2048] x d in [-96,96] x f in {1,1.5,2,3}.
                       This part cannot be wrong; it is arithmetic.
   B  THE FIXTURES     the three MEASURED panels above. The gate must predict the
-                      axis the user reported. If it cannot reproduce a defect
+                      axis the report describes. If it cannot reproduce a defect
                       that was seen on a screen, the law is not calibrated and
                       parts C and D are decoration. FATAL on mismatch.
   C  THE CENSUS       every parent->child offset in the shipped `.UI` corpus,
@@ -42,7 +42,7 @@ FOUR PARTS, in increasing order of how much they can be wrong about
      INSETS
 
 ────────────────────────────────────────────────────────────────────────────────
-⛔ PART D EXISTS BECAUSE THE OBVIOUS FILTER IS THE WRONG ONE, TWICE OVER.
+PART D EXISTS BECAUSE THE OBVIOUS FILTER IS THE WRONG ONE, TWICE OVER.
 
 First attempt: parent->child edges whose offset dies. At f=1.5, q=2, and roughly
 half of all integers are odd, so that is **3825 of 5635 edges - 67.9% of the
@@ -68,7 +68,7 @@ provides the visible aperture), whatever their tree relationship. That recovers
 7 of 7 faces, and the gate ASSERTS it - a filter that cannot see the defect it
 was built from is not a filter.
 
-⚠ THE BAND IS A VISIBILITY HEURISTIC AND IS LABELLED AS ONE. The law does not
+THE BAND IS A VISIBILITY HEURISTIC AND IS LABELLED AS ONE. The law does not
 care about magnitude: an odd offset dies whether it is 1 or 401. What magnitude
 changes is whether anyone can SEE it - one pixel on a 2px inset is half the
 inset; one pixel on a 400px layout offset is nothing. The band defaults to 3
@@ -76,7 +76,7 @@ because that is what the MEASURED cases need: the shipped seats are all (2,1)
 and My Sim is (3,2). Widening it does not find more defects, it finds more
 population - 10559 contained pairs exist and 7605 carry a dying offset.
 
-⚠ AND AN ENTRY IS STILL ONLY A HYPOTHESIS. It is a window that CAN slip a pixel
+AND AN ENTRY IS STILL ONLY A HYPOTHESIS. It is a window that CAN slip a pixel
 inside its aperture at 1.5x, not one that does. `build_selective_safe.py`'s
 `ADVISOR_FACE_SEATS` already repairs seven of them by seating each on its
 frame's flood-filled art aperture; those are read out of the shipped table and
@@ -206,7 +206,7 @@ def child_edges(text):
 def inset_pairs(text):
     """-> [(hostAttrs, insetAttrs, dx, dy)] : B strictly inset inside art-bound A.
 
-    ⛔ CONTAINMENT, NOT PARENTAGE. Derived from the one measured case (#152): the
+    CONTAINMENT, NOT PARENTAGE. Derived from the one measured case (#152): the
     advisor face and its frame are SIBLINGS, so any relation keyed on the tree
     misses them. `A` must be art-bound because A is what supplies the visible
     aperture the inset has to register against; `B` need not be, because the
@@ -342,7 +342,7 @@ def main():
         "visibility band (<=%dpx)."
         % (total, dying, tier, len(rows), band))
 
-    # ⛔ THE FILTER'S OWN POSITIVE CONTROL. If the seven MEASURED advisor faces
+    # THE FILTER'S OWN POSITIVE CONTROL. If the seven MEASURED advisor faces
     # are not in this set, the filter is looking at the wrong relation - which
     # is exactly what happened to its first two revisions.
     got = set(e[2] for e in rows)

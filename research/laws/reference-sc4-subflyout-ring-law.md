@@ -40,11 +40,11 @@ so the attachment point moves without moving the strip.
 
 ### Measured, not inferred
 
-`tools\flyout-sim\emu_plot.py` drives the emulated blit path directly. Four runs
-with `[0x100]` set to 138 / 200 / 0 / 417 placed the ring blit at exactly
-y = 138 / 200 / 0 / 417; the three bar rects were byte-identical every time, and
-changing `[0xF4]` from 6 to 12 moved the ring not at all. `win[0x100]` is the
-sole stem-Y input at blit time and cannot touch the strip.
+Driving the emulated blit path directly, four runs with `[0x100]` set to
+138 / 200 / 0 / 417 placed the ring blit at exactly y = 138 / 200 / 0 / 417; the
+three bar rects were byte-identical every time, and changing `[0xF4]` from 6 to
+12 moved the ring not at all. `win[0x100]` is the sole stem-Y input at blit time
+and cannot touch the strip.
 
 ### The vertical fix is two halves or nothing
 
@@ -82,10 +82,10 @@ for Y), with the container offset cancelling out of both axes:
     SubRingDY(f) = rhu(15f) - rhu(37f)/2 + rhu(26.5f) - rhu(26f)
     f=1.5: -4      f=2: -6      f=3: -8
 
-`tools\flyout-sim\gate_subnative.py` predicts the game's measured `(280,207)`
-from the button rect alone and carries ten negative controls, all detecting. A
-single-file ini value cannot be right at three tiers, so these offsets must
-never be hand-entered. Whatever moves the sprite must also move the click zone.
+The derivation predicts the game's measured `(280,207)` from the button rect
+alone, and ten negative controls all detect. A single-file ini value cannot be
+right at three tiers, so these offsets must never be hand-entered. Whatever
+moves the sprite must also move the click zone.
 
 ## The weld is the invariant: SubRingDX must be zero
 

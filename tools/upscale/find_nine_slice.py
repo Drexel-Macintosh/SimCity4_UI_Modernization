@@ -1,7 +1,7 @@
 r"""Emit the list of art TGIs that are PROVABLY 9-slice frames and NEVER state
 strips (#157).
 
-⛔ WHY THIS EXISTS. `CellUnit` takes the LCM of every count in {3,4} that
+WHY THIS EXISTS. `CellUnit` takes the LCM of every count in {3,4} that
 divides the sheet, on the reasoning that preserving divisibility is free. It is
 not free, because the two counts want DIFFERENT sizes and only one of them is
 real for any given sheet:
@@ -32,7 +32,7 @@ derivation, which uses independent evidence — window size — so agreement
 between the two is not two instruments agreeing blindly, and disagreement is a
 reason to exclude, never to include).
 
-⚠ THE .UI CORPUS IS NOT THE WHOLE TRUTH. Art binds by TGI and some consumers
+THE .UI CORPUS IS NOT THE WHOLE TRUTH. Art binds by TGI and some consumers
 are created at runtime and appear in no script (REGRESSION.md #148). That is
 why this list is EXCLUSION-BIASED: a sheet nobody proved is a 9-slice keeps the
 sizing it has today, so an unknown runtime strip consumer can only be missed by

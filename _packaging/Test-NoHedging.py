@@ -1,61 +1,87 @@
 #!/usr/bin/env python
-"""Gate: zero hedging or work-in-progress language in the public tree.
+"""Gate: no hedging, work-in-progress or private-session language ships.
 
 WHY THIS EXISTS
 ---------------
-User instruction: "Make sure there's nothing. Not a cross out, not a
-'think', 'need to validate' nothing." A production repository states facts;
-it does not think out loud, flag things for later, or leave a strikeout
-standing next to its own correction. This gate is the literal enforcement
-of that instruction, run against the STAGED PUBLIC TREE
-(_packaging\public-repo), never the private working tree, which is allowed
-to hedge because that is where the work actually happens.
+A production repository states facts. It does not think out loud, flag work
+for later, leave a strikeout standing beside its own correction, or address
+a reader who was in the room. This gate enforces that on the STAGED EXPORT,
+never on the private working tree, which is allowed to hedge because that is
+where the work happens.
 
-PASS = exit 0, zero hits.
+WHY THE PATTERNS ARE NARROW
+---------------------------
+The first version banned the words outright and produced 651 hits, almost
+all of them ordinary technical English: a file "held open" by the game,
+"placeholder art" as a real DBPF concept, a dial that "appears to wrap" on
+screen. A gate that cries wolf on correct prose gets ignored, which is worse
+than no gate at all. Each pattern below therefore matches the SENTENCE SHAPE
+that carries a hedge, not a word that can appear inside one.
+
+Third-party code under vendor is excluded: it ships verbatim for licence
+compliance and is not ours to rewrite.
+
+Usage:  Test-NoHedging.py [staged-tree]      PASS = exit 0.
 """
 import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent / "public-repo"
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-# Each pattern is (name, compiled regex). Word-boundary aware where it
-# matters, case-insensitive throughout - a hedge word capitalized at the
-# start of a sentence is still a hedge word.
+ROOT = (Path(sys.argv[1]) if len(sys.argv) > 1
+        else Path(__file__).resolve().parent / "public-repo")
+
 PATTERNS = [
+    # A crossed-out claim beside its replacement.
     ("strikeout", re.compile(r"~~[^~\n]+~~")),
-    ("first-person hedge",
-     re.compile(r"\bI think\b|\bwe think\b|\bI believe\b|\bnot sure\b|"
-                r"\bI'm not certain\b|\bmight be\b|\bmaybe\b|\bperhaps\b",
-                re.I)),
-    ("needs-validation",
-     re.compile(r"need(?:s|ed)? to validate|needs? verif(?:y|ication)|"
-                r"unverified|needs? confirmation|to be confirmed|"
-                r"TBD|TBC\b", re.I)),
-    ("todo marker",
-     re.compile(r"\bTODO\b|\bFIXME\b|\bXXX\b|\bHACK\b(?!:.*hack the)", re.I)),
-    ("wip marker",
-     re.compile(r"\bwork.?in.?progress\b|\bWIP\b|\bin flight\b|"
-                r"\bnot yet (?:done|finished|implemented|complete)\b|"
-                r"\bstill (?:working on|need|needs|open|pending)\b|"
-                r"\bcoming soon\b|\bplaceholder\b", re.I)),
-    ("uncertainty qualifier",
-     re.compile(r"\bunclear\b|\bunsure\b|\bunknown whether\b|"
-                r"\bshould probably\b|\bprobably (?:need|needs|should)\b|"
-                r"\bI guess\b|\bappears? to\b(?! be [a-z]+ table)", re.I)),
-    ("session/diary marker",
-     re.compile(r"\bUSER (?:ORDER|REQUEST|DIRECTIVE|DIRECTION)\b|"
-                r"\bthe user (?:said|reported|confirmed|asked)\b|"
-                r"\bsession\b.{0,20}\bended\b|originSessionId", re.I)),
-    ("open-status marker",
-     re.compile(r"\bOPEN\b(?=\s*[-|:])|\bSTATUS:\s*(?:OPEN|IN PROGRESS)\b|"
-                r"\bSUPERSEDED\b|\bCORRECTED\b(?=\s*\d{4}-\d{2}-\d{2})",
-                re.I)),
-]
 
-# A handful of legitimate technical uses that would otherwise false-positive.
-ALLOW = [
-    re.compile(r"appears? to be [a-z0-9 ]+ table", re.I),   # "appears to be a lookup table"
+    # Epistemic hedging ABOUT A FACT - not description of what a screen shows.
+    ("hedge",
+     re.compile(r"\bI think\b|\bwe think\b|\bI believe\b|\bI guess\b|"
+                r"\bnot (?:yet )?sure\b|\bunsure\b|\bit is unclear\b|"
+                r"\b(?:probably|might|maybe|perhaps) (?:need|needs|should|"
+                r"want|be worth)\b", re.I)),
+
+    # Work deferred rather than done.
+    ("deferred work",
+     re.compile(r"\bTODO\b|\bFIXME\b|"
+                r"needs? (?:to be )?(?:validat|verif|confirm)|"
+                r"\bunverified\b|\bto be (?:confirmed|determined|decided)\b|"
+                r"\bTBD\b|\bcoming soon\b|\bnot yet (?:done|finished|"
+                r"implemented|complete|written|shipped)\b|"
+                r"\bstill (?:to do|todo|outstanding|pending|open)\b|"
+                r"\bwork.in.progress\b|\bnext (?:target|step)s?\s*:", re.I)),
+
+    # An open-defect list or status board.
+    ("open status",
+     re.compile(r"\bSTATUS\s*:\s*(?:OPEN|IN.PROGRESS|WIP|PENDING)\b|"
+                # "first-open defect" is a defect ON first open, not an open
+                # one - the hyphenated forms are ordinary technical English.
+                r"(?<!-)\bopen (?:defect|issue|item|bug|question)s?\b|"
+                r"\bremains? open\b|\bnot closed\b", re.I)),
+
+    # A retraction left standing instead of the corrected fact alone.
+    ("revision layering",
+     re.compile(r"\bSUPERSEDED\b|\bSUPERSEDES\b|"
+                r"\bCORRECTED\s+\d{4}-\d{2}-\d{2}|"
+                r"\b(?:this|the (?:above|earlier|previous|old))\s+"
+                r"(?:claim|note|line|entry|statement)\s+(?:was|is)\s+wrong\b|"
+                r"\ban earlier (?:revision|version|build) (?:of this|had|did)",
+                re.I)),
+
+    # The private session showing through.
+    ("session residue",
+     re.compile(r"\bUSER (?:ORDER|REQUEST|DIRECTIVE|DIRECTION)\b|"
+                r"\bthe user (?:said|reported|confirmed|asked|wants|raised)\b|"
+                r"\boriginSessionId\b|\bnode_type:\s*memory\b|"
+                r"\[\[[a-z0-9-]+\]\]", re.I)),
+
+    # The private priority code: star / no-entry / warning glyphs. Table
+    # notation (check, cross, arrow) is ordinary technical writing and stays.
+    ("attention glyph", re.compile("[⛔⚠⭐✅❌❗"
+                                   "‼\U0001f6d1]")),
 ]
 
 
@@ -65,43 +91,39 @@ def scan_file(path):
         text = path.read_text(encoding="utf-8", errors="strict")
     except (UnicodeDecodeError, OSError):
         return hits
-    lines = text.split("\n")
-    for lineno, line in enumerate(lines, 1):
+    for lineno, line in enumerate(text.split("\n"), 1):
         for name, rx in PATTERNS:
-            for m in rx.finditer(line):
-                if any(a.search(line) for a in ALLOW):
-                    continue
-                hits.append((name, lineno, line.strip()[:100]))
+            if rx.search(line):
+                hits.append((name, lineno, line.strip()[:110]))
     return hits
 
 
 def main():
     if not ROOT.exists():
-        print("SKIP: %s does not exist - run Build-PublicRepo.ps1 first" % ROOT)
+        print("SKIP: %s does not exist - build the export first" % ROOT)
         return 0
 
-    exts = {".md", ".txt", ".cpp", ".h", ".py", ".ps1"}
+    exts = {".md", ".txt", ".cpp", ".h", ".py", ".ps1", ".cs"}
     files = [p for p in ROOT.rglob("*")
-             if p.is_file() and p.suffix.lower() in exts]
+             if p.is_file() and p.suffix.lower() in exts
+             and "vendor" not in p.relative_to(ROOT).parts]
 
     print("Test-NoHedging")
-    print("  scanning %d file(s) under %s" % (len(files), ROOT))
+    print("  scanning %d file(s) under %s (vendor excluded)" % (len(files), ROOT))
     print()
 
     total = 0
     for path in sorted(files):
-        hits = scan_file(path)
-        if hits:
-            rel = path.relative_to(ROOT)
-            for name, lineno, snippet in hits:
-                total += 1
-                print("  FAIL %s:%d [%s] %s" % (rel, lineno, name, snippet))
+        for name, lineno, snippet in scan_file(path):
+            total += 1
+            print("  FAIL %s:%d [%s] %s"
+                  % (path.relative_to(ROOT), lineno, name, snippet))
 
     print()
     if total:
-        print("FAIL: %d hedging/WIP hit(s) - the public tree is not clean." % total)
+        print("FAIL: %d hit(s) - the export is not production-clean." % total)
         return 1
-    print("ALL PASS (%d files, zero hedging/WIP/diary markers)" % len(files))
+    print("ALL PASS (%d files, no hedging/WIP/session residue)" % len(files))
     return 0
 
 

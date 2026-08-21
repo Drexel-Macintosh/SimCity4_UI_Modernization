@@ -29,7 +29,7 @@ it must keep, because the rule cannot defend itself from the next edit:
     ServiceScaleSelector, which must sit BEFORE the dialog gate (a safety
     net that needs the player to open the dialog is not a safety net).
 
-⚠ THIS IS A SOURCE-SHAPE GATE, and it is honest about that: it proves the
+THIS IS A SOURCE-SHAPE GATE, and it is honest about that: it proves the
 code is WIRED the way the contract requires. It cannot prove runtime
 behaviour - only a launch can - and it cannot see conditions inside a
 function (a banned call hidden behind an `if` is still banned; a log line
@@ -76,7 +76,7 @@ PURE_BANNED = TICK_BANNED + [
 def strip_comments(src):
     """Remove // and /* */ comments.
 
-    ⚠ NECESSARY, NOT COSMETIC. This file's own comments quote the banned
+    NECESSARY, NOT COSMETIC. This file's own comments quote the banned
     call shapes they warn against, and the source under test does the same
     - matching prose would let a warning about a bug read as the bug (the
     Test-StockTierContract lesson).

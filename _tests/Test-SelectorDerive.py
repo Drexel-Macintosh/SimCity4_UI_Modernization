@@ -11,7 +11,7 @@ that with ONE pure function - SelDerive(state) -> UI - and this gate IS that
 function's specification: it was written before the C++ and the C++ mirrors
 it, not the other way around.
 
-⚠ THIS MIRRORS THE RULE, IT DOES NOT CALL THE C++ - same declared limitation
+THIS MIRRORS THE RULE, IT DOES NOT CALL THE C++ - same declared limitation
 as Test-BootStateValidate. The structural half (writes only at close, no
 syscalls in the tick path) is Test-SelectorContract; the runtime half is a
 launch.

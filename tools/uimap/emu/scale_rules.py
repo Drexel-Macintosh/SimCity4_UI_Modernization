@@ -1,6 +1,6 @@
 r"""scale_rules.py - THE ONE SCALING MODEL. Every gate in this folder imports it.
 
-⛔ WHY THIS FILE EXISTS. `--drift` counted SEVENTEEN independent
+WHY THIS FILE EXISTS. `--drift` counted SEVENTEEN independent
 re-implementations of the same three-line rounding rule inside this one folder,
 under eleven different names, plus the C# copy in `Upscale2x.cs` and the
 original in `src\UiSpike.cpp`:
@@ -121,7 +121,7 @@ def round_half_up(v):
 def scale_round(v, f):
     """`UiSpike.cpp::ScaleRound(int32_t v, float f)` - RoundHalfUp(v * f).
 
-    ⚠ The C++ multiplies `(double)v * (double)f` where f is a **float**. For
+    The C++ multiplies `(double)v * (double)f` where f is a **float**. For
     1.5 / 2.0 / 3.0 the float is exact, so the double product is identical to
     python's. `--selftest` asserts that for every shipped tier against exact
     rational arithmetic; any tier added later must be re-checked there.
@@ -137,7 +137,7 @@ R = scale_round
 def llround_scale(v, f):
     """The REFUTED pre-#162 rule: round half AWAY FROM ZERO.
 
-    ⛔ NOT the shipped rule. It is kept, named, and exported ON PURPOSE, because
+    NOT the shipped rule. It is kept, named, and exported ON PURPOSE, because
     a gate that reports clean under BOTH rules is not measuring anything.
     `gate_art_vs_window.py`'s header already says so; this makes the negative
     control an import instead of a hand edit.
@@ -181,7 +181,7 @@ def window_extent(origin, extent, f, is_leaf):
     pipeline sizes every sheet position-independently as `R(w, f)`. The leaf
     rule is what makes window and art agree.
 
-    ⚠ THIS COST A FALSE FINDING WHILE THIS FILE WAS BEING WRITTEN.
+    THIS COST A FALSE FINDING WHILE THIS FILE WAS BEING WRITTEN.
     `gate_tiled_seam.py`'s first revision used edge-derivation for everything
     and reported 7 "new 1.5x overhangs", led by the god toolbar strip at
     527 art vs 526 window. The strip is a LEAF, its window is `R(351,1.5)=527`,
@@ -190,7 +190,7 @@ def window_extent(origin, extent, f, is_leaf):
     not have caught it. A model error inside a metric that passes its control
     is still a model error.
 
-    ⚠ MODELLING ASSUMPTION, stated because it is not free: offline, "leaf" is
+    MODELLING ASSUMPTION, stated because it is not free: offline, "leaf" is
     read from the static `.UI` child list. The DLL asks `GetChildCount()` on the
     LIVE tree, which can differ wherever code adds children at runtime.
     """
@@ -243,7 +243,7 @@ def scale_dim(v, f, counts=CELL_COUNTS, no_snap=False):
     no_snap mirrors `sNoSnapThis`: a tiled sheet has no cell divide to protect
     (#160), so the snap can only desynchronise it from its window.
 
-    ⚠ INTEGER FACTORS RETURN BEFORE THE SNAP IS EVEN CONSULTED. That early
+    INTEGER FACTORS RETURN BEFORE THE SNAP IS EVEN CONSULTED. That early
     return is why every art-sizing defect in this project's history has been
     1.5x-only, and it is what makes the 2x/3x control structural rather than
     lucky.
@@ -309,7 +309,7 @@ def _load_list(name, with_count=False):
 class Roles(object):
     """The four derived lists, loaded once, with the role rule on top.
 
-    ⚠ THE LISTS ARE A STALE-CACHE INPUT (see the codebase map, section 5): they
+    THE LISTS ARE A STALE-CACHE INPUT (see the codebase map, section 5): they
     are written by a command a human types and read by commands scripts run.
     `stamps()` returns their mtimes so a gate can print them and a reader can
     see whether they predate the tool that consumed them.
@@ -457,7 +457,7 @@ def seam_drift(art1, artf, f, winf):
 
     -> [(k, actual, expected, drift, kind)] with kind in {'VISIBLE','EDGE'}
 
-    ⚠ AT AN INTEGER FACTOR THE DRIFT IS ZERO FOR EVERY k, STRUCTURALLY:
+    AT AN INTEGER FACTOR THE DRIFT IS ZERO FOR EVERY k, STRUCTURALLY:
     `scale_dim` returns before the cell snap, so artf == art1*f exactly, and
     k*art1*f == R(k*art1, f) because the product is already whole. That is the
     control, and it is a proof rather than a measurement.
@@ -474,14 +474,14 @@ def seam_drift(art1, artf, f, winf):
 # 6. OUTPUT - cp1252 consoles cannot print the house glyphs
 # ══════════════════════════════════════════════════════════════════════════════
 
-_SUB = {"⛔": "[STOP]", "⚠": "[WARN]", "⭐": "[*]",
-        "→": "->", "✓": "ok", "✅": "[PASS]", "❌": "[FAIL]"}
+_SUB = {"": "[STOP]", "": "[WARN]", "": "[*]",
+        "→": "->", "✓": "ok", "": "[PASS]", "": "[FAIL]"}
 
 
 def out(*parts):
     """print() that cannot die on a cp1252 console.
 
-    ⛔ A REAL BUG THIS CLOSES: `gate_abut_1_5x.py` printed a literal U+26D4 in
+    A REAL BUG THIS CLOSES: `gate_abut_1_5x.py` printed a literal U+26D4 in
     its MODEL-IS-WRONG branch. `sys.stdout.encoding` here is cp1252, so the one
     line the gate exists to say would have raised UnicodeEncodeError instead of
     being read. A gate that crashes exactly when it has something to report is
@@ -691,7 +691,7 @@ _TRIPWIRES = [
 
 
 def _s8_tripwire(v):
-    """⛔ THE POINT OF THE WHOLE FILE. If the C++ or the C# moves, this shouts.
+    """THE POINT OF THE WHOLE FILE. If the C++ or the C# moves, this shouts.
 
     It is a TEXT tripwire, not a proof of equivalence - it cannot tell you the
     new code is wrong, only that the code this file claims to mirror is no
@@ -757,7 +757,7 @@ def _drift():
                 continue
             nargs = len([a for a in args.split(",") if a.strip()
                          and "=" not in a])
-            # ⛔ PRICE EACH COPY AGAINST ITS OWN CANON, NOT AGAINST ROUNDING.
+            # PRICE EACH COPY AGAINST ITS OWN CANON, NOT AGAINST ROUNDING.
             # The first version compared everything to `scale_round`, so a
             # legitimate private `cell_unit` (1 arg, an lcm) and `scale_dim`
             # (2 args, a cell snap) both came back DRIFT. A hunt that cries
@@ -835,4 +835,4 @@ if __name__ == "__main__":
         sys.exit(_drift())
     if "--selftest" in sys.argv:
         sys.exit(_selftest("-v" in sys.argv))
-    out(__doc__.replace("⛔", "[STOP]").replace("⚠", "[WARN]"))
+    out(__doc__.replace("", "[STOP]").replace("", "[WARN]"))

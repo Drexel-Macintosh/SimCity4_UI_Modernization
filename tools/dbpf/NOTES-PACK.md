@@ -81,7 +81,8 @@ This matches `SimCity_1.dat` exactly: its header says count=60440, size=1208800,
    60,440 entries @ 0x88BCF35, 1,208,800-byte index — all figures agree with the raw
    header bytes and with index_offset + index_size = file_size.
 2. Pulled 3 real PNG payloads (Type 0x856DDBAC) out of `SimCity_1.dat` byte-for-byte,
-   named them per the TGI convention, added 1 synthetic file + 1 decoy (`notes.txt`).
+   named them per the TGI convention, added 1 synthetic file + 1 decoy with a
+   non-matching name.
 3. Packed: decoy skipped with warning, 4 entries written.
 4. `--list` on the produced archive: all 4 TGIs, offsets and sizes correct
    (96 + Σ payloads = index offset; + 4*20 = file size).

@@ -15,7 +15,7 @@ from "dangling reference".
 
 Read-only.  Never writes to the game directory.
 
-⛔ WHY THE ARCHIVE LIST IS DISCOVERED, NOT HARD-CODED (2026-08-05, task #140).
+WHY THE ARCHIVE LIST IS DISCOVERED, NOT HARD-CODED (2026-08-05, task #140).
 This file used to carry a literal list of SEVEN archives, and its own docstring
 said "all seven" - which read as a complete census and was not one.  The
 install also ships **Intro.dat**, an EIGHTH archive nothing here ever opened.
@@ -102,7 +102,7 @@ def main(argv):
     for a in argv:
         rows = hits[a]
         if not rows:
-            # ⛔ NEVER call this "dangling" from this tool alone. It scans the
+            # NEVER call this "dangling" from this tool alone. It scans the
             # GAME ARCHIVES and NOTHING ELSE - no Plugins, no mods.
             # 2026-07-31: {46a006b0,ea7f0eae} was declared dangling on exactly
             # this line, a build-time guard was relaxed to let it through, and

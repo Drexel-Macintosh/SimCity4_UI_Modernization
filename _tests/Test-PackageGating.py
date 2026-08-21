@@ -96,7 +96,7 @@ def main():
     # ---- parse SyncDat call sites ---------------------------------------
     calls = {}
     for m in re.finditer(
-            # ⚠ THE THIRD ARGUMENT IS NOT ALWAYS pkg.tag (2026-08-19). This
+            # THE THIRD ARGUMENT IS NOT ALWAYS pkg.tag (2026-08-19). This
             # pattern used to demand it literally, so SelectorUI-1x - which
             # passes its own L"-1x" because it is armed by the ABSENCE of a
             # tier - was INVISIBLE to this gate: a package that ships a

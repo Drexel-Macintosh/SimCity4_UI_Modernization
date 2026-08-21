@@ -513,7 +513,7 @@ CODE_BOUND_TGIS = [
     # block - so #190 missed them, and a sim that resolves to a default face
     # kept a 36x41 source while the named ones became 72x82.
     #
-    # ⛔ THAT MISMATCH IS NOT COSMETIC, it is the whole "top-left quarter"
+    # THAT MISMATCH IS NOT COSMETIC, it is the whole "top-left quarter"
     # defect. The category-3 indicator divides its UVs by a SINGLE texture side
     # (0x0046CCCE, which we set to NextPow2(max(36f,41f))). A 36x41 face uploads
     # into a 64 square while a 72x82 face uploads into 128, so with two source
@@ -522,7 +522,7 @@ CODE_BOUND_TGIS = [
     # portrait texture the same size again, which is what the single divisor
     # requires.
     #
-    # ⭐ LAW: IF A CONSUMER DIVIDES BY ONE TEXTURE SIZE, EVERY SOURCE IT CAN
+    # LAW: IF A CONSUMER DIVIDES BY ONE TEXTURE SIZE, EVERY SOURCE IT CAN
     # BIND MUST BE THE SAME SIZE. Staging "the 19 portraits" was staging a
     # FAMILY, not a SET - the fallback members are part of the contract.
     # ARTFETCH proves the game loads these two beside the 19 (ret=0x00775239
@@ -560,7 +560,7 @@ CODE_BOUND_TGIS = [
     # because 83 EE ib sign-extends so the row reserve S must stay <= 127
     # (all sixteen need S=165 at 3x). Do not "complete" the range at 3x.
     #
-    # âš  CORRECTED 2026-08-01 (SDK-law audit): this comment used to say the X
+    # âš  this comment used to say the X
     # glyphs "stay at stock 18px at EVERY tier ... a hard design constraint",
     # which was retired v2.40.0 wording contradicted by the v2.40.2 block ~25
     # lines below AND by the shipped counts (655/655/651). Two contradicting
@@ -724,7 +724,7 @@ CODE_BOUND_FORCE = {
 #   * the 3x package's family payloads DO NOT change (it already ships 96);
 #   * only the 1.5x and 2x packages differ - 9 pinned entries each.
 #
-# ⚠ COMPANION GATES THAT MOVE WITH THIS PIN (recorded in REGRESSION.md #186):
+# COMPANION GATES THAT MOVE WITH THIS PIN (recorded in REGRESSION.md #186):
 #   * Test-DatIntegrity.ps1's #100 bubble payload assertion expects
 #     32*factor per tier and MUST be re-pointed to fixed 96 in the same
 #     batch, or it goes red on a correct build;
@@ -745,10 +745,10 @@ CODE_BOUND_FORCE = {
 # window is excluded from the sweep (0x48E945B4 in kNeverScaleIds). Art scaled
 # offline + window never swept is the DialogStatic pattern; it yields 32*f
 # exactly AND keeps the art crisp, which a=1 would not.
-# ⛔ BOTH HALVES OR NEITHER. Art-at-f without the never-scale entry restores
+# BOTH HALVES OR NEITHER. Art-at-f without the never-scale entry restores
 # the pre-#186 f-squared state; never-scale without art-at-f pins it at 1x.
 MISSION_BUBBLE_FIXED96_MULT = FACTOR   # = f: 48 / 64 / 96 px on the 32px base
-# ⛔⛔ ONE SHEET, NOT THE FAMILY (adversarial review 2026-08-17, finding 1 -
+# ONE SHEET, NOT THE FAMILY (adversarial review 2026-08-17, finding 1 -
 # the reviewer RENDERED the candidates). The other twelve "family" members
 # are the engine's CLASS-DEFAULT WIDGET sheets registered at VA 0x44DEC7:
 # checkbox/radio strips (46a006a2), dropdown arrows (62b99d31), message-box
@@ -769,7 +769,7 @@ MISSION_BUBBLE_FIXED96_MULT = FACTOR   # = f: 48 / 64 / 96 px on the 32px base
 MISSION_BUBBLE_FIXED96 = {
     (0x46A006B0, 0x094AC89A),  # bubble base 32x32 -> 96x96
 }
-# ⛔ EXCLUDED - NOT in the set above, and the guard below keeps it that way:
+# EXCLUDED - NOT in the set above, and the guard below keeps it that way:
 # 46A006A4 and 46A006A6 carry UNSCALED-only .UI refs (refmap: aa5e60d1.ui /
 # ebd0d36c.ui), so the classifier conflict-skips them from code-bound staging
 # and pinning them would break those consumers. They stay the known
@@ -796,7 +796,7 @@ MISSION_BUBBLE_FIXED96_EXCLUDED = {
 #             -> tier 2x-in-place
 # Their mission glyphs (if any) therefore stay tier-sized (A7's stays stock)
 # - ledgered with A4/A6 in REGRESSION.md #186.
-# ⚠ REDUCED with the set above (review finding 1): the routed four never
+# REDUCED with the set above (review finding 1): the routed four never
 # belonged to a "bubble family" either - they are widget art whose scripted
 # consumers already size to tier windows. Kept as an EMPTY ledger so the
 # subset guard below still parses; the class-default widget sheets
@@ -912,7 +912,7 @@ def double_subtree_areas(text, root_id_hex, scale_fn):
         if re.search(r"\sid=0x0000aaaa\b", tag, re.I):
             return tag
 
-        # ⛔ #170: AN ART LEAF IS SIZED AS A LENGTH, NOT BY ITS EDGES.
+        # #170: AN ART LEAF IS SIZED AS A LENGTH, NOT BY ITS EDGES.
         #
         # Scaling all four coordinates independently makes a child's SIZE
         # depend on its POSITION: at f=1.5 an odd left edge with an even right
@@ -939,11 +939,11 @@ def double_subtree_areas(text, root_id_hex, scale_fn):
         # seams are the failure mode); an `imagerect` crop is registered
         # against the node's own l,t and scales with the art already.
         #
-        # ⚠ POSITION NEVER MOVES - only the extent, by at most one pixel. The
+        # POSITION NEVER MOVES - only the extent, by at most one pixel. The
         # reverted parity nudge (below) moved things and was judged by its
         # densest neighbourhood; this is the lever that comment names instead.
         #
-        # ⚠ PROVABLE NO-OP AT AN INTEGER FACTOR: scale_fn(v) = v*N exactly, so
+        # PROVABLE NO-OP AT AN INTEGER FACTOR: scale_fn(v) = v*N exactly, so
         # N*l + N*(r-l) == N*r identically. 2x and 3x cannot move, and
         # `gate_btn_undercover.py` asserts it (0 mismatched at 2x and 3x).
         rest = span_text[mt.end():]
@@ -976,7 +976,7 @@ def double_subtree_areas(text, root_id_hex, scale_fn):
 # ---------------------------------------------------------------------------
 # SEAT A CHILD ON ITS FRAME'S MEASURED ART APERTURE  (#152, 2026-08-09)
 #
-# ⛔ THE LAW THIS EXISTS FOR - it is closed form, and it predicts WHICH AXIS
+# THE LAW THIS EXISTS FOR - it is closed form, and it predicts WHICH AXIS
 # breaks on WHICH panel:
 #
 #     For f = p/q in lowest terms, edge-derived rounding preserves a child's
@@ -991,7 +991,7 @@ def double_subtree_areas(text, root_id_hex, scale_fn):
 #     advisor faces     offset (2,1)  x even safe, y ODD  -> 1px HIGH
 #     My Sim picker     offset (3,2)  x ODD  fails, y even -> 1px LEFT
 #     advisor detail    offset (2,2)  both even            -> never fails
-# The user reported exactly "high" and "left" respectively.
+# The two defects read on screen as "high" and "left" respectively.
 #
 # THE ANCHOR IS THE FRAME; THE SAFETY NET IS THE MEASURED APERTURE. Not parity,
 # not floor(), not containment detection. Rejected alternatives, measured:
@@ -999,9 +999,9 @@ def double_subtree_areas(text, root_id_hex, scale_fn):
 #         windows (up to 2px) and 3 in the live balance bar. REJECT.
 #     floor() for positions -> moves 373/531 budget+graphs, 718/957 dashboard,
 #         26 row-pitch changes. REJECT - worst available.
-# Both would have broken the Monthly Budget, which the user confirmed fixed.
+# Both would have broken the Monthly Budget, which the report describes fixed.
 #
-# ⚠ TRANSLATES ONLY. Width and height are never touched, and the delta is
+# TRANSLATES ONLY. Width and height are never touched, and the delta is
 # capped at 1px (G5) - #148's lesson that a fix which MOVES things is judged by
 # its densest neighbourhood. This one moves 14 windows, all in two files.
 _SEAT_AREA = r"area=\((-?\d+),(-?\d+),(-?\d+),(-?\d+)\)"
@@ -1096,7 +1096,7 @@ def seat_faces_on_apertures(text, seats, stage_dir, fn):
         # G1 the ART's aperture is where the art says it is - and the FLOOD FILL
         #    is the authority, not ScaleRound. ScaleRound is the sanity bound.
         #
-        #    ⚠ RELAXED 2026-08-14 (#156), deliberately, with the reason:
+        #    RELAXED 2026-08-14 (#156), deliberately, with the reason:
         #    cell-aligned sampling scales each STATE from its own cell, so a
         #    55px cell becomes 83 (not 82.5) and source column 2 first appears
         #    at output 4 where the old global map put it at 3. The art is
@@ -1309,7 +1309,7 @@ def mark_scaled(roots):
 # (BLIT-BEHAVIOUR.md): the drawn size comes from the SOURCE rect, and the
 # window is never read. So a rect that asks for more pixels than the bitmap
 # HAS cannot draw them - the strip simply stops short, which is exactly the
-# "break in the green strip" the user reported on the warrior columns.
+# "break in the green strip" the report describes on the warrior columns.
 #
 # We shipped that break ourselves: warrior's own script over-reads its art
 # (imagerect (0,0,178,269) over a 170x248 bitmap), and we FAITHFULLY DOUBLED
@@ -1363,7 +1363,7 @@ def src1x_wh(gid, iid):
 
 
 # ---------------------------------------------------------------------------
-# ⛔⛔ ODD-EDGE PARITY NUDGE - REVERTED 2026-08-06, THE SAME DAY IT SHIPPED.
+# ODD-EDGE PARITY NUDGE - REVERTED 2026-08-06, THE SAME DAY IT SHIPPED.
 # NOT CALLED. Kept because the DIAGNOSIS below is correct and load-bearing; only
 # the LEVER was wrong.
 #
@@ -1378,7 +1378,7 @@ def src1x_wh(gid, iid):
 # where it is obvious. On an isolated button it is invisible; in a packed grid
 # it is a misalignment.
 #
-# ⚠ THE LAW: A FIX THAT MOVES THINGS IS JUDGED BY ITS DENSEST NEIGHBOURHOOD,
+# THE LAW: A FIX THAT MOVES THINGS IS JUDGED BY ITS DENSEST NEIGHBOURHOOD,
 # NOT BY THE CASE THAT REPORTED THE BUG. The Landscape flyout has five buttons
 # with 50px of air between them; "Select A My Sim" has twenty-one faces in a
 # grid. Same edit, one is invisible and one is a defect.
@@ -1532,7 +1532,7 @@ def parity_nudge_btn_areas(text, fn, states=4):
 # The mapping below is UpscaleNearest's, restated: `sx = ox * srcW / dstW`
 # (integer division), which is why PIL is used only to decode and encode - never
 # to resize. A resampler with its own rounding would be a second art pipeline.
-# ⛔⛔ REVERTED 2026-08-06, SAME DAY IT SHIPPED. DO NOT REINSTATE WITHOUT
+# REVERTED 2026-08-06, SAME DAY IT SHIPPED. DO NOT REINSTATE WITHOUT
 # ANSWERING THE QUESTION AT THE BOTTOM OF THIS BLOCK.
 #
 # `fit_state_strips_to_windows` used to live here. It regenerated every
@@ -1565,7 +1565,7 @@ def parity_nudge_btn_areas(text, fn, states=4):
 #   the old sheet size. MEASURED AND REFUTED: of 115 art-sized strips in scope,
 #   ZERO are also referenced by an imagerect. Recorded so it is not re-tried.)
 #
-# ⚠ THE LAW: EDITING GEOMETRY IN A .UI HAS THE SCOPE OF THAT .UI. EDITING ART
+# THE LAW: EDITING GEOMETRY IN A .UI HAS THE SCOPE OF THAT .UI. EDITING ART
 # HAS THE SCOPE OF THE WHOLE GAME. They are not the same blast radius and must
 # not be judged by the same evidence.
 #
@@ -1687,7 +1687,7 @@ FONT_GUIDS = load_font_guids()
 #     f=1.5 ->  96 : the real map can only be 64 (the next legal size, 128,
 #                    does not fit in 96). It covers 64 of 96, leaving a 32px
 #                    ring of BAKED FAKE TERRAIN visible around the real map.
-# The user reported that ring on 2026-08-06 as a "green grid" in the dashboard
+# That ring reads on screen as a "green grid" in the dashboard
 # minimap - greens 7C9B00 / 75B564 are this very block's own measured palette.
 #
 # THE GATE NOW EXPRESSES THE CONDITION IT WAS ALWAYS REACHING FOR: skip only
@@ -2300,7 +2300,7 @@ def main():
                      % (gid, iid))
         # ART SOURCE OVERRIDE (task #60, USER-DIRECTED 2026-07-30): the
         # U-Drive-It mission bubble base draws its WINDOW from the source
-        # image size (art-sized, zero .UI refs), and the user wants it 2x
+        # image size (art-sized, zero .UI refs), and the report describes it 2x
         # its already-scaled size for large-map visibility. Stage it from
         # the pre-generated double-of-tier art (bubble4x[-tag]/, built by
         # Upscale2x --factor 2 over the tier preview). DELIBERATE
@@ -2319,7 +2319,7 @@ def main():
         override = os.path.join(override_dir, tgi_png_name(gid, iid))
         if (gid, iid) in MISSION_BUBBLE_FIXED96:
             # #186: FIXED x3-of-design art, same bytes at every tier. This
-            # supersedes the disabled #60 "bubble4x" experiment below for
+            # replaces the disabled #60 "bubble4x" experiment below for
             # this family (#60 was 2x-OF-TIER, i.e. 4x-of-design at the 2x
             # tier - the very shape #100's payload gate exists to block;
             # fixed-96 is 3x-of-design everywhere and tier-invariant).
@@ -2559,7 +2559,7 @@ def main():
         # byte-verified in the align deserializer at 0xAD584C-0xAD58A4;
         # ZERO stock uses of the token is fine and expected (documented -
         # the deserializer, not the corpus, is the proof it parses).
-        # ⚠ SCOPE STRICTLY BY SCRIPT, NEVER BY ID: the SAME id value
+        # SCOPE STRICTLY BY SCRIPT, NEVER BY ID: the SAME id value
         # 0xc9e41918 is #184's population label in I-2bc90671 (leftcenter,
         # above) and also lives in I-898897de - a global rewrite of this id
         # would misalign both. The endswith covers the G-08000600 twin IF
@@ -2612,7 +2612,7 @@ def main():
                 new_text, ADVISOR_FACE_SEATS, STAGE, fn)
             print("   advisor faces seated on art aperture x%g (%d moved) in %s"
                   % (FACTOR, len(seated), fn))
-            # ⛔ THE NO-OP AT AN INTEGER FACTOR IS ASSERTED, NOT ASSUMED.
+            # THE NO-OP AT AN INTEGER FACTOR IS ASSERTED, NOT ASSUMED.
             # For integer N, scale_len(v) = vN exactly, so
             # N*frame + N*(face-frame) == N*face and every delta is (0,0).
             # If that ever stops being true the build STOPS - 2x and 3x are
@@ -2754,7 +2754,7 @@ def main():
         #     bottom-anchored dock drags the map outside the window.
         # Both reverted in v2.41.3. The dock is runtime-scaled ONLY. Any future
         # attempt must first answer what the union rect does at load time.
-        # ⛔ THE PARITY NUDGE WAS CALLED HERE AND IS REVERTED (2026-08-06, same
+        # THE PARITY NUDGE WAS CALLED HERE AND IS REVERTED (2026-08-06, same
         # day). See parity_nudge_btn_areas for the measurement and the reason.
         # The same defect is now fixed in the DLL, by changing the WIDTH instead
         # of the POSITION - see UiSpike.cpp, kLeafSizeDerived.

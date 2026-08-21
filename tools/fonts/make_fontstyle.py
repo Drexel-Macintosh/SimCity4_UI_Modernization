@@ -45,7 +45,7 @@ STYLE_SIZE_RE = re.compile(
 # ")000" garbage (user screenshot 2026-07-30). Same reasoning as the HTML
 # engine's stock-size clone styles: text drawn inside 1x-constant code
 # geometry keeps its stock size until that code geometry itself is patched.
-# ⚠ CORRECTED 2026-08-02 (#57). This comment used to end "(ChartLabel/Legend
+# . This comment used to end "(ChartLabel/Legend
 # keep scaling: their regions have room - verified in the same screenshots.)"
 # A user screenshot REFUTES that for Legend: at 26px the chart legend reads
 # "Income / Expense s" - the word wraps, because the legend column is a 1x
@@ -55,7 +55,7 @@ STYLE_SIZE_RE = re.compile(
 # decided against a real stock capture (task #57, graphs-stock-ref.png).
 # Do not "verify" a region has room by looking at a screenshot that happens to
 # contain a short string.
-# ⚠ CORRECTED AGAIN 2026-08-03 (#57 closed, v2.55.0). The 08-02 correction
+# CORRECTED AGAIN 2026-08-03 (#57 closed, v2.55.0). The 08-02 correction
 # above got the DIAGNOSIS right and the STYLE wrong, in both directions:
 #   - the wrapping text in that screenshot is NOT the Legend style. The Graphs
 #     legend row text is ChartLabel (0xE9C86B5E), byte-verified at 0x0076DD91;
@@ -93,7 +93,7 @@ STYLE_SIZE_RE = re.compile(
 #   recorded next to the disabled write path in UiSpike.cpp:
 #       stock plot (78,21,408,234)/488x256  ->  x2 (156,42,816,468)/976x512
 #
-# ✅ v2.53.2 (2026-08-03): THE GEOMETRY FIX LANDED, SO THE PIN COMES OFF -
+# v2.53.2 (2026-08-03): THE GEOMETRY FIX LANDED, SO THE PIN COMES OFF -
 # exactly the condition the warning below demanded. The repaint mechanism was
 # found (dirty byte cIGZWin+0x70, set only via vt+0x170) and v2.53.1 scales
 # the plot margins per chart object: gutter is now 90px (user-confirmed
@@ -102,7 +102,7 @@ STYLE_SIZE_RE = re.compile(
 # gutter was still 45 - the font was never the blocker, the frozen rect was,
 # and the rect is no longer frozen.
 # (Historical warning kept for the record:)
-# ⛔ DO NOT UNPIN THIS AGAIN WITHOUT A GEOMETRY FIX LANDING FIRST. The font
+# DO NOT UNPIN THIS AGAIN WITHOUT A GEOMETRY FIX LANDING FIRST. The font
 #    is not the blocker; the frozen rect is.
 KEEP_STOCK = set()
 
@@ -117,8 +117,8 @@ KEEP_STOCK = set()
 # full 2x. Paired with the +4px legend-rect widening in UiSpike's
 # CHARTSCALE block - the two together clear the shortfall with margin.
 #
-# ================= CORRECTED 2026-08-03 (#57, v2.55.0) ===================
-# ⚠ THE PARAGRAPH ABOVE NAMES THE WRONG SCREEN. It is kept because the
+# ================= ===================
+# THE PARAGRAPH ABOVE NAMES THE WRONG SCREEN. It is kept because the
 # arithmetic in it is right; what is wrong is WHICH legend it describes.
 #
 # THIS SQUEEZE DOES NOT TOUCH THE GRAPHS CHART LEGEND, AND NEVER HAS.
@@ -146,7 +146,7 @@ KEEP_STOCK = set()
 # into a 110px gutter, and at 2x a 32px checkbox plus a 2x text box put
 # 52px into the SAME unscaled 110px.
 #
-# ⚠ AND THE SQUEEZE'S OWN STATED MECHANISM IS A WARNING, NOT A RECIPE:
+# AND THE SQUEEZE'S OWN STATED MECHANISM IS A WARNING, NOT A RECIPE:
 # a text box of round(stockBox * f) does NOT hold the same string, because
 # glyph advance is NOT linear in point size. MEASURED over 17 strings at
 # both 13pt and 26pt (tools\uimap\emu\emu_text_extent.py, PAIRS_13_26):
@@ -154,7 +154,7 @@ KEEP_STOCK = set()
 # "Air Pollution" .. 2.188 "Commute Time"). NOT x2.00. That ~6% is exactly
 # the shortfall this squeeze was invented to paper over. Size a box from
 # the FONT, not from f (law L48).
-# ⚠ INFERENCE, not measurement: that ratio is a 13->26pt result. It has
+# INFERENCE, not measurement: that ratio is a 13->26pt result. It has
 # NOT been re-measured at the 1.5x/3x sizes; assuming it holds at 15/20/39
 # pt is a model assumption.
 #
@@ -171,7 +171,7 @@ SIZE_SQUEEZE = {"Legend": 0.92}
 def scale_size(size, factor, squeeze=1.0):
     r"""Scale a point size WITHOUT ever exceeding the box's own scale factor.
 
-    ⛔ THIS USED TO ROUND (floor(size*f + 0.5)) AND THAT CLIPPED EVERY LONG
+    THIS USED TO ROUND (floor(size*f + 0.5)) AND THAT CLIPPED EVERY LONG
     LABEL AT 1.5x (2026-08-06, found by the first eyes-on of that tier).
 
     The package builders scale every `area=` rect by EXACTLY f. Rounding the
@@ -188,7 +188,7 @@ def scale_size(size, factor, squeeze=1.0):
     observed symptom: "Passenger Train", "Abandoned Buildings" and "No Kick Out
     Lower Wealth" clipped while "Ferry", "Water" and "Monorail" were fine.
 
-    ⚠ WHY NOBODY SAW IT FOR MONTHS. At 2x and 3x this CANNOT happen - doubling
+    WHY NOBODY SAW IT FOR MONTHS. At 2x and 3x this CANNOT happen - doubling
     or tripling an integer never rounds, so the font ratio is exactly the box
     ratio and the only residual is the ink term, which the stock design's
     padding absorbs. 1.5x is the ONLY tier that can round, and it was the only
@@ -203,7 +203,7 @@ def scale_size(size, factor, squeeze=1.0):
     tiers that can actually overshoot change. (The selfcheck earned its keep:
     "looks equivalent" was wrong within one line of code.)
 
-    ⛔ THE GUARD MUST TEST THE TIER FACTOR, NOT THE SQUEEZED PRODUCT (#163).
+    THE GUARD MUST TEST THE TIER FACTOR, NOT THE SQUEEZED PRODUCT (#163).
     This function used to take ONE argument, and `generate()` handed it
     `eff = factor * SIZE_SQUEEZE[name]`. So for the one style that carries a
     squeeze - Legend, 0.92 - the guard saw 1.84 at tier 2 and 2.76 at tier 3,
@@ -301,7 +301,7 @@ CANDIDATE_ONLY = {"MessageBodyHtml", "MessageHeaderHtml"}
 # FontStyle-3x.ini had 62 styles and ZERO clones, while 2x had 64 - so the
 # 1.5x and 3x tiers have been shipping that regression since v2.25.2.
 #
-# ⚠ THEY ARE NEVER SCALED, AT ANY TIER. The game derives an HTML size index
+# THEY ARE NEVER SCALED, AT ANY TIER. The game derives an HTML size index
 # from these (idx=(4*size+8)/18) and the DLL scales the HTML size TABLE
 # instead; scaling the style too would compound. That is why they are
 # emitted verbatim rather than run through scale_size().

@@ -5,7 +5,7 @@
 // (SC4UIScale.ini). Missing keys keep the defaults below.
 struct Settings
 {
-	// ⚠ Input-layer settings that used to live in this struct were
+	// Input-layer settings that used to live in this struct were
 	// REMOVED 2026-08-06. They belonged to a different plugin that once shared
 	// this struct; this DLL parsed them and consumed none of them. Dead config
 	// is not harmless - it documents keys that do nothing, and it made a
@@ -48,7 +48,7 @@ struct Settings
 	bool spikeScaleRegion = false;    // extend ScaleAll to the region screen
 	                                  // (host 0xEA659793 cSC4WinRegionScreen;
 	                                  // timer-polled - no city message fires
-	                                  // on the region). CORRECTED 2026-08-04:
+	                                  // on the region). 
 	                                  // this said 0x2AAB8CC1 for weeks, which
 	                                  // is the TOOLTIP layer, not the region.
 	// #131: region-map camera scale. The region TERRAIN is renderer-drawn at a
@@ -64,7 +64,7 @@ struct Settings
 	// the tile-rebuild hook. ROTATION is NOT offered: the tiles are bitmaps
 	// baked at a fixed angle when each city was last saved, so rotating would
 	// need every thumbnail re-rendered, which only the city view can do.
-	// ⚠ v2.82.0-.2 CRASHED THE GAME TWICE and this key was default-off until
+	// v2.82.0-.2 CRASHED THE GAME TWICE and this key was default-off until
 	// v2.83.0. Keep the history: it is the reason the mechanism looks the way
 	// it does. Two ACCESS_VIOLATIONs at 0x0082653B (inside GetPixel, which has
 	// NO bounds check), both with ESI = 0x00AC1400 and EBP = the ORIGINAL 260px
@@ -90,7 +90,7 @@ struct Settings
 	// by RegionZoomStepRatio; you get RegionZoomLevels steps in EACH direction
 	// and no more. 2 levels x 1.25 => base/1.5625 .. base*1.5625.
 	//
-	// ⚠ WHY LIMITS EXIST: a rebuild is 8-10 full-image passes PER ITEM, two of
+	// WHY LIMITS EXIST: a rebuild is 8-10 full-image passes PER ITEM, two of
 	// them ~3 virtual calls per pixel and two more one unreserved vector insert
 	// per opaque pixel - and BOTH cost and memory are QUADRATIC in the factor.
 	// The user FROZE the game by scrolling fast (2026-08-05). Levels bound the
@@ -281,7 +281,7 @@ struct Settings
 	int  spikeShowHook = 1;           // v2.32.0 task #50: scale a subtree the
 	                                  // instant the game shows it, before its
 	                                  // first paint. 0=off 1=log only 2=scale
-	                                  // ⛔ REFUTED for the city HUD (task #89,
+	                                  // REFUTED for the city HUD (task #89,
 	                                  // measured): cGZWin::SetFlag fires only on
 	                                  // a 0->1 transition and HUD windows are
 	                                  // BORN visible, so mode 2 never sees them
@@ -313,14 +313,14 @@ struct Settings
 	                                  // which is the most likely shape of the
 	                                  // v2.41.15 crash.
 	                                  //
-	                                  // ⚠ Ships at 1 ON PURPOSE (law 38: an
+	                                  // Ships at 1 ON PURPOSE (law 38: an
 	                                  // escape hatch is not a safe default).
 	                                  // Read the EARLYDOCK lines, THEN set 2.
 	int  spikeEarlyBake = 1;          // 0 = off, 1 = bake flags only (SHIPPING
 	                                  // DEFAULT), 2 = flags + scale the dock at
 	                                  // PostCityInit.
 	                                  //
-	                                  // ⛔ MODE 2 CRASHED AT CITY OPEN on its
+	                                  // MODE 2 CRASHED AT CITY OPEN on its
 	                                  // first run (v2.41.15, 2026-08-01,
 	                                  // reported). It shipped defaulted to
 	                                  // 2, which would have crashed anyone
@@ -362,7 +362,7 @@ struct Settings
 	                                  // lets the bake happen on an internal
 	                                  // message during load, before reveal.
 	                                  //
-	                                  // ⚠ THIS RUNS INSIDE PostCityInit, which
+	                                  // THIS RUNS INSIDE PostCityInit, which
 	                                  // is the region carrying the hang lesson.
 	                                  // It is deliberately TINY: two scoped
 	                                  // lookups, two byte writes, one
@@ -370,7 +370,7 @@ struct Settings
 	                                  // scaling, NO surface work. If the game
 	                                  // ever hangs at city open, set this to 0
 	                                  // and it is fully inert.
-	// ⛔ NO EarlyPass KEY - the posted-WM_APP channel was built, MEASURED and
+	// NO EarlyPass KEY - the posted-WM_APP channel was built, MEASURED and
 	// REVERTED on 2026-08-01 (task #89, v2.41.0). It beat WM_TIMER by 15ms
 	// (+2016ms vs +2031ms after arm): ONE timer period. The game does not pump
 	// messages AT ALL during the city load tail, so there is no queue to jump
