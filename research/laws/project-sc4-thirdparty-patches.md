@@ -135,16 +135,7 @@ upstream, and each documented for the upstream author.
   local override only.** It rewrites another mod's gameplay data, which is a
   decision for that mod's author, so releases omit it and the defects are instead
   reported upstream (`tools\research\UPSTREAM-CAM-REPORT.md`) for a fix at the
-  source. Documented here for completeness and for the upstream author: six
-  exemplar-patch cohorts (resource-loading-hooks format: Cohort `0x05342861`,
-  group `0xB03697D1`, targets prop `0x0062E78A`) that inject a corrected Item
-  Submenu Parent (`0xAA1DD399`) into ten CAM 4.0.1 exemplars: nine police/fire
-  buildings shipped with `parent={0x00000000}` — Police Kiosk, the precincts,
-  Jail, Prison and three fire stations, all unreachable in game — plus the
-  Lifeguard Tower pointing at undefined submenu `0x1C3780E4`. Built by
-  `tools\itemicons\build_menu_patches.py`. The unreachable set is found by
-  parsing both binary and text exemplars, and should be re-derived after any
-  plugin change.
+  source.
 - **`z_SC4UIScale_ItemIconsSub-2x.dat`** — 125 entries of 2x icons owned by other
   mods: 55 from the submenus mod, 69 CAM and Maxis-landmark icons, plus the
   submenus DLL's Missing Thumb `0x144161EC`. That last one is never exemplar-bound,
@@ -156,9 +147,6 @@ upstream, and each documented for the upstream author.
   inside a doubled cell: the button shows two states side by side, and hovering
   indexes past the end of the art and draws nothing. The copies are upscaled from
   NAM's own bitmaps, never from a stock lookalike.
-
-These are data defects and icon-pool gaps in the upstream mods, not scaling bugs;
-they ship as overrides because the goal is a working install.
 
 ## Verifying a replaced panel both ways
 
