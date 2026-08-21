@@ -402,6 +402,12 @@ $BUILT_PAIRS = @(
   @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-2x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-2x.dat" }
   @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-15x.dat";         d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-15x.dat" }
   @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-3x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-3x.dat" }
+  # WebButtonUI (2026-08-21): cyclone-boom Web Button Improvement Mod's web
+  # button bitmap, gated on the mod's presence. All three tiers from
+  # tools\itemicons\out\ (generator rebuild_webbutton.py).
+  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-2x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI-2x.dat" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-15x.dat";      d = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI-15x.dat" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI-3x.dat" }
   # UncoveredIcons ROWS DELIBERATELY ABSENT FROM THIS LIST.
   # Unlike every other package here, this one only EXISTS when the player has
   # third-party icons we do not cover. On a clean install there is nothing to

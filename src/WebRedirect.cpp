@@ -5,21 +5,41 @@
 #include <Windows.h>
 #include <shellapi.h>
 
+#include "Logger.h"
 #include "MinHook.h"
 
 #include <cstring>
 #include <cwchar>
+#include <cwctype>
+#include <filesystem>
+#include <string>
+
+extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 // The region screen's website button shells out to http://simcity.ea.com/,
-// dead since EA retired the site. Redirect any simcity.ea.com URL to the
-// living community hub instead. Hooked at ShellExecute so it works no
-// matter where the game stores the URL string.
+// dead since EA retired the site. Two behaviours, decided by whether the
+// cyclone-boom "Web Button Improvement Mod" (Option A, "Click Prevented") is
+// installed:
+//   * ABSENT  - the button stays live and we redirect any simcity.ea.com URL
+//               to the living community hub (this DLL's standard dead-link
+//               fix).
+//   * PRESENT - the mod owns the button; a click must do NOTHING - no browser
+//               AND no minimize. The real mechanism is the mod's own inert
+//               WebButtonUI .ui (website-button id cleared to 0), which we
+//               re-ship per tier in the mod-gated z_SC4UIScale_WebButtonUI
+//               package so it also wins at scaled factors (the SelectiveArt
+//               dat carries a live-id copy). Because the id is cleared, the
+//               game's web-launch routine never runs, so there is nothing to
+//               block or restore. The ShellExecute hook below is only a
+//               backstop for that case, plus the redirect when absent.
 namespace
 {
 	const char kDeadHostA[] = "simcity.ea.com";
 	const wchar_t kDeadHostW[] = L"simcity.ea.com";
 	const char kTargetA[] = "https://community.simtropolis.com/";
 	const wchar_t kTargetW[] = L"https://community.simtropolis.com/";
+
+	bool g_blockDeadEa = false;
 
 	typedef HINSTANCE(WINAPI* ShellExecuteAFn)(
 		HWND, LPCSTR, LPCSTR, LPCSTR, LPCSTR, INT);
@@ -66,11 +86,66 @@ namespace
 		return false;
 	}
 
+	// "Is this a web URL of any kind?" The game keyed the region website
+	// button on its control id (0x4A779A1A); our scaled tiers carry a live
+	// button, so when the Web Button Improvement Mod is absent the click MUST
+	// still fire (and be redirected). When the mod IS present its intent is
+	// 'click does nothing' - block ANY web URL, not just simcity.ea.com, so a
+	// scaled-tier button can never leak a browser launch on some other host.
+	bool LooksLikeWebUrlA(LPCSTR s)
+	{
+		if (!s) { return false; }
+		return _strnicmp(s, "http://", 7) == 0
+			|| _strnicmp(s, "https://", 8) == 0
+			|| _strnicmp(s, "www.", 4) == 0;
+	}
+
+	bool LooksLikeWebUrlW(LPCWSTR s)
+	{
+		if (!s) { return false; }
+		return _wcsnicmp(s, L"http://", 7) == 0
+			|| _wcsnicmp(s, L"https://", 8) == 0
+			|| _wcsnicmp(s, L"www.", 4) == 0;
+	}
+
+	// The cyclone-boom "Web Button Improvement Mod" - searched recursively by
+	// file name (its dat name varies by option A/B/C and version).
+	bool WebButtonModPresent()
+	{
+		wchar_t dir[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), dir, MAX_PATH);
+		wchar_t* lastSlash = wcsrchr(dir, L'\\');
+		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
+		const wchar_t* needle = L"web button improvement mod";
+		try
+		{
+			for (const auto& entry : std::filesystem::recursive_directory_iterator(dir))
+			{
+				if (!entry.is_regular_file()) { continue; }
+				std::wstring name = entry.path().filename().wstring();
+				for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
+				if (name.find(needle) != std::wstring::npos) { return true; }
+			}
+		}
+		catch (...) { /* unreadable tree -> treat as absent */ }
+		return false;
+	}
+
 	HINSTANCE WINAPI HookShellExecuteA(
 		HWND hwnd, LPCSTR op, LPCSTR file, LPCSTR params, LPCSTR dir, INT show)
 	{
-		if (ContainsDeadHostA(file))
+		const bool dead = ContainsDeadHostA(file);
+		const bool anyWeb = g_blockDeadEa && LooksLikeWebUrlA(file);
+		if (dead || anyWeb)
 		{
+			if (g_blockDeadEa)
+			{
+				Logger::Get().WriteLine(
+					LogLevel::Info,
+					"WebRedirect: '%s' BLOCKED (Web Button Improvement Mod "
+					"owns the button; click does nothing).", file);
+				return reinterpret_cast<HINSTANCE>(static_cast<INT_PTR>(42));
+			}
 			Logger::Get().WriteLine(
 				LogLevel::Info,
 				"WebRedirect: '%s' -> '%s'.", file, kTargetA);
@@ -82,8 +157,18 @@ namespace
 	HINSTANCE WINAPI HookShellExecuteW(
 		HWND hwnd, LPCWSTR op, LPCWSTR file, LPCWSTR params, LPCWSTR dir, INT show)
 	{
-		if (ContainsDeadHostW(file))
+		const bool dead = ContainsDeadHostW(file);
+		const bool anyWeb = g_blockDeadEa && LooksLikeWebUrlW(file);
+		if (dead || anyWeb)
 		{
+			if (g_blockDeadEa)
+			{
+				Logger::Get().WriteLine(
+					LogLevel::Info,
+					"WebRedirect: web URL BLOCKED (Web Button Improvement Mod "
+					"owns the button; click does nothing).");
+				return reinterpret_cast<HINSTANCE>(static_cast<INT_PTR>(42));
+			}
 			Logger::Get().WriteLine(
 				LogLevel::Info, "WebRedirect: dead EA URL -> Simtropolis (W).");
 			file = kTargetW;
@@ -96,6 +181,9 @@ namespace WebRedirect
 {
 	void Install()
 	{
+		// Decide the behaviour from the mod's presence, once.
+		g_blockDeadEa = WebButtonModPresent();
+
 		// MinHook may already be initialized by ScaleRemap; tolerate that.
 		const MH_STATUS init = MH_Initialize();
 		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
@@ -131,8 +219,11 @@ namespace WebRedirect
 		{
 			Logger::Get().WriteLine(
 				LogLevel::Info,
-				"WebRedirect: %d ShellExecute hook(s) active (simcity.ea.com -> simtropolis).",
-				hooked);
+				"WebRedirect: %d ShellExecute hook(s) active (%s).",
+				hooked,
+				g_blockDeadEa
+					? "BLOCK dead EA URL - Web Button Improvement Mod present"
+					: "simcity.ea.com -> simtropolis");
 		}
 	}
 }

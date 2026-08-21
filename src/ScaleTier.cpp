@@ -17,6 +17,8 @@
 #include <cwchar>
 #include <cstdlib>
 #include <cstdint>
+#include <filesystem>
+#include <string>
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -252,6 +254,18 @@ namespace
 		// nam.controller.<variant>.sc4pac\<file>).
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons",
 		  L"NetworkAddonMod_Controller.dat", false, 0, nullptr, 0 },
+		// WEB BUTTON IMPROVEMENT MOD (cyclone-boom). It ships its own
+		// web-button bitmap {856DDBAC,46A006B0,14416302} (320x60); our runtime
+		// region scaling enlarges the button's window, so a 1x bitmap stretches
+		// soft. Ours are 1.5x/2x/3x upscaled from THE MOD'S bitmap (generator
+		// tools\itemicons\rebuild_webbutton.py). The mod's region .UI
+		// (0xAA920991) is left to runtime scaling - doubling it would
+		// double-scale. PRESENCE ONLY, PREFIX MATCH: the dat name varies by
+		// option (A/B/C) and version, and the package is pure art at the mod's
+		// own TGI, so a mod update makes ours stale-looking, never
+		// mis-geometried - same reasoning as NamIcons.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI",
+		  L"z_Full Screen - Web Button Improvement Mod", true, 0, nullptr, 0 },
 	};
 	const int kThirdPartyDepCount =
 		static_cast<int>(sizeof(kThirdPartyDeps) / sizeof(kThirdPartyDeps[0]));
@@ -2321,6 +2335,27 @@ namespace ScaleTier
 		IconSynth::ScanAndReport(plugDir, factor);
 	}
 
+	// cyclone-boom "Web Button Improvement Mod": when installed it owns the
+	// region website button (its own text + link), so our WebText override and
+	// ShellExecute redirect must both step aside. Detected by file name,
+	// searched recursively (the dat name varies by option A/B/C and version).
+	bool WebButtonModPresent(const wchar_t* pluginsDir)
+	{
+		const wchar_t* needle = L"web button improvement mod";
+		try
+		{
+			for (const auto& entry : std::filesystem::recursive_directory_iterator(pluginsDir))
+			{
+				if (!entry.is_regular_file()) { continue; }
+				std::wstring name = entry.path().filename().wstring();
+				for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
+				if (name.find(needle) != std::wstring::npos) { return true; }
+			}
+		}
+		catch (...) { /* unreadable tree -> treat as absent */ }
+		return false;
+	}
+
 	void SyncStaticLayers(float factor)
 	{
 		// PACKAGES live beside the DLL in Documents\SimCity 4\Plugins (dats
@@ -2334,6 +2369,17 @@ namespace ScaleTier
 		DllDir(docPlugins, MAX_PATH);
 		wchar_t instPlugins[MAX_PATH];
 		InstallPluginsDir(instPlugins, MAX_PATH);
+
+		// WEB BUTTON IMPROVEMENT MOD - INVERSE GATE. When the mod is installed
+		// it owns the region website button (its own LTEXT + link), so our
+		// WebText override must step aside or its text wins over the mod's
+		// (root load order: our z_SC4UIScale_WebText sorts after the mod's
+		// dat). Disabled while the mod is present, re-enabled when it is gone.
+		// Runs before the factor guard below so it applies at every tier,
+		// including stock. (The ShellExecute redirect is gated separately in
+		// the director.)
+		const bool webBtnPresent = WebButtonModPresent(docPlugins);
+		SyncDat(docPlugins, L"z_SC4UIScale_WebText", L"", !webBtnPresent);
 
 		// #182 GUARD (adversarial review 2026-08-17): now that MANUAL factors
 		// also reach this function, an unvalidated ScaleFactor (2.5, or 3.0 on
@@ -2561,6 +2607,13 @@ namespace ScaleTier
 			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons", depOk));
+			// WebButtonUI (2026-08-21): cyclone-boom Web Button Improvement
+			// Mod's web-button bitmap, per tier, gated on the mod - without this
+			// SyncDat the tiers stay in whatever state they were deployed and
+			// 2x art crops/stretches at every other factor.
+			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI", depOk));
 		}
 		// SelectiveArt: ONE stable filename, content-swapped - see
 		// SyncDatStable's own comment for why (the sc4pac uninstall trap).
