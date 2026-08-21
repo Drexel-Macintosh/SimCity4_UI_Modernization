@@ -1,3 +1,55 @@
+2026-08-21  v4.0.2   THE CLICK-FIX WAS VERIFIED SAFE AND NEVER SHIPPED - three
+                     levers, all defaulting off, on every install that ever existed
+
+  User report while the game was live: a Building Styles sub-flyout (screenshot
+  attached) with only the RIGHT HALF of each thumbnail clickable - the left
+  half dead. Reported as "an old issue... come back." Live log, same session:
+
+      SUBHOOK container 0x8A6E61E0 258x874 -> draw hooks installed HERE by
+      the sweep (birth hook did not run)
+      SUBHOOK strip 0x8A2CAD8B 88x774 -> disaster strip hooks installed
+      (item fields x2, clickHook=0)
+
+  Two things confirmed at once. First: SUBBORN2 (the birth hook) does not
+  fire for every sub-flyout container - this one fell through to the
+  fallback sweep, which is expected-but-rare behaviour per its own comment
+  ("a burst of these means the born-hook path stopped firing"). ROOT CAUSE
+  of why THIS container missed the birth hook is still open - lower
+  priority now that the fallback correctly repairs it (see below) - but
+  worth a future capture with gStripDump on to see what distinguishes it.
+
+  Second, and the one that actually explains the symptom: clickHook=0. The
+  container's own IsPointInMe (0x0079A180 -> slot 121) claims only the
+  RIGHTMOST [this+0xE0] px - a field that stays at its 1x value unless
+  explicitly widened. THE FIX FOR THIS ALREADY EXISTS AND IS ALREADY
+  VERIFIED IN THIS FILE'S OWN COMMENTS - "Click-path hooks on the VERIFIED
+  3-arg list handlers (136 commit+fire, 138 pick-from-Y). Safe signatures."
+  - on the disaster flyout's own LOCKED install site, not just the fallback.
+  But all three levers this fix needs (gClickHook, gSelForce, gClaimScale)
+  compiled in DEFAULTING TO 0, and grepping every ini this project has ever
+  shipped - the packaging template, the live dev ini on this machine - NONE
+  of them ever set ClickHook=1. The mechanism was proven once, in some
+  session's hand-edited ini, the comment recorded that proof, and the
+  compiled default was never updated to match. It did not regress - it was
+  never actually live.
+
+  Cure: flipped the three compiled defaults (gClickHook 0->1, gSelForce
+  0->1, gClaimScale 0->2) now that the code they gate is confirmed safe by
+  its own install-site comment, on the exact class this bug reproduces on.
+  Still ini-overridable ([Disaster] ClickHook=/SelForce=/ClaimScale=) if a
+  future game patch ever moves these vtable slots again. gArrowClick was
+  ALREADY defaulting to 1 - it was silently dead too, gated behind
+  `gClickHook && gArrowClick`, so the back-arrow claim fix comes back to
+  life at the same time. gMouseSlot (133) marked dead in its own comment:
+  no install site has read it since the fix moved to slots 136/138.
+
+  ⚠ UNVERIFIED ON SCREEN. Built, full gate set + DatIntegrity green,
+  deployed 22:46:33 once the game closed. Confirm by reopening the exact
+  Building Styles picker from the report screenshot.
+
+  Files: src\UiSpike.cpp (gClickHook/gSelForce/gClaimScale defaults + their
+  comments), src\SC4UIScaleDllDirector.cpp (version).
+
 2026-08-21  v4.0.1   TWO REAL-USER BUGS FROM THE FIRST PUBLIC RELEASE, BOTH
                      CLOSED THE SAME DAY THEY WERE REPORTED
 

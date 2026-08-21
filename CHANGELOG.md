@@ -1,5 +1,15 @@
 # Changelog
 
+## 4.0.2
+
+Bug-fix release.
+
+- **Fixed: sub-menu picture strips (e.g. the Building Styles picker) could
+  have only the right half of each thumbnail clickable.** The menu
+  container's hit-test region was not being widened to match the enlarged
+  artwork in every case, leaving the left portion of each picture
+  unresponsive to clicks.
+
 ## 4.0.1
 
 Bug-fix release.
