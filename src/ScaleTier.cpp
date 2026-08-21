@@ -2570,5 +2570,56 @@ namespace ScaleTier
 		SyncFont(docPlugins, instPlugins, activeTag);
 		SyncFont(docPlugins, docPlugins, activeTag);
 	}
+
+	// ============ FONTSTYLE.INI SHUTDOWN REVERT (v4.0.4) ===================
+	// USER-CONFIRMED REAL DAMAGE, not a hypothetical: an sc4pac uninstall
+	// removes the DLL but leaves FontStyle.ini behind - confirmed directly by
+	// the sc4pac developer ("the DLL goes and the .ini stay ... sc4pac
+	// wouldn't uninstall INI files, as those contain settings that have been
+	// manually configured by the user"). With the DLL gone, stock SC4 reads
+	// whatever FontStyle.ini says - which, at the moment of uninstall, is
+	// still whichever tier's font table SyncFont copied onto it. The player
+	// is left with scaled text over a stock, unscaled UI: exactly the
+	// "font/geometry disagree" half-state BootState exists to prevent for
+	// OUR OWN runtime, except here there is no runtime left to prevent it.
+	//
+	// THE PROPOSED FIX WAS "CHECK ON THE NEXT LAUNCH" AND IT CANNOT WORK: if
+	// the DLL is gone, nothing of ours runs to perform any check. The only
+	// code that can still act is code that runs WHILE THE DLL IS STILL
+	// INSTALLED - i.e., at shutdown, on THIS session, before the player ever
+	// gets to an uninstall. sc4pac can only uninstall with the game closed
+	// (it holds these files open while running, same as every other write
+	// this DLL ever does), so a clean shutdown always precedes any uninstall
+	// that follows it.
+	//
+	// REUSES SyncFont'S OWN STOCK-TIER PATH, ZERO NEW LOGIC: activeTag=null
+	// already means "restore the player's real .user-original if we have
+	// one, else move the live file aside to .x1-disabled" - the exact same
+	// call every 1x selection already makes, proven by every 1x session this
+	// project has ever run. Moving it aside (not deleting it, not writing an
+	// empty stub) means FontStyle.ini simply DOES NOT EXIST after a clean
+	// shutdown - so even sc4pac's own "leave .ini files alone" policy has
+	// nothing under that exact name to leave behind. The .x1-disabled
+	// leftover, if sc4pac's subfolder-wholesale-delete does not reach it
+	// (root, not a subfolder - the modmaker's other uninstall category), is
+	// inert clutter with a non-standard extension nothing ever reads - never
+	// a broken-looking UI again.
+	//
+	// COST AT SHUTDOWN: two FileExists checks and at most one CopyFileW or
+	// MoveFileExW of a 23KB file - the same order of cost SyncFont already
+	// pays at every boot without incident. Deliberately NOT given its own
+	// numbered SHUTDOWN n/4 probe line in the director's shutdown trace:
+	// this call sits in the DIRECTOR's shutdown sequence, which already logs
+	// immediately before and after it, so a hang here is diagnosable the
+	// same way every other shutdown stage already is.
+	void RevertFontOnShutdown()
+	{
+		wchar_t docPlugins[MAX_PATH];
+		DllDir(docPlugins, MAX_PATH);
+		wchar_t instPlugins[MAX_PATH];
+		InstallPluginsDir(instPlugins, MAX_PATH);
+		SyncFont(docPlugins, instPlugins, nullptr);
+		SyncFont(docPlugins, docPlugins, nullptr);
+	}
 }
 

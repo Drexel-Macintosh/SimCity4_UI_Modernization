@@ -1,3 +1,61 @@
+2026-08-21  v4.0.4   THE FONTSTYLE.INI ORPHAN, ACTUALLY FIXED - sc4pac's
+                     developer confirmed real damage, and v4.0.1's placeholder never could
+
+  USER-CONFIRMED, ALREADY-OBSERVED HARM (not hypothetical): "uninstalling
+  but leaving the fontstyle.ini messed up the user's machine as the
+  uninstall left fontstyle.ini still active." Traced live, in a Discord
+  conversation with the sc4pac maintainer (memo33), to two facts the v4.0.1
+  fix never had:
+
+    1. "sc4pac wouldn't uninstall INI files, as those contain settings
+       that have been manually configured by the user" - a BLANKET policy,
+       not a tracking gap. The v4.0.1 empty-placeholder trick assumed the
+       problem was sc4pac not knowing the file existed; it was never that.
+       sc4pac knows, and leaves it alone ON PURPOSE.
+    2. "Uninstall the DLL goes and the .ini stay" (user, confirming directly
+       against their own sc4pac test). So after an uninstall, stock SC4 is
+       reading whichever tier's font table was live at that moment, over an
+       otherwise fully-reverted stock UI - the exact font/geometry
+       disagreement BootState exists to prevent for OUR OWN runtime, except
+       here there is no runtime left running to prevent it.
+
+  THE FIRST PROPOSED FIX ("check a marker on the next launch, revert if
+  missing") CANNOT WORK, and saying why out loud is what found the real
+  one: if the DLL is gone, NOTHING OF OURS RUNS to check anything, ever,
+  in the scenario that matters. The only code that can still act is code
+  that runs WHILE THE DLL IS STILL INSTALLED - i.e. NOW, at shutdown, on
+  THIS session, before the player ever reaches an uninstall. sc4pac can
+  only uninstall with the game closed (it holds these files open while
+  running, same as every write this DLL makes), so a clean shutdown always
+  precedes whatever uninstall follows it.
+
+  THE FIX (ScaleTier::RevertFontOnShutdown, zero new logic): call
+  SyncFont's own EXISTING stock-tier path (activeTag=nullptr) from the
+  director's shutdown sequence, for both the install root and Documents
+  mirror. This is the SAME call every 1x selection has always made -
+  restore .user-original if the player had one, else move the live file
+  aside to .x1-disabled - proven by every 1x session this project has run.
+  Moving it aside, not deleting it or writing an empty stub, means
+  FontStyle.ini simply DOES NOT EXIST after a clean shutdown, so even
+  sc4pac's "leave .ini files alone" policy has nothing under that exact
+  name to leave behind.
+
+  LIVE-VERIFIED tonight, full round trip: "SHUTDOWN 3.5/3 font revert" logs
+  before the call (same probe convention as every other shutdown stage, so
+  a hang here is diagnosable the same way); both install-root and Documents
+  copies correctly identified as OUR OWN font (the #118 upgrade-install
+  guard fired correctly - no false "preserved as user's original"); both
+  moved aside; total elapsed 23:50:32.062 -> 23:50:32.088, 26ms, no hang.
+  On-disk confirmed after: FontStyle.ini.x1-disabled only, no bare
+  FontStyle.ini - exactly the state an sc4pac uninstall now inherits.
+
+  Costs nothing during normal play: boot's own CopyFileW recreates the live
+  file from the tier source unconditionally either way, so a player never
+  sees this happen.
+
+  Files: src\ScaleTier.{h,cpp} (RevertFontOnShutdown),
+  src\SC4UIScaleDllDirector.cpp (shutdown call site + version).
+
 2026-08-21  v4.0.3   THE sc4pac UNINSTALL TRAP, PILOTED ON SelectiveArt: ONE
                      STABLE FILENAME, CONTENT SWAPPED INSTEAD OF RENAMED
 

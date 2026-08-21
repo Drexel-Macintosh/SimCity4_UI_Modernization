@@ -44,7 +44,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.0.3"
+#define UISCALE_VERSION_STR "4.0.4"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -879,6 +879,13 @@ public:
 		remap.Uninstall();
 		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 3/3 ResetTracking");
 		uiSpike.ResetTracking(); // full forget is safe only at APP shutdown
+		// FONT REVERT (v4.0.4): the last chance to prevent a leftover scaled
+		// FontStyle.ini from outliving an sc4pac uninstall - see
+		// ScaleTier::RevertFontOnShutdown's own comment for why this has to
+		// happen HERE, not on any later launch. Logged before/after like
+		// every other stage, so a hang here names itself the same way.
+		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 3.5/3 font revert");
+		ScaleTier::RevertFontOnShutdown();
 		Logger::Get().WriteLine(
 			LogLevel::Info,
 			"SHUTDOWN done - our cleanup returned. Anything after this is the "
