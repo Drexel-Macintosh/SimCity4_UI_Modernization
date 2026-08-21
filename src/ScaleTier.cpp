@@ -846,16 +846,71 @@ namespace IconSynth
 	// decided on the fly - collect ours FIRST, then diff. Deciding per-file as
 	// they arrive would mark an icon uncovered simply because our package had
 	// not been walked yet.
-	const int kMaxTgi = 4096;
+	// ---- GROWABLE ARRAYS - WIDEN, NEVER SILENTLY TRUNCATE -----------------
+	// This scan and its fix list used to be fixed at 4096 and 512 entries.
+	// MEASURED against a real install (45,945 plugin files under a
+	// sc4pac-managed "150-mods" tree): 6,619 third-party icon TGIs were
+	// dropped from the scan outright, and of the ones that WERE counted,
+	// only the first 512 could ever be corrected - no matter how many were
+	// found, thousands stayed uncorrected. There is no natural ceiling on
+	// "how many icons a player's plugin folder contains", so these grow
+	// instead of capping. Standing law: a patch that cannot express its
+	// value must REFUSE or WIDEN, never silently truncate.
+	struct U32List
+	{
+		uint32_t* data;
+		int n;
+		int cap;
+	};
+
+	void U32Push(U32List& list, uint32_t v)
+	{
+		if (list.n >= list.cap)
+		{
+			const int newCap = (list.cap > 0) ? list.cap * 2 : 1024;
+			uint32_t* grown = static_cast<uint32_t*>(realloc(
+				list.data, static_cast<size_t>(newCap) * sizeof(uint32_t)));
+			if (!grown) { return; }   // OOM: this one entry is dropped, not the feature
+			list.data = grown;
+			list.cap = newCap;
+		}
+		list.data[list.n++] = v;
+	}
+
+	void U32Free(U32List& list)
+	{
+		free(list.data);
+		list.data = nullptr;
+		list.n = 0;
+		list.cap = 0;
+	}
+
+	struct PtrList
+	{
+		cIGZUnknown** data;
+		int n;
+		int cap;
+	};
+
+	void PtrPush(PtrList& list, cIGZUnknown* v)
+	{
+		if (list.n >= list.cap)
+		{
+			const int newCap = (list.cap > 0) ? list.cap * 2 : 1024;
+			cIGZUnknown** grown = static_cast<cIGZUnknown**>(realloc(
+				list.data, static_cast<size_t>(newCap) * sizeof(cIGZUnknown*)));
+			if (!grown) { return; }
+			list.data = grown;
+			list.cap = newCap;
+		}
+		list.data[list.n++] = v;
+	}
 
 	struct ScanState
 	{
-		uint32_t ours[kMaxTgi];
-		int      nOurs;
-		uint32_t theirs[kMaxTgi];
-		int      nTheirs;
-		bool     collectingOurs;
-		int      dropped;      // hit the cap - report it, never hide it
+		U32List ours;
+		U32List theirs;
+		bool    collectingOurs;
 	};
 
 	ScanState* gScan = nullptr;
@@ -868,20 +923,15 @@ namespace IconSynth
 	// POSITIVE CONTROL: if the covered icon does not read back at the scaled
 	// size, the fetch is broken and an "uncovered art is 1x" finding would be
 	// an instrument reading, not a fact.
-	const int kMaxFix = 512;
-	uint32_t gFixList[kMaxFix] = {};
-	int      gFixN = 0;
-	bool     gFixTruncated = false;
+	U32List  gFixList = {};
 	uint32_t gControlInst = 0;   // one of OURS, known-enlarged on disk
 
 	void AddTgi(uint32_t inst, void* /*ctx*/)
 	{
 		if (!gScan) { return; }
-		uint32_t* arr = gScan->collectingOurs ? gScan->ours : gScan->theirs;
-		int&      n   = gScan->collectingOurs ? gScan->nOurs : gScan->nTheirs;
-		for (int i = 0; i < n; i++) { if (arr[i] == inst) { return; } }
-		if (n >= kMaxTgi) { gScan->dropped++; return; }
-		arr[n++] = inst;
+		U32List& list = gScan->collectingOurs ? gScan->ours : gScan->theirs;
+		for (int i = 0; i < list.n; i++) { if (list.data[i] == inst) { return; } }
+		U32Push(list, inst);
 	}
 
 	void OnFile(const wchar_t* full, const wchar_t* name, void* /*ctx*/)
@@ -905,8 +955,7 @@ namespace IconSynth
 			return -1;
 		}
 
-		gFixN = 0;
-		gFixTruncated = false;
+		gFixList.n = 0;   // keep the buffer; only the logical length resets
 		gControlInst = 0;
 		gLongPathsSeen = 0;
 
@@ -925,8 +974,8 @@ namespace IconSynth
 
 		gScan->collectingOurs = true;
 		Walk(root, fp, OnFile, nullptr);
-		const int nOurs = gScan->nOurs;
-		if (nOurs > 0) { gControlInst = gScan->ours[0]; }
+		const int nOurs = gScan->ours.n;
+		if (nOurs > 0) { gControlInst = gScan->ours.data[0]; }
 
 		Fingerprint fp2 = {};
 		gScan->collectingOurs = false;
@@ -939,18 +988,17 @@ namespace IconSynth
 		// walks past the end of the texture.
 		int uncovered = 0;
 		int logged = 0;
-		for (int i = 0; i < gScan->nTheirs; i++)
+		for (int i = 0; i < gScan->theirs.n; i++)
 		{
-			const uint32_t inst = gScan->theirs[i];
+			const uint32_t inst = gScan->theirs.data[i];
 			bool covered = false;
 			for (int j = 0; j < nOurs; j++)
 			{
-				if (gScan->ours[j] == inst) { covered = true; break; }
+				if (gScan->ours.data[j] == inst) { covered = true; break; }
 			}
 			if (covered) { continue; }
 			uncovered++;
-			if (gFixN < kMaxFix) { gFixList[gFixN++] = inst; }
-			else { gFixTruncated = true; }
+			U32Push(gFixList, inst);
 			if (logged < 24)
 			{
 				logged++;
@@ -961,6 +1009,9 @@ namespace IconSynth
 			}
 		}
 
+		// UNCOVERED is now the EXACT count, not a lower bound: nothing above
+		// this line can drop a TGI, so every one of them is either counted
+		// here or already in gFixList for stage 2 to attempt.
 		Logger::Get().WriteLine(LogLevel::Info,
 			"IconSynth: scanned %u files / %llu bytes in %u ms "
 			"(%d past MAX_PATH - #139 cost 10 missed icons to a truncating "
@@ -968,20 +1019,13 @@ namespace IconSynth
 			"not working). ours=%d theirs=%d UNCOVERED=%d%s  "
 			"fingerprint=%u/%llu/%llu",
 			fp2.files, fp2.bytes, GetTickCount() - t0, gLongPathsSeen,
-			nOurs, gScan->nTheirs, uncovered,
-			(logged < uncovered) ? " (list truncated at 24)" : "",
+			nOurs, gScan->theirs.n, uncovered,
+			(logged < uncovered) ? " (list truncated at 24 for readability - "
+				"every one is still counted and queued)" : "",
 			fp2.files, fp2.bytes, fp2.newest);
 
-		if (gScan->dropped)
-		{
-			// A cap that silently truncates reads as "fully covered" - the
-			// exact shape of a report that is wrong in the safe-looking
-			// direction. Say it loudly instead.
-			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth: TGI CAP HIT - %d entries dropped, so UNCOVERED is "
-				"a LOWER BOUND. Raise kMaxTgi (%d).", gScan->dropped, kMaxTgi);
-		}
-
+		U32Free(gScan->ours);
+		U32Free(gScan->theirs);
 		free(gScan);
 		gScan = nullptr;
 		return uncovered;
@@ -1084,9 +1128,7 @@ namespace IconSynth
 	// could reload the 1x original from disk mid-session and the defect would
 	// silently return - the exact "package rotted and every gate stayed green"
 	// shape. Holding the reference is what makes the fix durable.
-	const int kHoldMax = 512;
-	cIGZUnknown* gHold[kHoldMax] = {};
-	int gHoldN = 0;
+	PtrList gHold = {};
 
 	// The per-cell nearest-neighbour resample, factored out so the two paths
 	// below cannot drift apart. `read` is the source of truth for pixels -
@@ -1383,7 +1425,10 @@ namespace IconSynth
 
 	bool InFixList(uint32_t inst)
 	{
-		for (int i = 0; i < gFixN; i++) { if (gFixList[i] == inst) { return true; } }
+		for (int i = 0; i < gFixList.n; i++)
+		{
+			if (gFixList.data[i] == inst) { return true; }
+		}
 		return false;
 	}
 
@@ -1471,7 +1516,7 @@ namespace IconSynth
 	void EnlargeAndRegister(float factor)
 	{
 		if (factor <= 1.01f) { return; }
-		if (gFixN <= 0)
+		if (gFixList.n <= 0)
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
 				"IconSynth: stage 2 - nothing uncovered, no work to do.");
@@ -1524,9 +1569,9 @@ namespace IconSynth
 			}
 		}
 
-		for (int i = 0; i < gFixN; i++)
+		for (int i = 0; i < gFixList.n; i++)
 		{
-			const uint32_t inst = gFixList[i];
+			const uint32_t inst = gFixList.data[i];
 			const cGZPersistResourceKey key(kIconType, kIconGroup, inst);
 
 			cIGZBuffer* src = nullptr;
@@ -1560,7 +1605,7 @@ namespace IconSynth
 			// writes RoundHalfUp(base * gTierF) into [0xF4], so the identical
 			// expression is used here - matching the engine's arithmetic
 			// exactly rather than approximating it (SC4 measure, don't infer).
-			if (newW <= sw || gHoldN >= kHoldMax)
+			if (newW <= sw)
 			{
 				gSkip++;
 				src->Release();
@@ -1582,7 +1627,7 @@ namespace IconSynth
 				rm->UnregisterResource(key);
 				if (rm->RegisterResource(key, *res))
 				{
-					gHold[gHoldN++] = res;   // reference deliberately retained
+					PtrPush(gHold, res);   // reference deliberately retained
 					done = true;
 					if (gMade < 8)
 					{
@@ -1614,7 +1659,7 @@ namespace IconSynth
 					// reload mid-session with every gate still green - the
 					// exact shape of the three packages that rotted. So the
 					// reference stays.
-					if (gHoldN < kHoldMax) { gHold[gHoldN++] = src; }
+					PtrPush(gHold, src);
 					if (gMade < 8)
 					{
 						Logger::Get().WriteLine(LogLevel::Info,
@@ -1658,9 +1703,9 @@ namespace IconSynth
 		//                          FACTORY (cIGZPersistResourceFactory), which
 		//                          is the only point every instance passes
 		//                          through.
-		for (int i = 0; i < gFixN && i < 4; i++)
+		for (int i = 0; i < gFixList.n && i < 4; i++)
 		{
-			const cGZPersistResourceKey key(kIconType, kIconGroup, gFixList[i]);
+			const cGZPersistResourceKey key(kIconType, kIconGroup, gFixList.data[i]);
 			cIGZBuffer* shared = nullptr;
 			cIGZBuffer* priv = nullptr;
 			const bool gotShared = rm->GetResource(key, GZIID_cIGZBuffer,
@@ -1670,8 +1715,8 @@ namespace IconSynth
 			Logger::Get().WriteLine(LogLevel::Info,
 				"IconSynth: RE-FETCH {%08X} fixedPtr=%p | GetResource=%p %dx%d "
 				"| GetPrivateResource=%p %dx%d | hasRegistered=%d",
-				gFixList[i],
-				(i < gHoldN) ? static_cast<void*>(gHold[i]) : nullptr,
+				gFixList.data[i],
+				(i < gHold.n) ? static_cast<void*>(gHold.data[i]) : nullptr,
 				static_cast<void*>(shared),
 				gotShared ? shared->Width() : -1,
 				gotShared ? shared->Height() : -1,
@@ -1700,10 +1745,9 @@ namespace IconSynth
 		// wrong code (#77). Say FIXED, and say how.
 		Logger::Get().WriteLine(LogLevel::Info,
 			"IconSynth: stage 2 done in %u ms - fixed=%d notFound=%d "
-			"skipped=%d failed=%d of %d uncovered%s. Every fixed icon is held "
+			"skipped=%d failed=%d of %d uncovered. Every fixed icon is held "
 			"by reference so the cache cannot drop it back to 1x.",
-			GetTickCount() - t0, gMade, gMiss, gSkip, gFail, gFixN,
-			gFixTruncated ? " (LIST TRUNCATED at 512 - more remain)" : "");
+			GetTickCount() - t0, gMade, gMiss, gSkip, gFail, gFixList.n);
 	}
 }
 
