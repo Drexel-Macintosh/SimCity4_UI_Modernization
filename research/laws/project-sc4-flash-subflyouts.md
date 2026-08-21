@@ -1,58 +1,72 @@
----
-name: project-sc4-flash-subflyouts
-description: "SC4 UI scaling task #50/#76 — the flyout open-jump family, FIXED and user-confirmed at v2.36.2 by making windows BORN correct (geometry AND draw-hook state) instead of correcting them a tick later."
-metadata: 
-  node_type: memory
-  type: project
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-07-31T01:58:39.247Z
----
+# Born-Correct Flyouts
 
-**STATE 2026-07-30: DONE, user-confirmed, deployed v2.36.2-bornhook.**
-Three fixes, one principle: **make the window born correct instead of
-correcting it a tick later.** Nothing pending, nothing awaiting eyes.
+Tool flyouts and their nested sub-flyouts must be **born correct** — scaled,
+docked, and with their per-window draw state already promoted — rather than
+corrected by the next sweep tick. Anything left to the sweep is visible on
+screen for as long as the sweep takes to arrive.
 
-| ver | what | hook |
-|---|---|---|
-| v2.36.0 | nested sub-flyout born SCALED | detour on its `Place` `0x0079AD00` |
-| v2.36.1 | first-level tool flyouts scaled+docked at OPEN | one hook on the opener `sub_7E5C10` (arg2 = flyout id) |
-| v2.36.2 | their CHROME STATE born too (claim + draw hooks) | `InstallSubFlyoutHooksNow`, same detour |
+## The three hooks
 
-**⚠ THE TARGETING LESSON (cost a whole build):** v2.36.0 fixed the NESTED
-container, fired **zero** times, and the user still saw the jump — the menus
-they meant were the FIRST-LEVEL flyouts. The log had said so all along:
-`mayor flyout 0x699306ED ... +10 win (docked)` = 10 windows scaled at the
-moment it was **already on screen**. **Read the instrument before believing a
-fix targets the right window.**
+| what is made born-correct | where |
+|---|---|
+| nested sub-flyout geometry (scaled at creation) | detour on its `Place` at `0x0079AD00` |
+| first-level tool flyouts, scaled and docked at open | one hook on the opener `sub_7E5C10` (arg 2 is the flyout id) |
+| per-window chrome state (claim field + draw thunk) | `InstallSubFlyoutHooksNow`, from the same detour |
 
-**⚠ GEOMETRY AT BIRTH IS ONLY HALF.** v2.36.1 left the per-window draw state
-(promoted `[0xE0]`, latched `gClaimOrig`, instance `SlotThunk`) to the sweep, so
-the first sub-flyout of a city was born the right SIZE with **1x chrome** for
-159 ms. Opens #2+ looked perfect because they **inherit** the latch, not
-because they are faster (30-48 ms). **A defect that only appears on the FIRST
-use of a session is almost always an uninitialised latch, not a race.**
+Live levers under `[Flyout]`, changeable without a rebuild: `SubBornScale`,
+`SubBornDock`, `BornOnOpen`.
 
-**⚠ ORDER = the safety argument.** `[0xE0]` is dual-use (hit-claim width AND a
-Plot layout inset); `SlotThunk<88>` presents the 1x value to the draw group.
-Promote the field before installing the thunk → the game paints a **SECOND
-orange bar** (v2.11.24). Container thunks first, always. A second bar = revert,
-don't tune.
+## Geometry at birth is only half
 
-**Acceptance facts to re-check on any regression:** every `+N win` line
-followed by its `FLYOPEN` in the SAME ms; `SUBBORNHOOK` before the first
-`DCBUF` (8 ms, was 159); **`SUBCLAIM` count per session = 0** (the sweep finds
-everything already done — the idempotency proof).
+Scaling a flyout at creation while leaving its per-window draw state — the
+promoted `[0xE0]` field, the latched `gClaimOrig`, the instance `SlotThunk` — to
+the sweep produces a window that is born the right **size** with **1x chrome**.
+Measured, the first sub-flyout of a session carries 1x chrome for 159 ms.
+Subsequent opens look correct in 30–48 ms not because they are faster, but
+because they **inherit** the already-latched state.
 
-**⚠ TWO OF OUR OWN INSTRUMENTS LIE** (both bent a diagnosis that night):
-`SUBHOOK ... installed` prints every SWEEP, not per install — **`SUBCLAIM` is
-the honest signal**; `DCBUF` prints the incoming blit REQUEST, so
-`dst(205,..) src 53x3` still appears after the fix. See METHOD.md "YOUR OWN
-INSTRUMENTS CAN LIE".
+That timing signature generalises: **a defect that appears only on the first use
+of a session is almost always an uninitialised latch, not a race.** Look for the
+one-time initialisation that the first consumer misses, not for a timing window.
 
-Live levers, no rebuild (`[Flyout]`): `SubBornScale`, `SubBornDock`,
-`BornOnOpen`. Detail: `_tests\REGRESSION.md` (v2.36.0/.1/.2 blocks),
-`SC4-UI-ENGINE.md` §4.6b + §4.7 **row 4**, `tools\uimap\emu\emu_subflyout.py`
-(71 checks; predicted n=7/n=8 before they were ever measured).
+## Order: promote the field before installing the thunk
 
-Related: [[feedback-sc4-blast-radius]], [[feedback-sc4-measure-dont-infer]],
-[[feedback-docs-are-the-sdk]], [[project-sc4-ui-scaling-northstar]].
+`[0xE0]` is dual-use — it is both the hit-claim width and a Plot layout inset —
+and `SlotThunk<88>` presents the 1x value to the draw group. If the field is
+promoted before the thunk is installed, the game paints a **second orange bar**.
+Container thunks go in first, always. A second bar is a symptom of wrong install
+order, so the response is to revert the ordering, never to tune the values.
+
+## Acceptance signals
+
+- Every `+N win` line is followed by its `FLYOPEN` in the **same millisecond**.
+- `SUBBORNHOOK` appears before the first `DCBUF` — 8 ms when correct, 159 ms
+  when the chrome state is left to the sweep.
+- `SUBCLAIM` count per session is **0**: the sweep finds everything already
+  done, which is the idempotency proof.
+
+## Two instruments in this area lie
+
+- `SUBHOOK ... installed` prints on every **sweep**, not once per install, so it
+  cannot distinguish "installed now" from "already installed". `SUBCLAIM` is the
+  honest signal.
+- `DCBUF` prints the incoming blit **request**, not the result, so a line such as
+  `dst(205,..) src 53x3` still appears after the fix has landed and proves
+  nothing about what was painted.
+
+Both bent a diagnosis before being characterised. See
+`tools\research\METHOD.md`, "your own instruments can lie".
+
+## Target the window the user actually sees
+
+A fix aimed at the nested container can fire **zero** times while the visible
+jump persists, because the menus in question are the first-level flyouts. The
+log states this plainly: a line like
+`mayor flyout 0x699306ED ... +10 win (docked)` records 10 windows being scaled at
+a moment when the flyout is **already on screen**. Read the instrument and
+confirm which window a fix touches before believing it targets the right one.
+
+Further detail: `tools\research\SC4-UI-ENGINE.md` §4.6b and §4.7 row 4. The
+offline model `tools\uimap\emu\emu_subflyout.py` covers this family with 71
+checks and predicted the n=7 / n=8 child counts before they were measured in the
+running game.

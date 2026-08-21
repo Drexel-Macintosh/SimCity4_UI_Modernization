@@ -161,8 +161,8 @@ namespace
 
 	// ---- TIER MATH (v2.24.0 tier-generality pass, audit 2026-07-29) -------
 	// Every 2x-hardwired constant in the hooks below became its derived form;
-	// at f=2 each form reduces EXACTLY to the old constant (identity table in
-	// tools\research\_checkpoints\tier-math-fixes.md + _tests\REGRESSION.md).
+	// at f=2 each form reduces EXACTLY to the old constant; each hook
+	// documents its own identity case.
 	//
 	// gTierF mirrors settings.spikeScaleFactor for these namespace-scope
 	// hooks (settings is a UiSpike member and invisible here). Default 2.0f =
@@ -208,7 +208,7 @@ namespace
 
 	// ⛔ A BLIT EXTENT MUST FLOOR, NEVER ROUND UP.
 	//
-	// THE DEFECT (user-reported 2026-08-06, and the wording is the diagnosis):
+	// THE DEFECT (reported 2026-08-06, and the wording is the diagnosis):
 	// "the weird lines to the RIGHT and BOTTOM of the sun and moon". Right edge
 	// and bottom edge ONLY - an L-shaped artefact, not a texture-wide one.
 	//
@@ -230,7 +230,7 @@ namespace
 	//
 	// ⚠ MEASURED DEAD, DO NOT RETRY: the first attempt at this symptom rewrote
 	// the SAMPLER to map by the real size ratio (o*src/dst, the Upscale2x
-	// method). It compiled, shipped, and the user reported it made "a lot of
+	// method). It compiled, shipped, and the player reported it made "a lot of
 	// fields worse" - it changes the duplication pattern across the WHOLE
 	// sprite when the defect is only at the two trailing edges. Reverted the
 	// same session. The extent was the bug, not the mapping.
@@ -315,7 +315,7 @@ namespace
 	int32_t gClaimOrig = 0;           // the 1x claim width we scaled (latched by the
 	                                  // sweeps); the draw group restores exactly this
 	                                  // value instead of dividing by an int factor
-	// FLASH GUARD (v2.11.26): the user must NEVER see the stock 1x (or half-
+	// FLASH GUARD (v2.11.26): the player must NEVER see the stock 1x (or half-
 	// transformed "garbled") first paint of a god flyout. Class-vtable Plot
 	// patch (FlashGuardThunk<K>) suppresses painting of any god-flyout window
 	// until the sweep marks its ROOT (the direct child of 0x9A47B417) fully
@@ -547,7 +547,7 @@ namespace
 	// Superseded LandDX/LandDY/LandDock, which were screenshot-tuned nudges
 	// layered on the WRONG anchor (the god toolbar) - see kMayorFlyoutDock.
 	// #95 PHASE 4 (2026-08-02): DEFAULT FLIPPED 0 -> 1. Every row in
-	// kMayorFlyoutDock is derived=true and has been user-confirmed, and
+	// kMayorFlyoutDock is derived=true and has been confirmed on screen, and
 	// NO redistributable ini carries a [Flyout] section - so the old
 	// default meant a FRESH INSTALL scaled mayor flyouts but never docked
 	// them (they sat at the game's native placement while their spawn
@@ -848,7 +848,7 @@ namespace
 	// Unpinning ChartTickText 10 -> 20 did NOT move the gutter by one pixel:
 	//     10pt -> CHARTGEO PLOT(45,20,866,492)   gutter 45
 	//     20pt -> CHARTGEO PLOT(45,20,866,492)   gutter 45   (byte-identical)
-	// and the user's screen showed "8000"/"4000" sheared in half. The gutter
+	// and the player's screen showed "8000"/"4000" sheared in half. The gutter
 	// is INVARIANT to the font, because the plot rect is computed ONCE per
 	// chart object and nothing ever re-arms its sentinel - so no font change
 	// can reach it. Fonts re-pinned; the lever is GEOMETRY.
@@ -912,12 +912,12 @@ namespace
 	//   SubRingDX(f) = rhu(21f) - rhu(25f) - rhu(-16.5f)
 	//   SubRingDY(f) = rhu(15f) - rhu(37f)/2 + rhu(26.5f) - rhu(26f)
 	//
-	//        f=1.5      f=2 (SHIPPING, user-confirmed)      f=3
+	//        f=1.5      f=2 (SHIPPING, confirmed on screen)      f=3
 	//   DX:    19        25  <- reproduces the ini exactly   37
 	//   DY:    -4        -6  <- reproduces the ini exactly   -8
 	//
 	// The f=2 column is the gate: it must equal the values 2x shipped with, or
-	// this derivation is wrong and a user-confirmed tier has been disturbed.
+	// this derivation is wrong and a confirmed on screen tier has been disturbed.
 	// Test-SubRingLock asserts exactly that.
 	int     gSubRingDX = kIniAuto;
 	int     gSubRingDY = kIniAuto;
@@ -949,7 +949,7 @@ namespace
 	// ring blit to exactly that y, while the three BAR rects stayed
 	// byte-identical; changing [0xF4] 6->12 moved nothing. So the stem Y is a
 	// FREE variable that cannot disturb the strip - which is precisely what
-	// the user described: "the flyout never moves, just where it attaches in
+	// the player described: "the flyout never moves, just where it attaches in
 	// the list should".
 	//
 	// v2.45.0 moved the container to the game's clamped position and left the
@@ -958,7 +958,7 @@ namespace
 	// container goes where the game's own math says, and the ring sprite is
 	// offset by exactly the move, so it lands where it lands TODAY - a
 	// position confirmed exact by SUBGEO (ring centre == button centre) and
-	// by the user's eyes. gSubRingDX/DY stay the USER's ini nudges; these are
+	// by the player's eyes. gSubRingDX/DY stay the USER's ini nudges; these are
 	// ours, and they are ZERO whenever SubMath is off, so SubMath=0 remains
 	// bit-identical to v2.45.2.
 	int     gSubRingAutoX = 0;
@@ -1142,7 +1142,7 @@ namespace
 	// [Flyout] SubMath. ⛔ DEFAULT 0 - REVERTED THE SAME SESSION IT SHIPPED
 	// (v2.45.1). The math above is genuinely correct about the CONTAINER: it
 	// reproduces the game's own Place 32/32 at n=1..8 x f=1/1.5/2/3, and with
-	// it the 8-item picker stopped overlapping the bottom HUD. But the user's
+	// it the 8-item picker stopped overlapping the bottom HUD. But the player's
 	// eyes-on found what the emulator structurally could not: moving the
 	// container SLIDES THE RING OFF ITS BUTTON by exactly the distance moved.
 	//
@@ -1162,8 +1162,8 @@ namespace
 	// The missing half was found and MEASURED (emu_plot, see gSubRingAutoY):
 	// the stem's y is a free variable that cannot move the strip. So the
 	// container now goes to the game's clamped position AND the ring sprite is
-	// offset by exactly that move, which pins it to the legacy dock the user
-	// already confirmed. Net effect, and it is what the user described: the
+	// offset by exactly that move, which pins it to the legacy dock the player
+	// already confirmed. Net effect, and it is what the player described: the
 	// strip stops hanging into the bottom HUD, the ring does not move at all.
 	// 0 = the pre-v2.46 constant delta (instant revert, no rebuild).
 	int gSubMath = 1;
@@ -1181,7 +1181,7 @@ namespace
 			// WELDED in the buffer (ring 0..80f, strip starts at 80f), so any
 			// SubRingDX drives the connector wedge that many px INTO the panel
 			// and its top/bottom border lines terminate mid-panel: the "broken
-			// bar at the junction" the user reported, present at 2x since the
+			// bar at the junction" the player reported, present at 2x since the
 			// nudge shipped and simply tolerated.
 			//
 			// The RING LAW already said which lever is correct: "applying that
@@ -1266,9 +1266,8 @@ namespace
 	// HURTING once the bake was live: on open it overwrote a correct hidden
 	// bake with a blurry 128->512 dock upscale. With a real bake there is
 	// nothing to seed and nothing to heal, and a fallback that can only fight
-	// the primary path is a bug, not a safety net. Forensic record:
-	// REGRESSION.md #121 and VERSION-HISTORY v2.69.5-v2.70.1. The clamp below
-	// is the surviving fallback - it engages only when the x8 patch declines
+	// the primary path is a bug, not a safety net. The clamp below is the
+	// surviving fallback - it engages only when the x8 patch declines
 	// on an unexpected exe build.
 	// v2.69.10: the clamp and DVPIN are a COUPLED PAIR (law 43) and v2.69.8/9
 	// split them - DVPIN's table pins the map picture to 256*f = 512 EVERY
@@ -1526,10 +1525,10 @@ namespace
 	}
 
 	// ===== SURFACE CARRY-OVER (v2.41.14, task #89) ==========================
-	// THE DEFECT THESE EXIST TO FIX, measured 2026-08-01 and user-confirmed:
+	// THE DEFECT THESE EXIST TO FIX, measured 2026-08-01 and confirmed on screen:
 	// our surface-recreate destroyed the display surface, built a new one and
 	// PRE-CLEARED IT TO BLACK - so a perfectly good map vanished until the
-	// engine's message-driven bake landed, and that empty box is what the user
+	// engine's message-driven bake landed, and that empty box is what the player
 	// read as "corruption". Raster sampling proved it: distinct=4 (real
 	// terrain colours) before our pass, all zeros after.
 	//
@@ -1558,7 +1557,7 @@ namespace
 	// (0x7A8640) sees fd and calls the bake at 0x7A7FF0. For stock that is
 	// invisible: its map is already correct before the panel is shown. Ours is
 	// rescaled and its surface recreated AFTER creation, so the bake lands a
-	// tick or more after the panel is on screen and the user sees it fill in.
+	// tick or more after the panel is on screen and the player sees it fill in.
 	// MEASURED 2026-08-04: our own log shows blits=0 at one recompute and 336
 	// by the next, and the STOCK CONTROL paints the correct map immediately -
 	// so the gap is ours, not the game's.
@@ -1930,7 +1929,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		// game paints AFTER the top cap, leaving square shoulders poking past
 		// the arc at both pill ends (user report, mayor menus). The disaster
 		// flyout - whose caps were always x-wide-only 106x25 - is the
-		// user-confirmed CORRECT look; the original "seam" this doubling
+		// confirmed on screen CORRECT look; the original "seam" this doubling
 		// chased was actually the alpha-halo + ring-position issues, fixed
 		// separately. x-widening only, exactly like disaster.
 		const int dy0 = d[1];
@@ -1981,7 +1980,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	//     abutting windows separating at 1.5x   0  (0 at 1x/2x/3x, controls OK)
 	//     cropped blits under-filling           0 of 783
 	//     advisor portrait cell vs window       exact at 1.5x AND 2x
-	// When every coverage model says "covered" and the user still sees ink,
+	// When every coverage model says "covered" and the player still sees ink,
 	// the model is wrong - so stop modelling and watch the blits.
 	//
 	// A hairline that is DRAWN must arrive here as a dst rect <= 3px on one
@@ -2010,7 +2009,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 			// ---- ICONFIT (task #149): DOES THE ART FILL ITS FRAME? ----------
 			// The rule, and the whole point: never interpret the plugin's art.
 			// A menu item button takes stateW = imageWidth/4 (the ENGINE's own
-			// rule, #49 REGRESSION.md:1387) and then reads a slice AS WIDE AS
+			// rule) and then reads a slice AS WIDE AS
 			// THE CELL. With 1x art in a doubled cell it pulls 88px out of a
 			// 176x44 strip, spanning TWO 44px states - which is why an
 			// uncovered custom icon shows as N copies side by side. N is the
@@ -2511,7 +2510,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 					// v2.15.0 scaled the origin too ((0,94) -> (0,188)) and that
 					// pushed the circle 94px down, undocking it. The evidence
 					// against scaling the origin is direct: at (0,94) with 1x
-					// size the user reported the sub-flyout "docked correctly but
+					// size the player reported the sub-flyout "docked correctly but
 					// it's 1x" - so that origin was already right; only the sprite
 					// was small. SubRingDX/DY are live-tunable from the ini for
 					// the final centring, so this never needs another rebuild.
@@ -2683,7 +2682,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// half-pixel in the system - and RoundHalfUp sends it to 8. The denominator
 	// becomes 74 where the geometry only supports 73, the floor division drops
 	// one row, and the last item of every flyout of 3+ items is unreachable
-	// until the user scrolls. USER-REPORTED 2026-08-06.
+	// until the player scrolls. USER-REPORTED 2026-08-06.
 	//
 	// ⚠ INTEGER TIERS ARE UNAFFECTED: 5*2 = 10 and 5*3 = 15 are already whole,
 	// so floor and round agree exactly. Verified for n=2..12 at f=1.5/2/3 by
@@ -3079,7 +3078,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		// 352x88 art the true cell is 352/4 = 88, so that IS state 1. For
 		// 1x 176x44 art the true cell is 44, so an 88-wide cut spans states
 		// 2-3 and reads twice the texture height - the two-copies artefact.
-		// The copy count is the scale ratio (#49, REGRESSION.md:1387).
+		// The copy count is the scale ratio.
 		//
 		// ⛔ WE DO NOT UPSCALE (user order 2026-08-14): a runtime upscaler
 		// would be unbounded and would end the property that every scaled
@@ -3493,7 +3492,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	//   BltStripThunk  - the strip draw-context's slot 29, and installed ONLY
 	//                    inside SlotThunk<88> when gStripProbe > 0, a key that
 	//                    was never set. Zero lines, by construction.
-	// Both cost the user a launch. This one is different for a reason that can
+	// Both cost the player a launch. This one is different for a reason that can
 	// be checked BEFORE asking for a launch: FlashGuardThunk is written onto
 	// vt[88] of every painting class at city load by the same code that emits
 	// "DFG patched class vt=%p Plot=%p", and that line is in EVERY capture we
@@ -3753,7 +3752,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// ALLOCATED AT FIRST PAINT from the window's then-current size. If the
 	// game paints the minimap once at 64x64 and our sweep then resizes the
 	// window to 128x128, every later draw composites through a 64x64 buffer -
-	// which is the "corrupted map" the user sees, and it would persist until
+	// which is the "corrupted map" the player sees, and it would persist until
 	// something forces a reallocation (dismissing the load-warning modal).
 	//
 	// This logs the buffer's REAL dimensions at three points around our
@@ -3825,7 +3824,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		if (surf) { SafeBufProbe(surf, &sq, &sw, &sh, &sb); }
 
 		// Sample the raster's actual PIXELS. If our Fill left the surface all
-		// black yet the user sees colour, the pixels have to come from
+		// black yet the player sees colour, the pixels have to come from
 		// somewhere - this says whether the raster holds real map data,
 		// uninitialised heap, or nothing. Reads only; no calls.
 		// ⚠ SAMPLE THE MIDDLE, ON A DIAGONAL - v2.41.11 fix to my own probe.
@@ -4105,7 +4104,7 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 		// width (slot121 0x0079AE30 claims the rightmost [0xe0] px - wants 2x,
 		// set by the dock loop's ClaimScale) AND a Plot layout inset (1x base 53;
 		// doubled it makes the game paint a SECOND orange bar beside our replay -
-		// user-confirmed on the v2.11.24 test). Hit-tests never run inside the
+		// confirmed on screen on the v2.11.24 test). Hit-tests never run inside the
 		// draw group, so: present the 1x value to every draw-group call and
 		// restore the 2x claim immediately after. gVtCopy is installed only on
 		// the disaster container instance, so `self` is always that container.
@@ -4913,7 +4912,7 @@ namespace
 		// at the 3D VIEW (DPROBE: par=0x9A47B417 depth 1) so the city sweep
 		// scales it too: log "panel 0x10000006 (1968,8 424x650) ->
 		// (1536,16 848x1300)" = 4x frame around 2x content, which is the
-		// huge-empty-panel look the user reported.
+		// huge-empty-panel look the player reported.
 		// LESSON: an auto-discovery rule can enrol windows the rule's author
 		// never checked the parentage of. Anything the static dat serves
 		// that lives in the swept tree MUST be listed here.
@@ -5099,7 +5098,7 @@ namespace
 	// enumeration order - the dump enumerates children in REVERSE of .UI add
 	// order (CITY-DOCK-OVERLAP.md 1.2).
 	// ===== PANEL-TO-PANEL DOCK TABLE (#127, v2.76.0) =====================
-	// USER DIRECTION 2026-08-04: "ALL OF THE UI ELEMENTS SHOULD BE DOCKED VIA
+	// REQUIREMENT: "ALL OF THE UI ELEMENTS SHOULD BE DOCKED VIA
 	// MAP" - i.e. a panel whose position is defined RELATIVE TO ANOTHER PANEL
 	// belongs in a table, exactly like kMayorFlyoutDock, not in a one-off pin.
 	//
@@ -5113,8 +5112,8 @@ namespace
 	// 3840x2160, so at f=3 the band lands 18px left + 12px UP of where it
 	// stacks - into the chart's bottom-right corner (user screenshot).
 	//
-	// THE OFFSET IS MEASURED AT THE USER-CONFIRMED TIER AND SCALED. offX/offY
-	// are in the anchor's own SCALED pixels at f=2 (the tier the user has
+	// THE OFFSET IS MEASURED AT THE CONFIRMED ON SCREEN TIER AND SCALED. offX/offY
+	// are in the anchor's own SCALED pixels at f=2 (the tier the player has
 	// confirmed good), and are applied as offset * (f/2). At f=2 that is the
 	// identity, so every entry is BIT-IDENTICAL at 2x by construction - the
 	// same discipline as the disaster ring's seat-scaling (law 53: extrapolate
@@ -5134,11 +5133,11 @@ namespace
 		// which anchored the band to the CHART'S TOP with an offset eye-measured
 		// off a 2x screenshot. Scaling a wrong relationship keeps it wrong at
 		// every tier, and it was wrong: the band overlapped the "Graphs" title
-		// and the expansion arrow at 2x AND 3x (user-reported).
+		// and the expansion arrow at 2x AND 3x (reported).
 		//
 		// THE DESIGN SAYS BOTTOM-DOCK, and the .UI proves it. Comparing the two
 		// scripts that share this band id - Graphs I-6bc9065a vs Data Views
-		// I-ea2871aa, the panel the user pointed at as correct:
+		// I-ea2871aa, the panel the player pointed at as correct:
 		//     Data Views  band 546x122  dLeft 0   band.bottom - parent.bottom = -2
 		//     Graphs      band 503x107  dLeft +5  band.bottom - parent.bottom = -16
 		// Both are BOTTOM-referenced against parent 0x8A8B5B72, not top-referenced
@@ -5157,14 +5156,14 @@ namespace
 		//     13:45:04.291  open #1 of 0x8A8B5B71  <- chart, opens WITH the band
 		//     13:45:04.291  open #1 of 0x0A4A8176  <- the band
 		//     13:45:23.845  open #1 of 0x8A8B5B72  <- the bad anchor
-		// so the band painted undocked until the user clicked something. An
+		// so the band painted undocked until the player clicked something. An
 		// anchor must be alive whenever its child is, or the dock is born late
 		// by construction - the #50/#76 born-correct law applied to the ANCHOR.
 		//
 		// 0x8A8B5B71 carries the SAME bottom relationship in the design
 		// (band.bottom - chart.bottom = -10) and opens simultaneously, so it
 		// gives an identical target: at f=3, 2004 - 321 - rhu(10*3) = 1653,
-		// the value the 0x8A8B5B72 route produced and the user confirmed.
+		// the value the 0x8A8B5B72 route produced and the player confirmed.
 		{ 0x0A4A8176, 0x8A8B5B71, 5, 10, "graphs radio band" },
 	};
 	const int kPanelDockCount =
@@ -5207,7 +5206,7 @@ namespace
 		// 1 LANDSCAPE 0x49923239 off button 1 - MEASURED via MCAL:
 		//   native(25,371) - button(28,398) = R(-3,-27) -> target (22,344).
 		//   Cross-checks against marker (3,27): (28,398)-(6,54) = (22,344).
-		//   USER-CONFIRMED 2026-07-28. Shares its id with the GOD terraform
+		//   CONFIRMED ON SCREEN 2026-07-28. Shares its id with the GOD terraform
 		//   flyout but a DIFFERENT script (250x498 here vs 250x582 there), so
 		//   the mayor-mode gate is what keeps the two apart.
 		{ 0x49923239, 0x8991EE08, -3, -27, true, false },
@@ -5588,7 +5587,7 @@ namespace
 		// "$5,000" - suggestive, not decisive. Do not quote either name as
 		// settled until a capture or the disassembly says which it is.
 		// ⛔ THE HUD DOCK 0x0987B48F IS **NOT** A MEMBER, AND MUST NEVER BE.
-		// v2.41.1 added it and BROKE THE DOCK AND EVERY FLYOUT (user-reported,
+		// v2.41.1 added it and BROKE THE DOCK AND EVERY FLYOUT (reported,
 		// same session, reverted in v2.41.2). Membership makes ScalePanelRoot
 		// RETURN EARLY at the dock root - and the god/mayor flyout DOCKING
 		// logic lives inside that child recursion, so the flyouts lost the
@@ -5603,7 +5602,7 @@ namespace
 	// DIFFERENT WAY: the dock's rect is the UNION OF ITS CHILDREN WITH NO
 	// CLAMP (CITY-DOCK-OVERLAP.md), so a child pre-doubled to (36,144)-(164,272)
 	// hangs past the 235x223 design frame, the union grows, and the
-	// bottom-anchored dock drags the map outside the window (user-reported).
+	// bottom-anchored dock drags the map outside the window (reported).
 	// Both forms reverted in v2.41.3. Any future attempt must answer what the
 	// union rect does AT LOAD TIME before touching the data at all.
 	// FONT-SIZED CONTROLS (task #44, v2.20.3): a control whose SIZE is computed
@@ -5680,7 +5679,7 @@ namespace
 		// 2026-07-29 late): same cSC4WinAdviceList class - their items are
 		// game-sized to the container and must never be recursed into, or
 		// they double-scale exactly like the news reader's item did.
-		// MY SIMS story lists (v2.22.2). REGRESSION.md carried an explicit
+		// MY SIMS story lists (v2.22.2). An explicit
 		// warning about these two BEFORE v2.22.0 lifted the My Sims deferral,
 		// and the lift did not honour it: the sweep recursed into the list and
 		// double-scaled its runtime item (the 13-vs-12 window count logged for
@@ -6122,7 +6121,7 @@ void UiSpike::InstallSubFlyoutBorn()
 // scale it there, in the two ticks between "the game finished the layout" and
 // "the first pixel".
 //
-// WHAT THIS IS NOT (all measured, all reverted - REGRESSION.md "THE FLASH:
+// WHAT THIS IS NOT (all measured, all reverted - "THE FLASH:
 // DECODED, NOT FIXED"): not the SetFlag show hook (on-demand windows are born
 // visible, so no transition ever fires); not DATA pre-scale (broke mayor
 // mode); not paint suppression (permanently banned); not a sweep cadence
@@ -6158,8 +6157,8 @@ namespace
 	bool gSubBornScaleInstalled = false;
 	int  gSubBornScaleOn = 1;      // [Flyout] SubBornScale - live-tunable
 	// v2.39.0 task #5: the SAME Place detour, second builder. Its own lever so
-	// a mis-size can be switched off live without touching the user-confirmed
-	// sub-flyout path (REGRESSION.md: size and placement must be separately
+	// a mis-size can be switched off live without touching the confirmed on screen
+	// sub-flyout path (size and placement must be separately
 	// switchable, or a bad call forces a rebuild).
 	int  gDisBornScaleOn = 1;      // [Flyout] DisBornScale - live-tunable
 	int  gDisBornDockOn  = 1;      // [Disaster] BornDock - live-tunable
@@ -6338,8 +6337,8 @@ namespace
 		//
 		// v2.39.0 (task #5): the disaster twin is now handled HERE too. The
 		// v2.36.0 comment said it was "already scaled by other proven paths" -
-		// true of its clicks, dock, layering and art (v2.11.30, user-confirmed)
-		// but NOT of its SIZE AT BIRTH, which is the jump the user still sees.
+		// true of its clicks, dock, layering and art (v2.11.30, confirmed on screen)
+		// but NOT of its SIZE AT BIRTH, which is the jump the player still sees.
 		//
 		// Byte-verified 2026-07-31 (both twins, at the same 0x25 delta):
 		//   SetLayout 0x7EB16E / 0x7E74AE   both `ff 50 10`
@@ -6362,7 +6361,7 @@ namespace
 		// BEFORE this call, so the id is already readable.
 		//
 		// ⚠ THE DISASTER CONTAINER HAS NO ID AT ALL - sub_7E7270 contains no
-		// SetID call (scanned 0x7E7270..0x7E75B0). REGRESSION.md:2132's "same
+		// SetID call (scanned 0x7E7270..0x7E75B0). "same
 		// class, DIFFERENT id" is wrong and would send you to build the wrong
 		// guard. For that twin the return address IS the identification.
 		cIGZWin* win = reinterpret_cast<cIGZWin*>(
@@ -6609,7 +6608,7 @@ namespace
 		// --- 4. the dock. The sweep can only dock one tick LATER than it
 		// scales, because its placement law needs a ring blit at the new
 		// buffer size (ringFresh) - which cannot exist until the window has
-		// painted once. That is the SECOND settle the user sees. Here the
+		// painted once. That is the SECOND settle the player sees. Here the
 		// position is the game's native one BY CONSTRUCTION, so the delta
 		// applies with no button search and no ring data. The sweep then
 		// recognises its own target (atTarget) and does nothing.
@@ -6722,7 +6721,7 @@ namespace
 // ============ FIRST-LEVEL FLYOUT: SCALE ON OPEN (v2.36.1, task #50) =====
 // MEASURED, from the v2.36.0 session log - which is why this exists at all.
 // v2.36.0 born-scaled the NESTED container and fired ZERO times, because the
-// menus the user calls "sub flyouts" are the FIRST-LEVEL tool flyouts. The
+// menus the player calls "sub flyouts" are the FIRST-LEVEL tool flyouts. The
 // log named them and their cost in the same line:
 //     mayor flyout 0x699306ED at(22,344) size 230x710, +10 win (docked).
 //     mayor flyout 0x69923479 at(22,344) size 230x720,  +6 win (docked).
@@ -7338,7 +7337,7 @@ namespace
 	// produced ZERO 'incremental panel' lines for any budget root across a
 	// whole session of play - which is consistent BOTH with 'born correct'
 	// and with 'nobody is looking', and cannot tell them apart. That is the
-	// gap this closes, and it is the one the user's question needs:
+	// gap this closes, and it is the one the player's question needs:
 	// does the FIRST open after a city load differ from later opens?
 	int       gBudgetShowLog = 0;
 	// BUDGETWATCH state (2026-08-18). BUDGETSHOW proved the roots are BORN
@@ -7364,7 +7363,7 @@ namespace
 	// and NOTHING at either department open, with 36 of its 40 lines still
 	// unspent. That is a TRUE null with a working positive control: the
 	// instrument fires, on these ids, and the roots simply do not move or
-	// resize after they are shown. So the thing the user watches resize is
+	// resize after they are shown. So the thing the player watches resize is
 	// not the root. One level down is the only place left.
 	uint32_t  gBudgetKidsDigest[4] = { 0, 0, 0, 0 };
 	int       gBudgetKidsCount[4] = { -1, -1, -1, -1 };
@@ -7388,7 +7387,7 @@ namespace
 	BudgetTick gBudgetTick[5] = {
 		// THE ONE THAT ACTUALLY OPENS. Shared exe-built department transient,
 		// rebuilt per department, no .UI script, main-window child. This is
-		// the window the user watches resize; the four below are the panel
+		// the window the player watches resize; the four below are the panel
 		// furniture that was already on screen when they clicked.
 		{ 0x0423278F, 0, 0, 0, 0, false },
 		{ 0xAA3AC000, 0, 0, 0, 0, false },
@@ -7674,7 +7673,7 @@ void UiSpike::ScaleOnShow(cIGZWin* win)
 	// #127 (v2.77.0): DOCK AT SHOW, so a docked panel is BORN seated instead of
 	// jumping on its first open. v2.76.0 only ran kPanelDock from the sweeps, so
 	// the Graphs band painted once at the anchor's own (wrong) seat and snapped
-	// a tick later - the user saw exactly that ("it jumps when you open the city
+	// a tick later - the player saw exactly that ("it jumps when you open the city
 	// for the first time"), and it is the same first-paint family as #50/#76:
 	// a window must be BORN correct, not corrected afterwards.
 	// The dock needs BOTH windows, and `win` here may be either one (or an
@@ -7756,7 +7755,7 @@ namespace
 // THE MEASUREMENT THIS IS BUILT ON. At our first sweep (+1.9s) the minimap's
 // raster was uniform grey and BOTH dirty bytes were ZERO - i.e. the game had
 // not baked the city map and had no re-bake pending - while the display
-// surface was still showing pre-bake content. That content is what the user
+// surface was still showing pre-bake content. That content is what the player
 // calls "the corrupted map". Stock never shows it because a stock load is
 // short enough that the bake lands before the HUD is revealed; our ~11.7MB of
 // extra dats stretch the load past that point.
@@ -7931,7 +7930,7 @@ void UiSpike::EarlyMinimapBake()
 	// ===== MODE 2: SCALE THE DOCK HERE, SO IT IS NEVER SEEN AT 1x =========
 	// User's question, 2026-08-01: "is there any way to load our map directly
 	// without first showing the unscaled map?" With mode 1 the dock is still
-	// 1x until the first sweep (+766..+2250ms measured), so the user watches a
+	// 1x until the first sweep (+766..+2250ms measured), so the player watches a
 	// small dock, then a jump.
 	//
 	// WHAT MAKES THIS DEFENSIBLE NOW, when "scale it earlier" was refuted:
@@ -8015,7 +8014,7 @@ namespace
 	}
 	// v2.42.3: an OPEN is (pointer changed) OR (hidden -> visible). The
 	// v2.42.2 budget re-armed only on a NEW-HOOK pass, which is blind to
-	// exactly the user's headline repro: the My Sims STRIP windows hook ONCE
+	// exactly the player's headline repro: the My Sims STRIP windows hook ONCE
 	// at city load, so every later reopen hooks nothing, prints nothing, and
 	// (in v2.42.2) got no invalidate either. `vis` carries that second half.
 	struct BmpxRootTrack { uint32_t id; cIGZWin* ptr; bool vis; int seq; };
@@ -8104,7 +8103,7 @@ void UiSpike::Disarm()
 	//
 	// Why it is not merely untidy: its consumers are NOT the sweep. They are
 	// OnFlyoutOpened (:4010), which runs from the MinHook detour on the flyout
-	// opener - so it fires whenever the user opens a tool flyout, and that hook
+	// opener - so it fires whenever the player opens a tool flyout, and that hook
 	// is never uninstalled. Between city 2's PostCityInit and city 2's first
 	// sweep (~1-2s, measured) lastView still points at CITY ONE's freed view,
 	// and OnFlyoutOpened would call GetChildWindowFromIDRecursive through it.
@@ -8211,7 +8210,7 @@ void UiSpike::TickCheck(unsigned int nowTickMs)
 	{
 		// Catch dynamically created UI (flyout submenus, dialogs, advisors).
 		// Runs every tick (~16ms) so new panels (e.g. the Options toolbar)
-		// scale before the user perceives a 1x flash. Crash-killer liveness
+		// scale before the player perceives a 1x flash. Crash-killer liveness
 		// re-checks in ScalePanelsUnder/ScaleMenuFlyouts guard menu churn.
 		++tickSerial;
 		IncrementalPass();
@@ -9204,7 +9203,7 @@ namespace
 					//                                  .UI must NOT be edited
 					//
 					// ⚠ INFO level, not Debug, and its OWN budget - the existing
-					// BMPX rows are Debug and were invisible at the user's live
+					// BMPX rows are Debug and were invisible at the player's live
 					// logLevel. An instrument nobody can read is not evidence
 					// (law 54: no log line = did not run).
 					if (BmpSeatBudget(gBmpCurId))
@@ -9595,7 +9594,7 @@ namespace
 					// STRIP is resident and hooks ONCE at city load, so a
 					// reopen changes NEITHER the pointer NOR the hook count -
 					// which is why v2.42.2 was blind (and inert) on exactly
-					// the repro the user reports.
+					// the repro the the defect report says.
 					const bool visNow = root->IsVisible();
 					const bool opened = (slot->ptr && slot->ptr != root)
 						|| (visNow && !slot->vis);
@@ -9801,7 +9800,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 	// The name and the header (`GZWinMoveTo(int32_t x, int32_t y)`,
 	// cIGZWin.h:137) both read like an absolute placement, so this was
 	// "corrected" from the original delta form to seat+delta. MEASURED RESULT,
-	// from this function's own new log line plus the user's screenshot:
+	// from this function's own new log line plus the player's screenshot:
 	//     seat (27,108) 96x96 -> asked for (43,124)
 	// (27,108) is exactly the recess origin (18*1.5=27), so (43,124) would have
 	// been dead centre had the call been absolute. The map instead rendered
@@ -9892,7 +9891,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 	// `snap` hands a ring of (curW-snap) px back to the parent, and NOTHING
 	// repaints it - InvalidateSelf only dirties the map's NEW, smaller rect,
 	// so the parent's last paint of the old, larger area stays on screen.
-	// That is the "corrupted image still behind it" the user reported: not
+	// That is the "corrupted image still behind it" the player reported: not
 	// corruption at all, just a stale region nobody owns any more.
 	//
 	// Our C++ InvalidateSelf() lands on slot 91 (0x0099BECC) and only sets
@@ -9948,7 +9947,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 //
 // THE DEFECT, MEASURED. We scale the dock artwork by f, so its minimap RECESS is
 // 64*f = 192 at 3x. The map IMAGE can only ever be a power-of-two multiple of the
-// city tile, i.e. 128. The uncovered 64px band is the "garbage" the user sees -
+// city tile, i.e. 128. The uncovered 64px band is the "garbage" the player sees -
 // the recess is a hole in the dock bitmap, so it shows whatever is behind it.
 //   tier 2.00: recess 128, image 128 -> exact, clean (why 2x never showed this)
 //   tier 3.00: recess 192, image 128 -> 64px uncovered
@@ -9961,7 +9960,7 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 // buffer area as the SOURCE - it is ALREADY A STRETCH BLIT, it just always asks
 // for blitSize squared. So we do not need to blit anything ourselves: present a
 // larger blitSize for the duration of the original call and the game's own
-// compositor scales 128 -> 192. Soft, which the user has accepted.
+// compositor scales 128 -> 192. Soft, which the player has accepted.
 //
 // WHY THIS IS SAFE HERE AND NOT ON THE DATA VIEWS MAP. The #109 faulting chain
 // (0x007A2F60) resolves its target with `push 0xCA318385 / push 0x4203` - window
@@ -10105,15 +10104,15 @@ namespace
 }
 
 // #127 (v2.76.0): drive kPanelDock. Runs from BOTH the full city sweep and the
-// incremental pass, because a panel the user OPENS (Graphs, Budget) is never
+// incremental pass, because a panel the player OPENS (Graphs, Budget) is never
 // present during the load-time sweep - v2.75.1 put the pin in ScaleAll only and
 // it therefore never fired even once (the log had no GRAPHPIN line at all).
 // Idempotent by construction: once the child sits at its target the delta is 0
 // and nothing is written, so running it at 16ms costs a compare per entry.
 void UiSpike::ApplyPanelDocks(cIGZWin* pRoot, float f, bool fromShow)
 {
-	// #137: the guard here was `f < 2.5f` with the note "2x is user-confirmed;
-	// never touch it". That protected a 2x layout the user has since reported
+	// #137: the guard here was `f < 2.5f` with the note "2x is confirmed on screen;
+	// never touch it". That protected a 2x layout the player has since reported
 	// as WRONG in the same way as 3x - the band overlapping the title and the
 	// expansion arrow - and because the dock never fired at 2x there was
 	// nothing correcting it there at all. The dock now runs at every scaled
@@ -10698,7 +10697,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 
 				// BUDGETKIDS: the same question one level down, and only
 				// while the root is actually on screen - a hidden template
-				// re-laying itself is not what the user is watching.
+				// re-laying itself is not what the player is watching.
 				if (p.win->IsVisible() && gBudgetKidsLog < 30)
 				{
 					const int slot =
@@ -10784,7 +10783,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 
 		// REGION: whitelist ONLY. Transient dialogs there (Load Region, the
 		// city-info bubble) are game-positioned; scaling them causes the
-		// reset/re-anchor fight the user saw as "jumping around". They stay
+		// reset/re-anchor fight the player saw as "jumping around". They stay
 		// stock until the static .UI design pass handles them.
 		const bool isRegionPass = (rootTag[0] == 'r');
 		if (isRegionPass && !IsRegionPanelId(p.win->GetID()))
@@ -10843,7 +10842,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		// I-ea287193/I-0b72f276 are stale copies).
 		//
 		// v2.21.0 removed the historical skip here and shipped 2x art: the
-		// COMPACT panel rendered correctly (user-confirmed) but EXPAND
+		// COMPACT panel rendered correctly (confirmed on screen) but EXPAND
 		// crashed. v2.21.1 reverted; the offline disassembly then proved the
 		// crash was NOT the expand geometry (the state-flip helpers
 		// 0x79DF10/0x79DFB0 are pure show/hide via sub_9AFCFE - no moves, no
@@ -10927,7 +10926,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 	}
 
 	// #127: table-driven panel docking, EVERY incremental tick. The Graphs pair
-	// only exists once the user OPENS the panel, long after the load-time sweep
+	// only exists once the player OPENS the panel, long after the load-time sweep
 	// - putting this in ScaleAll alone (v2.75.1) meant it never fired once.
 	ApplyPanelDocks(pRoot, f);
 
@@ -10993,8 +10992,8 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		// v2.70.0: THE CLAMP IS OFF (user decision - "we need this map to
 		// scale"). It shipped in v2.69.8-10 and works, but the trade it makes
 		// (a 256 map centered in the 512 slot on small tiles) is the thing
-		// the user rejected. The FULL-SIZE path below is v2.69.5's - which
-		// the user confirmed looked right. (Its later add-on, the per-sweep
+		// the player rejected. The FULL-SIZE path below is v2.69.5's - which
+		// the player confirmed looked right. (Its later add-on, the per-sweep
 		// heal, was retired with the dock-seed in v2.71.4 - the x8 bake patch
 		// made both obsolete; see the tombstone at the latch declarations.)
 		// The clamp code is kept below, gated, as the emergency fallback; the
@@ -11017,7 +11016,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		// flicker). The renderer builds WINDOW-sized buffers (#45), so a
 		// clamped window keeps buffer==surface==256 - full stock behavior.
 		// v2.70.1: CLAMP BACK ON as the stable interim. v2.70.0's per-sweep
-		// heal produced WRONG CELL COLORS + a per-day flash, and the user's
+		// heal produced WRONG CELL COLORS + a per-day flash, and the player's
 		// screenshot proves WHY the whole heal family is unfixable: the game
 		// ALPHA-BLENDS data cells onto whatever base is under them AT PAINT
 		// TIME. Refresh order is clear -> bake (nothing at zoom=-3) -> blend
@@ -11127,7 +11126,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 					// v2.71.1 BORN CORRECT (#121 last 1%): the recompute only
 					// MARKS every tile dirty (memset 0xFF at 0x7A78E2) and sets
 					// fd=1; the actual bake is MESSAGE-DRIVEN via the handler
-					// 0x7A8640, so it lands a tick or more later - the user sees
+					// 0x7A8640, so it lands a tick or more later - the player sees
 					// the panel open, then the map fill in. STOCK never shows
 					// that gap (user-verified 2026-08-04: stock paints the
 					// correct map immediately) because its map is built right
@@ -11313,7 +11312,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 					// v2.71.1 BORN CORRECT (#121 last 1%): the recompute only
 					// MARKS every tile dirty (memset 0xFF at 0x7A78E2) and sets
 					// fd=1; the actual bake is MESSAGE-DRIVEN via the handler
-					// 0x7A8640, so it lands a tick or more later - the user sees
+					// 0x7A8640, so it lands a tick or more later - the player sees
 					// the panel open, then the map fill in. STOCK never shows
 					// that gap (user-verified 2026-08-04: stock paints the
 					// correct map immediately) because its map is built right
@@ -11471,7 +11470,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		cIGZWin* pUdRoot = pRoot->GetChildWindowFromIDRecursive(0x4BCB938A);
 		// #93 UDVAR: the console VARIANT 0xEC1A5CBF has never been seen live
 		// - no dump in the repo holds it - so "which vehicle spawns it" has
-		// been an open question for weeks. Rather than making the user cycle
+		// been an open question for weeks. Rather than making the player cycle
 		// every vehicle type against a DPROBE band, let it report ITSELF the
 		// first time it ever exists: id, rect, parent, and whether it is a
 		// SIBLING of the dashboard or a CHILD of it (the one fact that
@@ -11720,7 +11719,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 				// ⭐ THEY DREW 1x ANYWAY BECAUSE A GZWinBMP DRAWS dst = src
 				// (law 83 / the BMPX rationale at :11655) and these roots were
 				// not in this list, so the blit hook never ran on them. A
-				// window at 92x194 showing a 46x97 source is exactly the user's
+				// window at 92x194 showing a 46x97 source is exactly the player's
 				// "identical instead of scaling", and it is why FIVE patches
 				// aimed at sizes and constants could not move it - the size was
 				// already right and the BLIT was not following.
@@ -11955,7 +11954,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 						// motion that brought the switch-charts jump back.
 						// Fix, by legend kind:
 						//   plain (no checkboxes): the whole right margin is free, so
-						//     keep the user-confirmed leftward text widening.
+						//     keep the confirmed on screen leftward text widening.
 						//   checkbox: the column is already laid out; widen RIGHT
 						//     only (the spare 4px) and move no window.
 						//   both: scale the swatch - size x f and offset-from-text
@@ -12144,7 +12143,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 						// both IDENTICAL at f=1 and f=2 while Legend went
 						// 13 -> 26pt. Two stacked 26pt entries need ~55px of
 						// a 32px band, so the second overflows and its text
-						// breaks up - the "Expense / s" the user reported.
+						// breaks up - the "Expense / s" the player reported.
 						//
 						// These are PLAIN FIELDS on the chart object with no
 						// setter in the module, read fresh on every layout,
@@ -12291,7 +12290,7 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		}
 
 		// DATA VIEWS expanded-page PIN-BACK (task #45, v2.21.3). DPROBE
-		// measured (2026-07-29 20:29 capture; REGRESSION.md "DATA VIEWS
+		// measured (2026-07-29 20:29 capture ("DATA VIEWS
 		// PANEL"): the game's view-select code re-lays the legend on EVERY
 		// selection, mixing 1x .UI-era origin constants with pitches derived
 		// from the SCALED font - rows re-set to container-rel x=278 /
@@ -12546,7 +12545,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	// #137: run the panel docks on the TICK, not only from ScaleAllPanels /
 	// ScalePanelsUnder / the show hook. MEASURED: those three fire on scale and
 	// open events only, so a panel that becomes visible between them paints
-	// undocked until the user touches something - the log showed the Graphs
+	// undocked until the player touches something - the log showed the Graphs
 	// band painting for 1.9s before the dock reached it, then snapping. The
 	// function is idempotent (it compares against the target and writes nothing
 	// when already seated), which is exactly why the author noted it costs "a
@@ -12704,7 +12703,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				if (b[0]) gIconProbe = atoi(b);
 				// [Probe] SmallWin (#188): NAME the small floating windows over
 				// the 3D view - built to identify the U-Drive-It START bubbles
-				// the user clicks (the #186 pin hit the DURING-mission marker;
+				// the player clicks (the #186 pin hit the DURING-mission marker;
 				// the start bubbles are a different, unidentified window).
 				// IconProbe cannot do this: it dedupes by CLASS and a bubble
 				// sharing GZWinBMP's vtable spends its 4 example slots on dock
@@ -13806,7 +13805,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 		// 284/382/578/774 = different item counts per menu). The disaster-
 		// derived draw hooks below (buffer force-recreate via SlotThunk,
 		// strip item-field doubling, [0xe0] claim doubling) were validated
-		// ONLY on the five menus in kParents. When the user opened
+		// ONLY on the five menus in kParents. When the player opened
 		// U-Drive-It -> Earned Cars the same hooks installed on THAT strip
 		// (log: "SUBHOOK strip 0x8A2CAD8B 88x774 ... item fields x2") and the
 		// game died - a foreign layout getting a force-recreated buffer plus
@@ -13927,7 +13926,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					// f=2). Nothing is broken horizontally - the reported
 					// defect is the column hanging into the bottom HUD - so
 					// moving X would be an unforced 26px change to a placement
-					// the user has already signed off. It would ALSO desync
+					// the player has already signed off. It would ALSO desync
 					// birth from the sweep: the sweep only re-docks a container
 					// it finds at the native or the target position, and a
 					// 26px disagreement fails both tests, which silently ends
@@ -14394,7 +14393,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// It self-corrects on a later open because it is sticky per
 			// ADDRESS, not per open: opening another flyout recycles the
 			// pointer, the marker classifies Fresh, and the dock is right
-			// thereafter. That is exactly what the user saw.
+			// thereafter. That is exactly what the player saw.
 			//
 			// THE CURE IS THE PROJECT'S OWN, copied from ScalePanelRoot
 			// (~:14887) whose comment describes this failure in these words:
@@ -14447,7 +14446,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				// measured on warrior's god-terraforming-in-mayor-mode:
 				// LANDSCAPE marker moved (3,27)->(3,59) and SIGNS & LABELS
 				// (3,183)->(4,5), which is the "ring against the wrong
-				// circle" the user reported. The rule this file already
+				// circle" the player reported. The rule this file already
 				// documents above the table IS the general form:
 				//     target = spawnButtonAbs - markerOffset(live)
 				// ⚠ v2.47.0 CORRECTION: this comment used to end "and the
@@ -14817,8 +14816,8 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	//   terrain-fx docks (22,502), arm on btn2 centre 620 -> arm is 118px below
 	//   the flyout top. So for the arm to land on btn4 (860): top = 742, same
 	//   left column X=22 -> toolbar offset (6,160). Vector from raw (126,518):
-	//   down 224, left 104 = the user's "down + slightly left" arrow, and the
-	//   terraform-on-btn1 relationship the user set as the acceptance test.
+	//   down 224, left 104 = the player's "down + slightly left" arrow, and the
+	//   terraform-on-btn1 relationship the player set as the acceptance test.
 	// NO ScaleSubtree (it doubles child positions and flings the strip); dock
 	// first, scale later.
 	cIGZWin* godParent = pView->GetChildWindowFromIDRecursive(0x9A47B417);
@@ -15242,7 +15241,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// The set is DERIVED, not hand-written: it is every ROOT-depth node in
 		// the .UI corpus that carries an `image=` AND `blttype=tiled`, i.e. a
 		// window whose own background sheet is bound to it. Regenerate with the
-		// census in _tests/REGRESSION.md #166; it currently yields 17, and
+		// census; it currently yields 17, and
 		// contains all 4 ids the 218-capture live-rect harvest confirmed
 		// (0x0987B48F, 0x0A78827A, 0xABB26B0E, 0xC991EDA8).
 		static const uint32_t kOwnsBackgroundSheet[] = {
@@ -15321,7 +15320,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 		// #101: the city bottom-HUD family co-anchors off ONE leader so that
 		// overlapping siblings transform identically. Adjudicated offline
 		// before this was built, with tools\uimap\emu\emu_panel_anchor.py:
-		//   0 of 39 panels move at 2400x1600 f=2.0 (the USER-CONFIRMED tier)
+		//   0 of 39 panels move at 2400x1600 f=2.0 (the CONFIRMED ON SCREEN tier)
 		//   20 of 39 move at 1400x1050 f=1.5, all of them toward the design
 		//   layout, and the leader itself does not move at either.
 		// Family X is deliberately NOT clamped per-member below (clampX
@@ -15370,7 +15369,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 
 		// #197 ART-SIZED ROOT: this window is BORN at its art's pixel size, so
 		// writing a scaled geometry here is the SECOND application of f.
-		// Measured across the user's captures at every tier - img 48/64/96 in
+		// Measured across the player's captures at every tier - img 48/64/96 in
 		// a window ScalePanelRoot had set to 72/128/288, i.e. art*f = 32*f*f.
 		// Refuse the write and source == window, so the blit's clamp gives
 		// m = 1 and the marker draws at exactly 32*f.
@@ -15522,7 +15521,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 			// a child whose edge equals the parent's height lands a pixel past
 			// it. MEASURED on the god toolbar: strip (5,1011) 74x351 -> 526
 			// tall, while its bottom cap at local t=351 rounded to 527 - the
-			// one transparent pixel the user reported as a break in the rail.
+			// one transparent pixel the player reported as a break in the rail.
 			ScaleSubtree(snap.wins[i], f, 1, &count, false,
 				rootDesignL, rootDesignT);
 		}
@@ -15701,7 +15700,7 @@ void UiSpike::IncrementalPass()
 			// runtime entry double-doubled every toast (user screenshot:
 			// giant corrupted toast) while the real budget sub-dialogs stayed
 			// 1x. Identity for this list must be CONTENT-matched, never
-			// inferred from which dialog the user "should" have had open.
+			// inferred from which dialog the player "should" have had open.
 			// v2.25.20 - THE BUDGET MASTERS, with the REAL flaw fixed: their
 			// ids exist TWICE (a permanent hidden template + the open
 			// instance), so every earlier runtime pass found the TEMPLATE,
@@ -15954,7 +15953,7 @@ void UiSpike::IncrementalPass()
 			// is undecidable by size alone and was equally wrong before.
 			//
 			// ⚠ v2.39.11 - AND THE WIDTH TEST ALONE IS NOT "ARRIVED SCALED".
-			// v2.39.9 fixed the 4x (user-confirmed) but a 3-lens adversarial
+			// v2.39.9 fixed the 4x (confirmed on screen) but a 3-lens adversarial
 			// review caught what the eyes-on could not see: `w >= designW*5/4`
 			// is ALSO true of a window WE scaled on an earlier sweep. From the
 			// next tick on, every id in this table would take this branch and
@@ -16376,11 +16375,11 @@ void UiSpike::IncrementalPass()
 				// 2x, 24 at 3x. The equality therefore matched ONLY at 2x, and
 				// at every other tier this pin silently re-seated NOTHING -
 				// leaving each department's funding rule wherever the game
-				// composed it, unattached to its slider. That is the user's
+				// composed it, unattached to its slider. That is the player's
 				// "white lines in budget are broken" at 3x, and the block's own
 				// comment above records the same sentence from the 2x era.
 				// Derived, not constant - and it reduces to 16 at f=2 exactly,
-				// so the confirmed 2x layout cannot move (HANDOFF.md law: "a
+				// so the confirmed 2x layout cannot move (the law: "a
 				// tier is not 2x with rounding"; replace the constant with its
 				// derivation AND prove the derivation reduces to it at f=2).
 				const int32_t kNotchW =
@@ -16439,7 +16438,7 @@ void UiSpike::IncrementalPass()
 			// border (user: "the dark blue oval is getting cut off as it goes
 			// across the top", Screenshot 2026-08-17 103229, rows measured:
 			// gap 0 above / 2 below vs 1/1 at 1x). 2x shares the 0-gap and is
-			// USER-CONFIRMED as shipped, so the confirmed integer tiers must
+			// CONFIRMED ON SCREEN as shipped, so the confirmed integer tiers must
 			// not move: dy = R(f) - floor(f) restores the 1x clearance at
 			// fractional tiers and is PROVABLY 0 at every integer f (R(k)=k).
 			//   f=1.5: dy=+1 -> combo [rowTop+2..], arrow oval clearance 1/1.
@@ -16668,7 +16667,7 @@ void UiSpike::IncrementalPass()
 			//               Deals, 0x786BA2 Transportation and 0x78826D EVERY
 			//               department page.
 			//
-			// THE #110 DEFECT, measured and then user-confirmed on both sides:
+			// THE #110 DEFECT, measured and then confirmed on screen on both sides:
 			// for the ledger twin the HOST IS THE BOX - a top-level 600x127
 			// window - because CodePatches clamps its five SetSize sites to the
 			// `push imm8` ceiling (round(100*f)=200 cannot encode, so it ships
@@ -16682,7 +16681,7 @@ void UiSpike::IncrementalPass()
 			// LOGGED 19 TIMES as `POPBOX 600x127 -> 600x250 at y=-123`.
 			//
 			// PROVEN, not argued: at 1x with the whole layer parked the X closes
-			// the box (stock control, user-confirmed) - so #103's "stock has no
+			// the box (stock control, confirmed on screen) - so #103's "stock has no
 			// close handler" verdict is REFUTED. Its gate decoded the command
 			// dispatch correctly but nothing ever established that a click on
 			// the X ARRIVES there as command 0xCC; it does not. Then at 2x with
@@ -16839,7 +16838,7 @@ void UiSpike::IncrementalPass()
 	// every DIRECT view child that BECOMES VISIBLE (change-only on the
 	// visible-id set): id, class vtable, rect - plus one level of children
 	// for a newly visible window. The Taxes/department OPEN instance will
-	// identify itself the next time the user opens one.
+	// identify itself the next time the player opens one.
 	{
 		static uint32_t vwkidSig = 0;
 		ChildSnapshot vk = {};
@@ -17617,7 +17616,7 @@ void UiSpike::RegionZoomStep(int dir)
 
 	// ⚠ THE WHEEL ONLY RECORDS INTENT. Applying a zoom rebuilds 18 pixel
 	// buffers (9 tiles x source + composite) with Shutdown/Init/resample,
-	// synchronously. Doing that per notch FROZE THE GAME when the user
+	// synchronously. Doing that per notch FROZE THE GAME when the player
 	// scrolled fast (2026-08-05) - every queued notch paid the full cost.
 	// Now a burst of notches collapses into ONE resize on the next 16ms tick.
 	const int lo = -settings.spikeRegionZoomLevels;
@@ -17628,7 +17627,7 @@ void UiSpike::RegionZoomStep(int dir)
 	if (want == regionZoomTarget)
 	{
 		// Already at a stop. Say so ONCE per stop so the log does not fill up
-		// while the user keeps scrolling into the wall.
+		// while the player keeps scrolling into the wall.
 		if (!regionZoomAtLimitLogged)
 		{
 			regionZoomAtLimitLogged = true;
@@ -17754,7 +17753,7 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 
 	// RGKID (v2.26.7, measurement): change-only dump of the region screen's
 	// direct children + one level below - the CITY-SELECT BUBBLE (with the
-	// Mayor Rating bar the user reports drawing twice) lives there and has
+	// Mayor Rating bar the the defect report says drawing twice) lives there and has
 	// never been measured. Same shape as MWKID; costs one enum per sweep.
 	if (present && settings.spikeScaleRegion)
 	{
@@ -17866,7 +17865,7 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 		// Deliberately NOT resetting the zoom level. The basis lives in .data
 		// and is still patched, so the next region build computes its
 		// positions from it and the hook sizes its tiles to match - the map
-		// comes back exactly as the user left it. Zeroing the level here would
+		// comes back exactly as the player left it. Zeroing the level here would
 		// desynchronise the bookkeeping from the pixels.
 		regionZoomPending = false;
 		return;
@@ -17940,7 +17939,7 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 	// game's own rebuild via the sub_7AE3D0 hook
 	// (CodePatches::ApplyRegionTileScale), so the composite and the click mask
 	// inherit the new size for free. Law 57: a fix that must re-apply every
-	// tick is a fight, not a fix. Full autopsy in _tests\REGRESSION.md #131.
+	// tick is a fight, not a fix.
 
 	// Same idempotent whitelist pass as the city view, every tick while the
 	// region screen stays up.
@@ -18319,7 +18318,7 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		// (the #148 note below says so). The parent's extent was rounded at its
 		// own absolute origin; a child rounded at a local origin of 0 therefore
 		// lands somewhere the parent's extent never reaches. MEASURED on the god
-		// toolbar at 1.5x, which is what the user saw as "a break in the white
+		// toolbar at 1.5x, which is what the player saw as "a break in the white
 		// line on the left that is not in 2x or stock":
 		//
 		//   strip  pos(5,1011) 74x351 -> height = R(1011+351) - R(1011) = 526
@@ -18394,7 +18393,7 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		// The four-state art sheet is 284 wide, so its cell is 284/4 = 71 for
 		// BOTH. The odd-edge control gets a 71px cell in a 70px window and the
 		// uncovered right column plus bottom row draw as a REVERSE L. That is
-		// exactly what the user saw on Landscape's "Level Terrain" (the only
+		// exactly what the player saw on Landscape's "Level Terrain" (the only
 		// one of five buttons at an odd l) and on the god-mode Day/Night sun
 		// and moon (all three at l=79).
 		//
@@ -19760,7 +19759,7 @@ namespace
 		SelAttachButtonFilters(gfxDlg);
 
 		// THE COMBO'S LIVE GEOMETRY vs ITS PARENT'S CLIP, once per open -
-		// the user reported the box "cut off"; the margin is a number, not
+		// the player reported the box "cut off"; the margin is a number, not
 		// an impression.
 		{
 			cIGZWin* cg = gfxDlg->GetChildWindowFromIDRecursive(kSelComboId);
@@ -20277,7 +20276,7 @@ void UiSpike::ServiceScaleSelector()
 {
 	// FRAME-GAP watchdog: entry-to-entry stride of the caller's loop, checked
 	// BEFORE the throttle because the gap is the thing being measured. Only
-	// logged while the dialog is up - that is when the user feels the stall.
+	// logged while the dialog is up - that is when the player feels the stall.
 	{
 		const unsigned long long callUs = PerfProbe::NowUs();
 		if (gSelPerfPrevCallUs != 0 && gSelDlgUp

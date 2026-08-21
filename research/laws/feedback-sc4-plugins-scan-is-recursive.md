@@ -1,52 +1,40 @@
----
-name: feedback-sc4-plugins-scan-is-recursive
-description: "SC4 scans Plugins RECURSIVELY. Moving plugins into a SUBFOLDER of Plugins (e.g. Plugins\\_stock-stash) disables NOTHING - they keep loading. Only an extension rename or a move OUT of the Plugins tree disables a plugin. Cost: an entire stock-baseline investigation plus a full game reinstall, on a premise that was false."
-metadata: 
-  node_type: memory
-  type: feedback
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-05T19:20:54.797Z
----
+# SC4 Scans the Plugins Tree Recursively
 
-**SC4 loads `Plugins\` RECURSIVELY — every subfolder, at any depth.**
+SimCity 4 loads `Plugins\` recursively — every subfolder, at any depth. A
+"stash" or "disabled" folder created *inside* `Plugins\` disables nothing; its
+contents keep loading exactly as before, including `.dat` archives, DLL plugins,
+and SC4Lot/SC4Model/SC4Desc content.
 
-So a "stash" folder *inside* `Plugins\` disables absolutely nothing. There are
-only two real ways to take a plugin out of play:
+There are only two ways to take a plugin out of play:
 
-1. **Rename the extension** (`foo.dat` -> `foo.dat.x1-disabled`), or
-2. **Move it OUT of the Plugins tree** — a *sibling* of `Plugins`, e.g.
-   `Documents\SimCity 4\_stock-stash\`, never a child.
+1. **Rename the extension** — `foo.dat` to `foo.dat.disabled`. The scan matches
+   on extension, so a renamed file is skipped in place.
+2. **Move it out of the Plugins tree entirely** — to a *sibling* of `Plugins`,
+   for example `Documents\SimCity 4\_stock-stash\`, never to a child of it.
 
-**Why:** on 2026-08-05 `_tests\Set-StockPlugins.ps1` shipped with
-`$Stash = Join-Path $DocPlugins "_stock-stash"`. It moved 132 `.dat` (98 MB),
-30 `.dll`, and the SC4Lot/Model/Desc content into `Plugins\_stock-stash\` and
-reported the game "stock". **All of it kept loading**, through an entire
-stock-baseline investigation *and* through a fresh game reinstall — the user
-saw plugin fingerprints on screen and said so repeatedly while I argued the
-folder was empty. They were right every time.
+## Verifying a "stock" baseline
 
-This is the same failure class as the `zzz-` subfolder gap found 2026-08-02
-([[feedback-sc4-scaling-laws]] law 40's corollary) — one directory further out.
-It is now the second time the SAME mistake shape has cost a session.
+Any claim that the game is running stock must be backed by a recursive
+enumeration, not a top-level directory listing. A shallow `Get-ChildItem` on
+`Plugins\` reports an empty folder while a nested stash directory beneath it is
+still fully live, so the listing looks like proof and is not.
 
-**How to apply:**
-* Before believing ANY "stock"/"plugins removed" claim, run the positive
-  control: enumerate `.dat/.dll/.sc4*` **recursively** under BOTH Plugins trees
-  (`Documents\SimCity 4\Plugins` and `<install>\Plugins`) and require the list
-  to be empty. A top-level `Get-ChildItem` is not that check.
-* Third-party DLL **logs are the execution proof** — a fresh
-  `SC4MoreBuildingStyles.log` / `SC4LuaExtensions.log` timestamp means the DLL
-  ran, whatever the folder layout suggests ([[feedback-sc4-scaling-laws]] law 54,
-  law 47 installed != executed).
-* A user reporting "I can still see plugins" is a MEASUREMENT. Treat it as
-  outranking my own folder listing — see [[feedback-check-our-previous-work-first]]
-  and [[feedback-null-is-not-evidence]]: my listing found nothing because it
-  was looking one level too shallow, which is exactly a probe that could not
-  have seen the thing.
-* Stock captures taken before 2026-08-05 are ALL suspect — the plugins were
-  live. That compounds the third-`FontStyle.ini` contamination already recorded
-  in `_tests\REGRESSION.md`.
+The positive control is: enumerate `*.dat`, `*.dll`, and `*.sc4*` **recursively**
+under **both** Plugins trees — `Documents\SimCity 4\Plugins` and
+`<install>\Plugins` — and require both result sets to be empty. Both trees
+matter; the game merges them, and clearing only one leaves the other loading.
 
-Related: [[project-sc4-ui-scaling-northstar]], [[reference-sc4-golden-backup]]
-(its THREE FontStyle.ini probe sites are the same "one more place than you
-think" trap).
+## Execution proof beats folder layout
+
+Third-party DLL plugins write their own log files. A fresh timestamp on
+`SC4MoreBuildingStyles.log`, `SC4LuaExtensions.log`, or any equivalent
+plugin log is direct evidence that the DLL ran during that launch, regardless of
+what the folder layout suggests. Installed is not the same as executed, and the
+logs are the only cheap way to tell the two apart. When a log timestamp and a
+directory listing disagree, the log is the measurement.
+
+Any UI capture or measurement taken while a nested stash was believed to be
+"removed" is contaminated and must be retaken against a verified-empty tree.
+The same "one more place than you think" trap appears elsewhere in the SC4
+install — most notably the multiple `FontStyle.ini` locations that must all be
+neutralised before a font-related baseline is trustworthy.

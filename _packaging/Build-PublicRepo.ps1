@@ -94,6 +94,48 @@ $ROOT = @("README.md", "LICENSE", "THIRD-PARTY-NOTICES.md", "CHANGELOG.md",
 $DOCS = @("WHAT-IT-SCALES.md", "HOW-IT-WORKS.md", "BUILDING.md",
           "COMPATIBILITY.md")
 
+# --- the research corpus ----------------------------------------------------
+# SC4 shipped no SDK. These files are the reference that had to be written from
+# measurement to build this mod, and they are the repository's most reusable
+# content. They ship; the working notes that produced them do not.
+#
+# ABSENT BY DECISION and not by omission - anything that describes work in
+# progress rather than the product: the engineering ledger, the regression
+# diary, session state, open-defect and backlog lists, one-off probes, and
+# generated pipeline output. A public repository states what is true now.
+$RESEARCH = @("KNOWN-LIMITATIONS.md")
+$RESEARCH_LAWS = "*.md"     # research\laws\ ships whole, after the scrub
+$TOOLS_RESEARCH = @(
+    "SC4-UI-ENGINE.md", "SC4-WORLD-OVERLAYS.md", "SDK-GAPS.md",
+    "UI-ART-BINDING.md", "SCALING-AXES.md", "FONTS-AND-DIALOGS.md",
+    "ITEMICONS.md", "REGION-SCREEN.md", "REGION-SWITCH.md", "MAYOR-MODE.md",
+    "GOD-MODE-FLYOUTS.md", "DYNAMIC-CONTROLS.md", "STOCK-PARITY.md",
+    "CITY-SITUATION-INDICATORS.md", "CITY-DOCK-OVERLAP.md",
+    "BUDGET-DETAIL-ANATOMY.md", "MECHANISM-GENERATIONS.md",
+    "METHOD.md", "TRIAGE.md",
+    "UPSTREAM-CAM-REPORT.md", "UPSTREAM-NAM-REPORT.md",
+    "UPSTREAM-WARRIOR-REPORT.md", "UPSTREAM-SAVEWARNING-REPORT.md",
+    "UPSTREAM-BUILDINGSTYLES-REPORT.md"
+)
+# The offline simulator: it reproduces the engine's layout arithmetic without
+# launching the game, which is what makes a change testable at all. Gates and
+# emulators ship; the one-off scans and probes that answered a single question
+# once do not.
+$UIMAP_DOCS = @("BLIT-BEHAVIOUR.md", "CONSTANT-MAP.md", "SUBFLYOUT-BUILDER.md",
+                "SUBFLYOUT-CONSTANTS.md", "SUBFLYOUT-ART-VERDICT.md",
+                "SUBFLYOUT-LIVE-EVIDENCE.md")
+$UIMAP_EMU_GLOBS = @("gate_*.py", "emu_*.py", "render_*.py", "scale_rules.py",
+                     "sim_itemicon_states.py")
+# The regression net. Every one of these runs without the game and exits 0/1,
+# so a stranger can prove the source is intact before building it.
+$TESTS = @("Test-BootStateValidate.py", "Test-SelectorDerive.py",
+           "Test-SelectorContract.py", "Test-StockTierContract.py",
+           "Test-MutationCountInvariant.py", "Test-PackageGating.py",
+           "Test-ShippingIniKeys.py", "Test-MiniMapX8Bake.py",
+           "Test-RegionZoomSizes.py", "Test-BinaryPii.py",
+           "Test-DatIntegrity.ps1", "Deploy-OnGameClose.ps1", "Set-Tier.ps1",
+           "README.md")
+
 # vendor ships whole: required to COMPILE, and gzcom-dll's LGPL-2.1 obliges us
 # to provide its source alongside any binary we distribute.
 $VENDOR_EXT = @(".h", ".c", ".cpp", ".txt", ".md")
@@ -105,8 +147,25 @@ function Add-Item2([string]$from, [string]$rel) {
     if (-not (Test-Path $from)) { Write-Warning "MISSING $rel"; return }
     $items.Add([pscustomobject]@{ full = $from; rel = $rel })
 }
-foreach ($f in $ROOT) { Add-Item2 (Join-Path $staged $f) $f }
-foreach ($f in $DOCS) { Add-Item2 (Join-Path $staged "docs\$f") "docs\$f" }
+# ROOT and DOCS come from the REPOSITORY, not from a staged copy. A staged
+# copy is a second version of the same file that goes stale silently, which is
+# how a release once shipped a README nobody had edited in weeks.
+foreach ($f in $ROOT) { Add-Item2 (Join-Path $proj $f) $f }
+foreach ($f in $DOCS) { Add-Item2 (Join-Path $proj "docs\$f") "docs\$f" }
+foreach ($f in $RESEARCH) { Add-Item2 (Join-Path $proj "research\$f") "research\$f" }
+Get-ChildItem (Join-Path $proj "research\laws") -Filter $RESEARCH_LAWS -File |
+    ForEach-Object { Add-Item2 $_.FullName ("research\laws\" + $_.Name) }
+foreach ($f in $TOOLS_RESEARCH) {
+    Add-Item2 (Join-Path $proj "tools\research\$f") "tools\research\$f"
+}
+foreach ($f in $UIMAP_DOCS) {
+    Add-Item2 (Join-Path $proj "tools\uimap\$f") "tools\uimap\$f"
+}
+foreach ($g in $UIMAP_EMU_GLOBS) {
+    Get-ChildItem (Join-Path $proj "tools\uimap\emu") -Filter $g -File -ErrorAction SilentlyContinue |
+        ForEach-Object { Add-Item2 $_.FullName ("tools\uimap\emu\" + $_.Name) }
+}
+foreach ($f in $TESTS) { Add-Item2 (Join-Path $proj "_tests\$f") "_tests\$f" }
 foreach ($f in $SRC)  { Add-Item2 (Join-Path $proj "src\$f") "src\$f" }
 foreach ($f in $TOOLS){ Add-Item2 (Join-Path $proj "tools\$f") "tools\$f" }
 Get-ChildItem (Join-Path $proj "vendor") -Recurse -File |

@@ -1,47 +1,88 @@
----
-name: reference-sc4-exception-reports
-description: "SimCity 4 writes its own crash reports to Documents\\SimCity 4\\Exception Reports\\ with the faulting EIP, registers and module list - read them FIRST on any crash, before reasoning about bytes. Windows WER is useless on this machine (zero app reports ever)."
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-04T20:33:08.978Z
----
+# SimCity 4 Exception Reports
 
-**The game writes its own crash artefact. Read it before anything else.**
+SimCity 4 installs its own top-level exception handler and writes a crash report
+to disk before exiting. On any crash, that file is the first thing to read — it
+is a free measurement of where the game died, already on disk, requiring no
+rebuild, no debugger and no reproduction attempt.
 
-`<HOME>\OneDrive\Documents\SimCity 4\Exception Reports\`
-→ `SimCity Exception Report YYYY.MM.DD HH.MM.SS.txt`
+## Location and contents
 
-Each one carries: exception code, **`CS:EIP` = the faulting instruction**, the full
-register set, `Section:Offset`, the exe version (1.1.641.0), and the loaded-module
-list with base addresses. That is a **measurement** of where the game died, free,
-already on disk, no build and no user test required.
+```
+%USERPROFILE%\Documents\SimCity 4\Exception Reports\
+    SimCity Exception Report YYYY.MM.DD HH.MM.SS.txt
+```
 
-⚠ **Windows WER is a structural null here.** No `Application Error` event and no
-`.wer`/`.dmp` is produced for this game — the machine has produced **zero** WER app
-reports ever, so "no WER record" proves nothing. The game's own handler catches the
-fault, writes its report, and exits. Do not read WER silence as evidence.
+(If Documents is redirected to a cloud-synced folder, the reports follow it.)
 
-## How it closed #109 (2026-08-04)
+Each report carries:
 
-Twelve reports existed. **Five fault at the identical instruction `0x00910010`** —
-`ACCESS_VIOLATION`, the `rep stosd` inside the game's row fill — at tier 1.5× and
-tier 3× alike, and **never at 2×**. One tier crashes, one does not, same
-instruction ⇒ a geometry invariant, and a measurable one.
+* the exception code (e.g. `ACCESS_VIOLATION`),
+* `CS:EIP` — **the faulting instruction address**,
+* the full register set at fault time,
+* `Section:Offset` for the faulting address,
+* the executable version (`1.1.641.0` for the current Steam/patched build),
+* the loaded-module list with base addresses, which identifies injected DLLs and
+  their load bases so an EIP inside a mod can be resolved to a module offset.
 
-It also **refuted** the cause this project had written into every doc for two
-weeks (a non-power-of-two `blitSize` overrunning the raster). See
-[[reference-sc4-minimap-bake]] for the corrected invariant: the **WINDOW** and the
-**SURFACE** disagree at fractional tiers, not `blitSize` and `terrainDim`.
+Because the exe has a fixed `ImageBase` of `0x400000` and is not relocated in
+practice, an EIP inside the game's own range maps directly to a static address in
+a disassembly of `SimCity 4.exe` — no rebasing arithmetic required.
+
+## Windows Error Reporting is a structural null here
+
+The game's handler catches the fault, writes its report, and exits cleanly from
+the operating system's point of view. As a result there is typically **no
+`Application Error` event in the Windows event log and no `.wer` or `.dmp`
+produced** for a SimCity 4 crash. "WER recorded nothing" is therefore not
+evidence that no crash occurred, and not evidence about where it occurred; the
+channel simply never sees the fault. Check the game's own Exception Reports
+directory instead.
+
+## Correlating with a mod log
+
+Match report timestamps against the tail of the mod log. A logger that flushes
+per line survives the crash, so the last lines written before the fault are
+intact and can be lined up with the report's clock time. That pairing turns a
+bare EIP into a sequence: which panel was being scaled, at which tier, at the
+moment of the fault.
+
+## Worked case: five reports, one instruction
+
+Twelve reports accumulated across a series of runs. Five of them faulted at the
+**identical instruction `0x00910010`** — an `ACCESS_VIOLATION` inside the game's
+`rep stosd` row fill — at UI scale tier 1.5x and tier 3x alike, and **never at
+2x**.
+
+That distribution is itself the diagnosis. One instruction, crashing at two tiers
+and clean at a third, cannot be a random memory error or a general size problem;
+it is a geometry invariant that holds at 2x and breaks at the other two, and the
+tiers that break versus the one that does not name the invariant.
+
+The reports also refuted the cause that had been documented for the preceding two
+weeks. The written explanation blamed a non-power-of-two surface size (`blitSize`)
+overrunning the minimap raster. Measurement against the crashing runs showed
+`blitSize` was exact at both crashing tiers (1.5x: 256 = 64 << 2; 3x: 512 =
+64 << 3). The 384 and 768 figures being quoted were the **window** size, not the
+surface size.
+
+The real invariant was one level out: the **window** and the **surface** disagree.
+
+| tier | window / surface | result |
+|---|---|---|
+| 1.5x | 384 / 256 | crash |
+| 2x   | 512 / 512 | fine |
+| 3x   | 768 / 512 | crash |
+
+The window is `ScaleRound(256, f)`; the surface is created at `blitSize`. They
+agree only when the scale factor is itself a power of two. The fix snaps the
+window to the largest exact power-of-two multiple of the terrain dimension within
+the bake ceiling, which is why that window can only ever be 256, 512 or 1024 —
+never 384 or 768.
 
 ## The rule
 
-**On any crash: `ls` that directory first.** Match report timestamps to the tail of
-`SC4UIScale.log` (the logger `fflush`es per line, so the log tail survives). If two
-reports at different tiers share an EIP, you have the discriminator before you have
-written a line of analysis.
-
-Cost of not doing this: ~50 minutes of the user's time on a five-agent workflow,
-reasoning about bytes, while the answer sat in a text file. See
-[[feedback-sc4-measure-dont-infer]] — a faulting EIP is a MEASUREMENT.
+On any crash, list the Exception Reports directory before reasoning about bytes.
+A faulting EIP is a measurement; an inferred cause is a hypothesis. If two reports
+at different configurations share an EIP, the discriminator is in hand before a
+line of analysis has been written — and if a third configuration with the same
+code path does *not* crash, that contrast usually names the invariant outright.

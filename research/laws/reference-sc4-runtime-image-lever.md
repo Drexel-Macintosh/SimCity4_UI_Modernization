@@ -1,73 +1,107 @@
----
-name: reference-sc4-runtime-image-lever
-description: "SC4 UI scaling — the GZWinBMP draw hook (class 0x00ADF6A0) is THE lever for any image the game supplies at runtime; scoping it is an id list, and the fit clamp gives the tier factor with no tuning constant."
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-02T18:44:08.283Z
----
+# The GZWinBMP Draw Hook
 
-**THE LEVER for every "image draws 1x in the top-left of a doubled window"
-defect** (portraits, pickers, mission markers — the class in task #47):
-`kBmpClassVt = 0x00ADF6A0`, slot 88 `= 0x009BC325`, hooked per instance onto
-ONE shared patched vtable copy (`gBmpVtCopy`), with `BmpCtxBltThunk` scaling
-the plain-path DEST rect. `src\UiSpike.cpp`.
+The lever for every "image draws at 1x in the top-left corner of a doubled
+window" defect — portraits, pickers, in-world markers, any bitmap the game
+supplies at runtime rather than loading from a `.UI`-declared asset.
 
-**Why it lands on the tier factor with NO tuning constant:** the plain path
-makes the draw follow the **SOURCE** —
-`dst = {areaL, areaT, areaL+srcW, areaT+srcH}`, the window rect is never read —
-so 32px art draws 32px inside a 128px window. The thunk scales the dest by the
-tier factor and then **reduces it until it still fits the live window**.
-64x64 inside 128x128 fits ⇒ exactly 2x, and **overshoot is structurally
-impossible**. An already-correct 2x image clamps to 1.0, so two fixes can never
-fight. Never add a multiplier here — change the scope instead.
+## The hook
 
-**SCOPING IS THE WHOLE GAME, and it is an ID LIST.** `HookRuntimeBmpsUnder`
-walks GZWinBMPs under listed ROOT ids (`kBmpxCityRoots` / `kBmpxDialogRoots`).
-Two traps, both paid for on 2026-07-30:
-1. **A window that parents straight to the 3D view is under NO root** and is
-   never walked. The U-Drive-It mission marker `0x48E945B4` was reachable by
-   this hook the whole time; adding its id was the entire fix (v2.36.6,
-   user-confirmed). Add the id of the window ITSELF — the root is hooked too.
-2. **TRANSIENT windows** (the marker is PRESENT in one probe sample and gone
-   0.5 s later) defeat every static/one-shot approach. The sweep re-finding it
-   by id each tick is what makes it stick.
+- Class vtable: `kBmpClassVt = 0x00ADF6A0`
+- Draw slot: 88, stock target `0x009BC325`
+- Implementation: `src\UiSpike.cpp`
 
-**EDGE mode is excluded on purpose** (flag bit 8 on the holder at `[this+0xd8]`):
-it 9-slices with many blits and scaling those would shear the frame.
+Each instance is repointed onto **one shared patched vtable copy**
+(`gBmpVtCopy`) rather than being patched in place. A single copy keeps every
+hooked instance on the same code path, makes install idempotent, and avoids
+writing to the class vtable itself (which would capture instances that must not
+be touched).
 
-**Positive identification is enforced** (`HookBmpInstance`): class vtable AND
-slot-88 target are both verified, and a FlashGuard thunk in slot 88 is accepted
-so the chain stays intact. Hooking by class alone is what killed the game on
-Earned Cars (law 3).
+The patched slot is `BmpCtxBltThunk`, which scales the destination rect of the
+**plain** blit path.
 
-**⚠ INSTALLING THE HOOK IS ONLY HALF OF IT — THE ENGINE MUST CALL IT**
-(2026-08-02, #47 CLOSED v2.42.4, user-confirmed *"fixed 100%"*). The My Sims
-portraits were intermittently 1x with the hook **fully installed**: on a
-failing open the log read `25 instance(s) hooked` and then a per-open census
-of `scaled=0` — our Draw was **never called** in 13 seconds on screen. The
-engine paints some opens through a non-Draw path, so the cell shows whatever
-its private buffer holds (these cells are `winflag_pbuff=yes`).
-**Cure: kick ONE `InvalidateSelfAndParents()` through each freshly hooked
-LEAF, once per open** — the ROOT alone does not reach them (root-only was
-Qwen's v2.42.2 = "less frequent but still happening"). Bounded, capped at 64
-with a saturation line; NOT ghost-heal (which was blind repeated sweeps).
-**Acceptance instrument to reuse: a per-open census of COUNTS**
-(`BMPX open #N ... census: scaled=X clamped=Y`) — counts cannot saturate the
-way a log-line budget can, so a failing event always leaves a line. See
-[[feedback-sc4-scaling-laws]] law 41.
-⛔ Dead here, do not re-derive: single-find/hidden-template (the root
-resolves to a NEW pointer every open); "our doubling enlarged the source
-rect" (`imagerect` correctly untouched); **born-2x data** — it was the
-PRE-COMMITTED cure and the measurement killed it, because these cells are
-already born 2x (the gauge precedent needs windows born 1x).
+## Why it lands on the tier factor with no tuning constant
 
-**Still open in this class:** the U-Drive-It gauge dials (custom class
-`0xCBCBF1E0` — code-paints into its OWN cached buffer, so the lever there is
-force-recreate-buffer, not this one; ⚠ that prescription rests on the
-CONTESTED `[win+0x6c]` claim — measure before building on it) and the Graphs
-chart interior.
+On the plain path the engine derives the destination from the **source**:
 
-Related: [[feedback-sc4-measure-dont-infer]], [[feedback-sc4-scaling-laws]],
-[[project-sc4-ui-scaling-northstar]].
+```
+dst = { areaL, areaT, areaL + srcW, areaT + srcH }
+```
+
+The window rect is never read. That is exactly why 32 px art draws 32 px inside
+a 128 px window.
+
+The thunk scales that destination by the tier factor and then **reduces it
+until it still fits the live window**. 64x64 inside 128x128 fits, so the result
+is exactly 2x; an image that is already correct at 2x reduces back to 1.0 and is
+left alone. Two independent fixes for the same widget therefore cannot fight,
+and **overshoot is structurally impossible** — the fit reduction is bounded by a
+measured window, not by a guessed constant.
+
+Never add a multiplier here. If a widget scales wrongly, the scope is wrong, not
+the factor.
+
+## Scoping is the whole problem, and it is an id list
+
+`HookRuntimeBmpsUnder` walks GZWinBMP instances beneath listed root ids
+(`kBmpxCityRoots` for the city UI, `kBmpxDialogRoots` for dialogs). Two traps:
+
+1. **A window that parents straight to the 3D view sits under no root** and is
+   never walked, no matter how many ancestors are listed. Such a window is
+   already reachable by this hook; the entire fix is adding the id of the window
+   **itself** to the list, because a listed root is hooked as well as walked.
+   One in-world marker (`0x48E945B4`) sat unfixed for a long time for exactly
+   this reason.
+2. **Transient windows** defeat every static or one-shot install: the window is
+   present in one probe sample and gone half a second later. The periodic sweep
+   re-finding the window by id each tick is what makes the hook stick.
+
+## Edge mode is excluded on purpose
+
+Flag bit 8 on the holder at `[this+0xd8]` selects a 9-slice edge draw composed
+of many separate blits. Scaling those blits individually shears the frame, so
+edge-mode holders are skipped and left to the 9-slice art path.
+
+## Positive identification is enforced
+
+`HookBmpInstance` verifies **both** the class vtable and the current slot-88
+target before touching an instance. A FlashGuard thunk already sitting in slot
+88 is accepted so an existing chain stays intact.
+
+Hooking by class alone crashes the game — the Earned Cars reward path shares the
+class with instances whose draw slot has been replaced, and blindly overwriting
+it breaks the chain.
+
+## Installing the hook is only half of it — the engine must call it
+
+A fully installed hook can still produce 1x images intermittently. The failure
+signature is a log reading `25 instance(s) hooked` followed by a per-open census
+of `scaled=0`: the patched Draw was never invoked at all. The engine paints some
+opens through a non-Draw path, and the cell then shows whatever its private
+buffer already holds. Cells that behave this way carry `winflag_pbuff=yes`.
+
+Cure: kick one `InvalidateSelfAndParents()` through each freshly hooked **leaf**
+once per open. Invalidating the root alone does not reach the leaves — it
+reduces the failure rate without eliminating it, which is the classic shape of a
+partially-correct invalidation. The kick is bounded and capped (64 per open,
+with a saturation line) rather than a repeated blind sweep.
+
+**Acceptance instrument:** a per-open census of counts, e.g.
+`BMPX open #N ... census: scaled=X clamped=Y`. Counts cannot saturate the way a
+per-line log budget can, so a failing event always leaves evidence behind.
+
+## Dead ends in this class — do not re-derive
+
+- **Single-find or hidden-template caching.** The root resolves to a new pointer
+  on every open, so any cached handle is stale on the second open.
+- **"The doubling enlarged the source rect."** It does not; `imagerect` is
+  correctly untouched by this path.
+- **Born-2x data.** These cells are already born at 2x, so pre-scaling the data
+  changes nothing. The born-2x precedent only applies to windows that are born
+  at 1x.
+
+## Adjacent classes this hook does not cover
+
+Custom classes that code-paint into their own cached buffer (for example
+`0xCBCBF1E0`) are not reachable through this slot; the lever there is forcing a
+buffer recreate, not scaling a blit destination. Chart interiors drawn entirely
+by the renderer are likewise outside this hook's reach.

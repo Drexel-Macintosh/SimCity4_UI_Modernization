@@ -1,44 +1,60 @@
----
-name: feedback-sc4-deploy-on-close
-description: "SC4 deploys by WAIT-FOR-CLOSE, never by killing the game — it runs elevated and holds the DLL/dats open. Supersedes the old force-close permission."
-metadata: 
-  node_type: memory
-  type: feedback
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-07-31T01:11:12.126Z
----
+# Deploying to a Running Game
 
-**Current standing order (supersedes the 2026-07-25 force-close permission,
-which is REVOKED):** SimCity 4 runs **ELEVATED** and holds `SC4UIScale.dll`
-and the tier dats open. **Never kill it.** Deploy by waiting for the user to
-close the game:
+SimCity 4 runs elevated and holds `SC4UIScale.dll` and the tier `.dat` packages
+open for the whole session. A new build therefore cannot be copied over a live
+install, and the process must not be killed to force the issue: terminating it
+discards the player's unsaved city state and destroys the session log that
+verification depends on. Deployment waits for the game to exit instead.
 
-`SC4TouchControls\_tests\Deploy-OnGameClose.ps1` — polls every 5 s, then
-copies the DLL + SelectiveArt + DialogStatic for all three tiers and asserts
-the DLL size matches. Run it in the background with a window long enough for
-a real play session (a 5-minute watcher timed out while the user played 13
-minutes).
+## Wait-for-close deployment
 
-**Why:** killing an elevated process mid-session throws away the user's
-in-game state and the session log we are about to read; the whole verify loop
-depends on that log. The old permission existed only to unblock a DLL lock —
-the watcher solves the lock without the cost.
+`_tests\Deploy-OnGameClose.ps1` polls for the `SimCity 4` process every 5
+seconds and does nothing until it exits. Once the process is gone it copies the
+freshly built DLL and every tier-managed package into the Plugins tree, then
+asserts that the deployed DLL's byte size matches the build output and fails
+with a non-zero exit code if it does not.
 
-**How to apply:** build → start the watcher → tell the user the build is
-ready → they close the game when they choose → confirm the deploy line
-(`deployed ... at HH:MM:SS`) before claiming anything shipped.
+Run the watcher in the background with a lifetime long enough for a real play
+session — a five-minute window is far too short, and a watcher that times out
+mid-session leaves the install on the previous build while the console reports
+nothing wrong.
 
-**⚠ `_tests\Test-BootMatrix.ps1` IS NOT A ROUTINE CHECK — it violates the rule
-above by design.** It LAUNCHES AND KILLS the game once per matrix entry and
-rewrites `SC4GraphicsOptions.ini` (800x600 → 1920x1080 → 1600x1200 →
-2400x1600), restoring the native resolution only if it runs to completion. Run
-it 2026-07-30 and interrupted it: it left the ini at **800x600** and a game
-process running. Never launch it as part of a normal "run the suites" pass, and
-never while the user may be playing. **The routine suites are OFFLINE:**
-`Test-DatIntegrity`, `Test-ScaleTierDecide`, `Test-UiMapDiff`, and the
-`tools\uimap\emu\` drivers — the user's standing reminder is *"you don't need
-the game open to run your tests, you have the simulator."* If BootMatrix is
-ever interrupted, restore `WindowWidth=2400` / `WindowHeight=1600` immediately.
+Two details of the wait loop matter:
 
-Related: [[project-sc4-ui-scaling-northstar]], [[feedback-docs-are-the-sdk]],
-[[feedback-sc4-regression-net]].
+- The game frequently **hangs on shutdown**: the window closes but the process
+  does not exit, and a silent poll loop is then indistinguishable from "still
+  playing". The watcher nags once a minute with the process id and the elapsed
+  wait so the operator can end the orphaned process deliberately. It still never
+  kills the process itself — a half-written `.dat` is the worse failure.
+- `SC4UIScale.log` in the Plugins folder is **recreated from scratch on every
+  game launch**, and every deploy is immediately followed by a launch. The
+  moment just after the process exits is the last safe point to preserve the
+  previous run's log, so the watcher copies it aside, named by the log's own
+  modification time rather than the current clock, before touching anything
+  else.
+
+The working order is: build, start the watcher, announce the build is ready,
+let the player close the game when they choose, then confirm the
+`deployed ... at HH:MM:SS` line before treating anything as shipped.
+
+## The boot matrix is not a routine check
+
+`_tests\Test-BootMatrix.ps1` deliberately violates the rule above: it is a live
+regression that **launches and kills the game once per matrix entry** and
+rewrites `SC4GraphicsOptions.ini` between entries, walking 800x600 (stock tier),
+1920x1080 and 1600x1200 (1.5x), and 2400x1600 (2x), deleting the log before each
+boot. It restores the native resolution only if it runs to completion. Interrupt
+it and it leaves the graphics ini at whatever resolution it was mid-way through
+and a game process running; the recovery is to restore `WindowWidth` and
+`WindowHeight` to the machine's native values by hand.
+
+Never launch it as part of a general "run the suites" pass, and never while
+someone may be playing. It takes roughly ten minutes.
+
+## The routine suites are offline
+
+Verifying a build does not require the game to be open. `Test-DatIntegrity`,
+`Test-ScaleTierDecide`, `Test-UiMapDiff` and the offline UI-map drivers under
+`tools\uimap\emu\` all run against files on disk and are the correct default
+regression pass. Reserve live-boot checks for questions that genuinely cannot be
+answered from the shipped artifacts.

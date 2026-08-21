@@ -98,7 +98,7 @@ namespace
 		return same;
 	}
 
-	// #118: is `live` one of OUR shipped tier fonts rather than the user's own?
+	// #118: is `live` one of OUR shipped tier fonts rather than the player's own?
 	// Returns the matching tag ("-2x" etc.) or nullptr if it matches none.
 	//
 	// This is what makes the upgrade-install case decidable. We ship these
@@ -173,7 +173,7 @@ namespace
 	// Some of our packages are built from ANOTHER MOD'S data (its .UI script
 	// or its art) because that mod replaces a stock resource and, by the
 	// load-order law, our root package can never override it. Those packages
-	// are only correct while that mod is installed: left active after the user
+	// are only correct while that mod is installed: left active after the player
 	// removes it, OUR frozen copy keeps the mod's UI alive - the trap
 	// MAYOR-MODE.md:126 recorded ("it must move OUR override too or our copy
 	// keeps the mod alive") and that we had only applied inside a manual test
@@ -476,7 +476,7 @@ namespace
 		// FontStyle.ini is NOT ours. Other SC4 font mods ship one, and the
 		// player may have hand-edited theirs. Before this, we DESTROYED it:
 		//   * the CopyFileW below passes bFailIfExists = FALSE, so the FIRST
-		//     scaled launch overwrote the user's file with NO backup at all;
+		//     scaled launch overwrote the player's file with NO backup at all;
 		//   * the stock-tier MoveFileExW used MOVEFILE_REPLACE_EXISTING, so a
 		//     SECOND stock launch overwrote the .x1-disabled copy the first one
 		//     made - destroying the last remaining trace.
@@ -493,13 +493,13 @@ namespace
 		// by then `live` is already OUR OWN scaled font, written by the old
 		// version before this preservation existed. We would snapshot our 2x
 		// font as ".user-original" and then, at stock tier, faithfully
-		// "restore" a 2x font over the user's file - the very data loss this
+		// "restore" a 2x font over the player's file - the very data loss this
 		// block was added to prevent, with the evidence destroyed.
 		//
 		// The distinguishing test is exact and cheap: we SHIP the tier font
 		// sources, so a live file that is byte-identical to any of them is
 		// ours by construction. Only a file that matches NONE of them can be
-		// the user's. (Byte compare, not size: the three tier fonts are all
+		// the player's. (Byte compare, not size: the three tier fonts are all
 		// 23,016 bytes, so size alone cannot even tell them apart.)
 		wchar_t userOrig[MAX_PATH];
 		swprintf_s(userOrig, L"%sFontStyle.ini.user-original", liveDir);
@@ -510,7 +510,7 @@ namespace
 			{
 				// Ours, not theirs. Taking no snapshot is the SAFE outcome:
 				// with no .user-original the stock tier moves our file aside
-				// instead of restoring a wrong one, which leaves the user
+				// instead of restoring a wrong one, which leaves the player
 				// exactly where they were.
 				Logger::Get().WriteLine(
 					LogLevel::Info,
@@ -531,7 +531,7 @@ namespace
 
 		if (activeTag == nullptr)
 		{
-			// STOCK TIER = the game as the user had it. Restore their original
+			// STOCK TIER = the game as the player had it. Restore their original
 			// if we kept one; only then move ours aside. Note the missing
 			// MOVEFILE_REPLACE_EXISTING - a stale aside from a previous run is
 			// left alone rather than clobbered.
@@ -638,7 +638,7 @@ namespace
 // ===========================================================================
 // ICONSYNTH (task #149) - find the menu icons WE BREAK, at boot, cheaply.
 //
-// WHY THIS EXISTS. Stock control 2026-08-14, user-confirmed on screen:
+// WHY THIS EXISTS. Stock control 2026-08-14, confirmed on screen on screen:
 //
 //     our layer OFF : one icon, visible on hover      CORRECT
 //     our layer ON  : two icons, vanishes on hover    BROKEN
@@ -658,7 +658,7 @@ namespace
 // per-TGI, and a real strip mixes both. Every rect patch was rejected on
 // screen: re-cut source -> flickers; + centre -> flickers; + tile the whole
 // cell so every pixel is rewritten every frame -> STILL flickers. Baseline is
-// stable, ANY modification flickers. See _tests\REGRESSION.md #149.
+// stable, ANY modification flickers.
 //
 // THEREFORE the art must match the cell. Build-time packages cannot do it -
 // they cannot know about a lot published next year - so it happens at BOOT,
@@ -673,7 +673,7 @@ namespace IconSynth
 {
 	// The menu ItemIcon resource: type PNG, group ItemIcon. Both measured, and
 	// both are what the exe's three icon sites push (0x78EE11, 0x7ECB4C,
-	// 0x7F0388 - see REGRESSION.md #49).
+	// 0x7F0388).
 	const uint32_t kIconType  = 0x856DDBAC;
 	const uint32_t kIconGroup = 0x6A386D26;
 
@@ -1721,7 +1721,7 @@ namespace ScaleTier
 	// It was three inequalities - 880*f <= w, 558*f <= h, and f <= the density
 	// cap min(w/800, h/600) - and at 1920x1200 the cap is EXACTLY 2.00, so 2x
 	// passed by sitting precisely on the boundary. On screen it does not fit:
-	// the user measured the options menu pushed over the other menus. A tier
+	// the player measured the options menu pushed over the other menus. A tier
 	// admitted at the exact cap has zero headroom, and zero headroom is not a
 	// margin, it is a coincidence.
 	//
@@ -1731,7 +1731,7 @@ namespace ScaleTier
 	//     2x   @ 2400x1600  GOOD (weeks of daily use)
 	//     2x   @ 1920x1200  BAD  (measured 2026-08-19, this defect)
 	//     1.5x @ 1920x1200  GOOD (same session)
-	//     3x   @ 3840x2160  GOOD (user-confirmed)
+	//     3x   @ 3840x2160  GOOD (confirmed on screen)
 	// One stated choice - 20% density headroom over the 800x600 feel - lands a
 	// table consistent with every one of those four points, which is the most
 	// any threshold here can currently claim:
@@ -1819,7 +1819,7 @@ namespace ScaleTier
 	}
 
 	// ============ THE BOOT-STATE VALIDATOR ================================
-	// USER REQUEST: "if a user manually adjusts the ini file we need to run a
+	// REQUIREMENT: "if a user manually adjusts the ini file we need to run a
 	// check for 'resolution and scale combination correct', and if it flags
 	// false we should flip it back to auto. Automatically."
 	//
@@ -1894,7 +1894,7 @@ namespace ScaleTier
 		// so a missing key is indistinguishable from a disabled one.
 		//
 		// Remedy is to LOWER THE ART TO THE GEOMETRY, never to switch a
-		// subsystem on behind the user's back: ScaleAll is their own off
+		// subsystem on behind the player's back: ScaleAll is their own off
 		// switch, and their stored tier preference is not ours to overwrite.
 		// Nothing is written; the log names the key to restore.
 		const float effective = st.autoScale
@@ -2011,7 +2011,7 @@ namespace ScaleTier
 		}
 
 		// ---- C7: and the screen can carry it -----------------------------
-		// The trap the user raised: a tier chosen on a large display puts
+		// The trap the case raised: a tier chosen on a large display puts
 		// Graphic Options (558 design px tall) off-screen on a smaller one,
 		// and that dialog is the only in-game way back.
 		if (!measured)
@@ -2141,7 +2141,7 @@ namespace ScaleTier
 	void SyncStaticLayers(float factor)
 	{
 		// PACKAGES live beside the DLL in Documents\SimCity 4\Plugins (dats
-		// + per-factor font sources; the user's plugins-only requirement).
+		// + per-factor font sources; the player's plugins-only requirement).
 		// ONE exception, forced by the engine: the game probes the loose
 		// FontStyle.ini in <install>\Plugins ONLY (never Documents - the
 		// 2026-07-22 "Documents works" test was a timing confound), so the

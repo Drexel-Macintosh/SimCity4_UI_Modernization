@@ -1,37 +1,41 @@
----
-name: feedback-gate-on-the-condition-you-depend-on
-description: "Attaching a subsystem to a convenient neighbour makes it inherit that neighbour's gate, silently"
-metadata: 
-  node_type: memory
-  type: feedback
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-15T14:44:49.781Z
----
+# Gate on the Condition You Depend On
 
-SC4 #149, 2026-08-15. The uncovered-icon scan was folded into
-`SyncStaticLayers` because that was "already the boot point that decides which
-art the game sees". But `SyncStaticLayers` only runs on the **AutoScale** path —
-manual tier mode places its packages by hand — so the scan inherited that gate.
+Bolting new work onto a convenient existing function makes that work inherit the
+function's gate, silently.
 
-With `AutoScale=0`, **a supported user setting**, the scan never ran, the count
-came back 0, and stage 2 logged *"nothing uncovered, no work to do."* The entire
-cure was off and the log looked healthy.
+## The failure
 
-**Why it is nasty:** a scan that never runs reports zero findings, which is
-byte-identical to a clean result. Same shape as
-[[feedback-null-is-not-evidence]].
+An uncovered-icon scan was folded into `SyncStaticLayers`, on the reasoning that
+this was already the boot point deciding which art the game sees. But
+`SyncStaticLayers` only runs on the **AutoScale** path; manual tier mode places
+its packages by hand and never calls it. The scan therefore inherited the
+AutoScale gate it had no relationship to.
 
-**How to apply:**
-- Gate a subsystem on the condition **it** depends on, nothing else. This one
-  depended only on `factor > 1`; it never cared how the factor was chosen.
-- When adding work to an existing function, ask what that function is gated on
-  and whether your work shares that condition. If not, it needs its own entry
-  point.
-- Suspect this whenever a feature works in the default configuration and
-  vanishes in a supported alternative one (manual mode, a flag, a second
-  monitor, a clean install).
+With `AutoScale=0` — a supported setting, not a misconfiguration — the scan never
+ran, the count came back 0, and the following stage logged *"nothing uncovered,
+no work to do."* The entire cure was off and the log read as healthy.
 
-Two sibling defects surfaced in the same hour, both from assuming the common
-case: the deploy **hard-copied** a package that legitimately does not exist on a
-clean install, and an integrity gate asserted a **fixed count** of something
-that varies per user. See [[feedback-a-package-is-not-done-until-its-in-the-manifest]].
+This is nasty because **a scan that never runs reports zero findings, which is
+byte-identical to a clean result.** It is the same shape as any null result: an
+absence of findings is not evidence until the probe is proven capable of seeing
+the thing.
+
+## The rule
+
+- Gate a subsystem on the condition **it** depends on, and nothing else. The
+  scan above depended only on `factor > 1`; it never cared how the factor was
+  chosen.
+- Before adding work to an existing function, ask what that function is gated
+  on and whether the new work genuinely shares that condition. If it does not,
+  the work needs its own entry point.
+- Suspect an inherited gate whenever a feature works in the default
+  configuration and vanishes in a supported alternative one: manual mode, a
+  flag, a second monitor, a clean install.
+- Give a scan a positive control, or make a zero result distinguishable from a
+  skipped run — log "scanned N candidates, 0 uncovered" rather than "no work to
+  do", so the absence of the scan is visible in the absence of the line.
+
+The generalization: code that assumes the common case fails only in the
+alternative one, where nobody is looking. Deploy steps that hard-copy an
+optional package, and integrity gates that assert a fixed count of something
+that varies per installation, are the same defect wearing different clothes.

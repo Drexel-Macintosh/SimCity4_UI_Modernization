@@ -1,44 +1,83 @@
----
-name: reference-sc4-thiscall-hook-rule
-description: "SC4 hooking: NEVER guess a calling convention or arity. Two crashes in one session. __thiscall detour = __fastcall(self, edx); unknown arity = naked tail jmp."
-metadata:
-  type: reference
----
+# Calling Conventions When Detouring SC4
 
-**TWO CRASHES IN ONE SESSION (2026-08-14), same root cause: I inferred a
-calling convention from a disassembly excerpt instead of using a form that
-cannot be wrong.**
+SimCity 4 is a C++ program compiled for x86 with no public headers, so every
+detour into it targets a function whose calling convention and arity are
+unknown until proven. Guessing either produces a crash that looks nothing like
+its cause, because on x86 the two failure modes corrupt different machinery:
+the wrong convention feeds the original function garbage, and the wrong arity
+destroys the return address.
 
-1. **PRIV_INSTRUCTION**, garbage EIP, EDX still holding the buffer vtable.
-   Hooked buffer slot 20 with a TYPED thunk declared with two stack args,
-   counted from two visible `push`es. `__thiscall` is CALLEE-CLEANUP: a wrong
-   arity cleans the wrong number of bytes and `ret` lands in nowhere.
-2. **ACCESS_VIOLATION at 0x0099C4A1 with ECX = 1.** Detoured `PlotPresent`
-   (a VIRTUAL) as `__stdcall(void*)`. `this` arrives in **ECX**, not on the
-   stack, so the original ran against garbage and dereferenced it immediately.
+## Two failure modes, both silent until the crash
 
-## The rules
+**Wrong arity on a `__thiscall`.** `__thiscall` is callee-cleanup: the called
+function issues `ret N` and pops the arguments itself. A typed thunk declared
+with the wrong number of stack arguments therefore cleans the wrong number of
+bytes, and `ret` lands on whatever the stack happens to hold. The observed
+signature is a `PRIV_INSTRUCTION` fault at a garbage EIP with the object's
+vtable pointer still sitting in EDX. Counting the visible `push` instructions
+at a call site is not a proof of arity — arguments can already be in registers,
+in scratch stack slots, or set up in a branch not shown by the excerpt.
 
-- **Detouring a `__thiscall` (any virtual):** write
-  `int __fastcall Detour(void* self, void* edx)`. `ecx` maps to `self`, `edx`
-  is ignored. Call the original the same way. Add real args AFTER those two
-  only when the signature is KNOWN, not inferred.
-- **Unknown or unverified arity:** use a **NAKED TAIL JMP**
-  (`pushad` / note / `popad` / `mov eax, gOrig` / `jmp eax`). It never returns
-  to the thunk, so it cleans nothing and makes no assumption at all. Pattern
-  already shipping at `CodePatches.cpp` X8DispatchStub. Note MSVC parses
-  `jmp [symbol]` as a LABEL - load into a register first; EAX is scratch in
-  `__thiscall`.
-- `UiSpike.cpp` already says only ZERO-ARG slots may be hooked with a typed
-  thunk. **Read that note before hooking anything.**
+**Wrong convention on a virtual.** A virtual member function receives `this` in
+ECX, not on the stack. A detour declared `__stdcall(void*)` reads the first
+stack slot as `this`, so the original runs against an unrelated value and
+dereferences it immediately. The observed signature is an access violation
+inside the original function with ECX holding a small integer rather than a
+pointer — in one case an `ACCESS_VIOLATION` at `0x0099C4A1` with `ECX = 1`.
 
-## And the slot table itself can be wrong
+## The safe forms
 
-`UiSpike.cpp` asserted "GZPaint is vtable INDEX 87". In build 1.1.641 slot 87
-is `mov eax,[ecx+0x4C]; ret` - a getter, identical across all 23 live UI
-classes. The real per-class draw is **slot 88** (`0x0079AA70` for the menu
-strip). Hooking 87 installs cleanly and fires zero times, a null that looks
-exactly like a broken instrument. Grep the docs first, then **verify the
-load-bearing line against the bytes**.
+**Detouring a `__thiscall`, which includes every virtual:** declare the detour
+as
 
-Related: [[feedback-check-our-previous-work-first]], [[feedback-null-is-not-evidence]]
+```cpp
+int __fastcall Detour(void* self, void* edx);
+```
+
+`__fastcall` places the first integer argument in ECX and the second in EDX, so
+`self` receives `this` correctly and `edx` absorbs the register the compiler
+would otherwise clobber. It is ignored. Call the original through the same
+signature. Append real arguments only after those two, and only when the
+signature has been verified against the disassembly — never when it has been
+inferred.
+
+**Unknown or unverified arity:** use a naked tail jump rather than a typed
+thunk.
+
+```asm
+pushad
+; record whatever the probe needs here
+popad
+mov eax, gOrig
+jmp eax
+```
+
+The stub never returns to itself, so it cleans nothing and assumes nothing
+about the argument count or the return convention. It is the only form that is
+safe against an arity that has not been proven. Two mechanical notes: MSVC's
+inline assembler parses `jmp [symbol]` as a jump to a *label*, so the original's
+address must be loaded into a register first; EAX is caller-scratch under
+`__thiscall` and is therefore free to use for that.
+
+A typed thunk is appropriate only for slots proven to take zero arguments.
+
+## A vtable slot label in source can be wrong
+
+A slot index recorded in a comment is a claim, not a measurement, and one that
+is wrong produces a null indistinguishable from a broken instrument. In build
+1.1.641 the slot long documented as the per-class paint entry — index 87 — is
+in fact a getter:
+
+```asm
+mov eax, [ecx+0x4C]
+ret
+```
+
+identical across all 23 live UI classes. The real per-class draw is **slot 88**;
+for the menu strip its implementation is at `0x0079AA70`. A detour installed on
+87 attaches cleanly, never fires, and reports nothing, which reads exactly like
+a hook that failed to install.
+
+Before hooking a slot, disassemble the slot's target and confirm it does the
+work its label claims. Documentation is the starting point for the search; the
+bytes are the answer.

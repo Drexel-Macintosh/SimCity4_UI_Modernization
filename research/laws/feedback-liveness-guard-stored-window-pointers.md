@@ -1,66 +1,71 @@
----
-name: feedback-liveness-guard-stored-window-pointers
-description: "SC4: with a city loaded the game DESTROYS Graphic Options on Accept (the main menu only hides it). A stored dialog pointer re-read at close faulted — crash, no exception report, no SELCLOSE line. Cure = pass the pointer found THIS pass; null means destroyed: skip the re-read, zero the filters without RemoveMessageFilter on dead windows. Also: geometry from clip arithmetic (a GZWinBMP area is l,t,r,b; children clip to the local rect), never from screenshots — and the engine's combo drop-list paints the stock list colour regardless of .UI flags: the one colour reachable is the stock colour; join it, don't fight it."
-metadata:
-  node_type: memory
-  type: feedback
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-20T00:00:00.000Z
----
+# Stored Window Pointers Need a Liveness Guard
 
-**THE CRASH.** User report: city loaded, Graphic Options opened, NOTHING
-changed, Accept → dead. The log tail is the measurement: Accept click
-14:41:55.971; the tree-watch instrument saw the dialog LEAVE the main-window
-tree at 14:41:56.049; the log ends 14:41:56.127 — **no SELCLOSE line, no
-shutdown dump, and NO exception report on disk** (the game's handler never
-wrote one for this shape). The close handler's control re-read ran against a
-**stored dialog pointer** on the strength of "hidden, not destroyed" — true
-for every main-menu close ever measured, FALSE with a city loaded, where
-Accept DESTROYS the dialog. The pointer dangled and the re-read faulted.
+A stored pointer to an engine window is a claim with an expiry the storing code
+does not control. In SimCity 4 the lifetime of the Graphic Options dialog
+depends on where the game is: from the main menu, Accept only *hides* the
+dialog, so the pointer stays valid; with a city loaded, Accept **destroys** it.
+Any handler that re-reads its controls at close time on the strength of
+"hidden, not destroyed" reads a dangling pointer and faults the process.
 
-**Law 1 — "hidden, not destroyed" is a main-menu fact, not an engine law.**
-A stored window pointer is a claim with an expiry you did not set. The close
-branch must pass the pointer **it found THIS pass**: non-null = still in the
-tree (hidden) → re-read + detach exactly as before; **null = destroyed →
-skip the re-read** (the staged values the periodic tick already collected
-stand) **and zero the button filters WITHOUT RemoveMessageFilter on windows
-that no longer exist.** Structurally safe under both outcomes — the cure is
-a guard shape, not a bet on which outcome happens.
+## The guard shape
 
-**Law 2 — a crash that writes nothing is still diagnosable from the
-absences.** No exception report + no SELCLOSE line + a tree-watch line
-showing the dialog LEAVING 78 ms after the click is a complete measurement.
-Do not wait for the game's crash artefacts; the log's missing lines are
-artefacts too.
+The close branch must use the pointer it locates **in that pass**, not one
+cached at open time, and branch on the result:
 
-**Law 3 — geometry comes from clip arithmetic, never from screenshots.**
-The same dialog shipped a row CUTOFF at the bottom one build earlier because
-the panel `GZWinBMP`'s area `(15,37,479,393)` was read as (l,t,w,h) — it is
-**(l,t,r,b)**, so children clip at 464 wide × 356 tall LOCAL, and a frame
-bottom at 364 was 8 px past the clip ("29 px inside the parent" was the
-wrong model). Derive every rect from the stock script's numbers — rails
-from the sibling label's x0, rows from the free band between clip edges —
-and assert the rects in the builder's paired gate so a future reshape fails
-loud instead of shipping half-done. User direction that ended the class:
-*"never read pixels, compute."*
+- **Non-null** — the dialog is still in the main-window tree (hidden). Re-read
+  the controls and detach message filters exactly as normal.
+- **Null** — the dialog has been destroyed. Skip the control re-read entirely
+  (the values staged by the periodic tick are the committed state), and zero
+  the button filter slots **without** calling `RemoveMessageFilter` on windows
+  that no longer exist.
 
-**Law 4 — engine-owned chrome keeps its stock colour; join it, don't fight
-it.** The combo's internal drop-list child paints the engine's STANDARD list
-colour as its background **whatever the flags** — the stock grammar
-(transparent + white fill) opens the same way. The open list's row area
-follows `fillcolor` when opaque, which produced a two-tone "square in a
-square"; an all-white open list cannot be produced from `.UI` at all (it
-would be a game-wide byte patch of the shared listbox colour). **The one
-colour reachable is the stock colour** — setting `fillcolor` to it on all
-three combos makes closed field, open rows and surround one colour: the
-stock control's exact look.
+This is structurally safe under both outcomes. It is a guard shape, not a bet
+on which lifetime the current game state happens to have. The general rule:
+any handler that outlives the window it serves — close, commit, detach — must
+re-acquire the window in its own pass and branch on the null.
 
-**How to apply:** any handler that outlives the window it serves (close,
-commit, detach) must re-acquire the window in its own pass and branch on the
-null; any rect you draw must be derivable from the script's own arithmetic;
-and before fighting an engine chrome attribute, establish whether ANY `.UI`
-value can change it — if none can, the stock look is the design target.
+## A crash that writes no artefact is still diagnosable
 
-Related: [[feedback-state-machine-derive-diff-commit]],
-[[reference-sc4-dialogs-live-under-main-window]],
-[[reference-sc4-exception-reports]], [[feedback-sc4-measure-dont-infer]]
+This fault produces nothing on disk: the game's exception handler does not
+write a report for this shape, and the mod log simply stops. The absences are
+the measurement. A close click at `14:41:55.971`, a tree-watch line showing the
+dialog leaving the main-window tree at `14:41:56.049`, and the log ending at
+`14:41:56.127` with **no** close-handler line pin the fault to the close path
+78 ms after the click, without a single crash artefact. Missing log lines are
+evidence; do not wait for a dump that the handler will never write.
+
+## Geometry comes from clip arithmetic, not from screenshots
+
+A `GZWinBMP` panel's `area` is `(left, top, right, bottom)` — **not**
+`(left, top, width, height)` — and its children clip to the resulting *local*
+rect. A panel declared `area=(15,37,479,393)` therefore clips children at
+464 x 356 in local coordinates, so a child frame whose bottom sits at 364 is
+8 px past the clip edge and its last row is cut off. Reading the numbers as
+width/height produces the plausible-but-wrong conclusion that the frame ends
+29 px inside the parent.
+
+Derive every rect from the script's own numbers — rails from a sibling label's
+`x0`, rows from the free band between clip edges — and assert those rects in
+the generator's paired gate, so a future reshape fails loudly instead of
+shipping a clipped row.
+
+## Engine-owned chrome keeps its stock colour
+
+The combo box's internal drop-list child paints the engine's standard list
+colour as its background regardless of the `.UI` flags set on it; the stock
+grammar (transparent plus white fill) opens exactly the same way. Only the
+open list's *row* area follows `fillcolor` when that colour is opaque, which is
+what produces a two-tone "square in a square" when the two differ. An all-white
+open list is unreachable from `.UI` at all — it would require a game-wide byte
+patch of the shared listbox colour.
+
+The one colour reachable is the stock colour. Setting `fillcolor` to that
+colour on every combo makes the closed field, the open rows and the surround a
+single colour, which is the stock control's exact look. Before fighting an
+engine chrome attribute, establish whether *any* `.UI` value can change it; if
+none can, the stock appearance is the design target.
+
+See also: [state machines derive, diff, commit](feedback-state-machine-derive-diff-commit.md),
+[dialogs live under the main window](reference-sc4-dialogs-live-under-main-window.md),
+[the game's own exception reports](reference-sc4-exception-reports.md),
+[measure, don't infer](feedback-sc4-measure-dont-infer.md).

@@ -1,72 +1,83 @@
----
-name: reference-sc4-flyout-hittest-playbook
-description: "THE cracked method for scaling clickable cGZWin menus (won on Disaster, built FOR Mayor mode) — router semantics, two-gate hit model, custom-override detection, dual-use fields, offline capstone+Unicorn workflow; full detail in HANDOFF \"REUSABLE PLAYBOOK\""
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-07-29T00:59:32.662Z
----
+# Hit-Testing Clickable cGZWin Menus
 
-The complete method that cracked the Disaster flyout's clickable-area problem
-(2026-07-28), distilled for reuse on Mayor-mode menus — which are built from the
-same cGZWin machinery. **Full playbook + all addresses:
-`SC4TouchControls/tools/research/HANDOFF-god-mode-flyouts.md` → "GOD MODE: DONE —
-EVERY ISSUE AND EXACTLY HOW IT WAS FIXED" (top) and "REUSABLE PLAYBOOK".**
+Scaling a menu so it *looks* right and scaling it so it *clicks* right are two
+different jobs. The general method below applies to any of the game's flyout and
+toolbar menus, because they are all built from the same `cGZWin` machinery.
 
-## FIRST: identify WHICH LAYER you are fighting (the master skill)
+## First: identify which layer you are on
 
-A menu is never one thing. Nearly every long thrash on this project was acting on
-the wrong layer. Four independent layers, each identified differently:
-- **Window tree** (position/size) — DumpTree/LiveDump; DPROBE logs only CHANGED
-  rects per sweep, catching transitions a 1-second dump structurally cannot.
-- **Draw** (what you see) — hook the buffer class Blt (vtable 0x00AC1400 slot 29)
-  and correlate blit rect SIZE with the on-screen thing (94x62 = ring, 44x44 = a
-  picture, tiles at d[0]>=200 = bar).
-- **Hit-test** (what clicks) — a SEPARATE path (router → IsPointInMe → refined
-  mask); hook slots 62/121/149 or disassemble the class's override.
-- **Art** (pixels) — DBPF resources; refmap.csv + the dat builder report map
-  script → TGI.
+A menu is never one thing. Most long, fruitless debugging sessions come from
+acting on the wrong layer. There are four independent layers, and each one is
+identified by a different instrument:
 
-**The discriminator that works: change ONE thing and see what moves.** Hovering
-moved only the bar → proof it was a separate window from the ring and pictures;
-that one observation opened the whole flyout up. **If a layer won't respond to
-your change, you are on the wrong layer.**
+| Layer | What it controls | How to observe it |
+| --- | --- | --- |
+| Window tree | Position and size | Tree dumps and live dumps. A per-sweep log of *changed* rects catches transitions that a once-per-second full dump structurally cannot. |
+| Draw | What appears on screen | Hook the buffer class `Blt` (vtable `0x00AC1400`, slot 29) and correlate blit rect size with the on-screen element — e.g. 94x62 is the ring, 44x44 a picture, tiles with `d[0] >= 200` the bar. |
+| Hit-test | What responds to clicks | A separate path entirely: router → `IsPointInMe` → refined mask. Hook slots 62/121/149, or disassemble the class's own override. |
+| Art | The pixels themselves | DBPF resources; resolve through the reference map and the archive builder's report to a TGI. |
 
-**The architecture every menu shares:**
-- Router `GetChildWindowFromCursorPoint` 0x0099DFA9 (cGZWin base, ~90 classes):
-  walks `[this+0x44]` children head-forward, skips !flag1 (invisible) and
-  flag 0x200000 (input-transparent), FIRST child whose slot 40 claims the point
-  wins, else self.IsPointInMe. **A closed upstream gate starves every
-  downstream hook — a silent hook is NOT a broken hook.**
-- Base IsPointInMe 0x0099C97C: coarse `[this+0x14]` rect → (if MouseTrans
-  0x80000) transform slot 59 → refined slot 149 → `[this+0x64]` mask HitTest
-  (2 args, inverted: 0 = opaque = clickable).
-- Classes MAY override IsPointInMe (Disaster's container did: claim only the
-  rightmost `[this+0xe0]` px). ALWAYS read the instance's vtable slots before
-  assuming base behavior.
-- **Dual-use fields:** container layout fields (0xe0..0xf4) can feed BOTH paint
-  and hit-test. Scale for hit-test; mask back to 1x inside the draw-group hooks
-  (SlotThunk 87..97 halve-on-entry/restore-after pattern).
+The discriminator that works is to **change exactly one thing and see what
+moves.** Hovering that moved only the bar and nothing else proved the bar was a
+separate window from the ring and the pictures — a single observation that opened
+up the whole flyout. Conversely, if a layer refuses to respond to a change, the
+change is on the wrong layer.
 
-**Why:** the Disaster bug was TWO intersecting gates (container claim ∩ strip
-1x mask); every single-lever attempt failed and every downstream diagnostic was
-silent, which mis-pointed at z-order for hours. The offline method found the
-real gate in minutes of disassembly.
+## The architecture every menu shares
 
-**How to apply (offline-first, usually no game launch):**
-1. Log the instance vtable ptr → read slots 40/59/62/121/149/GetFlag.
-2. capstone-disassemble any non-base slot (VA→file map via PE sections;
-   template in `tools/flyout-sim/emu_hittest.py`).
-3. Unicorn-emulate the REAL code, stubbing virtual calls with EXACT arg counts
-   (a push with a matching pop after the call is a register SAVE, not an arg).
-4. Chain stages, sweep x/y, REPRODUCE the observed bug first, then flip levers
-   offline to find the minimal fix.
-5. In-game fix = live-tunable ini levers + idempotent range-guarded writes.
-6. Instruments already exist: DGP-OPEN/DCKIDS dumps (fire while open, enum
-   order = router priority, per-child flags), DCLAIM, DS62/DXF, emu_hittest.py.
-7. Verify slot argc before hooking (wrong argc = stack corruption crash);
-   flag 0x200000 is the cheapest "make this window click-through" lever.
+**Router — `GetChildWindowFromCursorPoint` at `0x0099DFA9`** (on the `cGZWin`
+base, shared by roughly 90 classes). It walks the child list at `[this+0x44]`
+head-forward, skipping any window whose flag 1 is clear (invisible) and any with
+flag `0x200000` (input-transparent). The *first* child whose slot 40 claims the
+point wins; if none claims it, the window's own `IsPointInMe` decides.
 
-Related: [[project-sc4-god-flyouts]], [[project-sc4-ui-scaling-northstar]],
-[[feedback-sc4-regression-net]]
+The consequence is the single most important debugging fact here: **a closed
+upstream gate starves every downstream hook.** A hook that logs nothing is not
+necessarily a broken hook — it may simply never be reached, because something
+earlier in the walk already claimed the point or the window was skipped outright.
+
+**Base `IsPointInMe` at `0x0099C97C`** implements a two-gate hit model:
+
+1. Coarse rect test against `[this+0x14]`.
+2. If the MouseTrans flag `0x80000` is set, transform through slot 59.
+3. Refined test through slot 149.
+4. Final mask `HitTest` through `[this+0x64]` — two arguments, and **inverted**:
+   a return of 0 means opaque, which means clickable.
+
+Both gates must pass. A bug caused by two intersecting gates — a container that
+claims only part of its area, intersected with a hit mask still at 1x — is
+immune to every single-lever fix, and every diagnostic downstream of the first
+closed gate stays silent while it happens. That silence is easily mistaken for a
+z-order problem.
+
+**Classes may override `IsPointInMe`.** One container in the disaster flyout does
+exactly this: it claims only the rightmost `[this+0xe0]` pixels of its rect.
+Always read the actual instance's vtable slots before assuming base behavior.
+
+**Dual-use fields.** Container layout fields in the `0xe0..0xf4` range can feed
+both the paint path and the hit-test path. The workable pattern is to scale them
+for hit-testing and mask them back to 1x inside the draw-group hooks — the
+halve-on-entry / restore-after-return pattern used in slot thunks 87 through 97.
+
+## Applying it, offline first
+
+Most of this work needs no game launch.
+
+1. Log the instance's vtable pointer, then read slots 40, 59, 62, 121, 149, and
+   `GetFlag`.
+2. Disassemble any non-base slot with Capstone. Map virtual address to file
+   offset via the PE section table; there is a working template in
+   `tools/flyout-sim/emu_hittest.py`.
+3. Emulate the real code with Unicorn, stubbing virtual calls with the **exact**
+   argument counts. A push followed by a matching pop after the call is a
+   register save, not an argument — miscounting here produces plausible garbage.
+4. Chain the stages together, sweep x and y, and **reproduce the observed bug
+   offline before changing anything.** Only then flip levers to find the minimal
+   fix.
+5. Ship the in-game fix as live-tunable ini levers with idempotent,
+   range-guarded writes.
+6. Verify a slot's argument count before hooking it. The wrong argc corrupts the
+   stack and crashes.
+7. Flag `0x200000` is the cheapest available lever for "make this window
+   click-through" — it removes a window from the router walk without touching
+   its geometry or its art.

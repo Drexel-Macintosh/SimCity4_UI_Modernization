@@ -84,7 +84,7 @@ namespace
 
 	// #159 PART TWO — THE TEXT ORIGIN INSIDE THAT BUFFER.
 	//
-	// Widening the buffer alone is provably NOT enough, and the user saw exactly
+	// Widening the buffer alone is provably NOT enough, and the player saw exactly
 	// why: "still cut off and it has shifted really far to the left". The string
 	// is RIGHT-ALIGNED against a second 1x constant, so a wider buffer moved the
 	// box without moving the text's anchor.
@@ -131,7 +131,7 @@ namespace
 	// stamp - and the wrong SHAPE too, since the source (Intro.dat
 	// I-00000001) is 800x608 while the window is 2:1. The EA-logo clip
 	// (I-00000002) is 512x384, whose height matches the window exactly,
-	// which is why THAT one looks right and was the user's own clue.
+	// which is why THAT one looks right and was the player's own clue.
 	//
 	// HOW IT WAS FOUND (all static, tools\research\find_intro_video.py +
 	// disasm_at.py): the '-intro' switch string 0x00A93184 has ONE xref, at
@@ -371,7 +371,7 @@ namespace
 	// WHY THIS PATCH EXISTS: shipping 2x arrow art without it moves the X
 	// cell 18px right, past the pane's content edge, and the dismiss control
 	// disappears. This restores the declared total to GetW() - 25 - the
-	// exact geometry of the user-confirmed-good stock row - by taking the
+	// exact geometry of the confirmed on screen-good stock row - by taking the
 	// arrow's extra width out of the HEADLINE column instead of out of the
 	// X's position. It is a RESTORE-THE-KNOWN-GOOD-TOTAL patch, which is
 	// why it does not depend on where precisely the content edge falls.
@@ -496,7 +496,7 @@ namespace
 	// screenshot). Both sites are `push imm8`, so the applier's 127 clamp is the
 	// whole story and it is the SAME wrong pixel at every tier above 2x:
 	//   f=2  ideal 136 -> ships 127, still 23px clear of the eye
-	//        [chk 36..68][eye ~84..104][name 127+]      USER-CONFIRMED GOOD
+	//        [chk 36..68][eye ~84..104][name 127+]      CONFIRMED ON SCREEN GOOD
 	//   f=3  ideal 204 -> ships 127, i.e. 29px INSIDE the eye
 	//        [chk 54..102][eye ~126..156][name 127]     "ying Parking"
 	// The v2.25.28 comment that justified the clamp reasoned entirely in 2x
@@ -681,7 +681,7 @@ namespace
 		{ 0x787072, 0x5A }, // master funding slider 2 width (90; clamps 127)
 		// v2.26.2 the master ROW LOOP, measured live (MWKID 14:41:56: name
 		// text 0x0ABCDE06 at (21,y 177x30) = still stock while the sliders
-		// had moved to 400/610 - the collision the user photographed).
+		// had moved to 400/610 - the collision the player photographed).
 		// Helper arg order proven by that dump: earlier push = WIDTH,
 		// later push = X.
 		{ 0x786FAA, 0x15 }, // row building-name x (21)
@@ -2092,7 +2092,7 @@ namespace CodePatches
 		// basis into item+0x74/+0x78/+0x7C, clears byte[it+0x34], and marks
 		// every cache cell dirty. Skipping it when the overlay pass is
 		// currently off would leave those icons at pre-zoom offsets for
-		// whenever the user next switches view mode - nothing else rebuilds
+		// whenever the player next switches view mode - nothing else rebuilds
 		// them. Do what the game does.
 		{
 			const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
@@ -2475,8 +2475,7 @@ namespace CodePatches
 		// The region slab is not drawn through that camera at all; it is
 		// laid out from the .data isometric basis that ApplyRegionIsoScale
 		// now patches. Kept as a tombstone so the four builds it cost are
-		// not spent again. See _tests\REGRESSION.md "#131 ... CAMERA LEVER
-		// IS MEASURED DEAD".
+		// not spent again: this lever is measured dead.
 		return 0;
 
 #if 0
@@ -2743,7 +2742,7 @@ namespace CodePatches
 				// tighter indent beats the icon-on-text overlap. This is the
 				// f < 2.5 path ONLY: the name column's ideal 136 at f=2 becomes
 				// 127 and still clears the measured eye by 23px, which is the
-				// USER-CONFIRMED 2x state. At f >= 2.5 the name-x sites are in
+				// CONFIRMED ON SCREEN 2x state. At f >= 2.5 the name-x sites are in
 				// no array this helper is handed - ApplyOrdinanceNameColumnScale
 				// owns them, because 204 clamped to 127 lands the label 29px
 				// INSIDE the eye.
@@ -2773,7 +2772,7 @@ namespace CodePatches
 
 		// The name-x pair takes the imm8 clamp ONLY below the block gate. At
 		// f = 2.00 that reproduces v2.73.3 byte for byte (136 -> clamp 127),
-		// which is the state 2x is USER-CONFIRMED in.
+		// which is the state 2x is CONFIRMED ON SCREEN in.
 		int nx = 0;
 		if (!OrdinanceNameXUsesBlock(factor))
 		{
@@ -2802,7 +2801,7 @@ namespace CodePatches
 		// exe" about bytes WE wrote.
 		if (gOrdinanceNameXBlocks > 0) { return gOrdinanceNameXBlocks; }
 
-		// THE GATE (law 53). 2x is USER-CONFIRMED at the imm8 clamp of 127 and
+		// THE GATE (law 53). 2x is CONFIRMED ON SCREEN at the imm8 clamp of 127 and
 		// must not move; only f >= 2.5 re-encodes. At f = 1.00 / 1.50 / 2.00
 		// this returns before its first write and all 86 bytes stay stock.
 		if (!OrdinanceNameXUsesBlock(factor)) { return 0; }
@@ -3689,7 +3688,7 @@ namespace CodePatches
 		if (s <= 127)
 		{
 			// NARROW FORM - unchanged, and deliberately still the path for
-			// 1.5x (87) and 2x (113). Those two tiers are user-confirmed, so
+			// 1.5x (87) and 2x (113). Those two tiers are confirmed on screen, so
 			// they keep writing the exact 3 bytes they have always written;
 			// gate_advice_rowx asserts "1.5x/2x untouched" for this reason.
 			// `sub esi, 0x3d`, pinned by its own opcode+modrm so a different
@@ -4323,7 +4322,7 @@ namespace CodePatches
 		//   0x0046E04E / 0x0046E05C  (radial / stacked path: x1=x0+42, y1=y0+42)
 		//   0x0046E392 / 0x0046E3A0  (single-indicator path)
 		// Nothing on this path multiplies by the UI factor - which IS the
-		// symptom. And the user's two screenshots (same res, same tier, very
+		// symptom. And the player's two screenshots (same res, same tier, very
 		// different zoom, identical balloon pixel size) independently prove the
 		// thing is pixel-fixed, which is what a raw px constant produces.
 		//
@@ -5039,7 +5038,7 @@ namespace CodePatches
 		const uint8_t kSpTexStock[5] = { 0x83, 0xEC, 0x10, 0x53, 0x56 };
 
 		// THE LIVE BALLOON BUILDER (third disassembly pass, 2026-08-17,
-		// model PREDICTS the user's measured 45-48px: 64px body x
+		// model PREDICTS the player's measured 45-48px: 64px body x
 		// zoomTable[2]=0.75 = 48). The offer balloon is a MARKER attachment
 		// (occupant marker type 0xCB79919B) whose billboard strip is
 		// code-generated by 0x5F5FB0: content icons (default 24px) + 8px
@@ -6269,7 +6268,7 @@ namespace CodePatches
 		// property 0xABB90E58) instead. That is why every PNG / FSH / S3D /
 		// EFFDIR / window census returned an honest null: there is no asset.
 		//
-		// Draw spine, byte-verified (REGRESSION.md 2026-08-17):
+		// Draw spine, byte-verified:
 		//   TagKind read      0x004FBFFC (the ONLY read in the whole exe)
 		//   builder           0x004FBFE0, jump table 0x004FC410 on kind-1
 		//                     -> icon id 0x4301/0x4305/0x4304/0x4307/0x4308
@@ -6837,7 +6836,7 @@ namespace CodePatches
 				const bool arm = (gBubbleScale > 1.01f) && pristine;
 				// ⛔ THE CAP THAT BLINDED THE CLICK TEST (2026-08-17). This
 				// read `gBubbleLogs < 12`, and city load spawns EXACTLY 12
-				// pristine effects - so the budget was spent before the user
+				// pristine effects - so the budget was spent before the player
 				// could click, and the mission_selection_red line at the
 				// click printed NOTHING. The user said "I clicked", the log
 				// showed no click, and I believed the log. It was wrong.
@@ -7118,7 +7117,7 @@ namespace CodePatches
 		// what disappears. This is the cheapest possible decisive test - no
 		// geometry maths, nothing to misalign, nothing that can hang, and it
 		// cannot produce an ambiguous "no change" because the expected result
-		// is an ABSENCE the user cannot miss.
+		// is an ABSENCE the player cannot miss.
 		//   balloons gone  -> class 0xAA8314 IS the balloon drawable; the
 		//                     size then lives in its draw 0x620500/0x620160
 		//   balloons stay  -> class excluded, and whatever DID vanish names

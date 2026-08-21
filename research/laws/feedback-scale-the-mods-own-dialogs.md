@@ -1,63 +1,68 @@
----
-name: feedback-scale-the-mods-own-dialogs
-description: "SC4UIScale — a gate that only asks \"is what we built still correct?\" is blind to \"is there something we never built?\". CAM's own dialogs rendered at 1x for the life of the project with every gate green. Run the census in the other direction."
-metadata: 
-  node_type: memory
-  type: feedback
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-13T20:35:05.140Z
----
+# Run the Coverage Census in Both Directions
 
-**A GATE THAT ONLY ASKS ABOUT YOUR OWN WORK CANNOT SEE WORK YOU NEVER STARTED.**
+A verification gate that only asks "is what was built still correct?" is
+structurally blind to "is there something that was never built?". Both
+questions have to be asked, or whole windows sit at 1x indefinitely with every
+gate green.
 
-CAM's Village Hall / Town Hall info screen `{96a006b0,9b868f68}` rendered at
-**1x under 1.5x fonts for the entire life of SC4UIScale** — labels cut
-mid-word, values printed over them — and **every offline gate stayed green**.
+## The blind spot
 
-**Why:** `build_dialog_static.py` has a good winner assert. It asks *"is one of
-OUR targets owned by a plugin?"* It has never asked the mirror question,
-***"is a PLUGIN'S OWN dialog scaled at all?"*** A mod-ADDED window is in no
-TARGETS list, has no stock twin to diff against, and is never built — so every
-verifier is structurally blind to it. Same family as [[feedback-sc4-scaling-laws]]
-law 42 (a gate is only as honest as its SCOPE).
+A large gameplay mod's Village Hall / Town Hall info screen
+`{96a006b0,9b868f68}` rendered at 1x under 1.5x fonts — labels cut mid-word,
+values printed over them — while every offline gate reported clean.
 
-**How to apply:** for any coverage question, run the census in BOTH directions.
-"Is what we built still correct?" AND "enumerate what EXISTS, subtract what is
-handled, name the remainder." In this project that instrument already existed:
-`tools\uiscripts\winning_corpus.py` had been listing the three CAM-only scripts
-as unhandled third-party holders, under a heading literally called "What to
-do", since the day it was written. **The report was right and unread for
-weeks** — the same shape as the #150 gate that was red for two hours.
-Now at 0 third-party winners.
+The reason is scope, not correctness. `build_dialog_static.py` carries a sound
+winner assert, but the question it asks is *"is one of the targeted dialogs
+owned by a plugin?"* It never asks the mirror question, *"is a plugin's own
+dialog scaled at all?"* A mod-**added** window appears in no targets list, has
+no stock twin to diff against, and is never built, so every verifier that works
+from the target list cannot see it. A gate is only as honest as its scope.
 
-**⛔ SECOND FINDING, AND IT COST A SECOND USER REPORT: the CROP is a third
-number and it does not scale itself.** `blttype=normal` slices `imagerect` out
-of the bitmap and blits that slice at the window origin. v2.97.0 scaled the
-window (285→428) and the bitmap (285→429) and left `imagerect=(0,0,285,30)`
-alone — every row stripe painted 285px of a 428px window. The builder scales a
-rect only when `art_plan` says that art was scaled, and `art_plan` knows the
-STOCK store only, so **mod art is always classified "left1x" there**. Reuse
-`RUNTIME_BOUND_2X` ("the ref is unchanged but its pixels are scaled"), scoped
-to the owning package. The build printed `rects2x=0` on a file with 24
-imagerects and it was read past. See [[feedback-sc4-scaling-laws]] laws 73/74.
+**Method:** for any coverage question, run the census in both directions.
+Direction one is "is what was built still correct?". Direction two is
+"enumerate what exists, subtract what is handled, name the remainder." The
+second direction needs its own instrument that enumerates from the live plugin
+tree, not from the build's own inputs. `tools\uiscripts\winning_corpus.py` is
+that instrument here: it lists third-party script holders that nothing handles.
+A report of unhandled holders is only useful if it is read — the target state
+is zero third-party winners, and any nonzero count is a coverage gap, not a
+note.
 
-**Third:** when a mod supplies its own `GZWinBMP` art,
-`blttype=normal` means the bitmap is drawn at its OWN size and CLIPPED by the
-window — never stretched. So art and window do not scale to the same number and
-CANNOT (see the offset-parity law in
-[[project-sc4-15x-three-open-defects]]: 285 becomes 427 or 428 depending on the
-parity of the left edge). Do not "fix" the upscaler. The question that decides
-what the screen looks like is whether **the pixels the window cuts are a repeat
-of the last pixels it keeps** — and it must be asked at 1x too, because the mod
-crops several of its own strips on purpose.
+## The crop is a third number and it does not scale itself
 
-Third: **CAM's data has dangling TGI refs** — `{46a006b0,b5cfffff}` (nowhere in
-9 archives or the whole Plugins tree) after the `0xFF5D2E9F` graph-label typo.
-Before ever calling a ref dangling, get the null from an instrument that reads
-**Plugins too**, with a positive control from the same run — see
-[[feedback-null-is-not-evidence]]. A stock-only null already shipped one visible
-defect here (the 2x2-tiled splash).
+Under `blttype=normal` the engine slices `imagerect` out of the bitmap and
+blits that slice at the window origin. Scaling the window (285 to 428) and the
+bitmap (285 to 429) while leaving `imagerect=(0,0,285,30)` alone paints 285px
+of art into a 428px window — every row stripe comes up short.
 
-**CLOSED v2.97.1, USER-CONFIRMED "perfect", 2026-08-13** — but it took two
-builds, and the second defect (the unscaled crop) was the more instructive one.
-Detail in `_tests\REGRESSION.md` #154 and its CORRECTION section.
+A blit has three numbers: source size, crop rect, destination size. The builder
+scales a rect only when `art_plan` reports that the art was scaled, and
+`art_plan` knows the stock art store only, so **mod-supplied art is always
+classified "left at 1x" there** and its crops are silently left untouched. The
+fix is to reuse the `RUNTIME_BOUND_2X` classification — "the reference is
+unchanged but its pixels are scaled" — scoped to the owning package, so
+mod-owned rects scale with mod-owned art. A build line reading `rects2x=0` on a
+file containing 24 `imagerect` entries is a failure signal, not a status line.
+
+## Mod-supplied art is clipped, never stretched
+
+When a mod supplies its own `GZWinBMP` art, `blttype=normal` means the bitmap
+is drawn at its own size and clipped by the window — never stretched. Art and
+window therefore do not scale to the same number and cannot: at fractional
+factors the rounded window and rounded bitmap differ by the parity of the left
+edge (285 becomes 427 or 428 depending on it). This is not an upscaler defect
+and must not be "fixed" there.
+
+The question that decides what appears on screen is whether the pixels the
+window cuts are a repeat of the last pixels it keeps. Ask it at 1x as well,
+because mods deliberately crop several of their own strips.
+
+## Dangling references need an instrument that reads Plugins
+
+Mod data can carry dangling TGI references — `{46a006b0,b5cfffff}`, present in
+none of the nine shipped archives nor anywhere in the Plugins tree, appears
+after a graph-label typo at `0xFF5D2E9F`. Before calling any reference
+dangling, obtain the null from an instrument that reads the Plugins tree as
+well as the stock archives, and report a positive control from the same run. A
+stock-only null is not evidence of absence; one shipped as a visible defect
+here in the form of a 2x2-tiled splash.

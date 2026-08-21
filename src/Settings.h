@@ -20,7 +20,7 @@ struct Settings
 	// rect and the internal size from SC4GraphicsOptions.ini. They are kept
 	// only so an existing user ini does not warn on unknown keys, and they MUST
 	// NOT appear in the shipped ini: a documented key that does nothing is a
-	// lie to the user.
+	// lie to the player.
 	bool scalingAutoConfig = true;    // INERT - no consumer
 	int internalWidth = 0;            // 0 = read from SC4GraphicsOptions.ini
 	int internalHeight = 0;
@@ -102,7 +102,7 @@ struct Settings
 	// zoom-in is bounded by the byte budget. MEASURED on a 48-city region,
 	// pristine tile 260x160: +2 = 149 MB, +3 = 233 MB, +4 = 363 MB. Levels
 	// that do not fit are refused WHOLE and logged, and the level counter
-	// holds - so the user simply feels a stop, exactly like the range end.
+	// holds - so the player simply feels a stop, exactly like the range end.
 	int spikeRegionZoomLevels = 5;        // steps each way from the base
 	float spikeRegionZoomStepRatio = 1.25f;
 	// Hard ceiling on a single tile bitmap edge. A step that would put ANY tile
@@ -151,7 +151,7 @@ struct Settings
 	// say which one they are.
 	bool spikeSelectorAtStock = true;
 	bool spikeRatingArrowPatch = true; // byte-patch the Mayor-rating arrow
-	// v2.76.0: ARMED (2). The log-only run ADJUDICATED the model - the user's
+	// v2.76.0: ARMED (2). The log-only run ADJUDICATED the model - the player's
 	// 3x capture shows the arrow at L/T=(294,174) while its cached seat is
 	// (98,58), i.e. EXACTLY cached*3, and it alternates with correct (98,58)
 	// fires. So the detached case is the game re-seating from the pre-sweep
@@ -212,7 +212,7 @@ struct Settings
 	                                  // 0 while they are staged REPRODUCES the
 	                                  // missing X; that is its only diagnostic
 	                                  // value. The real revert is a data
-	                                  // rebuild - see _tests\REGRESSION.md.
+	                                  // rebuild -
 	bool spikeBudgetButtonPatch = true; // byte-patch the budget detail-dialog
 	                                  // Accept/Cancel builders (5 departments):
 	                                  // SetSize(180,30) + anchors W-195/H-40
@@ -322,7 +322,7 @@ struct Settings
 	                                  //
 	                                  // ⛔ MODE 2 CRASHED AT CITY OPEN on its
 	                                  // first run (v2.41.15, 2026-08-01,
-	                                  // user-reported). It shipped defaulted to
+	                                  // reported). It shipped defaulted to
 	                                  // 2, which would have crashed anyone
 	                                  // without the ini key - the ini protected
 	                                  // one machine, not the product. Default
@@ -375,7 +375,7 @@ struct Settings
 	// (+2016ms vs +2031ms after arm): ONE timer period. The game does not pump
 	// messages AT ALL during the city load tail, so there is no queue to jump
 	// and EVERY message-queue lever is dead - WM_TIMER tuning, ShowHook, and
-	// WM_APP alike. Do not re-derive this. See _tests\REGRESSION.md task #89.
+	// WM_APP alike. Do not re-derive this.
 	bool spikePopupWrap = true;       // wrap the ordinance/deal description
 	                                  // ourselves (cIGZFont) - the engine
 	                                  // lays that text out once, at creation,

@@ -1,42 +1,69 @@
----
-name: feedback-thresholds-come-from-controls
-description: Never invent a threshold or pick a metric without measuring the known-good population first
-metadata: 
-  node_type: memory
-  type: feedback
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-15T13:47:15.015Z
----
+# Take Thresholds From the Known-Good Set
 
-SC4 #149, 2026-08-15 — three numbers were guessed and **all three were wrong**,
-each costing a launch:
+A threshold that is reasoned about rather than measured is a guess wearing a
+number. Before asserting any cutoff — a percentage, a state index, a brightness
+ratio — measure the population that is already correct on screen and take the
+number from it. That population exists: the shipped art, the untouched icons,
+the widgets nobody has complained about. It is on disk, and one command reads
+it.
 
-| guessed | truth, from measuring the known-good set |
+## Three guessed numbers, three wrong
+
+A single icon-hover investigation produced three inferred constants, each of
+which cost a launch before measurement replaced it. All three were answerable in
+one command against a known-good set of 450 covered icons.
+
+| Guessed | Measured truth |
 |---|---|
-| hover border >= 90% of perimeter | every correct icon measures **81.8%** — 90% fails all 450 |
-| state 2 is hover | **state 3** is; state 2 is never drawn at all |
-| hover = 1.4x brightness | it is a white BORDER; the luminance rise was the border's own pixels moving the mean |
+| Hover border covers >= 90% of the icon perimeter | Every correct icon measures **81.8%**. A 90% gate fails all 450. |
+| State 2 is the hover state | **State 3** is the hover state. State 2 is never drawn at all. |
+| Hover is a 1.4x brightness rise | Hover is a **white border**. The luminance rise was the border's own pixels dragging the mean. |
 
-Each was answered in ONE command by measuring the population that is already
-correct on screen — 450 covered icons sitting right there on disk.
+These are durable facts about the button-strip art: hover is state 3, hover is
+drawn as a white border occupying 81.8% of the perimeter, and state 2 is dead.
 
-**Also: choose the STATISTIC from what varies.** Alignment was first measured
-with SSE on column luminance, but the four states of a button strip differ BY
-DESIGN in luminance, so the metric bought a brightness match with a wrong lag
-and was confidently wrong twice. Correlating the GRADIENT — blind to a constant
-brightness offset — got it right immediately.
+## Choose the statistic from what varies
 
-**How to apply:**
-- Before asserting a threshold, measure the known-good population and take the
-  number from it. `min / median / p90` also tells you if the metric is stable.
-- A metric sensitive to the thing that differs between your samples cannot
-  measure anything else about them.
-- A fixed search range is a SILENT CLAMP: it reported `[0,3,9,9]` for a 12px
-  drift at span 10, which then failed a linearity guard. Scale the range with
-  what is being measured.
-- When a gate fires on your output, FIRST run it on the known-good set. If they
-  fail too, the gate is wrong — not the output. (State-3 "drift" fired on 92%
-  of correct icons.)
+A metric that is sensitive to the property which differs between samples cannot
+measure anything else about them.
 
-See [[feedback-simulate-the-consumer-not-the-build]],
-[[feedback-null-is-not-evidence]], [[feedback-static-defect-is-a-hypothesis]].
+Strip alignment was first measured as sum-of-squared-error over column
+luminance. The four states of a button strip differ in luminance *by design*, so
+that metric bought a brightness match at the cost of a wrong lag — and was
+confidently wrong twice. Correlating the **gradient** instead, which is blind to
+a constant brightness offset, produced the correct lag immediately.
+
+Pick the statistic that is invariant to the intended difference and sensitive to
+the defect being hunted.
+
+## A fixed search range is a silent clamp
+
+A correlation or offset search bounded by a hard-coded range does not report
+"out of range" — it reports the edge of the range as if it were the answer. A
+search capped at span 10 returned `[0, 3, 9, 9]` for a genuine 12px drift, and
+those clamped nines then failed a downstream linearity guard, sending the
+investigation after a nonexistent nonlinearity.
+
+Scale the search range with the quantity being measured, and treat any result
+sitting exactly on a boundary as suspect rather than as data.
+
+## When a gate fires, run it on the known-good set first
+
+If a new gate rejects new output, the gate is on trial alongside the output. Run
+it against the population that is known correct before believing it. A state-3
+"drift" check fired on 92% of already-correct icons — the gate was wrong, not
+the art.
+
+A gate that would condemn the shipped, working set is broken by definition.
+
+## Applying it
+
+- Take thresholds from measurement of the correct population, not from
+  reasoning about what the value ought to be.
+- Report `min / median / p90` alongside the chosen threshold; the spread shows
+  whether the metric is stable enough to gate on at all.
+- Verify the metric is insensitive to the designed-in variation between samples.
+- Scale every search window with its input, and distrust results pinned to a
+  window edge.
+- Validate every new gate against known-good inputs before applying it to new
+  ones.

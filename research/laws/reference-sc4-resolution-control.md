@@ -1,92 +1,121 @@
----
-name: sc4-resolution-control
-description: "EXACT mechanism for controlling SC4 resolution + renderer (the thing that caused a long thrash): SC4GraphicsOptions.ini + software mode, NO dgVoodoo needed for stock modes"
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-07-22T07:34:02.428Z
----
+# Controlling Resolution and Renderer
 
-**How SC4's resolution + renderer are controlled on this machine. Read before ANY
-resolution/display change — this is the thing that got overcomplicated on 2026-07-22.**
+SimCity 4's render size, renderer backend and window mode are all controlled from
+a single file. Read this before making any resolution or display change: the
+number the game is asked for and the number it actually renders at are not always
+the same, and mistaking one for the other produces a UI that looks catastrophically
+mis-scaled while every configuration file reads correct.
 
-## The ONE knob: SC4GraphicsOptions.ini
+## The one knob: SC4GraphicsOptions.ini
 
-`<HOME>\OneDrive\Documents\SimCity 4\Plugins\SC4GraphicsOptions.ini`
-is read by the community mod **SC4GraphicsOptions.dll** (NOT our code). It forces:
-```
-Driver=Software        <- or DirectX. Software = CPU render, no GPU, no dgVoodoo, no 2048 cap.
-WindowWidth=1024       <- stock modes: 800/600, 1024/768, 1280/1024, 1600/1200
+`<Documents>\SimCity 4\Plugins\SC4GraphicsOptions.ini` is read by the community
+mod **SC4GraphicsOptions.dll**, not by the scaling DLL. It forces:
+
+```ini
+Driver=Software        ; or DirectX. Software = CPU render, no GPU, no wrapper, no 2048-wide cap.
+WindowWidth=1024       ; stock modes: 800x600, 1024x768, 1280x1024, 1600x1200
 WindowHeight=768
 WindowMode=FullScreen
-ForceDrawOnScroll=true  <- keep true (fixes partial-redraw garble)
+ForceDrawOnScroll=true ; leave true; fixes partial-redraw garble
 ```
-Change resolution = edit WindowWidth/Height here + relaunch. That's it.
 
-## ⚠️ FontStyle.ini LIVES IN `<install>\Plugins\` (corrects an earlier wrong note)
+Changing resolution means editing `WindowWidth` / `WindowHeight` here and
+relaunching. Nothing else is involved.
 
-The game probes `FontStyle.ini` at `<install>\Plugins\FontStyle.ini` ->
-`<install>\FontStyle.ini` -> DBPF (disassembly). NOT Documents\Plugins (the
-2026-07-22-morning "Documents-only" test had a timing confound and was WRONG).
-Retiring the install-root copy makes ALL text render 1x while frames are 2x.
-The 2x font MUST be at
-`C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Plugins\FontStyle.ini`.
-The DATS still load fine from Documents\Plugins; only the loose FontStyle.ini
-is probed by install path. See [[sc4-golden-backup]].
+Write this file without a BOM. The parser does not tolerate one.
 
-## THE SIMPLE, CORRECT SETUP (proven clean, user "good job")
+## DirectX renders at the monitor's native mode, not the requested size
 
-Software renderer + stock resolution + dgVoodoo removed = SC4 renders stock
-PERFECTLY, no GPU/wrapper/DPI complexity.
-1. `Driver=Software` in SC4GraphicsOptions.ini
-2. a stock WindowWidth/Height (<=1600x1200)
-3. dgVoodoo aside: rename `<install>\Apps\DDraw.dll` and `D3DImm.dll` -> `.off`
-   (install = C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe)
-4. our UI scaler layers on top (SC4UIScale.dll); at stock res the AutoScale
-   tier auto-inerts unless a package fits.
-Proof capture: tools\capture\out\software-1024.png (clean 1024x768 stock).
+With `Driver=DirectX` behind a DirectDraw/Direct3D wrapper on a display wider than
+2048 px, requesting `WindowWidth`/`WindowHeight=1600x1200` does **not** make the
+game render 1600x1200. The wrapper renders at the monitor's native mode and
+reports that size back to the game, so the `cIGZWin` tree is built at native size.
+Only `Driver=Software` renders at the requested size.
 
-## ⚠️ CRITICAL: DirectX renders at the MONITOR's native mode, NOT the requested res
+The consequence is that any "sub-native resolution in production" test on such a
+panel is really a native-resolution render. An auto-scale tier chosen by reading
+the requested resolution out of the ini will disagree with the tier the render
+actually needs — a 1600x1200 read picks 1.5x while the frame is really 2x — and
+the result is a grossly oversized, blurry UI that looks like a scaling bug rather
+than a resolution mismatch.
 
-Proven 2026-07-22 (v2.7.4): with Driver=DirectX + dgVoodoo on the 2400x1600
-panel, requesting WindowWidth/Height=1600x1200 does NOT make the game render
-1600x1200 — dgVoodoo renders at the MONITOR native (2400x1600) and reports THAT
-to the game (the cIGZWin tree is 2400x1600). Only SOFTWARE mode renders at the
-requested size. This is why every "1600x1200 in production" test on this panel
-was really a 2400x1600 render, and why AutoScale (which read the ini 1600x1200
-and picked 1.5x) mismatched the actual 2x render -> the "giant blurry UI" garble.
+**The rule:** key auto-scale off the *actual* render resolution, not the requested
+one.
 
-**THE FIX (SC4UIScaleDllDirector ctor, v2.7.4-renderres):** AutoScale keys off
-the ACTUAL RENDER resolution: `Driver=DirectX -> render = GetSystemMetrics
-monitor size; Driver=Software -> render = requested WindowWidth/Height`. Set
-PMv2 DPI-awareness BEFORE reading the monitor (physical px). So on THIS panel,
-production DirectX always -> tier 2.0 (the validated golden state); a genuine
-1600x1200 DISPLAY (monitor=1600x1200) -> tier 1.5. Correct on any device.
+- `Driver=DirectX` → render size = the monitor size from `GetSystemMetrics`.
+- `Driver=Software` → render size = the requested `WindowWidth`/`WindowHeight`.
 
-**ScaleRemap is OFF by default** (ini [Scaling] UseScaleRemap=0, code default
-false). Its internal!=present metric lies are the rejected whole-frame approach
-and were the OTHER half of the garble - they double-transform against dgVoodoo's
-present-scaling. Never re-enable to fix resolutions.
+Set per-monitor-v2 DPI awareness **before** reading the monitor, so the values
+come back in physical pixels. With that in place, DirectX on a large panel always
+lands on the tier matching its native render, and a machine whose monitor genuinely
+is 1600x1200 lands on 1.5x. The logic is then correct on any device.
 
-## dgVoodoo = ONLY for big-display DirectX play
+## FontStyle.ini is probed by install path, not Documents
 
-dgVoodoo (DDraw.dll + D3DImm.dll in Apps\, config dgVoodoo.conf) exists ONLY
-because `Driver=DirectX` at >2048 wide (this 2400x1600 panel) needs a wrapper +
-the NVIDIA card. It is NOT needed for correctness or for testing scaling.
-DO NOT route stock/sub-native resolutions through dgVoodoo — that was the entire
-"garble" saga. Restore dgVoodoo only when deliberately doing DirectX big-display.
-When restored: dgVoodoo.conf ScalingMode=unspecified is the known-good.
+Disassembly of the probe order shows the game looks for `FontStyle.ini` at:
 
-## Hard rules (user directives)
+1. `<install>\Plugins\FontStyle.ini`
+2. `<install>\FontStyle.ini`
+3. inside DBPF archives
 
-- NEVER touch/disable SC4TouchControls.dll for resolution work - separate + shipped.
-- ScaleRemap (in SC4UIScale) is the rejected whole-frame approach; do NOT use it to
-  fix resolutions. (It stays in the DLL because its AttachWindow window-cover is
-  load-bearing for the 2400x1600 DirectX window ONLY; irrelevant in software mode.)
-- Restore procedure after experiments: dgVoodoo DLLs back, ScalingMode=unspecified,
-  all our Plugins files present, SC4UIScale.ini Enabled=1, native 2400x1600 -> boot,
-  expect "tier 2.00" + "9/9 region panels" in SC4UIScale.log.
+`<Documents>\SimCity 4\Plugins\` is **not** in that list. Loose `FontStyle.ini`
+therefore has to live under the install directory; DAT files continue to load
+normally from the Documents plugins folder, so it is easy to assume the loose ini
+does too.
 
-Related: [[sc4-ui-scaling-northstar]] (has the ARCHITECTURE CORRECTION note),
-[[sc4-regression-net]], [[sc4-touch-controls]].
+Symptom of getting this wrong: every frame and widget renders at the scaled size
+while all text renders at 1x. Any test that appears to show a Documents-path
+`FontStyle.ini` working is a timing confound — an earlier copy still resident, or
+a DBPF fallback supplying the same values.
+
+## The simple, correct stock setup
+
+Software renderer plus a stock resolution plus the DirectDraw wrapper removed
+gives a perfectly clean stock render with no GPU, wrapper or DPI complexity in the
+picture. This is the configuration to use for stock comparisons and for any
+sub-native testing.
+
+1. `Driver=Software` in `SC4GraphicsOptions.ini`.
+2. A stock `WindowWidth`/`WindowHeight` at or below 1600x1200.
+3. Move the wrapper aside: rename `<install>\Apps\DDraw.dll` and
+   `<install>\Apps\D3DImm.dll` to `.off`.
+4. The UI scaler layers on top unchanged; at stock resolution its auto-scale tier
+   goes inert unless a scaled package actually fits the render size.
+
+## The wrapper is only for big-display DirectX play
+
+The dgVoodoo wrapper (`DDraw.dll` + `D3DImm.dll` in `<install>\Apps\`, configured
+by `dgVoodoo.conf`) exists solely because `Driver=DirectX` above 2048 px wide needs
+a wrapper and a capable GPU. It is not required for correctness and not required
+for testing scaling.
+
+Do not route stock or sub-native resolutions through the wrapper. Doing so
+reintroduces exactly the render-size mismatch described above. Restore the wrapper
+only when deliberately running DirectX on a large display; when restored,
+`ScalingMode=unspecified` in `dgVoodoo.conf` is the known-good value.
+
+## ScaleRemap stays off
+
+`[Scaling] UseScaleRemap=0` is the ini default and `false` is the code default.
+ScaleRemap is the rejected whole-frame-upscaling approach. Its internal-versus-
+presented size metrics are misleading under a present-scaling wrapper, because the
+two transforms compose: the frame is scaled twice. It is never the right lever for
+a resolution problem.
+
+It remains present in the DLL only because its `AttachWindow` window-cover is
+load-bearing for the large-display DirectX window. In software mode it is
+irrelevant.
+
+## Restoring after experiments
+
+After any renderer or resolution experiment, put the machine back to the validated
+production state before drawing conclusions from a later run:
+
+- Wrapper DLLs restored under `<install>\Apps\`, `ScalingMode=unspecified`.
+- All scaling plugin files present in the plugins folder.
+- `SC4UIScale.ini` `Enabled=1`.
+- Display back at native resolution.
+
+Boot and confirm the log reports the expected tier and the expected count of
+scaled panels. A configuration that merely *looks* restored on disk is not
+restored until a launch says so.

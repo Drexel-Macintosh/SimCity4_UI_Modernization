@@ -1,68 +1,74 @@
----
-name: feedback-selector-freeze-named-by-instrument
-description: "SC4 selector: two inference 'fixes' for the Graphic Options freeze both missed; one in-memory timing instrument named the cause in a single launch (EnumDisplaySettingsW, 3.3s, first enumeration through dgVoodoo's virtualized display). Cure = warm the enumeration at DLL load on a background thread with a tri-state handshake; the instrument stayed in the build."
-metadata:
-  node_type: memory
-  type: feedback
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-20T00:00:00.000Z
----
+# The Display-Enumeration Freeze
 
-The Graphic Options selector froze the game for seconds on first open. Two
-builds shipped inference fixes — a one-way-ratchet fix, then a once-per-
-session cache — and the user reported after both: *"It still isn't working /
-is still freezing up."* The third build shipped **measurement instead of a
-third guess, with no behaviour change at all**, and one launch ended it.
+Opening the Graphic Options selector for the first time in a session stalls the
+game for roughly three seconds. The cause is a single call: the first
+`EnumDisplaySettingsW` enumeration performed through dgVoodoo's virtualized
+display device costs about 3.3 seconds. Subsequent enumerations are effectively
+free, so a naive cache appears to fix the problem — it does not. It merely
+schedules the one expensive call at the first click, which is the moment a
+player is guaranteed to be looking at the screen. A once-per-session cost is a
+user-visible cost whenever it lands on the first interaction.
 
-**The instrument, and why it is shaped this way:**
-- **In-memory named buckets only.** The leading suspect was file I/O (the
-  whole Plugins tree sits under a sync-filtered Documents folder), so the
-  instrument must not be made of the thing it measures — no disk writes, no
-  log lines in the timed path.
-- Brackets around every named bucket (dialog find/open/close, combo work,
-  resolution-list build, ini reads/writes, message paths).
-- A **frame-gap watchdog** (a >500 ms stride with the dialog up dumps the
-  in-gap bucket deltas — a big gap with quiet buckets means the stall is
-  OUTSIDE the bracketed code, which is a finding, not a failure) and a
-  **pass watchdog** (any single pass >25 ms names its contributors).
+## The cure: warm enumeration at DLL load
 
-**One launch named both defects:**
-1. ⭐ **THE FREEZE = `EnumDisplaySettingsW`, 3,264 ms, ONCE.** The pass
-   table read `pass took 3266ms. In-pass: sel.buildResList=3264ms/1` — the
-   FIRST enumeration through dgVoodoo's virtualized display costs 3.3 s on
-   this machine, and the previous build's cache had correctly made it
-   once-per-session… **scheduled at the one moment the user is guaranteed to
-   be watching: the first click.** Every suspect the theories favoured
-   measured INNOCENT in the same table (sync-filter logger: 361 writes =
-   7 ms; message path: 13,203 messages = 6 ms; tree walks: 100 = 1.3 ms).
-2. ⛔ **"built 0 row(s) for Windowed" — the list builder HAD NO WINDOWED
-   BRANCH.** Borderless returned early, Fullscreen had its block, Windowed
-   fell through both to the sort with an empty list. The user's screenshot
-   of an open-and-empty dropdown was the list being empty AT BIRTH — the
-   mid-drop-mutation theory died in one measured line.
+The enumeration state is tri-state — idle, enumerating, done — and a background
+thread kicks it from the director constructor, while the plugin scan is already
+running. By the time the selector is first opened the cache is warm and the
+dialog builds instantly. The UI thread's wait-for-done path exists only as a
+correctness net for the case where the dialog is opened before the warm thread
+finishes; it is never the common path.
 
-**The cure (user direction: "load the resolutions during game startup when
-the DLL loads"):** the enumeration state is **tri-state** (idle /
-enumerating / done) and a warm thread kicks it in the director constructor,
-during plugin scan. The first open finds the cache warm; the UI thread's
-only race path is a correctness net that waits. The enumerated-ONCE log line
-now carries its own duration, so **the cure is measurable in the same line
-that proved the defect** — and the whole instrument stayed in the build
-(SELPERF), because a performance guarantee you cannot re-measure is a
-memory, not a gate.
+The "enumerated once" log line carries its own measured duration, so the same
+line that proved the defect also proves the cure on every launch. The timing
+instrument (`SELPERF`) stays compiled into the shipping build for the same
+reason: a performance guarantee that cannot be re-measured is a memory, not a
+gate.
 
-**How to apply:**
-1. After two inference fixes fail the same symptom, the next build ships an
-   instrument, not a third guess — and no behaviour change, so the
-   instrument's reading cannot be contaminated by the fix.
-2. A once-per-session cost is a **user-visible** cost if it lands on the
-   first interaction. Move it to load time, off the UI thread, with a
-   handshake the UI thread can wait on as a net, never as the common path.
-3. Exonerated suspects are part of the result — publish their numbers beside
-   the culprit so the next session does not re-accuse them.
-4. Keep the instrument armed after the cure. The line that proved the defect
-   is the only line that can prove the cure.
+## The instrument
 
-Related: [[feedback-sc4-measure-dont-infer]],
-[[feedback-state-machine-derive-diff-commit]],
-[[feedback-null-is-not-evidence]]
+Two inference-driven fixes — a one-way ratchet, then a once-per-session cache —
+both failed to move the symptom. The build that resolved it changed no behaviour
+at all and shipped measurement instead, so the reading could not be contaminated
+by a simultaneous fix.
+
+Design constraints that made it usable:
+
+- **In-memory named buckets only.** The leading suspect was file I/O, so the
+  instrument must not be built out of the thing it is measuring: no disk writes
+  and no log lines inside any timed path. Results are dumped after the fact.
+- **Brackets around every named bucket**: dialog find/open/close, combo box
+  work, resolution-list build, ini reads and writes, and message dispatch paths.
+- **A frame-gap watchdog.** A frame stride longer than 500 ms while the dialog
+  is up dumps the bucket deltas accumulated inside that gap. A large gap with
+  quiet buckets is itself a finding — it proves the stall is outside the
+  bracketed code — not an instrument failure.
+- **A pass watchdog.** Any single pass exceeding 25 ms prints its contributors.
+
+One launch produced the pass table `pass took 3266ms. In-pass:
+sel.buildResList=3264ms/1`, naming the culprit and its call count together.
+Every suspect the standing theories favoured measured innocent in the same
+table, and those numbers are worth recording so they are not re-accused later:
+the log writer under a sync-filtered folder did 361 writes in 7 ms, the message
+path handled 13,203 messages in 6 ms, and the tree walks ran 100 times in
+1.3 ms.
+
+## The empty resolution list
+
+The same table exposed a second, unrelated defect: `built 0 row(s) for
+Windowed`. The list builder had no Windowed branch at all. Borderless returned
+early, Fullscreen had its own block, and Windowed fell through both straight to
+the sort with an empty list. A dropdown that appears empty when opened is
+ambiguous between "empty at birth" and "mutated while open"; the count-at-build
+line settled it in one measured number.
+
+## Applying this
+
+1. After two inference fixes fail against the same symptom, the next build ships
+   an instrument rather than a third guess, and ships it with no behaviour
+   change so the reading stands on its own.
+2. Move a once-per-session cost to load time, onto a background thread, with a
+   handshake the UI thread can wait on as a net rather than as its normal path.
+3. Publish the exonerated suspects' numbers next to the culprit's; an
+   exoneration is part of the result.
+4. Leave the instrument armed after the cure lands. The line that proved the
+   defect is the only line that can prove the cure still holds.

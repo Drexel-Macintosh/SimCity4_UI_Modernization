@@ -1,148 +1,163 @@
----
-name: reference-sc4-subflyout-ring-law
-description: "SC4 sub-flyout (0x8A6E61E0): the stem is PART of the ring sprite, and its Y (obj[0x104]/win[0x100] = our gSubRingBltY) is the ONE lever for where the flyout attaches — MEASURED via emu_plot, independent of the strip rect. Fix = container-to-model + ring-pinned, both halves or neither. #134: X IS now modelled — SubNativeDX = btnW/2-27 is NOT factor-independent (20 at f=2, 43 at f=3); the stale 20 desynced born-vs-sweep at 3x and killed the back-arrow zone. Ring nudges are derived per tier, never hand-entered. Two models died before this."
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-05T16:43:54.309Z
----
+# The Sub-Flyout Ring Law
 
-**THE LAW.** The sub-flyout's stem is not a separate draw: the 80x53 ring
-atlas cell is a keyring — annulus (magenta hole, the button shows through)
-merging into a full-height connector wedge to the cell's right edge. Its Y
-inside the container is the single quantity that decides where the flyout
-attaches:
+The sub-flyout family (window id `0x8A6E61E0`) draws its stem as part of the ring
+sprite, not as a separate element. The 80x53 atlas cell is a keyring: an annulus
+with a magenta hole (the button underneath shows through) merging into a
+full-height connector wedge that runs to the cell's right edge. Ring sprites
+differ per family — mayor-mode 80x53, disaster 94x62.
+
+## The one lever
+
+The ring's Y inside the container is the single quantity that decides where the
+flyout attaches:
 
     ringY = (contentH >> 1) - ([0xF4] >> 1)      unclamped
           = cy - containerTop - [0x100]           general form
 
-⚠ `(a>>1) - (b>>1)`, **NOT** `(a-b)>>1` — off by one on the rails menu.
-Verified 4/4, zero residual (zones 94, rails 119, 8-item 192, disaster 138).
-Stored at `obj[0x104]` / `win[0x100]`; **we already record it live as
-`gSubRingBltY`** (`UiSpike.cpp:1505`), and it is **latched per open from the
-1x contentH** — never recomputed from the live rect.
+The halving detail matters: `(a>>1) - (b>>1)`, **not** `(a-b)>>1`. The two forms
+differ by one on the rails menu. The closed form reproduces four captured menus
+with zero residual (zones 94, rails 119, eight-item 192, disaster 138).
 
-**WHY THE STRIP LOOKS FIXED IN STOCK.** Unclamped, `cy - top` is constant so
-ringY is constant and the whole assembly tracks the button. Once a
-screen-margin clamp pins `top`, `cy` keeps moving and **ringY absorbs the
-difference: the strip stays put, only the ring+wedge slides.** The game's
-last two clamps exist purely to keep ringY between the bar's end caps —
-meaningless unless ringY is live per selection. User stated this before we
-measured it: *"The flyout never moves — just where it attaches should."*
+The value lives at `obj[0x104]` / `win[0x100]`, is recorded live as
+`gSubRingBltY` (`UiSpike.cpp:1505`), and is **latched per open from the 1x
+`contentH`** — never recomputed from the live rect.
 
-**INDEPENDENCE:** `stripTop = (contentH - stripH)>>1` and `stripLeft` carry
-NO `cy` and no per-selection term. ringY is the only term with the button
-centre ⇒ the attachment moves without moving the strip.
+### Why the strip looks fixed in stock
 
-**✅ MEASURED, not inferred (v2.46.0, `tools\flyout-sim\emu_plot.py`).** Four
-runs with `[0x100]` = 138 / 200 / 0 / 417 put the ring blit at exactly
-y = 138 / 200 / 0 / 417; the three BAR rects were **byte-identical** every
-time, and `[0xF4]` 6→12 moved the ring not at all. `win[0x100]` is the SOLE
-stem-Y input at blit time and cannot touch the strip.
+Unclamped, `cy - containerTop` is constant, so `ringY` is constant and the whole
+assembly tracks the button. Once a screen-margin clamp pins `containerTop`, `cy`
+keeps moving and `ringY` absorbs the difference: the strip stays put and only the
+ring and wedge slide. The game's last two clamps exist purely to keep `ringY`
+between the bar's end caps, which is meaningless unless `ringY` is live per
+selection. The observable behaviour is exactly that — the flyout does not move,
+only where it attaches.
 
-**THE SHIPPED FIX = BOTH HALVES IN ONE ACTION** (either alone is a revert):
-container → the game's own clamped `SubPlaceTop()` at f; ring sprite →
-offset by MINUS that move (`gSubRingAutoY`), pinning it where it already
-draws.
+### Independence of the strip
 
-**⚠ #134 SUPERSEDES THE OLD "X IS NOT MODELLED" CLAUSE (v2.86.0,
-2026-08-05).** X *is* modelled now, and the old note had the danger exactly
-backwards. The real defect was **`kSubNativeDX = 20`, commented
-"factor-independent" — it is not.** The game seats the container 27px left of
-the button CENTRE, so the offset grows with the button:
+`stripTop = (contentH - stripH) >> 1` and `stripLeft` carry no `cy` term and no
+per-selection term. `ringY` is the only quantity containing the button centre,
+so the attachment point moves without moving the strip.
 
-    SubNativeDX = btnW/2 - 27      94/2-27 = 20 (f=2)   141/2-27 = 43 (f=3)
+### Measured, not inferred
 
-MEASURED by the `SUBCAND` instrument at 3840x2160: `BTN(237,300 141x111)`,
-game's own native `(280,207)`, `NATDX=43`. Halving is on the SCALED width —
-`rhu(47f)/2` = 70 at f=3; `rhu(47f/2)` = 71 and misses by one.
+`tools\flyout-sim\emu_plot.py` drives the emulated blit path directly. Four runs
+with `[0x100]` set to 138 / 200 / 0 / 417 placed the ring blit at exactly
+y = 138 / 200 / 0 / 417; the three bar rects were byte-identical every time, and
+changing `[0xF4]` from 6 to 12 moved the ring not at all. `win[0x100]` is the
+sole stem-Y input at blit time and cannot touch the strip.
 
-**The stale 20 broke the coupled pair.** Born (`SUBBORN2`) docks from the
-game's REAL native; the sweep predicts native as `buttonX + kSubNativeDX`. At
-f=2 those agree, so 2x was always right. At f=3 they differed by 23px, so the
-container rested 23px right of the law AND the sweep matched **neither**
-`atNative` nor `atTarget` — it silently declined every 3x sub-flyout and
-never ran. `gSubArrowAbs` (the back-arrow click zone) is assigned ONLY inside
-that sweep, so **3x had a dead back-arrow zone nobody had reported.** The
-visible ring offset and the invisible dead zone were one bug.
+### The vertical fix is two halves or nothing
 
-Ring nudges are now DERIVED per tier (`SubRingDXEff/DYEff`), the container
-offset cancelling out of both axes:
+Applying either half alone is a revert. The container goes to the game's own
+clamped `SubPlaceTop()` evaluated at factor `f`; the ring sprite is offset by
+minus that same move (`gSubRingAutoY`), pinning it where it already draws.
+
+## The X term is not factor-independent
+
+The container is seated 27px left of the button *centre*, so the horizontal
+offset grows with the button:
+
+    SubNativeDX = btnW/2 - 27      94/2 - 27 = 20 (f=2)    141/2 - 27 = 43 (f=3)
+
+Measured with the `SUBCAND` instrument at 3840x2160: `BTN(237,300 141x111)`, the
+game's own native placement `(280,207)`, `NATDX=43`. The halving is on the
+*scaled* width — `rhu(47f)/2` is 70 at f=3, while `rhu(47f/2)` is 71 and misses
+by one. (`rhu()` is the project-wide round-half-up scaling helper; one rounding
+convention everywhere.)
+
+A hard-coded `kSubNativeDX = 20`, commented "factor-independent", breaks a
+coupled pair. Born-scaled placement (`SUBBORN2`) docks from the game's real
+native position, while the sweep predicts native as `buttonX + kSubNativeDX`. At
+f=2 those agree, so 2x looks correct forever. At f=3 they differ by 23px: the
+container rests 23px right of the law, *and* the sweep matches neither
+`atNative` nor `atTarget`, so it silently declines every 3x sub-flyout and never
+runs. `gSubArrowAbs` — the back-arrow click zone — is assigned only inside that
+sweep, so 3x also has a dead back-arrow zone that no visual inspection reports.
+The visible ring offset and the invisible dead zone are one bug.
+
+Ring nudges are therefore **derived per tier** (`SubRingDXEff` / `SubRingDYEff`),
+with the container offset cancelling out of both axes:
 
     SubRingDX(f) = rhu(21f) - rhu(25f) - rhu(-16.5f)
     SubRingDY(f) = rhu(15f) - rhu(37f)/2 + rhu(26.5f) - rhu(26f)
-    f=1.5: 19/-4    f=2: 25/-6 (reproduces shipped)    f=3: 37/-8
+    f=1.5: 19 / -4      f=2: 25 / -6      f=3: 37 / -8
 
-Gate: `tools\flyout-sim\gate_subnative.py` — predicts the game's measured
-`(280,207)` from the button alone, 10 negative controls, all detecting.
-A one-file ini can never be right at three tiers: **do not hand-enter
-`SubRingDX/DY` again.** Whatever moves the sprite must also move the zone.
+`tools\flyout-sim\gate_subnative.py` predicts the game's measured `(280,207)`
+from the button rect alone and carries ten negative controls, all detecting. A
+single-file ini value cannot be right at three tiers, so `SubRingDX/DY` must
+never be hand-entered. Whatever moves the sprite must also move the click zone.
 
-**⛔ #135 — `SubRingDX` MUST BE ZERO. THE WELD IS THE INVARIANT (v2.87.0).**
-The ring, strip and bar are ONE shape in the buffer: ring spans `0..80f`, the
-strip starts at exactly `80f`. **The ring's right edge IS the strip's left
-edge.** So *any* non-zero `SubRingDX` drives the connector wedge that many px
-INTO the panel, and the wedge's own top/bottom border lines then terminate
-mid-panel — a visible "broken bar at the junction". User-reported and
-user-confirmed present at **2x for months** (`SubRingDX=25`), simply tolerated;
-it was never 3x-specific.
+## The weld is the invariant: SubRingDX must be zero
 
-The alignment is now carried entirely by the DOCK, which moves the whole
-assembly and keeps the weld:
+Ring, strip and bar are one shape in the buffer. The ring spans `0..80f` and the
+strip starts at exactly `80f`: the ring's right edge *is* the strip's left edge.
+Any non-zero `SubRingDX` therefore drives the connector wedge that many pixels
+into the panel, and the wedge's own top and bottom border lines terminate
+mid-panel — the visible "broken bar at the junction". This is not tier-specific;
+it is present at 2x whenever `SubRingDX` is non-zero.
 
-    SubDockDX(f) = rhu(21f) - rhu(25f) - SubNativeDX()   -14 / -28 / -55
+Horizontal alignment is carried entirely by the dock, which moves the whole
+assembly and preserves the weld:
+
+    SubDockDX(f) = rhu(21f) - rhu(25f) - SubNativeDX()      -14 / -28 / -55
     SubRingDX(f) = 0 at every tier
 
-⚠ This CHANGED two long-shipped f=2 constants on purpose (`-53 -> -28`,
-`25 -> 0`) and moves the 2x assembly ~25px right. **If a gate ever reads -53
-or 25 again, someone reverted the fix — that is not a baseline.**
+This intentionally supersedes two earlier f=2 constants (`-53` becomes `-28`,
+`25` becomes `0`) and shifts the 2x assembly about 25px right. A gate that reads
+`-53` or `25` is reading a reverted fix, not a baseline.
 
-This is the law's own rule finally applied: *"applying that delta to the RING
-alone centres it but tears it off the strip/bar; applying it to the CONTAINER
-moves the whole assembly together, so the ring seats on the button AND stays
-joined."* Seating a ring by nudging the sprite is ALWAYS wrong — if the ring
-is off its button, **the dock is wrong, fix that.**
+Seating a ring by nudging the sprite is always wrong: applying a delta to the
+ring alone centres it but tears it off the strip and bar, while applying the same
+delta to the container moves the whole assembly together, so the ring seats on
+the button *and* stays joined. If the ring is off its button, the dock is wrong —
+fix the dock.
 
-Y is deliberately exempt: vertical ring-slide is the GAME's own mechanism
-(ringY absorbs the screen clamp, `gSubRingAutoY`), so it has stock precedent.
-Horizontal slide has none.
+Y is deliberately exempt. Vertical ring-slide is the game's own mechanism
+(`ringY` absorbing the screen clamp, mirrored by `gSubRingAutoY`), so it has
+stock precedent. Horizontal slide has none.
 
-**THE DISASTER FAMILY HAD THE SAME BUG, IN THE INI.** Live
-`[Disaster] RingDX=16 DockX=-2` vs the DLL's own defaults `RingDX=0 DockX=6`
-(`UiSpike.cpp:1556/1558`). Those two configs put the RING in a BIT-IDENTICAL
-screen position at every tier — `DockX` is tier-scaled (`ScaleRound`) and
-`8*f` exactly cancels the seat-scaled `RingDX` — so the dial bought nothing
-but moved the STRIP 16px (2x) / 24px (3x), driving the ring's neck into it.
-That is the junction "lip". Fix = restore `RingDX=0 DockX=6`; **live-tunable,
-no rebuild** (the `[Disaster]` RingDX/RingDY/DockX are re-read every ~20
-sweeps). The SHIPPED `_packaging` ini carries neither key, so the public build
-was never affected — this was a dev-ini-only defect.
-Only two ring-X nudges exist in the codebase (`gRingDX`, `gSubRingDX`); both
-are zero now. Ring sprites differ per family: mayor 80x53, disaster 94x62.
+## The same bug expressed as configuration
 
-⚠ Do NOT reach for `LayerFix=1`. `REGRESSION.md:178-185` records that the
-bar-tile replay is what opened the disaster family's junction gap, and the
-sub-flyout family never drains `gBarCache` at all (`UiSpike.cpp:1584`) — the
-mechanism is unrelated to this seam.
+A development ini carrying `[Disaster] RingDX=16 DockX=-2` against the DLL's own
+defaults `RingDX=0 DockX=6` (`UiSpike.cpp:1556` / `1558`) puts the *ring* in a
+bit-identical screen position at every tier: `DockX` is tier-scaled through
+`ScaleRound`, and `8*f` exactly cancels the seat-scaled `RingDX`. The dial buys
+nothing but moves the *strip* 16px at 2x and 24px at 3x, driving the ring's neck
+into it. That is the junction "lip". The cure is to restore `RingDX=0 DockX=6`;
+the `[Disaster]` `RingDX` / `RingDY` / `DockX` keys are re-read roughly every 20
+sweeps, so this is live-tunable with no rebuild. The shipped `_packaging` ini
+carries neither key, so released builds are unaffected.
 
-**LEVERS, each verified to touch only what is listed:** `gSubRingDX/DY` =
-the ring+wedge sprite at blit time (ring only; `gSubRingBltX/Y` stay RAW
-pre-offset so the dock law/`ringFresh` are unaffected) · `gBarDX`/`BarWiden`
-= bar X only, Y never scaled · `gStripFieldScale` = item metrics only ·
-`SubDockDX/DY` = the WHOLE assembly. We scale the strip rect ourselves at
-`UiSpike.cpp:3931` ((80,25) game, (160,50) ours).
+Only two ring-X nudges exist in the codebase — `gRingDX` and `gSubRingDX` — and
+both are zero.
 
-**⛔ TWO DEAD MODELS — each cost a shipped-and-reverted build:**
-1. *"`cy` in `sub_79AD00` is the SELECTED button's centre."* FALSE — a stock
-   capture of three pickers with buttons ~60px apart shows the strip in the
-   SAME band. `cy` is the MENU anchor.
-2. *"Move the container to fix a strip that overflows."* The ring is a
-   latched blit INSIDE the container, so moving it slides the ring off the
-   button 1:1 (v2.45.0, reverted same session). Our own source had said so
-   since v2.15.0: *"ORIGIN STAYS PUT... scaling it UNDOCKED the circle."*
+`LayerFix=1` is not the lever for this seam. The bar-tile replay is what opens
+the disaster family's junction gap, and the sub-flyout family never drains
+`gBarCache` at all (`UiSpike.cpp:1584`), so that mechanism cannot be the cause
+here.
 
-Related: [[feedback-sc4-scaling-laws]] law 42 (a gate is only as honest as
-its scope — a 32/32 emulator pass proved the arithmetic on a mis-identified
-input), [[reference-sc4-flyout-alignment-marker-rule]] (the OTHER family:
-script flyouts dock by `buttonAbs - marker`, a different law entirely).
+## Levers, each verified to touch only what is listed
+
+- `gSubRingDX` / `gSubRingDY` — the ring-plus-wedge sprite at blit time, ring
+  only. `gSubRingBltX` / `gSubRingBltY` stay raw and pre-offset, so the dock law
+  and `ringFresh` are unaffected.
+- `gBarDX` / `BarWiden` — bar X only; bar Y is never scaled.
+- `gStripFieldScale` — item metrics only.
+- `SubDockDX` / `SubDockDY` — the whole assembly.
+
+The strip rect is scaled explicitly at `UiSpike.cpp:3931`: the game's `(80,25)`
+becomes `(160,50)` at f=2.
+
+## Two models that do not survive measurement
+
+1. *"`cy` in `sub_79AD00` is the selected button's centre."* False. A stock
+   capture of three pickers whose buttons are roughly 60px apart shows the strip
+   in the same band each time. `cy` is the menu anchor.
+2. *"Move the container to fix a strip that overflows."* The ring is a latched
+   blit inside the container, so moving the container slides the ring off its
+   button 1:1. The origin stays put; scaling it undocks the circle.
+
+Related: a gate is only as honest as its scope — a 32/32 emulator pass can prove
+the arithmetic while running on a mis-identified input. And this law governs one
+family only: script flyouts belong to the alignment-marker rule and dock by
+`buttonAbs - marker`, which is a different law entirely.

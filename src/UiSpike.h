@@ -64,7 +64,7 @@ public:
 	// v2.36.1 task #50: the FIRST-LEVEL tool flyouts (Zones / Transportation /
 	// Utilities / Civic / Landscape ...) are created fresh on every open and
 	// were scaled+docked by the next sweep tick - one 1x frame, which is the
-	// jump the user still saw after v2.36.0. All seven open sites funnel
+	// jump still visible after that fix. All seven open sites funnel
 	// through one function; the hook runs the EXISTING pass at that instant.
 	void InstallFlyoutOpenHook();
 	void OnFlyoutOpened(uint32_t flyoutId);

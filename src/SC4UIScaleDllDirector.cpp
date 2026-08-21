@@ -41,12 +41,10 @@
 #pragma comment(lib, "comctl32.lib")
 
 #define UISCALE_NAME_STR "SC4UIScale"
-// ⚠ THIS STRING IS THE ONLY THING THE LOG HEADER KNOWS. It sat at "2.93.1"
-// through v2.94, v2.95 and v2.96 while those builds shipped, so every log
-// header in that window named a build that was not running - and a log that
-// lies about its own version poisons every later bisection that trusts it.
-// Bump it in the SAME commit as the VERSION-HISTORY.txt entry, never after.
-#define UISCALE_VERSION_STR "3.14.4"
+// This string is the only version the log header knows. A log that names a
+// build that is not running poisons every diagnosis that trusts it, so bump
+// it in the same commit as the change it describes, never after.
+#define UISCALE_VERSION_STR "4.0.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -105,10 +103,10 @@ public:
 		Logger& logger = Logger::Get();
 		logger.Init(logPath, static_cast<LogLevel>(settings.logLevel));
 		logger.WriteHeader(UISCALE_NAME_STR " v" UISCALE_VERSION_STR);
-		// USER DIRECTION 2026-08-20: enumerate the display's modes NOW, on a
+		// REQUIREMENT: enumerate the display's modes NOW, on a
 		// background thread, not on the first Graphic Options click - v3.13.2
 		// measured that enumeration at 3.3s (dgVoodoo between us and the
-		// driver), all of it spent while the user watched a frozen dialog.
+		// driver), all of it spent while the player watched a frozen dialog.
 		uiSpike.WarmSelectorCaches();
 		// #188 ARTFETCH armed AS EARLY AS THE DLL EXISTS. This constructor
 		// runs during the plugin scan, long before PostAppInit - and that
@@ -215,7 +213,7 @@ public:
 			// back 2400x1600), and that measurement was taken under a
 			// different wrapper configuration. dgVoodoo.conf here reads
 			// `Resolution = unforced`, which passes the game's requested mode
-			// straight through - and the user OBSERVED the desktop mode change
+			// straight through - and the player OBSERVED the desktop mode change
 			// when they picked a resolution, which is the same fact from the
 			// other side.
 			//
@@ -413,7 +411,7 @@ public:
 			// The ScaleAll=0 rig KEEPS its untouched behaviour, because that is
 			// what iniWantsScaling reads: Set-StockCompare owns that state with
 			// its own suffixes and a dormant rig must not have its files
-			// renamed. The distinction the old gate could not draw is "the user
+			// renamed. The distinction the old gate could not draw is "the player
 			// asked for stock" versus "the rig is dormant"; the ini's own
 			// ScaleAll is what separates them.
 			// `|| bootRepaired` is MANDATORY, not cosmetic. A repair means we
@@ -629,7 +627,7 @@ public:
 			// COUPLED PAIR (law 43): the basis moves tile POSITIONS, this makes
 			// the tiles that big by growing sub_7AE3D0's output inside the
 			// game's own rebuild. Ship both or neither - the basis alone
-			// spreads the tiles apart with gaps (user-confirmed, worse than the
+			// spreads the tiles apart with gaps (confirmed on screen, worse than the
 			// defect it fixes).
 			CodePatches::SetRegionTileSharp(settings.spikeRegionTileSharp);
 			const int tileHooked = CodePatches::ApplyRegionTileScale(regionFactor);
@@ -842,7 +840,7 @@ public:
 	{
 		// #104 SHUTDOWN TRACE. The game "hangs on shutdown" often enough that
 		// it blocked the deploy step TWICE in one session (the window
-		// closes, the PROCESS does not exit, and the user has to End Task).
+		// closes, the PROCESS does not exit, and the player has to End Task).
 		// Waiting for a clean exit is the ONLY safe deploy path because the game
 		// runs elevated and holds the DLL open, so this tax is paid on every
 		// build.
@@ -1003,7 +1001,7 @@ private:
 		// deeper in: IsRegionUp() only says the region tick has run, which is
 		// independent of whether the zoom hooks installed. Without this we
 		// would SWALLOW the wheel (return 0, DefSubclassProc skipped) in
-		// configurations where zoom can never apply, giving the user dead
+		// configurations where zoom can never apply, giving the player dead
 		// input plus one "0 pristine snapshots" line per gesture.
 		if (msg == WM_MOUSEWHEEL && self->settings.spikeRegionZoom &&
 			self->uiSpike.IsRegionUp() && CodePatches::RegionZoomOperable())

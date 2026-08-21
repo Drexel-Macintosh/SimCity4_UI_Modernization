@@ -66,13 +66,13 @@ namespace CodePatches
 	// v2.74.0: the ordinance NAME-label x, the one member of the inset family
 	// whose scaled value cannot fit a push imm8. lround(68*f) is 136 at f=2 and
 	// 204 at f=3, and the imm8 applier ships 127 for BOTH - which clears the eye
-	// icon by 23px at 2x (user-confirmed) and lands 29px INSIDE it at 3x
+	// icon by 23px at 2x (confirmed on screen) and lands 29px INSIDE it at 3x
 	// ("Buying Parking" reads "ying Parking"). Re-encodes the two 43-byte windows
 	// at 0x0077CBFC (income) and 0x0077D0B9 (expense) in place, same length, same
 	// ten arguments in the same order, same net ESP, same frame slot - buying the
 	// three bytes push-imm32 costs from neighbours proven dead across the seam.
 	//
-	// GATED TO f >= 2.50 (integer percent). 2x is USER-CONFIRMED at the clamped
+	// GATED TO f >= 2.50 (integer percent). 2x is CONFIRMED ON SCREEN at the clamped
 	// 127 and must not move: below the gate this writes NOTHING and the two sites
 	// stay on ApplyOrdinanceInsetScale's imm8 clamp path, byte-identical to
 	// v2.73.3. COUPLED PAIR (law 43): call it in the same if-block as
@@ -129,7 +129,7 @@ namespace CodePatches
 	// Returns the number of sites written; 4 = complete.
 	// #131 COUPLED HALF of ApplyRegionIsoScale. The basis moves tile POSITIONS;
 	// this makes the tiles that big. Ship both or neither - the basis alone
-	// spreads them apart with gaps (user-confirmed, worse than the defect).
+	// spreads them apart with gaps (confirmed on screen, worse than the defect).
 	//
 	// Hooks sub_7AE3D0 (__cdecl, the per-buffer builder inside sub_7AE510's
 	// rebuild) and enlarges its output before it returns, so the growth happens

@@ -1,36 +1,53 @@
----
-name: reference-sc4-dialogs-live-under-main-window
-description: "SC4's modal confirms and popups are parented under the MAIN WINDOW, not the 3D view - which is why SC4TouchControls (which only holds view3d) is structurally blind to them and its tap gate swallows their buttons. Root ids 0xAA921F4F / 0x6AAEEC4A."
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: 12c17599-6d28-4c98-99ab-fc651db4fa8f
-  modified: 2026-08-14T16:09:17.759Z
----
+# Where SC4 Parents Its Dialogs
 
-**SC4's dialogs are NOT under the 3D view.** The in-city quit / exit-to-region
-confirmation dialogs are modal popups **parented under the MAIN WINDOW**, and
-the city pass over the 3D view never sees them. Root ids:
+SimCity 4's modal confirmations and popups are not children of the 3D city
+view. They are parented under the **main window**, so any traversal that starts
+at the 3D view — a scaling sweep, an enumeration, a hit-test scope — never sees
+them at all.
 
-- `0xAA921F4F` — "Save and Quit" / "Save and Exit to Region" (3-btn), AND the
-  region-screen "Quit SimCity 4"/"Cancel" (2-btn, script I-4a551b4c)
-- `0x6AAEEC4A` — "Exit to Region" / "Exit and Play City" (3-btn)
+## Root window ids
 
-Source of truth: `SC4UIScale\src\UiSpike.cpp` ~13026 and the `kCityDialogIds`
-table (~13335, `modalConfirm`). Those are the GAME's window ids, so they are
-valid facts about SC4 itself, not about that mod — safe to use from
-[[project-sc4-touch-controls]] without violating the
-[[project-sc4-projects-split-and-entry-point]] zero-shared-files rule. Port the
-FACTS, never the code.
+- `0xAA921F4F` — "Save and Quit" / "Save and Exit to Region" (three-button
+  in-city variant), and also the region-screen "Quit SimCity 4" / "Cancel"
+  (two-button, script `I-4a551b4c`, design size 330x109). One id, three stock
+  scripts.
+- `0x6AAEEC4A` — "Exit to Region" / "Exit and Play City" (three-button).
 
-⛔ **WHY THIS BITES TOUCH.** `SC4TouchControls` only ever holds `view3d`, so it
-is **structurally blind to every dialog and popup**. It cannot see them by
-Win32 either: they are drawn INSIDE the game's DirectX window, so the
-`GetAncestor(WindowFromPoint(...), GA_ROOT)` cover-check returns the game hwnd
-itself (device log 2026-08-13: every cover-check logged `cover == hwnd`). The
-old "the game's own save/quit dialogs are separate HWNDs" comment in
-`TouchInputHandler.cpp` is therefore WRONG for the in-city case.
+Other dialogs built the same way include the "Text Entry" prompt used by Save
+City (`I-e9263d4c`) and Set Lot Size (`I-e9263de5`).
 
-Consequence: the plop gate treats dialog buttons as bare terrain and swallows
-the taps (`plop tap silent`), which is why quit-without-save needed ESC
-mashing. See [[project-sc4-touch-controls]].
+## They are built in code, not from the .UI script
+
+For these in-city variants the game constructs the dialog through a path that
+bypasses the DBPF `.UI` override entirely. A static script override of the root
+geometry has no effect on them; they arrive at their 1x design size and must be
+adjusted at runtime instead. A guard keyed to each id's own design width
+(treat the root as "still 1x" while `w < designW * 1.25`) distinguishes an
+untouched dialog from one already resized, and stays correct at fractional
+factors where a single flat threshold does not.
+
+The id table and the runtime pass live in `src\UiSpike.cpp` (`kCityDialogIds`).
+
+## They are invisible to Win32 as well
+
+These dialogs are drawn **inside the game's DirectX window**, not as separate
+top-level HWNDs. A cover check of the form
+
+```cpp
+GetAncestor(WindowFromPoint(pt), GA_ROOT)
+```
+
+therefore returns the game's own hwnd whether a dialog is open or not — the
+test can never distinguish "pointer is over a dialog button" from "pointer is
+over bare terrain". Any input layer that gates on window ancestry will pass
+dialog-button taps through to the terrain handler and silently swallow them,
+which looks like the dialog ignoring input.
+
+Two consequences follow, and both are worth designing for up front:
+
+1. A component scoped to the 3D view is structurally blind to every dialog and
+   popup in the game. Widen the scope to the main window, or accept the gap
+   deliberately.
+2. Presence of a dialog must be derived from the game's own window tree (root
+   id lookup), never from Win32 hit-testing. The OS has no idea these windows
+   exist.

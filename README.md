@@ -74,7 +74,6 @@ on disk is touched except the mod's own files. Full detail:
 | [tools/uimap/](tools/uimap/) | The offline simulator: layout emulation, gates and compositors that run without launching the game |
 | [_tests/](_tests/) | The regression net: gates, goldens, deploy scripts |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
-| [VERSION-HISTORY.txt](VERSION-HISTORY.txt) | The full engineering ledger, newest first |
 
 Known limitations are tracked in
 [research/KNOWN-LIMITATIONS.md](research/KNOWN-LIMITATIONS.md).

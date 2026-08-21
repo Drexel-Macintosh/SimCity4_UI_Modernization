@@ -1,78 +1,71 @@
----
-name: reference-sc4-intro-dat-is-the-eighth-archive
-description: "FIXED 2026-08-05: SC4 ships NINE DBPF archives, not the seven that were hard-coded — tools\\dbpf\\find_tgi.py omits Intro.dat, and the upscale preview set only covers SimCity_1. Art that lives in Intro.dat therefore reports 'DANGLING / no 2x asset' while being perfectly present in the game. The startup splash {856ddbac,46a006b0,ea7f0eae} is the known case."
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-06T04:14:50.741Z
----
+# Enumerate the DBPF Archives, Do Not List Them
 
-# `Intro.dat` is the EIGHTH archive, and two of our tools cannot see it
+The game's install root holds nine DBPF archives, not the seven that a
+hand-written list is likely to name. Any tool that searches for a TGI by walking
+a hard-coded archive list is capable of reporting a false negative — and it will
+only ever be wrong about the archive that was left out, which is exactly the
+case the search was run for.
 
-`tools\dbpf\find_tgi.py:23-25` scans **seven** archives:
+## The archive set
 
-    SimCity_1..5.dat, EP1.dat, SimCityLocale.DAT
+A hard-coded list covering
 
-The install root also holds **`Intro.dat`** (~18 MB, 3 index entries). It is not
-in that list. Separately, the upscale preview sets are built from
-`SimCity_1` only (`tools\upscale\preview*\SimCity_1\`), so anything in another
-archive has no 2x asset even when its 1x source is right there in the game.
+    SimCity_1.dat .. SimCity_5.dat, EP1.dat, SimCityLocale.DAT
 
-**MEASURED 2026-08-05.** The startup-splash background:
+misses at least `Intro.dat` (~18 MB, 3 index entries) and `Sound.dat`. Both sit
+in the install root alongside the others. Enumerating `*.dat` in the install
+root at run time reports nine archives on a stock install.
 
-    DbpfExtract.exe Intro.dat out 0x856DDBAC
-    -> T-856ddbac_G-46a006b0_I-ea7f0eae.png   768x600   500,591 B
-
-That TGI had been recorded **DANGLING / "no source anywhere"** in
-`sdkgaps-03.md`, `REGRESSION.md:3508` and the builder reports — a null from a
-tool that could not have seen it. [[feedback-null-is-not-evidence]] exactly:
-state the positive control before believing an absence. `find_tgi.py`'s own
-header already warns it had produced false negatives twice; Intro.dat made it
-four times on the same TGI.
-
-**WHAT IT COST.** Believing "no stock source exists", I shipped **CAM's** copy
-of the splash in our ROOT DialogStatic package to fix the 2x2 tiling. Pixel
-diff against the real stock bitmap: **99.72% of pixels differ, max delta 251** —
-not a re-encode, a genuinely different image. The user spotted it on screen and
-asked why the CAM background was being used. Wrong on provenance, and wrong for
-a CC0 project to redistribute a third-party mod's art. Corrected the same
-session: extracted from Intro.dat, upscaled with our own `Upscale2x.exe` at
-1.5/2/3, rebuilt and redeployed all three tiers.
-
-## ✅ FIXED 2026-08-05 — and the real count is NINE, not eight
-
-`find_tgi.py` no longer carries a list at all: it **enumerates** `*.dat` in the
-install root. Run against this machine it reports **nine** archives, and names
-the two the hard-coded list was missing — `Intro.dat` **and `Sound.dat`**. So
-the original diagnosis ("we forgot one") was itself short by one, which is the
-whole argument for deriving the inventory instead of writing it down.
+`tools\dbpf\find_tgi.py` therefore carries no list: it discovers the archive set
+and prints the count it found.
 
     python tools\dbpf\find_tgi.py ea7f0eae
     -> discovered 9 archive(s) ... 0xEA7F0EAE  Intro.dat  T=0x856DDBAC ...
 
-That line is the standing regression check. If the count drops, the discovery
-regressed to a list.
+That line doubles as a regression check. If the reported count drops, discovery
+has regressed to a list.
 
-**THE DURABLE LESSON IS NOT "ADD INTRO.DAT".** A hand-maintained inventory of
-what exists on disk is a *claim about the filesystem*. It ages silently, and it
-is only ever wrong in the case you needed it. The tool even carried a warning
-that its negatives were not "dangling" — and the warning pointed at the wrong
-axis (it said *Plugins* were unscanned, which was true and irrelevant; nobody
-asked whether the GAME side of the scan was complete). A caveat on the wrong
-axis reads as diligence and buys nothing.
+## The failure mode it prevents
 
-**HOW TO APPLY**
-* Before calling any art ref dangling, say how many archives you scanned and
-  where the number came from. `who_owns_tgi.py` covers plugins; `find_tgi.py`
-  now covers every archive the install actually has.
-* "No 2x asset in the upscale preview set" means *the SimCity_1 preview set* —
-  it is NOT evidence the 1x art is missing from the game.
+The startup-splash background lives in `Intro.dat`:
+
+    DbpfExtract.exe Intro.dat out 0x856DDBAC
+    -> T-856ddbac_G-46a006b0_I-ea7f0eae.png   768x600   500,591 B
+
+Under the seven-archive list, that TGI `{856ddbac, 46a006b0, ea7f0eae}` was
+reported as dangling — "no stock source anywhere" — across several reports, a
+null produced by a scanner that could not have seen the archive it lived in.
+Acting on that null meant substituting a third-party mod's copy of the splash in
+a shipped package. A pixel diff against the genuine stock bitmap showed 99.72%
+of pixels differing with a maximum channel delta of 251: a different image, not
+a re-encode. The cure was to extract the pristine 1x source from `Intro.dat` and
+upscale it with the project's own `Upscale2x.exe` for the 1.5x, 2x and 3x tiers.
+
+A caveat on the wrong axis does not help here. The list-based tool already
+warned that its negatives were unreliable, but the warning named unscanned
+*Plugins* as the reason — true, and irrelevant to the actual gap, which was on
+the game side of the scan. A disclaimer aimed at the wrong axis reads as
+diligence and buys nothing.
+
+## Rules
+
+* Before calling an art reference dangling, state how many archives were scanned
+  and where that number came from. A probe finding nothing is not a fact until
+  the probe is shown capable of seeing the thing.
+* Plugins coverage and game-archive coverage are separate questions answered by
+  separate tools: `who_owns_tgi.py` covers the Plugins tree, `find_tgi.py`
+  covers every archive the install actually has.
+* "No 2x asset in the upscale preview set" means the preview set built from
+  `SimCity_1` only (`tools\upscale\preview*\SimCity_1\`). It is not evidence
+  that the 1x source is missing from the game.
 * `DbpfExtract.exe <archive> <outDir> [0xTYPE]` is read-only and is the way to
-  get a pristine 1x source. Prefer it over any mod's copy, always.
-* A bitmap that "looks like the stock one" is not the stock one. Pixel-diff it
-  ([[feedback-sc4-measure-dont-infer]]).
+  obtain a pristine 1x source. Prefer it over any mod's copy, always — for
+  provenance, and because a permissively licensed project must not redistribute
+  third-party mod art.
+* A bitmap that looks like the stock one is not the stock one. Pixel-diff it.
 
-Related: [[feedback-sc4-scaling-laws]] (law 35 tiled blits; LEFT1X law 55/56),
-[[feedback-sc4-plugins-scan-is-recursive]] (the other shallow-probe failure from
-the same day), [[project-sc4-ui-scaling-northstar]].
+The durable lesson is not "add `Intro.dat`". A hand-maintained inventory of what
+exists on disk is a claim about the filesystem; it ages silently. The first
+correction to the seven-archive list ("one was forgotten") was itself short by
+one, which is the whole argument for deriving the inventory rather than writing
+it down.

@@ -1,48 +1,53 @@
----
-name: feedback-never-repin-a-fingerprint-without-reading-the-bytes
-description: "When an exe-pinned offline gate says 'fingerprint mismatch', NEVER just re-pin it. Bypass the check, run every byte-level site assertion against the new binary, and re-pin only if they all pass — then write down that you did. Relaxing a guard because a tool said no is exactly how the CAM splash shipped."
-metadata:
-  node_type: memory
-  type: feedback
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-08-06T04:15:28.174Z
----
+# Exe Fingerprint Gates and the 4GB Patch
 
-# A fingerprint is a PROXY. When it fails, check the thing it stands for.
+Several offline gates pin themselves to a hash of the game executable so that
+byte-level assertions about specific virtual addresses are only adjudicated
+against the build they were derived from. A fingerprint is a proxy for the
+claim "the code at these addresses is what the gate thinks it is". When the
+proxy fails, the thing it stands for still has to be checked directly.
 
-2026-08-05: three SC4UIScale gates printed `FAIL: fingerprint mismatch`
-together and stopped adjudicating anything below that line. Two causes, and
-separating them was the whole job:
+## The 4GB / large-address-aware patch moves the hash without moving any code
 
-1. **The 4GB/LAA patch flips one bit in the PE COFF Characteristics word.**
-   It cannot change an instruction, but `exe_fingerprint()` hashed the whole
-   file, so the hash moved. Cured by MASKING `0x0020` before hashing — every
-   existing pin was taken with the bit clear, so masking keeps them all valid
-   in both directions (patch and `-Undo`).
-2. **The reinstall produced a genuinely different binary of the same size.**
-   The build the gates were derived from no longer exists on disk to diff.
+The LAA patch sets the `IMAGE_FILE_LARGE_ADDRESS_AWARE` bit (`0x0020`) in the
+PE COFF header's `Characteristics` word. That single bit cannot change an
+instruction, but a fingerprint computed over the whole file moves anyway, so
+every exe-pinned gate reports a mismatch on a binary that is functionally
+identical at every address it cares about.
 
-For (2) the only honest move is: **bypass the fingerprint, run the gate's own
-byte assertions against the new exe, and re-pin only if every one passes.**
-All three did (24/24 site checks in one of them), so the re-pin was earned.
+Cure: mask `0x0020` out of the `Characteristics` word before hashing. Pins
+taken with the bit clear stay valid in both directions — patched and unpatched
+— so the same pin adjudicates a binary before the patch, after it, and after
+the patch is undone.
 
-**Why this matters more than it sounds:** relaxing a guard because a tool
-returned a negative is precisely how the #140 startup splash shipped CAM's
-artwork instead of the game's. Same reasoning, same session, one file apart.
-A fingerprint stands in for "the code is what I think it is" — reading the
-bytes at the actual VAs *is* that claim, directly, and is strictly stronger.
+## A genuine mismatch: bypass, assert, then re-pin
 
-**How to apply**
-* On a mismatch: bypass → assert → re-pin → **comment the re-pin** with what
-  was verified and why the old binary is gone. An unexplained pin change is
-  indistinguishable from someone silencing a gate.
-* Expect the whole exe-pinned family to go red *together* after any reinstall
-  or exe patch. Together is the instrument working. One gate red while its
-  siblings are green on the same binary means the gates disagree about what
-  "the same build" means — and the cause is usually a **private copy of the
-  fingerprint function** (there were three; there is now one).
-* Never let a gate ship a verdict it did not measure. These correctly refused.
+A reinstall can produce a genuinely different binary, sometimes at the same
+file size, with the build the gates were derived from no longer on disk to
+diff against. The only honest move is:
 
-Related: [[feedback-null-is-not-evidence]],
-[[reference-sc4-intro-dat-is-the-eighth-archive]],
-[[feedback-static-defect-is-a-hypothesis]], [[feedback-sc4-regression-net]].
+1. Bypass the fingerprint check.
+2. Run every one of that gate's byte-level site assertions against the new exe.
+3. Re-pin only if all of them pass.
+4. Comment the re-pin with what was verified and why the old binary is gone.
+
+An unexplained pin change is indistinguishable from someone silencing a gate.
+Reading the bytes at the actual VAs *is* the claim the fingerprint stands in
+for, so a full site sweep is strictly stronger evidence than a matching hash —
+but only if it is actually run.
+
+Relaxing a guard because a tool returned a negative is precisely how a
+third-party mod's artwork once shipped in place of the game's own startup
+splash. The gate refused; the refusal was correct; overriding it without
+measuring anything was the defect.
+
+## Reading the failure pattern
+
+* Expect the entire exe-pinned family to go red *together* after any reinstall
+  or exe patch. Simultaneous failure is the instrument working correctly.
+* One gate red while its siblings are green on the same binary means the gates
+  disagree about what "the same build" means. The usual cause is a private
+  copy of the fingerprint function that has drifted from the others; keep
+  exactly one implementation and have every gate call it.
+* Never let a gate ship a verdict it did not measure. A gate that refuses to
+  adjudicate below a mismatch line is behaving correctly, and its silence must
+  not be read as a pass.

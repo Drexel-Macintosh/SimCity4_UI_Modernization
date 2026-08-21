@@ -1,49 +1,65 @@
----
-name: reference-sc4-html-text-engine
-description: "SC4: ALL rich text (news ticker/reader, stories, advisor+message popups, tutorials, Credits) renders through the game's own HTML engine, whose SIZE=1..7 point tables live in .rdata and FontStyle.ini can NEVER reach — this is why the community's font mods report 'font size does not work for news'. Fixed by patching the two tables; three coupled parts."
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-07-29T23:39:36.160Z
----
+# The Built-In HTML Text Engine
 
-Found 2026-07-29 (SC4UIScale v2.19.0) while fixing the News Box. It explains a
-long-standing community limitation, so it is worth keeping even outside this
-project.
+Every piece of rich text in SimCity 4 renders through one built-in HTML
+renderer, not through a FontStyle style. That single fact explains a
+long-standing community limitation: DAT-based font mods can change most of the
+UI but report that "font size does not work for news".
 
-**THE FINDING.** News ticker roll, news-reader headlines, expanded story pages,
-advisor/message popup toasts, the 189 tutorial pages and the Credits window all
-render through **one built-in HTML renderer**, not through a FontStyle style.
-The exe carries literal templates in `.rdata` (e.g. `<FONT FACE="Arta"
-SIZE=3>`), and locale LTEXTs embed their own `<font size="N">`. `SIZE=1..7`
-resolves through **two point-size tables**: fonts at `0xACD4A0`
-`{8,10,12,14,18,24,36}` and `<H1>..<H7>` at `0xAB4AD0`
-`{8,10,12,16,19,24,48}`. **FontStyle.ini never touches this path** — which is
-exactly why DAT-based font mods hit the wall.
+## What routes through the renderer
 
-**THE FIX (three COUPLED parts — breaking one regresses the others):**
-1. Scale both tables in place at `PostAppInit`
-   (`CodePatches::ApplyHtmlSizeScale`, verify-before-write). Each rich window
-   COPIES the tables at creation (setter `0x8FEEB8` → `this+0x1A8`), so one
-   patch reaches every instance the game will ever build.
-2. The popup builders derive their index from a *style's* size
-   (`idx = (4*size+8)/18`), and our FontStyle DOUBLES those styles — so the
-   builders' style GUIDs are retargeted at **stock-size clone styles**
-   (`MessageHeaderHtml` 0x5c4b0914, `MessageBodyHtml` 0x5c4b0915) that every
-   FontStyle tier file carries. **Those clones must stay at STOCK sizes at every
-   tier** or popups compound to ~4x.
-3. The Credits LTEXT size maps had to be re-calibrated, since the old per-factor
-   bumps would compound against the now-scaled tables.
+- The news ticker roll
+- News-reader headlines
+- Expanded story pages
+- Advisor and message popup toasts
+- The 189 tutorial pages
+- The Credits window
 
-**Related engine fact:** `GZWinBMP`-family windows draw **dst = src size**, so
-2x art scales the draw with no code hook — and a 2x `imagerect` over a 1x
-bitmap draws only the corner that exists (the signature of a shadowed art
-override).
+The executable carries literal markup templates in `.rdata` (for example
+`<FONT FACE="Arta" SIZE=3>`), and locale LTEXTs embed their own
+`<font size="N">` tags.
 
-Detail + trap signatures: `_tests\REGRESSION.md` → "NEWS BOX + NEWS TEXT = THE
-HTML ENGINE"; the FontStyle limitation is closed out in
-`tools\fonts\FONTSTYLE-RESEARCH.md`.
+## The two point-size tables
 
-Related: [[feedback-sc4-scaling-laws]], [[project-sc4-ui-scaling-northstar]],
-[[reference-sc4-scenario-matrix]]
+`SIZE=1..7` resolves through two tables of point sizes compiled into `.rdata`:
+
+| Table | Address | Contents |
+| --- | --- | --- |
+| `<FONT SIZE=1..7>` | `0xACD4A0` | `{8, 10, 12, 14, 18, 24, 36}` |
+| `<H1>..<H7>` | `0xAB4AD0` | `{8, 10, 12, 16, 19, 24, 48}` |
+
+FontStyle.ini never touches this path. A font mod delivered as a DAT can only
+reach styles the style system owns; these are constants inside the binary, so
+no amount of style editing moves them. That is the wall the community hit.
+
+## The fix: three coupled parts
+
+The parts are coupled — changing one without the others regresses the others.
+
+**1. Scale both tables in place at `PostAppInit`.**
+`CodePatches::ApplyHtmlSizeScale` verifies the existing bytes before writing.
+Each rich-text window *copies* the tables at creation time (setter `0x8FEEB8`
+stores into `this+0x1A8`), so one patch applied before any such window exists
+reaches every instance the game will ever build.
+
+**2. Retarget the popup builders at stock-size clone styles.**
+The popup builders do not read a size directly; they derive a table index from
+a *style's* size, using `idx = (4*size + 8) / 18`. A FontStyle that doubles
+those styles therefore doubles the derived index on top of the already-scaled
+table, compounding to roughly 4x. The cure is to point the builders' style
+GUIDs at clone styles held at stock sizes — `MessageHeaderHtml` (0x5c4b0914)
+and `MessageBodyHtml` (0x5c4b0915) — which every FontStyle tier file carries.
+**Those clones must stay at stock sizes at every tier**, precisely because
+their only job is to feed a correct index into a table that is already scaled.
+
+**3. Re-calibrate the Credits LTEXT size maps.**
+The Credits window's per-factor size bumps predate the table patch and would
+compound against the now-scaled tables, so they are recalibrated rather than
+left in place.
+
+## Related engine fact
+
+`GZWinBMP`-family windows draw with `dst = src size`. Supplying 2x art
+therefore scales the draw with no code hook at all. The corollary is a useful
+diagnostic: a 2x `imagerect` over a 1x bitmap draws only the corner that
+actually exists, which is the signature of an art override being shadowed by a
+lower-priority 1x source.

@@ -1,51 +1,89 @@
----
-name: reference-sc4-scenario-matrix
-description: "SC4 UI scaling: the TEST SCENARIO AXES every fix must be exercised across (scale tier, mod state, game mode, panel lifecycle, render mode, input) — lives in _tests\\SCENARIOS.md. Five bugs in one session were each caused by an untested axis, not bad code. Read with REGRESSION.md, not instead of it."
-metadata: 
-  node_type: memory
-  type: reference
-  originSessionId: f1160943-a698-434b-a6bf-d3c3e2971cea
-  modified: 2026-07-29T23:39:12.276Z
----
+# Test Scenario Axes
 
-User standing ask (2026-07-29): *"Everything we build we need to make sure we
-can test in various scenarios in the future."* The answer lives in
-`_tests\SCENARIOS.md` (SC4TouchControls repo) — written because five bugs in
-one session were each caused by an **untested scenario axis**, not by bad code.
+A UI scaling fix is not proven by a single run. Most scaling regressions are not
+bad code — they are correct code exercised on only one point of a multi-axis
+condition space. The axes below are the ones that have actually produced
+distinct, reproducible defects; each carries a specific trap that makes a fix
+look correct on the axis you tested and wrong on the one you did not.
 
-**REGRESSION.md = "is it still right?" · SCENARIOS.md = "right under WHAT
-CONDITIONS?"** Read both.
+Regression testing asks "is it still right?". Scenario testing asks "right
+under which conditions?". Both are needed.
 
-**The axes** (each has its own gotchas in the file):
-1. **Scale tier** 1x/1.5x/2x/3x — 1x must be TRUE STOCK (DLL fully inert);
-   **1.5x is where rounding bugs hide because 2x is exact doubling**; always
-   rebuild all three tiers together.
-2. **Mod state** — full modded set / one override toggled off / vanilla. The
-   LOAD-ORDER LAW lives here, and **when disabling a mod to test, OUR override
-   of it must move too** or our copy keeps the mod's layout alive.
-   `_tests\Toggle-BuildingStylesUI.ps1` is the pattern to copy.
-3. **Game mode** — region / mayor / god pre-founding / god founded (different
-   toolbar + pitch!) / sim (deferred). Never gate on a state test not verified
-   in all three city states.
-4. **Panel lifecycle** — city-load-while-hidden / **FIRST open per city load**
-   (where the game BINDS things once) / re-open / compact vs expanded / after a
-   city switch (windows are REUSED across cities) / region↔city. First-open
-   bugs survive testing precisely because re-open works.
-5. **Render mode** — DirectX fullscreen renders at MONITOR NATIVE (the request
-   is ignored); windowed and software use the requested size.
-6. **Input path** — mouse / frozen touch DLL / synthesized clicks. SC4 POLLS
-   the physical cursor for drags and ignores posted messages.
+## 1. Scale tier — 1x / 1.5x / 2x / 3x
 
-**Environment gotchas that cost real time:** the game runs ELEVATED (a normal
-shell cannot kill it; use the wait-for-close deploy loop); OneDrive holds
-directory handles so `shutil.rmtree` fails on the rmdir (use a clear-contents
-helper) and `find` is glacial (use Glob); `LiveDumpMs` left on wrote ~12 MB per
-session; `[Probe]` is live-tunable but `LiveDumpMs` needs a restart; DPROBE
-needs `BandL=900` or the news ticker floods it.
+1x must be **true stock**: the DLL fully inert, scaled art and the replacement
+font stack out of the load path. Setting a scale factor of 1 while leaving
+scaled art and font overrides live only *looks* stock and hides the very
+differences a 1x reference exists to expose. The screen resolution is part of
+the tier — a 1x run at a 4K desktop is not a reference, because every widget is
+correct but tiny and formatting becomes the entire question.
 
-Still-missing scenarios are listed as TODOs in the file (vanilla-run toggle,
-1.5x/3x eyes-on, stock-parity pixel pass, founded-city vanilla reference).
+**1.5x is where rounding bugs hide, because 2x is exact doubling.** Any integer
+division, cell-pitch derivation, or threshold expressed as a fraction of the
+scale factor collapses into rounding noise at 1.5x while remaining invisible at
+2x and 3x. A fractional-tier metric that does not read exactly 0 at 2x is
+measuring itself, not the defect.
 
-Related: [[feedback-sc4-scaling-laws]], [[feedback-sc4-regression-net]],
-[[feedback-sc4-measure-dont-infer]], [[project-sc4-ui-scaling-northstar]],
-[[feedback-sc4-founded-city-invalidates-notes]]
+Rebuild every tier together. A tier built from a stale generator run is a false
+negative on all the other tiers.
+
+## 2. Mod state — full set / one override toggled off / vanilla
+
+Load order decides which copy of a shared UI resource wins. The trap:
+**disabling a third-party mod is not enough — the override of that mod must be
+moved out too.** Otherwise the local copy keeps the mod's layout alive, and the
+"vanilla" control is silently still modded. Toggling scripts should move both
+halves as one operation.
+
+Plugin scanning is recursive, so a stash placed *inside* the plugins tree
+disables nothing. Enumerate both the user and application plugin trees before
+believing any claim that a run was stock.
+
+## 3. Game mode — region / mayor / god pre-founding / god founded
+
+God mode before a city is founded and god mode after founding present different
+toolbars and different vertical pitch; a layout rule verified in one is not
+verified in the other. Never gate behaviour on a state test that has not been
+checked in every city state, and re-derive notes after founding a city, since
+measurements taken pre-founding do not carry over.
+
+## 4. Panel lifecycle
+
+Distinct states, each capable of its own defect:
+
+- city load while the panel is hidden
+- **first open per city load** — the game binds geometry, images, and crops once
+  at this moment
+- re-open within the same session
+- compact versus expanded form
+- after a city switch — **windows are reused across cities**, so stale bind-time
+  state survives
+- region ↔ city transitions
+
+First-open bugs survive testing precisely because re-open works. A defect that
+appears only on first use is an uninitialised latch, and a latched crop bound at
+first show never refreshes on later resizes.
+
+## 5. Render mode
+
+DirectX fullscreen renders at **monitor native resolution — the requested size
+is ignored**. Windowed and software rendering honour the request. A wrapper
+layer can also override a windowed-mode request on its own, so setting windowed
+mode in the game's own configuration alone does nothing; the wrapper's
+fullscreen setting has to change with it.
+
+## 6. Input path — mouse / touch layer / synthesized clicks
+
+The game **polls the physical cursor position for drags** and ignores posted
+messages. Synthesized click injection therefore validates hit-testing but not
+drag behaviour; drag paths must be exercised with a real pointer.
+
+## Environment notes
+
+- The game process runs elevated and holds the DLL and archives open. Deploys
+  must wait for it to close rather than attempting to terminate it.
+- `LiveDumpMs` produces large logs — on the order of 12 MB per session when
+  left enabled — and only takes effect at process start. The `[Probe]` settings
+  are live-tunable during a run.
+- The directional probe needs its band limit raised (`BandL=900`) or the news
+  ticker floods the capture.
