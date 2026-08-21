@@ -165,6 +165,10 @@ foreach ($g in $UIMAP_EMU_GLOBS) {
         ForEach-Object { Add-Item2 $_.FullName ("tools\uimap\emu\" + $_.Name) }
 }
 foreach ($f in $TESTS) { Add-Item2 (Join-Path $proj "_tests\$f") "_tests\$f" }
+# The shipping ini. Both the installer and Test-ShippingIniKeys read it, and a
+# cold clone without it fails that gate on the first run - which is exactly
+# what the cold-clone test exists to catch.
+Add-Item2 (Join-Path $proj "_packaging\SC4UIScale.ini") "_packaging\SC4UIScale.ini"
 foreach ($f in $SRC)  { Add-Item2 (Join-Path $proj "src\$f") "src\$f" }
 foreach ($f in $TOOLS){ Add-Item2 (Join-Path $proj "tools\$f") "tools\$f" }
 Get-ChildItem (Join-Path $proj "vendor") -Recurse -File |

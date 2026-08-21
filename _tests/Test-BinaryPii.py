@@ -118,6 +118,13 @@ def main():
     bundle = sys.argv[1] if len(sys.argv) > 1 else None
     if not bundle:
         dist = os.path.join(PROJ, "dist")
+        # A fresh clone has no dist\ - nothing has been built yet. That is
+        # not a failure, and crashing on it makes the gate look broken to
+        # the first person who ever runs it.
+        if not os.path.isdir(dist):
+            print("no dist\ directory - nothing built yet, nothing to scan.")
+            print("RESULT: SKIP (build a bundle first, then re-run)")
+            return 0
         # DIRECTORIES ONLY. The first version of this picker took the last
         # matching NAME, which sorted "SC4UIScale-v2.93.1.zip" above the folder
         # of the same name. os.walk() on a file yields nothing, so it scanned
