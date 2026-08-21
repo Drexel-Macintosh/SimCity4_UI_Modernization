@@ -1,6 +1,6 @@
 # Package manifest
 
-The complete set of DBPF packages that make up a SC4UIScale install: what
+The complete set of DBPF packages that make up an SC4UIScale install: what
 each package contains, how the tier system arms them, and the dependency
 gates that keep third-party overrides honest.
 
@@ -18,9 +18,6 @@ this file describes it. Byte sizes are indicative only — nothing asserts
 them, so measure the file before quoting one. (`DbpfPack` output is
 non-deterministic: to prove a package unchanged, compare per-entry payloads,
 never the file hash — a DBPF header carries a build timestamp.)
-
-`SC4TouchControls` (a multi-touch camera plugin) is a separate project and is
-not part of this manifest.
 
 ---
 
@@ -90,16 +87,16 @@ instead (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)).
 | `z_SC4UIScale_CamUI-<tier>.dat` | **22** | The six dialog-static targets CAM replaces, plus CAM's own three dialogs (city info / civic / school query) and their bitmaps: 9 scripts + 13 art. Gated |
 | `z_SC4UIScale_NamIcons-<tier>.dat` | **392** | NAM's own ItemIcon strips, upscaled from NAM's own bitmaps, never a stock lookalike. Gated on `NetworkAddonMod_Controller.dat`, presence only, no size check |
 | `z_SC4UIScale_CsiIcons-<tier>.dat` | 16 | U-Drive-It offer-balloon icons (City Situation Indicators) |
-| `z_SC4UIScale_UncoveredIcons-<tier>.dat` | *varies* | Icons a custom lot ships that no package of ours covers. The count is however many this install has — the suite deliberately asserts no number for it, and the package is simply absent when nothing is uncovered |
+| `z_SC4UIScale_UncoveredIcons-<tier>.dat` | *varies* | Icons a custom lot ships that no other package in this set covers. The count is however many the install has — the integrity test deliberately asserts no number for it, and the package is simply absent when nothing is uncovered |
 
 ### Untagged packages (tier-independent, always on)
 
 | Package | Entries | What it is |
 |---|---|---|
 | `z_SC4UIScale_MenuFix.dat` | 6 | Exemplar patches fixing CAM 4.0.1's broken submenu parents. Reported by the integrity test, not entry-asserted |
-| `z_SC4UIScale_WebText.dat` | 3 | LTEXT overrides matching the dead-link redirect |
+| `z_SC4UIScale_WebText.dat` | 3 | LTEXT overrides that name Simtropolis, matching the DLL's redirect of the dead `simcity.ea.com` link (active at every tier) |
 | `zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels.dat` | 1 | The one LTEXT (`0xFF5D2E9F`) CAM's Power/Water charts ask for and no installed archive provides. Inert without CAM by construction — nothing except CAM binds the instance |
-| `zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat` | 1 | The scale selector's own dialog at the stock tier — Graphic Options and nothing else. One entry by design: the stock tier must never ship scaled art |
+| `zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat` | 1 | The scale selector's own dialog at the stock tier — the Graphic Options script and nothing else. One entry by design: the stock tier must never ship scaled art |
 
 A string has no geometry, so `CamGraphLabels` and `WebText` carry no tier
 triple and no `.x1-disabled` variant.
@@ -113,16 +110,16 @@ Five packages contain copies of *another mod's* data and are gated by
 
 | Package | Gate |
 |---|---|
-| `SaveWarningUI` | exact name + size of the mod's dat (our copy hard-codes the mod's exact rects, so a mod update must disable us) |
+| `SaveWarningUI` | exact name + size of the mod's dat (the scaled copy hard-codes the mod's exact rects, so a mod update must disable it) |
 | `CamUI` | both `CAM_Extended_Essentials.dat` and `CAM_Intro.dat`, exact size (the six replaced scripts come from two of CAM's dats; a half-present set would be half stale) |
-| `ThirdPartyUI` | presence of the mod's package by name prefix (our copy supplies art for a panel the runtime sweep scales, so only the mod-gone case is unambiguously wrong) |
+| `ThirdPartyUI` | presence of the mod's package by name prefix (the scaled copy supplies art for a panel the runtime sweep scales, so only the mod-gone case is unambiguously wrong) |
 | `WarriorUI` | exact name + size of both mod dats |
-| `NamIcons` | presence of `NetworkAddonMod_Controller.dat`, no size check (pure art at the mod's own TGIs; a NAM update makes ours stale-looking, never mis-geometried, so a size check would disable 392 good icons on every patch) |
+| `NamIcons` | presence of `NetworkAddonMod_Controller.dat`, no size check (pure art at the mod's own TGIs; a NAM update leaves the icons stale-looking, never mis-geometried, so a size check would disable 392 good icons on every patch) |
 
-Without these gates, uninstalling a mod would not uninstall our copy: it sits
-in `zzz-` and outranks everything, so the mod's UI would stay on screen.
-"NOT FOUND (live or gated)" from the integrity test while the mod is absent
-is correct behaviour, not a regression.
+Without these gates, uninstalling a mod would not uninstall the scaled copy of
+its data: that copy sits in `zzz-` and outranks everything, so the mod's UI
+would stay on screen. "NOT FOUND (live or gated)" from the integrity test
+while the mod is absent is correct behaviour, not a regression.
 
 **Any new package built from another mod's data needs its dependency row in
 the same change.** Reproduce the load order with
@@ -166,18 +163,17 @@ poll for `SimCity 4.exe` to exit, then copy.
 with a `Plugins\` tree you copy straight in, plus `README.txt`,
 `Install.ps1`, `LICENSE.txt`, `THIRD-PARTY-NOTICES.md` and `SHA256SUMS.txt`.
 It derives its file list **by parsing `_tests\Deploy-OnGameClose.ps1`**
-rather than keeping a second copy — a hand-maintained duplicate of "what a
-working install contains" is exactly how packages have shipped stale or not
-at all. One manifest, one failure mode.
+rather than keeping a second copy of "what a working install contains": one
+manifest, one failure mode.
 
 ---
 
 ## Building the packages
 
-Every package is generated; nothing is hand-edited. The builders and their
-recipes live in [../tools/packages/PACKAGES.md](../tools/packages/PACKAGES.md);
-the end-to-end procedure (corpus bootstrap, per-tier rebuilds, gates) is in
-[../RUNBOOK.md](../RUNBOOK.md). Two rules that are not optional:
+Every package is generated; nothing is hand-edited. The builders live under
+`tools\`, and the end-to-end procedure — corpus bootstrap, per-tier rebuilds
+and the gates that check them — is in [BUILDING.md](BUILDING.md). Two rules
+that are not optional:
 
 - **A mod's own dialogs are not in the game's data**, so nothing here can
   build them from a stock source. The dialog builder reads
@@ -212,8 +208,8 @@ the vcxproj are the two above.
 
 SimCity 4 and its assets belong to **Electronic Arts**; this is an unofficial,
 unaffiliated mod containing no EA code. The scaled art and font files it
-generates are derived from a user's own installation, are not covered by the
-CC0 dedication, and are excluded from the published source.
+generates are derived from the player's own installation, are not covered by
+the CC0 dedication, and are excluded from the published source.
 
 → **Full detail, pinned commits and exact obligations:
 [`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md)** · dedication text:

@@ -30,15 +30,15 @@ of scripted dialogs.
 
 The hardest class of bug here isn't wrong geometry, it's *right geometry
 applied too late*. A panel that is resized one tick after it appears has
-already painted at the wrong size, and the user sees a flash or a jump.
+already painted at the wrong size, and the player sees a flash or a jump.
 
 So panels are made correct **before their first paint**, from inside the game's
 own `cGZWin::SetFlag` path — the call the game itself makes as a window becomes
 visible — gated on the subtree being fully built. The periodic sweep remains as
 a belt, and skips anything already handled.
 
-The corollary, learned expensively: **if a fix has to re-apply every tick, it
-is a fight, not a fix.** Growing a buffer the game owns from outside means the
+The corollary: **if a fix has to re-apply every tick, it is a fight, not a
+fix.** Growing a buffer the game owns from outside means the
 game's next rebuild undoes it. Grow it *inside* the rebuild and everything
 downstream inherits the new size — including hit-test masks.
 

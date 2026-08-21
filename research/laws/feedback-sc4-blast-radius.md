@@ -44,12 +44,11 @@ offline rather than tuning by build.
 "what if this changes?" has an answer there that costs minutes and cannot break
 anything:
 
-- `census.py` / `constants.py` — which builder owns a window, which constants it
-  uses, their encodings and twins.
+- A builder census and a constant map — which builder owns a window, which
+  constants that builder uses, their encodings and their twins.
 - `emu\emu_layout.py` — runs the game's own layout code under Unicorn and
   predicts rects at any scale factor.
-- `diff\` with `_tests\Test-UiMapDiff.ps1` — predicted versus live versus stock
-  at f = 1, 1.5, 2, 3.
+- `diff\` — predicted versus live versus stock at f = 1, 1.5, 2, 3.
 
 A shipped experiment, by contrast, costs a build, a deploy, a play session, and
 sometimes a working UI.

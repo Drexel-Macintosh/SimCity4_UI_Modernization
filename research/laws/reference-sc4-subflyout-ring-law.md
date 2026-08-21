@@ -48,9 +48,10 @@ sole stem-Y input at blit time and cannot touch the strip.
 
 ### The vertical fix is two halves or nothing
 
-Applying either half alone is a revert. The container goes to the game's own
-clamped `SubPlaceTop()` evaluated at factor `f`; the ring sprite is offset by
-minus that same move (`gSubRingAutoY`), pinning it where it already draws.
+The container goes to the game's own clamped `SubPlaceTop()` evaluated at factor
+`f`, and the ring sprite is offset by minus that same move (`gSubRingAutoY`),
+pinning it where it already draws. Either half alone leaves the assembly
+misaligned; the two land together or not at all.
 
 ## The X term is not factor-independent
 
@@ -75,16 +76,15 @@ runs. `gSubArrowAbs` — the back-arrow click zone — is assigned only inside t
 sweep, so 3x also has a dead back-arrow zone that no visual inspection reports.
 The visible ring offset and the invisible dead zone are one bug.
 
-Ring nudges are therefore **derived per tier** (`SubRingDXEff` / `SubRingDYEff`),
-with the container offset cancelling out of both axes:
+Offsets are therefore **derived per tier** (`SubDockDX` for X, `SubRingDYEff`
+for Y), with the container offset cancelling out of both axes:
 
-    SubRingDX(f) = rhu(21f) - rhu(25f) - rhu(-16.5f)
     SubRingDY(f) = rhu(15f) - rhu(37f)/2 + rhu(26.5f) - rhu(26f)
-    f=1.5: 19 / -4      f=2: 25 / -6      f=3: 37 / -8
+    f=1.5: -4      f=2: -6      f=3: -8
 
 `tools\flyout-sim\gate_subnative.py` predicts the game's measured `(280,207)`
 from the button rect alone and carries ten negative controls, all detecting. A
-single-file ini value cannot be right at three tiers, so `SubRingDX/DY` must
+single-file ini value cannot be right at three tiers, so these offsets must
 never be hand-entered. Whatever moves the sprite must also move the click zone.
 
 ## The weld is the invariant: SubRingDX must be zero
@@ -99,12 +99,10 @@ it is present at 2x whenever `SubRingDX` is non-zero.
 Horizontal alignment is carried entirely by the dock, which moves the whole
 assembly and preserves the weld:
 
-    SubDockDX(f) = rhu(21f) - rhu(25f) - SubNativeDX()      -14 / -28 / -55
-    SubRingDX(f) = 0 at every tier
+    SubDockDX(f) = rhu(21f) - rhu(25f) - SubNativeDX()
+    f=1.5: -14     f=2: -28     f=3: -55
 
-This intentionally supersedes two earlier f=2 constants (`-53` becomes `-28`,
-`25` becomes `0`) and shifts the 2x assembly about 25px right. A gate that reads
-`-53` or `25` is reading a reverted fix, not a baseline.
+    SubRingDX(f) = 0 at every tier
 
 Seating a ring by nudging the sprite is always wrong: applying a delta to the
 ring alone centres it but tears it off the strip and bar, while applying the same
@@ -118,15 +116,14 @@ stock precedent. Horizontal slide has none.
 
 ## The same bug expressed as configuration
 
-A development ini carrying `[Disaster] RingDX=16 DockX=-2` against the DLL's own
-defaults `RingDX=0 DockX=6` (`UiSpike.cpp:1556` / `1558`) puts the *ring* in a
+An ini carrying `[Disaster] RingDX=16 DockX=-2` against the DLL's own defaults
+`RingDX=0 DockX=6` (`UiSpike.cpp:1556` / `1558`) puts the *ring* in a
 bit-identical screen position at every tier: `DockX` is tier-scaled through
 `ScaleRound`, and `8*f` exactly cancels the seat-scaled `RingDX`. The dial buys
 nothing but moves the *strip* 16px at 2x and 24px at 3x, driving the ring's neck
-into it. That is the junction "lip". The cure is to restore `RingDX=0 DockX=6`;
-the `[Disaster]` `RingDX` / `RingDY` / `DockX` keys are re-read roughly every 20
-sweeps, so this is live-tunable with no rebuild. The shipped `_packaging` ini
-carries neither key, so released builds are unaffected.
+into it. That is the junction "lip". The values that hold the weld are
+`RingDX=0 DockX=6`; the `[Disaster]` `RingDX` / `RingDY` / `DockX` keys are
+re-read roughly every 20 sweeps, so they are live-tunable with no rebuild.
 
 Only two ring-X nudges exist in the codebase — `gRingDX` and `gSubRingDX` — and
 both are zero.

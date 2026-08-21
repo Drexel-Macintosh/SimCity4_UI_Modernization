@@ -6,8 +6,8 @@ toolbar menus, because they are all built from the same `cGZWin` machinery.
 
 ## First: identify which layer you are on
 
-A menu is never one thing. Most long, fruitless debugging sessions come from
-acting on the wrong layer. There are four independent layers, and each one is
+A menu is never one thing. Acting on the wrong layer is the most common cause of
+long, fruitless debugging. There are four independent layers, and each one is
 identified by a different instrument:
 
 | Layer | What it controls | How to observe it |
@@ -18,9 +18,10 @@ identified by a different instrument:
 | Art | The pixels themselves | DBPF resources; resolve through the reference map and the archive builder's report to a TGI. |
 
 The discriminator that works is to **change exactly one thing and see what
-moves.** Hovering that moved only the bar and nothing else proved the bar was a
-separate window from the ring and the pictures — a single observation that opened
-up the whole flyout. Conversely, if a layer refuses to respond to a change, the
+moves.** Elements that move independently under a single hover or a single
+geometry change are separate windows; elements that move together share a
+parent. One such observation partitions an entire flyout into its real windows
+in a single pass. Conversely, if a layer refuses to respond to a change, the
 change is on the wrong layer.
 
 ## The architecture every menu shares
@@ -33,8 +34,9 @@ point wins; if none claims it, the window's own `IsPointInMe` decides.
 
 The consequence is the single most important debugging fact here: **a closed
 upstream gate starves every downstream hook.** A hook that logs nothing is not
-necessarily a broken hook — it may simply never be reached, because something
-earlier in the walk already claimed the point or the window was skipped outright.
+evidence of a broken hook — the identical silence comes from a hook the walk
+never reaches, because something earlier in the walk already claimed the point
+or the window was skipped outright.
 
 **Base `IsPointInMe` at `0x0099C97C`** implements a two-gate hit model:
 

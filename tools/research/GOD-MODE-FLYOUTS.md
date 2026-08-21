@@ -1,490 +1,209 @@
-> ## Read this first — standing corrections
->
-> Three statements that appeared in earlier revisions of this doc are wrong
-> and must not be re-derived:
->
-> 1. `0x0A78827A` IS the founded-city god toolbar. It must stay in BOTH the
->    art list and the runtime lists; the old advice that it is inert and
->    should be removed from `SCALED_WINDOW_IDS` re-breaks founded-city god
->    mode.
-> 2. The ticker marquee is never-touch; its width ships in DATA.
-> 3. `0x00ADF6A0` is `GZWinBMP` — it sizes the draw from the SOURCE image,
->    not a "generic window" class.
->
-> Canonical references: `tools\research\SC4-UI-ENGINE.md` (engine model,
-> incl. §9 listing every doc contradiction found), `_tests\REGRESSION.md`,
-> and `tools\research\SDK-GAPS.md`. Keep this file for the god-flyout
-> mechanisms — the derivations and the click-fix reverse engineering remain
-> valid.
+# God-mode tool flyouts
 
-# God-mode tool flyouts — status, mechanisms, and the Disaster problem
+Mechanism reference for the god-mode tool flyouts: how each one is identified,
+docked and scaled, and the full reverse engineering of the Create Disasters
+flyout's paint pipeline. The runtime code lives in `src/UiSpike.cpp` →
+`UiSpike::ScaleGodFlyouts()`.
 
-> **Standing state:** god mode is COMPLETE and its docks LOCKED. Four later
-> laws generalise the mechanisms in this log (alignment markers are
-> positioning data in DATA as well as at runtime; runtime is sometimes
-> structurally too late so the fix belongs in the shipped `.UI`; never scale
-> font/art-sized controls; identify windows positively, never by size
-> heuristic) — plus the LOAD-ORDER LAW, which can silently shadow any art
-> fix here. Full detail: `_tests\REGRESSION.md`; test axes:
-> `_tests\SCENARIOS.md`.
-
-This file is the mechanism log for the god-mode flyouts. All work lives in
-`src/UiSpike.cpp` → `UiSpike::ScaleGodFlyouts()`.
-
-> **Disaster status: SOLVED by born-at-place (v2.39.4).** The dock block is
-> LIVE (search `"disaster flyout (anon)"`). The historical probe notes below
-> are kept because the dead ends are the instructive part.
+Companion references: `tools\research\SC4-UI-ENGINE.md` (the engine model and
+the canonical `cIGZWin` vtable map) and `tools\research\SDK-GAPS.md` (where the
+community headers diverge from the shipped executable).
 
 ---
 
-## STATUS AT A GLANCE
+## The five god tools
 
-| # | Tool (button) | Flyout window | Docked | Scaled | State |
-|---|---|---|---|---|---|
-| 1 | Terraform (green) | `0x49923239` | offset (6,−80) | yes | **DONE, user-confirmed** |
-| 2 | Terrain Effects (tan) | `0xCA35CBED` | offset (6,40) | yes | **DONE, user-confirmed** |
-| 3 | Reconcile Edges | *(no flyout)* | — | — | n/a |
-| 4 | **Create Disasters (orange)** | anonymous `id==0` | **yes (28,130)** | **yes** | **BORN-AT-PLACE v2.39.4 (shipped)** |
-| 5 | Day/Night (blue) | rides `0xCA35CBED` | via coupling | yes | **DONE, user-confirmed** |
+| # | Tool (button) | Flyout window | Dock offset (1x units) | Scaling mechanism |
+|---|---|---|---|---|
+| 1 | Terraform (green) | `0x49923239` | (6, −80) | dock + subtree scale |
+| 2 | Terrain Effects (tan) | `0xCA35CBED` | (6, 40) | dock + subtree scale |
+| 3 | Reconcile Edges | none | — | — |
+| 4 | Create Disasters (orange) | anonymous, `id == 0` | (6, 130) | born-at-place |
+| 5 | Day/Night (blue) | `0xCA35CBED` (shared with 2) | (6, 160) | rides flyout 2 |
 
-**Do not "improve" 1/2/5 casually — they were painful to converge and are confirmed correct.**
+Flyouts 1, 2 and 5 are converged and locked. Their offsets are derived
+constants, not tuning values — treat a change to any of them as a change to the
+derivation below.
 
 ---
 
-## THE MECHANISM THAT WORKS (flyouts 1, 2, 5)
+## The dock mechanism (flyouts 1, 2 and 5)
 
-Dock target = scaled toolbar strip `0xC991EDA8` live pos + design offset × f:
+The dock target is the scaled toolbar strip `0xC991EDA8`'s live position plus a
+design offset scaled by the tier factor:
 
 ```
 targetL = tbLiveL + ScaleRound(offX, f)
 targetT = tbLiveT + ScaleRound(offY, f)
 ```
 
-**Offsets are DERIVED, never hand-tuned.** From `_vanilla-reference/FINDINGS.md`
-"EXACT STOCK DIMENSIONS" (1280×1024, f=1.0), with toolbar stock (5,435):
+Offsets are **derived**, never hand-tuned. From the clean 1:1 vanilla capture at
+1280×1024 (f = 1.0), with the toolbar at stock (5,435):
 
 ```
-0x49923239 (11,355) -> ( 6,-80)   terraform    <- matches shipped value
-0xCA35CBED (11,475) -> ( 6, 40)   terrain-fx   <- matches shipped value
+offset = flyoutStock − toolbarStock
+
+0x49923239  stock (11,355)  ->  ( 6,-80)   terraform
+0xCA35CBED  stock (11,475)  ->  ( 6, 40)   terrain-fx
 ```
-Both derived values equal the confirmed-correct ones, so the formula
-`offset = flyoutStock − toolbarStock` is validated. **Use it. Do not guess
-offsets by eye — many hours were lost doing exactly that.**
 
-### Day/Night rides Terrain-FX (non-obvious, critical)
-Terrain-FX and Day/Night **share** the `0xCA35CBED` window. Its offset drives
-whichever is showing, 1:1:
-- `offY 40` → ring on btn2 (correct for terrain-fx)
-- `offY 160` → ring on btn5 (correct for day/night)
+Both derived values equal the confirmed-correct shipped ones, which validates
+the formula. Bracketing an offset by eye does not converge: the disaster
+container was bracketed X 22 (too far left) ↔ 126 (too far right) and Y 518 (too
+high) ↔ 758 (too low) across eight build cycles without landing, because the
+container is not the window that positions the visible circle.
 
-So the offset is chosen at runtime by which tool is active, detected via
-`0xCA35CB74` visibility (day/night's sub-tool; visible ONLY under day/night —
-terrain-fx shows the 4-button set `0x0AA44502..05` instead). Day/Night has no
-dock entry of its own; `0xABB26B0E` is a frozen hidden template at Y1045.
+### Day/Night rides Terrain Effects
 
-### Other hard-won rules
-- **`gateVisible` is per-flyout.** Terrain-FX must be gated on `IsVisible()`
-  (a closed one docked onto day/night breaks it). **Correction:** the earlier
-  claim *"Disaster's root is `vis=0` always"* was about `0x0A78827A`, a
-  **different** window (see Dead end 1). The real disaster container is
-  `vis=1` in every logged sighting, and the sweep block that finds it
-  *requires* `IsVisible()`.
-- **`InvalidateSelfAndParents()`** (cIGZWin.h:187) after any geometry change —
-  otherwise the game keeps the stale paint until a mouse hover invalidates it
-  ("only scales after I move the mouse over it").
-- **`ScaleSubtree` doubles child POSITIONS, not just sizes.** Correct for 1/2/5
-  (whole layout scales coherently); it **destroys** Disaster (flings its
-  thumbnail strip from rel X184 → X368).
+Terrain Effects and Day/Night **share** the `0xCA35CBED` window. Its offset
+drives whichever tool is showing, 1:1:
+
+- `offY 40` → ring lands on button 2 (correct for Terrain Effects)
+- `offY 160` → ring lands on button 5 (correct for Day/Night)
+
+So the offset is selected at runtime by which tool is active. Detection is by
+`0xCA35CB74` visibility — Day/Night's sub-tool, visible only while Day/Night is
+the open tool. Terrain Effects swaps in the four-button set
+`0x0AA44502..05` instead. The shared root `0xCA35CBED` stays `vis=1` for both,
+so it cannot be used as the discriminator. Day/Night has no dock entry of its
+own.
+
+### Per-flyout rules
+
+- **`gateVisible` is per-flyout.** Terrain Effects must be gated on
+  `IsVisible()`, because a closed Terrain-FX flyout docked on top of Day/Night
+  breaks Day/Night. The disaster container is `vis=1` in every logged sighting
+  and the sweep block that finds it requires `IsVisible()`.
+- **`InvalidateSelfAndParents()`** (`cIGZWin.h:187`) must follow any geometry
+  change. Without it the game keeps the stale paint until a mouse hover
+  invalidates the region, so the flyout scales only after the pointer crosses
+  it.
+- **`ScaleSubtree` doubles child POSITIONS as well as sizes.** That is correct
+  for flyouts 1, 2 and 5, whose whole layout scales coherently. It destroys the
+  disaster flyout: the thumbnail strip flies from relative X184 to X368.
 
 ---
 
-## DISASTER (button 4) — SOLVED v2.39.4. Read before touching.
+## The founded-city god toolbar `0x0A78827A`
 
-> The flyout was the **first** one ever scaled (v2.11.x) and sat for 28
-> versions on generation 1 (scale-after-`IsVisible()`) while every other
-> flyout had been upgraded twice. v2.39.0–.4 moved it to **born-at-place**
-> (`SubPlaceDetour`, return address `0x007E74D6`, distinct from the
-> first-level twin's `0x007EB196`): size, dock and item metrics are now all
-> applied at birth, plus one forced repaint (`DISHEAL`) for the chrome.
->
-> Two self-inflicted regressions were paid for on the way, both now laws:
-> born-scaling took the window **off the sweep**, which had been silently
-> supplying its strip item metrics (→ tiny thumbnails, law 16); and writing
-> metrics at birth **poisoned the game-wide shared `gStripBase*` latch** (→
-> duplicated picker icons everywhere, law 17 — prime a shared latch from a
-> STOCK value, never from a scaled one).
->
-> Details: `_tests\REGRESSION.md` → "CREATE DISASTER FLYOUT", and
-> `tools\research\MECHANISM-GENERATIONS.md`. The anatomy below is still
-> correct; the old "no independent control" conclusion is not.
+`0x0A78827A` is the god toolbar in a founded city. Its `.UI` script
+`I-aa53e3ea` lists the Obliterate / Reconcile / Disasters / Day-Night buttons.
 
-### What it is
-Three visually independent pieces: **orange circle**, **orange bar**,
-**disaster pictures** (clickable thumbnails).
+Before a city is founded the window sits hidden (`vis=0`) at abs(5,1071),
+74×291, and moving it changes nothing on screen. Once a city exists it goes
+live and carries the god UI, so it belongs in `SCALED_WINDOW_IDS`
+(`tools/selective-safe/build_selective_safe.py`) and in the runtime lists.
+Removing it from either breaks founded-city god mode.
 
-Only **two windows** exist for it (verified by open-vs-closed diff over 29 open
-and 41 closed frames, anonymous windows included):
+`0x0A78827A` is not the Create Disasters flyout. The visible disaster flyout is
+an anonymous (`id == 0`) child of the 3D view `0x9A47B417`.
+
+The `SCALED_WINDOW_IDS` marker recurses into **all** children of the id it
+marks. On the disaster thumbnails that doubled the textures while the control
+still blitted them with 1× source rects, which reads on screen as zoomed-in
+thumbnails. Supplying the strip's item metrics from the birth path resolves it;
+`0x0A78827A` stays in both the art list and the runtime lists.
+
+---
+
+## Create Disasters — anatomy
+
+Three visually independent pieces: an **orange circle**, an **orange bar**, and
+the **disaster pictures** (clickable thumbnails).
+
+Only **two windows** exist for it, established by diffing 29 opened frames
+against 41 closed ones with anonymous windows included:
 
 ```
 0x00000000  par 0x9A47B417   282x678   <- container (paints circle + bar)
 0x00000000  par 0x00000000    88x578   <- thumbnail strip (the pictures)
 ```
 
-### Dead ends — do NOT repeat these
-1. **`0x0A78827A` is NOT the disaster flyout**, despite that label in
-   `_vanilla-reference/FINDINGS.md`. It is a hidden `vis=0` god sub-tool strip
-   (its `.UI` script `I-aa53e3ea` lists Obliterate/Reconcile/Disasters/
-   Day-Night buttons) sitting at abs(5,1071) 74×291. **The FINDINGS label is
-   wrong.** Note, though, that this entry was measured **before a city was
-   founded** — the window goes LIVE once one exists, and "docking/scaling it
-   changes nothing" is false there. It IS the founded-city god toolbar; see
-   the banner at the top of this file. Keep it in `SCALED_WINDOW_IDS`.
-2. **Hand-tuned offsets.** X was bracketed 22 (too left) ↔ 126 (too right) and
-   Y 518 (too high) ↔ 758 (too low) across ~8 build cycles without converging.
-   The container is not the thing that positions the circle.
-3. **`ScaleSubtree` on the container** — flings the strip and bar apart.
-4. **Force-scaling the container** — window became 564×1356 but the art stayed
-   1×; the art does not follow the window rect.
+When settled, the container sits at abs(126,518), 282×678.
 
-### The decisive finding (DPROBE)
-A change-triggered probe running at **sweep frequency** (the 1-second
-`LiveDump` can only ever capture settled states, which is why every earlier
-investigation failed) recorded **ZERO geometry changes** across
-open → settle → hover → mouse-away, with our dock disabled.
+The circle and the bar are **painted art inside the container**, not child
+windows. A change-triggered probe running at sweep frequency recorded **zero**
+geometry changes across open → settle → hover → mouse-away with the dock
+disabled, while the bar visibly moves on hover — the hover is a paint-state
+change. A 1-second `LiveDump` can only ever capture settled states, which is
+why lower-frequency sampling never showed this. Because the pieces are not
+windows, no dock, offset, or resize gives independent control of them.
 
-**Yet the bar visibly jumps on hover.** Therefore the circle and bar are
-**painted art inside the container**, not windows. The hover is a *paint-state*
-change. This is why no dock, offset, or resize ever gave independent control.
+### Class identity
 
-### Class identity (DCLASS probe)
 ```
 container 282x678  vtable = 0x00AB6AA8   answers ONLY to cIGZWin
 strip      88x578  vtable = 0x00AB6D88   answers ONLY to cIGZWin
-generic windows    vtable = 0x00ADF6A0
+generic windows    vtable = 0x00ADF6A0   (GZWinBMP: it sizes the draw from
+                                          the SOURCE image)
 ```
-Two distinct specialized classes. Neither exposes `cIGZWinGen`/`cIGZWinBMP`,
-so **there is no supported image/paint API** — the cheap route is closed.
 
-### The draw hook probe (historical)
-Only remaining lever at the time = intercept `GZPaint()`.
-
-- `cIGZWin::GZPaint` is virtual **#85**. `cIGZUnknown` adds exactly 3 slots and
-  **neither class declares a virtual destructor** (verified) ⇒ **vtable index 87**.
-  (Settled correction: the arithmetic missed one slot — `0x0099BE4C` at index
-  87 is `GetNotificationTarget`, and the per-class draw `GZPaint` is index
-  **88** (`SDK-GAPS.md` §1). The probe below therefore sat on the getter,
-  which is why it never fired.)
-- `cIGZWin` has 144 virtuals (147 slots); concrete class adds more ⇒ copy 256.
-- Installed as a **per-instance vtable copy**; the shared class vtable
-  (0x00AB6AA8) is **never written**, so no other window is affected.
-
-**RESULT (v2.7.33-dprobe): installed cleanly, NEVER FIRED.**
-```
-DHOOK installed on ptr2BFED818 (282x678) origVt=00AB6AA8 origGZPaint=0099BE4C
-installed: 1   FIRED: 0
-```
-One install (the tight size gate 200-400 x 500-900 correctly matched only the
-disaster container), no crash, and **zero fires even after 6 forced
-`InvalidateSelfAndParents()` calls**. The conclusion drawn at the time — "this
-window is not painted through its own `GZPaint` virtual" — was an artifact of
-the slot misidentification above; the container IS painted through slot 88
-(`0x0079B0E0`).
-
-### Slot scan (v2.7.34-slotscan) — the systematic replacement
-Guessing one slot at a time is too slow, so hook the whole draw-related RANGE
-at once and log which the game actually calls.
-
-**SAFETY RULE — only zero-argument slots may be hooked this way.** `__thiscall`
-is callee-cleanup, so a thunk declared with the wrong argument count cleans the
-wrong number of stack bytes and corrupts the stack. Indices **87..97** are the
-range scanned.
-
-**The slot table originally placed here was off by one, and this file is
-where that error was born.** It omitted **slot 89**, shifting every name
-after it, and was copied verbatim into `SC4-UI-ENGINE.md` §2.1 and into
-`UiSpike.cpp`'s header. It cost a probe build on #89: a caller asking "93"
-for `GetBufferToDrawTo` got `[ecx+0x6c]`, the DRAW CONTEXT, and "92"
-returned NULL. The settled table, corrected from the exe (the canonical
-copy is `SC4-UI-ENGINE.md` §2.1; the full header-drift law — the vendor
-header is missing one virtual at real slot 57, and slot 87 is
-`GetNotificationTarget`, not `GZPaint` — is `SDK-GAPS.md` §1):
-
-| idx | offset | virtual | VA |
-|---|---|---|---|
-| 87 | `+0x15C` | `GetNotificationTarget` | `0x0099BE4C` |
-| 88 | `+0x160` | **`GZPaint`** (per-class draw) | base no-op `0x00949ADE`; container `0x0079B0E0`; strip `0x0079AA70` |
-| 89 | `+0x164` | **`Plot`** (= composite + present) | `0x0099BA07` |
-| 90 | `+0x168` | `CalcAbsoluteArea` | `0x0099DCE4` |
-| 91 | `+0x16C` | `InvalidateSelf` | `0x0099BECC` |
-| 92 | `+0x170` | `InvalidateSelfAndParents` | `0x0099BED1` |
-| 93 | `+0x174` | `GetDrawContext` (`= [ecx+0x6c]`) | `0x0099BEF9` |
-| 94 | `+0x178` | `GetBufferToDrawTo` (`= [ecx+0x68]`) | `0x0099BEFD` |
-| 95–98 | — | `SetBufferToDrawTo` / `…Recursive` / `SetAreaToDrawTo` / `…Recursive` — zero-arg, hooked safely | `0x0099C6F8` / `0x0099D57E` / `0x0099CF6A` / `0x0099D5B7` |
-| 100 | `+0x190` | `PrivateBuffer(bool)` — **NOT zero-arg** | `0x0099EA70` |
-| 101 | `+0x194` | `GetPrivateBuffer` (`= [ecx+0x64]`) | `0x009D419D` |
-
-The old community-header names for 95–98 included argument-taking variants,
-so the sentence "87..97 are *exactly* the zero-arg draw group" was never
-true. The range is still hooked in full, and that is safe only because the
-thunks return `uintptr_t` and never assume an arity.
-
-Thunks are `template <int IDX>` and return `uintptr_t`, which preserves EAX
-exactly for every one of them (the void-returning slots just have their garbage
-EAX ignored by the caller).
-
-**Built-in positive control:** our own forced `InvalidateSelfAndParents()` now
-routes through the swapped vtable, so **slot 92 must fire** (this was written as
-"slot 91" under the old off-by-one numbering — one more way the wrong table made
-a real null unreadable). If 92 fires and others do not, the hook machinery is
-proven and the silence is real. If 92 also stays silent, the vtable swap itself
-is not taking effect and the index base is wrong.
-
-Next: whichever slot fires is the live interception point on the exact window
-that paints circle + bar. If NOTHING fires including 91, move the hook up the
-parent chain to `0x9A47B417`.
-
-### DEAD END — reading the rendered frame back (v2.7.33–2.7.41, do NOT retry)
-Nine builds tried to measure the orange ring's pixel position objectively by
-reading the render buffer in-process. It cannot be done:
-- The container has **no private buffer** (`GetPrivateBuffer()` = null).
-- It paints into the shared **main/parent draw-to buffer = 2400×1600 32bpp**
-  (`qiBuf=1`), at absolute screen coords — the right buffer in principle.
-- But that buffer is **GPU-only**: `Lock(0)`/`Lock(0x8000)` succeed, yet every
-  pixel reads `(0,0,0)` and `GetColorSurfaceBits()`/`Stride()` return **0**.
-  There is no CPU-readable copy of the frame. `GetPixel` sees nothing.
-- The container's own `GetBufferToDrawTo()` returns junk (`1537×0 qiBuf=0`)
-  outside its draw sequence.
-So the ring's color/position is NOT measurable from the DLL. The GZPaint→Plot
-hook (index 88) does fire and IS a valid interception point, but the pixels it
-writes go straight to GPU memory. Objective measurement, if ever needed, must
-come from a real screen capture, not a buffer read. **The container is at
-abs(126,518) 282×678 when settled** (matches the old FINDINGS value).
-
-### The thumbnail-zoom regression (settled)
-`0x0A78827A` is in `SCALED_WINDOW_IDS`
-(`tools/selective-safe/build_selective_safe.py:102`) and the marker recurses
-into **all children** — which once 2×'d the disaster thumbnail textures while
-the control still blitted them at 1× source rects (the "zoomed-in" look).
-The strip-metrics work of the born-at-place fix (laws 16/17) is what settled
-it; `0x0A78827A` stays in both the art and runtime lists.
+Two distinct specialized classes. Neither exposes `cIGZWinGen` or
+`cIGZWinBMP`, so there is no supported image or paint API on them.
 
 ---
 
-## DEBUG INSTRUMENTS (probe era)
+## Create Disasters — the Plot pipeline
 
-All in `ScaleGodFlyouts()`.
+Container `Plot()` (`0x0079B0E0..0x0079B48F`, 279 instructions) is disassembled
+in full, and the pipeline explains why no member-field write scales the art.
 
-| Log prefix | What it does |
-|---|---|
-| `DPROBE` | Walks all of `0x9A47B417`'s subtree each sweep; logs only windows whose pos/size/vis **changed**. Keyed by **window pointer** (keying by id/parent collapses anonymous windows together — that mistake wasted a run). Band-limited to X −150..500, Y 380..1250 to exclude the constantly-animating bottom query panels. |
-| `DCLASS` | One-shot per window: vtable pointer + which GZWin interfaces it answers to. |
-| `DHOOK` | GZPaint hook install + fire logging (observe-only). |
+1. **Top gate:** `test byte[0x114],1; je end`. `Plot` only redraws when the
+   dirty bit is set, and clears it afterwards. The bit is normally 0 (confirmed
+   live), so `Plot` early-exits to the blit path and re-blits the cached buffer.
+2. **Redraw path (dirty = 1 only):** reallocates the internal buffer `[0xdc]`
+   to the window-rect size `[0xa8..0xb4]` — the realloc check at `0x0079B117`
+   compares buffer W/H against `[0xb0]-[0xa8]` / `[0xb4]-[0xac]` — then draws
+   the bar and circle into it via `[0xd8]`(drawContext)`->[0x74]` plus the arc
+   helper `0x8d8bc0`, using rects built from the window W/H minus the
+   `[0xe0..0xf4]` field insets.
+3. **Blit path (always):** `[0x68]`(dest buffer)`->Blt(src=[0xdc], ...)` using
+   the rect at `[0x24..0x30]`. `[eax+0x30]` is `cIGZBuffer` idx12
+   `GetBufferArea`; `[ebx+0x74]` is idx29 `Blt`.
 
-During the probe era the disaster dock block was wrapped in `#if 0` so the
-probes stayed clean.
+### Live object values (natural, un-forced)
 
-Settings: `LiveDumpMs=1000`, `LogLevel=3` in
-`Documents\SimCity 4\Plugins\SC4UIScale.ini`.
-
----
-
-## BUILD / DEPLOY
-
-```
-MSBuild src\SC4UIScale.vcxproj -p:Configuration=Release -p:Platform=Win32
-copy build\Release\SC4UIScale.dll  "%USERPROFILE%\OneDrive\Documents\SimCity 4\Plugins\"
-```
-Kill SimCity first (it locks the DLL). Bump `UISCALE_VERSION_STR` in
-`src/SC4UIScaleDllDirector.cpp` every build so the log banner identifies it.
-
-## VERIFYING
-Open each god tool and check the coloured ring wraps its own button:
-Terraform→1, Terrain-FX→2, Disaster→4, Day/Night→5. Nothing may render on
-button 3 (Reconcile has no flyout). Check both the **settle** and **hover**
-states — several bugs only appeared in one of them.
-
----
-
-## 2026-07-27 UPDATE (full Plot pipeline reverse-engineered)
-
-Disassembled container Plot() **completely** (0x0079B0E0..0x0079B48F, 279 insns;
-dump in scratch `container_plot_full.txt`) and probed the live object. The whole
-draw/blit pipeline is now understood — and it explains why NO member-field lever
-scales the art.
-
-### The pipeline (container 282x678, vtable 0x00AB6AA8)
-1. **Top gate:** `test byte[0x114],1; je end`. Plot only REDRAWS when the dirty
-   bit is set; it clears it after. **Normally dirty=0** (confirmed live) → Plot
-   early-exits to the blit path and just re-blits the cached buffer.
-2. **Redraw path (dirty=1 only):** reallocates the internal buffer `[0xdc]` to
-   the window rect `[0xa8..0xb4]` size (realloc check at 0x79b117 compares
-   buffer W/H to `[0xb0]-[0xa8]`/`[0xb4]-[0xac]`), then draws the bar/circle into
-   it via `[0xd8]`(drawContext)`->[0x74]` + the arc helper `0x8d8bc0`, using
-   rects = window W/H minus the `[0xe0..0xf4]` field insets.
-3. **Blit path (always):** `[0x68]`(dest buffer)`->Blt(src=[0xdc], ...)` using a
-   rect at `[0x24..0x30]`; `[eax+0x30]`=cIGZBuffer idx12 GetBufferArea,
-   `[ebx+0x74]`=idx29 Blt.
-
-### Live object values (DOBS, natural/un-forced)
 ```
 r24 [0x24..0x30] = (0,0,282,678)     window SIZE at local origin
 win [0xa8..0xb4] = (66,682,348,1360) absolute rect (282x678, docked at 66,682)
-dst68 [0x68]     = 2400x1600 32bpp   THE FULL SCREEN buffer
-srcBuf [0xdc]    = 141x339 32bpp     <-- HALF the window (282x678)
+dst68 [0x68]     = 2400x1600 32bpp   the full-screen buffer
+srcBuf [0xdc]    = 141x339 32bpp     HALF the window (282x678)
 v100 [0x100]=138  dirty[0x114]=0x00  f118=256 f11c=0 f120=0
 ```
-**The cached buffer is 141x339 — exactly half the on-screen window.** So the art
-is drawn small and the flyout is a **stretch-blit of a 141x339 buffer onto the
-282x678 window** (already a 2x stretch). The apparent "1x" look is inherent to
-the stock art's thin bar / small thumbs, magnified by this being a bitmap
-stretch rather than real 2x windows like Terraform's sub-buttons.
 
-### LEVERS TRIED — all four member-level writes RULED OUT
-| Build | Wrote | Result | Meaning |
-|-------|-------|--------|---------|
-| v2.7.78 | 6 fields `[0xe0..0xf4]` x2 (persisted, verified) | no change | fields are insets, not size |
-| v2.7.79 | window rect `[0xa8..0xb4]` x2, no redraw | no change | on-screen size is NOT this rect |
-| v2.7.80 | window rect x2 + fields x2 + **force dirty** | **SHRANK** | redraw realloc'd buffer 141->564, killing the 141->display stretch → art half size |
-| v2.7.83 | `r24 [0x24..0x30]` x2 (stuck, verified) | no change | on-screen size is NOT r24 |
+The cached buffer is 141×339 — exactly half the on-screen window — so the flyout
+is a stretch-blit of a 141×339 buffer onto a 282×678 window. The compact look is
+inherent to the stock art's thin bar and small thumbnails magnified by a bitmap
+stretch, rather than the real 2× sub-windows Terraform uses.
 
-**Conclusion:** the on-screen SIZE is neither the window rect, nor r24, nor the
-fields. Only forcing a redraw changed the display — and it SHRANK it, by
-reallocating the buffer to match the window and thereby destroying the implicit
-141→display 2x stretch. The real on-screen size is set by the **parent's
-compositing of this child** (the blit dest region on `[0x68]`), which is not in
-any member field we can write — it's decided when the parent asks the child to
-paint. Position IS reachable (GZWinMoveTo moved the flyout, updating `[0xa8]`),
-but SIZE is not.
+### The four container draws at 1x
 
-### 2026-07-27 (cont.) — OFFLINE EMULATOR + src/dst decouple WORKS
-Built `tools/flyout-sim/emu_plot.py`: runs the REAL container Plot()
-(0x0079B0E0) under the Unicorn CPU emulator with a synthetic object, stubs the
-buffer/drawctx vtable calls, and CAPTURES the exact rects Plot feeds each draw.
-Renders them to a PNG (`--png`). Reusable for any Mayor-mode painted control.
-Requires `pip install unicorn` (capstone+PIL already present).
+Running the real container `Plot()` against a synthetic object under a CPU
+emulator, with the buffer and draw-context vtable calls stubbed, captures the
+exact rects `Plot` feeds each draw:
 
-**Emulator findings (natural 1x -> the 4 container draws):**
 ```
-bar-top cap  dst(229,0,  282,25)   x[229-282]=53w (right-anchored)
+bar-top cap  dst(229,0,  282,25)   x[229-282]  width 53 from field 0xe0  (right-anchored)
 bar-spine    dst(229,25, 282,653)  drawn by the ARC helper 0x8d8bc0 (TILES)
 bar-bot cap  dst(229,653,282,678)
-ring/circle  dst(0,138,  94,200)   x[0-94]=ec wide (LEFT-anchored)
+ring/circle  dst(0,138,  94,200)   x[0-94]     width 94 from field 0xec  (LEFT-anchored)
 ```
-At all-fields-x2: ring->188w, bar->106w — the correct 2x target (ring encircles
-the 2x button; bar 2x thick). Circle is LEFT-anchored (x[0,ec]), bar is
-RIGHT-anchored (x[W-e0,W]) - that opposite anchoring is why blind field-doubling
-looked wrong.
 
-**Key mechanism (finally cracked):** the element draws are
-`[0xdc]->Blt(drawCtx, srcRect, dstRect)` and are 1:1 (src size == dst size).
-Doubling the fields doubles BOTH -> the srcRect reads PAST the 1x texture edge =
-the tiling MESS. FIX (v2.7.94, IN-GAME CONFIRMED the buffer Blt STRETCHES):
-double the fields (2x dst) + hook `[0xdc]`'s Blt to HALVE the srcRect back to 1x
--> the real texture stretches to the 2x dst. **First build ever to put the
-disaster thumbnails ON the bar.**
+With all six fields doubled the ring reaches 188 wide and the bar 106 — the
+correct 2× target, where the ring encircles the 2× button and the bar is twice
+as thick. The circle is **left**-anchored (`x[0,ec]`) and the bar is
+**right**-anchored (`x[W-e0,W]`); that opposite anchoring is why blind field
+doubling looks wrong on screen.
 
-**Remaining at that stage (all sim-modelable):**
-1. Ring not reaching 2x in-game though the sim says 188 -> debug (src guard? or
-   ring is partly the arc). 2. Bar spine "chopped" = the arc helper 0x8d8bc0
-   TILES its texture; needs the same stretch treatment (model the arc in the
-   emulator first). 3. Thumbnails show 1/4 / unchanged = they are the SEPARATE
-   STRIP control (0x0079AA70, vtable 0x00AB6D88), which the container hook never
-   touches; needs its own emulation + src/dst decouple. 4. Re-dock once sizes
-   settle. (Deployed at the time: v2.7.95, container decouple + thumb-guard,
-   gFieldMask=0x3F, gCtxHalve on [0xdc]. All of this was later superseded by
-   the born-at-place mechanism, v2.39.4.)
+The element draws are `[0xdc]->Blt(drawCtx, srcRect, dstRect)` and are 1:1 —
+source size equals destination size. Doubling the fields doubles both, so the
+source rect reads past the 1× texture edge and the art tiles. The working form
+is to double the fields for a 2× destination and hook `[0xdc]`'s `Blt` to halve
+the source rect back to 1×, which makes the real texture stretch into the 2×
+destination.
 
-### BLT HOOK RESULT (v2.7.84-88) — the pipeline is fully mapped; no clean lever
-Hooked the flyout's screen composite `[0x68]->Blt` (idx29) via a surgical
-per-instance vtable swap around the container's Plot call (restored after; no
-other window affected). Captured the real args:
-```
-Blt(src=[0xdc] 141x339 buffer, srcRect a2=(0,0,141,339),
-    dstRect a3=(0,0,282,678), clip a4=null)
-```
-- **a3 (dest rect) is NOT a scale lever.** Set a3 to 846x2034, then it
-  accumulated to **2538x6102** (a3 is a persistent, reused rect) — and the screen
-  was UNCHANGED. A 2538x6102 dest producing zero change proves the Blt is a
-  **1:1 clipped copy**, not a stretch: on-screen art size = the SOURCE buffer
-  size (141), positioned at the dest origin, clipped to the dest.
-- **Forcing the redraw (v2.7.87, dirty bit only)** reallocated the buffer 141→282
-  (the natural window rect) and redrew — but the layout is **WIDTH-DRIVEN**, so
-  drawing at 282 wide RE-FLOWED the flyout (scroll bar shoved far right,
-  over-tall) instead of magnifying it. User: wrong. **Reverted (v2.7.88).**
+### Member field values (container 282×678)
 
-### CONCLUSION (2026-07-27): no RUNTIME lever uniformly scales this flyout
-Superseded as a recommendation by the born-at-place mechanism (v2.39.4), which
-scales the flyout at birth instead of at runtime; the lever analysis itself
-stands. Every reachable runtime lever is exhausted: fields (insets), window
-rect, r24, the Blt dest rect (1:1 copy ignores it), and forced redraw
-(re-flows the width-driven layout). The flyout draws its art into a 141x339
-buffer with a width-driven internal layout and 1:1-copies it to screen. To
-magnify it uniformly you must change the game's compiled coordinate MATH
-(binary-patch Plot at 0x0079B0E0 / the arc helper 0x8d8bc0 to scale the
-field-derived positions), or replace the source textures with 2x art AND fix
-the fixed source-rect blits (the zoomed-thumbnail problem). The natural state
-(v2.7.88) = the flyout stretched into its 2x-docked window, which is its
-correct compact appearance; runtime enlargement beyond that is not available.
-
-### Paths considered (historical)
-1. **Hook the blit** — swap `[0x68]`'s vtable (or the container's) around the
-   original Plot call so the `Blt` (idx29) dest rect is scaled 2x; the 141x339
-   buffer then stretches to 2x the current on-screen area. Surgical (restore the
-   vtable after Plot) but the Blt arg layout wasn't fully parseable statically.
-2. **SetW/SetH virtuals** (NOT direct member writes) — may notify the parent to
-   composite the child at 2x. **v2.7.74 already tried this and it broke** (ring
-   vanished, bar stretched, strip flew) because SetW sets dirty → redraw →
-   buffer realloc → lost stretch. Would need to also suppress the realloc.
-3. **Accept it** — the flyout may already be effectively 2x (buffer stretched to
-   the 2x window); its "small" look is the stock art design, unlike Terraform's
-   real-window sub-buttons.
-The born-at-place mechanism (v2.39.4) made all three moot.
-
----
-
-## 2026-07-26 UPDATE (second model session)
-
-### Version history this session
-| Version | Change | Result |
-|---------|--------|--------|
-| v2.7.73 | Restore button dat-only fix | Deployed, working |
-| v2.7.74 | CAA hook + window SetW/SetH ×2 | Failed: CAA returns 0x06752001 (not rect ptr); window scaling caused regressions (ring gone, bar stretched, strip flew right) |
-| v2.7.75 | Revert window scaling, CAA observe-only | Back to dock-only state |
-| v2.7.76 | Member field dump + doubling at 0xE0-0xF4 | Superseded by the later mechanism work |
-
-### Dead ends confirmed this session
-1. **CalcAbsoluteArea hook (slot 89)** — returns `0x06752001` for both container
-   and strip, every frame. Same value = NOT a per-window rect pointer. Reads as
-   garbage when dereferenced (`L=422416 T=-1340969632...`). **DEAD — and the
-   cause is now known:** the hook sat on `0x0099BA07`, which ends
-   `mov al,bl; ret` — it writes only the low byte of `eax`, so `0x06752001`
-   is caller garbage with `al = 0x01` = true; that is also why both windows
-   returned the identical value. The real absolute-rect recompute is slot 90
-   (`0x0099DCE4`), which returns nothing and writes the rect in place at
-   `[this+0x14..0x20]` (`SDK-GAPS.md` §1).
-2. **Window SetW/SetH ×2** — caused regressions: orange ring disappeared
-   (probably painted at offset from window bottom/center), bar stretched
-   vertically, strip flew right. Painted art does NOT follow window rect.
-   **REVERTED.**
-3. **Binary-patch Plot() for immediates** — disassembly of both Plot() functions
-   (container 0x0079B0E0, strip 0x0079AA70) shows **ZERO hardcoded drawing
-   immediates**. All coordinates come from member fields. **NOT POSSIBLE.**
-
-### Key discovery: Plot() reads member fields, not immediates
-Disassembled both Plot() functions with capstone
-(`%USERPROFILE%\Documents\Qwen\sc4_disasm_disaster_plot.py`):
-
-**Container Plot() (0x0079B0E0):** reads `[this+0xe0..0xf4]` as 6 int32 layout
-params, plus `[this+0xa8..0xb4]` (window rect), plus `[this+0xd8]` (draw context
-ptr). Calls `[drawCtx+0x74]` (blit virtual) with rects built from those fields.
-Also calls `0x8d8bc0` (circle arc helper). No `push imm32` for coordinates.
-
-**Strip Plot() (0x0079AA70):** loops over items from `[this+0xd8]` array.
-Reads item size from `[this+0xf4]`, spacing from `[this+0xf8]`, count from
-`[this+0xfc]`. Computes blit rects from `[this+0x24]`, `[this+0x28]`,
-`[this+0x68]`. No hardcoded drawing immediates.
-
-### Member field values (DMEM dump, container 282×678)
 ```
 Offset  Index   Value   Role in Plot()
 0xE0    m[0x38]   53    bar pitch / vertical spacing
@@ -495,28 +214,192 @@ Offset  Index   Value   Role in Plot()
 0xF4    m[0x3D]    6    small offset
 ```
 
-v2.7.76 doubled all 6 at hook-install time. The strip's Plot() reads from
-0xE4-0xFC, similar range but different class.
+Strip `Plot()` (`0x0079AA70`) loops over items from the `[this+0xd8]` array,
+reading item size from `[this+0xf4]`, spacing from `[this+0xf8]` and count from
+`[this+0xfc]`, and computes its blit rects from `[this+0x24]`, `[this+0x28]`
+and `[this+0x68]`.
 
-### Follow-ups (historical — executed by the later mechanism generations)
-1. The v2.7.76 member-field doubling was tested in-game (`DMEM DOUBLED`
-   lines): the art did not uniformly scale, confirming the fields alone are
-   not the lever.
-2. Dock offY recomputation followed once sizes settled (the circle internal
-   offset doubles from ~178px to ~356px under field doubling,
-   `new_offY ≈ (860 - 356 - tbLiveT) / 2 ≈ 41`).
-3. The strip (88×578, vtable 0x00AB6D88) got its own treatment: its Plot()
-   at 0x0079AA70 reads `[this+0xe4..0xfc]`.
-4. The probe diagnostics (DPROBE/DCLASS/DHOOK/DHOOK2/DPOS/DCAL/DMEM/CAA/CAA2
-   and the buffer-scan helpers ScanRegion, SafeBufProbe) were probe-era
-   overhead, not shipping machinery.
-The flyout was ultimately settled by born-at-place (v2.39.4), not by any of
-the runtime levers above.
+Neither `Plot()` contains a single hardcoded drawing immediate — there is no
+`push imm32` for a coordinate in either function. Every coordinate comes from a
+member field, so binary-patching immediates is not a route here.
 
-### The thumbnail-zoom regression (duplicate of the note above — settled)
-`0x0A78827A` in `SCALED_WINDOW_IDS`
-(`tools/selective-safe/build_selective_safe.py` ~L102) recurses the marker
-into **all children**, which once 2×'d the disaster thumbnail textures while
-the control still blitted them at 1× source rects → the "zoomed in" look.
-Settled by the strip-metrics work of the born-at-place fix (laws 16/17);
-`0x0A78827A` stays in both the art and runtime lists.
+---
+
+## Create Disasters — levers that do not scale the art
+
+| Lever | Result | Meaning |
+|---|---|---|
+| 6 fields `[0xe0..0xf4]` ×2 (persisted, verified) | no change | the fields are insets, not size |
+| Window rect `[0xa8..0xb4]` ×2, no redraw | no change | on-screen size is not this rect |
+| Window rect ×2 + fields ×2 + force dirty | shrank | the redraw realloc'd the buffer 141 → 564, destroying the 141 → display stretch |
+| `r24 [0x24..0x30]` ×2 (stuck, verified) | no change | on-screen size is not r24 |
+| `ScaleSubtree` on the container | strip and bar fly apart | positions scale independently of the painted art |
+| Force-scaling the container | window became 564×1356, art stayed 1× | the art does not follow the window rect |
+| `SetW`/`SetH` virtuals ×2 | ring vanished, bar stretched vertically, strip flew right | `SetW` sets dirty → redraw → buffer realloc → the stretch is lost |
+| Forced redraw (dirty bit only) | buffer realloc'd 141 → 282 and re-flowed | the internal layout is WIDTH-driven, so a wider draw re-flows rather than magnifies |
+
+The on-screen size is therefore neither the window rect, nor r24, nor the
+fields. It is set by the **parent's compositing of the child** — the blit
+destination region on `[0x68]` — decided when the parent asks the child to
+paint, and reachable through no member field. Position **is** reachable:
+`GZWinMoveTo` moves the flyout and updates `[0xa8]`.
+
+### The screen composite is a 1:1 clipped copy
+
+Hooking the flyout's screen composite `[0x68]->Blt` (idx29) through a surgical
+per-instance vtable swap around the container's `Plot` call — restored
+immediately after, so no other window is affected — captures the real arguments:
+
+```
+Blt(src=[0xdc] 141x339 buffer, srcRect a2=(0,0,141,339),
+    dstRect a3=(0,0,282,678), clip a4=null)
+```
+
+`a3` is not a scale lever. Set to 846×2034 it accumulates to 2538×6102 — `a3`
+is a persistent, reused rect — and the screen is unchanged. A 2538×6102
+destination producing zero change proves the `Blt` is a **1:1 clipped copy**,
+not a stretch: on-screen art size equals the SOURCE buffer size (141),
+positioned at the destination origin and clipped to the destination.
+
+### Reading the rendered frame back is not possible
+
+The orange ring's pixel position cannot be measured in-process:
+
+- The container has **no private buffer** — `GetPrivateBuffer()` returns null.
+- It paints into the shared main/parent draw-to buffer, 2400×1600 32bpp
+  (`qiBuf=1`), at absolute screen coordinates. That is the right buffer in
+  principle.
+- That buffer is **GPU-only**. `Lock(0)` and `Lock(0x8000)` both succeed, yet
+  every pixel reads `(0,0,0)` and `GetColorSurfaceBits()` / `Stride()` return
+  **0**. There is no CPU-readable copy of the frame, and `GetPixel` sees
+  nothing.
+- The container's own `GetBufferToDrawTo()` returns junk (`1537×0 qiBuf=0`)
+  outside its draw sequence.
+
+The `GZPaint` → `Plot` hook at index 88 does fire and is a valid interception
+point, but the pixels it writes go straight to GPU memory. Objective
+measurement of the ring must come from a real screen capture.
+
+---
+
+## Create Disasters — the born-at-place mechanism
+
+The disaster flyout is scaled at **birth** rather than at runtime, through
+`SubPlaceDetour` at return address `0x007E74D6` — distinct from the first-level
+twin's `0x007EB196`. Size, dock and item metrics are all applied at birth, plus
+one forced repaint for the chrome. The live dock block is findable in
+`src/UiSpike.cpp` by the string `"disaster flyout (anon)"`; its offsets are
+`gRingDockX = 6` / `gRingDockY = 130` in 1x units (scaled by `f` at use), both
+live-tunable through `[Disaster] DockX` and `DockY` in the ini.
+
+Two properties of that mechanism are load-bearing:
+
+- **Born-scaling takes the window off the sweep.** The sweep had been supplying
+  the strip's item metrics, so the birth path must supply them itself or the
+  thumbnails render tiny.
+- **The `gStripBase*` latch is game-wide and shared.** Priming it from a scaled
+  value duplicates picker icons across the whole game. Prime a shared latch from
+  a STOCK value.
+
+Full generation-by-generation detail of the birth mechanism is in
+`tools\research\MECHANISM-GENERATIONS.md`.
+
+---
+
+## The `cIGZWin` draw-related vtable slots
+
+`cIGZWin::GZPaint` is virtual number **85** in the header, and `cIGZUnknown` adds
+exactly three slots, with neither concrete class declaring a virtual
+destructor. The real per-class draw entry is index **88**, not 87: the vendor
+header is missing one virtual at real slot 57, so every index past it shifts by
+one. Index 87 is `GetNotificationTarget`. The canonical copy of this table is
+`SC4-UI-ENGINE.md` §2.1, and the header-drift rule is `SDK-GAPS.md` §1.
+
+| idx | offset | virtual | VA |
+|---|---|---|---|
+| 87 | `+0x15C` | `GetNotificationTarget` | `0x0099BE4C` |
+| 88 | `+0x160` | **`GZPaint`** (per-class draw) | base no-op `0x00949ADE`; container `0x0079B0E0`; strip `0x0079AA70` |
+| 89 | `+0x164` | **`Plot`** (composite + present) | `0x0099BA07` |
+| 90 | `+0x168` | `CalcAbsoluteArea` | `0x0099DCE4` |
+| 91 | `+0x16C` | `InvalidateSelf` | `0x0099BECC` |
+| 92 | `+0x170` | `InvalidateSelfAndParents` | `0x0099BED1` |
+| 93 | `+0x174` | `GetDrawContext` (`= [ecx+0x6c]`) | `0x0099BEF9` |
+| 94 | `+0x178` | `GetBufferToDrawTo` (`= [ecx+0x68]`) | `0x0099BEFD` |
+| 95–98 | — | `SetBufferToDrawTo` / `…Recursive` / `SetAreaToDrawTo` / `…Recursive` | `0x0099C6F8` / `0x0099D57E` / `0x0099CF6A` / `0x0099D5B7` |
+| 100 | `+0x190` | `PrivateBuffer(bool)` — **takes an argument** | `0x0099EA70` |
+| 101 | `+0x194` | `GetPrivateBuffer` (`= [ecx+0x64]`) | `0x009D419D` |
+
+`cIGZWin` has 144 virtuals (147 slots) and a concrete class adds more, so a
+vtable copy of 256 entries covers every case. Hooks are installed as a
+**per-instance vtable copy**; the shared class vtable (`0x00AB6AA8`) is never
+written, so no other window is affected.
+
+### Hooking the range safely
+
+`__thiscall` is callee-cleanup, so a thunk declared with the wrong argument
+count cleans the wrong number of stack bytes and corrupts the stack. Indices
+87..97 are hooked as a range. The community-header names for 95–98 include
+argument-taking variants, so the range is not uniformly zero-argument; hooking
+it in full is safe only because the thunks are declared
+`template <int IDX>`, return `uintptr_t`, and never assume an arity. Returning
+`uintptr_t` preserves EAX exactly for every slot — the void-returning ones
+simply have their garbage EAX ignored by the caller.
+
+**Built-in positive control:** a forced `InvalidateSelfAndParents()` routes
+through the swapped vtable, so **slot 92 must fire**. If 92 fires and the
+others stay silent, the hook machinery is proven and the silence is real
+evidence. If 92 also stays silent, the vtable swap is not taking effect and the
+index base is wrong.
+
+### Two slot-identity traps
+
+- **Slot 89 (`Plot`, `0x0099BA07`)** ends `mov al,bl; ret`, writing only the
+  low byte of `eax`. Its return value is caller garbage with `al = 0x01`, which
+  reads as `0x06752001` for the container and the strip alike — an identical
+  value from two different windows, and not a per-window rect pointer.
+  Dereferencing it yields nonsense (`L=422416 T=-1340969632`).
+- **Slot 90 (`CalcAbsoluteArea`, `0x0099DCE4`)** is the real absolute-rect
+  recompute. It returns nothing and writes the rect in place at
+  `[this+0x14..0x20]`.
+
+A hook installed on index 87 sits on `GetNotificationTarget` and never fires:
+it logs a clean install with zero calls even after repeated forced
+`InvalidateSelfAndParents()`, which is a null produced by the slot arithmetic
+rather than by the window. The container is painted through slot 88
+(`0x0079B0E0`).
+
+---
+
+## Diagnostics
+
+All in `ScaleGodFlyouts()`.
+
+| Log prefix | What it does |
+|---|---|
+| `DPROBE` | Walks the whole `0x9A47B417` subtree each sweep and logs only windows whose position, size or visibility **changed**. Keyed by **window pointer** — keying by id or parent collapses all the anonymous windows into one entry. Band-limited to X −150..500, Y 380..1250 to exclude the constantly animating bottom query panels. |
+| `DCLASS` | One-shot per window: the vtable pointer plus which `GZWin` interfaces the window answers to. |
+| `DHOOK` | `GZPaint` hook install and fire logging, observe-only. |
+
+Enable with `LiveDumpMs=1000` and `LogLevel=3` in
+`Documents\SimCity 4\Plugins\SC4UIScale.ini`.
+
+---
+
+## Building and deploying
+
+```
+MSBuild src\SC4UIScale.vcxproj -p:Configuration=Release -p:Platform=Win32
+copy build\Release\SC4UIScale.dll  "%USERPROFILE%\Documents\SimCity 4\Plugins\"
+```
+
+Close SimCity 4 first — a running game holds the DLL open. Bump
+`UISCALE_VERSION_STR` in `src/SC4UIScaleDllDirector.cpp` per build so the log
+banner identifies which binary is loaded.
+
+## Verifying
+
+Open each god tool and check that the coloured ring wraps its own button:
+Terraform → 1, Terrain Effects → 2, Create Disasters → 4, Day/Night → 5.
+Nothing may render on button 3, which has no flyout. Check both the **settle**
+and the **hover** state — several defects in this area render correctly in one
+and wrongly in the other.

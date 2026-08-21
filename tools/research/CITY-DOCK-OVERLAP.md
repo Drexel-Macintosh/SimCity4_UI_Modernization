@@ -1,41 +1,40 @@
-# City HUD Bottom-Left "U-Dock" Composition at 2x — Stock Layout, Breakage Diagnosis, Fix
+# City HUD Bottom-Left "U-Dock" Composition at 2x — Stock Layout, Clamp Diagnosis, Cure
 
-Research date: 2026-07-21. Companion to `UISCRIPTS.md` (script format), `DYNAMIC-CONTROLS.md`
+Companion to `..\uiscripts\UISCRIPTS.md` (script format), `DYNAMIC-CONTROLS.md`
 (code-drawn controls), `..\selective-safe\SELECTIVE-SAFE.md` (art package).
 
-Evidence base (all offline, nothing touched):
-- Runtime truth: `%USERPROFILE%\Documents\SimCity 4\Plugins\SC4TouchControls.log.bak-userclickthrough`
-  — full pre-scale tree dump at 21:41:37.037 (840 windows, positions/sizes/visibility),
-  then `ScaleAll x2.00 (view 2400x1600)` and the incremental passes.
+Evidence base:
+- Runtime truth: a full pre-scale tree dump of the city HUD at 2400x1600 (840 windows,
+  positions/sizes/visibility), followed by `ScaleAll x2.00 (view 2400x1600)` and the
+  incremental passes.
 - Design truth: `..\uiscripts\extracted\T-00000000_G-96a006b0_I-c973b411.ui` (view cluster +
-  mode overlay) and `...I-2bc90671.ui` (LIVE composite HUD; `I-898897de` is the stale dev
-  copy per UISCRIPTS.md). `area=` is corner-format `(x1,y1,x2,y2)`, absolute for roots,
+  mode overlay) and `...I-2bc90671.ui` (the live composite HUD; `I-898897de` is the stale
+  development copy). `area=` is corner-format `(x1,y1,x2,y2)`, absolute for roots,
   parent-relative for children.
-- Scaler code (read-only): `..\..\src\UiSpike.cpp` — `ScalePanelRoot()` anchor math and the
-  on-screen clamp.
+- Scaler code: `..\..\src\UiSpike.cpp` — `ScalePanelRoot()` anchor math and the on-screen
+  clamp.
 - Art: `..\dbpf\extracted\SimCity_1\` — dock sheet `13d14ca0` (235x222), composite sheet
   `4bbe9c7d` (878x182), Mayor Mode button strip `14015555` (4 cells of 60x46, a mayor bust
   on an oval button — this is "the Mayor symbol").
 
-Executive summary: **everything the user reported is one bug.** The stock design overlaps
-the dock and the composite panel on purpose (the arts interlock), and the dock's bottom
-11 px hang off-screen on purpose. At 2x our scaler's anchor math reproduces both facts
-perfectly — and then the unconditional on-screen clamp (`UiSpike.cpp` lines 636-641)
-overrides the answer for the one panel that legitimately overhangs, lifting the dock 22 px
-relative to everything else. Exempt design overhang from the clamp (option (a)) and the
-whole dock area snaps back to design proportions. No .UI edits, no art changes, no
-per-child tweaks.
+Summary: the reported dock breakage at 2x is **one bug**. The stock design overlaps the
+dock and the composite panel on purpose (the arts interlock), and the dock's bottom 11 px
+hang off-screen on purpose. At 2x the scaler's anchor math reproduces both facts perfectly
+— and an unconditional on-screen clamp then overrides the answer for the one panel that
+legitimately overhangs, lifting the dock 22 px relative to everything else. Making the
+clamp per-edge conditional on the design gap snaps the whole dock area back to design
+proportions. No .UI edits, no art changes, no per-child tweaks.
 
 ---
 
-## 1. Stock 1x composition of the dock area (Q1)
+## 1. Stock 1x composition of the dock area
 
 ### 1.1 The players
 
 Three sibling top-level windows under the city view `0x9A47B417` (cSC4View3DWin) make up
 the bottom-left composition, plus the ticker family to the right:
 
-| Window | Script | Stock rect at 2400x1600 (runtime, from the log) | Notes |
+| Window | Script | Stock rect at 2400x1600 (runtime) | Notes |
 |---|---|---|---|
 | `0xE9889775` composite status panel | `I-2bc90671` root 1 | (139,1413) 880x180 → (139,1413)-(1019,1593) | bottom gap 7 px |
 | `0x0987B48F` minimap cluster ("U-dock") | `I-c973b411` root 1 | (5,1388) 235x223 → (5,1388)-(240,1611) | **bottom 11 px off-screen by design** |
@@ -50,12 +49,12 @@ the .UI top overhang -5 becomes a bottom overhang once the code bottom-docks the
 
 ### 1.2 Z-order
 
-The spike's tree dump enumerates children in exact reverse of .UI sibling order (verified:
+The runtime tree dump enumerates children in exact reverse of .UI sibling order (verified:
 the composite's 14 children appear in the dump precisely backwards from `I-2bc90671`,
 background last). .UI order = add order = paint order, first child painted first (behind) —
 the cluster's full-size background BMP is its first .UI child and its buttons paint over
 it, which is only possible with first-behind. Applying the same reading to the top-level
-dump order (lines 200-1035 of the log, top-first) gives the add order, bottom to top:
+dump order (top-first) gives the add order, bottom to top:
 
 ```
 ... < 0xE9889775 (composite)  <  0x0987B48F (dock)  <  0xEA8CAD14 (mode overlay) < ...
@@ -77,14 +76,14 @@ Composite origin (139,1413) + (-37,12) = **(102,1425)** — exactly where the do
 the Mayor Mode button: cluster (5,1388) + child (97,37) = **(102,1425)**. The designers
 encoded the intended relative placement of the two panels as a ghost rect: the composite
 must sit at **cluster origin + (134,25)**, so the mayor bust nests into the composite's
-notch. (The 800x600 variant `G-08000600\I-2bc90671` carries the same ghost at (-37,47) —
+notch. The 800x600 variant `G-08000600\I-2bc90671` carries the same ghost at (-37,47) —
 per-resolution anchoring, same mechanism. A second ghost `0xAA6767AA` "<alignment target>"
-at (413,140) marks the ticker slot.)
+at (413,140) marks the ticker slot.
 
 ### 1.4 Dock (0x0987B48F) subtree — design rects
 
-Parent-relative corners from `I-c973b411`; absolute = +(5,1388). Log dump agrees on every
-size and position. Paint order = table order (first = bottom).
+Parent-relative corners from `I-c973b411`; absolute = +(5,1388). The runtime dump agrees on
+every size and position. Paint order = table order (first = bottom).
 
 | # | Window | Role | rel rect | abs at 1x |
 |---|---|---|---|---|
@@ -151,9 +150,9 @@ Within that region, painted top-to-bottom:
 
 ---
 
-## 2. What breaks at 2x (Q2)
+## 2. Why an unconditional on-screen clamp breaks the composition at 2x
 
-### 2.1 Log facts
+### 2.1 Measured facts
 
 ```
 UiSpike: ScaleAll x2.00 (view 2400x1600)
@@ -167,43 +166,44 @@ UiSpike: panel 0x69E40A1F (4,982 157x488)   -> (8,364 314x976)
 
 Every bottom-family panel obeys the scaler's bottom-anchored rule
 `y' = 1600 - 2*(1600 - y)` exactly: composite 1226, ticker 1504, polls 1224, tool column
-364. Cross-check of mutual consistency: ticker relative to composite is (93,139) at 1x and
-(186,278) at 2x — perfect doubling. **The whole composite family is design-proportional at
-2x.** The one misfit is the dock: the same rule yields `1600 - 2*(1600-1388) = 1176`
-(bottom overhang 22 = 2 x 11), but the log shows **1154 = 1600 - 446**, i.e. clamped fully
-on-screen. The mode overlay is the same story on the top edge: rule says (0,-32), log
-shows (0,0).
+364. Cross-check of mutual consistency: the ticker relative to the composite is (93,139) at
+1x and (186,278) at 2x — perfect doubling. **The whole composite family is
+design-proportional at 2x.** The misfit is the dock: the same rule yields
+`1600 - 2*(1600-1388) = 1176` (bottom overhang 22 = 2 x 11), while an unconditional clamp
+produces **1154 = 1600 - 446**, i.e. fully on-screen. The mode overlay is the same story on
+the top edge: the rule gives (0,-32), the clamp gives (0,0).
 
 ### 2.2 Root cause — one clamp line
 
-`src\UiSpike.cpp`, `ScalePanelRoot()`. The scaled-gap anchor math (lines 602-634) computes
+`src\UiSpike.cpp`, `ScalePanelRoot()`. The scaled-gap anchor math computes
 `gapB = frameH - (t+h) = -11`, takes the bottom-anchor branch, and produces
-`newY = 1600 - ScaleRound(-11, 2.0) - 446 = 1176` — the design answer. Then:
+`newY = 1600 - ScaleRound(-11, 2.0) - 446 = 1176` — the design answer. An unconditional
+clamp then discards it:
 
 ```cpp
 // On-screen clamp: whatever the anchor math says, a panel that fits
-// the frame must end up inside it (fail toward visible).           // lines 636-641
-if (newY + newH > frameH) newY = frameH - newH;   // 1176 -> 1154   <-- the bug for designed overhang
-if (newY < 0) newY = 0;                            // -32  -> 0     <-- same bug, 0xEA8CAD14
+// the frame must end up inside it (fail toward visible).
+if (newY + newH > frameH) newY = frameH - newH;   // 1176 -> 1154   <-- wrong for designed overhang
+if (newY < 0) newY = 0;                            // -32  -> 0     <-- same, 0xEA8CAD14
 ```
 
-The clamp cannot distinguish "anchor math overflowed" from "the design itself overhangs".
-For the dock it discards a correct answer and lifts the panel **22 px** relative to the
-composite family; for the mode overlay it pushes it **32 px** down.
+An unconditional clamp cannot distinguish "anchor math overflowed" from "the design itself
+overhangs". For the dock it discards a correct answer and lifts the panel **22 px**
+relative to the composite family; for the mode overlay it pushes the panel **32 px** down.
 
 ### 2.3 The 22 px shift, quantified
 
-Actual 2x dock children = 2 x rel + (10,1154). Design-intent = 2 x rel + (10,1176)
-(everything 22 px lower). Composite children (correct, unchanged): see section 3.2 table.
+Clamped 2x dock children = 2 x rel + (10,1154). Design-intent = 2 x rel + (10,1176)
+(everything 22 px lower). Composite children are correct either way: see section 3.2.
 
 Alignment-ghost check at 2x: ghost target = composite (278,1226) + 2 x (-37,12) =
-**(204,1250)**. Actual Mayor button = (10,1154) + 2 x (97,37) = **(204,1228)**. X exact,
+**(204,1250)**. Clamped Mayor button = (10,1154) + 2 x (97,37) = **(204,1228)**. X exact,
 **y off by exactly 22** — the entire dock-vs-composite composition error in one number.
 
-Collisions and exposures that did not exist at 1x (all derived from that one delta;
+Collisions and exposures that do not exist at 1x (all derived from that one delta;
 silhouette-dependent extents marked ~):
 
-1. **"The Mayor symbol overlaps"** — Mayor button actual (204,1228)-(324,1320) vs designed
+1. **Mayor symbol overlap** — Mayor button clamped (204,1228)-(324,1320) vs designed
    (204,1250)-(324,1342). The composite's top edge band (bg art rows 0..~12, screen
    y 1226..~1250) is the panel's rounded top-left frame line; designed, the bust sits
    fully below it, nested in the notch. Shifted, the bust's upper half paints across the
@@ -211,17 +211,17 @@ silhouette-dependent extents marked ~):
    under the bust show as a ~22 px crescent beneath it. The God button (62,1142 vs design
    1164) and My Sim button (286,1340 vs 1362) ride equally high over the composite art —
    the whole interlock seam (x 282..480) is discontinuous by 22 px.
-2. **"Elements look missing"** — two mechanisms, both real:
+2. **Elements that read as missing** — two mechanisms, both real:
    - The dock paints on top and its opaque body is 22 px high: along x 440..480 the dock's
-     right hump now covers the composite's top-left frame line and the upper-left corner
+     right hump covers the composite's top-left frame line and the upper-left corner
      of the Mayor Rating label plate (450,1282)-(780,1330) ~22 px beyond design (~y 1282..1304
-     of the plate's left ~30 px). The composite's frame simply vanishes under the dock body
+     of the plate's left ~30 px). The composite's frame vanishes under the dock body
      for that stretch.
    - The composite's notch region that should be covered is exposed lower down: raw
      sheet-edge pixels of 4bbe9c7d appear below the dock silhouette — reads as broken or
-     "missing" art at the seam.
+     missing art at the seam.
 3. **Extra art, mirror of the overhang:** the dock sheet's bottom 22 px (2 x art rows
-   201..222 — the rounded bottom-corner band that stock always clips off-screen) is now
+   201..222 — the rounded bottom-corner band that stock always clips off-screen) become
    fully visible at y 1556..1600, doubling the dock's apparent bottom margin and shifting
    every dock control (city name, Hide Toolbars, speed row) visibly up from the screen
    edge compared to stock proportions.
@@ -231,25 +231,25 @@ silhouette-dependent extents marked ~):
 5. **No new child-vs-child control collisions.** Exhaustive rect sweep: no dock button
    lands on any composite interactive child even shifted (Options ends x 468 vs funds
    plate starting x 482; speed row ends x 386 vs rating groove starting x 522; the arrow
-   at x 474..516 was already tucked at 1x). The damage is composition/art-level plus the
-   label-corner coverage — consistent with the user seeing "overlaps" and "looks missing"
-   rather than dead buttons.
+   at x 474..516 is already tucked at 1x). The damage is composition- and art-level plus
+   the label-corner coverage, not dead buttons.
 
 ---
 
-## 3. Recommendation (Q3)
+## 3. The cure
 
-### 3.1 Primary: (a) exempt design overhang from the on-screen clamp
+### 3.1 Per-edge clamp, conditional on the design gap
 
-Make the clamp per-edge conditional: only clamp toward an edge when the panel's DESIGN
+The clamp is per-edge conditional: it clamps toward an edge only when the panel's DESIGN
 rect did not already overhang that edge. When the design gap is negative the anchor math
-has already produced exactly the scaled overhang — let it stand:
+has already produced exactly the scaled overhang, and it stands:
 
 ```cpp
-// On-screen clamp — but never pull a panel further on-screen than the
-// design allows: stock hangs the dock 11 px off the bottom (0x0987B48F)
-// and the mode overlay 16 px off the top (0xEA8CAD14); a scaled panel
-// keeps its SCALED overhang (gap<0 => anchor math already returned it).
+// On-screen clamp, PER-EDGE conditional on the DESIGN gap: a negative
+// design gap is an INTENTIONAL overhang (the dock hangs 11 px off the
+// bottom, the mode overlay starts at y=-16) and the anchor math already
+// scaled it correctly; clamping it shifts the panel off its design
+// alignment. Only a non-negative gap can mean genuine overflow.
 if (gapR >= 0 && newX + newW > frameW) newX = frameW - newW;
 if (gapL >= 0 && newX < 0)             newX = 0;
 if (gapB >= 0 && newY + newH > frameH) newY = frameH - newH;
@@ -261,37 +261,36 @@ Why this is safe and sufficient:
   center branch requires both gaps > frame/4, i.e. positive), so "gap < 0" is precisely
   "the anchor result carries scaled design overhang" — the guard never weakens the clamp
   for genuine overflow (mid-screen or oversized panels still clamp).
-- It is a general rule, not a window-id special case: it fixes 0x0987B48F and 0xEA8CAD14
-  today and any future overhanging stock panel for free, at every scale factor and
-  resolution.
+- It is a general rule, not a window-id special case: it covers 0x0987B48F and 0xEA8CAD14
+  and any other overhanging stock panel for free, at every scale factor and resolution.
 - Zero data-side changes: no .UI edits, no art, no SCALED_WINDOW_IDS churn, no re-pack of
   `z_SC4UIScale_SelectiveArt.dat`.
-- At 2x no interactive dock child enters the clipped band (lowest control bottom = 1584,
-  see 3.2); only the non-interactive rounded-corner art rows go off-screen — exactly the
-  stock proportion. (For hypothetical factors > 2x, re-check that the city-name plate
-  bottom, design 2 px above the clip line per 1x-scale, stays on-screen.)
+- No interactive dock child ever enters the clipped band. The lowest control is the
+  city-name plate, whose bottom sits at `frameH + R(11,f) - R(223,f) + R(204,f)`, i.e.
+  `8*f` px above the frame bottom at every factor (11 - 223 + 204 = -8) — 16 px of margin
+  at 2x, more above it. Only the non-interactive rounded-corner art rows go off-screen —
+  exactly the stock proportion.
 
-Rejected alternatives:
-- **(b) anchor dock+composite as a unit:** produces the identical rects for this pair
+Alternatives that do not work:
+- **Anchoring dock + composite as a unit:** it produces the identical rects for this pair
   (unit-anchoring about the composite's bottom rule also yields dock y 1176) but requires
   a pairing registry, does nothing for 0xEA8CAD14, and couples panels that the game
-  positions independently per resolution (the 800x600 ghost offset differs). Strictly
-  dominated by (a).
-- **(c) per-child adjustments:** the dock's internal layout is already perfect (all 20
-  children move as one with the root); no child edit can rejoin the one-bitmap art seam.
-  There is nothing to adjust per-child.
+  positions independently per resolution (the 800x600 ghost offset differs).
+- **Per-child adjustments:** the dock's internal layout is already perfect (all 20
+  children move as one with the root), and no child edit can rejoin the one-bitmap art
+  seam. There is nothing to adjust per-child.
 
-### 3.2 Resulting rects at 2400x1600 with the fix
+### 3.2 Resulting rects at 2400x1600
 
 Dock `0x0987B48F`: **(10,1176) 470x446 → (10,1176)-(480,1622)**, bottom 22 px off-screen
-(= stock 11 px x 2). Composite family: unchanged from the current build. Expected log line:
+(= stock 11 px x 2). Composite family unchanged. Log line:
 `panel 0x0987B48F (5,1388 235x223) -> (10,1176 470x446)`.
 
-| Element | Fixed 2x rect |
+| Element | 2x rect |
 |---|---|
 | dock sheet BMP | (10,1178)-(480,1622) (rows past 1600 clipped, as stock) |
 | God Mode | (62,1164)-(190,1264) |
-| **Mayor Mode** | **(204,1250)-(324,1342)** — top-left equals the ghost target (204,1250); nests in the notch again |
+| **Mayor Mode** | **(204,1250)-(324,1342)** — top-left equals the ghost target (204,1250); nests in the notch |
 | My Sim | (286,1362)-(394,1446) |
 | minimap | (46,1320)-(174,1448) |
 | Query / Route Query | (200,1346)-(272,1388) / (200,1388)-(272,1430) |
@@ -303,25 +302,24 @@ Dock `0x0987B48F`: **(10,1176) 470x446 → (10,1176)-(480,1622)**, bottom 22 px 
 | city-name plate | (94,1540)-(388,1584) |
 | Options | (400,1524)-(468,1576) |
 | Mode overlay `0xEA8CAD14` | (0,-32) 450x278; cross-fade BMPs (34,44)-(166,130) |
-| Composite root (unchanged) | (278,1226)-(2038,1586); bg (282,1226)-(2038,1590) |
+| Composite root | (278,1226)-(2038,1586); bg (282,1226)-(2038,1590) |
 | rating label / groove / arrows | (450,1282)-(780,1330) / (522,1340)-(726,1362) / (474,1342)-(516,1360) + (728,1342)-(770,1360) |
 | funds / population plates | (482,1396)-(766,1434) / (502,1450)-(758,1486) |
 | RCI meter + columns | (790,1258)-(874,1494); columns x 804/824/844, y 1338-1480 |
 | tab stack + 6 tabs | (880,1262)-(990,1496); tabs 68x70 at x 876/930, y 1280/1350/1420 |
-| ticker (unchanged) | (464,1504)-(1978,1590) |
+| ticker | (464,1504)-(1978,1590) |
 
-Every interactive dock child stays fully on-screen (max bottom 1584 < 1600); the dock-vs-
-composite offset returns to 2 x (134,25) = (268,50), so the interlock seam, the bust
-nesting, the label tuck-under, and the stock bottom margin are all design-proportional
-again.
+Every interactive dock child stays fully on-screen (max bottom 1584 < 1600), and the
+dock-vs-composite offset is 2 x (134,25) = (268,50), so the interlock seam, the bust
+nesting, the label tuck-under, and the stock bottom margin are all design-proportional.
 
-### 3.3 Verification checklist (next table/session run)
+### 3.3 Verification
 
-1. Log shows `-> (10,1176 470x446)` for 0x0987B48F and `-> (0,-32 450x278)` for
+1. The log shows `-> (10,1176 470x446)` for 0x0987B48F and `-> (0,-32 450x278)` for
    0xEA8CAD14; no other panel's placement line changes.
-2. Ghost identity: composite pos + 2 x (-37,12) == Mayor button screen pos (tree dump).
-3. Visual: mayor bust sits below the composite's top frame line; no raw sheet-edge
-   crescent under the mode buttons; "Mayor Rating" plate corner uncovered; dock bottom
-   corner band off-screen again.
-4. Regression watch: panels that clamp legitimately (any future oversized/mid-screen
-   case) still clamp — the guard only relaxes edges with negative design gaps.
+2. Ghost identity: composite pos + 2 x (-37,12) == Mayor button screen pos in the tree dump.
+3. On screen: the mayor bust sits below the composite's top frame line; no raw sheet-edge
+   crescent under the mode buttons; the "Mayor Rating" plate corner is uncovered; the dock
+   bottom corner band is off-screen.
+4. Panels that clamp legitimately (oversized or mid-screen cases) still clamp — the guard
+   relaxes only edges with negative design gaps.

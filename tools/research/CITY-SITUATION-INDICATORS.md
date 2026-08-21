@@ -1,14 +1,13 @@
 # City Situation Indicators (CSI) — the U-Drive-It offer balloon
 
-**SimCity 4 Deluxe 1.1.641.** Decompiled 2026-08-17/18 during task #188.
-Everything here is byte-verified against the shipped executable and confirmed
-on screen. Addresses are virtual addresses at the default image base
-`0x00400000`.
+**SimCity 4 Deluxe 1.1.641.** Everything here is byte-verified against the
+shipped executable and confirmed on screen. Addresses are virtual addresses at
+the default image base `0x00400000`.
 
-The CSI is the blue disc that floats above a parked U-Drive-It vehicle
-offering you a mission. It is the **only in-world overlay in SimCity 4 that
-the player clicks**, which makes its geometry unusually load-bearing: the same
-numbers that size the art also size the hit box.
+The CSI is the blue disc that floats above a parked U-Drive-It vehicle offering
+a mission. It is the **only in-world overlay in SimCity 4 that the player
+clicks**, which makes its geometry unusually load-bearing: the same numbers
+that size the art also size the hit box.
 
 ---
 
@@ -22,12 +21,9 @@ dispatch/emergency markers. The category test is:
 0046DD6C   cmp ecx, 4          ; 4 == CSI
 ```
 
-> **Attribution note.** The police/fire dispatch markers belong to THIS
-> system, not to the marker-strip builder `0x5F5FB0`
-> (`SC4-WORLD-OVERLAYS.md` §2.5): that inference rested on the offer balloon
-> drawing through `0x5F5FB0`, which is false on screen. The dispatch markers
-> were user-confirmed at 1.5x through the SHARED pin quad below
-> (`_tests\REGRESSION.md:13970–13984`).
+> **Ownership.** The police/fire dispatch markers belong to THIS system, not to
+> the marker-strip builder `0x5F5FB0` (`SC4-WORLD-OVERLAYS.md` §2.5). They draw
+> through the SHARED pin quad below and scale with it.
 
 The indicator is keyed on the **automaton** (the vehicle), not on a lot or a
 building — `QueryInterface` for iid `0xA9B40F05` at `0x0046DDBD`. That is why
@@ -68,12 +64,11 @@ Groups: **`0x46A006B0`** (the one actually drawn) and **`0x1ABE787D`**.
 All sixteen entries live in `SimCity_1.dat`. There is no FSH or S3D twin —
 PNG only, verified by enumerating every entry with those instance ids.
 
-> **Warning — the dual-group duplication cost a full day.** A red-tracer test that
-> covered only `0x46A006B0` was read as "the art is not involved" because the
-> tracer had not been proven to cover the drawn copy. Always enumerate *every*
-> copy of a resource id before excluding art.
+> **The dual-group duplication is a trap.** A tracer that instruments only one
+> of the two groups cannot exclude the art: it never touches the copy that
+> draws. Enumerate *every* copy of a resource id before ruling art out.
 
-The counts above are not a guess: all four automata LUA resources
+The counts above come from measurement: all four automata LUA resources
 (`type 0xCA63E2A3`, group `0x4A5E8F3F`) were QFS-decompressed and every
 `csi_image` value extracted — 8 distinct values, 8 covered, 0 missing.
 
@@ -142,8 +137,8 @@ inner glyph is clickable, not the surrounding pin.
 
 ## 4. Constants that are NOT the size
 
-These were all scaled and all appeared inert. Understanding *why* is the
-useful part.
+Scaling any of these leaves the CSI's size unchanged. What each one actually
+feeds is the useful part:
 
 | address | value | what it really does |
 |---|---|---|
@@ -154,9 +149,9 @@ useful part.
 | `0x00A88170` | `{20,30,40,50,60,60,14,32,35,64}` | per-zoom pixel table, consumed at `0x0046CD03`. **Not the CSI path** — the CSI is pixel-fixed at every camera zoom. |
 | `0x00A881AC` | `01 01 01 01 02 02 03 FF` | style byte per kind. Never scale. |
 
-A constant can be **live and still be the wrong constant**. The 42.0f applied
-cleanly, read back correctly, and produced no visible change — which is
-indistinguishable from a dead patch unless you know what it feeds.
+A constant can be **live and still be the wrong constant**. The 42.0f applies
+cleanly, reads back correctly, and produces no visible change — which is
+indistinguishable from a dead patch without knowing what it feeds.
 
 ---
 
@@ -181,43 +176,40 @@ instruction stream, so this is a code patch, not a data patch.
 glyph; scaling only the icon gives a glyph that overflows its plate. Verify
 every value before writing any of them.
 
-Supply matching art at `cell * f` (the source is scaled to fit the destination
-rect, so larger art changes sharpness, never size). See
-`tools/research/udriveit/build_csi_scaled.py`.
+Supply matching art at `cell * f` — the source is scaled to fit the destination
+rect, so larger art changes sharpness, never size.
 
 Implementation: `ApplyCsiIndicatorScale` in `src/CodePatches.cpp`.
 
 ---
 
-## 6. Method notes — why this took seventeen launches
+## 6. Method notes
 
 Recorded because the failure modes generalise.
 
-1. **A `.rdata` constant sweep is blind to inline immediates.** Both levers are
-   `imm32` fields inside instructions. Every "the constant is inert" verdict in
-   this investigation was a *filtered null* until inline immediates were
-   scanned. If a sweep did not scan `.text` immediates, it did not look.
+1. **An `.rdata` constant sweep is blind to inline immediates.** Both levers are
+   `imm32` fields inside instructions. A sweep that does not scan `.text`
+   immediates returns a filtered null, not a negative result.
 
-2. **Suppression identifies; scaling does not.** Every "make it bigger" test
-   produced an ambiguous *no change*. The one test that made the balloons
-   vanish identified the drawer in a single launch.
+2. **Suppression identifies; scaling does not.** A test that makes the balloons
+   vanish names the drawer in one launch; a test that makes them bigger
+   produces an ambiguous *no change*.
 
 3. **When two elements overlap at similar sizes, 1.5× cannot separate them.**
-   Three launches at 1.5× produced three contradictory readings. One launch at
-   3× answered correctly and immediately. Exaggerate the probe, then dial back.
+   A 3× probe answers the same question immediately. Exaggerate the probe, then
+   dial back.
 
 4. **Do not judge size relationships by eye from a compressed screenshot.**
-   Two such readings were wrong. Change one thing and ask which element moved.
+   Change one thing and ask which element moved.
 
 5. **Names describe the owning subsystem, not the visual.** `mission_selection`
    is a ground square. `aircraftindicate` is a landing ring.
    `Tag1x1x3_Helicopter` is a helipad marker. None of them is the balloon.
 
-6. **A capped log channel is not a null channel.** A 12-line cap consumed by
-   the city-load burst hid a click event and led to telling the user their
-   click had not registered. It had.
+6. **A capped log channel is not a null channel.** A 12-line cap consumed by the
+   city-load burst hides click events that did register.
 
 7. **Instrument the art to measure, not just to colour.** Replacing the icons
-   with a solid block filling the cell turned the destination rect into
+   with a solid block filling the cell turns the destination rect into
    something directly readable off one screenshot. A *hollow* frame is better
    still — it measures the art while leaving whatever is behind it visible.

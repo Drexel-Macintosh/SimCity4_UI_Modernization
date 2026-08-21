@@ -1,17 +1,17 @@
 # Upstream note — Network Addon Mod (NAM)
 
-**Status: FYI only. No defect in NAM.** We ship a compatibility layer for it;
-the NAM team needs to do nothing. Written 2026-08-05 per our standing order:
-whenever we override another mod's data, we record it and prepare a
+Informational. There is no defect in NAM. SC4UIScale ships a compatibility
+layer for it, and the NAM team needs to do nothing. This note exists because
+every third-party override SC4UIScale performs is recorded with a
 developer-facing callout.
 
 Measured against the sc4pac package tree `Plugins\770-network-addon-mod\`.
 
-## What NAM ships that we touch
+## What NAM ships that the layer touches
 
 Menu-button **ItemIcons** — DBPF entries of type `0x856DDBAC` in group
-`0x6A386D26`. Nothing else. We do not touch NAM's networks, textures,
-exemplars, RUL files, LTEXT, or any of its DLLs.
+`0x6A386D26`. Nothing else. NAM's networks, textures, exemplars, RUL files,
+LTEXT and DLLs are untouched.
 
 A census of both plugin trees finds **392 distinct ItemIcon instances whose
 winning supplier is a file inside `770-network-addon-mod\`**. They come from
@@ -29,33 +29,33 @@ contributors are:
 | …plus a long tail across bridge, viaduct and SAM packages | |
 
 **Everything here is correctly authored.** Each icon is a well-formed
-four-state strip. The strip widths are simply not what our stock-derived
-pipeline had seen before: stock icons are `176x44`, while NAM also uses
-`356x58`. That is a legitimate authoring choice, not an error.
+four-state strip. The strip widths are simply wider than a stock-derived
+pipeline expects: stock icons are `176x44`, while NAM also uses `356x58`.
+That is a legitimate authoring choice, not an error.
 
-## Why it interacts with our project
+## Why it interacts with SC4UIScale
 
 `SC4UIScale.dll` renders SimCity 4's UI at 1.5x / 2x / 3x on high-resolution
 displays, partly by shipping enlarged copies of stock `.UI` scripts and art.
 
 An ItemIcon is a **four-state strip** and the button picks its cell by
-`imageWidth / 4`. When our layer doubles the button cell but the icon is still
-supplied at 1x, the cell arithmetic lands mid-glyph: the user sees **two
-half-size copies of the icon side by side, and hovering blanks it** because
-the hover cell falls past the end of the bitmap.
+`imageWidth / 4`. When the layer doubles the button cell but the icon is still
+supplied at 1x, the cell arithmetic lands mid-glyph: the player sees **two
+half-size copies of the icon side by side, and hovering blanks the button**
+because the hover cell falls past the end of the bitmap.
 
-**That symptom is ours, not NAM's.** With our layer disabled, NAM's icons
-render exactly as intended.
+**That symptom belongs to SC4UIScale, not to NAM.** With the layer disabled,
+NAM's icons render exactly as intended.
 
-## What we did
+## The compatibility layer
 
-We generate 1.5x / 2x / 3x copies of **NAM's own icons** — never stock
-substitutes, which would silently replace NAM's artwork with Maxis art — and
-ship them as:
+SC4UIScale generates 1.5x / 2x / 3x copies of **NAM's own icons** — never
+stock substitutes, which would silently replace NAM's artwork with Maxis art
+— and ships them as:
 
     Plugins\zzz-SC4UIScale\z_SC4UIScale_NamIcons-{15x,2x,3x}.dat
 
-`zzz-` sorts after `770-network-addon-mod`, so our enlarged copy wins. Only
+`zzz-` sorts after `770-network-addon-mod`, so the enlarged copy wins. Only
 one tier is active at a time; the other two sit on disk renamed
 `.x1-disabled`.
 
@@ -69,41 +69,42 @@ Transformation, per icon: LANCZOS upscale to `factor x` the source, with the
 (`356 * 1.5 = 534` is not divisible by 4 — that one rounds to 536). No
 recolouring, no re-authoring, no change to any TGI.
 
-## For the NAM team, if you ever want to make this unnecessary
+## What would retire the layer
 
 Nothing is broken, so there is nothing to fix. The only thing that would
-retire our layer is upstream art at more than one scale — and that is a large
-ask for a cosmetic edge case affecting people running the game at 2400px+
-with a third-party UI scaler. We are not requesting it.
+retire this layer is upstream art at more than one scale — a large ask for a
+cosmetic edge case affecting people running the game at 2400px+ with a
+third-party UI scaler. It is not a request.
 
-One small thing that would help us stay correct across NAM releases: if a
-future NAM changes an icon's **dimensions** (not just its pixels), our copy
-becomes a stale picture until we rebuild. We deliberately do **not** check
-sizes — a size check would fail the entire package on a harmless upstream
-change — so a line in the NAM changelog when icon strip dimensions change
-would be enough for us to regenerate.
+One small thing keeps the copies correct across NAM releases: if a future NAM
+changes an icon's **dimensions** (not just its pixels), the enlarged copy
+becomes a stale picture until it is rebuilt. Sizes are deliberately **not**
+checked at load time — a size check would fail the entire package on a
+harmless upstream change — so a line in the NAM changelog when icon strip
+dimensions change is enough to trigger a regeneration.
 
-## Our own guard rails (recorded here so the behaviour is auditable)
+## Guard rails
 
 * `tools\uimap\emu\gate_namicons.py` — 392 icons x 3 tiers, 5 negative
   controls. Verifies every TGI is present at exactly tier size, every width
-  is divisible by 4, and **no orphans**: we never ship an override for a TGI
+  is divisible by 4, and **no orphans**: no override is ever shipped for a TGI
   NAM does not actually have.
 * Section **3b** of that gate re-derives the load-order **winner per TGI**
-  across both plugin trees and fails if any third-party file wins an icon we
-  claim to cover. This exists because of a real defect: the Rail button
-  (`0x2A3ED76A`) is a *stock* icon we had always doubled in our **root**
-  package, NAM also ships it from a **subfolder**, root files load before
-  subfolders — so NAM won and the button rendered wrong while our coverage
-  count said "covered". Our copy of that one now ships from `zzz-` too.
-* We read NAM's dats with the `\\?\` long-path prefix. NAM legitimately nests
+  across both plugin trees and fails if any third-party file wins an icon the
+  package claims to cover. Root-package files load before subfolder files, so
+  a stock icon shipped from the SC4UIScale root loses to a NAM copy shipped
+  from a subfolder — the Rail button (`0x2A3ED76A`) is exactly that case, and
+  the enlarged copy of it ships from `zzz-` for the same reason NAM's own
+  icons do. A coverage count alone cannot see this; the winner derivation can.
+* NAM's dats are read with the `\\?\` long-path prefix. NAM legitimately nests
   paths to 283–298 characters, past Windows' 260-char `MAX_PATH`; without the
-  prefix a plain `open()` throws on files that plainly exist, and ten icons
-  were silently missed in our first pass because of it. That was our bug.
+  prefix a plain `open()` throws on files that plainly exist and icons are
+  silently missed.
 
 ## Provenance and redistribution
 
 The generated packages contain **derivative copies of NAM's artwork**,
-enlarged. They are not published in our public repository: the repo ships the
-generator, never the art. Anyone rebuilding runs our script against their own
-NAM install and produces the packages locally.
+enlarged. They are not published in the public repository: the repo ships the
+generator, never the art. Rebuilding runs
+`tools\itemicons\rebuild_namicons.py` against a local NAM install and produces
+the packages there.

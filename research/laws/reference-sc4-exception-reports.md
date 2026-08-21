@@ -48,7 +48,7 @@ moment of the fault.
 
 ## Worked case: five reports, one instruction
 
-Twelve reports accumulated across a series of runs. Five of them faulted at the
+Twelve reports accumulate across a series of runs. Five of them fault at the
 **identical instruction `0x00910010`** — an `ACCESS_VIOLATION` inside the game's
 `rep stosd` row fill — at UI scale tier 1.5x and tier 3x alike, and **never at
 2x**.
@@ -58,14 +58,12 @@ and clean at a third, cannot be a random memory error or a general size problem;
 it is a geometry invariant that holds at 2x and breaks at the other two, and the
 tiers that break versus the one that does not name the invariant.
 
-The reports also refuted the cause that had been documented for the preceding two
-weeks. The written explanation blamed a non-power-of-two surface size (`blitSize`)
-overrunning the minimap raster. Measurement against the crashing runs showed
-`blitSize` was exact at both crashing tiers (1.5x: 256 = 64 << 2; 3x: 512 =
-64 << 3). The 384 and 768 figures being quoted were the **window** size, not the
-surface size.
+Measured against the crashing runs, the surface size `blitSize` is exact at both
+crashing tiers (1.5x: 256 = 64 << 2; 3x: 512 = 64 << 3), so the surface itself is
+never the overrun. The 384 and 768 figures belong to the **window** size, one
+level out from the surface.
 
-The real invariant was one level out: the **window** and the **surface** disagree.
+The invariant is that the **window** and the **surface** disagree.
 
 | tier | window / surface | result |
 |---|---|---|

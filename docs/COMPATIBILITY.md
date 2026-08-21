@@ -2,7 +2,7 @@
 
 ## Mods with a compatibility layer
 
-| Mod | What we enlarge | Gated? |
+| Mod | What the layer enlarges | Gated? |
 |---|---|---|
 | **Network Addon Mod** | 392 menu ItemIcons, drawn from NAM's own artwork | yes |
 | **Colossus Addon Mod** | UI scripts and art | yes |
@@ -10,28 +10,28 @@
 | **Save Warning** (cyclone-boom) | the in-city quit/exit confirmations | yes |
 | **God Terraforming in Mayor Mode** (warrior) | the compact Landscape and Signs flyouts | yes |
 | **Submenus DLL** (memo33) | 55 of its menu icons, drawn from that mod's own artwork | **no** |
-| **Colossus Addon Mod** — chart caption | one caption record CAM's Power and Water graphs ask for but which no installed file provides, so that legend row draws blank. We add the resource; CAM's files are untouched | **no** |
+| **Colossus Addon Mod** — chart caption | a caption record that CAM's Power and Water graphs request but that no installed file provides, leaving that legend row blank. The layer supplies the missing resource; CAM's own files are untouched | **no** |
 
 **"Gated"** means the package is checked at load against the owning mod's file
 and deactivates itself if that mod is not installed. The five gated rows are
 the complete gate table in `src/ScaleTier.cpp`. The two ungated rows ship in
 `ItemIconsSub` and `CamGraphLabels`, which load regardless — their entries are
 keyed to resource ids only those plugins introduce, so without the plugin
-nothing looks them up and they sit inert. Inert is not the same as gated, so it
-is said plainly here.
+nothing looks them up and they sit inert. Inert is not the same as gated.
 
-**For the scaling work, no defect is claimed in any of them.** In every scaling
-case the symptom was ours: this layer enlarges a container and their
+**No scaling defect exists in any of those mods.** In every scaling case the
+symptom belongs to this layer: it enlarges a container and the mod's
 correctly-authored 1× artwork ends up inside it, tiled or half-size. With this
 mod disabled they render exactly as their authors intended.
 
-The one exception is the CAM chart caption above, and the related menu-data
-findings we reported to the CAM / SIM developers. Those are reproducible with
-none of our packages installed and are genuine upstream data gaps — worked
-around by adding a resource, never by editing CAM's files.
+The one exception is the CAM chart caption above, along with the related
+menu-data gaps reported to the CAM and SIM developers. Those reproduce with
+none of this mod's packages installed and are genuine upstream data gaps —
+worked around by adding a resource, never by editing CAM's files.
 
-Where a mod is patched, we enlarge **that mod's own art**, never a Maxis
-substitute — so what you see is still that author's work, just bigger.
+Where a mod is patched, the enlarged art is **that mod's own art**, never a
+Maxis substitute — so what appears on screen is still that author's work, just
+bigger.
 
 ### If you are one of those authors
 
@@ -41,9 +41,9 @@ renders at 1× again and nothing else changes.
 
 ### If a NAM or CAM update changes an icon
 
-Our copy becomes a stale picture until it's regenerated. We deliberately do
-**not** check sizes, because a size check would fail the whole package on a
-harmless upstream change. Report it and it gets rebuilt.
+The bundled copy becomes a stale picture until it is regenerated. Sizes are
+deliberately **not** checked, because a size check would fail the whole package
+on a harmless upstream change. Report it and it gets rebuilt.
 
 ## Known-good alongside
 

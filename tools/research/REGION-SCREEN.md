@@ -1,16 +1,13 @@
 # SC4 REGION SCREEN — module reference
 
 **Target** `SimCity 4 Deluxe 1.1.641`, 32-bit x86, image base `0x400000`, `fileOffset = VA − 0x400000`.
-**Module span** `0x007A9000 .. 0x007B6240` (197 functions in `tools\uimap\funcs.json`, plus 6 real
-functions that file is missing — see [§9](#9-funcsjson-gaps)).
+**Module span** `0x007A9000 .. 0x007B6240` — 203 functions, six of which live inside another
+function's span and are invisible to a linear function enumeration (see [§9](#9-functions-hidden-inside-other-spans)).
 
-**Provenance.** Everything here was read out of the shipped exe with
-`tools\research\scripts\disasm.py`, `tools\uimap\fn.py`, or a raw little-endian byte scan.
-The eight decompile slices in `tools\research\regionmap\slice-1.md … slice-8.md` are the long form;
-this file is the index. Claims carry a VA. Claims that are **inference** rather than measurement are
-tagged **Unverified** or **Inferred**.
+**Provenance.** Everything here is read out of the shipped exe by disassembly and by raw
+little-endian byte scan. Every claim carries a VA.
 
-Read [§7 LEVERS](#7-levers) and [§8 DEAD ENDS](#8-dead-ends) before touching anything.
+Read [§7 LEVERS](#7-levers) and [§8 DEAD ENDS](#8-dead-ends) before changing anything.
 
 ---
 
@@ -24,8 +21,8 @@ Read [§7 LEVERS](#7-levers) and [§8 DEAD ENDS](#8-dead-ends) before touching a
 6. [Call graphs — BUILD / TILE / CLICK](#6-call-graphs)
 7. [LEVERS](#7-levers)
 8. [DEAD ENDS](#8-dead-ends)
-9. [funcs.json gaps](#9-funcsjson-gaps)
-10. [Corrections to earlier ground truth](#10-corrections-to-earlier-ground-truth)
+9. [Functions hidden inside other spans](#9-functions-hidden-inside-other-spans)
+10. [Facts that are easy to get wrong](#10-facts-that-are-easy-to-get-wrong)
 
 ---
 
@@ -72,8 +69,8 @@ cSC4WinRegionScreen              clsid 0xEA659793  vtable 0x00AB9260   (a cGZWin
 | **3-D scene** (`+0x160` renderer, `+0x164` camera, `+0x168` scene, `+0x16C` grid) | the flat ground/water quad and 3-D props | `sub_7AB630` emits ONE quad sized `cellSize*width × cellSize*height` from the grid; the camera is driven by `sub_7AC1A0` |
 | **2-D tile cache** (`view+0x10C`) | **every city thumbnail, every label, every overlay icon, the wallpaper** | 256×256 `IGZBuffer` cells, painted by `sub_7B4150`, blitted by `sub_7B2770` |
 
-The thing users call "the region map" — the city tiles — is **entirely** the 2-D path.
-The camera never touches it. That is why the camera experiment failed ([§8](#8-dead-ends)).
+What the player sees as "the region map" — the city tiles — is **entirely** the 2-D path.
+The camera never reaches it, which is why camera-side scaling changes nothing ([§8](#8-dead-ends)).
 
 ### 1.2 Coordinate spaces (get these wrong and nothing else parses)
 
@@ -196,9 +193,9 @@ hung on **GZPaint**, not a timer), `+0x21C` `sub_7AD3B0`, `+0x224` `sub_7AAEC0`,
 `+0x228` `sub_7AAF20`, `+0x250` `sub_7AC5C0`.
 Nine-entry direction cursor table at **`0x00AB8F2C`** (index `row*3+col`, row 0 = up);
 index 4 (`0xC2A676AC`) is the neutral cursor and is also hard-coded at `0x7AB061`.
-The scroll anchor marker child window id is **`0x48E945B4`** (`sub_7AC620`) — the SAME id our
-`UiSpike.cpp` calls the "EDGE bubble / U-Drive-It marker". Any id-keyed rule on it fires in
-both screens.
+The scroll anchor marker child window id is **`0x48E945B4`** (`sub_7AC620` creates it,
+`sub_7AAEC0` destroys it) — the same id the city view uses for its right-drag ring, so any
+id-keyed rule on it fires in both screens.
 
 ### 2.2 The region terrain grid (`+0x16C`, ctor `sub_7AACE0`, vtables `0xAB8C00`/`0xAB8BE8`)
 
@@ -260,7 +257,7 @@ Tile index = `tileY * cols + tileX` (`0x7B2740..0x7B274E`).
 `sub_7B3E80` re-anchors the grid as a **torus** — cells that fall off one edge reappear on the
 other with their pixels intact, and only wrapped cells are marked dirty.
 
-**Warning — game defect (not ours).** `sub_7B5E90` grows the vector with an 8-byte element but zeroes
+**Warning — engine defect.** `sub_7B5E90` grows the vector with an 8-byte element but zeroes
 only the first dword (`mov dword ptr [esp+8],0` @`0x7B5EA7`); `sub_7B51D0` reads `[edi+4]`, the
 dirty byte, so **every appended tile gets an uninitialised `dirty` flag**, and `sub_7B5EF0`
 never writes it. Relevant to any first-frame / stale-tile symptom.
@@ -301,7 +298,7 @@ copy-ctor `sub_7AE7B0`. Stride confirmed by `sar/shl 7` in `sub_7B0E60`.
 `[open, close, w0 … w(n−1), …]`, `n = closeX − openX`
 (stride proof `0x7B2EE5`: `add eax,4 / sub ebx… / lea eax,[eax+ebx*4]`).
 Consumers `sub_7B2DD0` (full dword as a 0..255 weight) and `sub_7B3300` (low byte `>>1`, so its
-tint tops out at ~50 %). **Unverified:** no producer of format B was located in any slice.
+tint tops out at ~50 %). Format B has no producer inside this module.
 
 ---
 
@@ -331,7 +328,7 @@ shifted by 5 slots (`0x00AC13EC + 0x14 == 0x00AC1400 + 0x00`).
 | `+0x44` | u32 | accumulated OR of every live lock's flags | `0x00826AB2`, `0x00826497` |
 | `+0x48` | ptr | attached parent surface (set by `vt+0x98`) | `0x00826954` |
 
-### 5.2 Vtable `0x00AC1400` — every slot resolved in this pass
+### 5.2 Vtable `0x00AC1400` — the resolved slots
 
 | slot | target VA | signature (measured) | notes |
 |---|---|---|---|
@@ -353,7 +350,7 @@ shifted by 5 slots (`0x00AC13EC + 0x14 == 0x00AC1400 + 0x00`).
 | `+0x54` | `0x00826510` | `u32 GetPixelRGB(int x, int y, u8* r, u8* g, u8* b)` | 5 args |
 | `+0x58` | `0x00826560` | `void SetPixel(int x, int y, u32 native)` | |
 | `+0x74` | `0x00826AD0` | `bool Blit(IBuffer* src, const RECT* srcRect, const RECT* dstRect, const RECT* clip)` `ret 0x10` | **CANNOT STRETCH** — recomputes `dst.right = dst.left + srcW`, `dst.bottom = dst.top + srcH` at `0x00826B07`/`0x00826B0B` |
-| `+0x78` | `0x00825DA0` | `u32 MakeColor(u8 r, u8 g, u8 b)` | channel order inferred |
+| `+0x78` | `0x00825DA0` | `u32 MakeColor(u8 r, u8 g, u8 b)` | packs a triple into the buffer's native pixel format |
 | `+0x88` | `0x008265C0` | `void* GetBits()` | `[this+0x3C]` |
 | `+0x8C` | `0x0068D1B0` | `int GetPitch()` — **BYTES per row** | `[this+0x40]` |
 | `+0x98` | `0x00826950` | `bool AttachTo(IBuffer* parent)` | swaps `[this+0x48]` with refcounting |
@@ -366,7 +363,7 @@ shifted by 5 slots (`0x00AC13EC + 0x14 == 0x00AC1400 + 0x00`).
 | `+0xB8` | `0x00826B80` | the clipped, format-converting copy worker behind `vt+0x74`. 1:1; dispatches through a converter table at `0x00B105A0` | |
 
 > **Note:** the other buffer vtable `0x00ADB418` shares `+0x0C` (= the same `0x008269B0` Init) but
-> `+0x10` is a DIFFERENT function (`0x00991A60`)** — a device-surface teardown that releases four
+> `+0x10` is a DIFFERENT function (`0x00991A60`) — a device-surface teardown that releases four
 > sub-objects at `+0x74/+0x78/+0x7C/+0x84` and clears `[+8]` and `[+0x50]`. Calling it on a
 > memory bitmap is wrong. Always read the slot off the object's own vptr at runtime.
 
@@ -390,7 +387,7 @@ cSC4WinRegionScreen::Init                                       sub_7B1900   0x7
  │         │     ├─ tiles.resize(cols*rows)                      sub_7B5E90 0x7B5F8A
  │         │     └─ per tile:  Release  ->  gs->vt+0x0C(&buf)  ->  buf->vt+0x0C(tw,th,{fmt,bpp})
  │         │                                        0x7B5FA6 / 0x7B5FB6 / 0x7B5FF9
- │         ├─ [0xB43DD0]->vt+0x80(cache, 0, 1000)   register as a draw layer (inferred)
+ │         ├─ [0xB43DD0]->vt+0x80(cache, 0, 1000)   register as a draw layer
  │         └─ load wallpaper + region_airport/region_seaport PNGs           0x7B618F/0x7B619A
  ├─ Init(1,1,{9,0x20}) on a BRAND-NEW buffer                                0x7B1DA1
  ├─ new(0x138) + sub_7AAE10 -> +0x174   scroll window                       0x7B1E38
@@ -511,8 +508,8 @@ Right-drag scroll: vt+0x21C -> sub_7AB790 -> [this+0x174]->vt+0x21C (sub_7AD3B0)
           0x8A4BAC53 / 0xAAA1CDF2 / 0x8A4BAC5B back to the screen (sub_7AB9F0)
 ```
 
-**Warning:** the click mask at `item+0x44` is built from `item+0x20` (the alpha mask bitmap), not from
-the composite.** Anything that changes the drawn size without changing `+0x20` will make the
+**Warning:** the click mask at `item+0x44` is built from `item+0x20` (the alpha mask bitmap), not
+from the composite. Anything that changes the drawn size without changing `+0x20` makes the
 picture and the hit box disagree.
 
 ---
@@ -529,14 +526,14 @@ the city view.
 | L3 | **Layout margins** | exemplar `T=0x6534284A G=0x690F693F I=0xAA383BFE`, props `0xCA383CA5` (X), `0xCA383CA6` (Y) → `screen+0x198/+0x19C` | data-driven | The only *tunable* terms in `sub_7AB7C0`'s size law: `contentW += 2*X`, `contentH += 2*Y` | Pan clamp only — does not change tile size | NO |
 | L4 | **Scroll feel** | same exemplar: `0xCA383CA4` dead-zone (10), `0xCA383CA3` max drag (32), `0xCA383CA7` ramp divisor (3.0) | see §2.1 | Right-drag scroll response | scroll window only | NO |
 | L5 | **Edge-scroll step** | `screen+0x174 +0x104` (ctor immediate `0x43960000` at `sub_7AAE10`) | `300.0f` | Edge-scroll speed | scroll window only | NO |
-| L6 | **Smooth-scroll speed / cap / epsilon** | `[0xA84D28]=5.0f`, `[0xAB91B8]=1200.0f`, `[0xA8825C]=2.0f` | — | `speed = min(5*dist, 1200)` px/s | `0xA84D28` and `0xA8825C` are generic float pool entries — **check refcounts before patching** | likely YES for the pooled floats |
-| L7 | **Default tile art** (placeholder thumbnails) | `screen+0x124..+0x150`; instance table `0x00AB8B40` — 6 PAIRS: `(0x6A231946,0x6A231947) (0xEA23195D,0xEA23195E) (0x0A2312D9,0x0A2312D8) (0x6A6CA89E,0x6A6CA89F) (0x6A6CA6DF,0x6A6CA6DE) (0x0A6CAB89,0x0A6CAB88)` PNG `T=0x856DDBAC G=0x6A1EED2C` | — | The art used when a city has no savegame thumbnail. Size class picks the pair; `+0x13C` table is used when region mode == 1 | **Art-only, no code patch.** Second element of each pair is the ALPHA MASK and MUST match the RGB size (`sub_7ABCD0` bounds the loop by the MASK alone — bytes at `0x7ABD06`) | NO |
-| L8 | **Region label fonts** | style GUIDs `0x8A8CC984 − 2*sizeClass` (city) and `0x8A8CC985 − 2*sizeClass` (mayor); `sizeClass 0 → {84,85}`, `1 → {82,83}`, `2 → {80,81}` | — | Region city/mayor label size. Selected by GUID — **no art change needed** | `sub_7B4150` label pass only. Line 2 is placed at `y1 + h2` (`0x7B4770`) — it offsets by line TWO's height, so unequal line heights overlap or gap | font styles come from a shared table; confirm the GUIDs are not used elsewhere |
+| L6 | **Smooth-scroll speed / cap / epsilon** | `[0xA84D28]=5.0f`, `[0xAB91B8]=1200.0f`, `[0xA8825C]=2.0f` | — | `speed = min(5*dist, 1200)` px/s | `0xA84D28` and `0xA8825C` are generic float pool entries — **check refcounts before patching** | YES for `0xA84D28` and `0xA8825C` |
+| L7 | **Default tile art** (the stand-in thumbnails) | `screen+0x124..+0x150`; instance table `0x00AB8B40` — 6 PAIRS: `(0x6A231946,0x6A231947) (0xEA23195D,0xEA23195E) (0x0A2312D9,0x0A2312D8) (0x6A6CA89E,0x6A6CA89F) (0x6A6CA6DF,0x6A6CA6DE) (0x0A6CAB89,0x0A6CAB88)` PNG `T=0x856DDBAC G=0x6A1EED2C` | — | The art used when a city has no savegame thumbnail. Size class picks the pair; `+0x13C` table is used when region mode == 1 | **Art-only, no code patch.** Second element of each pair is the ALPHA MASK and MUST match the RGB size (`sub_7ABCD0` bounds the loop by the MASK alone — bytes at `0x7ABD06`) | NO |
+| L8 | **Region label fonts** | style GUIDs `0x8A8CC984 − 2*sizeClass` (city) and `0x8A8CC985 − 2*sizeClass` (mayor); `sizeClass 0 → {84,85}`, `1 → {82,83}`, `2 → {80,81}` | — | Region city/mayor label size. Selected by GUID — **no art change needed** | `sub_7B4150` label pass only. Line 2 is placed at `y1 + h2` (`0x7B4770`) — it offsets by line TWO's height, so unequal line heights overlap or gap | the style GUIDs come from the shared font-style table |
 | L9 | **Label wrap width** | `0x7B4665` `imul 0x55555556` | `thumbnailWidth * 4 / 3` | Text wrap column | label pass only | NO |
 | L10 | **Tile cache cell size** | immediates `0x100` at `0x007B60FF` and `0x007B6104` | 256×256 | Cell granularity; cols/rows derive from it | Memory ×(cols*rows); a *bigger* cell means fewer, larger buffers | NO |
 | L11 | **Cache pixel format** | jump table `0x007B6038`, branch `0x7B5F6E..0x7B5F89` | fmt 9/bpp 0x20 when mode depth > 16, else fmt 4/bpp 0x10 | 32 vs 16-bit cells | region view only | NO |
 | L12 | **Composite over-size** | `add eax,2` / `add ecx,2` at `0x007AE439` / `0x007AE43C` | +2 px each axis | Every shifted source and therefore every composite is `original + (2,2)` | Every region item. Changing it alone does NOT scale — the resampler still runs at 1.0 (see [§8.4](#84-the-games-own-resampler-cannot-scale)) | NO |
-| L13 | **Wallpaper** | PNG `{0x856DDBAC, 0x6A1EED2C, 0x4A2805FF}` → `view+0xE0` | — | The region backdrop | Art-only. Inferred: the `−2*cellOrigin` residue vanishes only if the wallpaper width divides `2*256 = 512`; a non-divisor will seam | NO |
+| L13 | **Wallpaper** | PNG `{0x856DDBAC, 0x6A1EED2C, 0x4A2805FF}` → `view+0xE0` | — | The region backdrop | Art-only. The `−2*cellOrigin` residue vanishes only when the wallpaper width divides `2*256 = 512`; a non-divisor seams at the cell boundary | NO |
 | L14 | **Overlay icons** | table `0x00AB9594`: `{0x856DDBAC, 0x46A006B0, 0xEBABB1B0}` = `region_airport`, `…B1B1` = `region_seaport` | — | Airport/seaport markers | Art-only; positions come from L2 | NO |
 | L15 | **Per-city plaque window** | `.UI` group `0x96A006B0`, instance `view+0xF0` (or `0xCA539343` / guid `0x0A551C53` for the player's own city); child ids `0x4A552000` name, `…001` mayor, `…002` "no city", `…003/4/5` numerics, `…006` population, `0x4A553000` rating bar (typed `0x4A5D1208`) | — | **The plaque is a real `cIGZWin` built from a UI script** — it IS reachable by the normal window-tree scaling machinery, unlike the tile bitmaps | Setting `view+0xF0 = 0` (`sub_7B5E20`) turns plaques off entirely | NO |
 | L16 | **View mode** | `view+0x118` via `sub_7B30F0` | 0 | `==1` composites from `item+0x24`; `!=0` enables the overlay-icon pass | region view only | NO |
@@ -550,7 +547,8 @@ Byte-checked absence of any scale term:
 `sub_7B5EF0` — tile grid from the window's own client rect (`vt+0xA4` = `[+0xB0]−[+0xA8]`,
 `vt+0xA8` = `[+0xB4]−[+0xAC]`), so it scales with the WINDOW, never with a factor.
 `sub_7B4150` — every blit rect is `{px, py, px+srcW, py+srcH}`.
-That triple is the mechanism behind **#131 "region map unusably small at 2x/3x"**.
+Together those four are the mechanism behind the region map keeping its stock pixel size while
+the rest of the UI is scaled to 2x or 3x.
 
 ---
 
@@ -571,17 +569,19 @@ Measured not to work. Do not retry.
 008269BA  0F 85 3D 00 00 00  jne 0x8269FD         ; -> xor al,al / pop esi / ret 0x10
 ```
 
-`[this+8] != 0` ⇒ **immediate `return false`, nothing written, no exception.** That is exactly
-the measured symptom on all 9 tiles. The only other early-outs are `width == 0` (`0x8269C0`)
+`[this+8] != 0` ⇒ **immediate `return false`, nothing written, no exception** — the behaviour of
+every already-initialised tile buffer when Init is called on it a second time, so a resize
+attempt on a live cache cell fails silently and leaves the old geometry in place.
+The only other early-outs are `width == 0` (`0x8269C0`)
 and `height == 0` (`0x8269C8`). The game itself never re-Inits a live buffer: its two Init call
 sites (`0x007B1DA1`, `0x007B5FF9`) both run on a buffer created a dozen instructions earlier,
 with any previous occupant Released first (`0x7B5FA6..0x7B5FAE`).
 
 ### 8.2 The camera and its ortho frustum
 
-`cSC4CameraControl` at `[regionScreen+0x164]` (clsid `0xC9C628EC`, created `0x7ACE41`) —
-we set our scale, **the projection and the device frustum both took OUR values and held steady
-for 20 samples over 5 s, and the screen never changed.** Mechanism now understood: the camera
+`cSC4CameraControl` at `[regionScreen+0x164]` (clsid `0xC9C628EC`, created `0x7ACE41`) accepts a
+scale: **the projection and the device frustum both hold the value written into them — steady
+across 20 samples over 5 s — and the screen does not change.** The camera
 drives only the 3-D scene (`+0x160`/`+0x168`/`+0x16C`), whose entire visible contribution is
 `sub_7AB630`'s one flat ground quad. Every city thumbnail, label and icon is drawn by the
 **2-D tile cache** (`view+0x10C` → `sub_7B4150` → `sub_7B2A30`), which never consults the
@@ -636,10 +636,10 @@ upscaler without patching four immediates in two functions.
 
 ---
 
-## 9. `funcs.json` gaps
+## 9. Functions hidden inside other spans
 
-Six real functions live inside other functions' spans and are absent from
-`tools\uimap\funcs.json`. Any pass that iterates `starts[]` silently skips them.
+Six real functions live inside another function's span, so a pass that iterates function START
+addresses skips them silently.
 
 | VA | size | what it is | how it is reached |
 |---|---|---|---|
@@ -650,34 +650,37 @@ Six real functions live inside other functions' spans and are absent from
 | `0x007AB600` | 48 | dtor of the `0xAB8CB8`/`0xAB8CA0` MI pair | swallowed by `sub_7AB5E0`'s span |
 | `0x007B5300` | 80 | tile-cache scalar deleting dtor | `[0x00AB9624] = 0x007B3E70` → `sub ecx,4; jmp` |
 
-`sub_7B51D0`'s recorded end (`0x7B5350`) is wrong: it returns at `0x7B52FD` (`ret 0xC`), so it
-is 304 bytes, and `0x7B5300..0x7B5350` is the separate function above.
+`sub_7B51D0` returns at `0x7B52FD` (`ret 0xC`) and is 304 bytes; `0x7B5300..0x7B5350` is the
+separate function listed above, not its tail.
 
 ---
 
-## 10. Corrections to earlier ground truth
+## 10. Facts that are easy to get wrong
 
-| Old statement | Correction | Evidence |
-|---|---|---|
-| "`cSC4WinRegionView`'s slot-88 draw `0x00648F00`" | Slot **index** 88 decimal = **offset `+0x160`** (GZPaint). Offset `+0x88` is `0x0099DE74`, the inherited `GetChildWindowFromID`. Say "offset `+0x160`" or the next person patches the wrong dword | `[0x00AB9658+0x160]` vs `[+0x88]` |
-| "IT PAINTS NOTHING" | True only of the cIGZWin draw slot. The view owns a 256×256 tile cache at `+0x10C` and paints every region pixel through the painter interface at `+0xD8` | `sub_7B6060`, `sub_7B4150` |
-| "`+0x158` service" | The **bitmap factory** used to create tile buffers is **`+0x154`** (`mov esi,[ecx+0x154]` @`0x007AE6B2`). `+0x158` is `cSC4AnimationTickManager` | measured |
-| "`+0x124..` default tile images" | Exactly **12 slots = 6 PAIRS** `{RGB, ALPHA MASK}`, stride 8, two tables (`+0x124` default, `+0x13C` mode 1), 3 size classes each | ctor zero-fill; Shutdown `0x7B1163..0x7B118D`; dtor `mov ebx,0xC` @`0x7B12C7` |
-| "`+0x118/+0x11C` an item array" (screen) | Correct **for the screen** — a 3-field `vector<item>` `{+0x118,+0x11C,+0x120}`, stride `0x80`. **Wrong for the view**: `view+0x118` is the VIEW MODE dword; the view's item array is `+0x100/+0x104/+0x108` | `sub_7B0BB0`; `sub_7B30F0` |
-| "`+0x168` scene (ctor `sub_7C9B10`)" | Confirmed — but `sub_7B1900` never writes `+0x168`; the scene is created in `sub_7ACC90` (`0x7ACF70`). `sub_7B1900` builds `+0xE0` (view, ctor `sub_7B4090`), `+0xE4` (clouds) and `+0x174` (scroll) | measured |
-| "`sub_7B3030` = item → screen point (no multiply)" | It also `floor()`s both components (`0x009EFF60`) and **subtracts `item[0x1C]->GetHeight()` from Y** (`fsubr` @`0x7B3090`, `vt+0x28` @`0x7B307B`), treating the height as unsigned (`fadd [0x00A80AA8]` @`0x7B308A`). **Items are BOTTOM-anchored** — a taller source moves the tile UP | measured |
-| "`sub_7B3110` = item → screen RECT" | It is a **content-space** rect: `sub_7B3030` subtracts the pan and `sub_7B3110` adds it straight back (`0x7B312F`/`0x7B3137`). Size comes from `item+0x1C`, never `+0x2C` | measured |
-| "`sub_7B3300` composites 1:1 / `sub_7B2A30` blits 1:1 / NEITHER RESAMPLES" | Both statements hold, but the module-level "nothing resamples" is wrong: `sub_7AE160` is a real resampler — it is just hard-wired to scale 1.0 (§8.4). Also `sub_7B2A30` is not purely per-pixel: an opaque run (first pixel `>= 0xFF000000`, `0x7B2C49`) is issued as a whole-run rect Blit | measured |
-| "`sub_7B3300` … the composite is sized verbatim from the source" | `sub_7AE510` has ALREADY replaced `item+0x1C` with `sub_7AE3D0`'s `+(2,2)` copy by the time `0x007AE6D9` runs ⇒ **composite == originalSource + (2,2)** | `0x007AE439/0x007AE43C` |
-| "`[item+0x38..]` a packed uint16 alpha run-list" | Element size is **4 bytes** (`sar ecx,2` @`0x00462F12`), and there are **four** such vectors: `+0x38`, `+0x44`, `+0x50`, `+0x5C`. `+0x38` is the screen-blit list (format A, built by `sub_7B3670` from the **composite**); `+0x44` doubles as the **click mask**; `sub_7AE510` fills only `+0x44/+0x50/+0x5C` from `item+0x20` | measured |
-| "`[item+0x1C]` source, `[item+0x2C]` composite" (only two buffers) | The item owns **six** refcounted buffers: `+0x1C`, `+0x20` (alpha mask), `+0x24`, `+0x28`, `+0x2C` (composite), `+0x30` | dtor `sub_7ADA00`, copy-assign `sub_7ADFA0` |
-| Tile-buffer head "`+0x2C=1 +0x30=3 +0x34=FFFFFFFF +0x38=00040001`" | Those were live *values*, not constants. `+0x2C` = **refcount** (`0x00825D60`), `+0x30` = **modification counter**, low word of `+0x38` = **lock depth**, `+0x44` = OR of live lock flags. **`+0x40` = row pitch in bytes** was missing entirely. `+0x08` is the **initialised gate**, `+0x14`/`+0x18` are rect.left/top forced to 0 by Init | §5.1 |
-| "`+0x1C` width `+0x20` height" + "slot `+0x30` GetRect" listed separately | They are the same record: `GetRect` = `lea eax,[ecx+0x14]`, so width/height are `rect[2]`/`rect[3]` | `0x008268C0` |
-| "one region cell = 128.0 px" | Also **64.0 px in Y** (`18.75 + 45.25`), independently sighted in `sub_7AB7C0`. One cell = **128 × 64** | `0x7AB84E`/`0x7AB8DA` |
-| `sub_7B2480` / `sub_7B24B0` / `sub_7B24FA` "region code" | Shared COM-singleton getter (`clsid 0xC2C2EB0F`, `iid 0x22C2EB1F`, literals at `0x007B249F`/`0x007B2495`) called from 15+ sites image-wide. The clsid literal sits in the GETTER; the create sites reach the class through the singleton's runtime dispatch table, so a literal-clsid create census still cannot see them (`SDK-GAPS.md` §4) | byte scan |
-| `SC4-UI-ENGINE.md:249` "SetID `+0xFC`", "Show `+0x110`" | `+0xFC` = `0x0099BE66` is the **getter**; `+0x100` = `0x0099BE5C` is the setter. `+0x110` = `0x0099DB6B` is the generic `SetFlag(u32 flag, bool)` | bytes |
-| `vendor/gzcom-dll/.../cIGZWin.h` | Missing exactly **one** virtual between header slot 30 and slot 63: `EnumChildren` is header `+0x074` → real `+0x080` (delta `0x0C`), while `SetFlag` `+0x100`→`+0x110`, `SetNotificationTarget` `+0x148`→`+0x158`, `GZPaint` `+0x150`→`+0x160` are all delta `0x10`. **Any real offset in `+0x078..+0x0FC` is ambiguous by one slot** | `0x7B2392`, `0x7B2351`, `0x7B2374` |
-| `cIGZGDriver.h` | Real vtable = header slot **+ 0x0C** (`cIGZUnknown`'s three slots). Verified at five sites in `sub_7A9D60`. Residual, unresolved: real `+0xE8` (header `SetTexture(u32,u32)`) is called with **one** argument at `0x7AA075` | measured |
+Each of these has an obvious wrong reading that a plain glance at the vtable, the header or a
+memory dump produces.
+
+| Fact | Evidence |
+|---|---|
+| `cSC4WinRegionView`'s draw slot is at **offset `+0x160`** (GZPaint), which is slot **index 88 decimal**. Offset `+0x88` is a different slot entirely — `0x0099DE74`, the inherited `GetChildWindowFromID`. Quote the offset, never the decimal index | `[0x00AB9658+0x160]` vs `[+0x88]` |
+| The view's cIGZWin draw slot paints nothing, but the view is not inert: it owns a 256×256 tile cache at `+0x10C` and paints every region pixel through the painter interface at `+0xD8` | `sub_7B6060`, `sub_7B4150` |
+| The **bitmap factory** used to create tile buffers is **`screen+0x154`** (`mov esi,[ecx+0x154]` @`0x007AE6B2`). `+0x158` is `cSC4AnimationTickManager` | measured |
+| `screen+0x124..+0x150` is exactly **12 slots = 6 PAIRS** `{RGB, ALPHA MASK}`, stride 8, in two tables (`+0x124` default, `+0x13C` mode 1), 3 size classes each | ctor zero-fill; Shutdown `0x7B1163..0x7B118D`; dtor `mov ebx,0xC` @`0x7B12C7` |
+| `screen+0x118/+0x11C/+0x120` is a 3-field `vector<item>`, stride `0x80`. On the VIEW the same offset means something else: `view+0x118` is the VIEW MODE dword, and the view's item array is `+0x100/+0x104/+0x108` | `sub_7B0BB0`; `sub_7B30F0` |
+| `sub_7B1900` never writes `+0x168`. The scene (`new(0x2E8)` + `sub_7C9B10`) is created in `sub_7ACC90` (`0x7ACF70`); `sub_7B1900` builds `+0xE0` (view, ctor `sub_7B4090`), `+0xE4` (clouds) and `+0x174` (scroll) | measured |
+| `sub_7B3030` maps an item to a screen point with no multiply, but it also `floor()`s both components (`0x009EFF60`) and **subtracts `item[0x1C]->GetHeight()` from Y** (`fsubr` @`0x7B3090`, `vt+0x28` @`0x7B307B`), treating the height as unsigned (`fadd [0x00A80AA8]` @`0x7B308A`). **Items are BOTTOM-anchored** — a taller source moves the tile UP | measured |
+| `sub_7B3110` returns a **content-space** rect, not a screen rect: `sub_7B3030` subtracts the pan and `sub_7B3110` adds it straight back (`0x7B312F`/`0x7B3137`). Its size comes from `item+0x1C`, never `+0x2C` | measured |
+| `sub_7B3300` composites 1:1 and `sub_7B2A30` blits 1:1, yet the module does contain a resampler: `sub_7AE160` is a real one, hard-wired to scale 1.0 ([§8.4](#84-the-games-own-resampler-cannot-scale)). `sub_7B2A30` is also not purely per-pixel — an opaque run (first pixel `>= 0xFF000000`, `0x7B2C49`) is issued as a whole-run rect Blit | measured |
+| By the time `0x007AE6D9` runs, `sub_7AE510` has already replaced `item+0x1C` with `sub_7AE3D0`'s `+(2,2)` copy ⇒ **composite == originalSource + (2,2)** | `0x007AE439/0x007AE43C` |
+| The item run lists have a **4-byte** element (`sar ecx,2` @`0x00462F12`) and there are **four** of them: `+0x38`, `+0x44`, `+0x50`, `+0x5C`. `+0x38` is the screen-blit list (format A, built by `sub_7B3670` from the **composite**); `+0x44` doubles as the **click mask**; `sub_7AE510` fills only `+0x44/+0x50/+0x5C`, all from `item+0x20` | measured |
+| The item owns **six** refcounted buffers, not two: `+0x1C`, `+0x20` (alpha mask), `+0x24`, `+0x28`, `+0x2C` (composite), `+0x30` | dtor `sub_7ADA00`, copy-assign `sub_7ADFA0` |
+| In the tile-buffer head, `+0x2C` is the **refcount** (`0x00825D60`), `+0x30` the **modification counter**, the low word of `+0x38` the **lock depth**, `+0x40` the **row pitch in bytes**, `+0x44` the OR of live lock flags, `+0x08` the **initialised gate**, and `+0x14`/`+0x18` rect.left/top forced to 0 by Init. A raw dump of that head reads as live values, not as constants | [§5.1](#51-head-layout-all-measured-from-the-slot-bodies) |
+| `+0x1C` width and `+0x20` height are `rect[2]`/`rect[3]` of the one record `GetRect` hands out: `GetRect` = `lea eax,[ecx+0x14]` | `0x008268C0` |
+| One region cell is **128 × 64 px** — `90.51 + 37.49 = 128.0` in X and `18.75 + 45.25 = 64.0` in Y, both sighted in `sub_7AB7C0` | `0x7AB84E`/`0x7AB8DA` |
+| `sub_7B2480` / `sub_7B24B0` / `sub_7B24FA` are not region code: they are a shared COM-singleton getter (`clsid 0xC2C2EB0F`, `iid 0x22C2EB1F`, literals at `0x007B249F`/`0x007B2495`) called from 15+ sites image-wide. The clsid literal sits in the GETTER; the create sites reach the class through the singleton's runtime dispatch table, so a literal-clsid create census cannot see them (`SDK-GAPS.md` §4) | byte scan |
+| On `cIGZWin`, `+0xFC` (`0x0099BE66`) is the id **getter** and `+0x100` (`0x0099BE5C`) is the **setter**; `+0x110` (`0x0099DB6B`) is the generic `SetFlag(u32 flag, bool)`, not Show | bytes |
+| `vendor/gzcom-dll`'s `cIGZWin.h` is missing exactly **one** virtual between header slot 30 and slot 63: `EnumChildren` is header `+0x074` → real `+0x080` (delta `0x0C`), while `SetFlag` `+0x100`→`+0x110`, `SetNotificationTarget` `+0x148`→`+0x158` and `GZPaint` `+0x150`→`+0x160` are all delta `0x10`. **Any real offset in `+0x078..+0x0FC` is ambiguous by one slot** | `0x7B2392`, `0x7B2351`, `0x7B2374` |
+| For `cIGZGDriver.h` the real vtable offset is the header slot **+ 0x0C** (`cIGZUnknown`'s three slots), measured at five sites in `sub_7A9D60`. Real `+0xE8` (header `SetTexture(u32,u32)`) is called with **one** argument at `0x7AA075` | measured |
 
 ---
 
@@ -685,7 +688,7 @@ is 304 bytes, and `0x7B5300..0x7B5350` is the separate function above.
 
 | Global | Contents | Evidence |
 |---|---|---|
-| `[0x00B43C94]` | the SC4 app singleton; `vt+0x88` → region manager, `vt+0x44` SavePreferences, `vt+0x98` GetPreferences. Named `cISC4App` by inference | setter `0x00601C04` |
+| `[0x00B43C94]` | the SC4 app singleton (`cISC4App`); `vt+0x88` → region manager, `vt+0x44` SavePreferences, `vt+0x98` GetPreferences | setter `0x00601C04` |
 | `[0x00B43C9C]` | **`cIGZGraphicSystem`** (`kGZGraphicSystem_SystemServiceID = 0xC416025C`) — copied to `screen+0x154` | `0x00602384`, `0x7B1AA9` |
 | `[0x00B43CA0]` | graphic system used by the cloud draw (`vt+0x0C` → `cIGZGDriver`) | `0x7A9DF9` |
 | `[0x00B43CA8]` | resource / properties service (`vt+0x0C(key,iid,out,0,0)`) | `sub_7ABF10` |
@@ -693,7 +696,7 @@ is 304 bytes, and `0x7B5300..0x7B5350` is the separate function above.
 | `[0x00B43CD8]` | prefs object; byte `+0xF09` gates edge-scroll; `+0xEFC/+0xF00` hold the saved pan ×256 | `sub_7AB130`, `sub_7AC2D0` |
 | `[0x00B43CF8]` | region terrain grid (mirror of `screen+0x16C`) | `sub_7AC380` |
 | `[0x00B43D1C]` | `cSC4EffectsManager` (mirror of `+0x15C`) | `0x7AD0FD` |
-| `[0x00B43DD0]` | scene / paint manager (mirror of `+0x168`); `vt+0x50` request repaint, `vt+0x60`/`vt+0x68` bracket a paint, `vt+0x80`/`vt+0x84` register/unregister a draw layer. Class not pinned | `0x7AC3BC`, `0x7AD0EB`, `0x7B6145` |
+| `[0x00B43DD0]` | scene / paint manager (mirror of `+0x168`); `vt+0x50` request repaint, `vt+0x60`/`vt+0x68` bracket a paint, `vt+0x80`/`vt+0x84` register/unregister a draw layer | `0x7AC3BC`, `0x7AD0EB`, `0x7B6145` |
 | `[0x00B4E1C0/C4/C8]` + flag `[0x00B4E1CC]` | three exemplar tunables (`0xCA383CAA/A9/A8`) | `sub_7ABF10` |
 | `[0x00B217B0]`, `[0x00B217B4]` | two exemplar bools | `sub_7ABF10` |
 | `[0x00B628C0]` / `[0x00B628C4]` | cached `cIGZWinMgr` / region-window-factory singletons | `0x00913C46` / `0x00913C72` |

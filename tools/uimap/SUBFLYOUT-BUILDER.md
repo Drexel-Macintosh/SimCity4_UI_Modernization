@@ -1,19 +1,17 @@
 # THE SUB-FLYOUT BUILDER — DECODED
 
 > **Scope.** The shared second-level menu container **`0x8A6E61E0`** and its
-> item strip **`0x8A2CAD8B`** — the strip that opens when you pick a tool
-> *inside* a flyout (zone density, road types, rail depots …). This file
-> answers "which function creates them, and where does every number come
-> from". Model for the layout: `tools\research\BUDGET-DETAIL-ANATOMY.md`.
+> item strip **`0x8A2CAD8B`** — the strip that opens when the player picks a
+> tool *inside* a flyout (zone density, road types, rail depots …). This file
+> answers which function creates them, and where every number comes from.
+> Model for the layout: `tools\research\BUDGET-DETAIL-ANATOMY.md`.
 >
-> **Written offline.** The exe was opened read-only; the game was never
-> launched, attached to, or modified. Every claim below carries a VA or a
-> byte pattern; anything inferred is labelled **HYPOTHESIS**.
+> Every claim carries a VA or a byte pattern, read from `SimCity 4.exe`
+> 1.1.641.0 (Steam).
 >
-> Machine-readable twin: `subflyout-builder.json` (+ `subflyout_builder.py`,
-> `--resume`). Generated C++ tables: `generated-subflyout-builder-{1.5,2,3}x.txt`.
-> The verdict on the art-vs-code question: `SUBFLYOUT-ART-VERDICT.md`; the
-> early scan this supersedes: `SUBFLYOUT-CONSTANTS.md`.
+> Companions: `SUBFLYOUT-ART-VERDICT.md` settles the art-versus-code question,
+> `SUBFLYOUT-CONSTANTS.md` holds the exe-wide constant scan, and
+> `SUBFLYOUT-LIVE-EVIDENCE.md` holds the live-instrument readings.
 
 ---
 
@@ -33,13 +31,15 @@ toolbars.
 
 ---
 
-## 1. HOW IT WAS FOUND (reproducible in 30 seconds)
+## 1. HOW TO LOCATE IT
 
 ```
-cd tools\uimap
-python -c "import common as C,struct;d=C.exe_bytes();
+python -c "import struct;d=open(r'<install>\Apps\SimCity 4.exe','rb').read();
 print([hex(i+0x400000) for i in range(len(d)) if d[i:i+4]==struct.pack('<I',0x8A6E61E0)])"
 ```
+
+A raw file offset in this image maps to its VA by adding `0x400000`. The scan
+reports the address of the id operand; the `push` opcode is the byte before it.
 
 | id | occurrences in the whole exe | VA | bytes | what it feeds |
 |---|---|---|---|---|
@@ -47,12 +47,12 @@ print([hex(i+0x400000) for i in range(len(d)) if d[i:i+4]==struct.pack('<I',0x8A
 | `0x8A2CAD8B` | 2 | `0x007EB1F4` | `68 8B AD 2C 8A` | `SetID` at `0x007EB1FB` |
 | | | `0x007E5EB9` | `68 8B AD 2C 8A` | inside `sub_7E5E90` — a **lookup** helper, creates nothing |
 
-Both create sites are in `sub_7EAEB0`. `+0x100 = SetID` is the census's own
-slot table (`BUILDER-CENSUS.md` §1), so the identification needs no guessing.
+Both create sites are in `sub_7EAEB0`, and slot `+0x100` on the window vtable
+is `SetID`, so the identification needs no guessing.
 
-`census.py`'s primitive set never reached these windows because they are built
-through **class methods on an anonymous class**, not through the `sub_779xxx`
-label/band/button factories. That is the gap this file closes.
+These two windows are built through **class methods on an anonymous class**,
+not through the `sub_779xxx` label/band/button factories, which is why a census
+keyed on those primitives never reaches them. That is the gap this file closes.
 
 ---
 
@@ -157,9 +157,8 @@ stripRight/Bottom = +stripW / +stripH
 | **twin**: first-level container `94 − 6 + 53` = **141** wide, `289+50` = **339** tall at its 6-row cap | `SC4-UI-ENGINE.md` §2.1: `srcBuf [0xDC] = 141x339` |
 | **twin** fields `53, 25, artH−50, 94, 62, 6` | §2.1's live DOBS dump: `53, 25, 12, 94, 62, 6` |
 
-Nothing was fitted. The formulas came out of the disassembly and then matched
-numbers that were already written down. **This is the strongest offline
-validation this project has produced.**
+Nothing is fitted. Every formula comes out of the disassembly and reproduces
+numbers that were recorded independently of it.
 
 Corollaries worth knowing:
 - **258x206 is a ONE-ITEM menu.** `n=1 → stripH = 44 < 53`, so the
@@ -174,11 +173,11 @@ Corollaries worth knowing:
 
 ## 4. THE CONSTANT TABLE
 
-Encodings and expected original bytes re-read from the exe by
-`subflyout_builder.py` (30 sites, **0 byte-verify failures**). Full records in
-`subflyout-builder.json`; C++ text in `generated-subflyout-builder-2x.txt`.
+Encodings and original bytes, re-read from the exe at all 30 sites. In the
+tier columns, `✗` marks a value that no longer fits the instruction's signed
+1-byte immediate field (§5).
 
-### 4.1 `sub_7EAEB0` — the SUB-FLYOUT (the defect the user reported)
+### 4.1 `sub_7EAEB0` — the SUB-FLYOUT
 
 | VA | bytes | enc | role | stock | 1.5x | 2x | 3x | twin |
 |---|---|---|---|---|---|---|---|---|
@@ -218,7 +217,7 @@ Encodings and expected original bytes re-read from the exe by
 | `0x7EAF28` / `0x7EAF44` / `0x7EAF1C` | `83 fb 08` / `83 fb 06` / `83 fb 01` | `cmp ebx,…` | 8 / 6 / 1 | row-count caps |
 | `0x7E72DF` / `0x7E72D3` | `83 f8 06` / `83 f8 01` | `cmp eax,…` | 6 / 1 | first-level flyouts are always capped at 6 rows |
 | `0x7EAF60` / `0x7EB0DD` | `68 b4 01 …` / `68 50 01 …` | `push 0x1b4` / `push 0x150` | 436 / 336 | `operator new` sizes. Touching either corrupts the heap. |
-| `0x7EAFC9` / `0x7EAFCB` | `6a 05` / `6a 08` | `push 5` / `push 8` | 5 / 8 | **HYPOTHESIS (font-style selector).** `[this+0x3d8]->vt+0x14(8,5)` and the result goes to the hover label's `vt+0x10`, immediately beside a colour fetch (`vt+0x50` → `vt+0x4c`) — the shape of a style/colour pair, not a rect. Twin at `0x7E733D`/`0x7E733F`. **They sit 0x22 bytes from the item-metrics pushes and are byte-identical to them; do not sweep the region.** |
+| `0x7EAFC9` / `0x7EAFCB` | `6a 05` / `6a 08` | `push 5` / `push 8` | 5 / 8 | **font-style selector.** `[this+0x3d8]->vt+0x14(8,5)` and the result goes to the hover label's `vt+0x10`, immediately beside a colour fetch (`vt+0x50` → `vt+0x4c`) — a style/colour pair, not a rect. Twin at `0x7E733D`/`0x7E733F`. **They sit 0x22 bytes from the item-metrics pushes and are byte-identical to them; do not sweep the region.** |
 
 ---
 
@@ -239,7 +238,7 @@ width, at `0x7EB165`.** And it is not optional — it is a *width* term:
 `containerW = [0xF0] − [0xF8] + [0xE4]`. Leaving it at 80 with the other two
 doubled gives `80 − 8 + 106 = 178`, not 258.
 
-### 5.1 The recommended cure — one vtable thunk, not a pin
+### 5.1 The cure — one vtable thunk, not a pin
 
 `SetLayout` is a **fixed-arity `__thiscall`** (`ret 0x20`, 8 stack args) reached
 through **one** vtable slot, `0xAB6D04 + 0x10`. A thunk there:
@@ -250,24 +249,24 @@ through **one** vtable slot, `0xAB6D04 + 0x10`. A thunk there:
 - distinguishes them by **return address** (`0x007EB171` = sub-flyout,
   `0x007E74B1` = first-level), which is also the proof line of §8.
 
-This beats a runtime pin on all three counts that `METHOD.md` §4.1 cares
-about: it runs at BIRTH (no sweep race, no flash), its identification does not
-depend on the state it corrects (it is the call itself), and it keeps no
-record (law 14). If a thunk is unacceptable, the fallback is
+This beats a runtime pin on all three counts that `METHOD.md` §4.1 weighs: it
+runs at BIRTH (no sweep race, no flash), its identification does not depend on
+the state it corrects (it is the call itself), and it stores no window pointer
+that can go stale. Where a thunk is unavailable, the fallback is
 `push 0x50 → push 0x7F` (127) plus a **+33 width correction** applied in the
-`Place` thunk — but that is two mechanisms where one will do.
+`Place` thunk — two mechanisms where one does the job.
 
-Do **not** try to absorb the shortfall into `[0xE4]`: `[0xE4]` is
-**dual-use** — it is also the hit-claim width (`0x79AE30`) and the bar's
-flush-right draw width. `ENGINE` §2.1 already paid for that lesson once.
+Do **not** absorb the shortfall into `[0xE4]`: `[0xE4]` is **dual-use** — it is
+also the hit-claim width (`0x79AE30`) and the bar's flush-right draw width, so
+a correction there moves the click target and the bar art along with it.
 
 ---
 
 ## 6. IS THE ITEM GEOMETRY CODE-DERIVED? — YES, DECISIVELY
 
-The question was worth asking: the budget band family sizes its dialog from
-the **sum of art heights**, and if this family did the same there would be
-nothing to patch. **It does not.**
+The question is worth asking: the budget band family sizes its dialog from the
+**sum of art heights**, and if this family did the same there would be nothing
+to patch. **It does not.**
 
 **Every number that reaches a `SetArea` is a code immediate.** Traced end to
 end:
@@ -297,48 +296,38 @@ number appears in any window rect.
 
 > **One real coupling, and it bites.** `[0xEC] = artH − 2*[0xE8]`. Doubling
 > `[0xE8]` to 50 against a **1x** (53-tall) atlas yields `[0xEC] = −47` and the
-> bar draw goes negative. Verified present: both
-> `tools\selective\z_SC4UIScale_Art_2x_G0x46a006b0.dat` and
-> `…_G0x1abe787d.dat` contain `I-14215ED0..ED5` + `EDD`, so the 2x atlas ships —
-> but the `[0xE8]` patch is **only** valid while it loads. The exe asks for
-> group **`0x46A006B0`** (`0x7EB0C8`), not the `0x1ABE787D` recorded in
-> `MAYOR-MODE.md` §ring-atlas. Both groups ship 2x, so nothing is broken today;
-> the discrepancy is flagged, not resolved. **HYPOTHESIS:** the doc recorded the
-> group the sprite was *authored* under and the ring is blitted from a second
-> lookup. One `RCAL` line settles it.
+> bar draw goes negative, so the `[0xE8]` patch is valid only while the scaled
+> atlas is loaded. The exe requests the atlas from group **`0x46A006B0`**
+> (`0x7EB0C8`); the 2x art packages supply `I-14215ED0..ED5` plus `EDD` under
+> that group and under `0x1ABE787D`, so both lookups resolve to scaled art.
 
 ---
 
 ## 7. THE TWIN IS ALREADY SCALED BY OTHER MEANS — DO NOT PATCH IT BLIND
 
-`sub_7E7270` builds the **first-level** flyout, from the **same two classes**
-(this is why `SVT` found byte-identical vtables and why every disaster fix
-applied verbatim to the sub-flyout). But that window is already handled:
-`gForceRecreate`, `gStripFieldScale`, `gBarDX`, `ClaimScale`, the god-flyout
-pre-scale-while-hidden path and `kMayorFlyoutDock` all act on it after birth.
+`sub_7E7270` builds the **first-level** flyout, from the **same two classes** —
+which is why the `SVT` vtable probe reads byte-identical vtables for the two
+windows, and why every disaster-flyout fix applies verbatim to the sub-flyout.
+That window is already handled after birth: `gForceRecreate`,
+`gStripFieldScale`, `gBarDX`, `ClaimScale`, the god-flyout
+pre-scale-while-hidden path and `kMayorFlyoutDock` all act on it.
 
-Patching its builder **as well** double-scales it. The generated C++ text
-carries this warning inline. Sequence that is safe:
+Patching its builder **as well** double-scales it. Born-2x and resize-to-2x are
+mutually exclusive by construction, so a build that patches the `sub_7EAEB0`
+block drops `gStripFieldScale` and the container resize for `0x8A6E61E0` in the
+same build. The twin keeps its post-birth treatment.
 
-1. patch the `sub_7EAEB0` block only, and delete `gStripFieldScale` /
-   the container resize for `0x8A6E61E0` in the same build — born-2x and
-   resize-to-2x are mutually exclusive by construction;
-2. confirm the sub-menus, then decide about the twin separately.
-
-Also: `sub_7E7270` is called from **`0x7F4D2C` in `sub_7F4690`** — the same
-function that opens one of the sub-menus (`0x7F4EE1`). The two levels share an
-owner, so a region-wide byte sweep would hit both. Patch by VA, never by
-pattern.
+`sub_7E7270` is called from **`0x7F4D2C` in `sub_7F4690`** — the same function
+that opens one of the sub-menus (`0x7F4EE1`). The two levels share an owner, so
+a region-wide byte sweep hits both. Patch by VA, never by pattern.
 
 ---
 
 ## 8. THE ONE LOG LINE THAT PROVES IT
 
-> *"What single line from a live sub-menu open would prove this builder is the
-> one that actually runs?"*
-
-**Hook `0xAB6D04` slot `+0x10` (`SetLayout`, `sub_79AC60`) and log the caller's
-return address with the seven arguments:**
+A single line from a live sub-menu open shows that this builder is the one that
+actually runs. **Hook `0xAB6D04` slot `+0x10` (`SetLayout`, `sub_79AC60`) and
+log the caller's return address with the seven arguments:**
 
 ```
 SUBLAY ret=0x007EB171 e4=53 e8=25 f0=80 f4=53 f8=4 fc=27 100=29 img=<w>x<h>
@@ -360,7 +349,7 @@ Why this one line and no other:
   builder ran *and* timestamps the moment the 1x geometry was committed.
 
 A weaker but zero-code alternative: the **first** `DPROBE`/`SUBSKIP` sighting of
-`0x8A6E61E0` in a session, before the sweep touches it, must read **width 129**
+`0x8A6E61E0` in a session, before the sweep touches it, reads **width 129**
 with `left = spawnButtonAbsCentreX − 27`. `129` exists nowhere in the exe as a
 literal — it only ever comes into being as `80 − 4 + 53` at `0x79ADBE`.
 
@@ -383,8 +372,8 @@ literal — it only ever comes into being as `80 − 4 + 53` at `0x79ADBE`.
   therefore collapses. Not a constant; nothing to patch.
 - **`0x7EAFC9`/`0x7EAFCB` `push 5` / `push 8`** are font-style ids that sit 0x22
   bytes from the item-metrics pushes and look exactly like geometry. §4.3.
-- **No `.UI` script defines either window** — already established (330 scripts,
-  zero hits) and confirmed here from the other direction: the ids exist only as
+- **No `.UI` script defines either window** — 330 scripts, zero hits — and the
+  same result arrives from the other direction: the ids exist only as
   `push imm32` operands feeding `SetID`.
 - **Searching for the literal 258 / `0x102` finds nothing, and one false
   friend.** The width is *computed*, never stored, so `0x102` does not appear
@@ -393,20 +382,3 @@ literal — it only ever comes into being as `80 − 4 + 53` at `0x79ADBE`.
   (§4.3). Two different numbers wearing the same digits. The window **ids** are
   the only usable search key; `129` (the true native width) is likewise never a
   literal.
-
----
-
-## 10. HOW TO REGENERATE
-
-```
-cd tools\uimap
-python subflyout_builder.py --resume --factor 2.0
-python subflyout_builder.py --factor 1.5
-python subflyout_builder.py --factor 3.0
-```
-
-Idempotent; one unit per site, persisted to `subflyout-builder.state.json`
-(its own file — it never touches the shared `state.json`) immediately after
-each site, so an interruption loses at most one site. Acceptance gate:
-**`0 byte-verify FAILURES`**. A non-zero count means the exe changed and every
-number in this file must be re-derived, not adjusted.

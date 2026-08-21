@@ -26,8 +26,8 @@ Subsequent opens look correct in 30–48 ms not because they are faster, but
 because they **inherit** the already-latched state.
 
 That timing signature generalises: **a defect that appears only on the first use
-of a session is almost always an uninitialised latch, not a race.** Look for the
-one-time initialisation that the first consumer misses, not for a timing window.
+of a session is an uninitialised latch, not a race.** Look for the one-time
+initialisation that the first consumer misses, not for a timing window.
 
 ## Order: promote the field before installing the thunk
 
@@ -54,10 +54,10 @@ order, so the response is to revert the ordering, never to tune the values.
   `dst(205,..) src 53x3` still appears after the fix has landed and proves
   nothing about what was painted.
 
-Both bent a diagnosis before being characterised. See
+Neither line is evidence of what reached the screen. See
 `tools\research\METHOD.md`, "your own instruments can lie".
 
-## Target the window the user actually sees
+## Target the window the player actually sees
 
 A fix aimed at the nested container can fire **zero** times while the visible
 jump persists, because the menus in question are the first-level flyouts. The
@@ -68,5 +68,4 @@ confirm which window a fix touches before believing it targets the right one.
 
 Further detail: `tools\research\SC4-UI-ENGINE.md` §4.6b and §4.7 row 4. The
 offline model `tools\uimap\emu\emu_subflyout.py` covers this family with 71
-checks and predicted the n=7 / n=8 child counts before they were measured in the
-running game.
+checks and predicts the n=7 / n=8 child counts that the running game produces.

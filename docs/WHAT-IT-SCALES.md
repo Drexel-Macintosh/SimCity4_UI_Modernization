@@ -1,6 +1,6 @@
 # What it scales
 
-A rough map of the interface, and what happens to each part. "Data" means an
+A map of the interface, and what happens to each part. "Data" means an
 enlarged package supplies it; "runtime" means the DLL resizes it live; several
 need both.
 
@@ -16,6 +16,7 @@ need both.
 | Dashboard minimap | runtime — the window *and* its render surface are recreated at the new size |
 | Pause / disaster / situation alert borders | data (nine-slice art at tier size) |
 | Mayor rating meter and decline arrow | data |
+| Move In My Sim marker — the framed sim face, plate and green/red arrow that float over a candidate house | data + runtime — the art comes from a data-scaled `I-6a9455c9`, and both roots (`0x27DF05BE`/`0x27DF05BF`) are hooked for the BMPX blit so the bitmaps follow the window |
 | Building query panels, including the ones the Colossus Addon Mod **adds** — its city info screen (Village Hall / Town Hall) and its civic and school panels | data — built from the mod's own scripts and bitmaps, in a package that switches itself off if the mod is removed |
 | Tooltips | runtime — the text box is sized from the font, not from the scale factor |
 
@@ -65,13 +66,7 @@ from measured font extents rather than multiplied by the tier factor.
 
 ## Not scaled
 
-- **The intro video.** Its four geometry constants are patched and verified
-  applied; something downstream also decides the final presentation rect.
+- **The intro video.** It plays at its authored size; the presentation rect is
+  decided downstream of the four geometry constants that control its layout.
 - **The 3D world.** Deliberately — it already renders at your native
   resolution, and stretching it is the thing this mod exists to avoid.
-
-- **Move In My Sim marker** (#191) - the framed sim face, plate and
-  green/red arrow that float over a candidate house. Born at the scaled
-  size from a data-scaled `I-6a9455c9`, with both roots
-  (`0x27DF05BE`/`0x27DF05BF`) hooked for the BMPX blit so the bitmaps
-  follow the window.

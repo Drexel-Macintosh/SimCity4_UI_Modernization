@@ -37,20 +37,6 @@ The working order is: build, start the watcher, announce the build is ready,
 let the player close the game when they choose, then confirm the
 `deployed ... at HH:MM:SS` line before treating anything as shipped.
 
-## The boot matrix is not a routine check
-
-`_tests\Test-BootMatrix.ps1` deliberately violates the rule above: it is a live
-regression that **launches and kills the game once per matrix entry** and
-rewrites `SC4GraphicsOptions.ini` between entries, walking 800x600 (stock tier),
-1920x1080 and 1600x1200 (1.5x), and 2400x1600 (2x), deleting the log before each
-boot. It restores the native resolution only if it runs to completion. Interrupt
-it and it leaves the graphics ini at whatever resolution it was mid-way through
-and a game process running; the recovery is to restore `WindowWidth` and
-`WindowHeight` to the machine's native values by hand.
-
-Never launch it as part of a general "run the suites" pass, and never while
-someone may be playing. It takes roughly ten minutes.
-
 ## The routine suites are offline
 
 Verifying a build does not require the game to be open. `Test-DatIntegrity`,

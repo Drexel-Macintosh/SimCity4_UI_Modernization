@@ -1,105 +1,102 @@
-# `_tests\` — the suite reference (read before running anything here)
+# `_tests\` — the regression net (read before running anything here)
 
-This file exists because a script was once run without anyone knowing what it
-did: it killed the game, rewrote the resolution, and left the ini at 800x600.
-Nothing in the repo warned about that. This file is the warning.
+**A script's danger is part of its API.** Every entry below states what it
+touches — nothing, on-disk config, or the running game — before it states what
+it proves.
 
-**The rule this encodes:** *a script's danger is part of its API.* Every entry
-below states whether it touches the running game or on-disk config.
+Most of the net is offline: it runs without SimCity 4, exits 0 or 1, and proves
+the source is intact before anyone builds it.
 
 ---
 
-## SAFE — offline, run any time, no game needed
+## OFFLINE — run any time, no game needed
 
 | script | what it asserts | typical runtime |
 |---|---|---|
-| `Test-DatIntegrity.ps1` | every shipped dat's entry count + the 3 font sources + the DLL + **20 DEPLOYED==BUILT content hashes** (a package left out of Deploy-OnGameClose.ps1 rots silently — stale and fresh dats can have IDENTICAL sizes/counts, only hashes catch it). **The one to run after any data change OR deploy.** Update its expected counts AND add a hash pair for any new package in the same commit. Note it FAILS between build and deploy by design — deploy, re-run. | ~1 min |
-| `Test-ScaleTierDecide.ps1` | the AutoScale fit function: 14 named resolutions + a 5000x2 random sweep, asserting the chosen tier always fits. | seconds |
-| `Test-UiMapDiff.ps1` | the offline model vs the live log vs the stock captures at f=1/1.5/2/3. **Needs a full, healthy session log** — a truncated or stock-tier log produces false STOCK-1X failures. | seconds |
-| `Audit-UnscaledWindows.py` | sweeps a log for windows we never scaled. | seconds |
-| `Test-BornCorrectCoverage.ps1` | every id in `SCALED_WINDOW_IDS` (python AST) has a born-correct route or a LABELED own mechanism in UiSpike.cpp. **Run after touching SCALED_WINDOW_IDS or any born-correct/flyout id list.** | seconds |
-| `Test-SubRingLock.ps1` | the sub-flyout ring PIN: ring absolute Y identical under the model+Auto and under the legacy constant, ring centred on its button, f=1 reducing to the game's own native top, birth/sweep anchor identity, and the payoff case (8 items on a low button overflows under the legacy constant, fits under the model). **Run before every sub-flyout change.** Its scope is the RING — `emu_subflyout`'s 32/32 models the CONTAINER only. | seconds |
+| `Test-BootStateValidate.py` | `ScaleTier::ValidateBootState`'s truth table. A hand-edited `SC4UIScale.ini` can reach 26 incoherent combinations of `AutoScale`, `ScaleFactor`, `ScaleAll`, armed packages and screen resolution — several of them inescapable, because the UI ends up too large to navigate or the art is armed while the geometry sweep is off, and the in-game control that would fix it is gone. The gate pins which states are repaired and, just as important, which coherent ones are left alone. | seconds |
+| `Test-SelectorDerive.py` | the Graphic Options selector's derivation rule: one pure function, `SelDerive(state) -> UI`, written before the C++ that mirrors it. The design it pins down — the player's scale pick is a REQUEST that is never overwritten, and the effective row is derived fresh every pass as `request if usable else Auto` — is what removes the bounce/un-bounce state machine entirely. | seconds |
+| `Test-SelectorContract.py` | the same selector's SHAPE, asserted on the source, because the rule cannot defend itself from the next edit: the 250 ms tick (`SelOnTick`) polls three `GetSelection` calls and nothing else — no syscalls, no file I/O, no list mutation; `SelDerive` and `SelBuildResRows` stay pure; `RemoveAllStrings` exists in exactly one function (the diff-apply `SelPushCombo`), which is the structural end of mutating a list while the player is reading it. | seconds |
+| `Test-StockTierContract.py` | stock-tier boot work is gated on the condition it actually depends on. Arming `z_SC4UIScale_SelectorUI-1x` from inside `ScaleTier::SyncStaticLayers` cannot work, because that function is not called at the stock tier; gating the static-layer sync on `spikeAutoScale \|\| tierActive` cannot work for a manual stock factor, because both are false there and the previous tier's art dats stay armed while geometry runs at 1x. | seconds |
+| `Test-MutationCountInvariant.py` | in `UiSpike::ScalePanelRoot` and `UiSpike::ScaleSubtree`, every call that mutates a game window (`SetW` / `SetH` / `SetArea` / `GZWinMoveTo` / `ChildAdd` / `ChildDelete`) is paired with an increment of the scale counter. Five loops re-enumerate the whole child list because the mod's own writes can make the game destroy a later sibling; the counter is the "was anything mutated?" signal that keeps that re-verification off the 16 ms tick, and it is the same number the per-panel `%d windows scaled` lines print. | seconds |
+| `Test-PackageGating.py` | every third-party package reaches a real `SyncDat` call rather than computing `depOk` and discarding it, and `SyncFont` never snapshots an already-scaled `FontStyle.ini` as the player's original — on an upgrade install the live file is the mod's own font, and preserving it as "the player's" restores a scaled font over their file at stock tier. | seconds |
+| `Test-ShippingIniKeys.py` | every key documented in the shipped `SC4UIScale.ini` resolves to a real read in `src\Settings.cpp` or `src\UiSpike.cpp`, under the same section name. A documented key the DLL never reads is a promise the code does not keep, and a player has no way to tell it apart from a wrong value. Covers all four read paths: the two Win32 wide entry points, the ANSI one the live-tune poll uses, and `GetPrivateProfileFloat`, which has no trailing `W`. | seconds |
+| `Test-MiniMapX8Bake.py` | the minimap terrain bake at x8. The game dispatches its per-tile blitter through a 5-entry jump table indexed by `zoom + 2` with an UNSIGNED bound (`0x7A8560 lea ecx,[edx+2]` / `cmp ecx,4` / `ja 0x7A85B0` / `jmp [ecx*4+0x7A8628]`), so zoom −3 wraps to `0xFFFFFFFF` and skips the bake, and the game alpha-blends its data cells onto black. The surrounding destination math is fully general in zoom (`destY = cellY*16 >> (zoom+4)`, tile side `256 >> (zoom+4)`), so only the dispatch stops at −2. `CodePatches::ApplyMiniMapX8Bake` rewrites those 15 bytes to index `zoom + 3` against a 6-entry table in the mod's DLL: entry 0 is the x8 blitter, entries 1..5 are the game's own stubs in their original order. | seconds |
+| `Test-RegionZoomSizes.py` | at every region zoom level the source, the mask, the composite and the three run lists describe the SAME dimensions — a click mask at `[item+0x44]` still describing the stock tile while the pixels were resized under it meets a `GetPixel` with no bounds check. The shipping design re-runs the game's own `sub_7AE510` to regenerate all of them from restored pristine art, so every level is computed at an absolute factor from the pristine snapshot rather than by multiplying the current size by a ratio, which is what makes an exact round trip possible. Constants are parsed out of `src\Settings.h` so the model cannot drift from the shipping code. | seconds |
+| `Test-BinaryPii.py` | byte-scans a release bundle for personal data in ASCII **and UTF-16**. Every text-based privacy check is blind to a compiled binary: without `NDEBUG`, MSVC's `assert` expands to `_wassert(..., _CRT_WIDE(__FILE__), __LINE__)`, which puts the compiler's absolute source path into `.rdata` as wide characters, where `/PDBALTPATH:%_PDB%` never reaches. This reads bytes, and reads them twice — raw, and with NUL bytes removed, the pass that turns UTF-16 back into something a byte search can find. The cure it guards is `/d1trimfile:"<repo root>\"` in both vcxproj files. | seconds |
+| `Test-DatIntegrity.ps1` | every deployed dat's entry count, the 3 font sources, the DLL's presence and the Plugins-folder quarantine check, plus a DEPLOYED==BUILT content hash for every package with a canonical build output. A package left out of `Deploy-OnGameClose.ps1` rots silently — stale and fresh dats can have IDENTICAL entry counts and byte sizes, because a reference rewrite swaps equal-length hex strings, so only a content hash catches that class. **The one to run after any data change or deploy.** Update its expected counts and add a hash pair for any new package in the same commit. It FAILS between build and deploy by design: deploy, then re-run. | ~1 min |
 
-Also offline and safe, with their exact invocations:
-- `python tools\uimap\emu\emu_subflyout.py` → `PASS - 71 checks` (runs the
-  game's own `sub_79AD00` under Unicorn).
-- `python tools\flyout-sim\check_marker_fit.py` → `ALL FIT (16 placements
-  checked at f=2.00, view 2400x1600)`. The OTHER flyout family (mayor
-  marker-docked), asked whether any of them lands off-screen — stock AND
-  WarriorUI. Run after touching `kMayorFlyoutDock` or any marker constant.
-  Its `R != -marker` notes for the `G-08000600` rows are EXPECTED (the
-  marker really does move per resolution group — that is why the live-marker
-  rule exists), not failures. Zero placements checked exits non-zero: an
-  earlier version indexed every window's CLASS id (`clsid=0x…` contains
-  `id=0x…`), matched nothing, and printed "ALL FIT" over an empty run.
-- `python tools\uimap\emu\emu_layout.py --selftest --fresh` → `5 pass, 0 fail`.
-  **Use `--fresh`, not `--resume`**: with `--resume` the cached run reports
-  `0 pass, 0 fail, 5 skipped`, which is a NULL, not a pass — it looks green at
-  a glance and asserts nothing (null-is-not-evidence).
-- `python tools\uimap\placement.py --selftest` → `ALL PASS` (3 measured
-  births + an exe byte check).
+The offline emulators and geometric gates, with their exact invocations:
+
+- `python tools\uimap\emu\emu_subflyout.py` → `PASS - 71 checks`. Runs the
+  game's own `sub_79AD00` under Unicorn, so born-at-place geometry is checked
+  against the engine's arithmetic rather than a model of it.
+- `python tools\uimap\emu\emu_layout.py --selftest --fresh` →
+  `5 pass, 0 fail, 0 skipped`. **Use `--fresh`, not `--resume`**: with
+  `--resume` the cached run reports `0 pass, 0 fail, 5 skipped`, which is a
+  NULL, not a pass — it looks green at a glance and asserts nothing.
+- The `gate_*.py` family under `tools\uimap\emu\` — one geometric rule each
+  (offset parity, icon centring, tiled seams, 9-slice fit, strip visible rows,
+  minimap snap, band docking, and the rest). Each runs offline and exits 0 or 1.
 
 ## TOUCHES ON-DISK CONFIG — reversible, but know what it changes
 
 | script | what it changes | how to undo |
 |---|---|---|
-| `Set-StockCompare.ps1` | stages the STOCK (1x) configuration so a panel can be captured for parity work. | re-stage the 2x config; see `STOCK-REFERENCE.md` |
-| `Set-StockPlugins.ps1` | stashes the WHOLE Plugins tree (ours included) as a **sibling** of `Plugins\`, for a true vanilla run. | `-Restore` (manifest-backed) |
-| `Toggle-BuildingStylesUI.ps1` | enables/disables the third-party Building Styles UI override. | run again to toggle back |
-| `Restore-StockPark.ps1` | restores a stock park/lot file that testing replaced. | n/a — it *is* the restore |
+| `Set-Tier.ps1` | forces a specific scale tier for an eyes-on test, DATA AND ALL — the tier packages are renamed and the matching font is copied. Setting `AutoScale=0` with a manual `ScaleFactor` instead does NOT do this: the DLL scales window GEOMETRY and logs `layers untouched`, leaving the 2x art and the 2x font in place, so 1.5x boxes get 2x artwork — crushed panels, overlapping text, clipped boxes — which reads as a catastrophic tier bug and is the test rig. `-Windowed` / `-FullScreen -Width -Height` also stage the screen the tier is judged on, which rewrites `SC4GraphicsOptions.ini`. | `-Tier 2` or `-Auto`; `-Status` reports without changing anything |
+
+`SC4GraphicsOptions.ini` must be written **without a BOM**. `Set-Content
+-Encoding utf8` adds one, and `SC4GraphicsOptions.dll` then abandons the whole
+file and boots windowed; restore it by byte-exact `Copy-Item` from a known-good
+copy rather than by rewriting it.
 
 ## DANGEROUS — TOUCHES THE RUNNING GAME
 
 ### `Deploy-OnGameClose.ps1` — the standing deploy mechanism
+
 **This is how the DLL ships. Nothing else.** The game runs **ELEVATED** and
 holds `SC4UIScale.dll` and the tier dats open, so it is **never killed**: the
-script polls every 5 s, then copies the DLL + every tier package and asserts
-the DLL size matches.
+script polls every 5 s for the process to exit, then copies the DLL plus every
+tier package and asserts the DLL size matches.
 
     cd _tests ; .\Deploy-OnGameClose.ps1
 
 Run it in the background (or detached) with a window long enough for a real
 play session, and **confirm the `deployed ... at HH:MM:SS` line and hash-verify
-against `build\Release` before claiming anything shipped**. A watcher armed
-*before* a later build will ship whatever is in `build\Release` when the game
+against `build\Release` before treating anything as shipped**. A watcher armed
+*before* a later build ships whatever is in `build\Release` when the game
 closes — check the hash, not the intent.
 
-### `Test-BootMatrix.ps1` — NOT A ROUTINE CHECK
-**It launches and KILLS the game once per matrix entry and rewrites
-`SC4GraphicsOptions.ini`** (800x600 → 1920x1080 → 1600x1200 → 2400x1600),
-restoring native resolution only if it runs to completion. ~10 minutes.
-
-- **Never** run it as part of a normal "run the suites" pass.
-- **Never** run it while the user may be playing.
-- If it is interrupted it leaves the resolution wherever it died. Restore
-  `WindowWidth=2400` / `WindowHeight=1600` immediately — **by byte-exact
-  `Copy-Item` from `_working-backup\GOLDEN-2x-DirectX-2026-07-23\`**, never
-  by `Set-Content`, which writes a UTF-8 BOM that makes
-  `SC4GraphicsOptions.dll` abandon the whole file and boot windowed.
+The script records which tier is LIVE per tier-managed family **before** any
+copy runs and restores that snapshot verbatim at the end. The files on disk are
+not a reliable source for that answer: reading "which tier is armed" back works
+only while exactly one is armed, and on an install with two armed packages a
+first-match scan picks whichever tier sorts first and disarms the correct one.
+The DLL owns which tier is right — `ScaleTier` resolves the factor from the
+screen when `AutoScale=1`; this script owns only whether the bytes are current.
 
 ---
 
 ## The routine verification pass
 
-1. `Test-DatIntegrity.ps1` + `Test-ScaleTierDecide.ps1` (+ the `emu\` drivers
-   for anything geometric).
+1. The offline gates: `Test-DatIntegrity.ps1` plus the `emu\` drivers for
+   anything geometric.
 2. Build, then `Deploy-OnGameClose.ps1`; hash-verify the deployed DLL.
-3. Read the log for the acceptance line you decided on **before** the build.
-4. Eyes-on the specific panel, plus the standing regression watch in
-   `REGRESSION.md`.
-
-**Never** substitute `Test-BootMatrix.ps1` for step 1.
+3. Read the log for the acceptance line chosen **before** the build.
+4. Eyes-on the specific panel at the tier under test.
 
 ## Instruments (ini-gated, in `SC4UIScale.ini`)
+
 `[Probe] Enabled` DPROBE geometry changes · `EdgeDump` full-screen window set ·
-`VisTrace` full-depth visibility + creation trace · `EdgeBlt` thin edge blits
-(⚠ **cannot see the screen surface** — see
-`captures\2026-07-30-BORDER-HUNT-README.md`).
+`VisTrace` full-depth visibility and creation trace · `EdgeBlt` thin edge blits
+(it sees WINDOW blits only and **cannot see the screen surface**, so a null
+there leaves the screen surface unmeasured).
+
 All ship at 0. They are re-read live only when `[UiSpike] LiveTune=1`;
 otherwise they are read once at the first sweep, so editing them needs a
 restart.
 
 **Before trusting any instrument's null result, read its printf and confirm it
-sits in the branch that does the thing.** Six probes in one session returned
-nulls that were really blind spots — one root, two levels, flips-only, unarmed
-hook, wrong surface. `METHOD.md` "YOUR OWN INSTRUMENTS CAN LIE".
+sits in the branch that does the thing.** A probe rooted at the wrong window,
+hooked at the wrong level, armed only on state flips, installed lazily, or
+reading the wrong surface returns a null that is a blind spot rather than a
+measurement. See `tools\research\METHOD.md`, "YOUR OWN INSTRUMENTS CAN LIE".

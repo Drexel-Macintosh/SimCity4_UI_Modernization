@@ -19,8 +19,9 @@ difference depends on the **parity of the frame's own coordinate `t`**, so the
 same child offset survives under one parent and shifts under another.
 
 At `f = 1.5` (`q = 2`) this reduces to a simple rule: **even offsets always
-survive, odd offsets are decided by the parent.** At an integer factor `q = 1`
-and every offset survives, which is why the family is invisible at 2x and 3x.
+survive, odd offsets are decided by the parent.** At an integer factor `q = 1`,
+so `d * f` is an integer for every `d` and every offset survives, which is why
+the family is invisible at 2x and 3x.
 
 The law names the failing **axis** before any measurement. Verified on three
 panels:

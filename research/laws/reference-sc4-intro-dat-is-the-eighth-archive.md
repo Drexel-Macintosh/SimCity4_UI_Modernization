@@ -1,10 +1,9 @@
 # Enumerate the DBPF Archives, Do Not List Them
 
-The game's install root holds nine DBPF archives, not the seven that a
-hand-written list is likely to name. Any tool that searches for a TGI by walking
-a hard-coded archive list is capable of reporting a false negative — and it will
-only ever be wrong about the archive that was left out, which is exactly the
-case the search was run for.
+The game's install root holds nine DBPF archives, not the seven a hand-written
+list names. Any tool that searches for a TGI by walking a hard-coded archive
+list can report a false negative — and it is only ever wrong about the archive
+that was left out, which is exactly the case the search was run for.
 
 ## The archive set
 
@@ -12,9 +11,9 @@ A hard-coded list covering
 
     SimCity_1.dat .. SimCity_5.dat, EP1.dat, SimCityLocale.DAT
 
-misses at least `Intro.dat` (~18 MB, 3 index entries) and `Sound.dat`. Both sit
-in the install root alongside the others. Enumerating `*.dat` in the install
-root at run time reports nine archives on a stock install.
+misses `Intro.dat` (~18 MB, 3 index entries) and `Sound.dat`. Both sit in the
+install root alongside the others. Enumerating `*.dat` in the install root at
+run time reports nine archives on a stock install.
 
 `tools\dbpf\find_tgi.py` therefore carries no list: it discovers the archive set
 and prints the count it found.
@@ -32,20 +31,19 @@ The startup-splash background lives in `Intro.dat`:
     DbpfExtract.exe Intro.dat out 0x856DDBAC
     -> T-856ddbac_G-46a006b0_I-ea7f0eae.png   768x600   500,591 B
 
-Under the seven-archive list, that TGI `{856ddbac, 46a006b0, ea7f0eae}` was
-reported as dangling — "no stock source anywhere" — across several reports, a
-null produced by a scanner that could not have seen the archive it lived in.
-Acting on that null meant substituting a third-party mod's copy of the splash in
-a shipped package. A pixel diff against the genuine stock bitmap showed 99.72%
-of pixels differing with a maximum channel delta of 251: a different image, not
-a re-encode. The cure was to extract the pristine 1x source from `Intro.dat` and
-upscale it with the project's own `Upscale2x.exe` for the 1.5x, 2x and 3x tiers.
+A seven-archive list reports the TGI `{856ddbac, 46a006b0, ea7f0eae}` as
+dangling — "no stock source anywhere" — a null produced by a scanner that could
+not have seen the archive the asset lives in. Acting on that null substitutes a
+third-party mod's copy of the splash into a shipped package, and a pixel diff
+against the genuine stock bitmap separates the two: 99.72% of pixels differ,
+maximum channel delta 251. That is a different image, not a re-encode. The cure
+is to extract the pristine 1x source from `Intro.dat` and upscale it with the
+project's own `Upscale2x.exe` for the 1.5x, 2x and 3x tiers.
 
-A caveat on the wrong axis does not help here. The list-based tool already
-warned that its negatives were unreliable, but the warning named unscanned
-*Plugins* as the reason — true, and irrelevant to the actual gap, which was on
-the game side of the scan. A disclaimer aimed at the wrong axis reads as
-diligence and buys nothing.
+A caveat on the wrong axis does not help. A list-based tool that warns its
+negatives are unreliable because the *Plugins* tree went unscanned names a real
+limitation and the wrong one: the gap here is on the game side of the scan. A
+disclaimer aimed at the wrong axis reads as diligence and buys nothing.
 
 ## Rules
 
@@ -65,7 +63,7 @@ diligence and buys nothing.
 * A bitmap that looks like the stock one is not the stock one. Pixel-diff it.
 
 The durable lesson is not "add `Intro.dat`". A hand-maintained inventory of what
-exists on disk is a claim about the filesystem; it ages silently. The first
-correction to the seven-archive list ("one was forgotten") was itself short by
-one, which is the whole argument for deriving the inventory rather than writing
-it down.
+exists on disk is a claim about the filesystem, and it ages silently: every
+patch to such a list is itself a list, short by whatever the next install adds.
+Deriving the count at run time is the only form of the inventory that cannot be
+short by one.

@@ -1,7 +1,7 @@
 # SC4UIScale
 
 **Runtime UI scaling for SimCity 4 Deluxe 1.1.641.** The game renders the
-world at your display's native resolution while every interface element —
+world at the display's native resolution while every interface element —
 windows, buttons, fonts, icons, cursors, menus — is drawn at 1.5×, 2× or 3×.
 SimCity 4 has no UI scaling of its own; its interface is hard-coded around
 1024×768 assumptions, which makes it near-unusable on modern high-DPI
@@ -18,13 +18,14 @@ interface grows.
 | 2× | 1920×1440 | the reference tier: exact doubling throughout |
 | 3× | 2880×2160 | for 4K-class displays |
 
-**Auto scale** picks the largest tier your resolution can carry at boot and
-arms the matching package set. An in-game selector inside the game's own
-Graphic Options dialog lets you change scale, resolution and window mode;
-changes apply on restart, and boot-state validation repairs a hand-edited or
-incoherent configuration to a runnable state, so no combination of choices
-can trap the player in an unusable UI. Tier 1 (stock) is a first-class
-state: every scaling subsystem off, indistinguishable from a no-mod install.
+**Auto scale** picks the largest tier the display resolution can carry at boot
+and arms the matching package set. An in-game selector inside the game's own
+Graphic Options dialog lets the player change scale, resolution and window
+mode; changes apply on restart, and boot-state validation repairs a
+hand-edited or incoherent configuration to a runnable state, so no combination
+of choices can trap the player in an unusable UI. Tier 1 (stock) is a
+first-class state: every scaling subsystem off, indistinguishable from a
+no-mod install.
 
 ## Requirements
 
@@ -35,15 +36,15 @@ state: every scaling subsystem off, indistinguishable from a no-mod install.
   lifts the DirectX 7 2048×2048 texture cap — required for 3× and for any
   render surface wider than 2048 px, recommended everywhere. Window modes
   (Borderless / Fullscreen / Windowed) are coordinated with the wrapper.
-- **SC4GraphicsOptions.dll** (community plugin) if you want the in-game
-  Resolution / Window Mode controls. The scale selector works without it.
+- **SC4GraphicsOptions.dll** (community plugin) for the in-game Resolution /
+  Window Mode controls. The scale selector works without it.
 
 ## Install
 
 1. Copy `SC4UIScale.dll`, `SC4UIScale.ini` and the `z_SC4UIScale_*` packages
    into `Documents\SimCity 4\Plugins`.
-2. Launch the game. AutoScale picks the right tier for your resolution;
-   change it any time in **Options → Graphic Options**.
+2. Launch the game. AutoScale picks the tier the current resolution can carry;
+   the scale changes at any time under **Options → Graphic Options**.
 
 Prebuilt release bundles are published under
 [Releases](../../releases); the repository itself ships the *generators*,
@@ -68,14 +69,14 @@ on disk is touched except the mod's own files. Full detail:
 
 | Path | What it is |
 |---|---|
-| [docs/](docs/) | Product documentation: [how it works](docs/HOW-IT-WORKS.md), [what it scales](docs/WHAT-IT-SCALES.md), the [package manifest](docs/PACKAGE-MANIFEST.md), [compatibility](docs/COMPATIBILITY.md), [building](docs/BUILDING.md) |
-| [research/laws/](research/laws/) | Engineering notes and lessons learned — the scaling laws, each paid for by a real defect; start at the [index](research/laws/INDEX.md) |
+| [docs/](docs/) | Product documentation: [how it works](docs/HOW-IT-WORKS.md), [what it scales](docs/WHAT-IT-SCALES.md), [compatibility](docs/COMPATIBILITY.md), [building](docs/BUILDING.md) |
+| [research/laws/](research/laws/) | The scaling laws: engineering rules, each derived from a real defect; start at the [index](research/laws/INDEX.md) |
 | [tools/research/](tools/research/) | The SDK-style reference to SC4's UI engine, written from measurement (Maxis shipped no SDK) |
 | [tools/uimap/](tools/uimap/) | The offline simulator: layout emulation, gates and compositors that run without launching the game |
-| [_tests/](_tests/) | The regression net: gates, goldens, deploy scripts |
+| [_tests/](_tests/) | The regression net: contract gates and deploy scripts that run without the game |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 
-Known limitations are tracked in
+Known limitations are listed in
 [research/KNOWN-LIMITATIONS.md](research/KNOWN-LIMITATIONS.md).
 
 ## Repository map
@@ -84,7 +85,7 @@ Known limitations are tracked in
 |---|---|
 | `src/` | The DLL: director, window-tree scaler (`UiSpike.cpp`), executable patches (`CodePatches.cpp`), tier/package logic (`ScaleTier.cpp`) |
 | `tools/` | Package builders — every shipped `.dat` is generated, never hand-edited |
-| `_packaging/` | Release build and the checks that gate it |
+| `vendor/` | The third-party libraries the DLL links: gzcom-dll and MinHook |
 
 No Maxis-derived art is committed to this repository; the packages are built
 locally from an owned installation.
@@ -93,7 +94,7 @@ locally from an owned installation.
 
 This project's own code is dedicated to the public domain —
 [CC0 1.0](LICENSE), no rights reserved, no attribution required. It
-staticically links two third-party libraries with their own terms
+statically links two third-party libraries with their own terms
 (gzcom-dll, LGPL-2.1-or-later; MinHook, BSD-2-Clause); see
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) before redistributing a
 build. SimCity 4 and its assets belong to Electronic Arts; this is an

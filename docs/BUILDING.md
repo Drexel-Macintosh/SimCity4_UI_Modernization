@@ -38,7 +38,7 @@ csc tools\dbpf\DbpfPack.cs
 csc tools\upscale\Upscale2x.cs
 
 # 2. point the scripts at your install (optional - they auto-detect
-#    a Steam install and a OneDrive-redirected Documents folder)
+#    a Steam install and a redirected Documents folder)
 set SC4_GAME_DIR=C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe
 set SC4_PLUGINS=%USERPROFILE%\Documents\SimCity 4\Plugins
 
@@ -57,7 +57,7 @@ Each builder takes a scale factor and writes a `z_SC4UIScale_*.dat`. Deploy
 those to `Documents\SimCity 4\Plugins\`, with the third-party ones in the
 `zzz-SC4UIScale\` subfolder.
 
-### Two rules that are not optional
+### Three rules that are not optional
 
 **A mod's own dialogs are not in the game's data, so nothing here can build
 them from a stock source.** The dialog builder reads
@@ -71,9 +71,9 @@ and those dialogs simply stay unscaled.
 **Load order decides everything.** SimCity 4 loads root `Plugins` files
 *before* subfolders, and the last file loaded wins. A package that has to beat
 another mod must live in a subfolder sorting after it — hence `zzz-`. Coverage
-means *our file loads last for this resource*, not *the resource is in one of
-our files*. Those two are not the same question, and they disagreed for exactly
-one icon out of 392.
+means *this package loads last for that resource*, not *the resource sits in
+one of these files*. Those two are not the same question, and they disagree for
+exactly one icon out of 392.
 
 **Art the game cuts into cells must keep dividing evenly.** SimCity picks a
 cell with an integer divide, and the divisor is compiled into the game:
@@ -88,10 +88,8 @@ a multiple of 4 a multiple of 4. At 1.5× it is not — roughly a third of
 nine-slice dimensions and **two fifths of strip widths** stop dividing evenly,
 and each one shows up as a bright seam where a cell bleeds into its neighbour.
 
-> This rule was originally written here for *menu icons* and implemented only
-> in the NAM icon builder. It is not a menu-icon rule; it applies to every
-> sheet the game cell-divides, and the gap cost a release. If you add a
-> generator, snap there too.
+> This is not a menu-icon rule. It applies to every sheet the game
+> cell-divides, in every builder. A new generator snaps too.
 
 ## Layout
 
@@ -122,17 +120,18 @@ pixel narrower than the same control at an even `l`. If its art cell was built
 for the wider one, the uncovered column and row draw as a thin "reverse L".
 
 So **leaf** windows (`GetChildCount() == 0` — discrete icons, nothing butted
-against them) take their size **size-derived**, `ScaleRound(w, f)`. Containers
-keep the edge-derived rule. Both are no-ops at an integer factor, because
+against them) are sized directly instead: `ScaleRound(w, f)`. Containers keep
+the edge-derived rule. Both are no-ops at an integer factor, because
 `ScaleRound(l * 2)` is exact for every `l`.
 
-### If you are tempted to fix this somewhere else
+### Why the fix does not belong anywhere else
 
-Two other levers were tried and reverted, both on the same day:
+Two other levers reach the same arithmetic and cost more than they buy:
 
-- **Moving the control** onto an even edge works, and is up to 2px at 1.5×.
-  That is invisible on a flyout with five well-spaced buttons and obvious in a
-  21-icon grid. Judge a positional change in the densest layout it touches.
+- **Moving the control** onto an even edge works, and shifts it by up to 2px at
+  1.5×. That shift is invisible on a flyout with five well-spaced buttons and
+  obvious in a 21-icon grid. Judge a positional change in the densest layout it
+  touches.
 - **Resizing the art** to match the window works arithmetically and is
   unbounded in practice: some windows are **created at runtime and appear in no
   `.UI` file**, yet they bind art by TGI like everything else. A builder can

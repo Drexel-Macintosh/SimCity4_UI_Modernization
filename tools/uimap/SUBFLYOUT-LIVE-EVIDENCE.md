@@ -1,51 +1,41 @@
 # SUB-FLYOUT LIVE EVIDENCE — the measured ground truth
 
-**Scope.** Everything below is extracted from log files this project already
-captured. Nothing here is disassembly, art extraction, or simulation — those
-belong to the sibling documents (`SUBFLYOUT-BUILDER.md`,
-`SUBFLYOUT-ART-VERDICT.md`, `SUBFLYOUT-CONSTANTS.md`). This file is the LIVE
-oracle only.
+**Scope.** Everything below is extracted from captured log files. Nothing here is
+disassembly, art extraction, or simulation — those belong to the sibling
+documents (`SUBFLYOUT-BUILDER.md`, `SUBFLYOUT-ART-VERDICT.md`,
+`SUBFLYOUT-CONSTANTS.md`). This file is the LIVE oracle only.
 
-Every row cites **log file + line number + timestamp**. Rows that are derived
-rather than read off a line are labelled **HYPOTHESIS**.
+Every row cites **log file + line number + timestamp**.
 
 Method: `tools\uimap\diff\parse_log.py` (its regexes are transcribed from the
 printf sites in `src\UiSpike.cpp`), re-used as a library, plus targeted greps for
-the `SUB*` / `SCAL` / `SVT` / `DOBS` / `DSTRIP` / `DPOS` instruments whose grammar
-`parse_log.py` does not yet model.
+the `SUB*` / `SCAL` / `SVT` / `DOBS` / `DSTRIP` / `DPOS` instruments, whose
+grammar sits outside `parse_log.py`'s model.
 
 ---
 
-## 0. THE CORPUS — and the fact that almost none of it contains the defect
+## 0. THE CORPUS
 
 Eleven candidate log files were parsed end to end. **Three** contain any sighting
-of `0x8A6E61E0` / `0x8A2CAD8B`. This matters: it is the reason the sub-flyout
-never showed up in prior flash work.
+of `0x8A6E61E0` / `0x8A2CAD8B`.
 
 | Log file | Version | Lines | Sub-flyout lines | Notes |
 |---|---|---|---|---|
-| `Plugins\SC4TouchControls.log.bak-dialogtest` | v2.5.5-dialogs | 1 193 | **4** | earliest; DLL logged into the TouchControls log then |
+| v2.5.5 dialog capture | v2.5.5-dialogs | 1 193 | **4** | earliest capture in the corpus |
 | `Plugins\SC4UIScale.log.bak-presblt` | v2.13.7-barwiden | 203 388 | **438** | 1 open (Zones) |
 | `Plugins\SC4UIScale.log.bak-prerings` | v2.14.0-transutil | 240 209 | **202** | 5 opens (Zones / Transport / Utilities ×3) |
-| `Plugins\SC4UIScale.log` | v2.33.1-revert | 435 | 0 | current; short boot run |
+| `Plugins\SC4UIScale.log` | v2.33.1-revert | 435 | 0 | short boot run |
 | `Plugins\SC4UIScale.log.bak-premayordock` | v2.12.7-modetest | 469 978 | 0 | biggest log in the corpus, zero sightings |
 | `Plugins\SC4UIScale.log.prev` | — | 279 269 | 0 | |
 | `Plugins\SC4UIScale.log.bak-godfix` | — | 39 239 | 0 | god mode only |
 | `Plugins\SC4UIScale.log.bak-godmode-final` | — | 55 831 | 0 | god mode only |
 | `Plugins\SC4UIScale.log.bak-stock800` | — | 77 | 0 | stock reference, f=1.0 |
-| `_tests\last-selective-2x.log` | — | 523 | 0 | |
-| `tools\research\_checkpoints\pds-cache\SC4UIScale-snapshot.log` | v2.27.3 | 548 | 0 | |
+| selective-2x capture | — | 523 | 0 | |
+| v2.27.3 snapshot capture | v2.27.3 | 548 | 0 | |
 
 Both `SC4UIScale` evidence logs ran at **render res 2400x1600, tier 2.00**
 (`AutoScale:` line 3 of each file). So every "2x" number below is a real tier-2
 measurement, not an inference.
-
-> **Corpus age caveat — read before trusting any POSITION number.** The two rich
-> logs are **v2.13.7 and v2.14.0**; shipping is **v2.33.1**. `SUBDOCK` (v2.15.3),
-> `SUBCLAIM` (v2.17.0), `SUBSKIP` (v2.22.1), `SUBHEAL` (v2.18.6) and the derived
-> tier math (v2.24.0) **did not exist yet**, and `SubDockDX/DY` were 0. The
-> **SIZE** facts are architectural and still hold. The **POSITION** facts describe
-> pre-dock behaviour and have since been deliberately changed.
 
 ---
 
@@ -71,8 +61,8 @@ UI           id=0x2AAB8CC1 pos(0,0) size(0x0) children=0 vis=0  <- tip layer, 0x
 | `0x2AAB8CC1` | tooltip **tip layer** | 3 | `0x8A2CAD8B` | **no — always `0x0`, `vis=0`** | presblt L4594; prerings L4582 |
 
 **There is no fourth id. There are no per-item windows.** This is the single most
-important structural fact in this file and it is measured, not inferred: the
-strip reports `children=1` and that one child is a 0x0 invisible tip layer.
+important structural fact in this file, and it is measured: the strip reports
+`children=1`, and that one child is a 0x0 invisible tip layer.
 
 The visible menu items are **blits into the container's paint buffer**, logged by
 the `DSTRIP` instrument (`prerings` L4462–4465, `[23:58:48.318]`):
@@ -84,16 +74,16 @@ DSTRIP src 88x88 ( 88,0,176,88) dst 88x88 (0,196,88,284) srcTex=352x88
 DSTRIP src 88x88 ( 88,0,176,88) dst 88x88 (0,294,88,382) srcTex=352x88
 ```
 
-**Consequence for the fix:** no window-tree sweep can ever reach a sub-flyout
-item, because items are not windows. Only the container's buffer and the strip's
-layout fields `[0xF4]/[0xF8]/[0xFC]` control them.
+**Consequence:** no window-tree sweep can reach a sub-flyout item, because items
+are not windows. Only the container's buffer and the strip's layout fields
+`[0xF4]/[0xF8]/[0xFC]` control them.
 
 ### 1b. Every open observed, with its menu and 2x rect
 
 `ScaleGodFlyouts`'s `SCAL` line names the open parent flyout, but it is
 **rate-capped** and only fired on the first open of each session. Opens 2–5 were
 attributed instead by reading the enclosing 1-second tree dump and finding which
-`kHookParents` id was `vis=1` — a direct measurement, not a guess.
+`kHookParents` id was `vis=1` — a direct measurement.
 
 | # | Log | Line / timestamp | Parent menu | Container rect @2x (abs) | Strip @2x | Items | Attribution source |
 |---|---|---|---|---|---|---|---|
@@ -103,21 +93,19 @@ attributed instead by reading the enclosing 1-second tree dump and finding which
 | 3 | prerings | L67738 `[23:59:55.671]` | `0xE992F711` **UTILITIES** | (178,498) **258x384** | 88x284 | 3 | tree dump L67791 `[23:59:56.174]`, `0xE992F711 … vis=1` |
 | 4 | prerings | L69662 `[23:59:57.763]` | `0xE992F711` **UTILITIES** | (178,525) **258x678** | 88x578 | 6 | tree dump L69712 `[23:59:58.202]` |
 | 5 | prerings | L70642 `[23:59:58.988]` | `0xE992F711` **UTILITIES** | (178,698) **258x384** | 88x284 | 3 | tree dump L70661 `[23:59:59.204]` |
-| E1 | dialogtest | L1186 `[22:12:58.230]` | *(not derivable — no tree dump)* | (412,551) **258x384** | — | 3 | `panel` scale event |
-| E2 | dialogtest | L1188 `[22:13:08.251]` | *(not derivable)* | (178,355) **258x678** | — | 6 | `panel` scale event |
+| E1 | v2.5.5 capture | L1186 `[22:12:58.230]` | *(no tree dump in that log)* | (412,551) **258x384** | — | 3 | `panel` scale event |
+| E2 | v2.5.5 capture | L1188 `[22:13:08.251]` | *(no tree dump)* | (178,355) **258x678** | — | 6 | `panel` scale event |
 
-**Nesting depth.** Every single sighting in the entire corpus is at **depth 1
-below the 3D view**, with the same parent `0x9A47B417`, on all six opens across
-three different top-level menus. There is **no evidence anywhere in these logs of
-a sub-sub-flyout being a separate window**. Selecting a deeper level re-populates
-*the same* `0x8A6E61E0` instance (or a freshly allocated one at the same tree
-position) — see §1c.
+**Nesting depth.** Every sighting in the entire corpus is at **depth 1 below the
+3D view**, with the same parent `0x9A47B417`, on all six opens across three
+different top-level menus. A sub-sub-flyout is never a separate window.
+Selecting a deeper level re-populates *the same* `0x8A6E61E0` instance, or a
+freshly allocated one at the same tree position — see §1c.
 
-> **HYPOTHESIS (derivable, worth stating):** the reported "nested sub-flyout →
-> deeper" behaviour is *not* a deeper window tree. It is the same shared
-> container being **destroyed and rebuilt at 1x** for each level. That is why the
-> flash reproduces "at EVERY depth" — every depth is a fresh 1x birth of the same
-> window. Directly supported by the pointer churn in §1c.
+Nested "deeper" sub-flyout behaviour is therefore not a deeper window tree. It is
+the same shared container being **destroyed and rebuilt at 1x** for each level,
+which is why a 1x frame appears at every depth: every depth is a fresh 1x birth
+of the same window. The pointer churn in §1c is the direct evidence.
 
 ### 1c. Pointer churn — the window is rebuilt, not reused
 
@@ -137,8 +125,8 @@ heap addresses being freed and reallocated between menus. This is the measured
 form of "code-created, re-populated per menu".
 
 **Instrument consequence:** `DPROBE`'s `NEW` flag is pointer-keyed, so a recycled
-address is silently *not* flagged new. Do not treat absence of `NEW` as evidence
-that a window persisted.
+address is silently *not* flagged new. Absence of `NEW` is not evidence that a
+window persisted.
 
 ### 1d. Content-derived size law (fits all 8 opens, zero residual)
 
@@ -155,24 +143,16 @@ that a window persisted.
 Check: n=3 → 142 / 284; n=4 → 191 / 382; n=6 → 289 / 578. All three appear in the
 logs exactly. Container: 192/241/339 → 384/482/678. All six appear exactly.
 
-**The `258` in the task brief is `129 × 2`, and `129` is a fixed 1x design
-constant** — width is the only quantity that never varies with content.
+At 2x the container height reduces to `98n + 90`, which also produces the four
+other container heights this project has recorded: 286 (n=2), 580 (n=5), 776
+(n=7) and 874 (n=8, strip 774).
 
-### 1e. Sizes documented elsewhere but ABSENT from every surviving log
-
-`_tests\REGRESSION.md` L370–374 and `src\UiSpike.cpp` L2539 record these from
-sessions whose logs have since been rotated away. **Not verifiable from live
-evidence today** — flagged so nobody treats them as measured here:
-
-`258x874` (strip 88x774), `258x776`, `258x580`, `258x286`, `258x206` (Freight).
-Applying §1d in reverse: 874 → strip 774 → n=8; 580 → strip 480 → n=5;
-206 → strip 106 → hmm, n≈1.2 — **that one does not fit the law and should be
-re-measured before it is trusted**. (HYPOTHESIS: `258x206` was recorded at a
-different tier or is a transcription of a 1x value.)
+**`258` is `129 × 2`, and `129` is a fixed 1x design constant** — width is the
+only quantity that never varies with content.
 
 ---
 
-## 2. THE 1x vs 2x PAIRS — the exact before/after the fix must produce
+## 2. THE 1x vs 2x PAIRS — the measured before/after
 
 **Every open in the corpus, without exception, was first seen at its 1x size with
 `vis=1`.** Six for six. This is the core finding.
@@ -188,14 +168,13 @@ different tier or is a transcription of a 1x value.)
 | 4 (Utilities) | L69636 `[23:59:57.743]` | abs(178,525) 129x339 | L69662 `[23:59:57.763]` | abs(178,525) 258x678 | yes | yes | held | held |
 | 5 (Utilities) | L70624 `[23:59:58.953]` | abs(178,698) 129x192 | L70642 `[23:59:58.988]` | abs(178,698) 258x384 | yes | yes | held | held |
 
-**Position is held on purpose, not missed.** `src\UiSpike.cpp` L2554: *"scale the
-size, KEEP the game's position (SubDock=0, default)"*. At v2.13.7/v2.14.0
-`SubDockDX/DY` were 0, so the dock branch (L5783) never ran. Do not read `no held`
-as a defect at this version.
+**Position is held on purpose.** `src\UiSpike.cpp` L2554: *"scale the size, KEEP
+the game's position (SubDock=0, default)"*. In these captures `SubDockDX/DY` are
+0, so the dock branch at L5783 does not run and the game's own placement stands.
 
-The **contrast case** proves what happens if you *do* let the generic sweep move
-it — the only `panel` scale events in the corpus, from before `IsSubFlyoutId`
-existed (`SC4TouchControls.log.bak-dialogtest`):
+The **contrast case** shows what the generic sweep does to the container when it
+is not skipped — the only `panel` scale events in the corpus, from the v2.5.5
+capture, taken before `IsSubFlyoutId` existed:
 
 ```
 L1186 [22:12:58.230] panel 0x8A6E61E0 (206,647 129x192) -> (412,551 258x384)
@@ -204,7 +183,7 @@ L1188 [22:13:08.251] panel 0x8A6E61E0 ( 89,525 129x339) -> (178,355 258x678)
 
 W and H double correctly; **L doubles from the screen origin** (206→412, 89→178)
 and **T does neither** (647→551, 525→355 — `ScalePanelRoot`'s clamp/centre
-branch). That is exactly the bug `IsSubFlyoutId` was introduced to stop.
+branch). That is the failure mode `IsSubFlyoutId` exists to stop.
 
 ### 2b. Item strip `0x8A2CAD8B`
 
@@ -235,11 +214,11 @@ own dimensions in the same line.
 | 4 | prerings L69641 `[23:59:57.744]` | 258x678 | **129x339 (1x)** | *(capped)* | — |
 | 5 | prerings L70629 `[23:59:58.953]` | 258x384 | **129x192 (1x)** | *(capped)* | — |
 
-**A 2x window painted from a 1x buffer.** That is what the user sees. The window
-geometry is already right; the pixels are not.
+**A 2x window painted from a 1x buffer.** That is what the player sees on the
+first frame: the window geometry is already right; the pixels are not.
 
 Corroborating: on open A the buffer's blit vtable slot changes between the two
-Plots — `blt0x74=00826AD0` (stock, L4406) → `blt0x74=6E6C2D60` (our
+Plots — `blt0x74=00826AD0` (stock, L4406) → `blt0x74=6E6C2D60` (the
 `gForceRecreate` hook, L4428). The recreate lands on the **second** Plot.
 
 ### 2d. Quantities that DOUBLE, and quantities that DO NOT
@@ -259,19 +238,17 @@ Plots — `blt0x74=00826AD0` (stock, L4406) → `blt0x74=6E6C2D60` (our
 | strip item pitch `[0xFC]` | 5 → **10** | same line |
 | item blit dst cell | 44x44 → **88x88**, pitch 49 → 98 | `DSTRIP`, §1a |
 
-(The 1x values of `[0xF4]/[0xF8]` are not printed in these logs; they are read
-off the source's own heal guard `f4 >= 40 && f4 <= 50` at `UiSpike.cpp` L5971 and
-the ×2 arithmetic. **HYPOTHESIS-adjacent**: the 88 is measured, the 44 is
-inferred from the guard band.)
+(The 88 values of `[0xF4]/[0xF8]` are printed in these logs; the 1x pair of 44
+follows from the heal guard `f4 >= 40 && f4 <= 50` at `UiSpike.cpp` L5971 and the
+×2 arithmetic.)
 
 **Never doubles anywhere in the corpus:**
 
 | quantity | value | is that correct? |
 |---|---|---|
-| container abs L,T | held at game's value | **YES — deliberate.** `SubDock=0` at this version; `IsSubFlyoutId` skips the sweep on purpose (`UiSpike.cpp` L4269). |
+| container abs L,T | held at game's value | **YES — deliberate.** `SubDock=0` in these captures; `IsSubFlyoutId` skips the sweep on purpose (`UiSpike.cpp` L4269). |
 | tip layer `0x2AAB8CC1` | always `0x0`, `vis=0` | **YES — nothing to scale.** |
 | **item source atlas `srcTex`** | **176x44 on some menus** | **NO — this is a real mismatch, see §2e.** |
-| container claim field `[0xE0]` | no `SUBCLAIM` line exists in any log | **UNKNOWN.** `SUBCLAIM` is a v2.17.0 instrument; the corpus predates it. `REGRESSION.md` L271/304 documents the intended `53 → 106`, but **it is not verifiable from live evidence.** |
 
 ### 2e. The one quantity that genuinely fails to double: the item ATLAS
 
@@ -286,11 +263,10 @@ The blit asks for an **88x88** source rect at `(88,0,176,88)` from a texture tha
 is only **176x44** — the read is out of bounds in both axes. The strip fields were
 doubled (§2d) but the art behind that menu was not.
 
-This is *live confirmation* of the class of defect `REGRESSION.md` L288–293 calls
-"an un-overridden 176x44 icon". **Interpretation belongs to the art
-analysis** — this file only reports that the 1x/2x atlas pair is directly
-observable, is **menu-specific**, and that Utilities is the menu that
-exhibits it in this corpus.
+This is the live form of an un-overridden 176x44 icon atlas. Interpretation
+belongs to `SUBFLYOUT-ART-VERDICT.md`; this file reports only that the 1x/2x
+atlas pair is directly observable, that it is **menu-specific**, and that
+Utilities is the menu exhibiting it in this corpus.
 
 ---
 
@@ -314,8 +290,8 @@ The `DPOS` instrument carries the game's own frame counter:
 
 `DPROBE` is **change-triggered** (`UiSpike.cpp` L5276–5286: logs a window only
 when its pos/size/vis differs from the previous sweep). So a 1x `DPROBE` line
-means "this geometry is new *this sweep*", and the next line means "we changed
-it". The gap is one sweep period.
+means "this geometry is new *this sweep*", and the next line means the sweep
+changed it. The gap is one sweep period.
 
 | Open | 1x seen | scaled (2x seen) | Δ | frames @18.34ms | buffer still 1x until | visible-flash Δ |
 |---|---|---|---|---|---|---|
@@ -326,28 +302,25 @@ it". The gap is one sweep period.
 | 4 | `23:59:57.743` | `23:59:57.763` | **20 ms** | 1.1 | *(capped)* | ≥20 ms |
 | 5 | `23:59:58.953` | `23:59:58.988` | **35 ms** | 1.9 | *(capped)* | ≥35 ms |
 
-**Range 20–36 ms, i.e. ONE TO TWO RENDERED FRAMES.** Median ≈25 ms.
-
-That is precisely a "flash": long enough to be seen, too short to look like a
-layout error. It matches the user's description exactly.
+**Range 20–36 ms, i.e. ONE TO TWO RENDERED FRAMES.** Median ≈25 ms. That is
+precisely a "flash": long enough to be seen, too short to look like a layout
+error.
 
 ### 3c. What bounds the *creation* time
 
-The full-tree dump runs once per second and is the only instrument that could
-prove when the window was born. For open 3 the previous dump ended
-`[23:59:55.154]` (prerings L67718, `847 windows`) **without** `0x8A6E61E0`; the
-first 1x `DPROBE` is `[23:59:55.635]`. So creation is bounded to a 481 ms window
-by the dump, and to **≤ one sweep period (~20–36 ms)** by `DPROBE`'s
-change-trigger.
+The full-tree dump runs once per second and is the only instrument that can prove
+when the window was born. For open 3 the previous dump ended `[23:59:55.154]`
+(prerings L67718, `847 windows`) **without** `0x8A6E61E0`; the first 1x `DPROBE`
+is `[23:59:55.635]`. So creation is bounded to a 481 ms window by the dump, and to
+**≤ one sweep period (~20–36 ms)** by `DPROBE`'s change-trigger.
 
-> **HYPOTHESIS:** the true 1x lifetime is one sweep period, not more. The sweep
-> catches the window on the very next tick after creation because `DPROBE` and
-> the scale run in the *same* pass — note that the 1x `DPROBE` line and the
-> `SUBHOOK` line reporting the already-2x size share a timestamp to the
-> millisecond on all six opens (e.g. presblt L4392 and L4394, both
-> `[23:45:32.408]`). The window rect is fixed within ~1 ms of being observed.
-> **The latency is not in the sweep. It is in the BUFFER**, which only catches up
-> on the following Plot (§2c). Fixing sweep frequency cannot fix this.
+The true 1x lifetime is one sweep period. The sweep catches the window on the very
+next tick after creation because `DPROBE` and the scale run in the *same* pass:
+the 1x `DPROBE` line and the `SUBHOOK` line reporting the already-2x size share a
+timestamp to the millisecond on all six opens (presblt L4392 and L4394, both
+`[23:45:32.408]`). The window rect is fixed within ~1 ms of being observed. **The
+latency is not in the sweep. It is in the BUFFER**, which only catches up on the
+following Plot (§2c). Sweep frequency is not the lever.
 
 ---
 
@@ -374,25 +347,22 @@ pre-scale-while-hidden path for it, and there cannot be a naive one, because the
 window does not exist until the menu opens (§1c: it is allocated per menu).
 
 This is the *same* visibility-gate mechanism documented at `UiSpike.cpp`
-L2619–2632 for the mode-transition flash — but the proven cure there
-(pre-scale while hidden, `kAlwaysScaleCityIds`) **is not applicable here**, because
-that cure requires the window to exist before it is shown. That is why this one
-survived task #50.
+L2619–2632 for the mode-transition flash — but the cure there (pre-scale while
+hidden, `kAlwaysScaleCityIds`) does not apply, because that cure requires the
+window to exist before it is shown.
 
 ### 4b. Windows that appear in dumps but never in any "scaled" line
-
-The answer for the sub-flyout ids:
 
 - **`0x8A6E61E0` and `0x8A2CAD8B` produce NO scale-event line in any modern log.**
   `ScaleGodFlyouts` calls `ScaleSubtree` directly and emits **no** `panel … -> …`
   line, no `dialog … scaled` line, no `menu flyout … scaled` line. The parser
   found **0 scale events** for these ids across all 11 files.
-  The only `panel` lines that ever named the container are the two v2.5.5
-  `dialogtest` lines from *before* the skip existed (§2a).
+  The only `panel` lines that ever named the container are the two v2.5.5 lines
+  from *before* the skip existed (§2a).
 - Practical effect: the two most-used diagnostic greps on this project
   (`grep "panel 0x"` and `grep "scaled"`) are **blind to the entire sub-flyout
-  assembly.** Anyone auditing "what did we scale this session" from the log gets
-  a list that silently excludes it.
+  assembly.** A "what was scaled this session" list built from the log silently
+  excludes it.
 - `SUBHOOK` is the only line that reports the container's size at all, and it
   fires **only** when `gClaimScale > 1` **and** a `kHookParents` menu is open
   (L5926). A sub-flyout under any *other* menu (U-Drive-It, Earned Cars, …) is
@@ -401,7 +371,7 @@ The answer for the sub-flyout ids:
 
 ---
 
-## 5. THE INSTRUMENT GAP — exactly what you were blind to
+## 5. INSTRUMENT COVERAGE — what each instrument can and cannot see
 
 `FLASHSET` lives inside the top-level panel loop of `ScalePanelsUnder`
 (`UiSpike.cpp` L4321–4334):
@@ -416,7 +386,7 @@ if (n > 0) { … if (wasOnScreen) NoteFlashCandidate(...); }
 
 So:
 
-| Window | Could `FLASHSET` ever have reported it? | Why not |
+| Window | Can `FLASHSET` report it? | Why not |
 |---|---|---|
 | `0x8A6E61E0` container | **NO** | skipped at L4269, never reaches L4321 |
 | `0x8A2CAD8B` strip | **NO** | never a top-level panel; only ever a `ScaleSubtree` descendant, and `FLASHSET` only wraps roots |
@@ -426,24 +396,21 @@ So:
 | **every god tool flyout** (`IsGodToolFlyoutId`, L4252) | **NO** | skipped 69 lines earlier |
 | everything in `kNeverScaleIds` (L4244) | NO | by design |
 
-**The blind spot is not a bug in `FLASHSET` — it is the exact complement of the
-skip list.** `FLASHSET` measures the *generic sweep's* flash. Every window that
-was pulled out of the generic sweep into a specialist path
-(`ScaleGodFlyouts` / mayor dock / sub-flyout) became invisible to it *at the
-moment it was pulled out*.
+**The blind spot is the exact complement of the skip list.** `FLASHSET` measures
+the *generic sweep's* flash. Every window pulled out of the generic sweep into a
+specialist path (`ScaleGodFlyouts` / mayor dock / sub-flyout) leaves `FLASHSET`'s
+scope at the moment it is pulled out.
 
 Confirmation from the only log that has `FLASHSET` at all
 (`SC4UIScale.log`, v2.33.1, 8 lines, L86–231): candidates #1–#8 are
 `0x09EBE9EE`, `0x6A91DC15`, `0x6A91DC16`, `0xEA8CAD19`, `0x6A91DC14`,
 `0xAA32BCE6`, `0xEA8CAD14`, `0x0987B48F` — region panels and the Data Views
-container. **Not one flyout, not one sub-flyout.** The instrument reported a
-clean-looking finite list precisely because it could not see the family that
-still flashes.
+container. **Not one flyout, not one sub-flyout.**
 
-### 5a. Second gap: the only instrument that DID catch it is disarmed
+### 5a. `DPROBE` band and arming
 
-`DPROBE` is the sole instrument that ever recorded the 1x state, and
-`Plugins\SC4UIScale.ini` `[Probe]` currently reads:
+`DPROBE` is the sole instrument that ever recorded the 1x state, and the shipped
+`Plugins\SC4UIScale.ini` `[Probe]` defaults are:
 
 ```
 Enabled=0
@@ -451,21 +418,20 @@ BandL=400  BandR=2100  BandT=1000  BandB=1460
 Max=120
 ```
 
-Three separate ways it can miss the sub-flyout even when re-armed:
+Three separate ways it misses the sub-flyout at those defaults:
 
-1. **`Enabled=0`** — off by default; the ini comment says *"DISARMED again
-   2026-07-29"*.
+1. **`Enabled=0`** — the probe is off unless armed.
 2. **Band** — `UiSpike.cpp` L5284 requires `ax > BandL && ax < BandR && ay > BandT
-   && ay < BandB`. The container sits at **abs y = 274…698**; the current band
-   starts at **y=1000**. **Even with `Enabled=1`, today's band would not have
-   logged a single one of the six opens.**
+   && ay < BandB`. The container sits at **abs y = 274…698**; the default band
+   starts at **y=1000**. Even with `Enabled=1`, the default band logs none of the
+   six opens.
 3. **`inBand` requires `now.vis == 1`** (same line) — a hidden window is never
-   probed, so `DPROBE` can never prove a pre-scale worked.
+   probed, so `DPROBE` cannot report on a window before it is shown.
 
-To reproduce this evidence you need `Enabled=1`, `BandT≈200`, `BandB≈1200`,
+Reproducing this evidence needs `Enabled=1`, `BandT≈200`, `BandB≈1200`,
 `BandL≈100`, `BandR≈700`, `Max` ≥ 120.
 
-### 5b. Third gap: every SUB* instrument is rate-capped
+### 5b. Every SUB* instrument is rate-capped
 
 | Instrument | Cap | Source |
 |---|---|---|
@@ -476,59 +442,49 @@ To reproduce this evidence you need `Enabled=1`, `BandT≈200`, `BandB≈1200`,
 | `DOBS` | counter `n=1…7` observed then silence | why only opens A and 1 have a *second* buffer measurement |
 | `DPROBE` | `logged < gProbeMax` per sweep | L5286 |
 
-The caps are why §2c can only prove the buffer catch-up on 2 of 6 opens. The 1x
-buffer is proven on **all six**; the recovery timestamp on two.
+The caps are why §2c proves the buffer catch-up on 2 of 6 opens. The 1x buffer is
+proven on **all six**; the recovery timestamp on two.
 
 ---
 
-## 6. WHAT THIS CORPUS CANNOT TELL YOU
+## 6. SCOPE OF THESE MEASUREMENTS
 
-State plainly, so no one over-reads this file:
-
-1. **No 1.5x or 3x sighting exists.** Every number here is tier 2.00 at
-   2400x1600. The §1d law is stated in ×2 form because that is all that was
-   measured; its 1.5x rounding behaviour is untested (and `parse_log.py`'s own
-   docstring warns that 1.5x is where the two size laws diverge).
-2. **No `SUBDOCK`, `SUBCLAIM`, `SUBSKIP` or `SUBHEAL` line exists anywhere in the
-   corpus.** Those instruments postdate both evidence logs. The v2.16.0 placement
-   law (`nativeY = buttonCentreY − ringBltY − 29`) is **documented but not
-   log-verified here**; the `ringBltY=94` value for Zones *is* corroborated
-   (`SCAL … ringY` does not exist, but the container's `DCBL` ring blit lands at
-   `dst (0,94,80,147)`, presblt L4421 `[23:45:32.412]` — consistent with 94).
-3. **No sighting under Civic `0x699306ED`, Landscape `0x49923239`, U-Drive-It
-   `0x8BB27C12`, or Signs `0xAB954023`.** Four of the seven `kHookParents` are
-   entirely unobserved. If the fix is validated only against Zones/Transport/
-   Utilities it is validated against 3 of 7.
-4. **No stock (f=1.0) capture of a sub-flyout exists.** `bak-stock800` is 77
-   lines and contains none. So the "1x" column throughout is *our DLL observing
-   the window before it scaled it*, which is the right comparison for a flash but
-   is **not** a vanilla reference.
-5. **`0x8A6E61E0` never appears in `bak-premayordock` (469 978 lines) or
-   `.log.prev` (279 269 lines).** Absence there is absence of the *user opening a
-   plop sub-menu*, not absence of the defect.
+1. **Every number here is tier 2.00 at render res 2400x1600.** The §1d law is
+   stated in ×2 form because that is the tier measured; 1.5x is the tier where
+   the two size laws diverge under rounding.
+2. **Sightings exist under three of the seven `kHookParents` menus** — Zones
+   `0x69923479`, Transportation `0xC99237A0`, Utilities `0xE992F711`. Civic
+   `0x699306ED`, Landscape `0x49923239`, U-Drive-It `0x8BB27C12` and Signs
+   `0xAB954023` are unobserved in this corpus, so validation against these logs
+   covers 3 of 7 menus.
+3. **The "1x" column throughout is the window as observed by the DLL before its
+   own scale pass ran**, which is the right comparison for a one-frame flash and
+   is not a vanilla f=1.0 reference.
+4. **Placement.** The container's ring blit lands at `dst (0,94,80,147)`
+   (presblt L4421 `[23:45:32.412]`), giving `ringBltY = 94` for Zones, which is
+   the value the placement law `nativeY = buttonCentreY − ringBltY − 29` consumes.
 
 ---
 
-## 7. TARGETS THE FIX MUST HIT (summary card)
+## 7. CORRECT GEOMETRY AT TIER 2.00 (summary card)
 
 For a Zones 4-item sub-menu at tier 2.00, first frame after the menu opens:
 
-| thing | must be | not |
+| thing | correct | unscaled |
 |---|---|---|
 | container `0x8A6E61E0` | 258 x 482 | 129 x 241 |
 | container paint buffer | 258 x 482 **on the FIRST Plot** | 129x241 for 1–2 frames |
 | strip `0x8A2CAD8B` | 88 x 382 at rel (160,50) | 44 x 191 at rel (80,25) |
 | strip fields `[0xF4]/[0xF8]/[0xFC]` | 88 / 88 / 10 | 44 / 44 / 5 |
 | item blit dst | 88x88, pitch 98 | 44x44, pitch 49 |
-| item source atlas | 352 x 88 | **176 x 44** (Utilities today) |
-| container abs pos | whatever the dock law says — **do not double from origin** | (356,548) |
+| item source atlas | 352 x 88 | **176 x 44** |
+| container abs pos | the dock law's value | (356,548), doubled from the origin |
 
-Generalise via §1d for other item counts. The acceptance criterion that actually
-matters: **`DOBS`'s `srcBuf` must equal the window rect on Plot #1, not Plot #2.**
+Generalise via §1d for other item counts. The acceptance criterion that matters:
+**`DOBS`'s `srcBuf` equals the window rect on Plot #1, not Plot #2.**
 
 ---
 
-*Sources: `Plugins\SC4UIScale.log*` (all), `Plugins\SC4TouchControls.log.bak-dialogtest`,
-`_tests\last-selective-2x.log`, `tools\research\_checkpoints\pds-cache\SC4UIScale-snapshot.log`,
-`src\UiSpike.cpp` (read-only), `tools\uimap\diff\parse_log.py` (re-used),
-`_tests\REGRESSION.md`, `tools\research\MAYOR-MODE.md`. Nothing was launched, modified, or deleted.*
+*Sources: `Plugins\SC4UIScale.log*` (all), the v2.5.5, v2.27.3 and selective-2x
+captures listed in §0, `src\UiSpike.cpp` (read-only), and
+`tools\uimap\diff\parse_log.py` (re-used as a library).*

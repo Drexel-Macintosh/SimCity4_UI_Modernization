@@ -107,7 +107,7 @@ $RESEARCH = @("KNOWN-LIMITATIONS.md")
 $RESEARCH_LAWS = "*.md"     # research\laws\ ships whole, after the scrub
 $TOOLS_RESEARCH = @(
     "SC4-UI-ENGINE.md", "SC4-WORLD-OVERLAYS.md", "SDK-GAPS.md",
-    "UI-ART-BINDING.md", "SCALING-AXES.md", "FONTS-AND-DIALOGS.md",
+    "UI-ART-BINDING.md", "FONTS-AND-DIALOGS.md",
     "ITEMICONS.md", "REGION-SCREEN.md", "REGION-SWITCH.md", "MAYOR-MODE.md",
     "GOD-MODE-FLYOUTS.md", "DYNAMIC-CONTROLS.md", "STOCK-PARITY.md",
     "CITY-SITUATION-INDICATORS.md", "CITY-DOCK-OVERLAP.md",
@@ -122,8 +122,7 @@ $TOOLS_RESEARCH = @(
 # emulators ship; the one-off scans and probes that answered a single question
 # once do not.
 $UIMAP_DOCS = @("BLIT-BEHAVIOUR.md", "CONSTANT-MAP.md", "SUBFLYOUT-BUILDER.md",
-                "SUBFLYOUT-CONSTANTS.md", "SUBFLYOUT-ART-VERDICT.md",
-                "SUBFLYOUT-LIVE-EVIDENCE.md")
+                "SUBFLYOUT-ART-VERDICT.md", "SUBFLYOUT-LIVE-EVIDENCE.md")
 $UIMAP_EMU_GLOBS = @("gate_*.py", "emu_*.py", "render_*.py", "scale_rules.py",
                      "sim_itemicon_states.py")
 # The regression net. Every one of these runs without the game and exits 0/1,

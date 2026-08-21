@@ -4,7 +4,7 @@
 interface set. It is incomplete and, in places, wrong: whole interfaces are
 missing, one virtual is missing from `cIGZWin.h`, and the slot names it does
 give drift by one through the entire input and paint band. Everything the
-project relies on beyond those headers was recovered from the binary —
+mod relies on beyond those headers was recovered from the binary —
 `SimCity 4.exe` **1.1.641.0** Steam, 7,876,608 bytes, ImageBase `0x400000`,
 file offset = VA − `0x400000` — and is documented here, per subsystem, as:
 what the SDK omits, the known addresses and ids, and how the gap is worked
@@ -25,7 +25,7 @@ is one too low. Several names in the band are also misattributed.
 
 **Known.** Real slot 57 = `GZWinMoveRelative(dx,dy)` = `0x0099BD27`
 (`mov edx,[ecx+0xB4]; add edx,[esp+8]` ×4, then `call [eax+0xDC]` = `SetArea`;
-`ret 8`). Corrected anchors, all measured from function bodies:
+`ret 8`). Measured anchors, all read from function bodies:
 
 | real slot | `[vt+…]` | virtual | base impl |
 |---|---|---|---|
@@ -59,25 +59,24 @@ is one too low. Several names in the band are also misattributed.
 | 144 | `0x240` | 5-arg `SendMsg(pWin, type, d1, d2, d3)` | — |
 | 149 / 150 | `0x254` / `0x258` | refined per-pixel hit test / create-private-buffer — **past the end of `cIGZWin`** (header's last index is 146); `cGZWin`-derived extras | `0x0099BBBE` / `0x0099D0ED` |
 
-Two further naming corrections:
+Two further names to read from the binary rather than from the header:
 
-- `0x0099BE4C` is **`GetNotificationTarget`** (a zero-arg getter,
-  `mov eax,[ecx+0x4C]; ret`; paired setter `0x0099BE42`), not "base GZPaint".
-  It is still the vtable-diffing baseline: every one of the exe's 115 window
-  vtables carries it at slot 87, which is the fingerprint that a `.rdata`
-  address is a window vtable at all.
+- `0x0099BE4C` is **`GetNotificationTarget`** — a zero-arg getter,
+  `mov eax,[ecx+0x4C]; ret`, paired with setter `0x0099BE42`. It is also the
+  vtable-diffing baseline: every one of the exe's 115 window vtables carries
+  it at slot 87, which is the fingerprint that a `.rdata` address is a window
+  vtable at all.
 - The header names six `GZOnMouse*` handlers; the game exposes five 3-arg
-  slots (134–138). Which header name has no slot of its own is settled by
-  logging `msg->type` in a `DoMessage` hook, not by counting the header
-  (§13, gap G9).
+  slots (134–138), reached from message ids 7, 8, 10, 11 and 13. Bind mouse
+  handlers by slot number and message id, never by header name.
 
 **Workaround.** Index by number from the table above. The window-vtable
 population scan is: whole-`.rdata` search for `[vt+87*4] == 0x0099BE4C` with
 `[vt]` and `[vt+88*4]` inside `.text` → 115 hits, the complete population.
-A vtable address outside `0x00A80000`–`0x00B20000` in our own logs is a
-relocated DLL vtable — one of the project's shadow copies (`gVtCopy`,
-`gVtCopy2`, `gGaugeVtCopy`, `gStripVtCopy`), which move between sessions;
-exe vtables are constant across restarts.
+A vtable address outside `0x00A80000`–`0x00B20000` is a relocated DLL
+vtable — one of the mod's own shadow copies (`gVtCopy`, `gVtCopy2`,
+`gGaugeVtCopy`, `gStripVtCopy`), which move between sessions; exe vtables are
+constant across restarts.
 
 ### 1.1 The two rects — why draw and hit-test can disagree
 
@@ -147,24 +146,26 @@ plausible-looking pointer that is not one.
 `GZWinBMP`'s own overrides forward three mouse events as
 `SendMsg([this+0x4C], id, x, y, GetID())` with ids **`0x68915615`** (slot
 134), **`0x28916985`** (slot 136), **`0xC89155E3`** (slot 138), and keyboard
-types **5** (slot 130) and **6** (slot 131). Which of the three mouse ids is
-down/up/move is a reference gap (§13, G4).
+types **5** (slot 130) and **6** (slot 131).
+
+Upstream of the funnel, the Win32 message coalescer `0x0098CE30` drops
+redundant `WM_MOUSEMOVE` runs before the UI sees them; it is upstream of all
+routing, so its effects read exactly like routing effects.
 
 ### 1.4 The arity check
 
 `__thiscall` is callee-cleanup, so a function's `ret N` states its argument
 count exactly: a 3-arg mouse handler is `ret 0xC`, a 2-arg point test
 `ret 8`, `GZOnCaptureChanged` `ret 0x10`. Real slot 133 is
-`xor al,al; ret 4` — one argument — which is why hooking "slot 133 =
-`GZOnMouseDownL`" from the header corrupted the stack and crashed the game.
-Read the `ret` immediate before every vtable hook, without exception.
+`xor al,al; ret 4` — one argument — so hooking it as the header's 3-arg
+`GZOnMouseDownL` corrupts the stack and crashes the game. Read the `ret`
+immediate before every vtable hook, without exception.
 
 ### 1.5 Window flags the SDK enum does not list
 
 | flag | read by | effect |
 |---|---|---|
-| `0x1000` | real slot 131 path, `0x00999004` | unidentified (§13, G12) |
-| `0x4000` | `Init` short-circuit `0x0099BC31` | "already initialised" latch; decides whether a re-created window re-derives its state (§13, G3) |
+| `0x4000` | `Init` short-circuit `0x0099BC31` | "already initialised" latch: `Init` returns early while it is set |
 | `0x400000` | set at `0x0099E859` after a successful `GZPaint` into a private buffer | "this private buffer holds content" |
 | `0x4000000` | set at `0x0099E8C8/93C/9D5`, cleared in `PlotPresent` `0x0099C501` | queued into the winmgr plot strategy |
 | `0x8000000` `WinFlag_DelayedPlot` | the invalidation walk and `PlotComposite` | a wall in both directions (§3) |
@@ -204,7 +205,7 @@ The entire interface, object layout and draw law were recovered offline;
   (`0xB02`, selects the 9-slice path); `0x10` ← `imagerect=` present
   (`0xF018`; explicitly cleared when absent); `0x20` — same source selection
   as `0x10` plus dst shifted by `(src.l, src.t)`, **set by nothing in the
-  image** (§13, G2). `alpha=` (`0xB00`) and `imagetype=` (`0xF017`) parse but
+  image**. `alpha=` (`0xB00`) and `imagetype=` (`0xF017`) parse but
   are dead in practice: nothing in the draw path reads them, and the corpus
   uses each zero times.
 - Draw (`GZPaint` `0x9BC325`, slot 88): background fill unless `0x02`; no
@@ -248,7 +249,7 @@ The entire interface, object layout and draw law were recovered offline;
 the window at its final size and the art at the matching tier, because a
 post-hoc sweep that resizes the window never re-derives the source rect, and
 `SetImage` at runtime resets it to the window's size *at that moment* (the
-bind-time latch, `SC4-UI-ENGINE.md` §2.6). The project's BMPRECT pass writes
+bind-time latch, `SC4-UI-ENGINE.md` §2.6). The mod's BMPRECT pass writes
 `+0xE8` directly and therefore bypasses `SetImageRect`'s clamp — safe only
 while the paired art really is 2x.
 
@@ -258,8 +259,9 @@ Signature (cdecl, caller cleans `0x14`): `helper(ctx, img, srcCell, dst,
 fillCentre)`. The source walks a 3×3 grid of `cellW×cellH` starting at
 `(srcCell.l, srcCell.t)`; the dst is re-derived per band, never walked
 cumulatively. The four corners go through draw-context slot 38 (`+0x98`)
-unconditionally; the four edges and centre go through slot 39 (`+0x9C`, two
-extra zeroed args), each guarded by a room test; the centre also requires
+unconditionally, called at `0x8D8928` with 3 arguments; the four edges and
+centre go through slot 39 (`+0x9C`, called at `0x8D896A` with 5 — two extra
+zeroed args), each guarded by a room test; the centre also requires
 `fillCentre`. A window narrower/shorter than two cells does not clip — its
 corners overlap. Colour keying arrives via `img->QueryInterface(0x86D72B57)`.
 `imagerect` is never an inset, an edge width or a centre rect; there is no
@@ -277,9 +279,8 @@ never clamps.
 draw-context header; the class is undisassembled. Known slots: `+0x28`/`+0x2C`
 push/pop draw state, `+0x54` `SetColor`, `+0x8C` `FillRect`, **`+0x98`
 `DrawImage(img, src, dst)`** — proven to scale (live: `img 64x64 win 128x128
--> dst 128x128`), **`+0x9C` `DrawImage(img, src, dst, 0, 0)`** — the edge
-band blit; whether it stretches or tiles is a reference gap (§13, G1).
-`cIGZBuffer::Blt` (`0x826AD0`) clips, never stretches.
+-> dst 128x128`), **`+0x9C` `DrawImage(img, src, dst, 0, 0)`** — the
+edge-band blit. `cIGZBuffer::Blt` (`0x826AD0`) clips, never stretches.
 
 ---
 
@@ -327,8 +328,9 @@ suppress-`ExecutePlotStrategy` latch, written only inside
 - `PlotPresent` (slot 124, `0x0099C498`): no private buffer ⇒ return;
   deferred (`0x4000000`) ⇒ present `[0x14..0x20]` and clear the flag; else
   blit into the parent's `[0x68]`, or — parentless — into the canvas surface
-  via the lazily cached global `0x00BAC058`. A fourth rect `[win+0xB8..0xC4]`
-  is read here; its writer is untraced (§13, G13).
+  via the lazily cached global `0x00BAC058`. A fourth rect
+  `[win+0xB8..0xC4]`, zeroed in the constructor at `0x0099DB28`, is read here
+  for the non-deferred present.
 - **Buffer allocation.** `SetArea` (`0x0099C837`) always stores the rect,
   then, if `WinFlag_PrivateBuffer (0x10000)` is set and W/H changed, calls
   `PrivateBuffer(true)` (slot 100, `0x0099EA70`), then slots 90 and 98.
@@ -410,14 +412,16 @@ liveness contract the game itself follows.
   a dead window's record, and an id check cannot see it when the ids match
   (template+instance and pool cases). Identity, in ascending strength: id
   alone (insufficient) → id + parent + original size → `IsWindowValid`
-  (answers liveness, not sameness) → `GetInstanceID()` if it proves
-  populated (§13, G5). Engine-provided alternatives to a side map:
+  (answers liveness, not sameness). Engine-provided alternatives to a side
+  map:
   `SetParam/GetParam/EnumParams` (a per-window property bag that dies with
   the window) and `Set/GetNotificationTarget` for the owner link.
 - **The modal pump still drives a Win32 timer tick** (`DoModalWin`'s pump
   keeps dispatching to the game HWND), so runtime fixes work inside a modal;
   and because modals nest, `GetModalNestCount()` is the correct re-entrancy
-  gate.
+  gate. A modal-veil sub-service — cached at `0x602336` from
+  `[0xB43C94]->vt[0xAC]()` into `[0xB43CE0]` — brackets every `DoModalWin`
+  with `+0x28(win,bool)` and `+0x18(win)`.
 - **The loader instantiates every depth-0 root** of a script regardless of
   which node the `rootWinId` selects — the id may name **any** node, not just
   a root (measured: `0x00004200` is a depth-1 child passed as the winId at
@@ -426,14 +430,13 @@ liveness contract the game itself follows.
   (the missing-plugin-packs warning `0x2A5CFB2C`, added after the 3D view and
   therefore painting over it).
 
-**Creation routes a static census cannot see** (the denominator is unbounded
-above; `FINAL-3-PERCENT` §1.2):
+**Creation routes a static census cannot see:**
 
 1. The runtime COM singleton **`0xC2C2EB0F`** (getter `sub_913C72` @
    `0x00913C72`): the class is chosen from a runtime-registered dispatch
    table, no literal clsid in the instruction stream. 220 call edges in 129
-   functions; 27 inside the live-UI band `0x760000`–`0x7FFFFF`. Static
-   analysis has nothing to read; only emulation or a live hook lifts it.
+   functions; 27 inside the live-UI band `0x760000`–`0x7FFFFF`. Only a live
+   hook names the classes it produces.
 2. **`sub_779660`** — the generic window factory whose id is a register: 86
    call sites in six functions (the Ordinances/news builders); it does
    `call 0x913c72` → create → `SetID` from a register. Confirmed ids from
@@ -475,8 +478,8 @@ Consequence: a builder census keyed on the pushed ids lists `0x451`, `0x6D`,
 - **The lexical contract.** `.UI` is not line-oriented: 107 of 5,964 elements
   span multiple physical lines (quoted values contain raw newlines); 84
   quoted values in 19 files contain a literal `>` (so any `<LEGACY[^>]*>`
-  regex is wrong — the project's survive only because `id=`/`area=` always
-  precede `caption=`); one file (`I-ca551016`, the Credits) carries a UTF-8
+  regex is wrong — the mod's builders survive only because `id=`/`area=`
+  always precede `caption=`); one file (`I-ca551016`, the Credits) carries a UTF-8
   BOM; backslash escapes exist for `'` but not for `"` (zero `\"` in the
   corpus). The one invariant: every element begins `clsid`, then `iid` (if
   present), then `id=` (if present), then `area=`, and `caption=` never
@@ -501,8 +504,8 @@ Consequence: a builder census keyed on the pushed ids lists `0x451`, `0x6D`,
   `0xF01A–0xF026`.
 - **`pos=(x,y)` + `size=(w,h)` is a legal alternative to `area=`** —
   registered, parse-side `(%d,%d)` support, zero corpus uses. Every geometry
-  regex the project owns keys on `area=` and would silently scale nothing on
-  a script using `pos`/`size`.
+  regex the mod owns keys on `area=` and would silently scale nothing on a
+  script using `pos`/`size`.
 - **The tag grammar has 14 entries** (`0x0094B740`–`0x0094BA20`, registered
   through `[vt+0x24]`): `LEGACY` `0xFA450242`, `children`/`_children` 1,
   `/children` 2, **`define` 3, `name` 4, `val` 5 — a real, unexercised
@@ -570,23 +573,19 @@ neither; the second is outside the `cIGZWin` model entirely.
   `.rdata`; each rich window **copies** the tables at creation (setter
   `0x8FEEB8`). FontStyle can never reach this path; the only levers are the
   exe's tables (byte patches) and the box geometry.
-- **The pt→px rule is only partially known.** Measured line heights: 15 px @
-  13 pt and 28 px @ 24–26 pt — two points do not determine the rule, so
-  vertical text checks at the 1.5x and 3x tiers are decided by capture
-  (procedure: `tools\uimap\emu\measure_lineh_tier.py` against the Graphs
-  "Population by Age" chart, whose nine labels `1-10`…`81-90` cannot wrap at
-  any tier). Ink does not scale linearly with point size: measured ×2.13 per
+- **Point size to pixels.** Measured line heights: 15 px @ 13 pt, 28 px @
+  24–26 pt. Ink does not scale linearly with point size: measured ×2.13 per
   doubling (n=17), so `round(stockBox·f)` is ~6% too narrow and wraps more
-  than stock — size boxes from the font, not from `f`.
+  than stock — size boxes from the font, not from `f`. The reference case for
+  a vertical check at a fractional tier is the Graphs "Population by Age"
+  chart, whose nine labels `1-10`…`81-90` cannot wrap at any tier.
 - **The wrap contract:** SC4's wrap call `sub_896957` (font `vt+0xB8`)
   reads `r->left`/`r->right` and never writes them; the only output is
   `bottom = top + nLines*lineHeight`. The box is an input, not an output.
-- **`font=NAME` resolution paradox.** The tokenizer dictionary contains zero
-  FontStyle style names, so no style name can resolve through the token
-  path — yet `DataInsetHeader` renders correctly while `RegionLabel` does
-  not, both on plain `GZWinText`. The `<LEGACY>` tag handler was ruled out
-  (it is a registration site). Unresolved (§13, G10); the operational rule —
-  always ship `font=0x…` GUIDs — is unaffected.
+- **Style names never resolve through the token path.** The tokenizer
+  dictionary contains zero FontStyle style names, so a `font=NAME` value has
+  no token to resolve to. The operational rule follows: ship `font=0x…`
+  GUIDs.
 
 ---
 
@@ -617,24 +616,21 @@ drop-list painting, gutter arithmetic, or the scrollbar widget family.
   literal-`SetID` census sees only the parent. Any id-keyed rule on
   `0x42B7C35x` hits every scrollbar in the game. In Data Views the bar sits
   under the Map-View page `0x00004200` (265x27 frame, three 24x25 buttons).
-- **Pixel-valued attributes the builders do not scale** (the residual gap in
-  the statically scaled set): `scrollbargutters` (3 in dialog-static, 4 in
-  selective-safe), `buttongutter` (3), `combodownarrowrect` (3),
-  `icongutter` (1), `minmaxboxsize` (1). The one with visible consequence is
-  `combodownarrowrect=(0,0,64,15)` — a 1x drop-arrow rect inside a doubled
-  combo (`I-0a243d80`, `I-e9263de5`, `I-e9a56248`).
+- **Pixel-valued attributes outside the builders' scaled set:**
+  `scrollbargutters` (3 occurrences in dialog-static, 4 in selective-safe),
+  `buttongutter` (3), `combodownarrowrect` (3), `icongutter` (1),
+  `minmaxboxsize` (1). `combodownarrowrect=(0,0,64,15)` is the drop-arrow
+  rect inside a combo (`I-0a243d80`, `I-e9263de5`, `I-e9a56248`).
 - **Client padding never scales at runtime.** The DLL contains no
   `SetGutters`/`SetTextOffsets`/`SetTipPlacementOffsets` call site, so every
   runtime-swept window keeps 1x padding; only the statically doubled scripts
   carry scaled padding.
-- **Gutter byte-range ceiling.** The SDK declares the gutter setters as
-  8-bit (`cIGZWinGen::SetGutters(uint8_t,uint8_t)`, `cIGZWinText::
+- **Gutter values are not 8-bit in practice.** The SDK declares the gutter
+  setters as 8-bit (`cIGZWinGen::SetGutters(uint8_t,uint8_t)`, `cIGZWinText::
   SetGutters(int8_t,int8_t)`, `cIGZWinCombo::SetBtnGutter(int8_t)`), while
   the stock corpus reaches `gutters=(247,201)` (`I-8a7e052f`, Graphic
   Options, `0x2A57CB84`) and `(232,232)` (`I-aa5e60d1`, `0xCA5E6261`) — both
-  in the scaled set, where 2x writes (494,402)/(464,464). Whether the setter
-  truncates is a reference gap (§13, G6); the verification is to dump
-  `GetGutters` on `0x2A57CB84` in a deployed 2x build.
+  in the scaled set, where 2x writes (494,402)/(464,464).
 
 ---
 
@@ -647,10 +643,9 @@ class in the game without a guess; the SDK ships neither.
 
 - **(a) The `.UI` class registry — `0x00B16FA8`…`0x00B170A3`, 21 entries of
   12 bytes `{clsid, iid, char* name}`.** The authority for the `GZWin*`
-  family; exactly 21 scriptable widget classes exist. The "descriptor"
-  addresses older notes quote for `GZWinBMP`/`GZWinBtn` (`0xAD5CE0`/
-  `0xAD5CAC`) are simply the class-name strings these rows point at; there is
-  no per-class descriptor record.
+  family; exactly 21 scriptable widget classes exist. `0xAD5CE0` and
+  `0xAD5CAC` are the class-name strings the `GZWinBMP` and `GZWinBtn` rows
+  point at; there is no per-class descriptor record.
 - **(b) The GZCOM clsid→name table, `~0x00B05000`…`0x00B0B000`, 8-byte
   `{id, char*}` pairs, 906 resolvable entries** — the authority for the
   `cSC4Win*` classes, simulators and command ids.
@@ -660,7 +655,7 @@ class in the game without a guess; the SDK ships neither.
   cIGZWin sub-object** — the fact that tells you which of a class's several
   vtables the window tree will show.
 
-### 8.1 Corrections to the catalogue rows
+### 8.1 Reading the catalogue rows
 
 - **`0xAA7CECFD` is `cSC4WinText`** (named in `GZCLSIDDefs.h:285`, absent
   from the exe table). Its factory `0x007BE740` allocates `0x114` bytes,
@@ -674,9 +669,9 @@ class in the game without a guess; the SDK ships neither.
   `GZWinGen` in exactly two slots of 151: 121 (the hit-claim `0x0079C5C0`)
   and 148. It is an ordinary container, provably.
 - **`0x00ADCB38`** is a `cGZWin` subclass whose only override is slot 89
-  `CalcAbsoluteArea` (`0x0099C291` vs base `0x0099BA07`) — a
-  coordinate-remapping/clip viewport that paints nothing; scaling it moves
-  every descendant's absolute rect.
+  (`0x0099C291` against base `0x0099BA07`) — a coordinate-remapping clip
+  viewport that paints nothing; scaling it moves every descendant's absolute
+  rect.
 - **`0x00AB8150` is not a window vtable.** It fails the slot-87 fingerprint
   (its "slots" read `0x800B`/`0x800A`/`0x6005`/`0x5007`); it is the secondary
   COM-interface vtable of `cSC4WinMapView` (clsid `0x28C5A41F`, factory
@@ -743,8 +738,8 @@ The CITY HUD's rating bar is a different implementation entirely (four
 
 Given only a `vt=XXXXXXXX` in a log line: (1) range-check — game classes live
 in `0x00A80000`–`0x00B20000` and are fixed for the build; anything else is a
-relocated module (in our logs, our own shadow copies — restart the game and
-re-read; exe vtables print identically, DLL vtables move). (2) Confirm it is
+relocated module — the mod's own shadow copies. Restart the game and re-read:
+exe vtables print identically, DLL vtables move. (2) Confirm it is
 a window vtable: `[vt+87*4] == 0x0099BE4C`; if not, it is a secondary COM
 interface and the real window vtable is at another object offset. (3) Read
 slot 0 `QueryInterface` and collect its `cmp` immediates — the iids — and
@@ -776,10 +771,10 @@ The standing warning governs: the right class is not the right window.
   a strict subset of `0x46A006B0` (743/743 of its instances; the larger group
   has 810). Group `0x00000001` is a third twin: all 62/62 of its members
   exist under both. Covering a shared instance can mean covering three TGIs.
-- **Path 1b — the dangling placeholder.** A well-formed `image={g,i}` whose
-  TGI is in no shipped archive; the pixels arrive at runtime from a binder.
-  Every offline instrument reports it as ordinary path 1. Shipped instances:
-  `0a243d80` Select-A-Sim (22 cells `0x12340000..15`, placeholder
+- **Path 1b — the dangling ref.** A well-formed `image={g,i}` whose TGI is in
+  no shipped archive; the pixels arrive at runtime from a binder. Every
+  offline instrument reports it as ordinary path 1. Shipped instances:
+  `0a243d80` Select-A-Sim (22 cells `0x12340000..15`, stand-in TGI
   `{46a006b0,ea32f104}`, runtime pixels generated — rect must NOT double),
   `4bf325e8`/`abfaef15` U-Drive-It (28/14 cells `0x23450000+i`, runtime
   pixels from group `0x4C06F888` via exemplar property `0xEBFC5E5E` — rect
@@ -804,17 +799,15 @@ The standing warning governs: the right class is not the right window.
 - **Wrong-group refs exist.** `{82b9b75b,e2b66db8}` (`I-cb40cfdc`, the
   Apply/Remove Label buttons): group `0x82B9B75B` has zero index entries in
   all seven archives while instance `e2b66db8` is a real strip under
-  `0x46A006B0` referenced by 29 other scripts. Either the engine falls back
-  to instance-level lookup or Maxis shipped a dead ref — unresolved (§13,
-  G11), and it is the premise clone-retargeting rests on. The classifier
-  must test instance-level presence before declaring DANGLING.
+  `0x46A006B0` referenced by 29 other scripts. The classifier tests
+  instance-level presence before declaring a ref DANGLING.
 - **ItemIcon group `0x6A386D26` is two families.** 320 × 176x44 (the
   exemplar-referenced 4-cell strips; 266 carry an exemplar reference) and
   **36 × 356x58** with sequential structured instances `0xMM0000NN` — bound
   to the one-widget 89x58 template script `I-ebd0d36d` (no `image=` at all),
-  referenced by no exemplar and no `.UI`, staged by nothing. Their absence
-  from live dumps is a structural null — no deployed instrument walks the
-  top-level toolbar (§13, G14).
+  referenced by no exemplar and no `.UI`. The 89 px template width is the
+  sidebar strip width; the group constant sits at `0x78EE15`, `0x7ECB50` and
+  `0x7F038F`.
 - **Path 4 (runtime-generated pixels) has two sub-shapes:** 4a — no `image=`
   at all (invisible to every ref scan); 4b — dangling `image=` (counted,
   warned, and its `imagerect` is editable — right for the U-Drive-It pickers,
@@ -879,9 +872,10 @@ id (three for three). The tooltip layer `0x2AAB8CC1` is a sibling of
   counts (~32 ms); measured region-up latency on a return: 12 ms.
 - Region ids are not region-exclusive: `0x0BB0F5E7` and `0x6BB92BCA` also
   exist under the 3D view at different design sizes from different scripts.
-- The four full-screen layers: `0x6A0AF41D` (vt `0x00AB88C0`, code-created,
-  id stamped at `0x007A99DF` — the cloud emitter, §10.1), and two anonymous
-  ones (vt `0x00AB8CD0` — an animating list, `0x00AB8F50`).
+- The four full-screen layers: the map layer `0x2BA6BB97`
+  (`cSC4WinRegionView`); the cloud emitter `0x6A0AF41D` (vt `0x00AB88C0`,
+  code-created, id stamped at `0x007A99DF`, §10.1); and two anonymous ones,
+  vt `0x00AB8CD0` (an animating list) and vt `0x00AB8F50`.
 
 ### 10.1 The region cloud emitter (`0x6A0AF41D`)
 
@@ -899,65 +893,42 @@ float at `0xAB7E10` and the four-TGI art set.
 
 ---
 
-## 11. The layout model's own coverage (`tools\uimap`)
+## 11. The geometry call sites in `.text`
 
-The offline model (builder census + constant map + layout emulator + diff
-harness) has measured limits; they are stated here so a null from the model
-is never read as a fact about the game.
+The game sizes every code-built window through one of four `cIGZWin` slots,
+so the whole population of code-driven geometry is enumerable from the image.
 
 - **Population:** `.text` spans `0x407000..0xA7FA2D`. A 6-byte scan for the
   cIGZWin geometry slots (`FF /2 disp32`, disp ∈ {`0xD4 SetSize`, `0xD8
   SetArea(Rect*)`, `0xDC SetArea(l,t,r,b)`, `0xE0 SetPosition`}) across all
-  eight ModRM base forms finds **1026 geometry call sites in 552 functions**.
-- **The `--discover` scan's pattern list is incomplete:** it carries no
-  `0xD8` pattern and omits ModRM `0x95` (ebp base) and `0x94` (SIB) — 182 of
-  1026 sites (17.7%) unscanned; 147 confirmed `0xD8` sites; 69 functions
-  have `0xD8` as their only geometry call (among them the Data Views re-lay
-  `sub_007A04F0`, sites `0x7A082C`/`0x7A0955`). Including the missing
-  patterns takes the candidate list from 96 to 116. The scan technique
-  itself is sound (0 false positives on linear disassembly).
-- **`0xD8` sites cannot yield constants through the current recorder:** the
-  census names slot `0xD8` "SetAreaRect" but the constants pass keys roles on
-  "SetSize"/"SetArea"/"SetPosition" only, so every `0xD8` record is dropped.
-  The naive fix would fabricate constants — `0xD8` takes a pointer (the
-  pushed `lea [esp+disp]`), not four coordinates. The correct treatment is
-  "builder found, constants not recoverable" until a rect-store resolver
-  exists (follow the `lea` to the four member stores; for `sub_007A04F0`
-  even that fails — its rect members are computed at runtime, consistent
-  with the shipped fix scaling the origin inside the re-lay).
-- **The `callers ≥ 2` discovery filter is a lid, not a filter:** 8 of the 12
-  builders the census already holds fail it (including every named dialog
-  builder — a top-level dialog builder is called from exactly one place);
-  over the 552 geometry-driving functions it removes 420 (76%), of which 147
-  make ≥2 geometry calls. A discovery filter must re-find the things already
-  found; caller-count finds shared helpers, geometry-call-count finds
-  builders.
-- **The discovery pass skips the double-proof:** a 3-byte substring test with
-  no high-byte anchor means `call [eax+0x1D4]` matches `[eax+0xD4]` — 5 of
-  101 listed candidates carry no geometry call at all (`0x4827D0`,
-  `0x482DC0`, `0x4832E0`, `0x915EC0`, `0x685AE0`).
-- **Coverage:** 10 of 552 geometry-driving functions (1.8%), 43 of 1026
-  sites (4.2%), all budget-family; the emulator implements 1 of 13
-  primitives (`LABEL_FACTORY 0x00779660`); the predicted-vs-live join is 0
-  of 47 live ids (the 50 predicted windows are budget-family; the available
-  logs are region-screen dumps). Structural nulls, quoted as such:
-  `builders.json` holds zero `SetArea`/`SetAreaRect` rows because the 10
-  census owners contain only `0xD4`/`0xE0` calls; and edge-vs-direct
-  divergence at integer factors is identically zero (`edge_law(pos,len,f) =
-  R(pos+len,f) − R(pos,f)`; for integer f the edge law equals the direct
-  law). Only 1.5x can diverge: 807 pairs.
-- **The art-rect oracle** that retires the UNKNOWN-STOCK class is a generated
-  `art-rects.json` (art TGI → stock/shipped IHDR + create-type cell
-  divisor): for these windows the exe supplies only x and y — w and h are
-  the art's PNG IHDR, which no layout emulator can produce. Cell rule from
-  the create type: type 2 (`sub_77B960`) window = the whole strip; type 4
-  (`sub_77B7B0`) window = one cell.
+  eight ModRM base forms — including ModRM `0x95` (ebp base) and `0x94`
+  (SIB) — finds **1026 geometry call sites in 552 functions**, of which 147
+  are `0xD8`. 69 functions have `0xD8` as their only geometry call, among
+  them the Data Views re-lay `sub_007A04F0` (sites `0x7A082C`, `0x7A0955`).
+  On linear disassembly the scan has 0 false positives; it needs the
+  high-byte anchor, because a 3-byte substring test matches
+  `call [eax+0x1D4]` as `[eax+0xD4]`.
+- **Slot `0xD8` carries no coordinates.** It takes a pointer — the pushed
+  `lea [esp+disp]` — so constants come from following that `lea` to the four
+  member stores, never from immediates at the call site. `sub_007A04F0`
+  computes its rect members at runtime, which is why the shipped fix scales
+  the origin inside the re-lay instead.
+- **Geometry-call count finds builders; caller count finds shared helpers.**
+  8 of the 12 named builders have exactly one caller — a top-level dialog
+  builder always does. Of the 552 geometry-driving functions, 420 have fewer
+  than two callers, and 147 of those make two or more geometry calls.
+- **The edge law and the direct law agree at integer factors.**
+  `edge_law(pos,len,f) = R(pos+len,f) − R(pos,f)`, which for integer `f` is
+  exactly `R(len,f)`; only 1.5x can diverge, and 807 pairs do.
+- **Art-rect windows take their size from the art.** For windows built by the
+  button factories the exe supplies only x and y; w and h are the art's PNG
+  IHDR. The cell rule comes from the create type: type 2 (`sub_77B960`)
+  window = the whole strip; type 4 (`sub_77B7B0`) window = one cell.
 
 ### 11.1 The row windows (the budget/ordinances dialog contents)
 
-The 45 "unjudgeable" windows of the diff harness are identified; 32 have
-exact stock rects. Under dialog `0x0423278F` (stock 450x377): 12 checkbox
-cells (ids `0x12C+k`, 16x16, art cell of `{46A006B0,144161EA}` 128x16/8
+Under dialog `0x0423278F` (stock 450x377): 12 checkbox cells
+(ids `0x12C+k`, 16x16, art cell of `{46A006B0,144161EA}` 128x16/8
 states), 12 row strips (ids `0x1F4+k` → live `0x2F4+k` by the +0x100 law,
 1320x18, art `{46A006B0,140155B7}` 4-state 2640x36), 4 scroll arrows
 (`0x551..554`, 64x10), Accept/Cancel (`0x1CD`/`0x16D`, 180x30 by `SetSize`
@@ -970,44 +941,33 @@ boundary. Dialog height closes exactly: `H = 29+23+36·floor(n1/2)+41+23+
 41,40}); row counts clamp to 9 at `0x77C829`; slabs = floor(rows/2). The
 ordinance name texts live on the content pane (depth 3) and are invisible to
 one-level dumps by construction. The Accept/Cancel plate `0x144161EB` is
-SHARED (clone+retarget to `0x470261EA`) and bound by six hardcoded pushes no
-retarget touches — a code-sized 360x60 button drawn from a 1x plate until
-retargeted.
+SHARED (clone+retarget to `0x470261EA`) and bound by six hardcoded pushes: a
+code-sized 360x60 button whose art is named by address in `.text`, so a
+retarget of the clone leaves those six sites pointing at the original.
 
 ---
 
-## 12. Coverage of the shipping UI
+## 12. Code-created windows and id hazards
 
-**Named shipping windows: 315; carrying a scaling mechanism: 299 (94.9%).**
-Kept as separate denominators: D1 script-declared roots 288/298 (96.6%); D2
-code-created named windows 11/17 (64.7%). There is **no offline upper
-bound** — the three channels of §4 (the `0xC2C2EB0F` singleton, the
-register-id factory, anonymous creates) are unbounded by construction.
-
-The D2 ledger: covered — `0x9A47B417`, `0x6104489A` (sweep roots),
-`0x6A5E44B6` (art + ≥90% skip), `0x2AAB8CC1` (wrap patch + art),
-`0x8A6E61E0`/`0x8A2CAD8B` (born-scale), `0x2BA6BB97` (dialog-static on both
-bubble scripts), `0x0423278D/E/F` (byte patches + per-instance runtime pass
-+ popup pin). Uncovered — `0xEA659793` (whitelist-only region pass),
-`0x6A0AF41D` (cosmetic, correctly left alone, §10.1), `0x00000043` (the
-Restore-Toolbars button, below). Role-unknown — `0x85202C0E`, `0xA802B4EB`,
-`0x9AEDEF7C` (never in any retained log).
+A window the game builds in code has no `.UI` script behind it, so nothing
+about it appears in a corpus census. The measured detail for the ones that
+matter to scaling follows.
 
 - **`0x00000043` Restore-Toolbars:** built by `sub_7EDEB0` from `I-c973b411`
   (`mov [esp+0x6c],0xc973b411` @ `0x007EDECC`): CreateInstance GZWinBtn @
   `0x007EDFF6`, image `{856DDBAC,46A006B0,53244588}` @ `0x007EE02F` (84x19
   4-frame strip, cell 21x19), `SetID(0x43)` @ `0x007EE140`,
   `GZWinMoveTo(0xC, viewH−0x1C)` @ `0x007EE146`, born hidden @ `0x007EE175`.
-  The builder never sets a size. With 2x art shipped (cell 42x38) the
-  code-fixed position clips 10 px at birth, and the sweep then re-doubles it
-  to 84x76 at (24,1544) → 20 px clipped. `0x43` and the script-declared
-  `0x44` are the two halves of one feature (one in code, one in data), in a
-  dense semantically-allocated command-id run; SC4 reuses tiny ids in-image
-  (`0x000000FF` at three unrelated sites), so any cure keys the pair
-  (builder, script-instance TGI) plus a parent check, never the bare id.
+  The builder never sets a size, so the art's cell decides the extent while
+  the origin stays a code constant: art moves the size and never the origin.
+  `0x43` and the script-declared `0x44` are the two halves of one feature
+  (one in code, one in data), in a dense semantically-allocated command-id
+  run; SC4 reuses tiny ids in-image (`0x000000FF` at three unrelated sites),
+  so a rule for either keys the pair (builder, script-instance TGI) plus a
+  parent check, never the bare id.
 - **Id collisions are the mode, not the accident:** 596 of 1409 distinct
   corpus ids (42%) are declared by ≥2 script instances, and 37% of the
-  project's own id-keyed entries are multi-declared. Per-script-TGI static
+  mod's own id-keyed entries are multi-declared. Per-script-TGI static
   doubling of a colliding root ships in four places with no known breakage
   (`0x8A8DFCF5`, `0xAA921F4F`, `0xCBF32603`, `0x2A5CFB2C`).
 - **`0x6BB92BCB` (Trip-Types legend) is a construction-only container**: its
@@ -1036,7 +996,7 @@ Restore-Toolbars button, below). Role-unknown — `0x85202C0E`, `0xA802B4EB`,
   so its frame is never doubled by the city sweep and the lever is
   dialog-static. Its 36x41 portrait is runtime-supplied through `SetImage`
   on the GZWinBMP iface (`0x4385F4`–`0x43861C`, ids `0xEA9457BA/B`) — the
-  REAL-BUT-OVERWRITTEN class: the placeholder TGI `{1ABE787D,EA32F100}` is
+  REAL-BUT-OVERWRITTEN class: the stand-in TGI `{1ABE787D,EA32F100}` is
   real and 2x-generated, yet the pixels that arrive are 1x, so its
   `imagerect` must stay `(0,0,36,41)`.
 - **`0xEACA96DD` grid popup:** code-created (`sub_79C800` @ `0x79C822`
@@ -1049,67 +1009,8 @@ Restore-Toolbars button, below). Role-unknown — `0x85202C0E`, `0xA802B4EB`,
   62x49): one function `sub_443E60` loads the tutorial page and both
   overlays; they highlight the Disaster Tools button and inherit its
   tooltip. Created through helper `sub_441B50` with parent = 0 (`push 0` @
-  `0x441B6B`) — the loader's NULL-parent default is unmeasured (§13, G15);
-  the size is the load-bearing half either way.
-- **The 36 live ids once unexplained in logs** resolve to one family: all
-  are descendants of the Ordinances dialog (12 `0x12C+k`, 12 `0x2F4+k`, 4
-  `0x551+k`, Accept/Cancel, `0x0ABCE000/1`, the popup's four outer/inner
-  ids) — a child-window population, not 36 roots.
-
----
-
-## 13. Reference gaps
-
-Unresolved items, each with what is known and the observation that settles
-it. Nothing here blocks a shipped mechanism; every entry states its limit.
-
-| # | gap | known | settles it |
-|---|---|---|---|
-| G1 | draw-context slot 39 (`+0x9C`): stretch or tile | both blit slots located; argument counts read at the call sites (`0x8D8928` 3-arg, `0x8D896A` 5-arg); only the implementation is unread; `blttype=tiled` is the second-most common corpus value (254/540) | hook ctx slot 39 the way BMPX hooks 38; log src/dst for one `edgeimage=yes` window |
-| G2 | GZWinBMP flag `0x20` | consumer at `0x9BC37E`/`0x9BC3D9` (source from `+0xE8` plus dst offset by `(src.l, src.t)`); a whole-`.text` `push imm8`-near-`SetFlag` scan finds the three known setters and zero `push 0x20` (a register-computed mask would evade it) | treat as unreachable from data; if a setter is ever found, re-examine the "pixel-registered collage" pattern |
-| G3 | `cIGZWin` flag `0x4000` semantics on recreate | `Init` short-circuits on it (`0x0099BC31`); absent from `tWinFlag` | decide whether a re-created GZWinBMP re-derives its imagerect from its (already-scaled) window size — load-bearing for born-correct |
-| G4 | GZWinBMP mouse message ids → down/up/move | the three ids and their slots (§1.3); neighbouring stubs bracket the group (135/137 = shared 3-arg stub, 139 = 4-arg) | one live log of the id order on a click |
-| G5 | `cIGZWin::GetInstanceID()` (vt `+0x100`) populated for ordinary windows? | the `.UI iid=` hypothesis is disproved (`iid` is token −2 holding an interface name; the only `SetInstanceID`-shaped deserializer call `0x954C2E` is fed by token `0x1336 = rowheight` on a QI'd file-list interface) | add `iid=%08X` to the MWKID/VWKID/DGPKID format strings; if non-zero and distinct, the non-unique-id problem and the rect-matching tie-breaker both retire |
-| G6 | gutter setter byte truncation | SDK declares 8-bit setters; corpus reaches (247,201); 2x writes (494,402) | dump `GetGutters` on `0x2A57CB84` in a deployed 2x build: (494,402) = no ceiling; (238,146) = clamp needed |
-| G7 | `imagetype=` (token `0xF017`), `pos=`/`size=` (`0x0102/3`), `blttype=divider|bluebar` semantics | registered, zero corpus uses; `size` is parse-only (the serializer never writes it) | one-script generator experiments |
-| G8 | which of the header's six `GZOnMouse*` names has no slot | five 3-arg slots (134–138) reached from ids 7/8/10/11/13 | log `msg->type` in a `DoMessage` hook on a button while clicking — never by counting the header |
-| G9 | `cRZWinMgr::ProcessMouseMessage` / capture ordering | capture changes arrive as message 14 → slot 139; enter/exit as 18/19; the manager's mouse path was not located (slot `0xA0` is shared with unrelated interfaces) | disassemble the manager; until then "capture bypasses the router" stays hypothesis |
-| G10 | `font=NAME` resolution paradox | the dictionary holds zero style names, yet `DataInsetHeader` (×5) resolves and `RegionLabel` (×1) does not, both on plain GZWinText; the tag-handler suspect is ruled out (registration site, not handler) | the GUID rule ships regardless; the mechanism remains open |
-| G11 | does the engine honour a `.UI` ref's GROUP? | `{82b9b75b,e2b66db8}` names a nonexistent group while the instance lives under `0x46A006B0` (§9) | open Signs & Labels at stock; compare the two buttons against a sibling binding `{46a006b0,e2b66db8}` — identical art ⇒ group not honoured ⇒ every clone-retarget needs re-examining |
-| G12 | window flags `0x1000` and `0x4000000` identities | read sites (`0x00999004`; `0x0099C4BF/99`) | identify before any future flag-based lever |
-| G13 | the fourth rect `[win+0xB8..0xC4]` | zeroed in the ctor (`0x0099DB28`), read by `PlotPresent` for the non-deferred present; writer untraced | trace the writer; if it is a cached present rect it is another staleness candidate after resize |
-| G14 | the 36 356x58 ItemIcon strips (`0x6A386D26`, `0xMM0000NN`) | bound to template `I-ebd0d36d` (89x58, no `image=`); group constant at `0x78EE15`/`0x7ECB50`/`0x7F038F`; 89 px = the sidebar strip width | build a toolbar walk first — no deployed instrument enumerates the top-level toolbar, so their absence from dumps is a structural null |
-| G15 | the `.UI` loader's NULL-parent default | `sub_441B50` passes parent = 0 for the tutorial overlays | a boot-time tree dump locating the overlays' parent |
-| G16 | slot-90 recompute scheduling | slot 91 sets `[this+0x70]`; slot 89 tests `[this+0x71]`; slot 90 has 36 call sites and is recursive | which dirty byte gates the recompute, and same-frame vs next — decides whether a moved window is clickable at its new position immediately |
-| G17 | where the UI composites relative to the 3D view | all 4 call sites of slot 123 and 44 of slot 89 enumerated; the driver must be `cIGZWinMgr::Plot` (winmgr slot 6), whose vtable is runtime-only (singleton `0x00B628C0`) | read `*(void**)0x00B628C0` live; no ordering claim before that |
-| G18 | the Photo Album code-bound image | `{856DDBAC,1ABE787D,2558A4CB}` 296x222 at site `0x7BC624`, panel `I-4a8cc5ea` root `0x0A8CD3EE` 683x582; neither twin staged, in no `CODE_BOUND_TGIS` | one `refmap`/`SCALED_WINDOW_IDS` lookup: if the album is scaled this is a 1x backing |
-| G19 | region map tile labels/icons (distinct from the bubble) | the container claim ("nothing under `0x2BA6BB97`") is refuted — 13 descendants print the moment a tile is clicked; the label sub-claim was never tested | `DumpTree` full depth on the region screen with no bubble open |
-| G20 | `0x85202C0E` / `0xA802B4EB` / `0x9AEDEF7C` roles | vtables `0xAB9980`/`0xAB6010`/—; never in any retained log | one sighting run |
-| G21 | the Win32 message coalescer `0x0098CE30` | drops redundant `WM_MOUSEMOVE` runs; appears to zero matched down/up pairs before the UI sees them; read in passing | finish the decode only if a lost-click/lost-drag symptom appears — it is upstream of all routing and would look exactly like a routing bug |
-| G22 | the `[0xB43CE0]` modal-veil sub-service | cached at `0x602336` from `[0xB43C94]->vt[0xAC]()`; `+0x28(win,bool)`/`+0x18(win)` bracket every `DoModalWin` | disassemble the master at `[0xB43C94]` or find the vtable's QI iid |
-| G23 | does a declared `imagerect` reach the draw for `edgeimage=yes`? | the code says yes (pass 2 sets flag `0x10` whenever `imagerect=` is present; `GZPaint` selects `+0xE8` on it), and the BMPRECT fix only acts when the flag is live — but an offline recomposition of the real art under the decoded algorithm produces a flat interior where the game shows decorated chrome | extend the BMPRECT walker to log `[win+0xF8] & 0x18`, `[win+0xE8..0xF4]` and live W/H for one edge BMP; third answer: the decorated frame the player sees is a different window in the stack |
-| G24 | `sub_441B50`-class NULL parents, `0x6BFAC122`/`0x8BFAC13E`/`0xCBFACAE1` chips | measured null on two independent instruments (static reference and live tree); compressed-dat escape hatch open | one sighting run across the three building query types |
-| G25 | budget gray header band | engine + art say it must paint pink through the same plain-blit path as the slabs; the v2.25.33/34 hooks (since removed) are the prime suspect for the contrary observations | judge live; if still gray, the next step is a draw trace — never geometry |
-| G26 | Taxes dialog under the family patches | shares builders/helpers with the patched departments (`BUDGET-DETAIL-ANATOMY.md` §1) | eyes-on; patch residual sites the same way if flagged |
-| G27 | GZWinBtn standard-style state strips: does the vertical dimension stretch? | horizontal fit/stretch is measured (120x30 strip on 130–370px buttons; 84x19 strip on 18x16 buttons); 875 buttons are exact 4-state, a smaller population 8-state | 2x one shared strip, open an unscaled dialog (e.g. the budget window), see if buttons render correctly; until then treat shared button strips as unsafe for in-place 2x |
-| G28 | the flyout `0x09DE8798` (script `0x09DE3002`) | untracked — in no list in `UiSpike.cpp`; reached from the funnel twin's second call site (`0x7E718A`, dispatcher `sub_7E7130` on `[esi+8]==1`); the script exists in no extracted corpus (structural null) | log `GetChildWindowFromIDRecursive(0x09DE8798)` per mode to identify what UI it is before hooking the twin |
-| G29 | the `mission_selection_red` spawn site | recorded both as `0x528BC7` (`REGRESSION.md` `[R:11613]`) and `0x528BC9` (`src\CodePatches.cpp:4065`) — 2 bytes apart, unadjudicated | re-read the bytes before patching at either |
-| G30 | what draws through marker-strip builder `0x5F5FB0` / zoom table `0xAA523C` | the builder and table are byte-proven (table `{0.5,0.75,1.0,1.5,2.0}` at `.rdata 0xAA523C`, sole consumer `0x5F6067`); the offer-balloon attribution was refuted on screen (the balloon is the CSI); the route-dot fn's reference at `0x5F74AD` is a texture-loop end-bound compare, not a size read; the signpost quad builder is the dormant twin | one `SPTEX`/`SPSTRIP` capture in a scene with dispatched units; both builders ended the #188 hunt with no confirmed on-screen consumer |
-| G31 | the signpost kinds table (`[this+0x70]`) | kind 4 = mission balloon per the static trace; the full table lived in volatile session notes and is gone | one `SPTEX` capture in a scene with dispatched units names every live kind; do not guess kind numbers |
-| G32 | the pick whitelist's five automata families (`0x4B8880`) | the Accept fn accepts 5 automata families (byte-verified count) plus the signpost occupant at `0x4B8947`; the family ids lived in volatile session notes | read `0x4B8880`'s compare chain; turns "can the player click it?" into a table lookup for every in-world visual |
-| G33 | Graphs chart: are the `32f` band rect (`chart+0x108`/`+0x10C`) and the legend column the same object? | the legend row geometry is a six-constant right-margin budget owned by panel builder `sub_76D3D0` (`ApplyGraphLegendBudgetScale`); the chart renders `ChartLabel` (`0xE9C86B5E`), not `Legend`; the band write still ships (`SCALING-AXES.md` M6) | dump `chart+0x108` and the legend child rects in one `CHARTGEO` line at the same instant, or disassemble what reads `chart+0x108` inside draw path `sub_9B5ADE` |
-| G34 | gauge dials (`0xCBCBF1E0`): the cached-buffer scaling lever | the class keeps a class-private cached buffer at 1x while the window doubles; the My Sims portrait cure (law 41: one leaf invalidate per open) closed the analogous #47 half; the `[win+0x6c]`-buffer claim behind force-recreate is contested (REGRESSION REFUTED 4/5) | a per-open census of draw calls scoped to root `0x4BCB938A` BEFORE the buffer route; never hook on class identity alone |
-| G35 | Graphs legend: what turns the game's 16x16 checkbox into the measured 32x32 | the builder's own `SetArea` writes 16x16 at every tier (`0x0076E151/59`, `0x0076E168`), yet the live window is 32 wide at 2x; every named hypothesis was refuted by disassembly; two survive — nothing resizes it, or something writes `round(16*f)` (numerically identical to the art cell `stripW/8`) | the v2.55.0 fix is correct under both hypotheses; identifying the resizer is open |
-
-**Structurally unknowable offline** (the limit is named, so the entry moves
-when the limit lifts): the `0xC2C2EB0F` factory's output (runtime dispatch
-table — lift by emulation or live hook); computed window ids (the value does
-not exist in the image — lift by running the loop); anonymous creation
-sites (identity does not exist — reachable only through subtree recursion);
-runtime instance counts (offline analysis counts sites, never instances);
-parenting of an instance (the `ChildAdd` argument is a register — needs a
-live dump); depth-1+ nodes the code addresses as top-level handles (the
-denominator ladder counts depth-0 roots by construction); third-party plugin
-DLLs (outside every denominator); the city loading/saving screen (no `.UI`
-exists anywhere; 100% code-painted — settled); and rich-text sizing (outside
-the `cIGZWin` model; FontStyle can never reach it).
+  `0x441B6B`), so the loader's NULL-parent default decides where they land;
+  the size is the load-bearing half.
+- **The 36 child ids under the Ordinances dialog are one family:** 12
+  `0x12C+k`, 12 `0x2F4+k`, 4 `0x551+k`, Accept/Cancel, `0x0ABCE000/1` and the
+  popup's four outer/inner ids — a child-window population, not 36 roots.
