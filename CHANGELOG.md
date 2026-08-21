@@ -1,5 +1,22 @@
 # Changelog
 
+## 4.0.6
+
+Removes the hard dependency on the optional `SC4GraphicsOptions.dll` plugin.
+
+- **The mod now scales even if `SC4GraphicsOptions.dll` / `.ini` are not
+  installed.** The boot tier decision previously read the render resolution
+  from `SC4GraphicsOptions.ini` (owned by that third-party plugin) and fell
+  back to doing nothing when it was absent. It now falls back to the monitor
+  size as the render-resolution basis, so AutoScale still picks a sensible
+  tier; the existing `RESMISMATCH` check verifies against the real window and
+  corrects on later launches.
+- **Without the plugin, the Graphic Options Resolution / Window-Mode controls
+  show as read-only readouts** (the current value, single-entry dropdowns,
+  with their labels) instead of empty boxes. They cannot change anything in
+  that state — nothing reads the ini — so they offer no other choices; the
+  Scale control is unaffected and still works.
+
 ## 4.0.5
 
 Bug-fix release.

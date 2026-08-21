@@ -44,7 +44,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.0.5"
+#define UISCALE_VERSION_STR "4.0.6"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -279,6 +279,29 @@ public:
 			{
 				logger.WriteLine(
 					LogLevel::Info, "AutoScale: Software %ls - render res = requested %dx%d.", mode, gfxW, gfxH);
+			}
+
+			// SC4GraphicsOptions.ini BELONGS TO THE OPTIONAL SC4GraphicsOptions.dll
+			// PLUGIN - a user without it has no file at all, and scaling must not
+			// hard-depend on it. If the resolution came back empty (0x0), fall back
+			// to the monitor size as the render-resolution basis so the mod still
+			// picks a tier; RESMISMATCH measures the real window and corrects the
+			// guess on later launches. With the plugin present this block never
+			// fires, because the ini supplies a real size.
+			if (gfxW <= 0 || gfxH <= 0)
+			{
+				const int fbW = GetSystemMetrics(SM_CXSCREEN);
+				const int fbH = GetSystemMetrics(SM_CYSCREEN);
+				if (fbW > 0 && fbH > 0)
+				{
+					gfxW = fbW;
+					gfxH = fbH;
+					logger.WriteLine(
+						LogLevel::Info,
+						"AutoScale: no usable resolution in SC4GraphicsOptions.ini "
+						"(plugin absent or unset) - using the monitor size %dx%d as "
+						"the render-resolution basis.", gfxW, gfxH);
+				}
 			}
 
 			// #192: publish what the tier was decided FROM, for the readout in
