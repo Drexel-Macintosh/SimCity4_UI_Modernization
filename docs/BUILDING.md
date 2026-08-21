@@ -15,8 +15,17 @@ msbuild src\SC4UIScale.vcxproj -p:Configuration=Release -p:Platform=Win32
 Output: `build\Release\SC4UIScale.dll`. Copy it into
 `Documents\SimCity 4\Plugins\` beside `SC4UIScale.ini`.
 
-`vendor\` carries gzcom-dll and MinHook and is compiled in; there is nothing to
-fetch. `SC4UIScale.sln` opens in Visual Studio if you prefer.
+`vendor\` carries gzcom-dll and MinHook as **git submodules**; both are compiled
+in. Clone with `--recursive`, or run `git submodule update --init` after a plain
+clone, before building:
+
+```
+git clone --recursive <repo-url>
+# or, after a plain clone:
+git submodule update --init
+```
+
+`SC4UIScale.sln` opens in Visual Studio if you prefer.
 
 > `/PDBALTPATH:%_PDB%` and `/d1trimfile` are set deliberately — without them the
 > compiler writes your absolute build path into the binary, as ASCII *and* as a
@@ -95,7 +104,7 @@ and each one shows up as a bright seam where a cell bleeds into its neighbour.
 
 ```
 src/       the plugin
-vendor/    gzcom-dll (LGPL-2.1) + MinHook (BSD-2), compiled in
+vendor/    gzcom-dll (LGPL-2.1) + MinHook (BSD-2) - git submodules, compiled in
 tools/     the package generators
 docs/      these documents
 ```

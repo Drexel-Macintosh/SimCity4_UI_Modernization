@@ -52,8 +52,8 @@ rows above, and both are visible as explicit `<ClCompile>` entries in
 ## 1. gzcom-dll — LGPL-2.1-or-later
 
 * Upstream: <https://github.com/nsgomez/gzcom-dll>
-* Pinned commit: `08c529bc2edd32e11c269960a03011ad035c0529` (2026-07-12),
-  cloned 2026-07-19 — see `vendor\gzcom-dll\VENDOR-PIN.txt`
+* Pinned commit: `08c529bc2edd32e11c269960a03011ad035c0529` (2026-07-12) — the
+  git submodule at `vendor\gzcom-dll` (declared in `.gitmodules`)
 * Licence text as vendored: `vendor\gzcom-dll\LICENSE`
 * Upstream's own words: *"This project is licensed under the GNU Lesser
   General Public License, version 2.1 or (at your option) any later version…
@@ -76,9 +76,9 @@ linking, so the licence itself governs. What that means in practice:
 * **LGPL-2.1 §6 applies to the combined binary.** A recipient of
   `SC4UIScale.dll` must be able to obtain the library's source and to relink
   the program against a modified version of the library. **Publishing this
-  project's complete source, together with the vendored library, is what
-  satisfies that** — and is the reason the source is published rather than
-  only the binary.
+  project's complete source, with the library provided at the exact pinned
+  revision via the `vendor\gzcom-dll` git submodule, is what satisfies that**
+  — and is the reason the source is published rather than only the binary.
 * **§6 does NOT relicense our code.** LGPL-2.1 explicitly allows a "work that
   uses the Library" to carry terms of your choice. That is why the CC0
   dedication in `LICENSE` is compatible with this dependency, and why our code
@@ -97,7 +97,9 @@ linking, so the licence itself governs. What that means in practice:
 
 * Copyright (C) 2009-2017 Tsuda Kageyu. All rights reserved.
 * Licence text as vendored: `vendor\minhook\LICENSE.txt`
-* Pin: `vendor\minhook\VENDOR-PIN.txt` (13 file hashes recorded)
+* Pin: git submodule at `vendor\minhook`, upstream commit
+  `d94c64d32ea37bc4f5ee47d580709f70c6fb6080` (verified byte-identical to the
+  previously vendored sources)
 * Statically compiled: `buffer.c`, `hook.c`, `trampoline.c`,
   `src\hde\hde32.c`, `src\hde\hde64.c`
 

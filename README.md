@@ -47,6 +47,12 @@ no-mod install.
    carry. To change it, open **Options → Graphic Options**; that panel also
    sets resolution and window mode, and changes apply on restart.
 
+**Optional companion plugin.** The in-game resolution and window-mode control
+writes `SC4GraphicsOptions.ini`, which is read by the community plugin
+[SC4 Graphics Options](https://community.simtropolis.com/files/file/36091-sc4-graphics-options/).
+Install it for those settings to take effect. UI scaling itself works without
+it; only the resolution/window-mode control needs it.
+
 Prebuilt release bundles are published under
 [Releases](../../releases); the repository itself ships the *generators*,
 not the artwork (see below). Building from source:
@@ -86,7 +92,7 @@ Known limitations are listed in
 |---|---|
 | `src/` | The DLL: director, window-tree scaler (`UiSpike.cpp`), executable patches (`CodePatches.cpp`), tier/package logic (`ScaleTier.cpp`) |
 | `tools/` | Package builders — every shipped `.dat` is generated, never hand-edited |
-| `vendor/` | The third-party libraries the DLL links: gzcom-dll and MinHook |
+| `vendor/` | The third-party libraries the DLL links — gzcom-dll and MinHook, each a **git submodule** pinned to a specific upstream commit (fetch with `git submodule update --init`) |
 
 No Maxis-derived art is committed to this repository; the packages are built
 locally from an owned installation.
