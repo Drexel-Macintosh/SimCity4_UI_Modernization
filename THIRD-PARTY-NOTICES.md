@@ -1,9 +1,10 @@
 # Dependencies and third-party notices
 
 **Short version:** this project's own code is public domain (CC0 1.0, no rights
-reserved, no attribution required). It statically links **two** third-party
+reserved, no attribution required). It statically links **three** third-party
 libraries whose terms you must honour if you redistribute a build:
-**gzcom-dll** (LGPL-2.1-or-later) and **MinHook** (BSD-2-Clause).
+**gzcom-dll** (LGPL-2.1-or-later), **MinHook** (BSD-2-Clause) and
+**sc4-dll-utilities** (LGPL-2.1-or-later, the INI parser).
 
 That is the complete list. Every claim below was read out of the files named,
 in this tree, not taken from a package manifest or from memory.
@@ -17,6 +18,7 @@ in this tree, not taken from a package manifest or from memory.
 | 1 | **gzcom-dll** — Nelson Gomez (`nsgomez`) | **LGPL-2.1-or-later** | **Statically compiled into `SC4UIScale.dll`** | `vendor\gzcom-dll\` |
 | 2 | **MinHook** — Tsuda Kageyu, 2009-2017 | **BSD-2-Clause** | **Statically compiled into `SC4UIScale.dll`** | `vendor\minhook\` |
 | 2a | ↳ **HDE** (Hacker Disassembler Engine), embedded in MinHook | see per-file headers | length-decoder used by MinHook | `vendor\minhook\src\hde\` |
+| 3 | **sc4-dll-utilities** — Nicholas Hayes (`0xC0000054`) | **LGPL-2.1-or-later** | `IniReader`/`StringViewUtil` compiled in to parse `SC4UIScale.ini` (replaces `GetPrivateProfile*`) | `vendor\sc4-dll-utilities\` |
 
 There is **nothing else compiled in**. In particular **no code** from any of
 the following is used, linked or built into `SC4UIScale.dll`. These are the

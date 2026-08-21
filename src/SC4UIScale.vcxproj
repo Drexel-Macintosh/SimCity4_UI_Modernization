@@ -42,9 +42,9 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;WINVER=0x0A00;_WIN32_WINNT=0x0A00;NOMINMAX;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(MSBuildThisFileDirectory)..\vendor\gzcom-dll\gzcom-dll\include;$(MSBuildThisFileDirectory)..\vendor\minhook\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory);$(MSBuildThisFileDirectory)..\vendor\gzcom-dll\gzcom-dll\include;$(MSBuildThisFileDirectory)..\vendor\minhook\include;$(MSBuildThisFileDirectory)..\vendor\sc4-dll-utilities\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary Condition="'$(Configuration)'=='Debug'">MultiThreadedDebug</RuntimeLibrary>
       <RuntimeLibrary Condition="'$(Configuration)'=='Release'">MultiThreaded</RuntimeLibrary>
       <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
@@ -115,6 +115,7 @@
     <ClCompile Include="..\vendor\minhook\src\trampoline.c" />
     <ClCompile Include="..\vendor\minhook\src\hde\hde32.c" />
     <ClCompile Include="..\vendor\minhook\src\hde\hde64.c" />
+    <ClCompile Include="..\vendor\sc4-dll-utilities\src\StringViewUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UiSpike.h" />
