@@ -1,6 +1,0 @@
-[submodule "vendor/gzcom-dll"]
-	path = vendor/gzcom-dll
-	url = https://github.com/nsgomez/gzcom-dll
-[submodule "vendor/minhook"]
-	path = vendor/minhook
-	url = https://github.com/tsudakageyu/minhook

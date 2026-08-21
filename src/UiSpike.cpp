@@ -19742,7 +19742,44 @@ namespace
 				c->Release();
 			}
 		}
-		if (!gSelState.dll) { return; }   // mode/res hidden without the dll
+		if (!gSelState.dll)
+		{
+			// READ-ONLY READOUTS. No owning dll means nothing reads the ini,
+			// so these controls cannot change anything - show exactly the
+			// current value and offer nothing else (a one-row dropdown).
+			const int lm = (gSelState.liveMode >= 0 && gSelState.liveMode < kSelModeCount)
+				? gSelState.liveMode : kModeFullscreen;
+			char modeRow[1][80];
+			_snprintf_s(modeRow[0], _TRUNCATE, "%s (current)", kSelModeLabels[lm]);
+			cIGZWin* mc = gfxDlg->GetChildWindowFromIDRecursive(kSelModeComboId);
+			if (mc != nullptr)
+			{
+				cIGZWinCombo* c = nullptr;
+				if (mc->QueryInterface(GZIID_cIGZWinCombo,
+						reinterpret_cast<void**>(&c)) && c)
+				{
+					SelPushCombo(c, modeRow, 1, gSelPushedMode,
+						&gSelPushedModeN, 0, &gSelAppliedMode);
+					c->Release();
+				}
+			}
+			char resRow[1][80];
+			_snprintf_s(resRow[0], _TRUNCATE, "%dx%d (current)",
+				gSelState.liveW, gSelState.liveH);
+			cIGZWin* rr = gfxDlg->GetChildWindowFromIDRecursive(kSelResComboId);
+			if (rr != nullptr)
+			{
+				cIGZWinCombo* c = nullptr;
+				if (rr->QueryInterface(GZIID_cIGZWinCombo,
+						reinterpret_cast<void**>(&c)) && c)
+				{
+					SelPushCombo(c, resRow, 1, gSelPushedRes,
+						&gSelPushedResN, 0, &gSelAppliedRes);
+					c->Release();
+				}
+			}
+			return;
+		}
 		cIGZWin* mc = gfxDlg->GetChildWindowFromIDRecursive(kSelModeComboId);
 		if (mc != nullptr)
 		{
@@ -19832,28 +19869,17 @@ namespace
 		gSelState.sRes = -1;
 		gSelState.sScale = -1;
 
-		if (!gSelState.dll)
+		if (!gSelState.dll && !gSelNoGfxDllLogged)
 		{
-			// NO OWNING DLL, NO CONTROLS. Hidden rather than greyed: a
-			// disabled combo reads as a setting the player is missing out
-			// on, and on such an install this is not a setting at all.
-			if (!gSelNoGfxDllLogged)
-			{
-				gSelNoGfxDllLogged = true;
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: SELMODE SC4GraphicsOptions.dll is NOT installed "
-					"- Window Mode and Resolution are HIDDEN. That DLL owns "
-					"SC4GraphicsOptions.ini, so without it WindowMode and "
-					"WindowWidth/Height are read by nothing. The scale "
-					"selector is unaffected: it writes our own ini.");
-			}
-			const uint32_t hideIds[4] = { kSelResComboId, kSelModeComboId,
-				kSelResLabelId, kSelModeLabelId };
-			for (int hi = 0; hi < 4; hi++)
-			{
-				cIGZWin* hw = gfxDlg->GetChildWindowFromIDRecursive(hideIds[hi]);
-				if (hw != nullptr && hw->IsVisible()) { hw->HideWindow(); }
-			}
+			gSelNoGfxDllLogged = true;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: SELMODE SC4GraphicsOptions.dll is NOT installed - "
+				"Window Mode and Resolution are shown as READ-ONLY readouts "
+				"(one row, the current value). That DLL owns "
+				"SC4GraphicsOptions.ini, so without it WindowMode and "
+				"WindowWidth/Height are read by nothing and cannot be "
+				"changed. The scale selector is unaffected: it writes our "
+				"own ini.");
 		}
 
 		SelUi ui;
@@ -20207,10 +20233,10 @@ namespace
 		// captions the data ships beside the other two combos. The "- on
 		// restart" half of the old text lives in the combo rows now.
 		SelSetCaption(gfxDlg, kSelLabelId, "Scale");
-		if (!gSelState.dll) { return; }
 		// BOTH column captions are ours: the stock "Resolution" header is
 		// hidden, because the column leads with Window Mode and a fixed
-		// caption above the wrong control is worse than none.
+		// caption above the wrong control is worse than none. Set even
+		// without the dll - the read-only readouts still need their names.
 		const uint32_t capIds[2] = { kSelModeLabelId, kSelResLabelId };
 		const char* const capTxt[2] = { "Window Mode", "Resolution" };
 		for (int ci = 0; ci < 2; ci++)
