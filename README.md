@@ -1,4 +1,4 @@
-# SC4UIScale
+# SimCity 4 UI Modernization
 
 **Runtime UI scaling for SimCity 4 Deluxe 1.1.641.** The game renders the
 world at the display's native resolution while every interface element —
@@ -43,8 +43,9 @@ no-mod install.
 
 1. Copy `SC4UIScale.dll`, `SC4UIScale.ini` and the `z_SC4UIScale_*` packages
    into `Documents\SimCity 4\Plugins`.
-2. Launch the game. AutoScale picks the tier the current resolution can carry;
-   the scale changes at any time under **Options → Graphic Options**.
+2. Launch the game. AutoScale picks the tier the current resolution can
+   carry. To change it, open **Options → Graphic Options**; that panel also
+   sets resolution and window mode, and changes apply on restart.
 
 Prebuilt release bundles are published under
 [Releases](../../releases); the repository itself ships the *generators*,
