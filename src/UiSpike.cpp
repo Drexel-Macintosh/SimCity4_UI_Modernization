@@ -276,8 +276,11 @@ namespace
 	// the coarse 0x14 rect down to the actual 1x icon -> only the right half is
 	// clickable. Force it to accept, so the whole (0x14-covered) picture clicks;
 	// item is still picked by Y in handler 138. gSelForce toggles it (live).
+	// Default ON with gClickHook - see that flag's comment. Without this the
+	// slot-149 hook installs but Slot149Thunk just calls through, so the
+	// narrowed 1x hit region survives even with the container claim widened.
 	PtInFn  gOrigSlot149 = nullptr;
-	int     gSelForce = 0;
+	int     gSelForce = 1;
 	// Slot 62 IsPointInMe (0x0099C97C, base, 2-arg): the routing's actual
 	// "is the cursor in the strip" test. Log its (x,y)+answer for left vs right
 	// hovers to resolve why only the right half routes here.
@@ -292,12 +295,24 @@ namespace
 	                                  // anywhere in the 2x cell registers as a hit
 	                                  // (the FIX, once the diagnostic confirms the list
 	                                  // handler is what rejects the left half).
-	int     gClickHook = 0;           // 0 = do NOT install the 120/121/133 click hooks
-	                                  // (SDK vtable slot numbers past ~97 may not match
-	                                  // the game and CRASHED). Only enable once the DVT
-	                                  // dump verifies the real GZOnMouseDownL slot.
-	int     gMouseSlot = 133;         // vtable slot to hook as GZOnMouseDownL (SDK says
-	                                  // 133; override via ini once verified).
+	// ⭐ DEFAULT FLIPPED TO ON (this build). Originally 0 pending verification -
+	// "SDK vtable slot numbers past ~97 may not match the game and CRASHED" -
+	// but the DVT dump DID verify them (see the install site's own later
+	// comment: "Click-path hooks on the VERIFIED 3-arg list handlers (136
+	// commit+fire, 138 pick-from-Y). Safe signatures."), on this exact class,
+	// years before this default was ever revisited. No shipping ini - not the
+	// packaging template, not the live dev ini on this machine - has ever set
+	// ClickHook=1, so the fix these thunks implement has been DORMANT since
+	// the day it was verified: on the disaster flyout's own "LOCKED" install
+	// site as much as the sub-flyout fallback below. That is the mechanism
+	// behind "an old issue has come back" - it was never actually shipped
+	// live in the first place, only proven safe once in a hand-edited ini.
+	// Still overridable via [Disaster] ClickHook= in the ini if a future
+	// game patch ever moves these vtable slots again.
+	int     gClickHook = 1;           // installs the 62/59/136/138/121/149 click hooks
+	int     gMouseSlot = 133;         // DEAD: no install site reads this any more (the
+	                                  // fix moved to slots 136/138 - see gClickHook).
+	                                  // Kept only so old ini overrides do not error.
 	// THE CLICK GATE (v2.11.24, found by full offline disasm): the CONTAINER
 	// overrides IsPointInMe (0x0079A180) to tail-call its slot 121 (0x0079AE30),
 	// which claims the point ONLY when x >= (width - [this+0xe0]) - i.e. the
@@ -307,11 +322,14 @@ namespace
 	// is also why the strip's DS62/DS149 hooks stayed silent there. Fix: scale
 	// [0xe0] by gClaimScale (2 = double). Idempotent via a sane-range guard;
 	// if the game recomputes the field back to 1x, the sweep re-applies it.
-	int     gClaimScale = 0;          // 0/1 = off; >1 = scale [container+0xe0] by the
+	int     gClaimScale = 2;          // 0/1 = off; >1 = scale [container+0xe0] by the
 	                                  // TIER factor (v2.24.0: the ini value is an
 	                                  // ENABLE flag now, not the multiplier - atoi
 	                                  // of "1.5" is 1, so an integer multiplier
-	                                  // could never be fractional; audit A6)
+	                                  // could never be fractional; audit A6).
+	                                  // Default ON with gClickHook/gSelForce - the
+	                                  // three levers are load-bearing together;
+	                                  // see gClickHook's comment.
 	int32_t gClaimOrig = 0;           // the 1x claim width we scaled (latched by the
 	                                  // sweeps); the draw group restores exactly this
 	                                  // value instead of dividing by an int factor
