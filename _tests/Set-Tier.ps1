@@ -178,6 +178,24 @@ function Show-State {
         $label = if ($on.Count -eq 0) { "(none - dependency-gated off)" } else { $on -join "," }
         Write-Output ("{0,-34} {1}" -f $name, $label)
     }
+    # SelectiveArt (v4.0.3 STABLE-FILENAME PILOT): its own row above always
+    # reads "(none - dependency-gated off)" now - all three sources are
+    # PERMANENTLY suffixed, so Get-Families' generic by-filename scan can
+    # never see it as active. That is not a report of its real state; ask
+    # by CONTENT instead, same technique Test-DatIntegrity.ps1 uses.
+    $selArtStable = Join-Path $plug "z_SC4UIScale_SelectiveArt.dat"
+    if (-not (Test-Path $selArtStable)) { $selArtStable = "$selArtStable.x1-disabled" }
+    if (Test-Path $selArtStable) {
+        $h = (Get-FileHash $selArtStable -Algorithm SHA256).Hash
+        $which = "unrecognised"
+        foreach ($t in $ALLTAGS) {
+            $src = Join-Path $plug ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $t)
+            if ((Test-Path $src) -and (Get-FileHash $src -Algorithm SHA256).Hash -eq $h) { $which = $t }
+        }
+        $isArmed = $selArtStable -notlike "*.x1-disabled"
+        $label = if ($isArmed) { $which } else { "(disarmed - stock)" }
+        Write-Output ("{0,-34} {1}  [stable file, by content]" -f "z_SC4UIScale_SelectiveArt", $label)
+    }
     if ($script:_dupTiers.Count -gt 0) {
         $u = $script:_dupTiers | Sort-Object -Unique
         Write-Output ""
@@ -324,6 +342,40 @@ foreach ($key in ($fam.Keys | Sort-Object)) {
 }
 Write-Output ("packages: {0} rename(s); {1} family(ies) left dependency-gated off" -f $switched, $gated)
 if ($want -and (Test-Path $restoreFile)) { Remove-Item $restoreFile -Force }
+
+# SelectiveArt (v4.0.3 STABLE-FILENAME PILOT): the generic rename loop above
+# cannot touch it - there is no per-tier bare name to rename into any more,
+# only a fixed name whose CONTENT must be overwritten. Same two branches as
+# SyncDatStable in ScaleTier.cpp (kept in sync by hand; this is a dev tool,
+# not the shipped sync path).
+$selArtStable = Join-Path $plug "z_SC4UIScale_SelectiveArt.dat"
+$selArtOff = "$selArtStable.x1-disabled"
+if (-not $want) {
+    if (Test-Path $selArtStable) {
+        Move-Item $selArtStable $selArtOff -Force
+        Write-Output "SelectiveArt: disarmed (stock)."
+    }
+} else {
+    if ((-not (Test-Path $selArtStable)) -and (Test-Path $selArtOff)) {
+        Move-Item $selArtOff $selArtStable -Force
+    }
+    $selArtSrc = Join-Path $plug ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $want)
+    if (-not (Test-Path $selArtSrc)) {
+        Write-Warning ("SelectiveArt: source for tier {0} not found ({1}) - stable file left as-is." -f $want, $selArtSrc)
+    } else {
+        $needCopy = $true
+        if (Test-Path $selArtStable) {
+            $needCopy = (Get-FileHash $selArtStable -Algorithm SHA256).Hash -ne
+                        (Get-FileHash $selArtSrc -Algorithm SHA256).Hash
+        }
+        if ($needCopy) {
+            Copy-Item $selArtSrc $selArtStable -Force
+            Write-Output ("SelectiveArt: stable file now matches tier {0}." -f $want)
+        } else {
+            Write-Output ("SelectiveArt: already matches tier {0}." -f $want)
+        }
+    }
+}
 
 # --- font -----------------------------------------------------------------
 # THE GAME READS THE FONT TABLE FROM <install>\Plugins, **NOT** FROM

@@ -366,17 +366,156 @@ namespace
 		}
 	}
 
+	// ============ STABLE-FILENAME PACKAGES (v4.0.3, PILOT: SelectiveArt) ===
+	// sc4pac maintainer, confirmed by the user: the package manager tracks
+	// files it installed BY EXACT NAME and can only remove those exact
+	// names. SyncDat's rename dance (whichever tier is active loses its
+	// suffix; the other two keep `.x1-disabled`) means the file sc4pac
+	// remembers installing may not be the file that exists on disk the
+	// moment the player uninstalls - and AutoScale performs this rename on
+	// the FIRST LAUNCH, picking whatever tier the player's own screen
+	// needs, so this is not a rare manual-tier-switch edge case. It is the
+	// same shape of bug FontStyle.ini already had, at 11x the surface area
+	// (every tier-managed package).
+	//
+	// THE FIX, same principle as the FontStyle.ini placeholder: give
+	// sc4pac ONE filename that NEVER changes - `<base>.dat`, no tier tag -
+	// and move content into it instead of renaming files around it. The
+	// three tier SOURCES become PERMANENTLY suffixed (`<base><tag>.dat
+	// .x1-disabled`, always, never promoted to a bare .dat name); only
+	// their BYTES get copied onto the one stable name SC4 actually loads.
+	//
+	// SCOPE, DELIBERATE: this is the PILOT, SelectiveArt only. STOCK (1x)
+	// still disables the stable file by the same rename-to-.x1-disabled
+	// trick as before - a genuinely inert placeholder DBPF would close
+	// that gap too, but nothing in this codebase builds one yet, and
+	// inventing that format tonight is out of scope for a pilot. Stock is
+	// also the tier this bug bites LEAST: AutoScale almost never lands
+	// there (it needs a screen too small for even 1.5x), so the common
+	// case - someone uninstalling while the mod is actively scaling their
+	// UI - is fully covered.
+	//
+	// MIGRATION IS BUILT IN, NOT A SEPARATE STEP. Every v4.0.0-4.0.2
+	// install has the OLD layout: one of the three tier files sits bare
+	// (whichever tier was last active), matching the pattern this function
+	// would otherwise mistake for "no stable file has ever been written."
+	// So the very first thing this does is look for that bare legacy file,
+	// and if found, re-suffix it (source-only invariant restored) before
+	// anything else runs. Idempotent: once migrated, this check costs one
+	// FileExists per tag per call.
+	void SyncDatStable(const wchar_t* dir, const wchar_t* base,
+		const wchar_t* activeTag)
+	{
+		static const wchar_t* const kTags[] = { L"-15x", L"-2x", L"-3x" };
+
+		// ---- migrate any pre-v4.0.3 bare tier file back to source-only ----
+		for (int i = 0; i < 3; i++)
+		{
+			wchar_t bareLegacy[MAX_PATH];
+			swprintf_s(bareLegacy, L"%s%s%s.dat", dir, base, kTags[i]);
+			if (!FileExists(bareLegacy)) { continue; }
+			wchar_t suffixed[MAX_PATH];
+			swprintf_s(suffixed, L"%s%s%s.dat%s", dir, base, kTags[i],
+				kDisabledSuffix);
+			if (FileExists(suffixed))
+			{
+				// Both exist (a mid-migration state, or a stale leftover):
+				// the suffixed copy is the one every OTHER package trusts
+				// as the source, so the bare one is surplus - drop it
+				// rather than leave two candidates for the same tag.
+				DeleteFileW(bareLegacy);
+				continue;
+			}
+			if (MoveFileExW(bareLegacy, suffixed, 0))
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"ScaleTier: STABLE-MIGRATE %ls%ls.dat -> source-only "
+					"(pre-4.0.3 layout). This tier's content is preserved; "
+					"the stable %ls.dat file below carries whichever tier "
+					"is actually active.", base, kTags[i], base);
+			}
+		}
+
+		wchar_t stable[MAX_PATH];
+		swprintf_s(stable, L"%s%s.dat", dir, base);
+		wchar_t stableOff[MAX_PATH];
+		swprintf_s(stableOff, L"%s%s.dat%s", dir, base, kDisabledSuffix);
+
+		if (activeTag == nullptr)
+		{
+			// STOCK: turn the one stable file off. Same trick SyncDat has
+			// always used, now scoped to a single filename instead of
+			// three, which is what keeps it from being the sc4pac trap -
+			// there is only ever one name to look for either way.
+			if (FileExists(stable))
+			{
+				MoveFileExW(stable, stableOff, MOVEFILE_REPLACE_EXISTING);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"ScaleTier: %ls.dat -> disabled (stock).", base);
+			}
+			return;
+		}
+
+		// Coming back from stock: restore before comparing content, so a
+		// stale .x1-disabled from a previous stock visit does not leave
+		// TWO candidates or get silently orphaned.
+		if (!FileExists(stable) && FileExists(stableOff))
+		{
+			MoveFileExW(stableOff, stable, 0);
+		}
+
+		wchar_t src[MAX_PATH];
+		swprintf_s(src, L"%s%s%s.dat%s", dir, base, activeTag,
+			kDisabledSuffix);
+		if (!FileExists(src))
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: %ls%ls source missing - stable %ls.dat left "
+				"as-is.", base, activeTag, base);
+			return;
+		}
+
+		// Byte-compare before copying: on most boots the right tier is
+		// already in place, and a multi-megabyte copy every launch is
+		// exactly the kind of per-launch tax #141 already warns against.
+		if (FileExists(stable) && FilesIdentical(stable, src))
+		{
+			return;
+		}
+		if (CopyFileW(src, stable, FALSE))
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: %ls%ls -> %ls.dat (stable name, content swap).",
+				base, activeTag, base);
+		}
+		else
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: could not copy %ls%ls onto the stable %ls.dat "
+				"(err %u).", base, activeTag, base, GetLastError());
+		}
+	}
+
 	// One-time migration of a legacy (pre-multi-package) install: the
 	// original 2x package shipped UNTAGGED file names. Rename its dats to
 	// their -2x names (live or gated form) and derive the FontStyle-2x.ini
 	// package source from the legacy font file. Idempotent no-op afterward.
 	void MigrateLegacyUntagged2x(const wchar_t* dir)
 	{
+		// SelectiveArt REMOVED (v4.0.3): an untagged z_SC4UIScale_SelectiveArt
+		// .dat[.x1-disabled] is no longer a legacy artifact to migrate AWAY
+		// from - it is SyncDatStable's normal, current, content-swapped
+		// state (see its comment above). This function running on it would
+		// rename the stable file to -2x.dat every single boot, fighting
+		// SyncDatStable's own migration forever (each undoes the other's
+		// idempotence check). SyncDatStable owns SelectiveArt's migration
+		// now, including the ACTUALLY relevant case (a bare v4.0.0-4.0.2
+		// active-tier file), which this ancient pre-multi-package check
+		// never covered anyway.
 		const wchar_t* bases[] = {
-			L"z_SC4UIScale_SelectiveArt",
 			L"z_SC4UIScale_DialogStatic",
 		};
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 1; i++)
 		{
 			wchar_t legacy[MAX_PATH];
 			wchar_t tagged[MAX_PATH];
@@ -2303,7 +2442,10 @@ namespace ScaleTier
 			{
 				activeTag = pkg.tag;
 			}
-			SyncDat(docPlugins, L"z_SC4UIScale_SelectiveArt", pkg.tag, match);
+			// SelectiveArt moved OUT of this per-tier loop (v4.0.3, PILOT):
+			// see SyncDatStable above the migration helper. It is called
+			// once, after the loop, with the resolved activeTag - same
+			// shape as SyncFont two lines below.
 			SyncDat(docPlugins, L"z_SC4UIScale_DialogStatic", pkg.tag, match);
 			SyncDat(docPlugins, L"z_SC4UIScale_ItemIcons", pkg.tag, match);
 			// SUBFOLDER package (v2.17.1): overrides for icons that live in
@@ -2420,6 +2562,9 @@ namespace ScaleTier
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons", depOk));
 		}
+		// SelectiveArt: ONE stable filename, content-swapped - see
+		// SyncDatStable's own comment for why (the sc4pac uninstall trap).
+		SyncDatStable(docPlugins, L"z_SC4UIScale_SelectiveArt", activeTag);
 		// Install root FIRST (the copy the game reads); Documents mirror
 		// second (kept for inspectability + package consistency).
 		SyncFont(docPlugins, instPlugins, activeTag);

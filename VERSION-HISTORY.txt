@@ -1,3 +1,69 @@
+2026-08-21  v4.0.3   THE sc4pac UNINSTALL TRAP, PILOTED ON SelectiveArt: ONE
+                     STABLE FILENAME, CONTENT SWAPPED INSTEAD OF RENAMED
+
+  Confirmed directly by the sc4pac developer, via the user: the package
+  manager tracks installed files by EXACT NAME and can only remove those
+  exact names. Every tier-managed package here (11 of them) is enabled by
+  RENAMING - whichever tier is active loses its `.x1-disabled` suffix, the
+  other two keep it - so the filename sc4pac remembers installing may not
+  be the filename that exists on disk the moment a player uninstalls. Same
+  shape as the FontStyle.ini defect fixed in v4.0.1, at 11x the surface:
+  AutoScale performs this rename on the FIRST LAUNCH to match the player's
+  own screen, so this is not a rare manual-tier-switch edge case - it is
+  nearly everyone.
+
+  SCOPE, DELIBERATE (user decision): pilot ONE package - SelectiveArt, the
+  largest and most-used - verify it thoroughly, extend to the other 10 in a
+  follow-up once the pattern is proven. Full scope surfaced mid-session and
+  changed the risk picture from "convert one rename to a copy": this
+  touches PreAppInit boot code, needs a one-time migration for every
+  existing v4.0.0-4.0.2 install, and required a first-ever special case in
+  Set-Tier.ps1 (previously fully generic across every package).
+
+  THE FIX: give sc4pac ONE filename that never changes -
+  z_SC4UIScale_SelectiveArt.dat, no tier tag - and move CONTENT into it
+  instead of renaming files around it (ScaleTier::SyncDatStable). The three
+  tier sources become PERMANENTLY suffixed (never promoted to a bare .dat
+  name); only their bytes get copied onto the stable name SC4 actually
+  loads. Byte-compared before copying, so an unchanged boot costs nothing.
+  STOCK (1x) still disables the stable file by the old rename trick, scoped
+  to one filename now instead of three - a genuinely inert placeholder DBPF
+  would close that gap too, but nothing in this codebase builds one yet and
+  it is out of scope for a pilot. AutoScale essentially never resolves to
+  1x, so this is the tier the bug bites least.
+
+  MIGRATION IS BUILT INTO THE SYNC, NOT A SEPARATE STEP: every existing
+  install has a bare tier-tagged file (whichever was last active).
+  SyncDatStable finds it, re-suffixes it, and only then proceeds - LIVE-
+  VERIFIED tonight by deliberately reproducing a real v4.0.2 install's
+  on-disk layout (bare -2x.dat, no stable file) and confirming the log's
+  "STABLE-MIGRATE" line fires and the game renders correctly afterward.
+
+  RIPPLE, ALL FOUND BY READING BEFORE WRITING, NOT AFTER BREAKING:
+  MigrateLegacyUntagged2x (the pre-multi-package migration) would have
+  mistaken the new stable file for ITS OWN legacy artifact and fought
+  SyncDatStable's migration every single boot - excluded before it ever
+  shipped, not discovered after. Deploy-OnGameClose.ps1's ARMED-TIER
+  SNAPSHOT/restore, Test-DatIntegrity.ps1's armed-tier-agreement check, and
+  Set-Tier.ps1's fully-generic rename loop all assumed the old by-filename
+  detection; each got SelectiveArt-specific handling (content-hash based
+  where filename can no longer answer the question) rather than silently
+  going blind to this one package.
+
+  Full gate set green (Test-PackageGating.py gained a dedicated
+  SyncDatStable wiring check - the #119 shape one mechanism later: a call
+  that is written but never reached is indistinguishable from no call at
+  all until something asserts it). DatIntegrity green, deployed, and BOTH
+  the migration path and the live scaled-tier path verified on screen this
+  session - FontStyle.ini's own byte-identity re-confirmed unaffected.
+
+  Files: src\ScaleTier.cpp (SyncDatStable + migration exclusion),
+  src\SC4UIScaleDllDirector.cpp (version), _tests\Deploy-OnGameClose.ps1,
+  _tests\Set-Tier.ps1, _tests\Test-DatIntegrity.ps1,
+  _tests\Test-PackageGating.py.
+
+  STILL OWED: the other 10 packages, same pattern, next session.
+
 2026-08-21  v4.0.2   THE CLICK-FIX WAS VERIFIED SAFE AND NEVER SHIPPED - three
                      levers, all defaulting off, on every install that ever existed
 

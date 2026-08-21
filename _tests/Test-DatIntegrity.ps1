@@ -160,6 +160,12 @@ $EXPECTED = @(
   # 0xCA1F1D9C / 0xAA1F1EC5, script I-aa1f1f57 - the panel came OFF the
   # kNeverScaleIds deferral; see REGRESSION.md "MY SIMS").
   @{ name = "z_SC4UIScale_SelectiveArt-2x.dat";  entries = 696 },
+  # STABLE FILE (v4.0.3 pilot): the one name SC4 loads and sc4pac tracks.
+  # 696 holds regardless of WHICH tier's bytes are currently copied in -
+  # every tier source carries the same count by construction (see the note
+  # at the top of this table) - so this stays a valid, tier-independent
+  # check rather than a snapshot of one specific tier's content.
+  @{ name = "z_SC4UIScale_SelectiveArt.dat";     entries = 696 },
   # DialogStatic 255 -> 259 (2026-07-29, Batch A, task #54): the last three
   # bucket-D text-bearing roots joined TARGETS in build_dialog_static.py -
   # I-6b704690 Label Tool (root 0x8A8DFCF5, shared with the generic message
@@ -542,8 +548,15 @@ if (-not $psBlock.Success) {
 # and it does not matter which tier the machine is set to - only that they
 # agree. That makes the gate independent of ScaleFactor/AutoScale, which is the
 # point: a gate keyed on the tier would have to be right about the tier too.
+# SelectiveArt EXCLUDED from this generic, filename-based loop (v4.0.3
+# pilot): it has no bare tier-tagged name any more to detect ("-2x.dat"
+# never exists live - see Deploy-OnGameClose.ps1's STABLE-FILENAME PILOT
+# note). Its own armed-tier detection follows the loop, by CONTENT hash
+# against its three permanently-suffixed sources instead of by filename,
+# and folds into the same $armed table so it still takes part in the
+# majority-agreement check below - this gate is exactly the kind PRESENCE
+# IS NOT ARMING exists to keep honest, so it does not get to sit out.
 $tierFamilies = @(
-  @{ Dir = $plugins;                          Base = "z_SC4UIScale_SelectiveArt" },
   @{ Dir = $plugins;                          Base = "z_SC4UIScale_DialogStatic" },
   @{ Dir = $plugins;                          Base = "z_SC4UIScale_ItemIcons"    },
   @{ Dir = "$plugins\zzz-SC4UIScale";         Base = "z_SC4UIScale_ItemIconsSub" },
@@ -566,6 +579,39 @@ foreach ($fam in $tierFamilies) {
   }
   $armed[$fam.Base] = $plainTiers[0]
 }
+
+# SelectiveArt's own armed-tier detection (v4.0.3 pilot): by CONTENT, not
+# filename - the stable file's name never changes, so "which tier is this"
+# can only be answered by asking which of the three (always-suffixed)
+# sources it currently matches byte-for-byte.
+$selArtStablePath = Join-Path $plugins "z_SC4UIScale_SelectiveArt.dat"
+if (-not (Test-Path $selArtStablePath)) {
+  $selArtStablePath = "$selArtStablePath.x1-disabled"
+}
+if (Test-Path $selArtStablePath) {
+  $stableHash = (Get-FileHash $selArtStablePath -Algorithm SHA256).Hash
+  $selArtMatches = @()
+  foreach ($tier in @("15x", "2x", "3x")) {
+    $srcPath = Join-Path $plugins ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $tier)
+    if (-not (Test-Path $srcPath)) { continue }
+    if ((Get-FileHash $srcPath -Algorithm SHA256).Hash -eq $stableHash) {
+      $selArtMatches += $tier
+    }
+  }
+  if ($selArtMatches.Count -eq 0) {
+    $failures += ("z_SC4UIScale_SelectiveArt: the stable .dat's content matches " +
+      "NONE of its three sources - it was not written by SyncDatStable, or a " +
+      "source has drifted since the deploy that wrote it")
+  } elseif ($selArtMatches.Count -gt 1) {
+    $failures += ("z_SC4UIScale_SelectiveArt: the stable .dat is byte-identical " +
+      "to more than one tier source (" + ($selArtMatches -join ", ") +
+      ") - the sources themselves have converged, which hides a real tier " +
+      "mismatch from this check")
+  } else {
+    $armed["z_SC4UIScale_SelectiveArt"] = $selArtMatches[0]
+  }
+}
+
 if ($armed.Count -gt 1) {
   $distinct = @($armed.Values | Sort-Object -Unique)
   if ($distinct.Count -gt 1) {
