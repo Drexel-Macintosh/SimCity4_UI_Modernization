@@ -528,12 +528,27 @@ public:
 	bool OnStart(cIGZCOM* pCOM)
 	{
 		const uint16_t gameVersion = GetGameVersion();
-		if (gameVersion != 641)
+		if (gameVersion < kMinSupportedGameVersion)
 		{
 			Logger::Get().WriteLine(
 				LogLevel::Error,
-				"Game version %u detected (expected 641); UI scaling untested there.",
-				gameVersion);
+				"Game version %u detected (minimum supported is %u). Every "
+				"patch this DLL installs targets the %u build, so no hooks "
+				"are registered and nothing is patched - the DLL stays inert.",
+				static_cast<unsigned>(gameVersion),
+				static_cast<unsigned>(kMinSupportedGameVersion),
+				static_cast<unsigned>(kMinSupportedGameVersion));
+			return true;
+		}
+		if (gameVersion > kTestedGameVersion)
+		{
+			Logger::Get().WriteLine(
+				LogLevel::Info,
+				"Game version %u detected - newer than the tested build %u. "
+				"Proceeding: every byte patch verifies its site before "
+				"writing and declines individually if the build moved it.",
+				static_cast<unsigned>(gameVersion),
+				static_cast<unsigned>(kTestedGameVersion));
 		}
 
 		cIGZFrameWork* const pFramework = RZGetFrameWork();
