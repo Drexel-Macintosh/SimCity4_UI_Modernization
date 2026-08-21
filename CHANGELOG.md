@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.0.7
+
+- **`SC4UIScale.ini` is now parsed with the ecosystem's `sc4-dll-utilities`
+  `IniReader`** (vendored, LGPL-2.1) instead of the `GetPrivateProfile*` APIs,
+  matching the wider SC4 DLL ecosystem. Parsing is verified identical; the
+  shared `SC4GraphicsOptions.ini` still uses `GetPrivateProfile*` because it is
+  the canonical parser that file's other consumers use. (Project now C++20.)
+- **The website-button redirect now steps aside when the Web Button Improvement
+  Mod is installed.** That mod already owns the region website button, so our
+  `ShellExecute` redirect is skipped to avoid double-handling the URL; without
+  the mod, our standard redirect runs as before.
+
 ## 4.0.6
 
 Removes the hard dependency on the optional `SC4GraphicsOptions.dll` plugin.
