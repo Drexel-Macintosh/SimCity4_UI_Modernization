@@ -33,8 +33,16 @@ if (Get-Process "SimCity 4" -ErrorAction SilentlyContinue) {
 
 $names = @("SC4UIScale.dll")
 if ($IncludeArt) {
-    $names += (Get-ChildItem $Plugins -Recurse -File -Filter "z_SC4UIScale_*.dat" |
+    # Scan BOTH sides: at -Off time the art is live in Plugins, at -On time it
+    # is parked Aside. Scanning only Plugins made -On -IncludeArt restore the
+    # DLL and silently leave every dat behind (measured 2026-08-21). The aside
+    # mirrors Plugins' relative paths, so both scans yield the same names.
+    $names += (Get-ChildItem $Plugins -Recurse -File -Filter "z_SC4UIScale_*.dat" -ErrorAction SilentlyContinue |
                ForEach-Object { $_.FullName.Substring($Plugins.Length + 1) })
+    if (Test-Path $Aside) {
+        $names += (Get-ChildItem $Aside -Recurse -File -Filter "z_SC4UIScale_*.dat" -ErrorAction SilentlyContinue |
+                   ForEach-Object { $_.FullName.Substring($Aside.Length + 1) })
+    }
     $names += "FontStyle.ini"
 }
 
@@ -42,7 +50,7 @@ function Show-State {
     $live = @(); $parked = @()
     foreach ($n in $names) {
         if (Test-Path (Join-Path $Plugins $n)) { $live += $n }
-        elseif (Test-Path (Join-Path $Aside (Split-Path $n -Leaf))) { $parked += $n }
+        elseif (Test-Path (Join-Path $Aside $n)) { $parked += $n }
     }
     Write-Output ("live in Plugins : {0}" -f $(if ($live) { $live -join ', ' } else { '(none)' }))
     Write-Output ("parked aside    : {0}" -f $(if ($parked) { $parked -join ', ' } else { '(none)' }))
@@ -54,10 +62,11 @@ if (-not $Off -and -not $On) { Show-State; exit 0 }
 if (-not (Test-Path $Aside)) { New-Item -ItemType Directory -Path $Aside -Force | Out-Null }
 
 foreach ($n in $names) {
-    $leaf = Split-Path $n -Leaf
     $inPlugins = Join-Path $Plugins $n
-    $inAside   = Join-Path $Aside $leaf
+    $inAside   = Join-Path $Aside $n
     if ($Off -and (Test-Path $inPlugins)) {
+        $dir = Split-Path $inAside -Parent
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
         Move-Item $inPlugins $inAside -Force
         Write-Output "parked : $n"
     } elseif ($On -and (Test-Path $inAside)) {
