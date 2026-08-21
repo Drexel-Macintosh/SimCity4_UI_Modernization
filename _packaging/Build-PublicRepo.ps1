@@ -181,6 +181,12 @@ foreach ($f in $TESTS) { Add-Item2 (Join-Path $proj "_tests\$f") "_tests\$f" }
 Add-Item2 (Join-Path $proj "_packaging\SC4UIScale.ini") "_packaging\SC4UIScale.ini"
 foreach ($f in $SRC)  { Add-Item2 (Join-Path $proj "src\$f") "src\$f" }
 foreach ($f in $TOOLS){ Add-Item2 (Join-Path $proj "tools\$f") "tools\$f" }
+# sc4-dll-utilities (0xC0000054) - the INI parser Settings.cpp now uses. Shipped
+# inline (a 3-file subset) rather than as a submodule so the public source
+# compiles without nested-submodule setup. LGPL-2.1; see THIRD-PARTY-NOTICES.
+foreach ($f in @("include\IniReader.h","include\StringViewUtil.h","src\StringViewUtil.cpp","LICENSE.txt")) {
+    Add-Item2 (Join-Path $proj "vendor\sc4-dll-utilities\$f") "vendor\sc4-dll-utilities\$f"
+}
 # vendor/ deliberately absent: it ships as submodules, not inline files.
 
 $bytes = 0
