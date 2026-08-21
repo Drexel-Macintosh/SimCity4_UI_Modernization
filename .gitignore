@@ -12,7 +12,7 @@
 #   (a) no PII — usernames, machine paths, OneDrive layout
 #   (b) nothing derived from the game install (EA/Maxis)
 #   (c) nothing from other modders (CAM, warrior, CoriBoom, memo33, …)
-#       EXCEPT vendored source with a VENDOR-PIN.txt beside it
+#       EXCEPT the gzcom-dll and MinHook git submodules under vendor/
 #   (d) no screenshots, no logs, no build output, no session state
 #
 # The player's own game install supplies the art. See RUNBOOK.md §1.

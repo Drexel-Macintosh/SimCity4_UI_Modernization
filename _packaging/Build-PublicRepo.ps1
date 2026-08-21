@@ -96,6 +96,9 @@ $ROOT = @("README.md", "LICENSE", "THIRD-PARTY-NOTICES.md", "CHANGELOG.md")
 # HANDOFF-*.md, none of which the public export ships. The public repo owns
 # its own .gitignore; this script's job is the curated file manifest, not the
 # destination's own configuration.
+# ⛔ .gitmodules is ALSO not shipped here: the sync step creates it in the
+# public repo via `git submodule add`, which materialises both the .gitmodules
+# entry and the gitlink for gzcom-dll and MinHook at their pinned commits.
 $DOCS = @("WHAT-IT-SCALES.md", "HOW-IT-WORKS.md", "BUILDING.md",
           "COMPATIBILITY.md")
 
@@ -140,9 +143,11 @@ $TESTS = @("Test-BootStateValidate.py", "Test-SelectorDerive.py",
            "Test-DatIntegrity.ps1", "Deploy-OnGameClose.ps1", "Set-Tier.ps1",
            "README.md")
 
-# vendor ships whole: required to COMPILE, and gzcom-dll's LGPL-2.1 obliges us
-# to provide its source alongside any binary we distribute.
-$VENDOR_EXT = @(".h", ".c", ".cpp", ".txt", ".md")
+# vendor is NOT copied inline: gzcom-dll and MinHook are git SUBMODULES in the
+# published repo (declared in .gitmodules). The export therefore ships
+# everything EXCEPT vendor/, and the sync step materialises the two submodules
+# at their pinned commits. gzcom-dll's LGPL-2.1 §6 source obligation is met by
+# the submodule pointing at the exact upstream revision the DLL is built from.
 
 $staged = Join-Path $proj "_packaging\public-repo"
 
@@ -176,16 +181,12 @@ foreach ($f in $TESTS) { Add-Item2 (Join-Path $proj "_tests\$f") "_tests\$f" }
 Add-Item2 (Join-Path $proj "_packaging\SC4UIScale.ini") "_packaging\SC4UIScale.ini"
 foreach ($f in $SRC)  { Add-Item2 (Join-Path $proj "src\$f") "src\$f" }
 foreach ($f in $TOOLS){ Add-Item2 (Join-Path $proj "tools\$f") "tools\$f" }
-Get-ChildItem (Join-Path $proj "vendor") -Recurse -File |
-    Where-Object { $VENDOR_EXT -contains $_.Extension.ToLower() -and
-                   $_.FullName -notlike "*\.git\*" } |
-    ForEach-Object { Add-Item2 $_.FullName $_.FullName.Substring($proj.Length + 1) }
+# vendor/ deliberately absent: it ships as submodules, not inline files.
 
 $bytes = 0
 foreach ($i in $items) { $bytes += (Get-Item $i.full).Length }
-$ours = ($items | Where-Object { $_.rel -notlike "vendor\*" }).Count
-Write-Output ("manifest: {0} file(s) total - {1} ours + {2} vendored SDK - {3:N2} MB" -f
-    $items.Count, $ours, ($items.Count - $ours), ($bytes / 1MB))
+Write-Output ("manifest: {0} file(s), {1:N2} MB (gzcom-dll + MinHook ship as submodules, not counted here)" -f
+    $items.Count, ($bytes / 1MB))
 
 # --- leak scan, before any copy ---------------------------------------------
 $rxUserPath = [regex]'(?i)[A-Za-z]:\\+Users\\+[^\\\s"''<>|]+'
