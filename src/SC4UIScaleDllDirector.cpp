@@ -92,6 +92,7 @@ public:
 		, gameWindow(nullptr)
 		, subclassed(false)
 		, tierActive(false)
+		, gameVersion(0)
 	{
 		wchar_t iniPath[MAX_PATH] = {};
 		wchar_t logPath[MAX_PATH] = {};
@@ -103,6 +104,32 @@ public:
 		Logger& logger = Logger::Get();
 		logger.Init(logPath, static_cast<LogLevel>(settings.logLevel));
 		logger.WriteHeader(UISCALE_NAME_STR " v" UISCALE_VERSION_STR);
+		// VERSION GATE - BEFORE ANY VERSION-SPECIFIC WORK. Everything below this
+		// line (DPI, the tier decision, the static-layer sync, the byte patches,
+		// ScaleRemap) targets the 641 layout and must not run on an older build.
+		// The gate lives HERE, not in OnStart, because the constructor is where
+		// that work happens and it executes BEFORE OnStart is ever reached - an
+		// OnStart-only gate ran the whole setup first. Refusing here also forces
+		// the static layers to STOCK, so a tier a previous supported run armed
+		// cannot sit over a game we are about to refuse to scale (2x art in a
+		// 1x layout). GetGameVersion()==0 means "could not determine" and is
+		// refused like any other unsupported build.
+		gameVersion = GetGameVersion();
+		if (gameVersion < kMinSupportedGameVersion)
+		{
+			logger.WriteLine(
+				LogLevel::Error,
+				"Game version %u detected (minimum supported is %u). Every "
+				"patch this DLL installs targets the %u build, so no scaling "
+				"is set up and no hooks are registered - the static layers are "
+				"stashed to stock and the DLL stays inert.",
+				static_cast<unsigned>(gameVersion),
+				static_cast<unsigned>(kMinSupportedGameVersion),
+				static_cast<unsigned>(kMinSupportedGameVersion));
+			ScaleTier::SyncStaticLayers(1.0f);
+			ScaleTier::SyncSelectorPackage(false);
+			return;
+		}
 		// REQUIREMENT: enumerate the display's modes NOW, on a
 		// background thread, not on the first Graphic Options click - v3.13.2
 		// measured that enumeration at 3.3s (dgVoodoo between us and the
@@ -527,17 +554,10 @@ public:
 
 	bool OnStart(cIGZCOM* pCOM)
 	{
-		const uint16_t gameVersion = GetGameVersion();
 		if (gameVersion < kMinSupportedGameVersion)
 		{
-			Logger::Get().WriteLine(
-				LogLevel::Error,
-				"Game version %u detected (minimum supported is %u). Every "
-				"patch this DLL installs targets the %u build, so no hooks "
-				"are registered and nothing is patched - the DLL stays inert.",
-				static_cast<unsigned>(gameVersion),
-				static_cast<unsigned>(kMinSupportedGameVersion),
-				static_cast<unsigned>(kMinSupportedGameVersion));
+			// The constructor already logged the refusal and stashed the static
+			// layers to stock; the only gate left here is to register no hooks.
 			return true;
 		}
 		if (gameVersion > kTestedGameVersion)
@@ -1072,6 +1092,7 @@ private:
 	HWND gameWindow;
 	bool subclassed;
 	bool tierActive; // resolution tier chose scaling; false = stock, inert
+	uint16_t gameVersion; // host exe build number (0 = could not determine)
 };
 
 cRZCOMDllDirector* RZGetCOMDllDirector()
