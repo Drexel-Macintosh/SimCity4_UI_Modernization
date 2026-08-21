@@ -122,13 +122,18 @@ where an icon belongs.
 Suggested fix: ship the intended bitmap under that TGI, or drop the `image=`
 attribute so the node stops referencing a resource that does not exist.
 
-## The submenu-parent patch SC4UIScale ships
+## The submenu-parent patch (optional override; NOT shipped in releases)
 
+`z_SC4UIScale_MenuFix.dat` is an **optional local override only — SC4UIScale
+release bundles do NOT include it**, because rewriting another mod's gameplay
+data is a decision for that mod's author, not for this mod. It is documented
+here so the defects in §1 and §2 can be fixed at the source; once a CAM/SIM
+update fixes the data, the override becomes redundant and can be deleted. If
+built locally (`tools/itemicons/build_menu_patches.py`) it produces
 `Plugins\zzz-SC4UIScale\z_SC4UIScale_MenuFix.dat` — six Exemplar Patch cohorts
 (sc4-resource-loading-hooks format: Cohort 0x05342861, group 0xB03697D1,
 targets in 0x0062E78A) that inject corrected 0xAA1DD399 values into the ten
-exemplars in §1 and §2. Built by `tools/itemicons/build_menu_patches.py`. When
-a SIM update fixes the data, the dat becomes redundant.
+exemplars in §1 and §2.
 
 ---
 
