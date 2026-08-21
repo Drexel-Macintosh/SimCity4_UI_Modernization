@@ -18,6 +18,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <commctrl.h>
+#include <filesystem>
+#include <string>
 
 #include "cIGZCOM.h"
 #include "cIGZFrameWork.h"
@@ -44,7 +46,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.0.6"
+#define UISCALE_VERSION_STR "4.0.7"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -80,6 +82,30 @@ namespace
 		}
 
 		swprintf_s(out, outLen, L"%s%s", path, fileName);
+	}
+
+	// cyclone-boom's "Web Button Improvement Mod" replaces/removes the region
+	// screen's web button (and already points it at Simtropolis). When it is
+	// installed our ShellExecute WebRedirect is redundant, so skip installing.
+	// Detection is by file name, searched recursively (sc4pac folder names carry
+	// the mod version, so a hard-coded path breaks on update).
+	bool WebButtonModPresent()
+	{
+		wchar_t dir[MAX_PATH] = {};
+		GetDllSiblingPath(L"", dir, MAX_PATH);
+		const wchar_t* needle = L"web button improvement mod";
+		try
+		{
+			for (const auto& entry : std::filesystem::recursive_directory_iterator(dir))
+			{
+				if (!entry.is_regular_file()) { continue; }
+				std::wstring name = entry.path().filename().wstring();
+				for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
+				if (name.find(needle) != std::wstring::npos) { return true; }
+			}
+		}
+		catch (...) { /* unreadable tree -> treat as absent */ }
+		return false;
 	}
 }
 
@@ -775,7 +801,13 @@ public:
 		// the DLL and it installs a process-wide ShellExecuteA/W hook, so a
 		// user who wants strictly-scaling-and-nothing-else must be able to say
 		// no - [UiSpike] WebRedirect=0. Default stays on: the EA URL is dead.
-		if (settings.webRedirect)
+		if (settings.webRedirect && WebButtonModPresent())
+		{
+			logger.WriteLine(LogLevel::Info,
+				"SC4UIScale: WebRedirect skipped - the Web Button Improvement "
+				"Mod is installed and already owns the region website button.");
+		}
+		else if (settings.webRedirect)
 		{
 			WebRedirect::Install();
 		}
