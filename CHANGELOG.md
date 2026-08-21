@@ -1,5 +1,17 @@
 # Changelog
 
+## 4.0.5
+
+Bug-fix release.
+
+- **Fixed: on a game build the mod doesn't support, it could leave the
+  interface half-scaled.** The version check used to log a warning and then
+  run its setup anyway - arming a scaled art tier with no geometry scaling
+  behind it. It now refuses the whole setup on an unsupported build: the art
+  is stashed back to stock and the mod stays fully inert, so the game runs
+  exactly as if the mod weren't installed. A build newer than the tested one
+  still runs, but is logged as untested.
+
 ## 4.0.4
 
 Bug-fix release.
