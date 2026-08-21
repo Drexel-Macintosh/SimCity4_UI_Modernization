@@ -1,3 +1,78 @@
+2026-08-21  v4.0.1   TWO REAL-USER BUGS FROM THE FIRST PUBLIC RELEASE, BOTH
+                     CLOSED THE SAME DAY THEY WERE REPORTED
+
+  The first external install (a heavily-modded sc4pac-managed Plugins tree:
+  45,945 files, 14.1 GB, "150-mods"/"050-load-first" structure) hit two
+  defects neither of which any dev-machine install was large enough to
+  reach. The user's own log named the first one directly.
+
+  1. ICON COVERAGE WAS TRIPLE-CAPPED, AND EVERY CAP WAS SIZED FOR A SMALL
+  INSTALL. IconSynth::ScanState::ours[]/theirs[] were fixed uint32_t[4096]
+  arrays; the fix queue gFixList[] and the reference-hold array gHold[]
+  were both fixed at 512. On this install the scan hit its cap and
+  DROPPED 6,619 third-party icon TGIs outright (logged loudly: "TGI CAP
+  HIT ... UNCOVERED is a LOWER BOUND"), and of the 4,048 icons it DID
+  count as uncovered, only the first 512 could ever be queued for
+  correction - the remaining 3,536+ stayed rendered at 1x forever, no
+  matter how long the session ran. Visible as icons that "render doubled
+  and vanishes on hover", per the scan's own diagnostic text.
+
+  Cure: all three arrays became growable (U32List/PtrList, realloc-doubling
+  from a 1024-entry floor, freed only where their lifetime actually ends -
+  gFixList and gHold are process-lifetime and never freed, matching their
+  existing "held on purpose" design). Nothing caps them now; the scan
+  reports an EXACT count instead of a lower bound, and every icon it finds
+  is queued and attempted. Same standing law this codebase already names
+  in a dozen other places (⭐108: "a patch that cannot EXPRESS its value
+  must REFUSE or WIDEN, never silently truncate") - this was the same
+  defect shape, just never triggered until an install this size existed.
+
+  Removed as dead once nothing can overflow: the "TGI CAP HIT" log branch,
+  gFixTruncated and its "(LIST TRUNCATED at 512 - more remain)" suffix, the
+  gHoldN>=kHoldMax skip gate. Every remaining log line is still accurate,
+  just no longer hedged with "lower bound" language it no longer needs.
+
+  2. SC4PAC CANNOT UNINSTALL A FILE THE DLL GENERATES. Reported by an
+  sc4pac maintainer: FontStyle.ini is never shipped in any package - the
+  DLL creates it at first boot by copying one of the three tier sources
+  over it - so a package manager has no record of it and uninstalling the
+  mod through sc4pac leaves it orphaned. No DLL change: SyncFont's own
+  #115/#118 preservation logic already treats a non-matching live file
+  safely (backs it up once as .user-original, then overwrites it with the
+  real tier font in the same pass), so an EMPTY file behaves exactly like
+  no file at all. Build-Dist.ps1 now writes a zero-byte FontStyle.ini into
+  the bundle's Plugins\ root, asserted empty before it ships, so a package
+  manager can track and remove it like any other installed file.
+
+  Both fixes are packaging/runtime only - no ini keys, no new Settings
+  fields, no dat changes. Full gate set green, DatIntegrity green, rebuilt
+  and re-deployed on the dev machine; public repo re-exported and pushed as
+  v4.0.1.
+
+  ⚠ v4.0.0 itself never got a ledger entry - the public-push session
+  bumped the version and ran the export but the ledger habit lapsed at the
+  exact moment it mattered most. Backfilled immediately below.
+
+  Files: src\ScaleTier.cpp, _packaging\Build-Dist.ps1,
+  src\SC4UIScaleDllDirector.cpp (version), CHANGELOG.md.
+
+2026-08-20  v4.0.0   FIRST PUBLIC RELEASE - SimCity4_UI_Modernization
+                     (backfilled 2026-08-21; the entry that should have
+                     shipped with the release itself)
+
+  All selector work closed (v3.14.4) and user-confirmed on the previous
+  private-archive session. Per user direction: private history archived
+  (this repo, "sc4uiscale", flipped PRIVATE and re-described as the
+  archive), a brand-new public repo created
+  (github.com/Drexel-Macintosh/SimCity4_UI_Modernization) with exactly ONE
+  commit, curated research shipped (laws + SC4 UI engine reference +
+  offline simulator), internal diaries (this file included) kept archive-
+  only, and a full ready-to-play bundle attached to a GitHub Release
+  tagged v4.0.0.
+
+  Files: everywhere - see the export manifest _packaging/Build-PublicRepo.ps1
+  and the archived plan for the phase-by-phase record.
+
 2026-08-20  v3.14.4  THE DROPDOWN IS ONE COLOUR: join the engine's standard
                      list colour - an all-white open list is unreachable
 
