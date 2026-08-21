@@ -104,4 +104,14 @@ namespace ScaleTier
 	void ScanUncoveredIcons(float factor);
 
 	void EnlargeUncoveredIcons(float factor);
+
+	// USER-CONFIRMED, real damage: an sc4pac uninstall removes the DLL but
+	// leaves FontStyle.ini behind (sc4pac does not uninstall .ini files, to
+	// protect user-configured settings) - so stock SC4 then reads whichever
+	// tier's font table was live at the moment of uninstall, over an
+	// otherwise fully stock UI. Call this from the director's shutdown path,
+	// while the DLL is still installed - it is the only code that ever CAN
+	// act, since nothing of ours runs after uninstall to check anything.
+	// Reuses SyncFont's own stock-tier revert; see its call site's comment.
+	void RevertFontOnShutdown();
 }

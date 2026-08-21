@@ -48,6 +48,12 @@ SRC = os.path.join(REPO, "src", "ScaleTier.cpp")
 
 # Packages that intentionally have no dependency row (they are ours alone).
 UNGATED_BY_DESIGN = {
+    # DORMANT since v4.0.3: SelectiveArt no longer appears in `calls` at all
+    # (SyncDatStable, not SyncDat - see the wiring check below), so this
+    # entry is never consulted any more. Left in rather than removed: if
+    # SelectiveArt ever grows a genuine third-party dependency, whoever adds
+    # that row will find this set already has an entry to delete, not one to
+    # discover is missing.
     "z_SC4UIScale_SelectiveArt",
     "z_SC4UIScale_DialogStatic",
     "z_SC4UIScale_ItemIcons",
@@ -111,8 +117,11 @@ def main():
     print()
 
     # positive control -----------------------------------------------------
-    known = {"z_SC4UIScale_SelectiveArt", "z_SC4UIScale_DialogStatic",
-             "z_SC4UIScale_ItemIcons"}
+    # SelectiveArt EXCLUDED (v4.0.3): it moved from SyncDat(...) to
+    # SyncDatStable(...) (the stable-filename pilot, see ScaleTier.cpp), a
+    # different call this regex does not match by design - checked
+    # separately below instead of broadening this one to match both shapes.
+    known = {"z_SC4UIScale_DialogStatic", "z_SC4UIScale_ItemIcons"}
     found_known = known & set(calls)
     if len(found_known) != len(known):
         print("FAIL: positive control - the SyncDat parser found only %s of the "
@@ -121,6 +130,24 @@ def main():
         return 1
     print("  positive control: parser found all %d always-present packages." % len(known))
     print()
+
+    # ---- SelectiveArt's own wiring check (v4.0.3 pilot) -------------------
+    # The #119 shape, one mechanism later: a call that is WRITTEN but never
+    # actually reached is indistinguishable from no call at all until
+    # something asserts it is wired. SyncDatStable takes activeTag directly
+    # (not pkg.tag/match like SyncDat), so it cannot be found by the regex
+    # above - this checks its own call site exists, once.
+    stable_call = re.search(
+        r'SyncDatStable\(\s*docPlugins\s*,\s*L"z_SC4UIScale_SelectiveArt"\s*,'
+        r'\s*activeTag\s*\)', src)
+    if not stable_call:
+        failures.append(
+            "SyncDatStable(docPlugins, L\"z_SC4UIScale_SelectiveArt\", "
+            "activeTag) not found - SelectiveArt's stable-filename sync may "
+            "be computed and never actually called (the #119 shape).")
+        print("  [z_SC4UIScale_SelectiveArt (stable)                 ] *** NOT WIRED ***")
+    else:
+        print("  [z_SC4UIScale_SelectiveArt (stable)                 ] wired")
 
     # ---- 1 + 3: every dep row has a gated call ---------------------------
     for name in dep_names:

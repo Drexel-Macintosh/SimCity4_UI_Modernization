@@ -14,8 +14,11 @@ $plug = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plug
 # which art the player gets. Restored verbatim at the end of this script.
 # The DLL owns this decision (ScaleTier resolves the factor from the screen
 # when AutoScale=1); this script owns only whether the bytes are current.
+# SelectiveArt EXCLUDED (v4.0.3): it no longer has a tier-tagged LIVE
+# filename to detect ("z_SC4UIScale_SelectiveArt-2x.dat" never exists any
+# more - see the STABLE-FILENAME PILOT block below). It gets its own
+# dedicated snapshot/restore, not this generic by-filename one.
 $TIER_FAMILIES = @(
-    @{ Sub = "";                 Base = "z_SC4UIScale_SelectiveArt" },
     @{ Sub = "";                 Base = "z_SC4UIScale_DialogStatic" },
     @{ Sub = "";                 Base = "z_SC4UIScale_ItemIcons"    },
     @{ Sub = "zzz-SC4UIScale";   Base = "z_SC4UIScale_ItemIconsSub" },
@@ -77,6 +80,11 @@ if ($ARMED_BEFORE.Count) {
         (($ARMED_BEFORE.GetEnumerator() | Sort-Object Name |
           ForEach-Object { $_.Value }) | Sort-Object -Unique) -join ", ")
 }
+# SelectiveArt's own snapshot (STABLE-FILENAME PILOT): the stable file is
+# either present-and-armed or absent-and-stashed, no tier tag to read - so
+# the only question worth asking beforehand is whether it was armed AT ALL,
+# matching $anyArmedBefore's role for the tag-based families below.
+$selectiveArtArmedBefore = Test-Path (Join-Path $plug "z_SC4UIScale_SelectiveArt.dat")
 # #104: the game HANGS ON SHUTDOWN often enough that this loop blocked twice in
 # one session (2026-08-03) - the window closes, the PROCESS does not exit, and
 # the wait spun silently until the user noticed and used End Task. Silence was
@@ -126,9 +134,18 @@ if (Test-Path $srcLog) {
     }
 }
 Copy-Item "$proj\build\Release\SC4UIScale.dll" "$plug\SC4UIScale.dll" -Force
-Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat" "$plug\z_SC4UIScale_SelectiveArt-2x.dat" -Force
+# SelectiveArt (v4.0.3, STABLE-FILENAME PILOT): all three tier sources ship
+# PERMANENTLY suffixed - none of them is "the active one" by filename any
+# more. The DLL's SyncDatStable copies the right tier's bytes onto the one
+# stable name below at boot, so sc4pac (or a manual deploy re-run) always
+# finds z_SC4UIScale_SelectiveArt.dat under the SAME name regardless of tier.
+Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat" "$plug\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat" "$plug\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat" "$plug\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled" -Force
+# The STABLE file itself: ships as the 2x content by default (today's
+# out-of-the-box tier), and SyncDatStable rewrites it to match whatever the
+# player's own AutoScale/selector choice resolves to on next boot.
+Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat" "$plug\z_SC4UIScale_SelectiveArt.dat" -Force
 Copy-Item "$proj\tools\dialog-static\z_SC4UIScale_DialogStatic.dat" "$plug\z_SC4UIScale_DialogStatic-2x.dat" -Force
 Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat" "$plug\z_SC4UIScale_DialogStatic-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat" "$plug\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled" -Force
@@ -503,6 +520,25 @@ foreach ($fam in $TIER_FAMILIES) {
             Write-Output ("  disarmed " + (Split-Path $live -Leaf) + " (not the armed tier)")
         }
     }
+}
+
+# SelectiveArt's own restore (STABLE-FILENAME PILOT). The Copy-Item block
+# above always ships the stable file ARMED (2x content, bare .dat) - correct
+# for a normal deploy, wrong for a 1x reference-capture session: the DLL
+# will still fix its CONTENT on the next launch either way, but leaving it
+# bare between deploy and launch is exactly the "file, game and selector
+# disagree" half-state $anyArmedBefore exists to prevent for every other
+# family, and Test-DatIntegrity's armed-tier check inspects this window.
+$selArtStable = Join-Path $plug "z_SC4UIScale_SelectiveArt.dat"
+$selArtStash = $selArtStable + ".x1-disabled"
+if (-not $selectiveArtArmedBefore -and -not $anyArmedBefore) {
+    if (Test-Path $selArtStable) {
+        Move-Item $selArtStable $selArtStash -Force
+        Write-Output "  kept disarmed (1x baseline): z_SC4UIScale_SelectiveArt.dat"
+    }
+} elseif ($selectiveArtArmedBefore -and -not (Test-Path $selArtStable) -and (Test-Path $selArtStash)) {
+    Move-Item $selArtStash $selArtStable -Force
+    Write-Output "  re-armed z_SC4UIScale_SelectiveArt.dat (was armed before deploy)"
 }
 
 $a = (Get-Item "$proj\build\Release\SC4UIScale.dll").Length
