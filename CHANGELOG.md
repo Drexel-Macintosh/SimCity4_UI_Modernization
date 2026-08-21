@@ -1,5 +1,21 @@
 # Changelog
 
+## 4.0.4
+
+Bug-fix release.
+
+- **Fixed: uninstalling via a package manager (e.g. sc4pac) could leave a
+  scaled font active on an otherwise fully-reverted, stock interface.**
+  Package managers intentionally don't remove `.ini` files on uninstall (to
+  protect user-configured settings), so the font table this mod writes
+  needs to already be reverted by the time an uninstall happens. It now
+  reverts automatically on every clean shutdown, at no cost during normal
+  play.
+- **Improved: one more package (the largest art package) now uses a
+  filename that never changes**, so a package manager can reliably track
+  and remove it regardless of which scale tier is active. The remaining
+  two root-level packages will follow in a future release.
+
 ## 4.0.2
 
 Bug-fix release.
