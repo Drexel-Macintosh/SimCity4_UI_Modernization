@@ -1095,6 +1095,16 @@ namespace IconSynth
 	}
 
 	// Returns the number of UNCOVERED icons; logs the whole picture.
+	//
+	// TWO ROOTS (2026-08-22, "some assets don't scale" user report): SC4 loads
+	// plugins from BOTH <install>\Plugins AND Documents\SimCity 4\Plugins -
+	// caspe's log shows FontStyle being written to a GOG install-dir Plugins
+	// AND an OneDrive Documents Plugins on the same launch. This scan used to
+	// walk ONLY the DLL's own folder, so any third-party dat parked in the
+	// install root was rendered by the game yet invisible here: never in
+	// gFixList, never enlarged by stage 2 or the factory wrap, drawn at 1x
+	// inside scaled flyouts. Both roots are now walked in both phases; AddTgi
+	// already dedupes by instance across everything.
 	int ScanAndReport(const wchar_t* pluginsDir, float factor)
 	{
 		const DWORD t0 = GetTickCount();
@@ -1125,14 +1135,50 @@ namespace IconSynth
 			swprintf_s(root, L"\\\\?\\%s", pluginsDir);
 		}
 
+		// The second root: <install>\Plugins\ beside the running game. Empty
+		// when the exe path cannot be parsed, and SKIPPED when it resolves to
+		// the same folder as the DLL's own (a DLL deployed into the install
+		// tree must not be walked twice - harmless but wasteful).
+		wchar_t root2[kLongPath] = L"";
+		{
+			wchar_t instPlugins[MAX_PATH];
+			InstallPluginsDir(instPlugins, MAX_PATH);
+			if (instPlugins[0])
+			{
+				size_t n = wcslen(instPlugins);
+				while (n > 0 && instPlugins[n - 1] == L'\\')
+				{
+					instPlugins[--n] = 0;
+				}
+				const wchar_t* docCmp = pluginsDir;
+				if (wcsncmp(docCmp, L"\\\\?\\", 4) == 0) { docCmp += 4; }
+				if (_wcsicmp(instPlugins, docCmp) != 0)
+				{
+					swprintf_s(root2, L"\\\\?\\%s", instPlugins);
+				}
+			}
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"IconSynth: scan root 1 (DLL side): %ls%s",
+			root,
+			root2[0] ? "" : "   [scan root 2 (<install>\\Plugins): not "
+			"scanned - unresolved or identical to root 1]");
+		if (root2[0])
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth: scan root 2 (install side): %ls", root2);
+		}
+
 		gScan->collectingOurs = true;
 		Walk(root, fp, OnFile, nullptr);
+		if (root2[0]) { Walk(root2, fp, OnFile, nullptr); }
 		const int nOurs = gScan->ours.n;
 		if (nOurs > 0) { gControlInst = gScan->ours.data[0]; }
 
 		Fingerprint fp2 = {};
 		gScan->collectingOurs = false;
 		Walk(root, fp2, OnFile, nullptr);
+		if (root2[0]) { Walk(root2, fp2, OnFile, nullptr); }
 
 		// The difference IS the defect set: icons some plugin supplies at 1x
 		// that no package of ours enlarges. At any tier > 1 the engine scales
@@ -2342,17 +2388,33 @@ namespace ScaleTier
 	bool WebButtonModPresent(const wchar_t* pluginsDir)
 	{
 		const wchar_t* needle = L"web button improvement mod";
-		try
+		// BOTH PLUGIN ROOTS (2026-08-22): the game loads <install>\Plugins as
+		// well, and the same blind spot that hid install-root icons from the
+		// uncovered-icon scan would here keep our WebText override armed
+		// against a mod installed in the other root - its text would fight
+		// ours on the region screen.
+		wchar_t instPlugins[MAX_PATH];
+		InstallPluginsDir(instPlugins, MAX_PATH);
+		for (int pass = 0; pass < 2; pass++)
 		{
-			for (const auto& entry : std::filesystem::recursive_directory_iterator(pluginsDir))
+			const wchar_t* dir = (pass == 0) ? pluginsDir : instPlugins;
+			if (!dir[0]) { continue; }
+			if (pass == 1 && _wcsicmp(instPlugins, pluginsDir) == 0)
 			{
-				if (!entry.is_regular_file()) { continue; }
-				std::wstring name = entry.path().filename().wstring();
-				for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
-				if (name.find(needle) != std::wstring::npos) { return true; }
+				continue;   // one tree, already searched
 			}
+			try
+			{
+				for (const auto& entry : std::filesystem::recursive_directory_iterator(dir))
+				{
+					if (!entry.is_regular_file()) { continue; }
+					std::wstring name = entry.path().filename().wstring();
+					for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
+					if (name.find(needle) != std::wstring::npos) { return true; }
+				}
+			}
+			catch (...) { /* unreadable tree -> treat as absent */ }
 		}
-		catch (...) { /* unreadable tree -> treat as absent */ }
 		return false;
 	}
 

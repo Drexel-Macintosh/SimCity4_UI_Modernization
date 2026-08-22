@@ -1,5 +1,24 @@
 # Changelog
 
+## 4.0.9
+
+- **Fixed: third-party menu icons installed in the game's own Plugins folder
+  stayed at 1x.** SimCity 4 loads plugins from TWO places -
+  `Documents\SimCity 4\Plugins` and `<install>\Plugins` beside the game exe
+  (on a GOG install: `C:\Program Files (x86)\GOG Galaxy\Games\SimCity 4
+  Deluxe Edition\Plugins`). The uncovered-icon scanner only walked the
+  Documents folder, so any third-party dat parked in the install root was
+  loaded by the game yet invisible to the scan: its menu icons were never
+  enlarged and drew at 1x inside scaled flyouts. Which assets broke depended
+  purely on where each mod happened to be installed - the same dat scales
+  fine from one folder and breaks from the other. The scan now walks both
+  roots, and the Web Button Improvement Mod detection checks both as well.
+- **Fixed: the flyout bar-tile cache saturated on heavy installs.** A fixed
+  64-slot cache dropped replay tiles mid-paint (`BARCACHE saturated ...
+  LayerFix replay is INCOMPLETE` in the log), leaving part of a flyout paint
+  un-replayed. The cache now grows on demand up to a generous ceiling and
+  logs once when it first exceeds the old fixed cap.
+
 ## 4.0.8
 
 - **Both INI files the mod reads are now parsed with the ecosystem's

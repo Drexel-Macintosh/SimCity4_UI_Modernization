@@ -1906,8 +1906,17 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// Same-orange double-draw elsewhere is harmless. Live-toggle via ini LayerFix.
 	int    gLayerFix = 1;
 	struct BarTile { void* a1; int32_t s[4]; int32_t d[4]; };
-	BarTile gBarCache[64] = {};
-	int     gBarCacheN = 0;
+	// The cache GROWS ON DEMAND. It was a fixed 64-slot array, and a heavy
+	// install saturated it MID-PAINT (user log 2026-08-22: "BARCACHE saturated
+	// at 64 tiles - LayerFix replay is INCOMPLETE", fired during flyout paints)
+	// - part of the paint then draws without replay and reads as "some assets
+	// don't scale". A tile is 40 bytes, so even the ceiling costs well under a
+	// megabyte for the process lifetime.
+	static const int kBarCacheStart = 64;    // the old fixed cap
+	static const int kBarCacheMax   = 16384; // 640 KB ceiling; not reached in practice
+	BarTile* gBarCache    = nullptr;
+	int      gBarCacheN   = 0;
+	int      gBarCacheCap = 0;               // allocated slots
 	// v2.39.10 (task #84): WHICH CONTAINER OWNS THE CACHED TILES.
 	// The fill site is family-agnostic - `gDisasterDrawTuning ? destIsContainer
 	// : destIsSubContainer` - so BOTH the disaster container and the mayor
@@ -1920,6 +1929,37 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// explicit: a different `self` means a new paint, so discard first.
 	void*   gBarCacheOwner = nullptr;
 	bool    gBarCacheSatLogged = false;
+
+	// Grows the cache on demand and appends one tile. Returns false only when
+	// the paint cannot be fully cached - the hard ceiling was reached, or
+	// allocation failed - which the CALLER must surface (NO SILENT CAPS).
+	// Growth is amortised O(1) doubling; the one-time crossing of the old
+	// fixed cap is logged so a heavy install is visible in the log instead of
+	// silently behaving differently from ours.
+	bool BarCachePush(void* a1, const int32_t* s, const int32_t* d)
+	{
+		if (gBarCacheN == gBarCacheCap)
+		{
+			const int newCap = gBarCacheCap ? gBarCacheCap * 2 : kBarCacheStart;
+			if (newCap > kBarCacheMax) return false;
+			BarTile* grown = static_cast<BarTile*>(
+				realloc(gBarCache, static_cast<size_t>(newCap) * sizeof(BarTile)));
+			if (!grown) return false;   // keep the old buffer valid
+			if (gBarCacheN == kBarCacheStart)
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: BARCACHE grew past its old %d-tile cap "
+					"(%d -> %d tiles) - this install's flyout paints need "
+					"more bar-tile replay than the fixed array held.",
+					kBarCacheStart, gBarCacheN, newCap);
+			gBarCache = grown;
+			gBarCacheCap = newCap;
+		}
+		BarTile& t = gBarCache[gBarCacheN++];
+		t.a1 = a1;
+		t.s[0] = s[0]; t.s[1] = s[1]; t.s[2] = s[2]; t.s[3] = s[3];
+		t.d[0] = d[0]; t.d[1] = d[1]; t.d[2] = d[2]; t.d[3] = d[3];
+		return true;
+	}
 
 	// Draw one BAR tile: read the atlas (a1), x-upscale by gBarWiden, write into
 	// the container (self) at (d[0]+gBarDX, d[1]), color-keying magenta. Shared by
@@ -2619,23 +2659,18 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 							gBarCacheOwner = self;
 							gBarCacheSatLogged = false;
 						}
-						if (gBarCacheN < 64)
+						if (!BarCachePush(a1, s, d) && !gBarCacheSatLogged)
 						{
-							BarTile& t = gBarCache[gBarCacheN++];
-							t.a1 = a1;
-							t.s[0] = s[0]; t.s[1] = s[1]; t.s[2] = s[2]; t.s[3] = s[3];
-							t.d[0] = d[0]; t.d[1] = d[1]; t.d[2] = d[2]; t.d[3] = d[3];
-						}
-						else if (!gBarCacheSatLogged)
-						{
-							// NO SILENT CAPS: at 64 tiles the LayerFix replay is
-							// silently incomplete, which would read as "the fix
-							// stopped working" with nothing in the log to say so.
+							// NO SILENT CAPS: an incomplete cache means an
+							// incomplete LayerFix replay, which would read as
+							// "the fix stopped working" with nothing in the
+							// log to say so.
 							gBarCacheSatLogged = true;
 							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: BARCACHE saturated at 64 tiles on ptr%p "
-								"- LayerFix replay is INCOMPLETE for this paint.",
-								self);
+								"UiSpike: BARCACHE refused tile #%d (ceiling "
+								"%d or out of memory) on ptr%p - LayerFix "
+								"replay is INCOMPLETE for this paint.",
+								gBarCacheN + 1, kBarCacheMax, self);
 						}
 					}
 					DrawBarScaled(self, a1, s, d);
