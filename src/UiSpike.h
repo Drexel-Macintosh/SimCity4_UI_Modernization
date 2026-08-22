@@ -68,7 +68,23 @@ public:
 	// through one function; the hook runs the EXISTING pass at that instant.
 	void InstallFlyoutOpenHook();
 	void OnFlyoutOpened(uint32_t flyoutId);
-
+	// v4.0.10 (2026-08-22): the god-mode DISASTER flyout's dock target,
+	// DERIVED from the game's own stock glue instead of tuned constants.
+	// SubPlaceDetour measures the container's stock birth rect against the
+	// live Disaster Tools button (never-scale, art-sized) on every open -
+	// that stock delta IS the docking math - and this resolves the scaled
+	// target: button-live + stock-delta * f. Returns false when the anchor
+	// button cannot be found, in which case callers fall back to the legacy
+	// toolbar+ini path. PUBLIC because SubPlaceDetour is a free function in
+	// the game's call stack.
+	bool DisDockTarget(int32_t& outL, int32_t& outT, float f);
+	// v4.0.10: MEASURE the stock glue - called from SubPlaceDetour with the
+	// container's pristine birth rect (the game's own docking output, read
+	// before anything of ours moves it), resolved against the live Disaster
+	// Tools button. Re-run on EVERY open so mode switches / city changes
+	// self-heal; there are no constants to go stale.
+	void DisDockCapture(int32_t stockL, int32_t stockT);
+	cIGZWin* DisDockAnchor();   // private: the never-scale disaster button
 	explicit UiSpike(const Settings& settings);
 
 	// Deferred execution: running the tree walk inside the PostCityInit

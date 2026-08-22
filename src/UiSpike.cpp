@@ -68,11 +68,13 @@
 // The live-tune re-read below used a HARDCODED absolute path to this dev
 // box's Plugins folder. On any other machine that read silently returns
 // nothing, so every [Disaster] value falls back to its COMPILED default -
-// which are the pre-fix values (RingDY -27, DockY 130, LayerFix 1,
-// ClaimScale 0, SelForce 0): the shipped flyout would have no click fix, the
-// wrong dock and the junction gap. The ini lives beside this DLL (both are
-// installed into the Plugins folder), so resolve it from our own module path
-// exactly like the director does for the ini/log it loads at startup.
+// which were then the pre-fix values (RingDY -27, DockY 130, LayerFix 1,
+// RingDX 0, DockX 6): item 2 lined up with the tornado button instead of
+// item 4, and the circle painted over the strip junction. The ini now
+// resolves beside this DLL (both installed into Plugins), AND the compiled
+// defaults themselves are the USER-ACCEPTED stock-parity set (REGRESSION.md
+// v2.11.25, accepted 2026-07-28) - so a fresh install with NO [Disaster]
+// section ships correct too. Ini values still override for live tuning.
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace
@@ -1846,10 +1848,24 @@ namespace
 	                                     // (self) at the ring pos, color-keying
 	                                     // magenta. Skips the game's 1x ring blit.
 	                                     // Both buffers are the same readable class.
-	int    gRingDX = 0;                  // v2.9.7: back to 0 (no buffer-edge clip);
-	int    gRingDY = -27;                // v2.10: live-tunable via ini [Disaster] RingDY
-	int    gRingDockX = 6;               // disaster container dock X offset (ini DockX)
-int    gRingDockY = 130;             // disaster container dock Y offset (ini DockY).
+	int    gRingDX = 16;                  // v2.9.7 history; USER-ACCEPTED 2026-07-28 (REGRESSION.md v2.11.25)
+	// v4.0.16: initial scroll (first-visible ITEM index) written to the
+	// disaster strip once per open. Measured 2026-08-22: the strip draws 6
+	// rows of pitch 98 at dst-Y 0/98/196/294/392/490 and the ring centre
+	// lands at strip-local y~303 - the gap between visible rows 3 and 4.
+	// At scroll 0 that gap is volcano|fire, which is what stock shows; the
+	// field was observed at 3 (= bottom of the 9-item list, 6 visible), so
+	// the wrong disasters sat beside the ring. ini [Disaster] InitScroll.
+	int    gDisInitScroll = 0;
+	// v4.0.15: mask the 2x ring blit where it overlaps the strip viewport.
+	// The ring paints straight into the shared buffer, so window z-order
+	// never applies and its right arc ("tail") stamped over the thumbnails
+	// at x184..204. Skipping those pixels == true z-order: opaque cells
+	// cover the ring, gaps still reveal it. ini [Disaster] RingUnderStrip.
+	int    gRingUnderStrip = 1;
+	int    gRingDY = 153;                 // v2.10 live-tunable; accepted value (pairs with DockY, see below)
+	int    gRingDockX = -2;               // disaster container dock X offset (ini DockX); accepted
+int    gRingDockY = 40;              // disaster container dock Y offset (ini DockY).
                                      // STOCK PARITY TARGET (from the 1024x768
                                      // vanilla capture 2026-07-28): the flyout's
                                      // TOP ARROW sits at the TERRAFORM button
@@ -1904,7 +1920,23 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 	// cache each bar tile as it draws, and after the ring upscale REPLAY the tiles
 	// on top, so the strip's orange covers the circle's right arc (smooth lead-in).
 	// Same-orange double-draw elsewhere is harmless. Live-toggle via ini LayerFix.
+	// DEFAULT 0 (USER-ACCEPTED 2026-07-28, REGRESSION.md v2.11.25): for THIS
+	// family the replay opened a junction seam - our substituted 2x ring means
+	// the stock connector between ring and bar is never painted, and re-drawing
+	// bar tiles over the ring exposed it. Native bar->ring order welds cleanly.
+	// The v2.11 comment above describes why replay helps in general; the
+	// disaster family's accepted look wins. Mayor sub-flyouts are unaffected:
+	// they fill gBarCache but the only DRAIN is the disaster block above (#135),
+	// so this flag changes nothing for them.
 	int    gLayerFix = 1;
+	//                      ^ v4.0.19: DEFAULT ON. This replay IS the user's
+	//                      z-spec - connector back, orange strip middle: the ring
+	//                      block draws the 2x ring incl. its tail LAST, so the
+	//                      cached bar tiles must be re-stamped over it or the
+	//                      tail sits ON TOP of the strip (user report 2026-08-22,
+	//                      "Orange Strip being below the Circle Dock ARM"). It
+	//                      shipped default-off with nobody noticing that this
+	//                      left tail-over-strip as the out-of-box look.
 	struct BarTile { void* a1; int32_t s[4]; int32_t d[4]; };
 	// The cache GROWS ON DEMAND. It was a fixed 64-slot array, and a heavy
 	// install saturated it MID-PAINT (user log 2026-08-22: "BARCACHE saturated
@@ -2016,15 +2048,33 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 				const uint8_t* sp = srow + (s[0] + static_cast<int>(ox / barW)) * 4;
 				if (sp[0] == 0xFF && sp[1] == 0x00 && sp[2] == 0xFF)
 					continue;
-				// ALPHA (v2.17.3): the submenus mod's frame art is RGBA (real
-				// alpha, no magenta key); copying its semi-transparent edge
-				// pixels opaque paints a dark halo. Skip a<128 - but ONLY when
-				// alpha is meaningfully set: stock magenta-keyed art carries
-				// a=0 on every pixel and must keep drawing as before.
-				if (sp[3] > 0 && sp[3] < 128)
-					continue;
+				// ALPHA (v4.0.21): blend EVERY nonzero-alpha pixel - the
+				// v2.17.3 "skip 0<a<128" halo guard is obsolete now that
+				// low weights BLEND instead of stamping opaque: a faint
+				// edge column contributes almost nothing of itself but is
+				// exactly what carries the pill's fade over the dock arm.
+				// Skipping it left a navy sliver where the fade should be
+				// (user screenshot 2026-08-22). Stock blends every nonzero
+				// source pixel; so do we now.
 				uint8_t* dp = drow + cx * 4;
-				dp[0] = sp[0]; dp[1] = sp[1]; dp[2] = sp[2]; dp[3] = sp[3];
+				const uint8_t sa = sp[3];
+				if (sa == 0)
+					continue;
+				if (sa == 255)
+				{
+					dp[0] = sp[0]; dp[1] = sp[1]; dp[2] = sp[2];
+					dp[3] = sp[3];
+				}
+				else
+				{
+					dp[0] = static_cast<uint8_t>(
+						(sp[0] * sa + dp[0] * (255 - sa) + 127) / 255);
+					dp[1] = static_cast<uint8_t>(
+						(sp[1] * sa + dp[1] * (255 - sa) + 127) / 255);
+					dp[2] = static_cast<uint8_t>(
+						(sp[2] * sa + dp[2] * (255 - sa) + 127) / 255);
+					dp[3] = 255;
+				}
 			}
 		}
 	}
@@ -2455,6 +2505,29 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 			// CODE-ONLY 2x RING: read the 94x62 ring from the atlas (a1),
 			// nearest-upscale 2x, write into the container (self) at the ring's
 			// dst origin, color-keying magenta. Skip the game's 1x ring blit.
+			// DJUNC (v4.0.17): the dock-tail overlap survives PicsOnTop, so
+			// the tail pixels come from a draw none of the scoped probes
+			// watch. Log EVERY blit - any surface, any class state - whose
+			// dst crosses the arm/pill/pictures junction band (container-x
+			// ~140..260, y ~250..470). A hit names the owner; total silence
+			// means the arm is vector-FILLED by the arc helper (no atlas,
+			// no Blt) and needs a different lever entirely.
+			if (gStripDump)
+			{
+				static int djn = 0;
+				const int jw = d[2] - d[0], jh = d[3] - d[1];
+				if (djn < 60 && jw > 0 && jh > 0
+					&& d[0] < 260 && d[2] > 140
+					&& d[1] < 470 && d[3] > 250)
+				{
+					djn++;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: DJUNC #%02d self=%p src(%d,%d,%d,%d) "
+						"dst(%d,%d,%d,%d) %dx%d a1=%p",
+						djn, self, s[0], s[1], s[2], s[3],
+						d[0], d[1], d[2], d[3], jw, jh, a1);
+				}
+			}
 			// gDisasterDrawTuning: the ring upscale and its RingDX/RingDY were
 			// measured for the DISASTER flyout. The sub-flyout container is the
 			// same class and passes destIsContainer, so it must be excluded.
@@ -2498,12 +2571,47 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 					// = sh*2 and floor(oy/2.0) = oy>>1, bit-identical.
 					const int ringDstW = FloorScale(sw, gTierF);   // FLOOR, see decl
 					const int ringDstH = FloorScale(sh, gTierF);   // FLOOR, see decl
+					// RING UNDER STRIP (v4.0.15). This blit writes into the
+					// shared paint buffer, so window z-order never applies:
+					// the ring's right arc stamped straight over the strip
+					// thumbnails (measured 2026-08-22: 2x ring spans x16..204,
+					// strip viewport starts at x184). Masking those pixels is
+					// exactly true z-order - opaque cells cover the ring, and
+					// the gaps between cells still reveal it beneath. The
+					// viewport sits at design (92,25) 44x289 in the container
+					// (Place: stripTop=(contentH-stripH)>>1; verified live as
+					// rel(184,50) 88x578 at f=2), so the clip derives per tier.
+					int clipL = 0, clipT = 0, clipR = -1, clipB = -1;
+					if (gRingUnderStrip && gTierF > 1.01f)
+					{
+						clipL = RoundHalfUp(92.0 * gTierF);
+						clipT = RoundHalfUp(25.0 * gTierF);
+						clipR = clipL + RoundHalfUp(44.0 * gTierF);
+						clipB = clipT + RoundHalfUp(289.0 * gTierF);
+					}
+					// v4.0.17 verification: what this block actually drew and
+					// masked, three paints' worth - the overlap survived two
+					// fixes built on assumed coordinates, so print the real
+					// ones plus how many pixels the mask truly skipped.
+					{
+						static int rvn = 0;
+						if (rvn < 3)
+						{
+							rvn++;
+							Logger::Get().WriteLine(LogLevel::Info,
+								"UiSpike: RINGVERIFY ring dst=(%d,%d) "
+								"%dx%d buf=%dx%d clip=[%d..%d)x[%d..%d)",
+								dx0, dy0, ringDstW, ringDstH, cW, cH,
+								clipL, clipR, clipT, clipB);
+						}
+					}
 					if (asrc && cdst && astride > 0 && cstride > 0)
 					{
 						for (int oy = 0; oy < ringDstH; oy++)
 						{
 							const int cy = dy0 + oy;
 							if (cy < 0 || cy >= cH) continue;
+							const bool inClipY = cy >= clipT && cy < clipB;
 							const uint8_t* srow = asrc
 								+ (sy0 + static_cast<int>(oy / gTierF)) * astride;
 							uint8_t* drow = cdst + cy * cstride;
@@ -2511,6 +2619,8 @@ int    gRingDockY = 130;             // disaster container dock Y offset (ini Do
 							{
 								const int cx = dx0 + ox;
 								if (cx < 0 || cx >= cW) continue;
+								if (inClipY && cx >= clipL && cx < clipR)
+									continue;   // behind the strip viewport
 								const uint8_t* sp = srow
 									+ (sx0 + static_cast<int>(ox / gTierF)) * 4;
 								if (sp[0] == 0xFF && sp[1] == 0x00 && sp[2] == 0xFF)
@@ -6243,6 +6353,19 @@ namespace
 	// has a new toolbar).
 	int32_t gDisDockL = 0, gDisDockT = 0;
 	bool    gDisDockValid = false;
+	// v4.0.10 (2026-08-22): DERIVED DISASTER DOCK. The stock docking math is
+	// MEASURED, not tuned: on every open SubPlaceDetour hands us the
+	// container's pristine birth rect (the game glued it there) and we store
+	// its delta against the live Disaster Tools button. The scaled target is
+	// then button-live + delta*f - a pure function of the game's own glue and
+	// the tier, with no constants to go stale across resolutions/DPI.
+	// Recaptured every open, so mode switches and city changes self-heal.
+	// gDisDockL/T above remain only as the fallback when the anchor button
+	// cannot be resolved.
+	int32_t gDisStockDX = 0, gDisStockDY = 0;
+	bool    gDisStockValid = false;
+	int     gDisDerivedLogs = 0;
+	int     gDisCaptureLogs = 0;
 	// v2.39.4: container whose chrome-live repaint has already been
 	// forced. Pointer-keyed and one-shot: the block that sets it runs on
 	// every sweep tick while the flyout is open. Cleared in Disarm, and
@@ -6380,6 +6503,113 @@ namespace
 	}
 
 	// sub_79AD00  container->Place(w, h, cx, cy, margT, margB), ret 0x18.
+	// ---- DERIVED DISASTER DOCK (v4.0.10) -----------------------------------
+	// The UiSpike member definitions sit at FILE SCOPE directly below - they
+	// cannot be defined inside an anonymous namespace (C2888), and the anchor
+	// lookup reads the private lastView.
+}
+
+cIGZWin* UiSpike::DisDockAnchor()
+{
+	// 0x69B9324A - the disaster spawn button itself, from the vanilla
+	// full-tree dump (_vanilla-reference/FINDINGS.md): god toolbar
+	// 0xC991EDA8 children 74x58 at rel y 10/70/130/190/250, fourth is
+	// Disaster. These are LIVE window ids recorded at 1x, exactly the
+	// namespace GetChildWindowFromIDRecursive resolves. 0x0A41C7B2 (the
+	// .UI script-side container guess) kept as secondary - it never
+	// resolved under lastView in the field (v4.0.10 logs), wrong namespace.
+	if (!lastView) { return nullptr; }
+	cIGZWin* b = lastView->GetChildWindowFromIDRecursive(0x69B9324A);
+	return b ? b : lastView->GetChildWindowFromIDRecursive(0x0A41C7B2);
+}
+
+void UiSpike::DisDockCapture(int32_t stockL, int32_t stockT)
+{
+	cIGZWin* b = DisDockAnchor();
+	if (!b)
+	{
+		gDisStockValid = false;
+		// One-time ground-truth dump: which of the known rail windows
+		// exist under lastView, and where. Turns a silent anchor miss
+		// into one readable log block.
+		static bool dumped = false;
+		if (!dumped && lastView && gDisDerivedLogs < 6)
+		{
+			dumped = true;
+			const uint32_t cand[] = { 0x69B9324A, 0xA9ED5617, 0x49E95D2B,
+				0x8A32DDDB, 0x4A551A6B, 0xC991EDA8, 0x69E40A1F,
+				0x0A41C7B2 };
+			for (uint32_t id : cand)
+			{
+				cIGZWin* w = lastView->GetChildWindowFromIDRecursive(id);
+				if (w)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: GODDOCKCAP miss - rail probe "
+						"id %08X live (%d,%d) %dx%d",
+						id, w->GetL(), w->GetT(),
+						w->GetW(), w->GetH());
+				}
+			}
+		}
+		return;
+	}
+	gDisStockDX = stockL - b->GetL();
+	gDisStockDY = stockT - b->GetT();
+	gDisStockValid = true;
+	// One-time sibling dump: proves WHICH rail window 0x69B9324A resolved
+	// to by showing all five known rail-button rects together. If the
+	// pattern (five buttons, uniform pitch, disaster 4th) does not hold,
+	// the anchor id is wrong and this log says so immediately.
+	static bool s_sibsDumped = false;
+	if (!s_sibsDumped)
+	{
+		s_sibsDumped = true;
+		const uint32_t rails[] = { 0x49E95D2B, 0x8A32DDDB, 0x4A551A6B,
+			0x69B9324A, 0xA9ED5617 };
+		for (uint32_t id : rails)
+		{
+			cIGZWin* w = lastView ? lastView->GetChildWindowFromIDRecursive(id)
+			                      : nullptr;
+			if (w)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: GODDOCKCAP rail id %08X live (%d,%d) %dx%d",
+					id, w->GetL(), w->GetT(), w->GetW(), w->GetH());
+			}
+		}
+	}
+	if (gDisCaptureLogs < 4)
+	{
+		gDisCaptureLogs++;
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: GODDOCKCAP #%d stock glue (%d,%d) vs disaster "
+			"button live (%d,%d) %dx%d -> delta (%d,%d).",
+			gDisCaptureLogs, stockL, stockT,
+			b->GetL(), b->GetT(), b->GetW(), b->GetH(),
+			gDisStockDX, gDisStockDY);
+	}
+}
+
+bool UiSpike::DisDockTarget(int32_t& outL, int32_t& outT, float f)
+{
+	// RETIRED v4.0.13. The container is NOT the piece that was misaligned:
+	// the ring paints inside the container and docks on the button via the
+	// accepted tbLive + DockX/DockY scheme; the THUMBNAIL STRIP is a
+	// separate parentless window whose game glue does not follow the
+	// container's dock - THAT drift is the icons-off-the-ring defect, fixed
+	// by the strip-follow at the birth site. v4.0.10's glue-delta rule,
+	// v4.0.11's button-center rule (computed T=-20, flyout flashed and
+	// vanished) and v4.0.12's button+knob form all moved the container, i.e.
+	// moved the RING off its button. Every experiment in that family is
+	// dead; returning false routes both dock sites to the accepted paths.
+	(void)outL; (void)outT; (void)f;
+	return false;
+}
+
+namespace
+{
+
 	void __fastcall SubPlaceDetour(void* self, void* edx, int w, int h,
 		int cx, int cy, int mT, int mB)
 	{
@@ -6505,21 +6735,40 @@ namespace
 			// block. The metrics belong to the Plot-time thunk; birth's job is
 			// only to make sure it latches a CLEAN 1x base (done below).
 			void* dstrip = gDisLastStrip;
-			// DOCK AT BIRTH (v2.39.3). The sweep's dock is the last piece of
-			// the open-jump: measured born (63,688) -> dock (6,502). The target
-			// is cached by the sweep (it is a pure function of the scaled
-			// toolbar and the ini offsets, identical every tick), so applying
-			// it here needs no tree walk and no toolbar read inside the game's
-			// own call. The sweep then finds the window already at its target
-			// and its `cl != targetL` test makes the later move a no-op.
-			// Absolute, NOT the sub-flyout's relative delta form - the two
-			// flyouts have different dock laws and mixing them displaces this
-			// one (GZWinMoveTo takes a DELTA, hence target - current).
-			if (gDisDockValid && gDisBornDockOn)
+			// DOCK AT BIRTH (v2.39.3). Target = the accepted scheme:
+			// toolbar-live + DockX/DockY (gDisDock cache, tick-computed).
+			// The v4.0.10-12 "derived" container targets are retired - they
+			// moved the RING off its button; see DisDockTarget's comment.
+			// Absolute move - GZWinMoveTo takes a DELTA, hence target -
+			// current.
 			{
-				const int32_t dl = gDisDockL - l;
-				const int32_t dt = gDisDockT - t;
-				if (dl != 0 || dt != 0) { win->GZWinMoveTo(dl, dt); }
+				// MEASURE + LOG this open's pristine glue against the
+				// disaster button (diagnostics; drives no target any more).
+				if (gSpikeSelf) { gSpikeSelf->DisDockCapture(l, t); }
+				int32_t tgtL = 0, tgtT = 0;
+				if (gSpikeSelf) { gSpikeSelf->DisDockTarget(tgtL, tgtT, gTierF); }
+				if (gDisDockValid)
+				{
+					tgtL = gDisDockL; tgtT = gDisDockT;
+					if (gDisBornDockOn)
+					{
+						const int32_t dl = tgtL - l;
+						const int32_t dt = tgtT - t;
+						if (dl != 0 || dt != 0)
+						{
+							win->GZWinMoveTo(dl, dt);
+						}
+						if (gDisDerivedLogs < 6)
+						{
+							gDisDerivedLogs++;
+							Logger::Get().WriteLine(LogLevel::Info,
+								"UiSpike: GODDOCK #%d born (%d,%d) -> "
+								"(%d,%d) [accepted tbLive+ini] before "
+								"first paint.",
+								gDisDerivedLogs, l, t, tgtL, tgtT);
+						}
+					}
+				}
 			}
 			NoteBorn(win, 0, cw, ch, newW, newH);
 			// The strip WINDOW must be registered too, or the sweep finds it
@@ -6537,6 +6786,43 @@ namespace
 				{
 					NoteBorn(dstripWin, 0, osw, osh,
 						sr[2] - sr[0], sr[3] - sr[1]);
+				}
+				// INITIAL SCROLL (v4.0.14 - the actual fire-beside-the-ring
+				// fix). The thumbnails are drawn by the strip's own Plot
+				// from member fields, NOT from the window rect - a window
+				// move cannot move them (v4.0.13's rigid-follow wrote into
+				// rect fields that read (0,0) pre-layout and changed nothing
+				// on screen; removed). Measured with StripDump=1: six rows of
+				// pitch 98 at dst-Y 0..490, ring centre at strip-local ~303 =
+				// the gap between visible rows 3 and 4, which at scroll 0 is
+				// exactly volcano|fire. The first-visible field was observed
+				// at 3 = scrolled to the BOTTOM of the 9-item list, so the
+				// wrong disasters flanked the ring. Write it once per open,
+				// after Place, guarded so a recycled/garbage object is never
+				// touched. User scrolling afterwards remains free.
+				//
+				// OFFSET FRAME (v2.39.8 law, see below): dstrip is the OUTER
+				// object - every WINDOW-relative offset from the DSCROLL
+				// dump shifts +1 int here (win[0xE4]->sm[0x3A],
+				// win[0xE8]->sm[0x3B], win[0xFC]->sm[0x40]).
+				if (dstrip && gDisBornDockOn)
+				{
+					int32_t* sm = reinterpret_cast<int32_t*>(dstrip);
+					const int32_t count = sm[0x3A];    // win [0xE4]
+					const int32_t sp = sm[0x40];       // win [0xFC] spacing
+					// Sanity: only write when the fields match the shape we
+					// measured (9 disasters, spacing 10 live). Anything else
+					// means the pointer or layout is not what we think.
+					if (count == 9 && sp == ScaleRound(5, gTierF))
+					{
+						const int32_t oldScroll = sm[0x3B];  // win [0xE8]
+						sm[0x3B] = gDisInitScroll;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SCROLLINIT strip scroll %d -> %d "
+							"(first-visible item; 0 = volcano|fire beside "
+							"the ring).",
+							oldScroll, gDisInitScroll);
+					}
 				}
 			}
 			// BORN ITEM METRICS (v2.39.5, task #80 - THE MISSING ARROW).
@@ -7464,6 +7750,29 @@ namespace
 	int       gBudgetShowOpens = 0;
 	bool      gShowHookInstalled = false;
 
+	// GODSHOW / GODFIX (v4.0.9 follow-up, 2026-08-22): the god-mode DISASTER
+	// flyout jumps for a split second on its first open. Instrument reading
+	// from the repro session: ZERO 'FLYOPEN ... scaled at OPEN' lines while
+	// the hook was armed - the disaster flyout opens through neither hooked
+	// funnel, so its first frame was corrected by the sweep instead of being
+	// born correct. tools\uimap\subflyout-builder.json names the family
+	// positively: builder sub_7EAEB0 Sets the container id 0x8A6E61E0 and the
+	// strip id 0x8A2CAD8B (REGRESSION.md's SUBHOOK lines 258x482 / 88x382 at
+	// f=2 -> design 129x241 / 44x191). This block keys on THOSE ids only -
+	// not the refuted whole-HUD scale-at-show scope (#50/#76) - and acts on
+	// the hidden->visible transition, which the SHOWHOOK analysis proved is
+	// pre-paint: SetFlag invalidates without painting, so geometry set here
+	// is what the first frame draws. ScaleSubtree is idempotent via scaleMap,
+	// so if the flyout ever arrives already scaled this is a measured no-op,
+	// and the line still prints its verdict either way.
+	struct GodFlyoutRoot { uint32_t id; int32_t w, h; const char* name; };
+	const GodFlyoutRoot kGodFlyoutRoots[] = {
+		{ 0x8A6E61E0, 129, 241, "disaster container" },
+		{ 0x8A2CAD8B,  44, 191, "disaster strip"     },
+	};
+	int       gGodShowLog = 0;
+	int       gGodFixLogs = 0;
+
 	// EARLYDOCK (v2.41.17, task #89). State for scaling the dock from inside
 	// this detour once its subtree has settled. All per-city; all cleared in
 	// Disarm (second-city law) AND re-armed in ArmDeferred.
@@ -7586,6 +7895,64 @@ namespace
 				}
 				bt.w = cw; bt.h = ch; bt.l = cl; bt.t = ct; bt.seen = true;
 				break;
+			}
+		}
+
+		// GODSHOW/GODFIX - see kGodFlyoutRoots above. Same transition test as
+		// BUDGETSHOW: [this+0xC8] & 1 is still 0 here, i.e. genuinely hidden
+		// -> visible, and scaling now lands BEFORE the first paint.
+		if (flag == 1u && value && self && !gInShowHook && !gInEarlyDock
+			&& gSpikeForHook && gTierF > 1.01f && gGodShowLog < 16)
+		{
+			const uint32_t bitsG =
+				*reinterpret_cast<const uint32_t*>(
+					reinterpret_cast<const char*>(self) + 0xC8);
+			if ((bitsG & 1u) == 0u)
+			{
+				cIGZWin* wg = static_cast<cIGZWin*>(self);
+				const uint32_t gid = wg->GetID();
+				for (const GodFlyoutRoot& gr : kGodFlyoutRoots)
+				{
+					if (gr.id != gid) { continue; }
+					gGodShowLog++;
+					const int32_t ew = RoundHalfUp(gr.w * gTierF);
+					const int32_t eh = RoundHalfUp(gr.h * gTierF);
+					const int32_t lw = wg->GetW(), lh = wg->GetH();
+					gInShowHook = true;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: GODSHOW #%d 0x%08X (%s) becoming visible "
+						"%dx%d, expect %dx%d, design %dx%d, %d children -> %s.",
+						gGodShowLog, gid, gr.name, lw, lh, ew, eh,
+						gr.w, gr.h, wg->GetChildCount(),
+						(lw == ew && lh == eh) ? "BORN CORRECT"
+							: (lw == gr.w && lh == gr.h)
+								? "STILL 1x - scaling NOW pre-paint"
+								: "NEITHER design nor expected - read the numbers");
+					gSpikeForHook->ScaleOnShow(wg);
+					const int32_t nw = wg->GetW(), nh = wg->GetH();
+					if (nw != lw || nh != lh)
+					{
+						gGodFixLogs++;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: GODFIX 0x%08X (%s) %dx%d -> %dx%d at "
+							"SHOW, before first paint - the funnel never saw "
+							"this flyout, so this is its born-correct lever.",
+							gid, gr.name, lw, lh, nw, nh);
+					}
+					else if (lw != ew || lh != eh)
+					{
+						// ScaleOnShow scaled nothing AND the size is not the
+						// expected one - say so loudly instead of leaving a
+						// silent no-op that reads as a fix.
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: GODFIX 0x%08X (%s) UNCHANGED at %dx%d "
+							"- scaleMap considered it done; if the jump ever "
+							"reproduces, this line is the counter-evidence.",
+							gid, gr.name, lw, lh);
+					}
+					gInShowHook = false;
+					break;
+				}
 			}
 		}
 
@@ -8222,6 +8589,10 @@ void UiSpike::Disarm()
 	gSubLastStrip = nullptr;
 	gDisLastStrip = nullptr;
 	gDisDockValid = false;    // v2.39.3: new city, new toolbar
+	// v4.0.10: the derived dock re-measures on every open, so a stale stock
+	// delta cannot survive a city change - but clear it anyway so nothing
+	// consumes one across the Disarm boundary.
+	gDisStockValid = false;
 	gDisChromeHealed = nullptr;  // v2.39.4: heal again next city
 	gDisDockLogged = nullptr;    // v2.39.5: next open logs its dock line
 	// v2.39.10 (task #84): the bar-tile cache holds RAW ATLAS POINTERS and a
@@ -12663,6 +13034,13 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			if (b[0]) gRingDockX = atoi(b);
 			GetPrivateProfileStringA("Disaster", "DockY", "", b, sizeof(b), kIni);
 			if (b[0]) gRingDockY = atoi(b);
+			// v4.0.14: initial scroll (first-visible item) for the strip.
+			GetPrivateProfileStringA("Disaster", "InitScroll", "", b, sizeof(b), kIni);
+			if (b[0]) gDisInitScroll = atoi(b);
+			// v4.0.15: ring-behind-strip mask switch (superseded by LayerFix
+			// default-on for the visible defect, kept as a scoped fallback).
+			GetPrivateProfileStringA("Disaster", "RingUnderStrip", "", b, sizeof(b), kIni);
+			if (b[0]) gRingUnderStrip = atoi(b);
 			GetPrivateProfileStringA("Disaster", "BarDX", "", b, sizeof(b), kIni);
 			if (b[0]) gBarDX = atoi(b);
 			GetPrivateProfileStringA("Disaster", "BarW", "", b, sizeof(b), kIni);
@@ -15002,9 +15380,15 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 						overBand ? " **OVER-DEAD-BAND**" : "");
 				}
 			}
-			// Dock the container (same offset as before).
-			const int32_t targetL = tbLiveL + ScaleRound(gRingDockX, f);   // v2.10: live-tunable (ini [Disaster] DockX), default 6
-			const int32_t targetT = tbLiveT + ScaleRound(gRingDockY, f);   // v2.11.30: live-tunable (ini [Disaster] DockY), default 130
+			// Dock the container. v4.0.10: DERIVED from the game's own stock
+			// glue (measured this open in SubPlaceDetour against the disaster
+			// button) - the tuned-constant path is the fallback only.
+			int32_t targetL = 0, targetT = 0;
+			if (!DisDockTarget(targetL, targetT, f))
+			{
+				targetL = tbLiveL + ScaleRound(gRingDockX, f);   // v2.10: live-tunable (ini [Disaster] DockX)
+				targetT = tbLiveT + ScaleRound(gRingDockY, f);   // v2.11.30: live-tunable (ini [Disaster] DockY)
+			}
 			// v2.39.5: the gDisDock cache write that lived here moved UP to
 			// right after tbLiveL/T are read (before the flyout even exists).
 			// Writing it only here was the first-open hole: the cache could

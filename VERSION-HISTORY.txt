@@ -1,3 +1,61 @@
+2026-08-22  v4.0.21   THE DISASTER FLYOUT - SCROLL, LAYERING, AND A DEFAULT-OFF
+                      FLAG THAT WAS THE WHOLE BUG
+
+  USER-ACCEPTED at the end of the session: "PROGRESS! ... It's good enough
+  for now" (ring/strip/picture geometry correct; connector blends behind
+  the strip). This entry covers v4.0.14-v4.0.21 as shipped source; the
+  intermediate numbers existed only as local builds during the hunt.
+
+  THREE DEFECTS, ONE FLYOUT, in the order they actually fell:
+
+  1. WRONG DISASTERS BESIDE THE RING (v4.0.14). The strip opened scrolled
+     to the BOTTOM: first-visible field [0xE8] measured at 3 of a
+     9-item list showing 6 rows, so items 7-9 flanked the ring instead of
+     fire(4)/volcano(3). Found with StripDump: six rows of pitch 98 at
+     dst-Y 0/98/196/294/392/490, ring centre at strip-local ~303 = exactly
+     the gap between visible rows 3 and 4, which AT SCROLL 0 is
+     volcano|fire - i.e. the game's own layout was already perfect and only
+     the scroll state was wrong. Fix: write first-visible=0 once per birth,
+     read-guarded (count==9, spacing==10 live) so a recycled object is
+     never written blind. ini [Disaster] InitScroll.
+
+  2. THE DOCK-TAIL-ABOVE-THE-STRIP ARC (v4.0.15-4.0.19). Three fixes built
+     on wrong owners before the real one surfaced:
+       - RingUnderStrip mask (15): masked ring pixels inside the strip
+         viewport rect - coordinates verified right by RINGVERIFY, but it
+         treated the wrong layer.
+       - PicsOnTop replays (16/18/19): cached picture blits and re-stamped
+         them after strip Plot (no effect) and after container Plot
+         (ghost column shifted LEFT - raw blit args are only valid inside
+         the strip's own Plot moment). Fully reverted.
+       - ROOT CAUSE, found last because it was oldest: gLayerFix shipped
+         DEFAULT-OFF (line ~1942) and no player ini ever set it. The bar
+         replay that exists precisely to stamp the orange tiles back over
+         the ring ("Circle -> Strip", v2.x) never executed, so the 2x ring
+         drew last INCLUDING its tail - tail over strip, out of the box.
+     Fix: default ON. DJUNC also proved the connector between pill and
+     pictures is not blitted at all (300 container blits logged, zero arm
+     tiles) - the arm is vector-filled by the arc helper; any future fix
+     for it must address fills, not Blt.
+
+  3. THE SEAM AT THE JUNCTION (v4.0.20-21). With LayerFix live the tail
+     went behind but butted against the pill with a hard edge + navy
+     sliver: our widened-bar copy skipped 0<a<128 outright (the v2.17.3
+     halo guard, written for OPAQUE stamping) and stamped the rest
+     opaque, while the engine's own blit - what Mayor-mode flyout art gets
+     - alpha-composites every nonzero pixel. Now every nonzero-alpha
+     source pixel weight-blends onto the destination; a=255 is an
+     untouched fast path; opaque regions render bit-identical.
+
+  ALSO RETIRED (v4.0.10-13, local-only): three "derived" container docks
+  (glue-delta*f, button-center, button+knob). Wrong owner all along - the
+  container was never misaligned; its accepted tbLive+DockX/DockY dock is
+  restored as the only path, with the failed experiments documented in
+  DisDockTarget's comment so nobody re-derives them.
+
+  Files: src\UiSpike.cpp, src\UiSpike.h, src\SC4UIScaleDllDirector.cpp
+  (version).
+
 2026-08-21  v4.0.4   THE FONTSTYLE.INI ORPHAN, ACTUALLY FIXED - sc4pac's
                      developer confirmed real damage, and v4.0.1's placeholder never could
 

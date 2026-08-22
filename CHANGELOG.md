@@ -1,5 +1,35 @@
 # Changelog
 
+## 4.0.21
+
+- **Fixed: the Create Disasters flyout opened scrolled to the bottom of its
+  list**, putting the wrong disasters beside the docking ring. Measured with
+  the strip diagnostics: nine disasters, six visible, first-visible field
+  sitting at 3 (= fully scrolled down). The open path now writes the
+  scroll/first-visible field to 0 once per birth, guarded to fire only when
+  the strip's fields match the measured shape, so a recycled object can
+  never be written blind. Live-tunable via `[Disaster] InitScroll`.
+- **Fixed: the dock connector (the ring's tail) drew on top of the orange
+  strip.** The mechanism that replays cached bar tiles over the ring after
+  the ring redraw (`Circle → Strip`) shipped default-OFF years ago and no
+  ini ever set it - so out of the box the ring, painted last including its
+  tail, stamped straight over the pill. `LayerFix` now defaults ON. This is
+  the same z-order every other god-tool flyout shows: connector back,
+  orange strip middle, pictures front.
+- **The widened orange strip's edges now alpha-blend onto what is behind
+  them** instead of stamping opaque (and skipping faint columns outright),
+  which cut a hard seam plus a navy sliver exactly where the connector
+  slides under the pill. Every nonzero-alpha source pixel weight-blends;
+  fully opaque art renders bit-identical to before. This mirrors why the
+  Mayor-mode tool flyouts always met their connectors smoothly: their art
+  goes through the engine's own alpha-compositing blit.
+- **Retired the v4.0.10–4.0.13 experimental "derived" container docks**
+  (glue-delta scaling and button-center anchoring). The container was never
+  the misaligned piece - the ring paints inside it and docks via the
+  accepted toolbar-live scheme, which is restored as the only dock target.
+  The real fixes turned out to be scroll state and paint order, not
+  position.
+
 ## 4.0.9
 
 - **Fixed: third-party menu icons installed in the game's own Plugins folder
