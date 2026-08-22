@@ -1,0 +1,30 @@
+---------------------------------------------------------------------------
+-- This file defines various constants used by the advisor system.
+---------------------------------------------------------------------------
+--Do not Change the DoFiles below. They point to the original resourses shipped with game
+dofile("_adv_sys.lua")
+dofile("adv_const.lua")
+
+---------------------------------------------------------------------------
+--Add additional buildings tool types below  
+
+--Format:  building_tool_types.NAME_OF_YOUR_CHOICE = hex2dec('lot Guid')
+
+-- Building types used by game.tool_plop_building
+-- These constants are used by links that create plop tools for ploping 
+-- buildings with IDs from this table.
+
+plugin_002_building_tool_types = {}
+
+      plugin_002_building_tool_types.THE_LIVING_MALL = hex2dec('6ac4085b')
+      
+make_table_const(plugin_002_building_tool_types)
+
+--Special building declaration for Sims advisors
+-- For use with MySim messages.
+
+plugin_002_special_buildings = {}
+
+      plugin_002_special_buildings.TheLivingMall	= hex2dec('04C00000')
+      
+make_table_const(plugin_002_special_buildings)

@@ -1,0 +1,565 @@
+================================================================================
+1. PARENTS MATCHING THE OFFER/MISSION/ADVICE KEYWORD SET
+================================================================================
+
+--- 'indicate' : 1 parent(s) ---
+   [1046 @0x0fb0c0] aircraftindicate                     X=8    children=2 types=[1]
+
+--- 'advice'   : 0 parent(s) ---
+
+--- 'offer'    : 0 parent(s) ---
+
+--- 'avail'    : 0 parent(s) ---
+
+--- 'opportun' : 0 parent(s) ---
+
+--- 'reward'   : 0 parent(s) ---
+
+--- 'task'     : 0 parent(s) ---
+
+--- 'job'      : 0 parent(s) ---
+
+--- 'deliver'  : 0 parent(s) ---
+
+--- 'pickup'   : 0 parent(s) ---
+
+--- 'pu1'      : 29 parent(s) ---
+   [ 759 @0x0e62b5] crates_pu1_crate2                    X=0    children=3 types=[0]
+   [ 760 @0x0e6425] crates_pu1_new                       X=0    children=1 types=[2]
+   [ 761 @0x0e64b5] crates_pu1                           X=0    children=1 types=[2]
+   [ 762 @0x0e6542] farm_pu1_oildrum_random              X=0    children=1 types=[0]
+   [ 763 @0x0e65d1] farm_pu1_oildrums                    X=0    children=2 types=[2]
+   [ 764 @0x0e66dd] farm_pu1_new                         X=0    children=3 types=[0, 2]
+   [ 765 @0x0e684d] farm_pu1                             X=0    children=1 types=[2]
+   [ 766 @0x0e68d8] construction_pu1_ibeam_random        X=0    children=1 types=[0]
+   [ 767 @0x0e696d] construction_pu1_ibeams              X=0    children=4 types=[0, 2]
+   [ 768 @0x0e6b75] construction_pu1_pipe_random         X=0    children=1 types=[0]
+   [ 769 @0x0e6c09] construction_pu1_pipes               X=0    children=4 types=[0, 2]
+   [ 770 @0x0e6e0e] construction_pu1_lumberbeam_random   X=0    children=1 types=[0]
+   [ 771 @0x0e6ea8] construction_pu1_lumberbeams         X=0    children=5 types=[0, 2]
+   [ 772 @0x0e7140] construction_pu1_ladder_random       X=0    children=1 types=[0]
+   [ 773 @0x0e71d6] construction_pu1_ladders             X=0    children=2 types=[0, 2]
+   [ 774 @0x0e72e7] construction_pu1_new                 X=0    children=5 types=[0, 2]
+   [ 775 @0x0e7558] construction_pu1                     X=0    children=1 types=[2]
+   [ 776 @0x0e75eb] leisure_pu1_surfboardandrack         X=0    children=2 types=[0]
+   [ 777 @0x0e76ee] leisure_pu1_kayakandrack             X=0    children=2 types=[0]
+   [ 778 @0x0e77ed] leisure_pu1_new                      X=0    children=3 types=[0, 2]
+   [ 779 @0x0e796e] leisure_pu1                          X=0    children=1 types=[2]
+   [ 780 @0x0e79fc] camper_pu1_new                       X=0    children=2 types=[0]
+   [ 781 @0x0e7afe] camper_pu1                           X=0    children=1 types=[2]
+   [ 782 @0x0e7b8b] topper_pu1_new                       X=0    children=2 types=[0]
+   [ 783 @0x0e7c8d] topper_pu1                           X=0    children=1 types=[2]
+   [ 784 @0x0e7d1a] other_pu1_new                        X=0    children=1 types=[0]
+   [ 785 @0x0e7dab] other_pu1                            X=0    children=1 types=[2]
+   [ 786 @0x0e7e37] cargo_pu1                            X=0    children=7 types=[2]
+   [ 787 @0x0e813a] cargopu1                             X=8    children=1 types=[2]
+
+--- 'pu2'      : 29 parent(s) ---
+   [ 788 @0x0e81c2] crates_pu2_crate2                    X=0    children=3 types=[0]
+   [ 789 @0x0e8332] crates_pu2_new                       X=0    children=1 types=[2]
+   [ 790 @0x0e83c2] crates_pu2                           X=0    children=1 types=[2]
+   [ 791 @0x0e844f] farm_pu2_oildrum_random              X=0    children=1 types=[0]
+   [ 792 @0x0e84de] farm_pu2_oildrums                    X=0    children=2 types=[2]
+   [ 793 @0x0e85ea] farm_pu2_new                         X=0    children=3 types=[0, 2]
+   [ 794 @0x0e875a] farm_pu2                             X=0    children=1 types=[2]
+   [ 795 @0x0e87e5] construction_pu2_ibeam_random        X=0    children=1 types=[0]
+   [ 796 @0x0e887a] construction_pu2_ibeams              X=0    children=4 types=[0, 2]
+   [ 797 @0x0e8a82] construction_pu2_pipe_random         X=0    children=1 types=[0]
+   [ 798 @0x0e8b16] construction_pu2_pipes               X=0    children=4 types=[0, 2]
+   [ 799 @0x0e8d1b] construction_pu2_lumberbeam_random   X=0    children=1 types=[0]
+   [ 800 @0x0e8db5] construction_pu2_lumberbeams         X=0    children=5 types=[0, 2]
+   [ 801 @0x0e904d] construction_pu2_ladder_random       X=0    children=1 types=[0]
+   [ 802 @0x0e90e3] construction_pu2_ladders             X=0    children=2 types=[0, 2]
+   [ 803 @0x0e91f4] construction_pu2_new                 X=0    children=5 types=[0, 2]
+   [ 804 @0x0e9465] construction_pu2                     X=0    children=1 types=[2]
+   [ 805 @0x0e94f8] leisure_pu2_surfboardandrack         X=0    children=2 types=[0]
+   [ 806 @0x0e95fb] leisure_pu2_kayakandrack             X=0    children=2 types=[0]
+   [ 807 @0x0e96fa] leisure_pu2_new                      X=0    children=3 types=[0, 2]
+   [ 808 @0x0e987b] leisure_pu2                          X=0    children=1 types=[2]
+   [ 809 @0x0e9909] camper_pu2_new                       X=0    children=2 types=[0]
+   [ 810 @0x0e9a0b] camper_pu2                           X=0    children=1 types=[2]
+   [ 811 @0x0e9a98] topper_pu2_new                       X=0    children=2 types=[0]
+   [ 812 @0x0e9b9a] topper_pu2                           X=0    children=1 types=[2]
+   [ 813 @0x0e9c27] other_pu2_new                        X=0    children=1 types=[0]
+   [ 814 @0x0e9cb8] other_pu2                            X=0    children=1 types=[2]
+   [ 815 @0x0e9d44] cargo_pu2                            X=0    children=7 types=[2]
+   [ 816 @0x0ea047] cargopu2                             X=8    children=1 types=[2]
+
+--- 'tour'     : 0 parent(s) ---
+
+--- 'race'     : 0 parent(s) ---
+
+--- 'scenario' : 0 parent(s) ---
+
+================================================================================
+1b. EXTRA NAME SWEEP - mission/udi/drive/bubble/balloon/marker/select/sign/icon/arrow
+================================================================================
+
+--- 'mission'  : 18 ---
+   [1013 @0x0f8867] missionsparkles_active               X=0    children=3 types=[0]
+   [1014 @0x0f89d7] missionsuccess                       X=0    children=4 types=[1, 2, 7]
+   [1015 @0x0f8b9f] missionnegmoney                      X=0    children=4 types=[0, 1, 7]
+   [1016 @0x0f8d63] missionsuccessmoney                  X=0    children=6 types=[0, 1, 2, 7]
+   [1018 @0x0f9099] missionfailure                       X=0    children=2 types=[0, 1]
+   [1019 @0x0f91b5] missionfailuremoney                  X=0    children=1 types=[2]
+   [1020 @0x0f9243] missiondarkmoney                     X=0    children=2 types=[2]
+   [1021 @0x0f933e] missionmoney                         X=0    children=5 types=[0, 1, 2, 7]
+   [1144 @0x102481] mission_selection_red                X=0    children=2 types=[1]
+   [1145 @0x102590] mission_selection_green              X=0    children=2 types=[1]
+   [1146 @0x1026a3] mission_selection_blue               X=0    children=2 types=[1]
+   [1147 @0x1027b4] mission_selection_yellow             X=0    children=2 types=[1]
+   [1148 @0x1028c9] mission_selection_red_shrink         X=0    children=3 types=[1, 7]
+   [1149 @0x102a45] mission_selection_green_shrink       X=0    children=3 types=[1, 7]
+   [1150 @0x102bc5] mission_selection_blue_shrink        X=0    children=3 types=[1, 7]
+   [1151 @0x102d43] mission_selection_yellow_shrink      X=0    children=3 types=[1, 7]
+   [1152 @0x102ec5] mission_selection_water_yellow       X=0    children=1 types=[1]
+   [1153 @0x102f62] mission_selection_water_yellow_shrink X=0    children=2 types=[1, 7]
+
+--- 'udrive'   : 2 ---
+   [1124 @0x100c10] udriveit_crash                       X=0    children=4 types=[2, 7]
+   [1125 @0x100dc2] udriveit_injured                     X=0    children=1 types=[2]
+
+--- 'drive'    : 4 ---
+   [1096 @0x0fecce] launch_drive_copter                  X=0    children=1 types=[0]
+   [1113 @0x10015d] radiator_steam_drive                 X=0    children=8 types=[0]
+   [1124 @0x100c10] udriveit_crash                       X=0    children=4 types=[2, 7]
+   [1125 @0x100dc2] udriveit_injured                     X=0    children=1 types=[2]
+
+--- 'bubble'   : 2 ---
+   [ 966 @0x0f488d] bubblesparklesmk_active              X=0    children=3 types=[0]
+   [1049 @0x0fb340] bubblesparkles_active                X=0    children=3 types=[0]
+
+--- 'balloon'  : 3 ---
+   [ 530 @0x0d1a77] hot_air_balloon_firefx_slave         X=0    children=6 types=[0, 7]
+   [ 531 @0x0d1ce7] hotairballoonfx_slave                X=4    children=5 types=[0, 1, 8]
+   [ 532 @0x0d1f44] hotairballoonflight                  X=0    children=1 types=[0]
+
+--- 'select'   : 15 ---
+   [  72 @0x0a88de] selection_red                        X=0    children=1 types=[1]
+   [  73 @0x0a896a] selection_green                      X=0    children=1 types=[1]
+   [  74 @0x0a89f8] selection_blue                       X=0    children=1 types=[1]
+   [  75 @0x0a8a85] selection_yellow                     X=0    children=1 types=[1]
+   [ 234 @0x0b407a] potholeselector                      X=0    children=5 types=[1]
+   [1144 @0x102481] mission_selection_red                X=0    children=2 types=[1]
+   [1145 @0x102590] mission_selection_green              X=0    children=2 types=[1]
+   [1146 @0x1026a3] mission_selection_blue               X=0    children=2 types=[1]
+   [1147 @0x1027b4] mission_selection_yellow             X=0    children=2 types=[1]
+   [1148 @0x1028c9] mission_selection_red_shrink         X=0    children=3 types=[1, 7]
+   [1149 @0x102a45] mission_selection_green_shrink       X=0    children=3 types=[1, 7]
+   [1150 @0x102bc5] mission_selection_blue_shrink        X=0    children=3 types=[1, 7]
+   [1151 @0x102d43] mission_selection_yellow_shrink      X=0    children=3 types=[1, 7]
+   [1152 @0x102ec5] mission_selection_water_yellow       X=0    children=1 types=[1]
+   [1153 @0x102f62] mission_selection_water_yellow_shrink X=0    children=2 types=[1, 7]
+
+--- 'icon'     : 6 ---
+   [  30 @0x0a237e] level_icon_inactive                  X=0    children=20 types=[0]
+   [  31 @0x0a2d94] level_icon_active                    X=0    children=20 types=[0]
+   [  34 @0x0a3c77] smooth_icon_inactive                 X=0    children=20 types=[0]
+   [  35 @0x0a468d] smooth_icon_active                   X=0    children=20 types=[0]
+   [  38 @0x0a536f] flora_icon_inactive                  X=0    children=0 types=[]
+   [  39 @0x0a538f] flora_icon_active                    X=0    children=0 types=[]
+
+--- 'arrow'    : 2 ---
+   [  50 @0x0a6815] lot_direction_arrow                  X=0    children=6 types=[1]
+   [1050 @0x0fb4ad] greenarrow                           X=8    children=1 types=[0]
+
+================================================================================
+2. LIVE-CENSUS EFFECT CHAINS, type-2 followed to leaves
+================================================================================
+
+-------- cargopu2 --------
+'cargopu2'                         parent 816 @0x0ea047 X=8 A=1 children=1
+  - 'cargo_pu2'                      t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+    'cargo_pu2'                        parent 815 @0x0e9d44 X=0 A=1 children=7
+      - 'crates_pu2'                     t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'crates_pu2'                       parent 790 @0x0e83c2 X=0 A=1 children=1
+          - 'crates_pu2_new'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'crates_pu2_new'                   parent 789 @0x0e8332 X=0 A=1 children=1
+              - 'crates_pu2_crate2'              t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+      - 'farm_pu2'                       t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'farm_pu2'                         parent 794 @0x0e875a X=0 A=1 children=1
+          - 'farm_pu2_new'                   t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'farm_pu2_new'                     parent 793 @0x0e85ea X=0 A=1 children=3
+              - 'farm_pu2_haybales'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=904
+              - 'farm_pu2_hayloose'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=905
+              - 'farm_pu2_oildrums'              t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+      - 'construction_pu2'               t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'construction_pu2'                 parent 804 @0x0e9465 X=0 A=1 children=1
+          - 'construction_pu2_new'           t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'construction_pu2_new'             parent 803 @0x0e91f4 X=0 A=1 children=5
+              - 'construction_pu2_ibeams'        t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'construction_pu2_pipes'         t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'construction_pu2_lumberbeams'   t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'construction_pu2_ladders'       t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'construction_pu2_rack'          t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.5, 0.5) zoom=1..6 copies=1 effidx=907
+      - 'leisure_pu2'                    t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'leisure_pu2'                      parent 808 @0x0e987b X=0 A=1 children=1
+          - 'leisure_pu2_new'                t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'leisure_pu2_new'                  parent 807 @0x0e96fa X=0 A=1 children=3
+              - 'leisure_pu2_kayakandrack'       t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'leisure_pu2_surfboardandrack'   t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'leisure_pu2_bike'               t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=915
+      - 'camper_pu2'                     t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'camper_pu2'                       parent 810 @0x0e9a0b X=0 A=1 children=1
+          - 'camper_pu2_new'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'camper_pu2_new'                   parent 809 @0x0e9909 X=0 A=1 children=2
+              - 'camper_pu2_camper1'             t0 PARTICLE-SYS        scale=1 trans=(0.0, -0.2, 0.1) zoom=1..6 copies=1 effidx=916
+              - 'camper_pu2_camper2'             t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.9, -0.2) zoom=1..6 copies=1 effidx=917
+      - 'topper_pu2'                     t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'topper_pu2'                       parent 812 @0x0e9b9a X=0 A=1 children=1
+          - 'topper_pu2_new'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'topper_pu2_new'                   parent 811 @0x0e9a98 X=0 A=1 children=2
+              - 'topper_pu2_topper1'             t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.55, -0.1) zoom=1..6 copies=1 effidx=918
+              - 'topper_pu2_topper2'             t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.55, -0.1) zoom=1..6 copies=1 effidx=919
+      - 'other_pu2'                      t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'other_pu2'                        parent 814 @0x0e9cb8 X=0 A=1 children=1
+          - 'other_pu2_new'                  t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'other_pu2_new'                    parent 813 @0x0e9c27 X=0 A=1 children=1
+              - 'other_pu2_firewood'             t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.65, -0.1) zoom=1..6 copies=1 effidx=920
+
+-------- motorcycle --------
+'motorcycle'                       parent 943 @0x0f3048 X=8 A=1 children=1
+  - 'motorcyclesims'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+    'motorcyclesims'                   parent 942 @0x0f2f48 X=8 A=1 children=2
+      - 'cargo_motorcyclea'              t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'cargo_motorcyclea'                parent 940 @0x0f2dc3 X=0 A=1 children=1
+          - 'motorcyclesim'                  t0 PARTICLE-SYS        scale=1 trans=(0.0, -0.5, 1.0) zoom=1..6 copies=1 effidx=973
+      - 'cargo_motorcycleb'              t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'cargo_motorcycleb'                parent 941 @0x0f2e4f X=0 A=1 children=2
+          - 'motorcyclesim'                  t0 PARTICLE-SYS        scale=1 trans=(0.0, -0.5, 1.0) zoom=1..6 copies=1 effidx=973
+          - 'motorcyclesim2'                 t0 PARTICLE-SYS        scale=1 trans=(0.0, -0.5, 0.5) zoom=1..6 copies=1 effidx=974
+
+-------- cargopu1 --------
+'cargopu1'                         parent 787 @0x0e813a X=8 A=1 children=1
+  - 'cargo_pu1'                      t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+    'cargo_pu1'                        parent 786 @0x0e7e37 X=0 A=1 children=7
+      - 'crates_pu1'                     t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'crates_pu1'                       parent 761 @0x0e64b5 X=0 A=1 children=1
+          - 'crates_pu1_new'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'crates_pu1_new'                   parent 760 @0x0e6425 X=0 A=1 children=1
+              - 'crates_pu1_crate2'              t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+      - 'farm_pu1'                       t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'farm_pu1'                         parent 765 @0x0e684d X=0 A=1 children=1
+          - 'farm_pu1_new'                   t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'farm_pu1_new'                     parent 764 @0x0e66dd X=0 A=1 children=3
+              - 'farm_pu1_haybales'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=884
+              - 'farm_pu1_hayloose'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=885
+              - 'farm_pu1_oildrums'              t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+      - 'construction_pu1'               t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'construction_pu1'                 parent 775 @0x0e7558 X=0 A=1 children=1
+          - 'construction_pu1_new'           t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'construction_pu1_new'             parent 774 @0x0e72e7 X=0 A=1 children=5
+              - 'construction_pu1_ibeams'        t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'construction_pu1_pipes'         t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'construction_pu1_lumberbeams'   t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'construction_pu1_ladders'       t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'construction_pu1_rack'          t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.5, 0.5) zoom=1..6 copies=1 effidx=887
+      - 'leisure_pu1'                    t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'leisure_pu1'                      parent 779 @0x0e796e X=0 A=1 children=1
+          - 'leisure_pu1_new'                t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'leisure_pu1_new'                  parent 778 @0x0e77ed X=0 A=1 children=3
+              - 'leisure_pu1_kayakandrack'       t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'leisure_pu1_surfboardandrack'   t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+              - 'leisure_pu1_bike'               t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=895
+      - 'camper_pu1'                     t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'camper_pu1'                       parent 781 @0x0e7afe X=0 A=1 children=1
+          - 'camper_pu1_new'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'camper_pu1_new'                   parent 780 @0x0e79fc X=0 A=1 children=2
+              - 'camper_pu1_camper1'             t0 PARTICLE-SYS        scale=1 trans=(0.0, -0.2, 0.1) zoom=1..6 copies=1 effidx=896
+              - 'camper_pu1_camper2'             t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.9, -0.2) zoom=1..6 copies=1 effidx=897
+      - 'topper_pu1'                     t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'topper_pu1'                       parent 783 @0x0e7c8d X=0 A=1 children=1
+          - 'topper_pu1_new'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'topper_pu1_new'                   parent 782 @0x0e7b8b X=0 A=1 children=2
+              - 'topper_pu1_topper1'             t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.55, -0.1) zoom=1..6 copies=1 effidx=898
+              - 'topper_pu1_topper2'             t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.55, -0.1) zoom=1..6 copies=1 effidx=899
+      - 'other_pu1'                      t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+        'other_pu1'                        parent 785 @0x0e7dab X=0 A=1 children=1
+          - 'other_pu1_new'                  t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=4..6 copies=1 effidx=0
+            'other_pu1_new'                    parent 784 @0x0e7d1a X=0 A=1 children=1
+              - 'other_pu1_firewood'             t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.55, -0.1) zoom=1..6 copies=1 effidx=900
+
+-------- rotor --------
+'rotor'                            parent 662 @0x0def03 X=0 A=1 children=3
+  - 'helicopter_shadow_terrain'      t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, -5.0) zoom=1..6 copies=1 effidx=183   <<T1 LEAF #183 @file:0x09516b  f0=5  rid=0A4E4A9C  cols=[(0.0, 0.0, 0.2)]>>
+  - 'helicopter_shadow1_terrain'     t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, -5.0) zoom=1..6 copies=1 effidx=184   <<T1 LEAF #184 @file:0x0951c1  f0=5  rid=0A4E4A9C  cols=[(0.0, 0.0, 0.2)]>>
+  - 'helicopter_shadow_water'        t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, -5.0) zoom=1..6 copies=1 effidx=185   <<T1 LEAF #185 @file:0x095217  f0=5  rid=0A4E4A9C  cols=[(0.0, 0.0, 0.2)]>>
+
+-------- helibladestill --------
+'helibladestill'                   parent 664 @0x0df1df X=10 A=1 children=1
+  - 'helibladestill1'                t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=822
+
+-------- heliblade --------
+'heliblade'                        parent 663 @0x0df08a X=10 A=1 children=3
+  - 'helibladestart'                 t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=820
+  - 'heliblade1'                     t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=821
+  - ''                               t8 (idx-only)          scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=30
+
+-------- helipad --------
+'helipad'                          -> NOT IN EFFDIR (live lookup would return ok=0)
+
+-------- copter_spotlight --------
+'copter_spotlight'                 parent 670 @0x0dfc50 X=0 A=1 children=2
+  - 'copter_spotlight1'              t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=221   <<T1 LEAF #221 @file:0x095fc3  f0=5  rid=CBC23F68  cols=[(1.0, 1.0, 1.0)]>>
+  - 'copter_spotlight2'              t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=220   <<T1 LEAF #220 @file:0x095f6d  f0=5  rid=CBC23F68  cols=[(1.0, 1.0, 1.0)]>>
+
+-------- heli_closetoground --------
+'heli_closetoground'               parent 669 @0x0dfaf9 X=0 A=1 children=3
+  - 'heliwake_water'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+    'heliwake_water'                   parent 668 @0x0df91e X=0 A=1 children=4
+      - 'helicopter_wake'                t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=834
+      - 'helicopter_wake2'               t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=835
+      - 'helicopter_wake3'               t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=836
+      - 'helicopter_wake4'               t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=837
+  - 'roil_terrain'                   t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+    'roil_terrain'                     parent 667 @0x0df5ba X=0 A=1 children=8
+      - 'heliroiln'                      t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=826
+      - 'heliroils'                      t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=827
+      - 'heliroile'                      t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=828
+      - 'heliroilw'                      t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=829
+      - 'heliroilne'                     t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=830
+      - 'heliroilnw'                     t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=832
+      - 'heliroilsw'                     t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=833
+      - 'heliroilse'                     t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=831
+  - ''                               t4 SOUND               scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=37
+
+-------- aircraftindicate --------
+'aircraftindicate'                 parent 1046 @0x0fb0c0 X=8 A=1 children=2
+  - 'aircraftindicate_terrain'       t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=268   <<T1 LEAF #268 @file:0x0972ed  f0=5  rid=6C23BE66  cols=[(0.2, 1.0, 0.2)]>>
+  - 'aircraftindicate2_water'        t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=270   <<T1 LEAF #270 @file:0x097399  f0=5  rid=6C23BE66  cols=[(0.2, 1.0, 0.2)]>>
+
+================================================================================
+3. MISSION/SELECTION FAMILY CHAINS
+================================================================================
+
+-------- mission_selection_blue --------
+'mission_selection_blue'           parent 1146 @0x1026a3 X=0 A=1 children=2
+  - 'mission_selection_blue'         t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=291   <<T1 LEAF #291 @file:0x097bbb  f0=1  rid=144161D2  cols=[(0.0, 0.0, 1.0)]>>
+  - 'mission_selection_hidden_blue'  t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=296   <<T1 LEAF #296 @file:0x097d91  f0=1  rid=144161D2  cols=[(0.0, 0.0, 0.8)]>>
+
+-------- mission_selection_blue_shrink --------
+'mission_selection_blue_shrink'    parent 1150 @0x102bc5 X=0 A=1 children=3
+  - 'mission_selection_blue_shrink'  t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=301   <<T1 LEAF #301 @file:0x097f73  f0=1  rid=144161D2  cols=[(0.0, 0.0, 1.0)]>>
+  - 'mission_selection_hidden_blue_shrink' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=306   <<T1 LEAF #306 @file:0x09815d  f0=1  rid=144161D2  cols=[(0.0, 0.0, 0.8)]>>
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=302
+
+-------- mission_selection_green --------
+'mission_selection_green'          parent 1145 @0x102590 X=0 A=1 children=2
+  - 'mission_selection_green'        t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=290   <<T1 LEAF #290 @file:0x097b5d  f0=1  rid=144161D2  cols=[(0.0, 1.0, 0.0)]>>
+  - 'mission_selection_hidden_green' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=295   <<T1 LEAF #295 @file:0x097d33  f0=1  rid=144161D2  cols=[(0.0, 0.8, 0.0)]>>
+
+-------- mission_selection_green_shrink --------
+'mission_selection_green_shrink'   parent 1149 @0x102a45 X=0 A=1 children=3
+  - 'mission_selection_green_shrink' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=300   <<T1 LEAF #300 @file:0x097f11  f0=1  rid=144161D2  cols=[(0.0, 1.0, 0.0)]>>
+  - 'mission_selection_hidden_green_shrink' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=305   <<T1 LEAF #305 @file:0x0980fb  f0=1  rid=144161D2  cols=[(0.0, 0.8, 0.0)]>>
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=301
+
+-------- mission_selection_red --------
+'mission_selection_red'            parent 1144 @0x102481 X=0 A=1 children=2
+  - 'mission_selection_red'          t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=289   <<T1 LEAF #289 @file:0x097aff  f0=1  rid=144161D2  cols=[(1.0, 0.0, 0.0)]>>
+  - 'mission_selection_hidden_red'   t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=294   <<T1 LEAF #294 @file:0x097cd5  f0=1  rid=144161D2  cols=[(0.8, 0.0, 0.0)]>>
+
+-------- mission_selection_red_shrink --------
+'mission_selection_red_shrink'     parent 1148 @0x1028c9 X=0 A=1 children=3
+  - 'mission_selection_red_shrink'   t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=299   <<T1 LEAF #299 @file:0x097eaf  f0=1  rid=144161D2  cols=[(1.0, 0.0, 0.0)]>>
+  - 'mission_selection_hidden_red_shrink' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=304   <<T1 LEAF #304 @file:0x098099  f0=1  rid=144161D2  cols=[(0.8, 0.0, 0.0)]>>
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=300
+
+-------- mission_selection_water_yellow --------
+'mission_selection_water_yellow'   parent 1152 @0x102ec5 X=0 A=1 children=1
+  - 'mission_selection_water_yellow' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=308   <<T1 LEAF #308 @file:0x098221  f0=1  rid=144161D2  cols=[(1.0, 1.0, 0.0)]>>
+
+-------- mission_selection_water_yellow_shrink --------
+'mission_selection_water_yellow_shrink' parent 1153 @0x102f62 X=0 A=1 children=2
+  - 'mission_selection_water_yellow_shrink' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=309   <<T1 LEAF #309 @file:0x09827f  f0=1  rid=144161D2  cols=[(1.0, 1.0, 0.0)]>>
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=304
+
+-------- mission_selection_yellow --------
+'mission_selection_yellow'         parent 1147 @0x1027b4 X=0 A=1 children=2
+  - 'mission_selection_yellow'       t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=292   <<T1 LEAF #292 @file:0x097c19  f0=1  rid=144161D2  cols=[(1.0, 1.0, 0.0)]>>
+  - 'mission_selection_hidden_yellow' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=297   <<T1 LEAF #297 @file:0x097def  f0=1  rid=144161D2  cols=[(0.8, 0.8, 0.0)]>>
+
+-------- mission_selection_yellow_shrink --------
+'mission_selection_yellow_shrink'  parent 1151 @0x102d43 X=0 A=1 children=3
+  - 'mission_selection_yellow_shrink' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=302   <<T1 LEAF #302 @file:0x097fd5  f0=1  rid=144161D2  cols=[(1.0, 1.0, 0.0)]>>
+  - 'mission_selection_hidden_yellow_shrink' t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=307   <<T1 LEAF #307 @file:0x0981bf  f0=1  rid=144161D2  cols=[(0.8, 0.8, 0.0)]>>
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=303
+
+-------- missiondarkmoney --------
+'missiondarkmoney'                 parent 1020 @0x0f9243 X=0 A=1 children=2
+  - 'missionnegmoney'                t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+    'missionnegmoney'                  parent 1015 @0x0f8b9f X=0 A=1 children=4
+      - 'mission_negmoney_terrain'       t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=261   <<T1 LEAF #261 @file:0x09701f  f0=4  rid=8A492E8A  cols=[(1.0, 0.2, 0.2)]>>
+      - 'mission_negmoney'               t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1068
+      - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=266
+      - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=267
+  - 'missionfailure'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+    'missionfailure'                   parent 1018 @0x0f9099 X=0 A=1 children=2
+      - 'darkcloud'                      t0 PARTICLE-SYS        scale=1 trans=(0.0, -100.0, 0.0) zoom=1..6 copies=1 effidx=1069
+      - 'darkcloud_shadow'               t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=262   <<T1 LEAF #262 @file:0x097085  f0=18  rid=4C35FC4E  cols=[(0.1, 0.1, 0.1)]>>
+      ~ TAIL-effect 'mission_failure_light'
+
+-------- missionfailure --------
+'missionfailure'                   parent 1018 @0x0f9099 X=0 A=1 children=2
+  - 'darkcloud'                      t0 PARTICLE-SYS        scale=1 trans=(0.0, -100.0, 0.0) zoom=1..6 copies=1 effidx=1069
+  - 'darkcloud_shadow'               t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=262   <<T1 LEAF #262 @file:0x097085  f0=18  rid=4C35FC4E  cols=[(0.1, 0.1, 0.1)]>>
+  ~ TAIL-effect 'mission_failure_light'
+
+-------- missionfailuremoney --------
+'missionfailuremoney'              parent 1019 @0x0f91b5 X=0 A=1 children=1
+  - 'missionnegmoney'                t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+    'missionnegmoney'                  parent 1015 @0x0f8b9f X=0 A=1 children=4
+      - 'mission_negmoney_terrain'       t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=261   <<T1 LEAF #261 @file:0x09701f  f0=4  rid=8A492E8A  cols=[(1.0, 0.2, 0.2)]>>
+      - 'mission_negmoney'               t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1068
+      - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=266
+      - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=267
+
+-------- missionmoney --------
+'missionmoney'                     parent 1021 @0x0f933e X=0 A=1 children=5
+  - 'missionmoney_terrain'           t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=260   <<T1 LEAF #260 @file:0x096fb9  f0=4  rid=8A492E8A  cols=[(0.2, 1.0, 0.2)]>>
+  - 'mission_money'                  t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1067
+  - 'missionfailure'                 t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+    'missionfailure'                   parent 1018 @0x0f9099 X=0 A=1 children=2
+      - 'darkcloud'                      t0 PARTICLE-SYS        scale=1 trans=(0.0, -100.0, 0.0) zoom=1..6 copies=1 effidx=1069
+      - 'darkcloud_shadow'               t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=262   <<T1 LEAF #262 @file:0x097085  f0=18  rid=4C35FC4E  cols=[(0.1, 0.1, 0.1)]>>
+      ~ TAIL-effect 'mission_failure_light'
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=270
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=271
+
+-------- missionnegmoney --------
+'missionnegmoney'                  parent 1015 @0x0f8b9f X=0 A=1 children=4
+  - 'mission_negmoney_terrain'       t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=261   <<T1 LEAF #261 @file:0x09701f  f0=4  rid=8A492E8A  cols=[(1.0, 0.2, 0.2)]>>
+  - 'mission_negmoney'               t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1068
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=266
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=267
+
+-------- missionsparkles_active --------
+'missionsparkles_active'           parent 1013 @0x0f8867 X=0 A=1 children=3
+  - 'missionsparkles_1'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1064
+  - 'missionsparkles_2'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1065
+  - 'missionsparkles_3'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1066
+
+-------- missionsuccess --------
+'missionsuccess'                   parent 1014 @0x0f89d7 X=0 A=1 children=4
+  - 'missionsuccess_terrain'         t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=259   <<T1 LEAF #259 @file:0x096f53  f0=4  rid=8A492E8A  cols=[(1.0, 1.0, 1.0)]>>
+  - 'missionsparkles_active'         t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+    'missionsparkles_active'           parent 1013 @0x0f8867 X=0 A=1 children=3
+      - 'missionsparkles_1'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1064
+      - 'missionsparkles_2'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1065
+      - 'missionsparkles_3'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1066
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=264
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=265
+
+-------- missionsuccessmoney --------
+'missionsuccessmoney'              parent 1016 @0x0f8d63 X=0 A=1 children=6
+  - 'missionmoney_terrain'           t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=260   <<T1 LEAF #260 @file:0x096fb9  f0=4  rid=8A492E8A  cols=[(0.2, 1.0, 0.2)]>>
+  - 'missionsuccess_terrain'         t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=259   <<T1 LEAF #259 @file:0x096f53  f0=4  rid=8A492E8A  cols=[(1.0, 1.0, 1.0)]>>
+  - 'missionsparkles_active'         t2 SPAWN-EFFECT-BY-NAME scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=0
+    'missionsparkles_active'           parent 1013 @0x0f8867 X=0 A=1 children=3
+      - 'missionsparkles_1'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1064
+      - 'missionsparkles_2'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1065
+      - 'missionsparkles_3'              t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1066
+  - 'mission_money'                  t0 PARTICLE-SYS        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=1067
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=268
+  - ''                               t7                     scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=269
+
+-------- potholeselector --------
+'potholeselector'                  parent 234 @0x0b407a X=0 A=3 children=5
+  - 'potholier_than_thou1'           t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=109   <<T1 LEAF #109 @file:0x092fbf  f0=5  rid=0A450C35  cols=[(1.0, 1.0, 1.0)]>>
+  - 'potholier_than_thou2'           t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=110   <<T1 LEAF #110 @file:0x093015  f0=5  rid=6A450C41  cols=[(1.0, 1.0, 1.0)]>>
+  - 'potholier_than_thou3'           t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=111   <<T1 LEAF #111 @file:0x09306b  f0=5  rid=AA450C2C  cols=[(1.0, 1.0, 1.0)]>>
+  - 'potholier_than_thou4'           t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=112   <<T1 LEAF #112 @file:0x0930c1  f0=5  rid=CA450C48  cols=[(1.0, 1.0, 1.0)]>>
+  - 'potholier_than_thou5'           t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=113   <<T1 LEAF #113 @file:0x093117  f0=5  rid=AA08A8FE  cols=[(1.0, 1.0, 1.0)]>>
+
+-------- selection_blue --------
+'selection_blue'                   parent 74 @0x0a89f8 X=0 A=1 children=1
+  - 'selection_blue'                 t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=94   <<T1 LEAF #94 @file:0x09279d  f0=1  rid=144161D2  cols=[(0.0, 0.0, 1.0)]>>
+
+-------- selection_green --------
+'selection_green'                  parent 73 @0x0a896a X=0 A=1 children=1
+  - 'selection_green'                t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=93   <<T1 LEAF #93 @file:0x09273f  f0=1  rid=144161D2  cols=[(0.0, 1.0, 0.0)]>>
+
+-------- selection_red --------
+'selection_red'                    parent 72 @0x0a88de X=0 A=1 children=1
+  - 'selection_red'                  t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=92   <<T1 LEAF #92 @file:0x0926e1  f0=1  rid=144161D2  cols=[(1.0, 0.0, 0.0)]>>
+
+-------- selection_yellow --------
+'selection_yellow'                 parent 75 @0x0a8a85 X=0 A=1 children=1
+  - 'selection_yellow'               t1 DECAL/SPRITE        scale=1 trans=(0.0, 0.0, 0.0) zoom=1..6 copies=1 effidx=95   <<T1 LEAF #95 @file:0x0927fb  f0=1  rid=144161D2  cols=[(1.0, 1.0, 0.0)]>>
+
+================================================================================
+4. EVERY TYPE-1 LEAF REACHED, with f0 and file offset
+================================================================================
+   T1 #92  @file:0x0926e1  f0=1        rid=144161D2 flags=0x0a cols=[(1.0, 0.0, 0.0)]                               via ['selection_red']
+   T1 #93  @file:0x09273f  f0=1        rid=144161D2 flags=0x0a cols=[(0.0, 1.0, 0.0)]                               via ['selection_green']
+   T1 #94  @file:0x09279d  f0=1        rid=144161D2 flags=0x0a cols=[(0.0, 0.0, 1.0)]                               via ['selection_blue']
+   T1 #95  @file:0x0927fb  f0=1        rid=144161D2 flags=0x0a cols=[(1.0, 1.0, 0.0)]                               via ['selection_yellow']
+   T1 #109 @file:0x092fbf  f0=5        rid=0A450C35 flags=0x40 cols=[(1.0, 1.0, 1.0)]                               via ['potholeselector']
+   T1 #110 @file:0x093015  f0=5        rid=6A450C41 flags=0x40 cols=[(1.0, 1.0, 1.0)]                               via ['potholeselector']
+   T1 #111 @file:0x09306b  f0=5        rid=AA450C2C flags=0x40 cols=[(1.0, 1.0, 1.0)]                               via ['potholeselector']
+   T1 #112 @file:0x0930c1  f0=5        rid=CA450C48 flags=0x40 cols=[(1.0, 1.0, 1.0)]                               via ['potholeselector']
+   T1 #113 @file:0x093117  f0=5        rid=AA08A8FE flags=0x40 cols=[(1.0, 1.0, 1.0)]                               via ['potholeselector']
+   T1 #183 @file:0x09516b  f0=5        rid=0A4E4A9C flags=0x00 cols=[(0.0, 0.0, 0.2)]                               via ['rotor']
+   T1 #184 @file:0x0951c1  f0=5        rid=0A4E4A9C flags=0x00 cols=[(0.0, 0.0, 0.2)]                               via ['rotor']
+   T1 #185 @file:0x095217  f0=5        rid=0A4E4A9C flags=0x04 cols=[(0.0, 0.0, 0.2)]                               via ['rotor']
+   T1 #220 @file:0x095f6d  f0=5        rid=CBC23F68 flags=0x00 cols=[(1.0, 1.0, 1.0)]                               via ['copter_spotlight']
+   T1 #221 @file:0x095fc3  f0=5        rid=CBC23F68 flags=0x00 cols=[(1.0, 1.0, 1.0)]                               via ['copter_spotlight']
+   T1 #259 @file:0x096f53  f0=4        rid=8A492E8A flags=0x00 cols=[(1.0, 1.0, 1.0)]                               via ['missionsuccess', 'missionsuccessmoney']
+   T1 #260 @file:0x096fb9  f0=4        rid=8A492E8A flags=0x00 cols=[(0.2, 1.0, 0.2)]                               via ['missionmoney', 'missionsuccessmoney']
+   T1 #261 @file:0x09701f  f0=4        rid=8A492E8A flags=0x00 cols=[(1.0, 0.2, 0.2)]                               via ['missiondarkmoney', 'missionfailuremoney', 'missionnegmoney']
+   T1 #262 @file:0x097085  f0=18       rid=4C35FC4E flags=0x00 cols=[(0.1, 0.1, 0.1)]                               via ['missiondarkmoney', 'missionfailure', 'missionmoney']
+   T1 #268 @file:0x0972ed  f0=5        rid=6C23BE66 flags=0x00 cols=[(0.2, 1.0, 0.2)]                               via ['aircraftindicate']
+   T1 #270 @file:0x097399  f0=5        rid=6C23BE66 flags=0x00 cols=[(0.2, 1.0, 0.2)]                               via ['aircraftindicate']
+   T1 #289 @file:0x097aff  f0=1        rid=144161D2 flags=0x02 cols=[(1.0, 0.0, 0.0)]                               via ['mission_selection_red']
+   T1 #290 @file:0x097b5d  f0=1        rid=144161D2 flags=0x02 cols=[(0.0, 1.0, 0.0)]                               via ['mission_selection_green']
+   T1 #291 @file:0x097bbb  f0=1        rid=144161D2 flags=0x02 cols=[(0.0, 0.0, 1.0)]                               via ['mission_selection_blue']
+   T1 #292 @file:0x097c19  f0=1        rid=144161D2 flags=0x02 cols=[(1.0, 1.0, 0.0)]                               via ['mission_selection_yellow']
+   T1 #294 @file:0x097cd5  f0=1        rid=144161D2 flags=0x02 cols=[(0.8, 0.0, 0.0)]                               via ['mission_selection_red']
+   T1 #295 @file:0x097d33  f0=1        rid=144161D2 flags=0x02 cols=[(0.0, 0.8, 0.0)]                               via ['mission_selection_green']
+   T1 #296 @file:0x097d91  f0=1        rid=144161D2 flags=0x02 cols=[(0.0, 0.0, 0.8)]                               via ['mission_selection_blue']
+   T1 #297 @file:0x097def  f0=1        rid=144161D2 flags=0x02 cols=[(0.8, 0.8, 0.0)]                               via ['mission_selection_yellow']
+   T1 #299 @file:0x097eaf  f0=1        rid=144161D2 flags=0x02 cols=[(1.0, 0.0, 0.0)]                               via ['mission_selection_red_shrink']
+   T1 #300 @file:0x097f11  f0=1        rid=144161D2 flags=0x02 cols=[(0.0, 1.0, 0.0)]                               via ['mission_selection_green_shrink']
+   T1 #301 @file:0x097f73  f0=1        rid=144161D2 flags=0x02 cols=[(0.0, 0.0, 1.0)]                               via ['mission_selection_blue_shrink']
+   T1 #302 @file:0x097fd5  f0=1        rid=144161D2 flags=0x02 cols=[(1.0, 1.0, 0.0)]                               via ['mission_selection_yellow_shrink']
+   T1 #304 @file:0x098099  f0=1        rid=144161D2 flags=0x02 cols=[(0.8, 0.0, 0.0)]                               via ['mission_selection_red_shrink']
+   T1 #305 @file:0x0980fb  f0=1        rid=144161D2 flags=0x02 cols=[(0.0, 0.8, 0.0)]                               via ['mission_selection_green_shrink']
+   T1 #306 @file:0x09815d  f0=1        rid=144161D2 flags=0x02 cols=[(0.0, 0.0, 0.8)]                               via ['mission_selection_blue_shrink']
+   T1 #307 @file:0x0981bf  f0=1        rid=144161D2 flags=0x02 cols=[(0.8, 0.8, 0.0)]                               via ['mission_selection_yellow_shrink']
+   T1 #308 @file:0x098221  f0=1        rid=144161D2 flags=0x06 cols=[(1.0, 1.0, 0.0)]                               via ['mission_selection_water_yellow']
+   T1 #309 @file:0x09827f  f0=1        rid=144161D2 flags=0x06 cols=[(1.0, 1.0, 0.0)]                               via ['mission_selection_water_yellow_shrink']
+
+================================================================================
+5. ALL TYPE-1 ENTRIES USING THE mission-bubble TEXTURE 144161D2
+================================================================================
+   T1 #43  @file:0x091583 f0=5        cols=[(1.0, 1.0, 1.0)]              refs=['local_tile_outline::local_tile_outline_small_fuzzy', 'local_tile_outline::local_tile_outline_small_fuzzy', 'local_tile_outline::local_tile_outline_small_fuzzy']
+   T1 #44  @file:0x0915d9 f0=5        cols=[(1.0, 1.0, 1.0)]              refs=['local_tile_outline::local_tile_outline_small_fuzzy_invert', 'local_tile_outline::local_tile_outline_small_fuzzy_invert', 'local_tile_outline::local_tile_outline_small_fuzzy_invert']
+   T1 #91  @file:0x092683 f0=1        cols=[(1.0, 1.0, 1.0)]              refs=[]
+   T1 #92  @file:0x0926e1 f0=1        cols=[(1.0, 0.0, 0.0)]              refs=['selection_red::selection_red']
+   T1 #93  @file:0x09273f f0=1        cols=[(0.0, 1.0, 0.0)]              refs=['selection_green::selection_green']
+   T1 #94  @file:0x09279d f0=1        cols=[(0.0, 0.0, 1.0)]              refs=['selection_blue::selection_blue']
+   T1 #95  @file:0x0927fb f0=1        cols=[(1.0, 1.0, 0.0)]              refs=['selection_yellow::selection_yellow']
+   T1 #283 @file:0x097813 f0=0.75     cols=[(0.7, 1.0, 0.3)]              refs=['grid_flash::grid_flash']
+   T1 #284 @file:0x09786d f0=0.75     cols=[(0.7, 1.0, 0.3)]              refs=['grid_flash::grid_flash_z12']
+   T1 #288 @file:0x097aa1 f0=1        cols=[(1.0, 1.0, 1.0)]              refs=[]
+   T1 #289 @file:0x097aff f0=1        cols=[(1.0, 0.0, 0.0)]              refs=['mission_selection_red::mission_selection_red']
+   T1 #290 @file:0x097b5d f0=1        cols=[(0.0, 1.0, 0.0)]              refs=['mission_selection_green::mission_selection_green']
+   T1 #291 @file:0x097bbb f0=1        cols=[(0.0, 0.0, 1.0)]              refs=['mission_selection_blue::mission_selection_blue']
+   T1 #292 @file:0x097c19 f0=1        cols=[(1.0, 1.0, 0.0)]              refs=['mission_selection_yellow::mission_selection_yellow']
+   T1 #293 @file:0x097c77 f0=1        cols=[(1.0, 1.0, 1.0)]              refs=[]
+   T1 #294 @file:0x097cd5 f0=1        cols=[(0.8, 0.0, 0.0)]              refs=['mission_selection_red::mission_selection_hidden_red']
+   T1 #295 @file:0x097d33 f0=1        cols=[(0.0, 0.8, 0.0)]              refs=['mission_selection_green::mission_selection_hidden_green']
+   T1 #296 @file:0x097d91 f0=1        cols=[(0.0, 0.0, 0.8)]              refs=['mission_selection_blue::mission_selection_hidden_blue']
+   T1 #297 @file:0x097def f0=1        cols=[(0.8, 0.8, 0.0)]              refs=['mission_selection_yellow::mission_selection_hidden_yellow']
+   T1 #298 @file:0x097e4d f0=1        cols=[(1.0, 1.0, 1.0)]              refs=[]
+   T1 #299 @file:0x097eaf f0=1        cols=[(1.0, 0.0, 0.0)]              refs=['mission_selection_red_shrink::mission_selection_red_shrink']
+   T1 #300 @file:0x097f11 f0=1        cols=[(0.0, 1.0, 0.0)]              refs=['mission_selection_green_shrink::mission_selection_green_shrink']
+   T1 #301 @file:0x097f73 f0=1        cols=[(0.0, 0.0, 1.0)]              refs=['mission_selection_blue_shrink::mission_selection_blue_shrink']
+   T1 #302 @file:0x097fd5 f0=1        cols=[(1.0, 1.0, 0.0)]              refs=['mission_selection_yellow_shrink::mission_selection_yellow_shrink']
+   T1 #303 @file:0x098037 f0=1        cols=[(1.0, 1.0, 1.0)]              refs=[]
+   T1 #304 @file:0x098099 f0=1        cols=[(0.8, 0.0, 0.0)]              refs=['mission_selection_red_shrink::mission_selection_hidden_red_shrink']
+   T1 #305 @file:0x0980fb f0=1        cols=[(0.0, 0.8, 0.0)]              refs=['mission_selection_green_shrink::mission_selection_hidden_green_shrink']
+   T1 #306 @file:0x09815d f0=1        cols=[(0.0, 0.0, 0.8)]              refs=['mission_selection_blue_shrink::mission_selection_hidden_blue_shrink']
+   T1 #307 @file:0x0981bf f0=1        cols=[(0.8, 0.8, 0.0)]              refs=['mission_selection_yellow_shrink::mission_selection_hidden_yellow_shrink']
+   T1 #308 @file:0x098221 f0=1        cols=[(1.0, 1.0, 0.0)]              refs=['mission_selection_water_yellow::mission_selection_water_yellow']
+   T1 #309 @file:0x09827f f0=1        cols=[(1.0, 1.0, 0.0)]              refs=['mission_selection_water_yellow_shrink::mission_selection_water_yellow_shrink']

@@ -1,0 +1,46 @@
+# 40 .text references to cheat-manager global 0x00B43CAC
+cheat 0xA919D25E  Adv                           registered @0x0041B755
+cheat 0x6AB6A2D7  Barstuck                      registered @0x0069D665
+cheat 0x4AC096CA  BuildingPlop                  registered @0x007E9BDB
+cheat 0xCC478B79  Casper                        registered @0x00513A2A
+cheat 0xABA2B5BB  Controllers                   registered @0x0051C291
+cheat 0x42E3EA4B  cSC4View3DWin                 registered @0x007E9D1D
+cheat 0x8C4136DB  csitrigger                    registered @0x0052DC95
+cheat 0xAAB7F42A  DollyLlama                    registered @0x0041B710
+cheat 0xE97FCBC8  DrawPaths                     registered @0x0051395E
+cheat 0x4921FF8E  Effect                        registered @0x00594E4B
+cheat 0x08DAD89A  FightThePower                 registered @0x0069D627
+cheat 0x095BDC9C  Flora                         registered @0x006B2C59
+cheat 0x0AC07E24  FPS                           registered @0x00703397
+cheat 0x8973A69C  GOL                           registered @0x007E99A6
+cheat 0x4921FF8F  HeapCheck                     registered @0x00594EC5
+cheat 0xEA73FCD8  HelloMyNameIs                 registered @0x0045BEA4
+cheat 0xE97FCBC9  HidePaths                     registered @0x00513995
+cheat 0x491865E1  HowDryIAm                     registered @0x0069D5E9
+cheat 0x4AC096C6  LotPlop                       registered @0x007E9BA9
+cheat 0x4A70D491  magnify                       registered @0x00445FDC
+cheat 0x493F4FE6  Moolah                        registered @0x006931AD
+cheat 0x6BB354C7  NoCSI                         registered @0x005139F8
+cheat 0x4AB569C9  PlopAllBuildings              registered @0x0073433A
+cheat 0x8929E68E  PlopAllLots                   registered @0x007342F5
+cheat 0x6976AFA0  Recorder                      registered @0x007E9B02
+cheat 0x88F3D4BB  RenderProp                    registered @0x007E9A9E
+cheat 0xCBF31943  RiskyMoney                    registered @0x00693117
+cheat 0xEA5EDB88  ShowTime                      registered @0x004E12A1
+cheat 0x8A78BEFF  SimDate                       registered @0x007033E8
+cheat 0xCA7BC5B5  SizeOf                        registered @0x007E99D8
+cheat 0x4921FF8D  Snow                          registered @0x00594E8F
+cheat 0xC9B73FBB  Stopwatch                     registered @0x00445C11
+cheat 0xAA7A2746  TastyZots                     registered @0x007E9A09
+cheat 0x8AB730AE  TerrainQuery                  registered @0x007E9A6D
+cheat 0x0BFD8064  toll                          registered @0x007E9C0D
+cheat 0x6A382BAF  Tutorial                      registered @0x0043F840
+cheat 0x0B70C96D  udriveit                      registered @0x005139C6
+cheat 0x4A972F37  WatchMeMove                   registered @0x007E9B33
+cheat 0x4AB87766  WeaknessPays                  registered @0x00693159
+cheat 0x281F7858  WhatTimeIzIt                  registered @0x00445BCB
+cheat 0xEA73FCC2  WhereRUFrom                   registered @0x0045BE6C
+cheat 0x4A82253E  You don't deserve it          registered @0x007E9B65
+cheat 0x6A7A276E  Zoneria                       registered @0x007E9A3B
+
+43 distinct (id,name) pairs

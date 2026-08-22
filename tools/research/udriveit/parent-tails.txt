@@ -1,0 +1,119 @@
+==============================================================================
+CENSUS PARENTS - FULL RECORDS (children + tails)
+==============================================================================
+
+---- cargopu2 ----
+[ 816 @0x0ea047] cargopu2                         X=8 A=1 children=1 P=0 Q=0 (tail@0x0ea0bb, rec ends 0x0ea0cf)
+   child 'cargo_pu2'                        type=2 scale=1 SCALE@0x0ea095 zoom=4..6 effidx=0
+
+---- motorcycle ----
+[ 943 @0x0f3048] motorcycle                       X=8 A=1 children=1 P=0 Q=0 (tail@0x0f30c1, rec ends 0x0f30d5)
+   child 'motorcyclesims'                   type=2 scale=1 SCALE@0x0f309b zoom=4..6 effidx=0
+
+---- cargopu1 ----
+[ 787 @0x0e813a] cargopu1                         X=8 A=1 children=1 P=0 Q=0 (tail@0x0e81ae, rec ends 0x0e81c2)
+   child 'cargo_pu1'                        type=2 scale=1 SCALE@0x0e8188 zoom=4..6 effidx=0
+
+---- rotor ----
+[ 662 @0x0def03] rotor                            X=0 A=1 children=3 P=0 Q=0 (tail@0x0df076, rec ends 0x0df08a)
+   child 'helicopter_shadow_terrain'        type=1 scale=1 SCALE@0x0def61 zoom=1..6 effidx=183
+   child 'helicopter_shadow1_terrain'       type=1 scale=1 SCALE@0x0defda zoom=1..6 effidx=184
+   child 'helicopter_shadow_water'          type=1 scale=1 SCALE@0x0df050 zoom=1..6 effidx=185
+
+---- helibladestill ----
+[ 664 @0x0df1df] helibladestill                   X=10 A=1 children=1 P=0 Q=0 (tail@0x0df259, rec ends 0x0df26d)
+   child 'helibladestill1'                  type=0 scale=1 SCALE@0x0df233 zoom=1..6 effidx=822
+
+---- heliblade ----
+[ 663 @0x0df08a] heliblade                        X=10 A=1 children=3 P=0 Q=0 (tail@0x0df1cb, rec ends 0x0df1df)
+   child 'helibladestart'                   type=0 scale=1 SCALE@0x0df0dd zoom=1..6 effidx=820
+   child 'heliblade1'                       type=0 scale=1 SCALE@0x0df146 zoom=1..6 effidx=821
+   child ''                                 type=8 scale=1 SCALE@0x0df1a5 zoom=1..6 effidx=30
+
+---- helipad ----
+   helipad: NOT PRESENT in the effdir name map (1148 names) -> live lookup ok=0
+
+---- copter_spotlight ----
+[ 670 @0x0dfc50] copter_spotlight                 X=0 A=1 children=2 P=0 Q=0 (tail@0x0dfd3c, rec ends 0x0dfd50)
+   child 'copter_spotlight1'                type=1 scale=1 SCALE@0x0dfca6 zoom=1..6 effidx=221
+   child 'copter_spotlight2'                type=1 scale=1 SCALE@0x0dfd16 zoom=1..6 effidx=220
+
+---- heli_closetoground ----
+[ 669 @0x0dfaf9] heli_closetoground               X=0 A=1 children=3 P=0 Q=0 (tail@0x0dfc3c, rec ends 0x0dfc50)
+   child 'heliwake_water'                   type=2 scale=1 SCALE@0x0dfb4c zoom=1..6 effidx=0
+   child 'roil_terrain'                     type=2 scale=1 SCALE@0x0dfbb7 zoom=1..6 effidx=0
+   child ''                                 type=4 scale=1 SCALE@0x0dfc16 zoom=1..6 effidx=37
+
+---- aircraftindicate ----
+[1046 @0x0fb0c0] aircraftindicate                 X=8 A=1 children=2 P=0 Q=0 (tail@0x0fb1b9, rec ends 0x0fb1cd)
+   child 'aircraftindicate_terrain'         type=1 scale=1 SCALE@0x0fb11d zoom=1..6 effidx=268
+   child 'aircraftindicate2_water'          type=1 scale=1 SCALE@0x0fb193 zoom=1..6 effidx=270
+
+==============================================================================
+X-field histogram over all 1154 parents
+==============================================================================
+  X=0    x942   e.g. ['camera_collision', 'fire_1', 'fire_2', 'fire_3', 'fire_4', 'fire_5']
+  X=1    x20    e.g. ['powerplant_explosion', 'solarpowerglint', 'tornado_active', 'volcano_active', 'earthquake_active', 'meteorstrike_active']
+  X=2    x45    e.g. ['pothole', 'pothole_rail', 'red_blinking_light_fast', 'red_blinking_light_slow', 'green_blinking_light_fast', 'green_blinking_light_slow']
+  X=4    x34    e.g. ['ghosttrailsfx_slave', 'cemetary_ghosties', 'prosoccerteamfx_slave', 'prosoccerteam', 'kidsoccerteamfx_slave', 'kid_soccerteam']
+  X=8    x85    e.g. ['soccerball', 'kid_soccerball', 'research_lightning_glowcore', 'windmill_blades', 'small_crane_head', 'small_crane_arm']
+  X=9    x4     e.g. ['tornado_inactive', 'earthquake_inactive', 'meteorstrike_inactive', 'ufo_inactive']
+  X=10   x4     e.g. ['heliblade', 'helibladestill', 'mheliblade', 'mhelibladestill']
+  X=16   x3     e.g. ['takeoffsmokeburst', 'robot_landing_smokescreener', 'diessmokeburst']
+  X=32   x1     e.g. ['atmospheric_effects']
+  X=34   x1     e.g. ['air_pollution']
+  X=65   x1     e.g. ['windmills_shadow']
+  X=128  x5     e.g. ['raised_road_bridge_wake_new', 'straight_road_bridge_wake_new', 'rail_bridge_wake_new', 'goldengate_bridge_wake_new', 'highway_bridge_wake_new']
+  X=256  x5     e.g. ['cropdust', 'ufolaser', 'honkhorn', 'fishing_water', 'skydive']
+  X=258  x1     e.g. ['waterdrop']
+  X=264  x3     e.g. ['ufoabduction', 'icecream', 'waterski']
+
+P-field histogram:
+  P=0    x1086
+  P=1    x63
+  P=2    x5
+
+TAIL-name histogram (all parents):
+  vsmallshake                        x9
+  lightning_hit_shake                x7
+  placement_shake                    x4
+  small_rumble                       x4
+  firework_flashes_2                 x4
+  large_rumble                       x3
+  rocketpart_hit                     x3
+  meteor_hit_shake                   x2
+  laser_flash                        x2
+  heli_flash                         x2
+  camera_hit                         x1
+  bd_large_rumble                    x1
+  bd_small_rumble                    x1
+  nuclear_shake                      x1
+  nuclearplant_flash                 x1
+  powerplant_flash                   x1
+  earthquakeuishake                  x1
+  robot_fly_flash                    x1
+  meteor_flash                       x1
+  meteor_flash_water                 x1
+  tornado_shake                      x1
+  earthquakeshake                    x1
+  earthquakesmallshake               x1
+  lightning_flash                    x1
+  obliterate_demolish_flashes        x1
+  obliterate_demolish_shake          x1
+  obliterate_shake_start             x1
+  obliterate_flash                   x1
+  obliterate_flash_fade_out          x1
+  tsaurus_flash                      x1
+  firework_flashes_1                 x1
+  firework_flashes_4                 x1
+  firework_flashes_5                 x1
+  rocket_flashes                     x1
+  rocketexplode_shake                x1
+  shuttleexplode_shake               x1
+  explodebigplant_flash              x1
+  tank_flash                         x1
+  jet_flash                          x1
+  ufoflash                           x1
+  mission_failure_light              x1
+  whale_flash                        x1
+  sparkles_darken                    x1

@@ -1,0 +1,660 @@
+=== G=8a3858d8 I=031e0000  (701 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW26x26_HouseWorship_031E'
+   0x099AFACD                      sint64   3400
+   0x27812810 OccupantSize         float32  26.0,23.0,26.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x031E0000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812840                      uint32   6176,5000
+   0x27812841                      uint32   8208,1,8224,3,8240,1,6160,1,6176,3,6192,1
+   0x2781284F                      sint32   0,0
+   0x27812850                      sint32   70,26
+   0x27812851                      sint32   1,1,6,0
+   0x27812854                      uint32   7
+   0x29244DB5                      uint8    31
+   0x2A499F85                      uint32   0xCA8B9AA2
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  2.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x031E0000
+   0x8A2602B8                      uint32   0xAA35B0FA
+   0x8A2602B9                      uint32   70
+   0x8A2602CC                      uint32   8
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x0A5EA6A0
+   0xAA1DD396                      uint32   5387,6407
+   0xAA1DD397                      uint32   0xCA4C65E0
+   0xAA60E745                      float32  -100.0,0.0,100.0,70.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   5
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xEA5EA69F
+   0xCA5B9305                      sint32   4,110
+   0xEA260589                      uint32   0xCA2B083A
+   0xEA2E078B                      uint32   0x8A9ADCB0
+   0xEA3209F8                      bool     1
+   0xEA54D286                      sint64   0
+=== G=8a3858d8 I=031f0000  (717 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW16x14_MayorsHouse_031F'
+   0x099AFACD                      sint64   160
+   0x27812810 OccupantSize         float32  15.0,14.0,14.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x031F0000
+   0x27812832 BuildingValue?       uint8    3
+   0x27812841                      uint32   8208,0,8224,2,8240,0,6160,0,6176,2,6192,0
+   0x2781284F                      sint32   100,48
+   0x27812850                      sint32   100,48
+   0x27812851                      sint32   1,1,4,0
+   0x27812854                      uint32   5
+   0x29244DB5                      uint8    32
+   0x2A499F85                      uint32   0x4A8B9396
+   0x49BEDA31                      uint8    2
+   0x49CAC341                      sint64   1700
+   0x68EE9764                      float32  2.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x031F0000
+   0x8A2602B8                      uint32   0x8A35B060
+   0x8A2602B9                      uint32   60
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x8A5EA6A0
+   0xAA1DD396                      uint32   5387,6456
+   0xAA1DD397                      uint32   0x0A55BC01
+   0xAA60E745                      float32  -100.0,0.0,100.0,135.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   720
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0x6A5EA6A0
+   0xCA5B9305                      sint32   2,220
+   0xEA260589                      uint32   0xCA2B0620
+   0xEA2E078B                      uint32   0xAA9EE012
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0xEA59717A
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0xAA59670C
+   0xEA54D286                      sint64   25
+=== G=8a3858d8 I=03220000  (732 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW44x28_CourtHouse_0322'
+   0x099AFACD                      sint64   3100
+   0x27812810 OccupantSize         float32  46.0,32.0,22.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03220000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812840                      uint32   6176,5000,6192,5000,15136,20000
+   0x27812841                      uint32   8208,3,8224,22,8240,1,6160,3,6176,22,6192,1
+   0x2781284F                      sint32   70,26
+   0x27812850                      sint32   0,0
+   0x27812851                      sint32   2,1,9,0
+   0x27812854                      uint32   36
+   0x29244DB5                      uint8    34
+   0x2A499F85                      uint32   0x0A8B9A67
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   21000
+   0x68EE9764                      float32  2.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x03220000
+   0x8A2602B8                      uint32   0x6A4D3C64
+   0x8A2602B9                      uint32   380
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x4A5EA69D
+   0xAA1DD396                      uint32   5387,5393
+   0xAA1DD397                      uint32   0x4A55BBA9
+   0xAA60E745                      float32  -100.0,239.0,100.0,0.0
+   0xAA83558F                      uint8    3
+   0xC8ED2D84                      uint32   72
+   0xC9B93A56                      uint32   0x6A5EC589
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0x2A5EA69D
+   0xEA260589                      uint32   0x8A4D3B93
+   0xEA2E078B                      uint32   0x0A9AE3E6
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0xEA59717A
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0xAA59670C
+   0xEA54D286                      sint64   310
+=== G=8a3858d8 I=03270000  (687 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW44x28_CountryClub_0327'
+   0x099AFACD                      sint64   18900
+   0x27812810 OccupantSize         float32  44.0,34.0,28.0
+   0x27812811                      float32  0.30000001192092896
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03270000
+   0x27812832 BuildingValue?       uint8    3
+   0x27812840                      uint32   6192,8000
+   0x27812841                      uint32   8208,0,8224,27,8240,9,6160,0,6176,27,6192,9
+   0x2781284F                      sint32   0,0
+   0x27812850                      sint32   75,27
+   0x27812851                      sint32   -72,8,5,0
+   0x27812854                      uint32   14
+   0x29244DB5                      uint8    36
+   0x2A499F85                      uint32   0x2A8B99D0
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  4.0,4.0,0.0,0.0
+   0x6A871B82                      uint32   0x03270000
+   0x8A2602B8                      uint32   0xCA8DC2F6
+   0x8A2602B9                      uint32   160
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x8A5EA69D
+   0xAA1DD396                      uint32   5387,6402
+   0xAA1DD397                      uint32   0x4A4C65B2
+   0xAA60E745                      float32  -100.0,50.0,100.0,-10.0
+   0xAA83558F                      uint8    3
+   0xC8ED2D84                      uint32   368
+   0xC9B93A56                      uint32   0xEA5EC59F
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0x6A5EA69D
+   0xCA5B9305                      sint32   3,220
+   0xEA260589                      uint32   0x4A552C9E
+   0xEA2E078B                      uint32   0xCA9AE3C3
+   0xEA3209F8                      bool     1
+   0xEA54D286                      sint64   0
+=== G=8a3858d8 I=03310000  (702 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW63x63_BureauBureaucracy_0331'
+   0x099AFACD                      sint64   6260
+   0x27812810 OccupantSize         float32  63.0,57.0,63.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03310000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812841                      uint32   8208,9,8224,62,8240,4,6160,9,6176,62,6192,4
+   0x2781284F                      sint32   20,16
+   0x27812850                      sint32   -45,21
+   0x27812851                      sint32   2,2,22,0
+   0x27812854                      uint32   56
+   0x29244DB5                      uint8    38
+   0x2A499F85                      uint32   0xAA8B9971
+   0x49BEDA31                      uint8    4
+   0x49CAC341                      sint64   31000
+   0x68EE9764                      float32  3.0,4.0,0.0,0.0
+   0x6A871B82                      uint32   0x03310000
+   0x8A2602B8                      uint32   0xCA419844
+   0x8A2602B9                      uint32   390
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0xCA5EA69A
+   0xAA1DD396                      uint32   5387,6405
+   0xAA1DD397                      uint32   0xCA55BB62
+   0xAA60E745                      float32  -100.0,40074.0,100.0,0.0
+   0xAA83558F                      uint8    3
+   0xC8ED2D84                      uint32   56
+   0xC9B93A56                      uint32   0xEA5EC59F
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xAA5EA69A
+   0xEA260589                      uint32   0x0A419447
+   0xEA2E078B                      uint32   0x8A9AE5C3
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0xEA59717A
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0xAA59670C
+   0xEA54D286                      sint64   260
+=== G=8a3858d8 I=03330000  (692 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW32x20_RadioStation_0333'
+   0x099AFACD                      sint64   17820
+   0x27812810 OccupantSize         float32  31.899999618530273,93.0,20.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03330000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812840                      uint32   6176,9000,19200,9000
+   0x27812841                      uint32   8208,0,8224,0,8240,0,6160,0,6176,0,6192,0
+   0x2781284F                      sint32   25,17
+   0x27812850                      sint32   0,0
+   0x27812851                      sint32   8,5,18,0
+   0x27812854                      uint32   248
+   0x29244DB5                      uint8    29
+   0x2A499F85                      uint32   0x0A8B9C43
+   0x49BEDA31                      uint8    4
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  3.0,4.0,0.0,0.0
+   0x6A871B82                      uint32   0x03330000
+   0x8A2602B8                      uint32   0xEA4C0D21
+   0x8A2602B9                      uint32   210
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x8A5EA69F
+   0xAA1DD396                      uint32   5387
+   0xAA1DD397                      uint32   0xAA4C6520
+   0xAA60E745                      float32  -100.0,48.0,100.0,0.0
+   0xAA83558F                      uint8    3
+   0xC8ED2D84                      uint32   79
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0x6A5EA69F
+   0xCA5B9305                      sint32   2,440
+   0xEA260589                      uint32   0x2A4942B0
+   0xEA2E078B                      uint32   0x2A9ADE4A
+   0xEA3209F8                      bool     1
+   0xEA54D286                      sint64   0
+=== G=8a3858d8 I=03410000  (768 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW40x40_ToxicDump_0341'
+   0x099AFACD                      sint64   20000
+   0x0A4C13CB                      uint32   0xAA55B162
+   0x27812810 OccupantSize         float32  40.0,7.0,40.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03410000
+   0x27812832 BuildingValue?       uint8    0
+   0x2781283F                      bool     0
+   0x27812841                      uint32   8208,4,8224,0,8240,0,6160,4,6176,0,6192,0
+   0x2781284F                      sint32   -60,24
+   0x27812850                      sint32   -100,48
+   0x27812851                      sint32   40,75,35,10
+   0x27812854                      uint32   20
+   0x29244DB5                      uint8    77
+   0x2A499F85                      uint32   0x8A8B98A7
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   0
+   0x4A4C132E                      uint32   0x6A55B16E
+   0x68EE9764                      float32  8.0,10.0,0.0,5.0
+   0x6A871B82                      uint32   0x03410000
+   0x8A2602B8                      uint32   0xEAB7EA76
+   0x8A2602B9                      uint32   10
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x0A5EA69E
+   0xAA1DD396                      uint32   5125,6440,5387
+   0xAA1DD397                      uint32   0xAA4C49ED
+   0xAA60E745                      float32  -100.0,40.0,100.0,0.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   190
+   0xC9B93A56                      uint32   0x6A5EC589
+   0xCA19D7CA                      uint32   0x6A55B155
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xEA5EA69D
+   0xCA5B9305                      sint32   -10,440
+   0xEA260589                      uint32   0x0A551701
+   0xEA2E078B                      uint32   0x4A78B743
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0x2A5A723F
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0x4A5A495E
+   0xEA54D286                      sint64   400
+=== G=8a3858d8 I=03420000  (722 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW32x32_MissileRange_0342'
+   0x099AFACD                      sint64   22500
+   0x27812810 OccupantSize         float32  31.900005340576172,11.0,31.900009155273438
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03420000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812841                      uint32   8208,0,8224,4,8240,0,6160,0,6176,4,6192,0
+   0x2781284F                      sint32   -50,22
+   0x27812850                      sint32   -100,48
+   0x27812851                      sint32   9,10,49,0
+   0x27812854                      uint32   0
+   0x29244DB5                      uint8    40
+   0x2A499F85                      uint32   0x6A8B9ACC
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  6.0,7.0,0.0,0.0
+   0x6A871B82                      uint32   0x03420000
+   0x8A2602B8                      uint32   0x6AB7EA38
+   0x8A2602B9                      uint32   20
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x0A5EA69F
+   0xAA1DD396                      uint32   6440,5387,6421
+   0xAA1DD397                      uint32   0xAA4C4892
+   0xAA60E745                      float32  -100.0,12.0,100.0,0.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   0
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xEA5EA69E
+   0xCA5B9305                      sint32   -5,440
+   0xEA260589                      uint32   0x0A552ED8
+   0xEA2E078B                      uint32   0xEA78B756
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0x2A5A723F
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0x4A5A495E
+   0xEA54D286                      sint64   450
+=== G=8a3858d8 I=03460000  (750 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW64x96_ArmyBase_0346'
+   0x099AFACD                      sint64   17000
+   0x27812810 OccupantSize         float32  18.0,14.0,24.0
+   0x27812811                      float32  0.6075000166893005
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03460000
+   0x27812832 BuildingValue?       uint8    0
+   0x27812840                      uint32   19200,0x000186A0
+   0x27812841                      uint32   8208,30,8224,4,8240,2,6160,30,6176,4,6192,2
+   0x2781284F                      sint32   40,12
+   0x27812850                      sint32   -120,36
+   0x27812851                      sint32   4,5,20,1
+   0x27812854                      uint32   339
+   0x29244DB5                      uint8    45
+   0x2A499F85                      uint32   0x4A8B9936
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  4.0,5.0,0.0,2.0
+   0x6A871B82                      uint32   0x03460000
+   0x8A2602B8                      uint32   0x2A8B7D1F
+   0x8A2602B9                      uint32   30
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0xCA5EA699
+   0xAA1DD396                      uint32   5387,6420
+   0xAA1DD397                      uint32   0x8A4C6575
+   0xAA60E745                      float32  -100.0,0.0,100.0,26435.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   251
+   0xC9B93A56                      uint32   0xEA5EC59F
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xAA5EA699
+   0xCA5B9305                      sint32   -7,440
+   0xCA5B9306                      uint8    30,64
+   0xEA260589                      uint32   0x6A552AA5
+   0xEA2E078B                      uint32   0x2A78B768
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0x2A5A723F
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0x4A5A495E
+   0xEA54D286                      sint64   340
+=== G=8a3858d8 I=03470000  (676 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW32x32_Cemetery_0347'
+   0x099AFACD                      sint64   1200
+   0x27812810 OccupantSize         float32  9.0,10.036399841308594,11.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03470000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812841                      uint32   8208,0,8224,0,8240,0,6160,0,6176,0,6192,0
+   0x2781284F                      sint32   0,0
+   0x27812850                      sint32   40,20
+   0x27812851                      sint32   -25,4,1,0
+   0x27812854                      uint32   0
+   0x29244DB5                      uint8    35
+   0x2A499F85                      uint32   0xCA8B96C2
+   0x49BEDA31                      uint8    1
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  3.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x03470000
+   0x8A2602B8                      uint32   0x4A8DC317
+   0x8A2602B9                      uint32   80
+   0x8A2602CC                      uint32   8
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x4A5EA69F
+   0xAA1DD396                      uint32   5387,5888
+   0xAA1DD397                      uint32   0x4A4C65C6
+   0xAA60E745                      float32  -100.0,12.0,100.0,0.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   100
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0x2A5EA69F
+   0xCA5B9305                      sint32   2,220
+   0xEA260589                      uint32   0x6A53DE35
+   0xEA2E078B                      uint32   0xEA9ADE07
+   0xEA3209F8                      bool     1
+   0xEA54D286                      sint64   0
+=== G=8a3858d8 I=03730000  (720 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW4x4_MayorStatueMediumLow_0373'
+   0x099AFACD                      sint64   370
+   0x27812810 OccupantSize         float32  4.0,9.0,4.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03730000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812841                      uint32   8208,0,8224,0,8240,0,6160,0,6176,0,6192,0
+   0x2781284F                      sint32   25,17
+   0x27812850                      sint32   25,17
+   0x27812851                      sint32   0,0,1,0
+   0x27812854                      uint32   0
+   0x29244DB5                      uint8    0
+   0x2A499F85                      uint32   0x8A8B9811
+   0x49BEDA31                      uint8    1
+   0x49CAC341                      sint64   4600
+   0x68EE9764                      float32  0.0,0.0,0.0,0.0
+   0x6A871B82                      uint32   0x03730000
+   0x8A2602B8                      uint32   0xAA8B7DAF
+   0x8A2602B9                      uint32   112
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x0AAC09B9
+   0xAA1DD396                      uint32   5387
+   0xAA1DD397                      uint32   0xAA55BC12
+   0xAA60E745                      float32  -100.0,9.0,100.0,0.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   0
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xAA8A01D7
+   0xCA5B9305                      sint32   3,120
+   0xEA260589                      uint32   0x8A6F9C31
+   0xEA2E078B                      uint32   0xAA9AE59F
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0xEA59717A
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0xAA59670C
+   0xEA54D286                      sint64   35
+=== G=8a3858d8 I=03760000  (702 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW26x26_HouseWorship2_0376'
+   0x099AFACD                      sint64   3400
+   0x27812810 OccupantSize         float32  26.0,23.0,26.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x031E0000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812840                      uint32   6176,5000
+   0x27812841                      uint32   8208,1,8224,3,8240,1,6160,1,6176,3,6192,1
+   0x2781284F                      sint32   0,0
+   0x27812850                      sint32   70,26
+   0x27812851                      sint32   1,1,6,0
+   0x27812854                      uint32   7
+   0x29244DB5                      uint8    31
+   0x2A499F85                      uint32   0xCA8B9AA2
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  2.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x03760000
+   0x8A2602B8                      uint32   0xAA35B0FA
+   0x8A2602B9                      uint32   70
+   0x8A2602CC                      uint32   8
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x0A5EA6A0
+   0xAA1DD396                      uint32   5387,6407
+   0xAA1DD397                      uint32   0xCA8C9FC3
+   0xAA60E745                      float32  -100.0,0.0,100.0,70.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   5
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xEA5EA69F
+   0xCA5B9305                      sint32   4,110
+   0xEA260589                      uint32   0x0A7761E5
+   0xEA2E078B                      uint32   0x0A9ADD09
+   0xEA3209F8                      bool     1
+   0xEA54D286                      sint64   0
+=== G=8a3858d8 I=03770000  (702 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW26x26_HouseWorship3_0377'
+   0x099AFACD                      sint64   3400
+   0x27812810 OccupantSize         float32  26.0,23.0,26.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x031E0000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812840                      uint32   6176,5000
+   0x27812841                      uint32   8208,1,8224,3,8240,1,6160,1,6176,3,6192,1
+   0x2781284F                      sint32   0,0
+   0x27812850                      sint32   70,26
+   0x27812851                      sint32   1,1,6,0
+   0x27812854                      uint32   7
+   0x29244DB5                      uint8    31
+   0x2A499F85                      uint32   0xCA8B9AA2
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  2.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x03770000
+   0x8A2602B8                      uint32   0xAA35B0FA
+   0x8A2602B9                      uint32   70
+   0x8A2602CC                      uint32   8
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x0A5EA6A0
+   0xAA1DD396                      uint32   5387,6407
+   0xAA1DD397                      uint32   0xCA8C9FC3
+   0xAA60E745                      float32  -100.0,0.0,100.0,70.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   5
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xEA5EA69F
+   0xCA5B9305                      sint32   4,110
+   0xEA260589                      uint32   0x4A7762B0
+   0xEA2E078B                      uint32   0x2A9ADD4E
+   0xEA3209F8                      bool     1
+   0xEA54D286                      sint64   0
+=== G=8a3858d8 I=037b0000  (676 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW32x32_Cemetery_037b'
+   0x099AFACD                      sint64   1200
+   0x27812810 OccupantSize         float32  8.0,11.0,8.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03470000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812841                      uint32   8208,0,8224,0,8240,0,6160,0,6176,0,6192,0
+   0x2781284F                      sint32   0,0
+   0x27812850                      sint32   40,20
+   0x27812851                      sint32   -25,4,1,0
+   0x27812854                      uint32   0
+   0x29244DB5                      uint8    35
+   0x2A499F85                      uint32   0xCA8B96C2
+   0x49BEDA31                      uint8    1
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  3.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x037B0000
+   0x8A2602B8                      uint32   0x0A8DC347
+   0x8A2602B9                      uint32   80
+   0x8A2602CC                      uint32   8
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x4A5EA69F
+   0xAA1DD396                      uint32   5387,5888
+   0xAA1DD397                      uint32   0x4A4C65C6
+   0xAA60E745                      float32  -100.0,12.0,100.0,0.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   100
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0x2A5EA69F
+   0xCA5B9305                      sint32   2,220
+   0xEA260589                      uint32   0x6A53DE36
+   0xEA2E078B                      uint32   0xCA9ADEA7
+   0xEA3209F8                      bool     1
+   0xEA54D286                      sint64   0
+=== G=8a3858d8 I=037c0000  (676 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW32x32_Cemetery_037C'
+   0x099AFACD                      sint64   240
+   0x27812810 OccupantSize         float32  8.0,10.036399841308594,8.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03470000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812841                      uint32   8208,0,8224,0,8240,0,6160,0,6176,0,6192,0
+   0x2781284F                      sint32   0,0
+   0x27812850                      sint32   20,16
+   0x27812851                      sint32   -1,1,1,0
+   0x27812854                      uint32   0
+   0x29244DB5                      uint8    35
+   0x2A499F85                      uint32   0xCA8B96C2
+   0x49BEDA31                      uint8    1
+   0x49CAC341                      sint64   0
+   0x68EE9764                      float32  3.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x037C0000
+   0x8A2602B8                      uint32   0x0A8DC359
+   0x8A2602B9                      uint32   80
+   0x8A2602CC                      uint32   8
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x4A5EA69F
+   0xAA1DD396                      uint32   5387,5888
+   0xAA1DD397                      uint32   0x4A4C65C6
+   0xAA60E745                      float32  -100.0,12.0,100.0,0.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   20
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0x2A5EA69F
+   0xCA5B9305                      sint32   1,220
+   0xEA260589                      uint32   0x6A53DE37
+   0xEA2E078B                      uint32   0x4A9ADECB
+   0xEA3209F8                      bool     1
+   0xEA54D286                      sint64   0
+=== G=8a3858d8 I=037e0000  (723 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW8x8_FemaleMayorStatueMedium_037E'
+   0x099AFACD                      sint64   810
+   0x27812810 OccupantSize         float32  4.0,16.0,4.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x037E0000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812841                      uint32   8208,0,8224,0,8240,0,6160,0,6176,0,6192,0
+   0x2781284F                      sint32   45,21
+   0x27812850                      sint32   45,21
+   0x27812851                      sint32   0,0,1,0
+   0x27812854                      uint32   0
+   0x29244DB5                      uint8    0
+   0x2A499F85                      uint32   0x8A8B9811
+   0x49BEDA31                      uint8    1
+   0x49CAC341                      sint64   7400
+   0x68EE9764                      float32  0.0,0.0,0.0,0.0
+   0x6A871B82                      uint32   0x037E0000
+   0x8A2602B8                      uint32   0x0A8B7DE3
+   0x8A2602B9                      uint32   112
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x0AAC0ABB
+   0xAA1DD396                      uint32   5387
+   0xAA1DD397                      uint32   0xAA55BC12
+   0xAA60E745                      float32  -100.0,9.0,100.0,0.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   0
+   0xC9B93A56                      uint32   0x4A5EC571
+   0xCA416AB5                      uint32   0x2026960B,0x0A554AE0,0xAA8A01D7
+   0xCA5B9305                      sint32   3,190
+   0xEA260589                      uint32   0xEA89FF1F
+   0xEA2E078B                      uint32   0x8A9AE683
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0xEA59717A
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0xAA59670C
+   0xEA54D286                      sint64   55
+=== G=8a3858d8 I=03c00000  (766 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW46x22_CityHall_03C0_Phase1-MZ'
+   0x099AFACD                      sint64   1500
+   0x27812810 OccupantSize         float32  46.0,43.0,22.0
+   0x27812811                      float32  0.33000001311302185
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x03C00000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812840                      uint32   15136,1500,15152,1500,18944,500,19200,500,19456,0
+   0x27812841                      uint32   8208,2,8224,13,8240,1,6160,2,6176,13,6192,1
+   0x2781284F                      sint32   30,18
+   0x27812850                      sint32   0,0
+   0x27812851                      sint32   1,1,6,0
+   0x27812854                      uint32   10
+   0x29244DB5                      uint8    36
+   0x2A499F85                      uint32   0x9B868F68
+   0x499AFA38                      uint8    16
+   0x49BEDA31                      uint8    3
+   0x49CAC341                      sint64   17000
+   0x68EE9764                      float32  2.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0x03C00000
+   0x8A2602B8                      uint32   0x27ED9DA2
+   0x8A2602B9                      uint32   470
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x4A5EA69C
+   0xAA1DD396                      uint32   5387,5393
+   0xAA1DD397                      uint32   0xEA55BB81
+   0xAA60E745                      float32  -100.0,0.0,100.0,100.0
+   0xAA83558F                      uint8    3
+   0xC8ED2D84                      uint32   20
+   0xC9B93A56                      uint32   0x6A5EC589
+   0xCA416AB5                      uint32   0x2026960B,0x8A3858D8,0x03C00000
+   0xEA260589                      uint32   0x6A4BD588
+   0xEA2E078B                      uint32   0x4A9AE483
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0xEA59717A
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0xAA59670C
+   0xEA54D286                      sint64   150
+=== G=8a3858d8 I=03c30000  (765 bytes)  parent={00000000,00000000,00000000}
+   0x00000010 ExemplarType         uint32   2
+   0x00000020 ExemplarName         string   'RW16x8_CityHall_03C3_Phase0-MZ'
+   0x099AFACD                      sint64   660
+   0x27812810 OccupantSize         float32  16.0,6.0,8.0
+   0x27812811                      float32  0.5
+   0x27812821 ResourceKeyType1     uint32   0x5AD0E817,0xBADB57F1,0x01EB0000
+   0x27812832 BuildingValue?       uint8    2
+   0x27812840                      uint32   15136,375,15152,375,18944,125,19200,125,19456,0
+   0x27812841                      uint32   8208,0,8224,1,8240,0,6160,0,6176,1,6192,0
+   0x2781284F                      sint32   10,14
+   0x27812850                      sint32   0,0
+   0x27812851                      sint32   1,1,4,0
+   0x27812854                      uint32   0
+   0x29244DB5                      uint8    36
+   0x2A499F85                      uint32   0x9B868F68
+   0x499AFA38                      uint8    16
+   0x49BEDA31                      uint8    2
+   0x49CAC341                      sint64   4250
+   0x68EE9764                      float32  2.0,3.0,0.0,0.0
+   0x6A871B82                      uint32   0xAE4CA73C
+   0x8A2602B8                      uint32   0x569AB1B2
+   0x8A2602B9                      uint32   470
+   0x8A416A99 ResourceKey          uint32   0x2026960B,0x0A554AE0,0x28C29E40
+   0xAA1DD396                      uint32   5387,5393
+   0xAA1DD397                      uint32   0xEA55BB81
+   0xAA60E745                      float32  -100.0,0.0,100.0,100.0
+   0xAA83558F                      uint8    0
+   0xC8ED2D84                      uint32   1
+   0xC9B93A56                      uint32   0x6A5EC589
+   0xCA416AB5                      uint32   0x2026960B,0x8A3858D8,0x03C30000
+   0xEA260589                      uint32   0xAE4CA73C
+   0xEA2E078B                      uint32   0xAE4CA73C
+   0xEA3209F8                      bool     1
+   0xEA54D283                      uint32   0xEA59717A
+   0xEA54D284                      uint32   0
+   0xEA54D285                      uint32   0xAA59670C
+   0xEA54D286                      sint64   60

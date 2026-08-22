@@ -1,0 +1,514 @@
+2415 exemplar names loaded from idx-section1.txt
+
+==== objects whose exemplar instance appears EXACTLY TWICE ====
+  <unnamed I=0x00A11000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x00BF1000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x02400000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x02600000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x02700000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x02800000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x05000405 G=0x088E1962>                          x2   owner=cSC4PowerPoleOccupant
+  <unnamed I=0x06D01600 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x07101600 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x09A00000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x10730000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  <unnamed I=0x10BA0000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  <unnamed I=0x10C30000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  <unnamed I=0x115A0000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  <unnamed I=0x19421000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x1A3A1000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x1A401000 G=0xC977C536>                          x2   owner=cSC4FoundationOccupant
+  <unnamed I=0x210B0000 G=0xC96E6806>                          x2   owner=cSC4Pedestrian
+  <unnamed I=0x2BFD0000 G=0x096E6739>                          x2   owner=cSC4Vehicle
+  A4x9x4_tail-gaiters_1E9C                                     x2   owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidPants_28f6                             x2   owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidSuit_28F9                              x2   owner=cSC4PropOccupant
+  AGolf1x1x3_putterGreenShorts_28FC                            x2   owner=cSC4PropOccupant
+  AR6x3x2_$$PoolModest-swim_1D56                               x2   owner=cSC4PropOccupant
+  AR8x8x2_$DogOnAChain_1ef3                                    x2   owner=cSC4PropOccupant
+  ARW4x4x4_tv-camera-crew_1EB2                                 x2   owner=cSC4PropOccupant
+  ARWStateFair4x7x4_small-medium_1E9B                          x2   owner=cSC4PropOccupant
+  Abase2x2x4_base-infield-drk_1E9E                             x2   owner=cSC4PropOccupant
+  Abase2x2x4_base-infield2-lgt_1E9D                            x2   owner=cSC4PropOccupant
+  Abase2x2x4_base-outfield-drk_1F2A                            x2   owner=cSC4PropOccupant
+  Abase2x2x4_base-outfield-lgt_1F2B                            x2   owner=cSC4PropOccupant
+  Aper2x2x4_Baseballcoach                                      x2   owner=cSC4PropOccupant
+  Aper2x2x4_child-F-drk01-negative-tantrum_2896                x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-P-drk01-negative-tantrum_285F               x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-P-lgt01-negative-booer_2865                 x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-P-lgt01-negative-phooee_2868                x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-S-med01-negative-booer_284F                 x2   owner=cSC4PropOccupant
+  Aper2x2x4_female-S-med01-positive-clap_2856                  x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-drk01-negative-booer_2870                     x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-drk01-positive-booyah_2876                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-drk01-positive-clap_2877                      x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-drk01-positive-woohoo_287A                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-lgt01-negative-phooee_287E                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-med02-negative-kissmy_2887                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-med02-negative-tantrum_288B                   x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-med02-positive-booyah_288C                    x2   owner=cSC4PropOccupant
+  Aper2x2x4_male-med02-positive-clap_288D                      x2   owner=cSC4PropOccupant
+  C16x7x3_$$$1LotCarCluster-00010_1E95                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$1LotCarCluster-10000_283B                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$2LotCarCluster-00110_1E2B                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$3LotCarCluster-11001_28A8                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$5LotCarCluster-11111_2846                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$5LotCarCluster-11111_2848                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$$5LotCarCluster-11111_2849                         x2   owner=cSC4PropOccupant
+  C16x7x3_$$1LotCarCluster-10000_1E8E                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$2LotCarCluster-10010_1E28                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$3LotCarCluster-10011_1E2E                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$3LotCarCluster-11001_28AB                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$4LotCarCluster-01111_28B0                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$4LotCarCluster-10111_28AF                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$4LotCarCluster-11011_1E30                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$4LotCarCluster-11110_28B1                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$5LotCarCluster-11111_28B2                          x2   owner=cSC4PropOccupant
+  C16x7x3_$$5LotCarCluster-11111_28B4                          x2   owner=cSC4PropOccupant
+  C16x7x3_$1LotCarCluster-00001_1E48                           x2   owner=cSC4PropOccupant
+  C16x7x3_$1LotCarCluster-01000_1E8D                           x2   owner=cSC4PropOccupant
+  C16x7x3_$4LotCarCluster-01111_1E5A                           x2   owner=cSC4PropOccupant
+  C8x8x2_$$$fountain_1DFF                                      x2   owner=cSC4PropOccupant
+  CV10x24_SmallLibrary_0319                                    x2   owner=cSC4BuildingOccupant
+  CV32x28_36carLocalPrecinct_030F                              x2   owner=cSC4BuildingOccupant
+  CV32x32_4engineStationHouse_030B                             x2   owner=cSC4BuildingOccupant
+  Effect_blue_blinking_light_slow_292A0000                     x2   owner=cSC4PropOccupantVisualEffect
+  Effect_fireworks_MayorsHouse                                 x2   owner=cSC4PropOccupantVisualEffect
+  Effect_natural_gas_smoke                                     x2   owner=cSC4PropOccupantVisualEffect
+  Effect_pigeons                                               x2   owner=cSC4PropOccupantVisualEffect
+  Flora4x2x5_$$Planter-Wood3_1E0C                              x2   owner=cSC4PropOccupant
+  I2x6x3_IndustTruck3_1D4B0000                                 x2   owner=cSC4PropOccupant
+  I8x8_1DirtyOut1_07F2                                         x2   owner=cSC4PropOccupant
+  R$$$16x20_123NYMansion9_00E2                                 x2   owner=cSC4BuildingOccupant
+  R$$$20x20_123HouMansion2_00E7                                x2   owner=cSC4BuildingOccupant
+  R$$$20x20_123NYMansion2_00DB                                 x2   owner=cSC4BuildingOccupant
+  R$$$24x14_123NYMansion5_00DE                                 x2   owner=cSC4BuildingOccupant
+  R$$$24x28_5NYUrbanPalazzo3_0142                              x2   owner=cSC4BuildingOccupant
+  R$$$36x26_5HouLuxCondos4_0165                                x2   owner=cSC4BuildingOccupant
+  R$$$36x26_6ChiLuxCondos4_008C                                x2   owner=cSC4BuildingOccupant
+  R$$$36x36_5HouLuxCondos7_0168                                x2   owner=cSC4BuildingOccupant
+  R$$$60x60_7ChiHiriseLuxCondos1_007C                          x2   owner=cSC4BuildingOccupant
+  R$$10x14_123NYStdHouse3_00C2                                 x2   owner=cSC4BuildingOccupant
+  R$$12x10_123HouStdHouse4_00CC                                x2   owner=cSC4BuildingOccupant
+  R$$12x14_123ChiStdHouse9_00BF                                x2   owner=cSC4BuildingOccupant
+  R$$12x14_123NYStdHouse7_00C6                                 x2   owner=cSC4BuildingOccupant
+  R$$16x16_5HouRowHouse1_0124                                  x2   owner=cSC4BuildingOccupant
+  R$$24x30_5NYSmCondos7_0136                                   x2   owner=cSC4BuildingOccupant
+  R$$28x26_6ChiSmCondos1_0089                                  x2   owner=cSC4BuildingOccupant
+  R$$44x24_7ChiHiriseApts11_018C                               x2   owner=cSC4BuildingOccupant
+  R$$54x24_7ChiHiriseApts4_008D                                x2   owner=cSC4BuildingOccupant
+  R$$58x54_7NYHiriseApts7_0194                                 x2   owner=cSC4BuildingOccupant
+  R$16x8_123HouTinyHouse8_00B6                                 x2   owner=cSC4BuildingOccupant
+  R$28x24_5NYTenemtApt1_0109                                   x2   owner=cSC4BuildingOccupant
+  R$30x28_5ChiTenemtApt6_0106                                  x2   owner=cSC4BuildingOccupant
+  R$40x44_7HouHiriseTenemts5_0181                              x2   owner=cSC4BuildingOccupant
+  R$44x24_7NYHiriseTenemts7_017D                               x2   owner=cSC4BuildingOccupant
+  R$4x10_123ChiTinyHouse5_00A1                                 x2   owner=cSC4BuildingOccupant
+  R$8x10_123ChiTinyHouse8_00A3                                 x2   owner=cSC4BuildingOccupant
+  R$8x10_123HouTinyHouse6_00B4                                 x2   owner=cSC4BuildingOccupant
+  R$8x10_123NYTinyHouse6_00AB                                  x2   owner=cSC4BuildingOccupant
+  R11x9x11_$$$Gazebo_1DDE                                      x2   owner=cSC4PropOccupant
+  R12x12x3_$$$stoneterracechaisefurniture2_1D0D                x2   owner=cSC4PropOccupant
+  R16x7x3_$$$1LotCarCluster-00100_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$$2LotCarCluster-00101_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$$4LotCarCluster-01111_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$$4LotCarCluster-10111_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$$5LotCarCluster-11111_                             x2   owner=cSC4PropOccupant
+  R16x7x3_$$3LotCarCluster-11010_1E3F                          x2   owner=cSC4PropOccupant
+  R16x7x3_$4LotCarCluster-11011_1E58                           x2   owner=cSC4PropOccupant
+  R16x8x7_$123HouTinyHouse10                                   x2   owner=cSC4PropOccupant
+  R2x1x2_$$Grill_2919                                          x2   owner=cSC4PropOccupant
+  R6x6x3_$$patiofurniturebbq1_1CC7                             x2   owner=cSC4PropOccupant
+  R6x6x5_$$satellitedish_1CCD                                  x2   owner=cSC4PropOccupant
+  RW21x29x2_LargePool_2a04                                     x2   owner=cSC4PropOccupant
+  RW2x8_MnrLgStadium-Goal_296B                                 x2   owner=cSC4PropOccupant
+  RW32x28_UnivLibrary_034A                                     x2   owner=cSC4PropOccupant
+  RW37x52x11_CommencementStage_2832                            x2   owner=cSC4PropOccupant
+  Street1x1x1_$silverTrashCan_1D2F                             x2   owner=cSC4PropOccupant
+  Streetlight1x1x11_$$Streetlightdiagonal_89f0                 x2   owner=cSC4PropOccupant
+  Up64x64_OilPowerPlant_1F42                                   x2   owner=cSC4BuildingOccupant
+  Uw14x14_WaterPumpingStationPlatform_2A71                     x2   owner=cSC4FoundationOccupant
+  Uw14x14_WaterPumpingStation_1F49                             x2   owner=cSC4BuildingOccupant
+
+==== all U-Drive-It / marker family objects present ====
+  AGolf1x1x3_driverBlackShirt_28F8                             x1     owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidPants_28f6                             x2     owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidShirt_28F7                             x3     owner=cSC4PropOccupant
+  AGolf1x1x3_driverPlaidSuit_28F9                              x2     owner=cSC4PropOccupant
+  ARW14x10x4_Commencement-audience_29C1                        x6     owner=cSC4PropOccupant
+  Construction0x0x2_MarkerPost_03060000                        x21    owner=cSC4PropOccupant
+  RW12x6_MovieStudio-Security_29A9                             x10    owner=cSC4PropOccupant
+  Tag1x1x3_AttackHelicopter_2BF60000                           x1     owner=cSC4PropOccupant
+  Tag1x1x3_Helipad_Medical                                     x6     owner=cSC4PropOccupant
+
+==== per-class object totals with resolved keys ====
+  0x2977AA47 cSC4PropOccupant                       15059 keyed records, 550 distinct exemplars
+  0xA9C05C85 cSC4FloraOccupant                      5817 keyed records, 20 distinct exemplars
+  0x896E75AF cSC4Pedestrian                         746 keyed records, 52 distinct exemplars
+  0x49C1A034 cSC4NetworkOccupantWithPreBuiltModel   671 keyed records, 128 distinct exemplars
+  0xA9BD882D cSC4BuildingOccupant                   582 keyed records, 142 distinct exemplars
+  0x49C05C8F cSC4FoundationOccupant                 569 keyed records, 20 distinct exemplars
+  0x49C05C9F cSC4LotRetainingWallOccupant           480 keyed records, 3 distinct exemplars
+  0x2977AA49 cSC4PropOccupantVisualEffect           91 keyed records, 20 distinct exemplars
+  0x896E714A cSC4Vehicle                            46 keyed records, 32 distinct exemplars
+  0x8A22BEBE cSC4LandfillOccupant                   43 keyed records, 4 distinct exemplars
+  0x09C05C6A cSC4PowerPoleOccupant                  22 keyed records, 3 distinct exemplars
+  0x8BA98EDA cSC4Helicopter                         7 keyed records, 2 distinct exemplars
+  0x4A222B98 cSC4PatrolCar                          4 keyed records, 1 distinct exemplars
+  0x00D0723D <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x02BF1DFA <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x22F6E80C <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x22F6E81B <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x40D07236 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x42BF1E18 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x62BF1DAA <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x62BF1DB9 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x62F6E7CF <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x815B4CEF <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x82B9999B <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0x97D76F6E <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xA0D07129 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xA2BF1DDC <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xA2BF1DE5 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xA2BF1E43 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xC2BF1DC5 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xC2BF1E04 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xC2F6E81F <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xE0D0722E <UNNAMED>                              1 keyed records, 1 distinct exemplars
+  0xE0D07233 <UNNAMED>                              1 keyed records, 1 distinct exemplars
+
+unresolved exemplar instances: 264 distinct, 8147 records
+   G=0xE83E0437 I=0x16800000  x3143
+   G=0xE83E0437 I=0x2A0C8416  x468
+   G=0xE83E0437 I=0x2A0C8316  x424
+   G=0xE83E0437 I=0x2A0C8216  x294
+   G=0xA8434037 I=0x02001500  x280
+   G=0xC977C536 I=0x890B7314  x240
+   G=0xE83E0437 I=0x2A0C8312  x210
+   G=0xC977C536 I=0xC96D2135  x203
+   G=0xC977C536 I=0xC96D2136  x197
+   G=0xE83E0437 I=0x16A00000  x168
+   G=0xC977C536 I=0x890B7315  x160
+   G=0xE83E0437 I=0x2A0C8313  x139
+   G=0xE83E0437 I=0x2A0C8412  x133
+   G=0xE83E0437 I=0x2A0C8212  x125
+   G=0xE83E0437 I=0x16600000  x108
+   G=0xE83E0437 I=0x2A0C8314  x106
+   G=0xE83E0437 I=0x2A0C8413  x87
+   G=0xC977C536 I=0x890B7313  x80
+   G=0xC977C536 I=0xC96D2137  x80
+   G=0xE83E0437 I=0x2A0C8414  x64
+   G=0xE83E0437 I=0x2A0C8315  x60
+   G=0xC96E6806 I=0x00300000  x59
+   G=0xC96E6806 I=0x00400000  x59
+   G=0xE83E0437 I=0x16900000  x59
+   G=0xE83E0437 I=0x16700000  x59
+BUILDING EXEMPLAR                                    Centropoli Commercial Industrial
+CO$$$12x28_1ChiOfficeBldg1_04EF                      0         1         0        
+CO$$$14x14_4HouOfficeBldg3_0583                      0         1         0        
+CO$$$14x14_5HouOfficeBldg5_0585                      0         2         0        
+CO$$$14x14_5NYOfficeBldg5_057B                       0         2         0        
+CO$$$14x22_5ChiOfficeBldg7_04FE                      0         7         0        
+CO$$$14x22_5HouOfficeBldg7_0587                      0         3         0        
+CO$$$14x22_5NYOfficeBldg7_057D                       0         2         0        
+CO$$$24x24_1HouOfficeBldg4_0552                      0         2         0        
+CO$$$24x24_1NYOfficeBldg4_0546                       0         2         0        
+CO$$$30x22_4HouOfficeBldg1_0581                      0         1         0        
+CO$$$30x22_4NYOfficeBldg1_0577                       0         1         0        
+CO$$$40x24_3ChiOfficeBldg10_04F2                     0         1         0        
+CO$$$40x24_3ChiOfficeBldg11_04F3                     0         2         0        
+CO$$$40x24_3HouOfficeBldg10_0558                     0         8         0        
+CO$$$40x24_3NYOfficeBldg10_054C                      0         2         0        
+CO$$$44x26_6ChiOfficeBldg10_0576                     0         3         0        
+CO$$$44x26_6ChiOfficeBldg9_0507                      0         2         0        
+CO$$$44x26_6HouOfficeBldg9_0589                      0         7         0        
+CO$$$44x26_6NYOfficeBldg9_057F                       0         3         0        
+CO$$$44x26_7HouOfficeBldg1_05AB                      0         3         0        
+CO$$$44x26_7NYOfficeBldg1_05A3                       0         1         0        
+CO$$$44x36_8NYOfficeBldg3_05A5                       0         1         0        
+CO$$$56x56_8ChiOfficeBldg7_04F8                      0         1         0        
+CO$$12x28_1ChiOfficeBldg1_04E9                       0         1         0        
+CO$$12x28_1ChiOfficeBldg2_04EB                       0         1         0        
+CO$$12x28_1ChiOfficeBldg3_04EC                       0         2         0        
+CO$$12x28_1HouOfficeBldg1_0533                       0         8         0        
+CO$$12x28_1NYOfficeBldg1_05F4                        0         2         0        
+CO$$14x14_4HouOfficeBldg1_0568                       0         1         0        
+CO$$14x14_4NYOfficeBldg1_055E                        0         3         0        
+CO$$14x22_4ChiOfficeBldg3_05F8                       0         1         0        
+CO$$14x22_4ChiOfficeBldg4_055B                       0         1         0        
+CO$$14x22_4HouOfficeBldg3_056A                       0         1         0        
+CO$$14x22_4NYOfficeBldg3_0560                        0         1         0        
+CO$$24x24_1NYOfficeBldg4_05F5                        0         1         0        
+CO$$24x24_1NYOfficeBldg5_05F6                        0         2         0        
+CO$$24x24_3HouOfficeBldg10_053C                      0         8         0        
+CO$$24x24_3NYOfficeBldg10_0530                       0         2         0        
+CO$$30x22_6ChiOfficeBldg7_0509                       0         3         0        
+CO$$30x22_6HouOfficeBldg7_056E                       0         1         0        
+CO$$30x22_6NYOfficeBldg7_0564                        0         6         0        
+CO$$40x24_2ChiOfficeBldg8_04FA                       0         3         0        
+CO$$40x24_2ChiOfficeBldg9_04FB                       0         3         0        
+CO$$40x24_2HouOfficeBldg7_0539                       0         2         0        
+CO$$40x24_2NYOfficeBldg7_052D                        0         7         0        
+CO$$44x26_5ChiOfficeBldg10_050A                      0         5         0        
+CO$$44x26_5ChiOfficeBldg11_05B3                      0         1         0        
+CO$$44x26_5ChiOfficeBldg9_04F5                       0         2         0        
+CO$$44x26_5HouOfficeBldg9_0570                       0         5         0        
+CO$$44x26_5NYOfficeBldg9_0566                        0         8         0        
+CO$$44x26_7ChiOfficeBldg3_0503                       0         2         0        
+CO$$44x26_7HouOfficeBldg3_0599                       0         2         0        
+CO$$44x26_7NYOfficeBldg3_0591                        0         2         0        
+CO$$44x36_7HouOfficeBldg1_0597                       0         1         0        
+CO$$56x36_8ChiOfficeBldg5_0504                       0         1         0        
+CO$$56x36_8HouOfficeBldg5_059B                       0         1         0        
+CO$$56x56_8ChiOfficeBldg7_04E4                       0         1         0        
+CS$$$10x14_1ChiChezFancy_051B                        0         2         0        
+CS$$$12x28_1NYLuxuryStore1_05E5                      0         3         0        
+CS$$$14x14_4HouLuxuryStore4_05EE                     0         2         0        
+CS$$$14x14_4NYLuxuryStore4_05E8                      0         1         0        
+CS$$$16x12_1ChiLuxurySpa_0512                        0         3         0        
+CS$$$24x24_1HouLuxuryStore2_05EC                     0         1         0        
+CS$$$24x26_1ChiLuxuryAutoCentr_0518                  0         1         0        
+CS$$$24x30_1ChiDinnerTheater_050F                    0         15        0        
+CS$$$26x46_4ChiMaxisSimTheatre_051F                  0         1         0        
+CS$$$30x26_4ChiRitzy_0521                            0         1         0        
+CS$$$40x24_3HouLuxuryStore3_05ED                     0         1         0        
+CS$$$40x24_3NYLuxuryStore3_05E7                      0         2         0        
+CS$$$44x26_5ChiLuxuryStore5_05E3                     0         2         0        
+CS$$$44x26_5HouLuxuryStore5_05EF                     0         20        0        
+CS$$$44x26_5NYLuxuryStore5_05E9                      0         2         0        
+CS$$$52x52_4ChiFashionCentre_051D                    0         1         0        
+CS$$10x14_1ChiFamilyDiner_051A                       0         9         0        
+CS$$12x14_1ChiCarDealership_0517                     0         6         0        
+CS$$12x28_1ChiMediumStore1_05B5                      0         11        0        
+CS$$12x28_1HouMediumStore1_05C5                      0         15        0        
+CS$$12x28_1NYMediumStore1_05BD                       0         6         0        
+CS$$12x8_1ChiServiceStation_0514                     0         3         0        
+CS$$14x14_4ChiMediumStore4_05B8                      0         3         0        
+CS$$14x14_4HouMediumStore4_05C8                      0         1         0        
+CS$$14x14_4NYMediumStore4_05C0                       0         1         0        
+CS$$14x22_4ChiMediumStore5_05B9                      0         1         0        
+CS$$14x22_4HouMediumStore5_05C9                      0         6         0        
+CS$$14x22_4NYMediumStore5_05C1                       0         2         0        
+CS$$30x22_6HouMediumStore6_05CA                      0         8         0        
+CS$$30x22_6NYMediumStore6_05C2                       0         4         0        
+CS$$30x28_4ChiFamilyInn_0520                         0         2         0        
+CS$$40x24_2ChiMediumStore3_05B7                      0         7         0        
+CS$$40x24_2HouMediumStore3_05C7                      0         13        0        
+CS$$40x24_2NYMediumStore3_05BF                       0         10        0        
+CS$$40x28_7ChiSimcys_052A                            0         2         0        
+CS$$40x54_7ChiCinema_0526                            0         1         0        
+CS$$44x16_1ChiFamilyCourt_0511                       0         37        0        
+CS$$44x26_5ChiMediumStore7_05BB                      0         2         0        
+CS$$44x26_5HouMediumStore7_05CB                      0         13        0        
+CS$$44x26_5NYMediumStore7_05C3                       0         4         0        
+CS$$44x28_1ChiMultiplex_050E                         0         1         0        
+CS$$60x44_7ChiMiddleClassMall_05F1                   0         22        0        
+CS$14x14_1NYSmallShop1_05D3                          0         2         0        
+CS$14x22_1ChiSmallShop3_05CF                         0         1         0        
+CS$14x22_1HouSmallShop3_05DB                         0         1         0        
+CS$14x22_1NYSmallShop3_05D5                          0         4         0        
+CS$14x26_6ChiSmallShop5_05D1                         0         11        0        
+CS$14x26_6HouSmallShop5_05DD                         0         3         0        
+CS$14x26_6NYSmallShop5_05D7                          0         3         0        
+CS$24x24_1ChiFleaMarket_0572                         0         46        0        
+CS$28x14_1ChiFleaBagMotel_0510                       0         1         0        
+CS$34x9_1ChiDrivein_050D                             0         1         0        
+CV10x24_SmallLibrary_0319                            2         0         0        
+CV12x14_2engineStationHouse_0310                     1         1         5        
+CV28x28_K-8SmallSchool_0314                          15        0         0        
+CV32x28_36carLocalPrecinct_030F                      2         0         0        
+CV32x32_4engineStationHouse_030B                     2         2         2        
+CV38x48_Jail_0337                                    1         0         0        
+CV44x44_CityCollege_031C                             1         0         0        
+CV44x44_LargeMedicalCenter_0313                      6         0         0        
+CV56x28_9-12LargeSchool_0317                         4         0         0        
+ID12x20_1DirtyOut2_07F3                              0         0         2        
+ID14x14_2DirtyMech5_07EA                             0         0         169      
+ID14x14_2DirtyOut4_07F5                              0         0         141      
+ID14x16_1DirtyAnchor1_07DA                           0         0         251      
+ID22x14_2DirtyAnchor6_07DF                           0         0         3        
+ID24x24_1DirtyMech2_07E7                             0         0         1        
+ID28x16_2DirtyMech8_07ED                             0         0         1        
+ID28x16_2DirtyOut6_07F7                              0         0         1        
+ID30x14_3DirtyOut8_07F9                              0         0         10       
+ID30x24_1DirtyAnchor4_07DD                           0         0         15       
+ID30x30_1DirtyAnchor55_0863                          0         0         4        
+ID30x30_1DirtyAnchor5_07DE                           0         0         5        
+ID30x30_3DirtyOut9_07FA                              0         0         7        
+ID32x16_3DirtyMech10_07EF                            0         0         57       
+ID32x16_3DirtyOut7_07F8                              0         0         20       
+ID32x32_3DirtyMech9_07EE                             0         0         3        
+ID45x30_1DirtyAnchor3_07DC                           0         0         2        
+ID48x30_2DirtyAnchor7_07E0                           0         0         2        
+ID48x32_3DirtyAnchor9_07E2                           0         0         24       
+ID48x46_2DirtyAnchor10_07E3                          0         0         1        
+ID48x46_2DirtyAnchor8_07E1                           0         0         1        
+ID4x6_1DirtyMech1_07E6                               0         0         39       
+ID8x8_1DirtyOut1_07F2                                0         0         38       
+IH14x14_1HTMech1_0836                                0         0         1        
+IH14x14_1HTMech9_0864                                0         0         186      
+IH14x24_1HTOut2_083F                                 0         0         28       
+IH14x28_1HTAnchor1_082B                              0         0         56       
+IH14x28_1HTAnchor2_082C                              0         0         50       
+IH14x28_1HTOut1_083E                                 0         0         18       
+IH14x28_2HTMech4_0839                                0         0         79       
+IH14x28_2HTMech5_083A                                0         0         116      
+IH24x28_2HTAnchor4_082E                              0         0         73       
+IH26x26_1HTOut5_0842                                 0         0         4        
+IH26x28_1HTOut4_0841                                 0         0         2        
+IH28x28_3HTMech7_083C                                0         0         7        
+IH28x28_3HTMech8_083D                                0         0         15       
+IH28x44_2HTOut6_0843                                 0         0         1        
+IH40x44_3HTAnchor9_0833                              0         0         1        
+IH42x42_3HTAnchor8_0832                              0         0         19       
+IH54x42_3HTAnchor11_0835                             0         0         1        
+IM14x24_1ManuOut2_081D                               0         0         24       
+IM14x28_1ManuAnchor1_0809                            0         0         90       
+IM14x28_1ManuAnchor2_080A                            0         0         94       
+IM14x28_1ManuOut1_081C                               0         0         21       
+IM14x28_2ManuMech4_0817                              0         0         171      
+IM14x28_2ManuMech5_0818                              0         0         215      
+IM18x32_1ManuMech1_0814                              0         0         19       
+IM24x28_1ManuAnchor4_080C                            0         0         43       
+IM26x28_2ManuOut4_081F                               0         0         4        
+IM28x28_3ManuMech7_081A                              0         0         11       
+IM28x28_3ManuMech8_081B                              0         0         5        
+IM28x40_2ManuAnchor6_080E                            0         0         2        
+IM28x40_2ManuOut8_0823                               0         0         2        
+IM42x42_2ManuAnchor8_0865                            0         0         4        
+PZ1x1_ParkGreens1_4a635a8a                           44        0         0        
+PZ1x1_Plaza1                                         0         45        0        
+R$$$16x20_123ChiMansion10_00D7                       1         0         0        
+R$$$16x20_123ChiMansion12_00D9                       1         0         0        
+R$$$16x20_123ChiMansion9_006F                        1         0         0        
+R$$$16x20_123NYMansion9_00E2                         2         0         0        
+R$$$20x20_123ChiMansion3_00D3                        1         0         0        
+R$$$20x20_123HouMansion2_00E7                        2         0         0        
+R$$$20x20_123NYMansion2_00DB                         2         0         0        
+R$$$20x24_4NYUrbanPalazzo1_0140                      3         0         0        
+R$$$20x24_5ChiUrbanPalazzo3_0092                     1         0         0        
+R$$$24x14_123ChiMansion7_0096                        1         0         0        
+R$$$24x14_123HouMansion5_00EA                        4         0         0        
+R$$$24x14_123NYMansion5_00DE                         2         0         0        
+R$$$24x28_5NYUrbanPalazzo3_0142                      2         0         0        
+R$$$28x26_5ChiLuxCondos1_0072                        12        0         0        
+R$$$28x26_5HouLuxCondos1_0162                        20        0         0        
+R$$$28x26_5NYLuxCondos1_0153                         23        0         0        
+R$$$32x32_5HouLuxCondos10_016B                       15        0         0        
+R$$$32x32_5NYLuxCondos10_015C                        10        0         0        
+R$$$32x32_6ChiLuxCondos10_0095                       19        0         0        
+R$$$36x26_5HouLuxCondos4_0165                        2         0         0        
+R$$$36x26_5NYLuxCondos4_0156                         1         0         0        
+R$$$36x26_6ChiLuxCondos4_008C                        2         0         0        
+R$$$36x36_5HouLuxCondos7_0168                        2         0         0        
+R$$$36x36_5NYLuxCondos7_0159                         7         0         0        
+R$$$36x36_6ChiLuxCondos7_008B                        4         0         0        
+R$$$54x24_6NYLuxCondos13_015F                        1         0         0        
+R$$$60x28_7ChiHiriseLuxCondos9_008E                  4         0         0        
+R$$$60x28_7HouHiriseLuxCondos9_01CB                  7         0         0        
+R$$$60x44_7ChiHiriseLuxCondos5_0097                  8         0         0        
+R$$$60x44_7NYHiriseLuxCondos5_01B7                   5         0         0        
+R$$$60x60_7ChiHiriseLuxCondos1_007C                  2         0         0        
+R$$10x14_123NYStdHouse1_00C0                         1         0         0        
+R$$10x14_123NYStdHouse2_00C1                         1         0         0        
+R$$10x14_123NYStdHouse3_00C2                         2         0         0        
+R$$12x10_123HouStdHouse4_00CC                        2         0         0        
+R$$12x10_123NYStdHouse4_00C3                         1         0         0        
+R$$12x14_123ChiStdHouse7_0099                        3         0         0        
+R$$12x14_123ChiStdHouse8_00BE                        5         0         0        
+R$$12x14_123ChiStdHouse9_00BF                        2         0         0        
+R$$12x14_123HouStdHouse7_00CF                        5         0         0        
+R$$12x14_123HouStdHouse8_00D0                        4         0         0        
+R$$12x14_123HouStdHouse9_00D1                        5         0         0        
+R$$12x14_123NYStdHouse7_00C6                         2         0         0        
+R$$12x14_123NYStdHouse8_00C7                         3         0         0        
+R$$12x14_123NYStdHouse9_00C8                         4         0         0        
+R$$16x16_4ChiRowHouse6_0090                          2         0         0        
+R$$16x16_4NYRowHouse1_011C                           4         0         0        
+R$$16x16_5HouRowHouse1_0124                          2         0         0        
+R$$16x20_4ChiRowHouse10_009A                         1         0         0        
+R$$24x30_5NYSmCondos7_0136                           2         0         0        
+R$$24x30_6ChiSmCondos7_009B                          4         0         0        
+R$$28x20_5NYSmCondos4_0133                           1         0         0        
+R$$28x26_5NYSmCondos1_0130                           3         0         0        
+R$$28x26_6ChiSmCondos1_0089                          2         0         0        
+R$$28x26_6HouSmCondos1_004C                          5         0         0        
+R$$44x24_7ChiHiriseApts11_018C                       2         0         0        
+R$$44x24_7ChiHiriseApts12_018D                       3         0         0        
+R$$44x24_7HouHiriseApts10_01A3                       8         0         0        
+R$$44x24_7NYHiriseApts10_0197                        3         0         0        
+R$$44x44_7NYHiriseApts1_018E                         14        0         0        
+R$$44x44_8ChiHiriseApts1_0088                        26        0         0        
+R$$44x44_8HouHiriseApts1_019A                        8         0         0        
+R$$54x24_7ChiHiriseApts4_008D                        2         0         0        
+R$$54x24_7NYHiriseApts4_0191                         4         0         0        
+R$$58x54_7HouHiriseApts7_01A0                        3         0         0        
+R$$58x54_7NYHiriseApts7_0194                         2         0         0        
+R$10x24_4ChiBoxyApt5_00F5                            5         0         0        
+R$10x24_4HouBoxyApt4_007E                            1         0         0        
+R$10x24_4HouBoxyApt5_0080                            1         0         0        
+R$10x24_4NYBoxyApt4_00FA                             4         0         0        
+R$16x30_4ChiBoxyApt6_009F                            10        0         0        
+R$16x30_4HouBoxyApt6_0100                            2         0         0        
+R$16x30_4NYBoxyApt6_00FC                             10        0         0        
+R$16x8_123HouTinyHouse8_00B6                         2         0         0        
+R$16x8_123HouTinyHouse9_00B7                         1         0         0        
+R$16x8_123NYTinyHouse10_00AF                         1         0         0        
+R$16x8_123NYTinyHouse8_00AD                          1         0         0        
+R$16x8_123NYTinyHouse9_00AE                          3         0         0        
+R$28x24_5NYTenemtApt1_0109                           2         0         0        
+R$28x24_6HouTenemtApt1_0112                          1         0         0        
+R$30x28_5ChiTenemtApt6_0106                          2         0         0        
+R$30x28_5NYTenemtApt4_010C                           5         0         0        
+R$30x28_6HouTenemtApt4_0115                          6         0         0        
+R$40x44_7ChiHiriseTenemts5_0173                      5         0         0        
+R$40x44_7HouHiriseTenemts5_0181                      2         0         0        
+R$40x44_7NYHiriseTenemts5_017B                       4         0         0        
+R$44x24_7ChiHiriseTenemts7_0175                      7         0         0        
+R$44x24_7HouHiriseTenemts7_0183                      7         0         0        
+R$44x24_7NYHiriseTenemts7_017D                       2         0         0        
+R$4x10_123ChiTinyHouse5_00A1                         2         0         0        
+R$4x10_123HouTinyHouse5_00B3                         1         0         0        
+R$4x10_123NYTinyHouse4_00A9                          4         0         0        
+R$4x10_123NYTinyHouse5_01E1                          3         0         0        
+R$60x60_7ChiHiriseTenemts3_0171                      1         0         0        
+R$60x60_8HouHiriseTenemts3_006D                      1         0         0        
+R$6x8_123ChiTinyHouse1_0102                          1         0         0        
+R$6x8_123NYTinyHouse2_00A7                           1         0         0        
+R$6x8_123NYTinyHouse3_00A8                           1         0         0        
+R$8x10_123ChiTinyHouse8_00A3                         2         0         0        
+R$8x10_123HouTinyHouse6_00B4                         2         0         0        
+R$8x10_123HouTinyHouse7_00B5                         3         0         0        
+R$8x10_123NYTinyHouse6_00AB                          2         0         0        
+R$8x10_123NYTinyHouse7_00AC                          6         0         0        
+RW112x128_MnrLgStadium                               1         0         0        
+RW144x128_MjrLgStadium                               1         0         0        
+RW16x14_MayorsHouse_031F                             1         0         0        
+RW16x8_CityHall_03C3_Phase0-MZ                       1         0         0        
+RW24x30_PrivateSchool2_0379                          1         0         0        
+RW24x30_PrivateSchool_0318                           1         0         0        
+RW26x26_HouseWorship2_0376                           1         0         0        
+RW26x26_HouseWorship3_0377                           1         0         0        
+RW26x26_HouseWorship_031E                            1         0         0        
+RW32x20_RadioStation_0333                            1         0         0        
+RW32x32_Cemetery_0347                                1         0         0        
+RW32x32_Cemetery_037C                                1         0         0        
+RW32x32_Cemetery_037b                                1         0         0        
+RW32x32_MissileRange_0342                            1         0         0        
+RW36x50_DiseaseCtr_033F                              1         0         0        
+RW40x40_ToxicDump_0341                               1         0         1        
+RW44x28_CountryClub_0327                             1         0         0        
+RW44x28_CourtHouse_0322                              1         0         0        
+RW44x28_UnivAdminTower_033D                          1         0         0        
+RW46x22_CityHall_03C0_Phase1-MZ                      1         0         0        
+RW48x60_StockExchange_0332                           0         1         0        
+RW4x4_MayorStatueMediumLow_0373                      1         0         0        
+RW63x63_BureauBureaucracy_0331                       1         0         0        
+RW64x64_Casino_033A                                  1         0         0        
+RW64x64_Prison_0338                                  1         0         0        
+RW64x96_ArmyBase_0346                                1         0         0        
+RW8x8_FemaleMayorStatueMedium_037E                   1         0         0        
+Up64x64_OilPowerPlant_1F42                           2         1         5        
+Ut12x4_BusStation_035A                               52        49        83       
+Uw14x14_WaterPumpingStation_1F49                     2         8         5        
+Uw32x18_WaterPurificationPlant1_1F4B                 0         0         2        

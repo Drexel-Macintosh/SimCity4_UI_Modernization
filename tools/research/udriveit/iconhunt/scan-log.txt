@@ -1,0 +1,24 @@
+archives discovered: 532
+    25/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+    50/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+    75/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   100/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   125/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   150/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   175/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   200/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   225/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   250/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   275/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   300/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   325/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   350/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   375/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   400/532 archives | entries 0 decoded 0 fail 0 imgs 0 rows 0
+   425/532 archives | entries 157 decoded 157 fail 0 imgs 166 rows 50
+   450/532 archives | entries 325 decoded 325 fail 0 imgs 334 rows 98
+   475/532 archives | entries 350 decoded 350 fail 0 imgs 359 rows 198
+   500/532 archives | entries 377 decoded 377 fail 0 imgs 386 rows 286
+   525/532 archives | entries 2564 decoded 2564 fail 0 imgs 2573 rows 649
+   532/532 archives | entries 45833 decoded 45807 fail 26 imgs 50654 rows 18037
+STATS {'entries': 45833, 'decoded': 45807, 'decode_fail': 26, 'imgs': 50654, 'skip_big': 1, 'comps': 149263} rows 18037

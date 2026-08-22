@@ -1,0 +1,48 @@
+-----------------------------------------------------------------------------------------
+-- This file defines advices for the the ENVIRONMENT
+dofile("_adv_sys.lua") 
+dofile("_adv_advice.lua") 
+dofile("adv_game_data.lua") 
+dofile("adv_fluffnews.lua") 
+
+
+----------------------------------------------------------------------
+-- Advice fields 
+
+--type      = advice_types . ENVIRONMENT,
+--mood      = advice_moods . NEUTRAL,
+--priority  = 100,
+--title        = "UNDEFINED title : from base advice structure",
+--message = "UNDEFINED message : from base advice structure",
+--frequency   = 35, -- in days
+--timeout   = 45, -- in days
+--trigger   = "1",
+--once   = 1, -- trigger the advice only once
+-- event = 0, -- this has to be a valid event ID (see const file for the event table.)
+
+------------ Advice record ----
+
+-------------Landmark news The Living Mall----
+a = create_advice_fluff ('eac957d6')
+
+a.trigger  = "game.reward_instance_count('04c00000')== 1"
+a.timeout = tuning_constants.ADVICE_TIMEOUT_SHORT
+a.title   = [[text@6ac91ad7 This is a test for the Living Mall landmark plugin.]]
+a.priority  = tuning_constants.ADVICE_PRIORITY_LOW
+a.mood = advice_moods.FLUFF
+a.news_only = 1
+a.persist = 1
+a.once = 1
+
+--------------------------------------------------------------------
+-- This will try to execute triggers for all registerd advices 
+-- to make sure they don't have any syntactic errors.
+
+if (_sys.config_run == 0)
+then
+   advices : run_triggers()
+end
+
+
+
+

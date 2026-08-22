@@ -1,0 +1,2954 @@
+{
+"0x000A2D2D": [
+"CN_PDBS",
+"0x00A81430"
+],
+"0x3FEB3333": [
+"CN_PDBS",
+"0x00A83B04"
+],
+"0x40E00000": [
+"CN_PDBS",
+"0x00A85FB8"
+],
+"0x49742400": [
+"CN_PDBS",
+"0x00A867AC"
+],
+"0x41A80000": [
+"CN_PDBS",
+"0x00A88268"
+],
+"0x3D4CCCCD": [
+"CN_PDBS",
+"0x00A8CE98"
+],
+"0x02000000": [
+"north",
+"0x00A8E6D8"
+],
+"0x00020000": [
+"west",
+"0x00A8E6E8"
+],
+"0xBD800000": [
+"CN_PDBS",
+"0x00A8ECD0"
+],
+"0x4A989680": [
+"CN_PDBS",
+"0x00A8ED6C"
+],
+"0x00296425": [
+"CN_PDBS",
+"0x00A8FAAC"
+],
+"0x3F000000": [
+"CN_PDBS",
+"0x00A904D4"
+],
+"0x38D1B717": [
+"CN_PDBS",
+"0x00A90640"
+],
+"0x3FE00000": [
+"CN_PDBS",
+"0x00A92D2C"
+],
+"0x42FE0000": [
+"CN_PDBS",
+"0x00A9319C"
+],
+"0x3F800000": [
+"CN_PDBS",
+"0x00A94210"
+],
+"0x43800000": [
+"CN_PDBS",
+"0x00A9422C"
+],
+"0xBF800000": [
+"CN_PDBS",
+"0x00A94488"
+],
+"0x3FE921FB": [
+"CN_PDBS",
+"0x00A99F6C"
+],
+"0x459C4000": [
+"CN_PDBS",
+"0x00A9C7B0"
+],
+"0xEBFB0402": [
+"CN_PDBS",
+"0x00A9E428"
+],
+"0x41800000": [
+"CN_PDBS",
+"0x00A9E95C"
+],
+"0x4B400000": [
+"CN_PDBS",
+"0x00AA0BE8"
+],
+"0x3D8F5C29": [
+"CN_PDBS",
+"0x00AA27E8"
+],
+"0x00202D20": [
+"CN_PDBS",
+"0x00AA2B30"
+],
+"0x3DDB7CDF": [
+"CN_PDBS",
+"0x00AA51CC"
+],
+"0x3FB00000": [
+"CN_PDBS",
+"0x00AA66E4"
+],
+"0x3B800000": [
+"CN_PDBS",
+"0x00AA6E60"
+],
+"0x0BE08C87": [
+"Road",
+"0x00AA8458"
+],
+"0x3C10624D": [
+"CN_PDBS",
+"0x00AAEE4C"
+],
+"0x01000000": [
+"CN_PDBS",
+"0x00AB21E8"
+],
+"0x46FFFE00": [
+"CN_PDBS",
+"0x00AB274C"
+],
+"0x3F4CCCCD": [
+"CN_PDBS",
+"0x00AB3158"
+],
+"0x3DF5C28F": [
+"CN_PDBS",
+"0x00AB4A0C"
+],
+"0x462BE000": [
+"CN_PDBS",
+"0x00AB54CC"
+],
+"0x00346373": [
+"CN_PDBS",
+"0x00AB55B4"
+],
+"0x3F689374": [
+"CN_PDBS",
+"0x00AB8B2C"
+],
+"0x3F747AE1": [
+"CN_PDBS",
+"0x00AB98BC"
+],
+"0x002A2E2A": [
+"CN_PDBS",
+"0x00AB9E98"
+],
+"0x3FDEB851": [
+"hardwareDriver",
+"0x00ABAD3C"
+],
+"0x3F701010": [
+"CN_PDBS",
+"0x00ABB4E4"
+],
+"0x40C90FDB": [
+"CN_PDBS",
+"0x00ABD584"
+],
+"0x00010101": [
+"CN_PDBS",
+"0x00ABD79C"
+],
+"0x46000000": [
+"CN_PDBS",
+"0x00AC2810"
+],
+"0xFFFF00CB": [
+"nese",
+"0x00AC63A8"
+],
+"0x00210001": [
+"nil",
+"0x00ACB8D4"
+],
+"0x3DF00000": [
+"CN_PDBS",
+"0x00ACECBC"
+],
+"0x4386D516": [
+"CN_PDBS",
+"0x00AD5318"
+],
+"0xAC0C8DAD": [
+"advices",
+"0x00B07DA0"
+],
+"0x3D800000": [
+"WhereRUFrom",
+"0x00B07F2C"
+],
+"0x40000000": [
+"CN_PDBS",
+"0x00B07F84"
+],
+"0x533CCA1E": [
+"kMsgTypeToolTipTick",
+"0x00B07FD8"
+],
+"0x02A09B21": [
+"kMsgMapChanged",
+"0x00B07FE0"
+],
+"0x0426840A": [
+"kMsgTypeDemandChanged",
+"0x00B07FE8"
+],
+"0x06946DC3": [
+"kMsgWaterMapChanged",
+"0x00B07FF0"
+],
+"0x69247DC3": [
+"kMsgTransitStrikeCalledOff",
+"0x00B07FF8"
+],
+"0x69247DC4": [
+"kMsgTransitStrikeBegin",
+"0x00B08000"
+],
+"0x69247DC5": [
+"kMsgTransitStrikeFinished",
+"0x00B08008"
+],
+"0x69247DC6": [
+"kMsgTransitStrikeThreatened",
+"0x00B08010"
+],
+"0x69247DC7": [
+"kMsgTrafficMapChanged",
+"0x00B08018"
+],
+"0x69247DC8": [
+"kMsgRoadDamageChange",
+"0x00B08020"
+],
+"0x02C06BA8": [
+"kMsgFerryDataUpdate",
+"0x00B08028"
+],
+"0x426841A1": [
+"kMsgAdviceClickedChanged",
+"0x00B08038"
+],
+"0x0CA56DD7": [
+"kMsgTypeToolTipTick",
+"0x00B08040"
+],
+"0x0243FC6F": [
+"kMsgPingResult",
+"0x00B08048"
+],
+"0x4348B111": [
+"kMessageTypeAppGainLoseFocus",
+"0x00B08058"
+],
+"0x5A4FC3D5": [
+"kMessageTypeIMEEvent",
+"0x00B08060"
+],
+"0xCA8F3DB6": [
+"kMessageType_UpdateSelf",
+"0x00B08068"
+],
+"0xE94671EB": [
+"kMessageTypeDispatchBegin",
+"0x00B08070"
+],
+"0xE94671EC": [
+"kMessageTypeDispatchActive",
+"0x00B08078"
+],
+"0xE94671ED": [
+"kMessageTypeDispatchInactive",
+"0x00B08080"
+],
+"0x894671F6": [
+"kMessageTypeDispatchEnd",
+"0x00B08088"
+],
+"0x231BBF91": [
+"kMessageTypePreferencesChanged",
+"0x00B08090"
+],
+"0x49D15B72": [
+"kMessageTypeFireDisasterSeverityChange",
+"0x00B08098"
+],
+"0x49D15B73": [
+"kMessageTypeFireDisasterObjectsIgnited",
+"0x00B080A0"
+],
+"0xCA1B1E64": [
+"kMessageTypeDisasterPeriodStarted",
+"0x00B080A8"
+],
+"0xAA1B2002": [
+"kMessageTypeDisasterPeriodEnded",
+"0x00B080B0"
+],
+"0xA9C7CAB6": [
+"kMessageTypeDisasterPhaseChange",
+"0x00B080B8"
+],
+"0x49E3DB1D": [
+"kMessageTypeDisasterFireStarter",
+"0x00B080C0"
+],
+"0x87163754": [
+"kMessageTypeFileChangeNotification",
+"0x00B080C8"
+],
+"0x88EA4DFF": [
+"kMessageTypeMapChanged",
+"0x00B080D0"
+],
+"0x08DAC3E7": [
+"kMessageTypeFundingPercentageChanged",
+"0x00B080D8"
+],
+"0x08DAC3E8": [
+"kMessageTypeIdealMonthlyFundingChanged",
+"0x00B080E0"
+],
+"0x68F54CE0": [
+"kMessageTypeSimCycleComplete",
+"0x00B080E8"
+],
+"0x68F54CE1": [
+"kMessageTypeStrikeBegin",
+"0x00B080F0"
+],
+"0x68F54CE2": [
+"kMessageTypeStrikeEnd",
+"0x00B080F8"
+],
+"0x08F415FE": [
+"kMessageTypeSimCycleComplete",
+"0x00B08100"
+],
+"0x87CC75B3": [
+"kMessageTypeMapChanged",
+"0x00B08108"
+],
+"0x4C04DE69": [
+"kMessageType_LotDeveloperNotification",
+"0x00B08110"
+],
+"0xAA667CE2": [
+"kMessageTypeZooEscape",
+"0x00B08118"
+],
+"0xA8DAF510": [
+"kMessageTypeSimCycleComplete",
+"0x00B08120"
+],
+"0xA8DAF511": [
+"kMessageTypeStrikeBegin",
+"0x00B08128"
+],
+"0xA8DAF512": [
+"kMessageTypeStrikeEnd",
+"0x00B08130"
+],
+"0xA949569A": [
+"kMessageTypePoliceBuildingChange",
+"0x00B08138"
+],
+"0x2A614891": [
+"kMessageTypeJailbreakBegin",
+"0x00B08140"
+],
+"0x2A614892": [
+"kMessageTypeJailbreakEnd",
+"0x00B08148"
+],
+"0xCA358F85": [
+"kMessageTypeStrikeBegin",
+"0x00B08150"
+],
+"0xCA358F9C": [
+"kMessageTypeStrikeEnd",
+"0x00B08158"
+],
+"0x6A07C2EE": [
+"kMessageTypeMapChanged",
+"0x00B08160"
+],
+"0xC8EA5018": [
+"kMessageTypeSimCycleComplete",
+"0x00B08168"
+],
+"0x8A09FA64": [
+"kSC4MessageAdvisors_AdviceAdded",
+"0x00B08170"
+],
+"0x8A09FA65": [
+"kSC4MessageAdvisors_AdviceRemoved",
+"0x00B08178"
+],
+"0x8A09FA66": [
+"kSC4MessageAdvisors_AdviceChanged",
+"0x00B08180"
+],
+"0x8A09FA67": [
+"kSC4MessageAdvisors_AdviceRemovedAll",
+"0x00B08188"
+],
+"0x8A09FA6C": [
+"kSC4MessageAdvisors_AdviceCommand",
+"0x00B08190"
+],
+"0x8A09FA68": [
+"kSC4MessageAdvisors_AdvisorChanged",
+"0x00B08198"
+],
+"0x8A09FA69": [
+"kSC4MessageAdvisors_AdvisorRemoved",
+"0x00B081A0"
+],
+"0x8A09FA6A": [
+"kSC4MessageAdvisors_AdvisorAdded",
+"0x00B081A8"
+],
+"0x8A09FA6B": [
+"kSC4MessageAdvisors_AdvisorRemovedAll",
+"0x00B081B0"
+],
+"0xEA917750": [
+"kSC4MessageAdvisors_AdviceDebugCheat_DebugShowGUID",
+"0x00B081B8"
+],
+"0x8A917759": [
+"kSC4MessageAdvisors_AdviceDebugCheat_DebugRefresh",
+"0x00B081C0"
+],
+"0x4A91DD6E": [
+"kSC4MessageAdvisors_AdviceDebugCheat_DebugTrigger",
+"0x00B081C8"
+],
+"0x4A92ECEF": [
+"kSC4MessageAdvisors_AdviceDebugCheat_DebugPrint",
+"0x00B081D0"
+],
+"0xEA5BDFBC": [
+"kSC4MessageAdvisors_BudgetWindow",
+"0x00B081D8"
+],
+"0xCA5BDFB0": [
+"kSC4MessageAdvisors_Data1_BudgetWindowMainSmall",
+"0x00B081E0"
+],
+"0x4A5BDFB8": [
+"kSC4MessageAdvisors_Data1_BudgetWindowMainLarge",
+"0x00B081E8"
+],
+"0x6A5BDFCD": [
+"kSC4MessageAdvisors_DataMapWindow",
+"0x00B081F0"
+],
+"0x6A720993": [
+"kSC4MessageAdvisors_GraphWindow",
+"0x00B081F8"
+],
+"0x0B6F3E27": [
+"kSC4MessageMySim_DebugPrintMySimsInfo",
+"0x00B08200"
+],
+"0xAB6F3E2D": [
+"kSC4MessageMySim_DebugPrintMySimChangeJob",
+"0x00B08208"
+],
+"0x4B6F3EBF": [
+"kSC4MessageMySim_DebugPrintMySimChangeHouse",
+"0x00B08210"
+],
+"0x0BB04126": [
+"kSC4MessageMySim_DebugPrintMySimDispatch",
+"0x00B08218"
+],
+"0x8BBBD22A": [
+"kSC4MessageMySim_FollowWithCamera",
+"0x00B08220"
+],
+"0xAA25827C": [
+"kSC4MessageMySims_MySimsChanged",
+"0x00B08228"
+],
+"0xEA3ADA33": [
+"kSC4MessageMySims_MySimMovedIn",
+"0x00B08230"
+],
+"0xAA3840E6": [
+"kSC4MessageTutorial_EndTutorial",
+"0x00B08238"
+],
+"0xEBAB04B2": [
+"kSC4MessageTypeMySimDispatchFollow",
+"0x00B08240"
+],
+"0xEBAB04F3": [
+"kSC4MessageTypeMySimDispatchActivate",
+"0x00B08248"
+],
+"0x86AD10EE": [
+"kSC4MessageAnimationTick",
+"0x00B08250"
+],
+"0x86AD10EF": [
+"kSC4MessageAnimationTickPriority",
+"0x00B08258"
+],
+"0x28E9397A": [
+"kSC4MessagePreAppInit",
+"0x00B08260"
+],
+"0x28E9397B": [
+"kSC4MessagePostAppInit",
+"0x00B08268"
+],
+"0x28E9397C": [
+"kSC4MessagePreAppShutdown",
+"0x00B08270"
+],
+"0x28E9397D": [
+"kSC4MessagePostAppShutdown",
+"0x00B08278"
+],
+"0x8B8B2CED": [
+"kSC4MessageInsertBuildingOccupant",
+"0x00B08280"
+],
+"0x8B8B2CEE": [
+"kSC4MessageRemoveBuildingOccupant",
+"0x00B08288"
+],
+"0xC8DAC052": [
+"kSC4MessageBuildingOccupantStateChange",
+"0x00B08290"
+],
+"0x2977AE2F": [
+"kSC4MessageBuildingCompletionChange",
+"0x00B08298"
+],
+"0x09D8E0B6": [
+"kSC4MessageBuildingVisualStateChange",
+"0x00B082A0"
+],
+"0x26D31EC0": [
+"kSC4MessagePreCityInit",
+"0x00B082A8"
+],
+"0x26D31EC1": [
+"kSC4MessagePostCityInit",
+"0x00B082B0"
+],
+"0xEA8AE29A": [
+"kSC4MessagePostCityInitComplete",
+"0x00B082B8"
+],
+"0x26D31EC2": [
+"kSC4MessagePreCityShutdown",
+"0x00B082C0"
+],
+"0x26D31EC3": [
+"kSC4MessagePostCityShutdown",
+"0x00B082C8"
+],
+"0x26D31EC4": [
+"kSC4MessageCityEstablished",
+"0x00B082D0"
+],
+"0x26D31EC5": [
+"kSC4MessageCityObliterated",
+"0x00B082D8"
+],
+"0xEA65224E": [
+"kSC4MessageCityObliterationSceneEnded",
+"0x00B082E0"
+],
+"0x0AB99380": [
+"kSC4MessageCityNameChanged",
+"0x00B082E8"
+],
+"0x0AB99381": [
+"kSC4MessageMayorNameChanged",
+"0x00B082F0"
+],
+"0xA6DDE60A": [
+"kSC4MessagePreDemolishOccupant",
+"0x00B082F8"
+],
+"0xA6DDE60B": [
+"kSC4MessagePostDemolishOccupant",
+"0x00B08300"
+],
+"0xA6DDE60C": [
+"kSC4MessagePreDemolishArea",
+"0x00B08308"
+],
+"0xA6DDE60D": [
+"kSC4MessagePostDemolishArea",
+"0x00B08310"
+],
+"0xAA7A014D": [
+"kSC4MessagePreDemolishNetworkOccupant",
+"0x00B08318"
+],
+"0x4A809914": [
+"kSC4MessageHeaderFontStyleID",
+"0x00B08320"
+],
+"0x4A809915": [
+"kSC4MessageBodyFontStyleID",
+"0x00B08328"
+],
+"0x26C63340": [
+"kSC4MessagePreLoad",
+"0x00B08330"
+],
+"0x26C63341": [
+"kSC4MessageLoad",
+"0x00B08338"
+],
+"0x26C63342": [
+"kSC4MessagePostLoad",
+"0x00B08340"
+],
+"0x26C63343": [
+"kSC4MessagePreSave",
+"0x00B08348"
+],
+"0x26C63344": [
+"kSC4MessageSave",
+"0x00B08350"
+],
+"0x26C63345": [
+"kSC4MessagePostSave",
+"0x00B08358"
+],
+"0xCAD61E00": [
+"kSC4MessageMouseScrollBegin",
+"0x00B08360"
+],
+"0xEAD61E16": [
+"kSC4MessageMouseScrollEnd",
+"0x00B08368"
+],
+"0x2B96B3EA": [
+"kSC4MessagePostAppServicesInit",
+"0x00B08370"
+],
+"0xAB96B05F": [
+"kSC4MessagePostAppServicesInitComplete",
+"0x00B08378"
+],
+"0x896FDC70": [
+"kSC4MessagePropExemplarDataUpdated",
+"0x00B08380"
+],
+"0x6AC284F3": [
+"kSC4MessageConnectionsReady",
+"0x00B08388"
+],
+"0x8A878385": [
+"kSC4MessageAutomatonApprochingIntersection",
+"0x00B08390"
+],
+"0x09C8B8EA": [
+"kSC4MessageChangeInputControl",
+"0x00B08398"
+],
+"0x07699455": [
+"kSC4MessageZoningChange",
+"0x00B083A0"
+],
+"0x29A89B05": [
+"kSC4MessageUnilateralQuit",
+"0x00B083A8"
+],
+"0x49F10111": [
+"kSC4MessageTypeDispatchFollow",
+"0x00B083B0"
+],
+"0xC9F1011A": [
+"kSC4MessageTypeDispatchActivate",
+"0x00B083B8"
+],
+"0x697D01EE": [
+"kSC4MessageViewAnimTick",
+"0x00B083C0"
+],
+"0x8A385DD8": [
+"kSC4MessageAutomataPlaySFX",
+"0x00B083C8"
+],
+"0xAA396960": [
+"kSC4MessageAutomataStopSFX",
+"0x00B083D0"
+],
+"0xA9E3B6E2": [
+"kSC4MessageCrowdReactionEvent",
+"0x00B083D8"
+],
+"0xA9E3B6E3": [
+"kSC4MessageCrowdReactionResult",
+"0x00B083E0"
+],
+"0xCA8DCDB4": [
+"kSC4MessageEmergencyVehicleRouteBlocked",
+"0x00B083E8"
+],
+"0x49E64801": [
+"kSC4MessagePedestrianChangeState",
+"0x00B083F0"
+],
+"0x49E64802": [
+"kSC4MessageAutomataCollision",
+"0x00B083F8"
+],
+"0x09D92FC3": [
+"kSC4MessageAutomataEvent",
+"0x00B08400"
+],
+"0xEA298D50": [
+"kSC4MessageRemoveAutomataController",
+"0x00B08408"
+],
+"0xABBBCA64": [
+"kSC4MessageCitySituationActivationChange",
+"0x00B08410"
+],
+"0xAC083D7D": [
+"kSC4MessageCitySituationProgressChange",
+"0x00B08418"
+],
+"0xCC0D905F": [
+"kSC4MessageMissionEffectStarted",
+"0x00B08420"
+],
+"0x0BB324BD": [
+"kSC4MessagePlayerDriveControlCallback",
+"0x00B08428"
+],
+"0x0A36F1E8": [
+"kSC4MessageTornadoDead",
+"0x00B08430"
+],
+"0x0A36F1E9": [
+"kSC4MessageTornadoLocation",
+"0x00B08438"
+],
+"0x2A7B582D": [
+"kSC4MessageEffectDone",
+"0x00B08440"
+],
+"0x2A7B582E": [
+"kSC4MessageEffectLocation",
+"0x00B08448"
+],
+"0x99EF1140": [
+"kSC4MessageCreateOccupant",
+"0x00B08450"
+],
+"0x99EF1141": [
+"kSC4MessageDestroyOccupant",
+"0x00B08458"
+],
+"0x99EF1144": [
+"kSC4MessageShowOccupant",
+"0x00B08460"
+],
+"0x99EF1145": [
+"kSC4MessageChangeOccupant",
+"0x00B08468"
+],
+"0x99EF1142": [
+"kSC4MessageInsertOccupant",
+"0x00B08470"
+],
+"0x99EF1143": [
+"kSC4MessageRemoveOccupant",
+"0x00B08478"
+],
+"0x99EF1146": [
+"kSC4MessageMoveOccupant",
+"0x00B08480"
+],
+"0x49D968C4": [
+"kSC4MessageDeferOccupantOperations",
+"0x00B08488"
+],
+"0xEBFF18A3": [
+"kSC4MessageOccupantGroupChanged",
+"0x00B08490"
+],
+"0xE9C86DDB": [
+"kSC4MessagePropStateChange",
+"0x00B08498"
+],
+"0x4A44667F": [
+"kSC4MessageProgressMessage",
+"0x00B084A0"
+],
+"0x8B87A974": [
+"kSC4MessageInsertUndergroundOccupant",
+"0x00B084A8"
+],
+"0x8B87A975": [
+"kSC4MessageRemoveUndergroundOccupant",
+"0x00B084B0"
+],
+"0xCA1B151C": [
+"kSC4MessageTypeIngredChangesMade",
+"0x00B084B8"
+],
+"0xEA394B74": [
+"kSC4MessageGrowSmallAirport1",
+"0x00B084C0"
+],
+"0xCB3BE815": [
+"kSC4MessageGrowSmallAirport2",
+"0x00B084C8"
+],
+"0xEB3BE415": [
+"kSC4MessageGrowMediumAirport1",
+"0x00B084D0"
+],
+"0x2B3BE44A": [
+"kSC4MessageGrowMediumAirport2",
+"0x00B084D8"
+],
+"0x6B3BE6D8": [
+"kSC4MessageGrowLargeAirport1",
+"0x00B084E0"
+],
+"0x0B3BE81A": [
+"kSC4MessageGrowLargeAirport2",
+"0x00B084E8"
+],
+"0x0772FAD4": [
+"kSC4MessageFundsChanged",
+"0x00B084F0"
+],
+"0xC772FADA": [
+"kSC4MessageBondIssued",
+"0x00B084F8"
+],
+"0xCA3FBDCE": [
+"kSC4MessageBondFinished",
+"0x00B08500"
+],
+"0x29222F02": [
+"kSC4MessageToggleBudgetDialog",
+"0x00B08508"
+],
+"0xAA5CF1E3": [
+"kSC4MessageEndGameForBudgetFailure",
+"0x00B08510"
+],
+"0x0A3E7624": [
+"kSC4MessageBudgetGroupChanged",
+"0x00B08518"
+],
+"0x6A5FD3FD": [
+"kSC4MessageBudgetForOccupantChanged",
+"0x00B08520"
+],
+"0xA783EBC8": [
+"kSC4MessageBuildingTypesUpdated",
+"0x00B08528"
+],
+"0x87A6277F": [
+"kSC4MessageFloraTypesUpdated",
+"0x00B08530"
+],
+"0xFA6DD0BB": [
+"kSC4MessagePollutionAirChange",
+"0x00B08538"
+],
+"0x5A6DD1AA": [
+"kSC4MessagePollutionWaterChange",
+"0x00B08540"
+],
+"0xDA6DD2CB": [
+"kSC4MessagePollutionGarbageChange",
+"0x00B08548"
+],
+"0xDA6DD35D": [
+"kSC4MessagePollutionRadiationChange",
+"0x00B08550"
+],
+"0x876993FF": [
+"kSC4MessagePowerSupplyChange",
+"0x00B08558"
+],
+"0x077ACCD0": [
+"kSC4MessageSchoolStrike",
+"0x00B08560"
+],
+"0x077ACCD2": [
+"kSC4MessageHealthStrike",
+"0x00B08568"
+],
+"0x8A394DC4": [
+"kSC4MessageGrowSeaport",
+"0x00B08570"
+],
+"0x4A490D33": [
+"kSC4MessageSeaportBadLocation",
+"0x00B08578"
+],
+"0x02A622C8": [
+"kSC4MessageCreateSeaportAdvice",
+"0x00B08580"
+],
+"0x66956810": [
+"kSC4MessageSimBegin",
+"0x00B08588"
+],
+"0x66956811": [
+"kSC4MessageSimEmergencyTime",
+"0x00B08598"
+],
+"0x66956812": [
+"kSC4MessageSimNewMinute",
+"0x00B085A0"
+],
+"0x66956813": [
+"kSC4MessageSimNewHour",
+"0x00B085A8"
+],
+"0x66956814": [
+"kSC4MessageSimNewDay",
+"0x00B085B0"
+],
+"0x66956815": [
+"kSC4MessageSimNewWeek",
+"0x00B085B8"
+],
+"0x66956816": [
+"kSC4MessageSimNewMonth",
+"0x00B085C0"
+],
+"0x66956817": [
+"kSC4MessageSimNewYear",
+"0x00B085C8"
+],
+"0x66956818": [
+"kSC4MessageSimSpecificDay",
+"0x00B085D0"
+],
+"0x66956819": [
+"kSC4MessageSimSpecificTime",
+"0x00B085D8"
+],
+"0x6695681A": [
+"kSC4MessageSimIdle",
+"0x00B085E0"
+],
+"0xAA7FB7E0": [
+"kSC4MessageSimPauseChange",
+"0x00B085E8"
+],
+"0x4A7FB7E2": [
+"kSC4MessageSimHiddenPauseChange",
+"0x00B085F0"
+],
+"0x4A7FB807": [
+"kSC4MessageSimEmergencyPauseChange",
+"0x00B085F8"
+],
+"0x4A7FB7E9": [
+"kSC4MessageSimSpeedChange",
+"0x00B08600"
+],
+"0x6716A4E5": [
+"kSC4MessageSeasonChange",
+"0x00B08608"
+],
+"0x6716A4E6": [
+"kSC4MessageWeatherCycleCompleted",
+"0x00B08610"
+],
+"0x870BC918": [
+"kSC4MessageRedisplayTerrain",
+"0x00B08618"
+],
+"0x470BD214": [
+"kSC4MessageTerrainDoErosion",
+"0x00B08620"
+],
+"0x277A9364": [
+"kSC4MessageToggleTerrainGridDisplay",
+"0x00B08628"
+],
+"0xEA3B0AF1": [
+"kSC4MessageLongTerrainOperationBegin",
+"0x00B08630"
+],
+"0x6A3B0AFD": [
+"kSC4MessageLongTerrainOperationEnd",
+"0x00B08638"
+],
+"0x278E6003": [
+"kSC4MessageTerrainHeightsChanged",
+"0x00B08640"
+],
+"0x678E6E3A": [
+"kSC4MessageWaterHeightsChanged",
+"0x00B08648"
+],
+"0x89171496": [
+"kSC4MessageSeaLevelChanged",
+"0x00B08650"
+],
+"0xC922EB91": [
+"kSC4MessageTerrainTypeChanged",
+"0x00B08658"
+],
+"0xCA63D517": [
+"kSC4MessageTerrainReconcilation",
+"0x00B08660"
+],
+"0x6AB97795": [
+"kSC4MessageWaterSurfaceStateChanged",
+"0x00B08668"
+],
+"0xCA09FA6C": [
+"kSC4MessageAdviseList_RemoveCommand",
+"0x00B08670"
+],
+"0xABB5BB44": [
+"kSC4MessagePreRegionInit",
+"0x00B08678"
+],
+"0xCBB5BB45": [
+"kSC4MessagePostRegionInit",
+"0x00B08680"
+],
+"0x8BB5BB46": [
+"kSC4MessagePreRegionShutdown",
+"0x00B08688"
+],
+"0x8BB5BB4B": [
+"kSC4MessagePostRegionShutdown",
+"0x00B08690"
+],
+"0x4A9F2FFE": [
+"kSC4MessageCameraUpdated",
+"0x00B08698"
+],
+"0x4AB04CBE": [
+"kSC4MessageMultipleViewChangeBegin",
+"0x00B086A0"
+],
+"0x4AB04CBF": [
+"kSC4MessageMultipleViewChangeEnd",
+"0x00B086A8"
+],
+"0xA6B79600": [
+"kSC4MessageViewZRChange1",
+"0x00B086B0"
+],
+"0xA6B79601": [
+"kSC4MessageViewZRChange2",
+"0x00B086B8"
+],
+"0xA6B79602": [
+"kSC4MessageViewZRChange3",
+"0x00B086C0"
+],
+"0xA6B79610": [
+"kSC4MessageViewTChange1",
+"0x00B086C8"
+],
+"0xA6B79611": [
+"kSC4MessageViewTChange2",
+"0x00B086D0"
+],
+"0xA6B79612": [
+"kSC4MessageViewTChange3",
+"0x00B086D8"
+],
+"0xA6B79620": [
+"kSC4MessagePostViewInit",
+"0x00B086E0"
+],
+"0xA6B79621": [
+"kSC4MessagePostViewRefresh",
+"0x00B086E8"
+],
+"0xA6B79622": [
+"kSC4MessagePreViewShutdown",
+"0x00B086F0"
+],
+"0x06CDB65A": [
+"kSC4MessagePreViewFilterChange",
+"0x00B086F8"
+],
+"0x06CDB65B": [
+"kSC4MessagePostViewFilterChange",
+"0x00B08700"
+],
+"0xC6CDBF1A": [
+"kSC4MessagePreViewLevelChange",
+"0x00B08708"
+],
+"0xC6CDBF1B": [
+"kSC4MessagePostViewLevelChange",
+"0x00B08710"
+],
+"0xE6E85114": [
+"kSC4MessageOccupantHighlightChange",
+"0x00B08718"
+],
+"0xA2D1C5B9": [
+"kSC4MessageOrdinanceAvailable",
+"0x00B08720"
+],
+"0xC2C09554": [
+"kSC4MessageOrdinanceUpdated",
+"0x00B08728"
+],
+"0x1A10630A": [
+"kCanvasMessageType",
+"0x00B08730"
+],
+"0xFA0C6390": [
+"kMouseMessageType",
+"0x00B08738"
+],
+"0x4BC42C48": [
+"kMySimMessageTypeUpdate",
+"0x00B08740"
+],
+"0x2BA06B99": [
+"kNotificationMessageTypeID",
+"0x00B08748"
+],
+"0x4C05A5E6": [
+"kSelfMessageType",
+"0x00B08750"
+],
+"0x08A8AD2B": [
+"kRefreshMessageType",
+"0x00B08758"
+],
+"0xFE342D2A": [
+"kInternalMessageTypeScrolling",
+"0x00B08760"
+],
+"0x65783920": [
+"kDialupMessageTypeContacted",
+"0x00B08768"
+],
+"0x65783921": [
+"kDialupMessageTypeCompleted",
+"0x00B08770"
+],
+"0xDB53383B": [
+"kSndEventMsgTypeStd",
+"0x00B08778"
+],
+"0xBA44EB51": [
+"kMessageGameInIdleState",
+"0x00B08780"
+],
+"0xCA5501F2": [
+"kAdvisorSystemTicker_MessageType",
+"0x00B08788"
+],
+"0x2A3AD653": [
+"kMessageSetRadioStation",
+"0x00B08790"
+],
+"0xEC320E96": [
+"kMessageSetSimSpeed",
+"0x00B08798"
+],
+"0x8A4A69C7": [
+"kMessageListenerPosChanged",
+"0x00B087A0"
+],
+"0x89F10866": [
+"kSC4MsgConstructionRoadCrewStart",
+"0x00B087A8"
+],
+"0x89D3E9F3": [
+"kSC4MessageNetworkOccupantUsableChange",
+"0x00B087B0"
+],
+"0xEBB67EF7": [
+"kSC4MessageShowSituationPopup",
+"0x00B087B8"
+],
+"0x8ACAA95F": [
+"kSGLMessage_RestoreTextures",
+"0x00B087C0"
+],
+"0xE99B3D4D": [
+"kMessageConditionChanged",
+"0x00B087C8"
+],
+"0xE8BDA2E7": [
+"kMessageStateChanged",
+"0x00B087D0"
+],
+"0xCC327B60": [
+"kMessageTypeSelfTick",
+"0x00B087D8"
+],
+"0x8A07AE00": [
+"kMessageTractPowerChanged",
+"0x00B087E0"
+],
+"0x3AE4BEA3": [
+"kSystemServiceId",
+"0x00B087E8"
+],
+"0xA3460DEB": [
+"kGZCanvas_SystemServiceID",
+"0x00B087F0"
+],
+"0x2073215D": [
+"kGZFileSystemServiceID",
+"0x00B087F8"
+],
+"0x9C55E5F5": [
+"kGatherSystemServiceID",
+"0x00B08800"
+],
+"0x8414A2C2": [
+"kGZRealtimeDebugDisplaySystemServiceID",
+"0x00B08808"
+],
+"0x449B1939": [
+"kGZWWWSystem_SystemServiceID",
+"0x00B08810"
+],
+"0xC416025C": [
+"kGZGraphicSystem_SystemServiceID",
+"0x00B08818"
+],
+"0xAA12F911": [
+"kGZGUID_AudioAmbienceManagerSystemServiceId",
+"0x00B08820"
+],
+"0x49E50BA1": [
+"kAudioScapeManagerSystemServiceID",
+"0x00B08828"
+],
+"0xAC1FAE31": [
+"GZGUID_AEMSEventsSystemServiceId",
+"0x00B08830"
+],
+"0x654383C9": [
+"kRZNetManager_SystemServiceID",
+"0x00B08838"
+],
+"0xA76C78E7": [
+"kGZCallbackSysServiceID",
+"0x00B08840"
+],
+"0xEB903A32": [
+"kGZCommandServerSysServiceID",
+"0x00B08848"
+],
+"0x441E5070": [
+"kGZLanguageManagerSysServiceID",
+"0x00B08850"
+],
+"0x0A406334": [
+"kDefaultSysServiceID",
+"0x00B08858"
+],
+"0x06406338": [
+"kDefaultSysServiceID",
+"0x00B08860"
+],
+"0x64FA8434": [
+"kDefaultSysServiceID",
+"0x00B08868"
+],
+"0x04FA845B": [
+"kDefaultSysServiceID",
+"0x00B08870"
+],
+"0x25076B9E": [
+"kSysServiceID",
+"0x00B08878"
+],
+"0x86AD10EC": [
+"kSC4AnimationTickManagerSysServiceId",
+"0x00B08880"
+],
+"0xA7E7F92A": [
+"kSC424HourClockSysServiceId",
+"0x00B08888"
+],
+"0x46956659": [
+"kSC4SimulatorSysServiceId",
+"0x00B08890"
+],
+"0xA417445E": [
+"kGZWinMgrDefaultSysServiceID",
+"0x00B08898"
+],
+"0x4BD10133": [
+"kGZLuaScriptServerSystemServiceID",
+"0x00B088A0"
+],
+"0x1D07B39F": [
+"kRZRadioDefaultServiceId",
+"0x00B088A8"
+],
+"0x2AC45447": [
+"kGZIMEServerDefaultServiceID",
+"0x00B088B0"
+],
+"0x2AC45449": [
+"kGZIMEProxyDefaultServiceID",
+"0x00B088B8"
+],
+"0x8A09F5F4": [
+"cSC4Advice",
+"0x00B088C0"
+],
+"0xEAC937B4": [
+"cSC4Advisor",
+"0x00B088C8"
+],
+"0x4A0DD616": [
+"cSC4AdvisorSystem",
+"0x00B088D0"
+],
+"0x6A26D049": [
+"cSC4AdviceSubject",
+"0x00B088D8"
+],
+"0x8BE3753B": [
+"cSC4CitySituationAdvice",
+"0x00B088E0"
+],
+"0x29E37DEC": [
+"cSC4MySimAgentSimulator",
+"0x00B088E8"
+],
+"0xAA3836FB": [
+"cSC4TutorialSystem",
+"0x00B088F0"
+],
+"0xAA388261": [
+"cSC4TutorialTask",
+"0x00B088F8"
+],
+"0xCA09F543": [
+"cSC4AdvisorBase",
+"0x00B08900"
+],
+"0x2A5F877D": [
+"cSC4AdvisorCityPlanning",
+"0x00B08908"
+],
+"0x4BE372CD": [
+"cSC4AdvisorCitySituations",
+"0x00B08910"
+],
+"0xAA5292D7": [
+"cSC4AdvisorFinance",
+"0x00B08918"
+],
+"0x6A5F8755": [
+"cSC4AdvisorHQ",
+"0x00B08920"
+],
+"0xEA19E825": [
+"cSC4AdvisorSafety",
+"0x00B08928"
+],
+"0x4A3AD3E1": [
+"cSC4AdvisorTraffic",
+"0x00B08930"
+],
+"0xCA2C2A2F": [
+"cSC4AdvisorUtility",
+"0x00B08938"
+],
+"0x6A3848DB": [
+"cSC4AdviceNeghborDeal",
+"0x00B08940"
+],
+"0x4A1DBBBF": [
+"cSC4MySim",
+"0x00B08948"
+],
+"0x6A9335DE": [
+"cSC4MySimAdvice",
+"0x00B08950"
+],
+"0x6B70EFAD": [
+"cSC4MySimBalloonAdvice",
+"0x00B08958"
+],
+"0xCBC14674": [
+"cSC4MySimDispatch",
+"0x00B08960"
+],
+"0x0BF606A5": [
+"cSC4MyStreetSim",
+"0x00B08968"
+],
+"0xAA371C32": [
+"cSC4RewardAdvice",
+"0x00B08970"
+],
+"0xA7E7F929": [
+"cSC424HourClock",
+"0x00B08978"
+],
+"0xA9C73857": [
+"cSC4AnimationTickManager",
+"0x00B08980"
+],
+"0xEAD4BA36": [
+"cSC4CityDetailManager",
+"0x00B08988"
+],
+"0xE777F79D": [
+"cSC4DebugConsole",
+"0x00B08990"
+],
+"0x0990C38A": [
+"cSC4Demolition",
+"0x00B08998"
+],
+"0x4990BD93": [
+"cSC4DispatchManager",
+"0x00B089A0"
+],
+"0x89EFA536": [
+"cSC4HistoryWarehouse",
+"0x00B089A8"
+],
+"0x299062C0": [
+"cSC4LotConfigurationManager",
+"0x00B089B0"
+],
+"0xA990625B": [
+"cSC4LotManager",
+"0x00B089B8"
+],
+"0x098F964D": [
+"cSC4OccupantManager",
+"0x00B089C0"
+],
+"0xA990BD10": [
+"cSC4PropManager",
+"0x00B089C8"
+],
+"0x6A0F82B2": [
+"cSC4TrafficNetworkMap",
+"0x00B089D0"
+],
+"0x298B204C": [
+"cSC4WinProcSpy",
+"0x00B089D8"
+],
+"0x298F9B2D": [
+"cSC4ZoneManager",
+"0x00B089E0"
+],
+"0xCA263481": [
+"cSC4App",
+"0x00B089E8"
+],
+"0xA9BD882D": [
+"cSC4BuildingOccupant",
+"0x00B089F0"
+],
+"0x8990C372": [
+"cSC4City",
+"0x00B089F8"
+],
+"0x29D25F1D": [
+"cSC4FireOccupant",
+"0x00B08A00"
+],
+"0xA9C05C85": [
+"cSC4FloraOccupant",
+"0x00B08A08"
+],
+"0x8A22BEBE": [
+"cSC4LandfillOccupant",
+"0x00B08A10"
+],
+"0xA99062B4": [
+"cSC4LotConfiguration",
+"0x00B08A18"
+],
+"0xC918C6FF": [
+"cSC4WinLotConfigurationChooser",
+"0x00B08A20"
+],
+"0x4918C704": [
+"cSC4WinLotConfigurationEditor",
+"0x00B08A28"
+],
+"0x8918C708": [
+"cSC4WinBuildingFamilyChooser",
+"0x00B08A30"
+],
+"0xE918C70C": [
+"cSC4WinBuildingChooser",
+"0x00B08A38"
+],
+"0xC9DC0477": [
+"cSC4Nation",
+"0x00B08A40"
+],
+"0x29AAD0F6": [
+"cSC4WinNetworkLotChooser",
+"0x00B08A48"
+],
+"0x29AB0142": [
+"cSC4WinNetworkLotEditor",
+"0x00B08A50"
+],
+"0x6A037C24": [
+"cSC4RegionalCity",
+"0x00B08A58"
+],
+"0xABF98CB5": [
+"cSC4ToxicOccupant",
+"0x00B08A60"
+],
+"0x6A12F51C": [
+"cSC4AudioAmbienceManager",
+"0x00B08A68"
+],
+"0x29E2797F": [
+"cSC4AudioScapeManager",
+"0x00B08A70"
+],
+"0x4A2835FE": [
+"cSC4AudioAmbienceLayer",
+"0x00B08A78"
+],
+"0xAA355871": [
+"cSC4AudioSemManager",
+"0x00B08A80"
+],
+"0xBDB6171E": [
+"cSC4AudioEventHandler",
+"0x00B08A88"
+],
+"0x69E500BC": [
+"cSC4AudioEventHandlerDisasterFire",
+"0x00B08A90"
+],
+"0xCA4A66B9": [
+"cSC4AudioListener",
+"0x00B08A98"
+],
+"0x4A47DC0D": [
+"cSC4AudioSoundManager",
+"0x00B08AA0"
+],
+"0x896E714A": [
+"cSC4Vehicle",
+"0x00B08AA8"
+],
+"0xA98F9D3B": [
+"cSC4VehicleManager",
+"0x00B08AB0"
+],
+"0x896E75AF": [
+"cSC4Pedestrian",
+"0x00B08AB8"
+],
+"0xAA09DC28": [
+"cSC4PedestrianOneShot",
+"0x00B08AC0"
+],
+"0xC98F9D17": [
+"cSC4PedestrianManager",
+"0x00B08AC8"
+],
+"0xC96E75DC": [
+"cSC4Aircraft",
+"0x00B08AD0"
+],
+"0xC98F9D4A": [
+"cSC4AircraftManager",
+"0x00B08AD8"
+],
+"0x096E75F5": [
+"cSC4Watercraft",
+"0x00B08AE0"
+],
+"0xA98F9D28": [
+"cSC4WatercraftManager",
+"0x00B08AE8"
+],
+"0xCA14CA03": [
+"cSC4AutomataControllerManager",
+"0x00B08AF0"
+],
+"0x4A18672B": [
+"cSC4AutomataController",
+"0x00B08AF8"
+],
+"0x6A1628BA": [
+"cSC4AutomataAttractor",
+"0x00B08B00"
+],
+"0x4A1628C5": [
+"cSC4AutomataGenerator",
+"0x00B08B08"
+],
+"0x4A1B664E": [
+"cSC4AutomataScriptSystem",
+"0x00B08B10"
+],
+"0x0BB14381": [
+"cSC4CitySituationManager",
+"0x00B08B18"
+],
+"0x496678FE": [
+"cSC4PathInfoFactory",
+"0x00B08B20"
+],
+"0xCBEB4F62": [
+"cSC4Airplane",
+"0x00B08B28"
+],
+"0x6C1ACDE1": [
+"cSC4Ambulance",
+"0x00B08B30"
+],
+"0x498F9CB5": [
+"cSC4AutomataManager",
+"0x00B08B38"
+],
+"0xAA9F4A3D": [
+"cSC4Bus",
+"0x00B08B40"
+],
+"0xCBB32B0A": [
+"cSC4CarjackedVehicle",
+"0x00B08B48"
+],
+"0xAA222B83": [
+"cSC4FireTruck",
+"0x00B08B50"
+],
+"0xEA863423": [
+"cSC4GetawayVan",
+"0x00B08B58"
+],
+"0x8BA98EDA": [
+"cSC4Helicopter",
+"0x00B08B60"
+],
+"0x4C22AE53": [
+"cSC4MassTransitTrain",
+"0x00B08B68"
+],
+"0x4C0DD224": [
+"cSC4MayorLimo",
+"0x00B08B70"
+],
+"0x4A222B98": [
+"cSC4PatrolCar",
+"0x00B08B78"
+],
+"0x8A6E4FA4": [
+"cSC4RiotPolice",
+"0x00B08B80"
+],
+"0x4A222E4D": [
+"cSC4SimFireCrew",
+"0x00B08B88"
+],
+"0xEBE0DCAD": [
+"cSC4Tank",
+"0x00B08B90"
+],
+"0x4A5B69ED": [
+"cSC4TrailerVehicle",
+"0x00B08B98"
+],
+"0x4A416254": [
+"cSC4TrainCar",
+"0x00B08BA0"
+],
+"0x8A41625A": [
+"cSC4Train",
+"0x00B08BA8"
+],
+"0x0A086BD3": [
+"cSC4DisasterManagerEarthquake",
+"0x00B08BB0"
+],
+"0xAA086D86": [
+"cSC4DisasterInstanceEarthquake",
+"0x00B08BB8"
+],
+"0x6A7B3E9B": [
+"cSC4DisasterManagerEffect",
+"0x00B08BC0"
+],
+"0x6A7B3E9C": [
+"cSC4DisasterInstanceEffect",
+"0x00B08BC8"
+],
+"0x69C1718E": [
+"cSC4DisasterManagerFire",
+"0x00B08BD0"
+],
+"0x69C1718F": [
+"cSC4DisasterInstanceFire",
+"0x00B08BD8"
+],
+"0x4A132FDF": [
+"cSC4DisasterManagerPipeBurst",
+"0x00B08BE0"
+],
+"0x0A133012": [
+"cSC4DisasterInstancePipeBurst",
+"0x00B08BE8"
+],
+"0x4A38206C": [
+"cSC4DisasterManagerRiot",
+"0x00B08BF0"
+],
+"0x4A38206D": [
+"cSC4DisasterInstanceRiot",
+"0x00B08BF8"
+],
+"0xEBFB0403": [
+"cSC4DisasterInstanceToxic",
+"0x00B08C08"
+],
+"0x61F6ABF5": [
+"cSC4DisasterLayer",
+"0x00B08C10"
+],
+"0xA9B5AB9F": [
+"cSC4DisasterManagerVolcano",
+"0x00B08C18"
+],
+"0x29B5AB89": [
+"cSC4DisasterInstanceVolcano",
+"0x00B08C20"
+],
+"0x49822F75": [
+"cSC4EffectsManager",
+"0x00B08C28"
+],
+"0xA956AD14": [
+"cSC4EffectsParser",
+"0x00B08C30"
+],
+"0x2A5118AD": [
+"cSC4EffectsResource",
+"0x00B08C38"
+],
+"0xEA5118B5": [
+"cSC4EffectsResourceFactory",
+"0x00B08C40"
+],
+"0x2977AA47": [
+"cSC4PropOccupant",
+"0x00B08C48"
+],
+"0xC9EFB016": [
+"cSC4PropOccupantBurntBuilding",
+"0x00B08C50"
+],
+"0x2977AA48": [
+"cSC4PropOccupantTerrainDecal",
+"0x00B08C58"
+],
+"0x2977AA49": [
+"cSC4PropOccupantVisualEffect",
+"0x00B08C60"
+],
+"0x2A4017A0": [
+"cSC4PropOccupantAutomataController",
+"0x00B08C68"
+],
+"0xA83479EA": [
+"cSC4PropPlacementPropertiesFactory",
+"0x00B08C70"
+],
+"0xA977A86B": [
+"kSC4PropClassIDProperty",
+"0x00B08C78"
+],
+"0xAB72FBB3": [
+"cSC4SignpostOccupant",
+"0x00B08C80"
+],
+"0xA97F909E": [
+"cSC4ConstructionOccupant",
+"0x00B08C88"
+],
+"0x899CA901": [
+"cSC4DBSegmentTester1",
+"0x00B08C90"
+],
+"0x899CA902": [
+"cSC4DBSegmentTester2",
+"0x00B08C98"
+],
+"0x899CA903": [
+"cSC4DBSegmentTester3",
+"0x00B08CA0"
+],
+"0x899CA904": [
+"cSC4DBSegmentTester4",
+"0x00B08CA8"
+],
+"0x899CA905": [
+"cSC4DBSegmentTester5",
+"0x00B08CB0"
+],
+"0xE9862AB6": [
+"cSC4FoundationModel",
+"0x00B08CB8"
+],
+"0x49C05C8F": [
+"cSC4FoundationOccupant",
+"0x00B08CC0"
+],
+"0xC97F987C": [
+"cSC4LotBaseTextureOccupant",
+"0x00B08CC8"
+],
+"0x29802083": [
+"cSC4CellTextureModel",
+"0x00B08CD0"
+],
+"0xC9862A86": [
+"cSC4LotRetainingWallModel",
+"0x00B08CD8"
+],
+"0x49C05C9F": [
+"cSC4LotRetainingWallOccupant",
+"0x00B08CE0"
+],
+"0xA9BC9AB6": [
+"cSC4Occupant",
+"0x00B08CE8"
+],
+"0xA9C74DC9": [
+"cSC4OccupantFilter",
+"0x00B08CF0"
+],
+"0xC9C75EAE": [
+"cSC4DefaultOccupantFilter",
+"0x00B08CF8"
+],
+"0xE9C75ED1": [
+"cSC4OccupantTypeFilter",
+"0x00B08D00"
+],
+"0xE9C75EE8": [
+"cSC4OccupantTypesFilter",
+"0x00B08D08"
+],
+"0xAA25CB90": [
+"cSC4OccupantTypesFilterHashed",
+"0x00B08D10"
+],
+"0x8A7A1C2C": [
+"cSC4RealisticOccupantFilter",
+"0x00B08D18"
+],
+"0xEAC3A3D2": [
+"cSC4NetworkOccupantFilter",
+"0x00B08D20"
+],
+"0xAAC3C01D": [
+"cSC4ViewLevelOccupantFilter",
+"0x00B08D28"
+],
+"0x0BCEB6C2": [
+"cSC4StringSpecificationOccupantFilter",
+"0x00B08D30"
+],
+"0x09852AC9": [
+"cSC43DPlaceableObject",
+"0x00B08D38"
+],
+"0x49B6D69B": [
+"cSC4PylonOccupant",
+"0x00B08D40"
+],
+"0x0AA49A20": [
+"cSC4ScriptServiceResourceFactory",
+"0x00B08D48"
+],
+"0x49B9E600": [
+"cSC4SimGrid",
+"0x00B08D50"
+],
+"0x49B9E601": [
+"cSC4SimGridBool8",
+"0x00B08D58"
+],
+"0x49B9E602": [
+"cSC4SimGridUint8",
+"0x00B08D60"
+],
+"0x49B9E603": [
+"cSC4SimGridSint8",
+"0x00B08D68"
+],
+"0x49B9E604": [
+"cSC4SimGridUint16",
+"0x00B08D70"
+],
+"0x49B9E605": [
+"cSC4SimGridSint16",
+"0x00B08D78"
+],
+"0x49B9E606": [
+"cSC4SimGridUint32",
+"0x00B08D80"
+],
+"0x49B9E607": [
+"cSC4SimGridSint32",
+"0x00B08D88"
+],
+"0x49B9E608": [
+"cSC4SimGridUint64",
+"0x00B08D90"
+],
+"0x49B9E609": [
+"cSC4SimGridSint64",
+"0x00B08D98"
+],
+"0x49B9E60A": [
+"cSC4SimGridFloat32",
+"0x00B08DA0"
+],
+"0x49B9E60B": [
+"cSC4SimGridFloat64",
+"0x00B08DA8"
+],
+"0x8B79C707": [
+"cSC4TextDecalOccupant",
+"0x00B08DB0"
+],
+"0xE9A6CD3B": [
+"cSC4NetworkLotManager",
+"0x00B08DB8"
+],
+"0xC990BD46": [
+"cSC4NetworkManager",
+"0x00B08DC0"
+],
+"0x49CC1BCD": [
+"cSC4NetworkBridgeOccupant",
+"0x00B08DC8"
+],
+"0x4B8EA424": [
+"cSC4NetworkLayoutCustomView",
+"0x00B08DD0"
+],
+"0xC9C05C6E": [
+"cSC4NetworkOccupant",
+"0x00B08DD8"
+],
+"0xA9C05C80": [
+"cSC4MultiTypeNetworkOccupant",
+"0x00B08DE0"
+],
+"0x49C1A034": [
+"cSC4NetworkOccupantWithPreBuiltModel",
+"0x00B08DE8"
+],
+"0x8A4BD52B": [
+"cSC4NetworkTunnelOccupant",
+"0x00B08DF0"
+],
+"0x49C05B9F": [
+"cSC4PipeOccupant",
+"0x00B08DF8"
+],
+"0xC9C05C5D": [
+"cSC4PowerLineOccupant",
+"0x00B08E00"
+],
+"0x09C05C6A": [
+"cSC4PowerPoleOccupant",
+"0x00B08E08"
+],
+"0xCA16374F": [
+"cSC4SubwayOccupant",
+"0x00B08E10"
+],
+"0x4A10AFC2": [
+"cSC4UndergroundOccupant",
+"0x00B08E18"
+],
+"0xAA2049A1": [
+"cSC4AirportDeveloper",
+"0x00B08E20"
+],
+"0x0990BDD8": [
+"cSC4AuraSimulator",
+"0x00B08E28"
+],
+"0xE990BE01": [
+"cSC4BudgetSimulator",
+"0x00B08E30"
+],
+"0x8990BE7A": [
+"cSC4BuildingDevelopmentSimulator",
+"0x00B08E38"
+],
+"0x0A413481": [
+"cSC4CivicBuildingSimulator",
+"0x00B08E40"
+],
+"0x8990C080": [
+"cSC4CommercialSimulator",
+"0x00B08E48"
+],
+"0x8990C09A": [
+"cSC4CrimeSimulator",
+"0x00B08E50"
+],
+"0x2990BFF2": [
+"cSC4DemandSimulator",
+"0x00B08E58"
+],
+"0x2990C05A": [
+"cSC4FireProtectionSimulator",
+"0x00B08E60"
+],
+"0xE990C045": [
+"cSC4FlammabilitySimulator",
+"0x00B08E68"
+],
+"0xC990C034": [
+"cSC4FloraSimulator",
+"0x00B08E70"
+],
+"0xA990C022": [
+"cSC4IndustrialSimulator",
+"0x00B08E78"
+],
+"0xEA09D4AE": [
+"cSC4LandfillDeveloper",
+"0x00B08E80"
+],
+"0xE990C18E": [
+"cSC4LandValueSimulator",
+"0x00B08E88"
+],
+"0xA990BFE0": [
+"cSC4LotDeveloper",
+"0x00B08E90"
+],
+"0xC990C0A4": [
+"cSC4NeighborsSimulator",
+"0x00B08E98"
+],
+"0x0990C075": [
+"cSC4PlumbingSimulator",
+"0x00B08EA0"
+],
+"0x6990C04F": [
+"cSC4PoliceSimulator",
+"0x00B08EA8"
+],
+"0x8990C065": [
+"cSC4PollutionSimulator",
+"0x00B08EB0"
+],
+"0x89C48F47": [
+"cSC4PropDeveloper",
+"0x00B08EB8"
+],
+"0x4990C013": [
+"cSC4ResidentialSimulator",
+"0x00B08EC0"
+],
+"0xEA230A28": [
+"cSC4SeaportDeveloper",
+"0x00B08EC8"
+],
+"0x2990C1E5": [
+"cSC4Simulator",
+"0x00B08ED0"
+],
+"0x2990C142": [
+"cSC4TractDeveloper",
+"0x00B08ED8"
+],
+"0x6990C1AA": [
+"cSC4TrafficSimulator",
+"0x00B08EE0"
+],
+"0x2990C1BC": [
+"cSC4WeatherSimulator",
+"0x00B08EE8"
+],
+"0x498F9B01": [
+"cSC4ZoneDeveloper",
+"0x00B08EF0"
+],
+"0x8990C12D": [
+"cSC4Demand",
+"0x00B08EF8"
+],
+"0xE990BFFC": [
+"cSC4DepartmentBudget",
+"0x00B08F00"
+],
+"0xAA313C9F": [
+"cSC4LineItem",
+"0x00B08F08"
+],
+"0x4C0AE114": [
+"cSC4FirePlaneDispatchSource",
+"0x00B08F10"
+],
+"0x0990C138": [
+"cSC4GrowthDeveloper",
+"0x00B08F18"
+],
+"0xC9BD5D4A": [
+"cSC4Lot",
+"0x00B08F20"
+],
+"0x4A232DA8": [
+"cSC4BusinessUnit",
+"0x00B08F28"
+],
+"0x0A134F24": [
+"cSC4NeighborConnection",
+"0x00B08F30"
+],
+"0x2A134F42": [
+"cSC4NeighborDeal",
+"0x00B08F38"
+],
+"0x6A0EF3B8": [
+"cSC4PathFinder",
+"0x00B08F40"
+],
+"0x0C0B06E8": [
+"cSC4PoliceHelicopterDispatchSource",
+"0x00B08F48"
+],
+"0x0A2C4EEE": [
+"cSC4PortDeveloper",
+"0x00B08F50"
+],
+"0x89C49986": [
+"cSC4WealthRequester",
+"0x00B08F58"
+],
+"0xABDF0343": [
+"cSC4WaterPathFinder",
+"0x00B08F68"
+],
+"0xCA5D3294": [
+"cSC4WinAlertBorder",
+"0x00B08F70"
+],
+"0xCA318388": [
+"cSC4WinMiniMap",
+"0x00B08F78"
+],
+"0xC7A0E17E": [
+"cSC4WinRCI",
+"0x00B08F80"
+],
+"0xAA5C2F86": [
+"cSC4WinTrendBar",
+"0x00B08F88"
+],
+"0xCA5A7559": [
+"cSC4AdvisorPopupTracker",
+"0x00B08F90"
+],
+"0xCA1492AC": [
+"cSC4WinAdviceList",
+"0x00B08F98"
+],
+"0xAA5D16A9": [
+"cSC4WinAuraBar",
+"0x00B08FA0"
+],
+"0x89E1567C": [
+"cSC4WinGenTransparent",
+"0x00B08FA8"
+],
+"0x2A3832AA": [
+"cSC4WinIntroVideoScreen",
+"0x00B08FB0"
+],
+"0x28C5A41F": [
+"cSC4WinMapView",
+"0x00B08FB8"
+],
+"0xEA659793": [
+"cSC4WinRegionScreen",
+"0x00B08FC0"
+],
+"0x2BA6BB97": [
+"cSC4WinRegionView",
+"0x00B08FC8"
+],
+"0xAA38326E": [
+"cSC4WinSplashScreen",
+"0x00B08FD0"
+],
+"0x0A1D8285": [
+"cSC4ConfigRuleManager",
+"0x00B08FD8"
+],
+"0x681BD52B": [
+"cSC4LightingManager",
+"0x00B08FE0"
+],
+"0x9A47B417": [
+"cSC4View3DWin",
+"0x00B08FE8"
+],
+"0xE9C622D8": [
+"cSC43DRender",
+"0x00B08FF0"
+],
+"0xC9C628EC": [
+"cSC4CameraControl",
+"0x00B08FF8"
+],
+"0xCA56C8C4": [
+"kSC4CLSID_cSC4WinToolTipMgr",
+"0x00B09000"
+],
+"0xA990C08E": [
+"cSC4OrdinanceSimulator",
+"0x00B09008"
+],
+"0x8BD4FC74": [
+"cSC4OrdinanceSimple",
+"0x00B09010"
+],
+"0x0990C005": [
+"cSC4PowerSimulator",
+"0x00B09018"
+],
+"0x0C2D29ED": [
+"kSimAgent",
+"0x00B09020"
+],
+"0x0C2D29EE": [
+"kAnimTickAgent",
+"0x00B09028"
+],
+"0x4C2A6CE9": [
+"frame_sample",
+"0x00B09030"
+],
+"0x6A935C34": [
+"kCommandID_ToggleGodPanel",
+"0x00B09038"
+],
+"0x6A935CA4": [
+"kCommandID_ToggleMayorPanel",
+"0x00B09040"
+],
+"0x6A935CA8": [
+"kCommandID_ToggleMySimPanel",
+"0x00B09048"
+],
+"0x6A935CAB": [
+"kCommandID_ToggleOptionsPanel",
+"0x00B09050"
+],
+"0x6A935CAD": [
+"kCommandID_SimSpeedPause",
+"0x00B09058"
+],
+"0x6A935CB0": [
+"kCommandID_SimSpeedSlow",
+"0x00B09060"
+],
+"0x6A935CB2": [
+"kCommandID_SimSpeedMedium",
+"0x00B09068"
+],
+"0x6A935CB5": [
+"kCommandID_SimSpeedFast",
+"0x00B09070"
+],
+"0x6A935CB7": [
+"kCommandID_ZoomIn",
+"0x00B09078"
+],
+"0x6A935CBA": [
+"kCommandID_ZoomOut",
+"0x00B09080"
+],
+"0x6A935CBD": [
+"kCommandID_Zoom0",
+"0x00B09088"
+],
+"0x6A935CBF": [
+"kCommandID_Zoom1",
+"0x00B09090"
+],
+"0x6A935CC2": [
+"kCommandID_Zoom2",
+"0x00B09098"
+],
+"0x6A935CC4": [
+"kCommandID_Zoom3",
+"0x00B090A0"
+],
+"0x6A935CC7": [
+"kCommandID_Zoom4",
+"0x00B090A8"
+],
+"0x2BCBD5F1": [
+"kCommandID_Zoom5",
+"0x00B090B0"
+],
+"0x6A935CC9": [
+"kCommandID_RotateCW",
+"0x00B090B8"
+],
+"0x6A935CCC": [
+"kCommandID_RotateCCW",
+"0x00B090C0"
+],
+"0x6A935CD5": [
+"kCommandID_RotateLotCW",
+"0x00B090C8"
+],
+"0x6A935CD1": [
+"kCommandID_RotateLotCCW",
+"0x00B090D0"
+],
+"0x6A935CD8": [
+"kCommandID_ScrollLeft",
+"0x00B090D8"
+],
+"0x2A9484DA": [
+"kCommandID_ScrollLeftOnce",
+"0x00B090E0"
+],
+"0x2A948275": [
+"kCommandID_ScrollLeftStop",
+"0x00B090E8"
+],
+"0x6A935CDD": [
+"kCommandID_ScrollUp",
+"0x00B090F0"
+],
+"0x2A9484F2": [
+"kCommandID_ScrollUpOnce",
+"0x00B090F8"
+],
+"0x2A948272": [
+"kCommandID_ScrollUpStop",
+"0x00B09100"
+],
+"0x6A935CE0": [
+"kCommandID_ScrollRight",
+"0x00B09108"
+],
+"0x2A9484FF": [
+"kCommandID_ScrollRightOnce",
+"0x00B09110"
+],
+"0x2A94826E": [
+"kCommandID_ScrollRightStop",
+"0x00B09118"
+],
+"0x6A935CE2": [
+"kCommandID_ScrollDown",
+"0x00B09120"
+],
+"0x2A94850B": [
+"kCommandID_ScrollDownOnce",
+"0x00B09128"
+],
+"0x2A94826B": [
+"kCommandID_ScrollDownStop",
+"0x00B09130"
+],
+"0x6A935CE5": [
+"kCommandID_CenterOnCursor",
+"0x00B09138"
+],
+"0x6A935CE8": [
+"kCommandID_ToggleGridVisibility",
+"0x00B09140"
+],
+"0x6A935CF1": [
+"kCommandID_Cancel",
+"0x00B09148"
+],
+"0x6A935CF3": [
+"kCommandID_QueryTool",
+"0x00B09150"
+],
+"0x6A935CF4": [
+"kCommandID_TrafficQueryTool",
+"0x00B09158"
+],
+"0x6A935CF7": [
+"kCommandID_ZoneLowResidentialTool",
+"0x00B09160"
+],
+"0x6A935D0B": [
+"kCommandID_ZoneMediumResidentialTool",
+"0x00B09168"
+],
+"0x6A935D0E": [
+"kCommandID_ZoneHighResidentialTool",
+"0x00B09170"
+],
+"0x6A935D11": [
+"kCommandID_ZoneLowCommercialTool",
+"0x00B09178"
+],
+"0x6A935D17": [
+"kCommandID_ZoneMediumCommercialTool",
+"0x00B09180"
+],
+"0x6A935D1A": [
+"kCommandID_ZoneHighCommercialTool",
+"0x00B09188"
+],
+"0x6A935D1D": [
+"kCommandID_ZoneAgriculturalTool",
+"0x00B09190"
+],
+"0x6A935D25": [
+"kCommandID_ZoneMediumIndustrialTool",
+"0x00B09198"
+],
+"0x6A935D2B": [
+"kCommandID_ZoneHighIndustrialTool",
+"0x00B091A0"
+],
+"0x6A935D28": [
+"kCommandID_ZoneLandfillTool",
+"0x00B091A8"
+],
+"0x6A935D2E": [
+"kCommandID_DeZoneTool",
+"0x00B091B0"
+],
+"0x6A935D36": [
+"kCommandID_DemolishTool",
+"0x00B091B8"
+],
+"0x6A935D39": [
+"kCommandID_DispatchFireTool",
+"0x00B091C0"
+],
+"0xCA935DBD": [
+"kCommandID_DispatchPoliceTool",
+"0x00B091C8"
+],
+"0x8C0B0E46": [
+"kCommandID_DispatchFireAirTool",
+"0x00B091D0"
+],
+"0xEC0B0E6A": [
+"kCommandID_DispatchPoliceAirTool",
+"0x00B091D8"
+],
+"0x6A935DC0": [
+"kCommandID_RoadTool",
+"0x00B091E0"
+],
+"0x6A935DC2": [
+"kCommandID_StreetTool",
+"0x00B091E8"
+],
+"0x6A935DC5": [
+"kCommandID_HighwayTool",
+"0x00B091F0"
+],
+"0x6B730F78": [
+"kCommandID_AvenueTool",
+"0x00B091F8"
+],
+"0x6A935DC9": [
+"kCommandID_PlaceBusStopTool",
+"0x00B09200"
+],
+"0x6A935DDA": [
+"kCommandID_RailTool",
+"0x00B09208"
+],
+"0x2B79E72B": [
+"kCommandID_LightRailTool",
+"0x00B09210"
+],
+"0x8BE098F4": [
+"kCommandID_MonorailTool",
+"0x00B09218"
+],
+"0x4BE098F7": [
+"kCommandID_OneWayRoadTool",
+"0x00B09220"
+],
+"0x6BE098FA": [
+"kCommandID_DirtRoadTool",
+"0x00B09228"
+],
+"0x4BE098FD": [
+"kCommandID_GroundHighwayTool",
+"0x00B09230"
+],
+"0x6A935DDD": [
+"kCommandID_PlacePassengerDepotTool",
+"0x00B09238"
+],
+"0x6A935DDF": [
+"kCommandID_PlaceFreightDepotTool",
+"0x00B09240"
+],
+"0x2BFE11C9": [
+"kCommandID_PlaceLightRailStationTool",
+"0x00B09248"
+],
+"0x6A935DE3": [
+"kCommandID_SubwayTool",
+"0x00B09250"
+],
+"0x6A935DE6": [
+"kCommandID_PlaceSubwayStationTool",
+"0x00B09258"
+],
+"0x6A935DEB": [
+"kCommandID_PowerLinesTool",
+"0x00B09260"
+],
+"0x6A935DEE": [
+"kCommandID_PipesTool",
+"0x00B09268"
+],
+"0x6A935DF1": [
+"kCommandID_PlaceSmallPoliceStationTool",
+"0x00B09270"
+],
+"0x6A935DF4": [
+"kCommandID_PlaceLargePoliceStationTool",
+"0x00B09278"
+],
+"0x6A935DF7": [
+"kCommandID_PlaceJailTool",
+"0x00B09280"
+],
+"0x2BFE0BEA": [
+"kCommandID_PlacePoliceKioskTool",
+"0x00B09288"
+],
+"0x6A935DFA": [
+"kCommandID_PlaceSmallFireStationTool",
+"0x00B09290"
+],
+"0x6A935DFD": [
+"kCommandID_PlaceLargeFireStationTool",
+"0x00B09298"
+],
+"0x6A935E0A": [
+"kCommandID_PlaceClinicTool",
+"0x00B092A0"
+],
+"0x6A935E0D": [
+"kCommandID_PlaceHospitalTool",
+"0x00B092A8"
+],
+"0x6A935E14": [
+"kCommandID_PlaceElementarySchoolTool",
+"0x00B092B0"
+],
+"0x6A935E11": [
+"kCommandID_PlaceHighSchoolTool",
+"0x00B092B8"
+],
+"0x6A935E17": [
+"kCommandID_PlaceCollegeTool",
+"0x00B092C0"
+],
+"0x2BFE1095": [
+"kCommandID_PlaceFerryTerminal",
+"0x00B092C8"
+],
+"0x6A935E1E": [
+"kCommandID_EnableDayOnly",
+"0x00B092D0"
+],
+"0x6A935E21": [
+"kCommandID_EnableNightOnly",
+"0x00B092D8"
+],
+"0x6A935E27": [
+"kCommandID_EnableDayAndNight",
+"0x00B092E0"
+],
+"0x6A935E2A": [
+"kCommandID_OpenPlayOptionsDialog",
+"0x00B092E8"
+],
+"0x6A935E2D": [
+"kCommandID_OpenGraphicOptionsDialog",
+"0x00B092F0"
+],
+"0x6A935E34": [
+"kCommandID_OpenAudioOptionsDialog",
+"0x00B092F8"
+],
+"0x6A935E45": [
+"kCommandID_OpenPhotoAlbumDialog",
+"0x00B09300"
+],
+"0x6A935E4B": [
+"kCommandID_OpenSnapshotDialog",
+"0x00B09308"
+],
+"0x6A935E36": [
+"kCommandID_SaveCity",
+"0x00B09310"
+],
+"0x6A935E37": [
+"kCommandID_SaveCityQuick",
+"0x00B09318"
+],
+"0x6A935E39": [
+"kCommandID_QuitCity",
+"0x00B09320"
+],
+"0x6A935E3C": [
+"kCommandID_QuitGame",
+"0x00B09328"
+],
+"0x6A935E3F": [
+"kCommandID_ToggleUIVisibility",
+"0x00B09330"
+],
+"0x2A9496C9": [
+"kCommandID_OpenCheatCodeDialog",
+"0x00B09338"
+],
+"0x2A94A04B": [
+"kCommandID_ToggleTerrainContourDisplay",
+"0x00B09340"
+],
+"0x2A94A5B6": [
+"kCommandID_OpenObliterateCityDialog",
+"0x00B09348"
+],
+"0x6AA9FE51": [
+"kCommandID_SetExpandedToolTips",
+"0x00B09350"
+],
+"0x0B980581": [
+"kCommandID_SignTool",
+"0x00B09358"
+],
+"0x0B980587": [
+"kCommandID_LabelTool",
+"0x00B09360"
+],
+"0xABCDEE11": [
+"kCommandID_DemolishSignsAndLabels",
+"0x00B09368"
+],
+"0x6B98058A": [
+"kCommandID_ToggleSignsAndLabels",
+"0x00B09370"
+],
+"0x0BB3C277": [
+"kCommandID_LoadRegion",
+"0x00B09378"
+],
+"0x0BB2747D": [
+"kCommandID_LoadCity",
+"0x00B09380"
+],
+"0xAB99A64B": [
+"kCommandID_PlaceFlora",
+"0x00B09388"
+],
+"0x0B99AE81": [
+"kCommandID_PlaceBuilding",
+"0x00B09390"
+],
+"0x0BEAF1A2": [
+"kCommandID_CreateTextDecal",
+"0x00B09398"
+],
+"0xAC1F0449": [
+"kCommandID_MinimizeDrivingPanel",
+"0x00B093A0"
+],
+"0xCC1F0457": [
+"kCommandID_MaximizeDrivingPanel",
+"0x00B093A8"
+],
+"0xAC1F045D": [
+"kCommandID_ToggleDrivingPanel",
+"0x00B093B0"
+],
+"0x6A9391A0": [
+"kCommandID_FullScreenRefresh",
+"0x00B093B8"
+],
+"0x6A9753EA": [
+"kCommandID_PauseAnimation",
+"0x00B093C0"
+],
+"0x6A9753ED": [
+"kCommandID_StepAnimation",
+"0x00B093C8"
+],
+"0x6A9757C2": [
+"kCommandID_RegionBitmapLoad",
+"0x00B093D0"
+],
+"0xCAB22C64": [
+"kCommandID_AnimationRecorder",
+"0x00B093D8"
+],
+"0xCB996C8D": [
+"kCommandID_OccupantManagerDebug",
+"0x00B093E0"
+],
+"0xCB998EB2": [
+"kCommandID_RenderDirtyRectangle",
+"0x00B093E8"
+],
+"0x0B99A37A": [
+"kCommandID_PollutionSimulatorStats",
+"0x00B093F0"
+],
+"0x2B9D45CD": [
+"kCommandID_TrafficDebug",
+"0x00B093F8"
+],
+"0x0BFB41BA": [
+"kCommandID_ToxicSpill",
+"0x00B09400"
+],
+"0x8BB756A4": [
+"kCommandID_SetViewTarget",
+"0x00B09408"
+],
+"0x8BA12D18": [
+"kCommandID_GZLog",
+"0x00B09410"
+],
+"0x41200000": [
+"CN_PDBS",
+"0x00B097BC"
+],
+"0xC0400000": [
+"Controllers",
+"0x00B09A0C"
+],
+"0x3C000000": [
+"Automata",
+"0x00B09A20"
+],
+"0xFFFFFFFF": [
+"CN_PDBS",
+"0x00B09A88"
+],
+"0x112A0000": [
+"CitySituationManager",
+"0x00B09AB8"
+],
+"0x43400000": [
+"SC4PATHS",
+"0x00B09FDC"
+],
+"0x44FA0000": [
+"hs_bus_in",
+"0x00B0A0B8"
+],
+"0x40490FDB": [
+"renderprop",
+"0x00B0A284"
+],
+"0xFFFF00FF": [
+"CN_PDBS",
+"0x00B0A7BC"
+],
+"0x40A9999A": [
+"CN_PDBS",
+"0x00B0B358"
+],
+"0x40400000": [
+"CN_PDBS",
+"0x00B0C3B4"
+],
+"0x3F99999A": [
+"FPS",
+"0x00B0D454"
+],
+"0x3E2E147B": [
+"CN_PDBS",
+"0x00B0D8A0"
+],
+"0x2A5D4194": [
+"CN_PDBS",
+"0x00B0DA94"
+],
+"0x8A2871D8": [
+"advices",
+"0x00B0DAAC"
+],
+"0x42350000": [
+"CN_PDBS",
+"0x00B0DBB0"
+],
+"0xFF000000": [
+"CN_PDBS",
+"0x00B0DC24"
+],
+"0xEC3E82F8": [
+"PlaceLotTool",
+"0x00B0E134"
+],
+"0x00040000": [
+"CN_PDBS",
+"0x00B11DD8"
+],
+"0x00257972": [
+"CN_PDBS",
+"0x00B169E8"
+],
+"0x02625A00": [
+"CN_PDBS",
+"0x00B16F80"
+],
+"0xC2AFA76F": [
+"GZWinFlatRect",
+"0x00B16FAC"
+],
+"0x212CDC1F": [
+"GZWinText",
+"0x00B16FB8"
+],
+"0x231A1C57": [
+"GZWinTextEdit",
+"0x00B16FC4"
+],
+"0x4132242B": [
+"GZWinListBox",
+"0x00B16FD0"
+],
+"0x21335C59": [
+"GZWinLineInput",
+"0x00B16FDC"
+],
+"0x412CE496": [
+"GZWinCombo",
+"0x00B16FE8"
+],
+"0xC12CEA13": [
+"GZWinBMP",
+"0x00B17000"
+],
+"0x61325A2D": [
+"GZWinScrollbar",
+"0x00B1700C"
+],
+"0x21325207": [
+"GZWinSlider",
+"0x00B17018"
+],
+"0xA1336CC0": [
+"GZWinOptGrp",
+"0x00B17024"
+],
+"0x612CE0C3": [
+"GZWinSpinner",
+"0x00B17030"
+],
+"0xE303E5AE": [
+"GZWinOutline",
+"0x00B1703C"
+],
+"0x032F0B3C": [
+"GZWinTextTicker",
+"0x00B17048"
+],
+"0x5386D516": [
+"GZWinGen",
+"0x00B17054"
+],
+"0x3AA52E64": [
+"GZWinFileBrowser",
+"0x00B17060"
+],
+"0x3AE8BAD2": [
+"GZWinTreeView",
+"0x00B1706C"
+],
+"0xA13351B8": [
+"GZWinFolders",
+"0x00B17078"
+],
+"0xDAA6B9BE": [
+"GZWinGrid",
+"0x00B17084"
+],
+"0x678D1E84": [
+"GZWinCustom",
+"0x00B17090"
+],
+"0x22BA0121": [
+"GZWin",
+"0x00B1709C"
+],
+"0x3F700000": [
+"CN_PDBS",
+"0x00B1752C"
+],
+"0x7FF00000": [
+"CN_PDBS",
+"0x00B17544"
+],
+"0x31424B54": [
+"CN_PDBS",
+"0x00B17A40"
+]
+}

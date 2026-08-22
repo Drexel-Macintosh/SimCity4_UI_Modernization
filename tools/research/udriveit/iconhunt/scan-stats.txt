@@ -1,0 +1,7 @@
+entries	45833
+decoded	45807
+decode_fail	26
+imgs	50654
+skip_big	1
+comps	149263
+rows	18037

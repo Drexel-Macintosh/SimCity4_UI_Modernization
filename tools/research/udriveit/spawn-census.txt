@@ -1,0 +1,99 @@
+U-DRIVE-IT #188 - CreateEffectByName (0x5939B0) SPAWN CENSUS, 2026-08-17 captures
+================================================================================
+Source: SC4UIScale\_tests\captures\SC4UIScale-2026-08-17-*.log
+Hook: CreateEffectDetour on 0x5939B0 (src\CodePatches.cpp:5268), unfiltered
+census mode v3.0.16 active only in the 8 sessions 184330, 184654, 185039,
+185608, 185946, 190322, 190644, 191717 (191717 is byte-identical to
+SC4UIScale-2026-08-17-REGRESSION-mayorhat.log, md5 9d7f05bae94996ed044c3f03cd31629d;
+counted ONCE). Sessions 155901-183615 ran the FILTERED hook (mission_selection*
+names only) - their nulls are filtered nulls, not census data.
+
+CAPS (src\CodePatches.cpp:5287-5300, 5325, 5344): BUBBLEALL <= 40 lines/session
+(non-band ret VAs), BUBBLEBAND <= 16 lines/session (ret in 0x490000-0x4B0000),
+BUBBLESTACK <= 4/session, BUBBLEFX pristine-instance log <= 12/session.
+Every session's BUBBLEALL hit exactly 40 => later spawns in each session are
+UNLOGGED; the census is complete only for the first ~26s window after city
+load, which covers the load burst.
+
+BUBBLEBAND: 0 lines in ALL sessions. Positive control: the same hook, same
+sessions, printed 320 BUBBLEALL lines. NO CreateEffectByName call ever came
+from the offer/automata band 0x490000-0x4B0000.
+
+BUBBLEALL census, deduplicated, 8 sessions (n = total lines; ok0 = spawns the
+exe reported failed; ret = return VA of the caller into 0x5939B0):
+
+name                        n   ok0  ret(s)          first seen
+white_blinking_light_fast   72  0    0x005EEA73x72   184330.log:269 [18:43:13.653]
+helipad                     24  24   0x005E891Cx24   184330.log:262 [18:43:13.653]
+rotor                       24  0    0x005E891Cx24   184330.log:263 [18:43:13.653]
+copter_spotlight            24  0    0x0053A997x24   184330.log:264 [18:43:13.653]
+heli_closetoground          24  0    0x0053AA5Cx24   184330.log:265 [18:43:13.653]
+aircraftindicate            24  0    0x0053AA8Bx24   184330.log:266 [18:43:13.653]
+helibladestill              24  0    0x005E891Cx24   184330.log:267 [18:43:13.653]
+cargopu2                    16  0    0x005E891Cx16   184330.log:256 [18:43:13.565]
+natural_gas_smoke           16  0    0x005EEA73x16   184330.log:257 [18:43:13.611]
+heliblade                   16  0    0x005E891Cx16   184330.log:268 [18:43:13.653]
+#helicopter_takeoff         16  16   0x005EEA73x16   184330.log:273 [18:43:13.653]
+region_global               8   0    0x007B21DDx8    184330.log:71  [18:42:50.215]
+atmospheric_effects         8   0    0x0059406Ax8    184330.log:247 [18:43:13.280]
+water_effects               8   0    0x005940DDx8    184330.log:248 [18:43:13.280]
+motorcycle                  8   0    0x005E891Cx8    184330.log:259 [18:43:13.651]
+cargopu1                    8   0    0x005E891Cx8    184330.log:260 [18:43:13.653]
+
+BUBBLEFX (instances the hook found pristine and scaled; mode 3):
+cargopu2 14, rotor 14, aircraftindicate 14, helibladestill 14, heliblade 14,
+motorcycle 7, cargopu1 7 (all first in 184654.log:258+ [18:46:39.7]);
+mission_selection_red 8 (ONLY in click sessions: 164337.log:737 [16:43:28.937],
+170603.log:579/606 [17:05:52.849/17:05:56.539], 172458.log:663 [17:24:49.662],
+172846.log:586/609 [17:28:29.146/17:28:33.433], 174836.log:582/607
+[17:48:23.814/17:48:27.895]).
+
+RETURN-VA -> FUNCTION MAP (disassembled from the shipped exe; every spawn call
+is a virtual `call [reg+0x1C]` on the effect-manager interface):
+0x005E891C  call at 0x5E8919 `call [ebx+0x1c]`, fn 0x5E8810 (0xCC boundary).
+            Effect-system internal: an effect COMPOSITE spawning its named
+            child effects (cargopu1/2, motorcycle, rotor, heliblade(still),
+            helipad). Load-burst stack (184654.log:257): 0088ADD5 00AC4660
+            00930B7E 005E55CF 0090CF62 00408442 00408A10 005E7CAE 005E8656
+            00930B7E 005051ED 005E891C 005E848A 005E5E5C - pure effect-manager
+            frames, no 0x49xxxx.
+0x005EEA73  call at 0x5EEA70 `call [eax+0x1c]`, fn 0x5EE9C0 (4 direct callers
+            0x5EF2D2/0x5EF71C/0x5EF807/0x5F080A). Prop/lot ambient-effect
+            attacher; compares the name against "off" (0xA82B94) first; the
+            '#'-prefixed name (#helicopter_takeoff) and helipad fail ok=0.
+            Spawns natural_gas_smoke, white_blinking_light_fast.
+0x0053A997  call at 0x53A994 `call [eax+0x1c]` - helicopter automaton ctrl:
+0x0053AA5C  call at 0x53AA59 - same function region 0x53A7xx-0x53AAxx,
+0x0053AA8B  call at 0x53AA88 - spawns copter_spotlight / heli_closetoground /
+            aircraftindicate (the white heli offer indicator effect).
+0x0059406A  call at 0x594067, fn 0x593E10 (callers 0x594576/0x5947D9):
+0x005940DD  call at 0x5940DA - city-view global environment starter
+            (atmospheric_effects, water_effects) right after city load.
+0x007B21DD  call at 0x7B21DA, fn 0x7B2181: region-screen global effect
+            (region_global; fires on the region screen before city entry).
+
+CAR vs HELICOPTER PAIRING (user's test city = exactly one car + one heli offer
+on load; the whole block spawns at city-load completion, 18:43:13.5-13.7):
+CAR offer composite   (ret 0x5E891C): cargopu2 (x2/session), motorcycle,
+                      cargopu1  [2 car-mission spawn events/session]
+HELI offer composite  (ret 0x5E891C): helipad (always ok=0), rotor,
+                      helibladestill, heliblade  [3 events/session]
+HELI offer indicator  (ret 0x53A99x): copter_spotlight, heli_closetoground,
+                      aircraftindicate  [3 events/session]
+Scenery, NOT offers: natural_gas_smoke, white_blinking_light_fast,
+                      #helicopter_takeoff (ok=0), atmospheric/water/region.
+ON INTERACTION ONLY: mission_selection_red (SetTrackedTarget path; click
+stack 172846.log:585: 008C9332 008C92C3 008C93FC 008C9346 008C8EEC 008BB272
+008B6E5D 00881959 00473D67 00474B18 0067C69E 0072A1AC 00528BD4 0052B1B0).
+
+OFFER BAND 0x490000-0x4B0000: spawns NOTHING via CreateEffectByName (armed
+BUBBLEBAND channel, 0 hits, positive control above). The band talks to the
+marker objects instead (VTCAP): binder fn 0x496950 (hooked; PROPBIND) QIs iid
+0xEA123CEF (0x496963), requires GetType()==0xA823821E (0x496991), probes
+0x4A70D491 (0x4969A5), reads exemplar property 0x2977AA47 (0x4969BE) and
+returns its first element; direct callers 0x4902F9 (fn 0x4902E0, compares the
+returned offer id to 0xEA123BE1 / 0xAA123BF9) and 0x495521 (fn ~0x4954xx,
+compares to 0xAA123BF9). Neighbor fn 0x4965F0 reads properties 0x27812820,
+0x27812821, 0x27812822, 0x27812823, 0x27812824 (vt4+0x0C calls at
+0x496608-0x49665C) and QIs 0x87DDA3A9 / 0xE9793A65 - the marker's
+exemplar-driven setup, not an effect spawn.

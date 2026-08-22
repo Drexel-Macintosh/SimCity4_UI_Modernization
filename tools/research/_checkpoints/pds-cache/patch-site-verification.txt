@@ -1,0 +1,15 @@
+==============================================================================
+SITE VERIFICATION vs the exe on disk
+==============================================================================
+sites checked OK : 194
+sites MISMATCHED : 1
+  !! 0x0077F5B9  kDeptImm8Sites           want 6A 08 got BC 0A
+
+==============================================================================
+TWIN SCAN -- whole-exe occurrences of each fixed signature
+(a hit NOT in the table is a missed twin: laws 15/16)
+==============================================================================
+kBudgetBtnSizeSites    sig 6A 1E 68 B4 00 00 00     exe hits 20 / table 20   EXTRA 0 
+kBudgetBtnXSites       sig 81 E9 C3 00 00 00        exe hits  5 / table  5   EXTRA 0 
+kBizBoxSizeSites       sig 6A 64 68 2C 01 00 00     exe hits  5 / table  5   EXTRA 0 
+kBizBoxCloseX(sig)     sig 68 0D 01 00 00           exe hits  3 / table  1   EXTRA 2 0x0094DFFD 0x00956A9D

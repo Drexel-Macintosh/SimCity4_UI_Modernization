@@ -1,0 +1,423 @@
+NOTICE -- third-party attributions for SC4UIScale / SC4TouchControls
+===============================================================================
+
+⚠ SUPERSEDED HEADER, CORRECTED 2026-08-05. This file used to open with:
+    "This project is licensed under the GNU Lesser General Public
+     License, version 2.1 or later."
+THAT IS NO LONGER TRUE, and it is quoted here rather than deleted so the
+change is visible instead of silent. The project's OWN code is now
+dedicated to the PUBLIC DOMAIN under CC0 1.0 - no rights reserved, no
+attribution required. LGPL-2.1 still governs the VENDORED gzcom-dll, which
+is a different thing, and is exactly the distinction the old wording blurred.
+
+  * Dedication + carve-outs ...... LICENSE
+  * The dependency list, front and centre, and what each one obliges you
+    to do ........................ THIRD-PARTY-NOTICES.md   <- START HERE
+
+The audit below remains accurate as a record of every third-party work
+involved and the obligations each one carries.
+
+Every fact below was read out of the files named. Where a statement could not
+be verified from a file in this repository it is marked UNVERIFIED or
+NOT RECORDED, and the open ones are collected in section 6.
+
+
+===============================================================================
+1. THIRD-PARTY CODE COMPILED INTO SC4UIScale.dll
+===============================================================================
+
+Both components below are compiled directly into the shipped binary. This was
+verified in src/SC4UIScale.vcxproj: <ConfigurationType> is DynamicLibrary,
+<TargetName> is SC4UIScale, and each source file listed below appears as a
+<ClCompile> input to that project. <AdditionalDependencies> contains only
+user32.lib, comctl32.lib and version.lib -- no prebuilt third-party library is
+linked, and no third-party DLL is loaded at run time.
+
+
+-------------------------------------------------------------------------------
+1.1  gzcom-dll -- the SimCity 4 DLL Plugin SDK
+-------------------------------------------------------------------------------
+
+Component        gzcom-dll ("an open-source DLL Plugin SDK for SimCity 4",
+                 as the source headers describe it)
+
+Upstream         https://github.com/nsgomez/gzcom-dll
+                 Linked as the git submodule at vendor/gzcom-dll, declared in
+                 this repository's .gitmodules.
+
+Version pinned   commit 08c529bc2edd32e11c269960a03011ad035c0529 (2026-07-12) -
+                 the submodule's checked-out revision
+
+Licence          GNU Lesser General Public License, version 2.1, or (at your
+                 option) any later version.
+                 Full text: vendor/gzcom-dll/LICENSE (the verbatim FSF
+                 LGPL-2.1 document, 457 lines), reproduced unaltered in this
+                 project's own LICENSE file.
+
+Copyright lines, exactly as written in the three files we compile:
+
+    cRZCOMDllDirector.cpp
+        Copyright (C) 2016, 2017, 2018 Nelson Gomez
+    cRZBaseString.cpp
+        Copyright (C) 2016, 2017 Nelson Gomez
+        Copyright (C) 2023, 2025 Nicholas Hayes
+        Copyright (C) 2026 Casper Van Gheluwe
+    cRZBaseUnknown.cpp
+        Copyright (C) 2024 Nicholas Hayes
+
+  (The wider vendored tree carries further copyright lines by the same three
+  authors on files this project does not compile.)
+
+The grant, as written in each of those file headers:
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation, under
+    version 2.1 of the License, or (at your option) any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, see
+    <https://www.gnu.org/licenses/>.
+
+How it is used here
+    gzcom-dll supplies the GZCOM director plumbing that lets SimCity 4 load
+    and drive this plugin, plus the base string and base refcounted-object
+    implementations. Three of its .cpp files are compiled into
+    SC4UIScale.dll; the rest of the tree is used as headers only.
+
+STATIC LINKING AND YOUR RIGHT TO RELINK (LGPL-2.1 section 6)
+    Because gzcom-dll is compiled into SC4UIScale.dll rather than loaded from
+    a separate library, SC4UIScale.dll is a "work that contains the Library"
+    under LGPL-2.1 section 6.
+
+    - Source for gzcom-dll: the exact revision used is pinned above and is
+      available from https://github.com/nsgomez/gzcom-dll . This repository
+      references that revision as the git submodule at vendor/gzcom-dll
+      (fetch it with `git submodule update --init`).
+    - Source for the rest of the combined work: this whole project is
+      published under LGPL-2.1-or-later, so its complete corresponding source
+      accompanies the binary. That is section 6 option (a).
+    - You may therefore modify gzcom-dll and rebuild SC4UIScale.dll against
+      your modified copy. The build inputs needed to do so are
+      src/SC4UIScale.vcxproj and the vendored sources; nothing is withheld.
+    - You may also reverse engineer the binary for the purpose of debugging
+      such modifications.
+
+
+-------------------------------------------------------------------------------
+1.2  MinHook -- The Minimalistic API Hooking Library for x64/x86
+-------------------------------------------------------------------------------
+
+Component        MinHook
+Upstream         https://github.com/tsudakageyu/minhook , linked as the git
+                 submodule at vendor/minhook (declared in this repository's
+                 .gitmodules).
+Version          Pinned to upstream commit
+                 d94c64d32ea37bc4f5ee47d580709f70c6fb6080 - the submodule's
+                 checked-out revision; the previously vendored sources were
+                 verified byte-identical to that commit.
+Licence          BSD 2-Clause ("Simplified BSD"), as reproduced verbatim
+                 below from vendor/minhook/include/MinHook.h.
+
+How it is used here
+    MinHook installs the runtime detours this project places on SimCity 4's
+    own UI routines (see src/CodePatches.cpp and src/UiSpike.cpp). Five of its
+    source files are compiled into SC4UIScale.dll:
+        vendor/minhook/src/buffer.c
+        vendor/minhook/src/hook.c
+        vendor/minhook/src/trampoline.c
+        vendor/minhook/src/hde/hde32.c
+        vendor/minhook/src/hde/hde64.c
+
+BSD 2-Clause condition 2 requires that redistributions in binary form
+reproduce the copyright notice, the conditions and the disclaimer in the
+documentation or other materials provided with the distribution. This section
+is that reproduction, and it must ship with every binary release.
+
+Reproduced in full and verbatim:
+
+MinHook - The Minimalistic API Hooking Library for x64/x86
+Copyright (C) 2009-2017 Tsuda Kageyu.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER
+OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-------------------------------------------------------------------------------
+1.3  Hacker Disassembler Engine (HDE32 / HDE64) -- bundled inside MinHook
+-------------------------------------------------------------------------------
+
+MinHook embeds the Hacker Disassembler Engine to decode instruction lengths at
+the hook site. It is a separate work by a separate author and is listed here
+in its own right.
+
+Component        Hacker Disassembler Engine 32 / 64
+Files            vendor/minhook/src/hde/hde32.c, hde32.h, table32.h,
+                 hde64.c, hde64.h, table64.h
+
+Copyright lines, exactly as written in those files:
+
+    Hacker Disassembler Engine 32
+    Copyright (c) 2006-2009, Vyacheslav Patkov.
+    All rights reserved.
+        -- vendor/minhook/src/hde/hde32.h
+
+    Hacker Disassembler Engine 32 C
+    Copyright (c) 2008-2009, Vyacheslav Patkov.
+    All rights reserved.
+        -- vendor/minhook/src/hde/hde32.c, table32.h
+
+    Hacker Disassembler Engine 64 / Hacker Disassembler Engine 64 C
+    Copyright (c) 2008-2009, Vyacheslav Patkov.
+    All rights reserved.
+        -- vendor/minhook/src/hde/hde64.h, hde64.c, table64.h
+
+Licence          The HDE files as vendored here carry a copyright line and
+                 "All rights reserved" but NO permission grant -- the grant
+                 lives in MinHook's own LICENSE.txt, which the vendored copy
+                 omits. Upstream MinHook's LICENSE.txt (fetched 2026-08-04
+                 from raw.githubusercontent.com/TsudaKageyu/minhook/master/
+                 LICENSE.txt) contains three BSD-2-Clause sections: MinHook,
+                 "Hacker Disassembler Engine 32 C" and "Hacker Disassembler
+                 Engine 64 C", each attributed to Vyacheslav Patkov for the
+                 latter two. HDE is therefore BSD-2-Clause on the same terms
+                 reproduced in section 1.2.
+
+                 ACTION REQUIRED: vendor MinHook's upstream LICENSE.txt into
+                 vendor/minhook/ so this repository carries the grant itself
+                 rather than depending on an external fetch. See section 6.
+
+
+===============================================================================
+2. THIRD-PARTY SOURCE PRESENT IN THIS REPOSITORY BUT NOT LINKED
+===============================================================================
+
+tools/research/submenus-dll-src/
+    A full clone (including its .git directory) of the "Submenus DLL" project
+    by memo33. Origin recorded in its own .git/config as
+    https://github.com/memo33/submenus-dll.git . It is reference material for
+    reverse-engineering SimCity 4's menu data; NONE of it is compiled into
+    anything this project ships -- src/SC4UIScale.vcxproj lists no file from
+    that tree.
+
+    Its licence is GNU Lesser General Public License, version 3, 29 June 2007
+    (tools/research/submenus-dll-src/LICENSE.txt), and it ships its own
+    "Third Party Notices.txt". Both travel with the tree, which is what LGPL-3
+    requires of a source redistribution.
+
+    NOTE FOR THE RECORD -- a licensing discrepancy, not a conflict: that
+    project's "Third Party Notices.txt" describes gzcom-dll as
+    "The MIT License (MIT) / Copyright (c) 2015 Nelson Gomez (simmaster07)".
+    The copy of gzcom-dll WE vendor and link states LGPL-2.1-or-later in its
+    LICENSE and in every source header. The files we actually compile govern
+    our obligations, so this project is treated as LGPL-2.1-bound. The MIT
+    note appears to reflect an earlier state of gzcom-dll and is not relied on
+    here.
+
+    BEFORE PUBLISHING: consider whether a vendored clone of someone else's
+    repository (with its .git history) belongs in a public release at all.
+    Keeping it is permissible under LGPL-3; excluding it from release archives
+    is simpler. See section 6.
+
+
+===============================================================================
+3. THIRD-PARTY SIMCITY 4 MODS WHOSE DATA THIS PROJECT OVERRIDES
+===============================================================================
+
+READ THIS FIRST -- NOTHING BELOW IS REDISTRIBUTED.
+
+    This project ships a GENERATOR, not artwork. No file authored by EA, by
+    Maxis, or by any of the mod authors named below is contained in, bundled
+    with, or distributed by this project. The scaled replacement packages are
+    built on the end user's own machine, from the copy of SimCity 4 and the
+    copies of those mods that the user already has installed. A user who does
+    not own the game, or does not have a given mod installed, receives nothing
+    from that mod.
+
+    Our generated overrides are written to Plugins\zzz-SC4UIScale\ , which
+    sorts after the mods' own folders in SimCity 4's load order. They are
+    tier-gated and mod-gated: removing a mod removes our override for it.
+
+    Standing project rule: every time we override another mod's data we write
+    up exactly what, why, and what would make the override unnecessary. Those
+    write-ups are the developer-facing callouts in tools/research/UPSTREAM-*.md
+    and the summaries below are drawn from them. Nothing here is a bug report
+    against these authors except where the report itself says so.
+
+3.1  CAM -- the Colossus Addon Mod, and the SIM package
+     Report: tools/research/UPSTREAM-CAM-REPORT.md
+     Measured against CAM 4.0.1 + Submenus DLL 2.1.0 on SimCity 4 Deluxe
+     1.1.641. Two distinct interactions:
+       (a) A DATA DEFECT IS REPORTED against SIM 4.0.1: nine building
+           exemplars in "2 CAM Building\CAM_Police_Fire_Buildings.dat" carry
+           Item Submenu Parent (0xAA1DD399) = {0x00000000}, a menu id that
+           does not exist, plus one item in CAM_Park_Buildings.dat pointing at
+           an undefined submenu. Our local workaround is a generated
+           Exemplar Patch dat (z_SC4UIScale_MenuFix.dat), to be deleted when
+           the data is fixed upstream. A separate claim about five missing
+           landmark icons was WITHDRAWN the same day as our own audit error
+           and is recorded as withdrawn.
+       (b) INFORMATIONAL: CAM Core legitimately replaces nine stock .UI
+           scripts, six of which our dialog builder also targets. We scale
+           CAM's versions, never revert them.
+       (c) INFORMATIONAL (added v2.97.1, 2026-08-13): CAM also ADDS three .UI
+           scripts of its own -- the city info screen {96a006b0,9b868f68}
+           (the Village Hall / Town Hall query) and the civic and school query
+           panels 12121201 / 12121205. Those are not overrides of anything;
+           they are CAM's dialogs. We now generate scaled copies of them, and
+           of nine of CAM's own bitmaps that the info screen draws, into the
+           same CAM-gated package. Remove CAM and the gate removes our copies.
+       (d) A second dangling resource reference, alongside the 0xFF5D2E9F
+           label in 3.1(a): script 12121205 draws image {46a006b0,b5cfffff},
+           which exists in neither the nine game archives nor anywhere in the
+           Plugins tree. It is cosmetic -- the node is transparent-backed, so
+           nothing visibly fails -- and is reported upstream for information.
+
+3.2  warrior -- "God Terraforming in Mayor Mode" 1.0
+     Report: tools/research/UPSTREAM-WARRIOR-REPORT.md
+     Package warrior.god-terraforming-in-mayor-mode.1.0.sc4pac (UI_Compact.dat,
+     Mayor_Sign_Menu.dat, Locales.dat). Status in the report: "FYI only. No
+     defect in this mod." Both of its replacement .UI scripts are correctly
+     authored. We generate 2x/1.5x/3x copies of THIS MOD'S OWN scripts and
+     bitmaps -- never of the stock ones, which would revert the mod's compact
+     layout -- because SC4 loads Plugins root files before subfolders, so the
+     mod's 1x art legitimately outranked our root packages. Its Locales.dat is
+     untouched.
+
+3.3  CoriBoom -- "36 Slot Building Styles UI"
+     Report: tools/research/UPSTREAM-BUILDINGSTYLES-REPORT.md
+     File "CoriBoom's 36 Slot Building Styles UI - v0.46 Beta HA250411.dat",
+     shipped inside null-45.allow-more-building-styles-dll 3.6.1-1. The report
+     states plainly: "Nothing in the mod's own files was modified" and "Not a
+     bug in the mod. The mod's .UI script is a perfectly good 1x layout." We
+     generate a scaled copy of its 73-window panel script and matching art.
+
+3.4  cyclone-boom -- the "save warning" mod
+     Report: tools/research/UPSTREAM-SAVEWARNING-REPORT.md
+     SaveWarning_Disable_Exit_Quit.dat, sc4pac package cyclone-boom.save-warning.
+     Status: "informational. No bug is being reported against the mod -- it
+     does nothing wrong." We generate a scaled copy of the MOD'S script (never
+     the stock one, which would silently re-enable the very button the mod
+     disables). Only pixel geometry and font-name-to-GUID substitution change;
+     captions, colours and winflag_enable=no are preserved verbatim, and its
+     own LTEXT captions are not touched.
+
+3.5  0xC0000054 -- SC4ResourceLoadingHooks
+     Not linked and not redistributed. Our generated menu-fix dat (3.1a) is
+     authored in that project's Exemplar Patch cohort FORMAT so that the
+     user's own installed copy of SC4ResourceLoadingHooks applies it. Only the
+     data format is used; no code from it is present here.
+
+3.6  memo33 -- Submenus DLL
+     See section 2 for the source clone kept as reference material. The DLL
+     itself is not redistributed.
+
+
+===============================================================================
+4. SIMCITY 4, EA AND MAXIS
+===============================================================================
+
+SimCity 4 is Copyright (C) Electronic Arts Inc. SimCity and Maxis are
+trademarks of Electronic Arts Inc. This project is an unofficial, unaffiliated
+third-party plugin. It is not endorsed by or associated with Electronic Arts.
+
+No EA or Maxis code, artwork, sound, text or other asset is contained in,
+bundled with or distributed by this project. Memory addresses, resource ids
+and data-format descriptions recorded in this repository's research documents
+are factual observations about a program the authors lawfully own, not copies
+of it.
+
+
+===============================================================================
+5. HOW TO SATISFY THESE OBLIGATIONS WHEN YOU SHIP A BINARY
+===============================================================================
+
+A release archive containing SC4UIScale.dll MUST include:
+
+  1. This NOTICE file            -- discharges BSD-2 clause 2 for MinHook and
+                                    HDE, and the attribution duties above.
+  2. The LICENSE file            -- the LGPL-2.1 text, as LGPL-2.1 section 6
+                                    and the "show them these terms" duty
+                                    require.
+  3. A pointer to the complete corresponding source of the whole work
+                                 -- the LGPL-2.1 section 6(a) route this
+                                    project relies on. A URL is sufficient
+                                    only if the source is genuinely available
+                                    there for the lifetime of the release.
+
+Confirmed not yet done at the time of writing: dist/SC4UIScale-preview/ and
+dist/SC4TouchControls-v1.0.4 / v1.0.5 contain no LICENSE and no NOTICE. The
+two SC4TouchControls bundles are FROZEN (their hashes are asserted by
+_tests/Test-DatIntegrity.ps1) and must not be edited in place -- ship the
+licence files alongside them, or beside them in the release archive, rather
+than modifying the frozen folders.
+
+
+===============================================================================
+6. OPEN ITEMS -- things a human must settle before a public release
+===============================================================================
+
+B1. MinHook is vendored WITHOUT its licence file.  [PARTIAL BLOCKER]
+    vendor/minhook/ has no LICENSE.txt. The BSD-2 grant for MinHook itself is
+    still present, repeated in the header of every vendored source file, so
+    the terms are not in doubt for MinHook. But the HDE files carry only
+    "All rights reserved" with no grant anywhere in this repository -- the
+    grant for HDE exists only in MinHook's upstream LICENSE.txt, which we do
+    not carry.
+    FIX: copy upstream MinHook's LICENSE.txt into vendor/minhook/LICENSE.txt
+    and add vendor/minhook/VENDOR-PIN.txt recording the upstream URL, commit
+    or release tag, and clone date -- matching the vendor/gzcom-dll
+    convention. (This is already item 54 of _packaging/PUBLISH-PLAN-108.md.)
+    Until that is done, section 1.3 rests on a single external fetch rather
+    than on a file in this repository.
+
+B2. MinHook's upstream URL and version are NOT RECORDED locally.
+    Nothing in vendor/minhook names its origin. The upstream repository was
+    reached at raw.githubusercontent.com/TsudaKageyu/minhook on 2026-08-04 and
+    its LICENSE.txt matches the notices in our vendored headers, but no file
+    in this repository asserts that provenance. A human should confirm which
+    MinHook release the vendored files came from and record it. Without it we
+    cannot tell a user which upstream version to diff against.
+
+B3. The copyright holder on LICENSE is a placeholder.
+    LICENSE currently reads "Copyright (C) 2026 the SC4UIScale project
+    authors". That is workable but vague. If a named individual or entity
+    holds the copyright, replace that line with the real name before release.
+    Only the holder can make that statement.
+
+B4. Decide whether tools/research/submenus-dll-src/ ships.
+    It is a full clone of memo33's LGPL-3 repository, .git included. Shipping
+    it is permitted (its LICENSE.txt and Third Party Notices.txt are intact)
+    but excluding it from release archives avoids the question entirely. See
+    section 2.
+
+B5. Licence files are not yet in any dist/ bundle.
+    See section 5. Nothing blocks fixing this except deciding where the files
+    go relative to the two FROZEN bundles.
+
+NOT A BLOCKER, recorded for completeness: the gzcom-dll / Submenus-DLL MIT vs
+LGPL discrepancy in section 2. The vendored files we compile are unambiguous.

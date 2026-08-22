@@ -1,0 +1,52 @@
+roots parsed: 328   distinct art refs: 431   ships-2x: 317
+
+ROOT IDS WITH 1x ART AND NO STATIC/NEVER/GODFLYOUT COVER: 12
+(geometry doubled by the sweep -> 1x art inside a 2x frame, IF swept)
+==============================================================================
+0x299BA0FC  1x-art  12/12   scripts: e9a56248
+            22dec92d/00002001 22dec92d/00002002 22dec92d/00002003 22dec92d/00002004 22dec92d/00002005 22dec92d/00002006 22dec92d/00002007 22dec92d/00002008 22dec92d/0000200a 22dec92d/00003002 22dec92d/00003003 22dec92d/00003004
+0xCBFACAE1  1x-art   5/5    scripts: abfac197
+            1abe787d/6bf47dbe 1abe787d/ea32f100 46a006b0/13f15214 46a006b0/2bf4822d 46a006b0/6bf47dbf
+0x6BFAC122  1x-art   4/4    scripts: 0bfac164
+            1abe787d/6bf47dbd 1abe787d/ea32f100 46a006b0/13f15214 46a006b0/2bf4822d
+0x8BFAC13E  1x-art   4/4    scripts: 0bfac164,abfac197
+            1abe787d/6bf47dbd 1abe787d/ea32f100 46a006b0/13f15214 46a006b0/2bf4822c
+0x27DF05BE  1x-art   3/3    scripts: 6a9455c9
+            1abe787d/ea32f100 46a006b0/13f15213 46a006b0/13f15214
+0x27DF05BF  1x-art   2/2    scripts: 6a9455c9
+            1abe787d/ea32f100 46a006b0/13f15214
+0x0A41C7B2  1x-art   1/1    scripts: 0a41be3e
+            46a006b0/14416230
+0x0A41C7B3  1x-art   1/1    scripts: 0a41be3f
+            46a006b0/14416232
+0xEACA96DD  1x-art   1/1    scripts: 6aca9687
+            46a006b0/144161c0
+0xCB40CFDC  1x-art   1/1    scripts: cb40cfdc
+            82b9b75b/e2b66db8
+0xCBA7FFBD  1x-art   1/2    scripts: cba9ef16
+            00000001/14416315
+0xE9264B49  1x-art   1/2    scripts: e9263d4d
+            46a006b0/c2d6e93a
+
+==============================================================================
+STATIC-DOUBLED ROOTS *NOT* INSURED BY kNeverScaleIds: 20 of 36
+  0x0A551C50   0a8cd184,ca539340
+  0x0A592004   ca551016
+  0x0A5BA192   8a5ab1cd
+  0x0A8CD3EE   4a8cc5ea
+  0x10000005   0a562a05,0a8b819e,0a8b98fe,0a8b9a67,0a8b9c43,0a8b9c6a,2a554f6d,2a5621ee,2a564884,2a56675c,2a567dc1,2a5e7490,2a
+  0x27DF05BE   2a41436c
+  0x2A57CB82   8a7e052f
+  0x2A57DB82   0a7df315
+  0x2A96ED21   4a89b3f2
+  0x4A5BA0E7   8a5ab1cc
+  0x4A9DB60C   4a5a89d4,4a5a89d5
+  0x6A4D0A59   0a4d0c43,8a4d0a17,ca4d0b22
+  0x6A5BA20C   8a5ab1ce
+  0x6AAEEC4A   eaaeec1b
+  0x8A5AB1D0   8a5ab1d0
+  0xAA921F4F   0a55161d,4a551b4c,6a553aa4
+  0xEA53F5DB   ca53f06e
+  0xEA5BA0D1   8a5ab1cb
+  0xEBB16D71   2bb16d50
+  0xEBBC081E   0bbc06b6,4bbc080f
