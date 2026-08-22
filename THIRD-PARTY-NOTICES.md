@@ -18,7 +18,7 @@ in this tree, not taken from a package manifest or from memory.
 | 1 | **gzcom-dll** — Nelson Gomez (`nsgomez`) | **LGPL-2.1-or-later** | **Statically compiled into `SC4UIScale.dll`** | `vendor\gzcom-dll\` |
 | 2 | **MinHook** — Tsuda Kageyu, 2009-2017 | **BSD-2-Clause** | **Statically compiled into `SC4UIScale.dll`** | `vendor\minhook\` |
 | 2a | ↳ **HDE** (Hacker Disassembler Engine), embedded in MinHook | see per-file headers | length-decoder used by MinHook | `vendor\minhook\src\hde\` |
-| 3 | **sc4-dll-utilities** — Nicholas Hayes (`0xC0000054`) | **LGPL-2.1-or-later** | `IniReader`/`StringViewUtil` compiled in to parse `SC4UIScale.ini` (replaces `GetPrivateProfile*`) | `vendor\sc4-dll-utilities\` |
+| 3 | **sc4-dll-utilities** — Nicholas Hayes (`0xC0000054`) | **LGPL-2.1-or-later** | `IniReader`/`StringViewUtil` compiled in to parse `SC4UIScale.ini` and the shared `SC4GraphicsOptions.ini` (replaces `GetPrivateProfile*`) | `vendor\sc4-dll-utilities\` |
 
 There is **nothing else compiled in**. In particular **no code** from any of
 the following is used, linked or built into `SC4UIScale.dll`. These are the
@@ -31,8 +31,8 @@ absence is on the record rather than assumed:
 * `nsgomez/scgl` — **no code used**
 
 Verified by search across `src\` for each of those project names and authors:
-**zero matches.** The only third-party code paths in the build are the two
-rows above, and both are visible as explicit `<ClCompile>` entries in
+**zero matches.** The only third-party code paths in the build are the three
+rows above, and all are visible as explicit `<ClCompile>` entries in
 `src\SC4UIScale.vcxproj`.
 
 **Two things that statement does NOT cover, and must not be read as denying:**
@@ -121,9 +121,36 @@ MinHook embeds the Hacker Disassembler Engine to decode instruction lengths.
 Those files carry their own copyright notices in their headers; see
 `vendor\minhook\src\hde\`.
 
+## 3. sc4-dll-utilities — LGPL-2.1-or-later
+
+* Upstream: <https://github.com/0xC0000054/sc4-dll-utilities>
+* Pinned commit: `cb52a04f2704893021b986f7619321cf63c653ba` — the git
+  submodule at `vendor\sc4-dll-utilities` (declared in `.gitmodules`),
+  byte-identical to the previously vendored subset.
+* Licence text: `vendor\sc4-dll-utilities\LICENSE.txt` (upstream repo root).
+
+**We link it STATICALLY, not dynamically.** Two files are built into our DLL:
+
+```
+vendor\sc4-dll-utilities\sc4-dll-utilities\include\IniReader.h      (header-only)
+vendor\sc4-dll-utilities\sc4-dll-utilities\src\StringViewUtil.cpp
+```
+
+The same LGPL-2.1 §6 analysis as gzcom-dll applies: recipients of
+`SC4UIScale.dll` must be able to obtain this library's source and relink;
+publishing the complete source at the pinned submodule revision satisfies
+that. Modifications under `vendor\sc4-dll-utilities\` are LGPL, not CC0.
+
+It parses both INI files we read: our own `SC4UIScale.ini`
+(`src\Settings.cpp`) and the shared `SC4GraphicsOptions.ini` owned by the
+optional SC4GraphicsOptions plugin (`src\SC4UIScaleDllDirector.cpp`,
+`src\UiSpike.cpp`). That plugin itself uses a different parsing library; we
+do not stay bug-compatible with it, and a missing or malformed file falls
+back to defaults exactly as with `GetPrivateProfile*`.
+
 ---
 
-## 3. SimCity 4 itself — not ours, and not licensed here
+## 4. SimCity 4 itself — not ours, and not licensed here
 
 SimCity 4 and all of its assets are the property of **Electronic Arts**. This
 project is an unofficial, unaffiliated modification.
@@ -151,7 +178,7 @@ anything above.
 
 ---
 
-## 4. Not a dependency, but present in the wider setup
+## 5. Not a dependency, but present in the wider setup
 
 Listed so the picture is complete; none of these is linked, vendored, or
 redistributed by this project:
@@ -161,10 +188,11 @@ redistributed by this project:
 
 ---
 
-## 5. How to satisfy everything, in one paragraph
+## 6. How to satisfy everything, in one paragraph
 
-Ship the binary **with** a copy of this file and the two upstream licence
-texts (`vendor\gzcom-dll\LICENSE`, `vendor\minhook\LICENSE.txt`), and publish
+Ship the binary **with** a copy of this file and the three upstream licence
+texts (`vendor\gzcom-dll\LICENSE`, `vendor\minhook\LICENSE.txt`,
+`vendor\sc4-dll-utilities\LICENSE.txt`), and publish
 or otherwise make available the complete corresponding source. That covers
 MinHook's notice requirement and gzcom-dll's LGPL-2.1 §6 relink requirement at
 the same time. Our own code asks for nothing.

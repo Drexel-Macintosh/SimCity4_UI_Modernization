@@ -92,7 +92,7 @@ Known limitations are listed in
 |---|---|
 | `src/` | The DLL: director, window-tree scaler (`UiSpike.cpp`), executable patches (`CodePatches.cpp`), tier/package logic (`ScaleTier.cpp`) |
 | `tools/` | Package builders — every shipped `.dat` is generated, never hand-edited |
-| `vendor/` | The third-party libraries the DLL links — gzcom-dll and MinHook, each a **git submodule** pinned to a specific upstream commit (fetch with `git submodule update --init`) |
+| `vendor/` | The third-party libraries the DLL links — gzcom-dll, MinHook and sc4-dll-utilities, each a **git submodule** pinned to a specific upstream commit (fetch with `git submodule update --init`) |
 
 No Maxis-derived art is committed to this repository; the packages are built
 locally from an owned installation.

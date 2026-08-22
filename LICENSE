@@ -36,19 +36,21 @@ NOT ours to dedicate, and their terms survive regardless of the above:
      Also compiled in (buffer.c, hook.c, trampoline.c, hde32.c, hde64.c).
      Its copyright notice and disclaimer must be reproduced in redistributions.
 
-  3. vendor\sc4-dll-utilities  LGPL-2.1-or-later  (Nicholas Hayes / 0xC0000054)
-     Compiled in (IniReader.h, StringViewUtil.h/.cpp) to parse SC4UIScale.ini,
-     replacing the GetPrivateProfile* APIs. Like gzcom-dll, static linking puts
-     it under LGPL-2.1 section 6; publishing the complete source satisfies it.
+   3. vendor\sc4-dll-utilities  LGPL-2.1-or-later  (Nicholas Hayes / 0xC0000054)
+      Git submodule (pinned upstream commit cb52a04). Compiled in
+      (IniReader.h header-only, StringViewUtil.h/.cpp), parses SC4UIScale.ini
+      and SC4GraphicsOptions.ini in place of the GetPrivateProfile* APIs.
+      Like gzcom-dll, static linking puts it under LGPL-2.1 section 6;
+      publishing the complete source satisfies it.
 
   4. Anything derived from SimCity 4's own files.
      SimCity 4 and its assets are the property of Electronic Arts. This project
      contains no EA code. It DOES generate scaled art packages, font
      configurations and a small number of locale-text overrides derived from
      the game's own resources, which are produced from a user's existing
-     installation. Those derived files are not covered by the dedication above
-     and are excluded from the published source. See THIRD-PARTY-NOTICES.md,
-     section 3, for the one place where game text does travel with the source.
+      installation. Those derived files are not covered by the dedication above
+      and are excluded from the published source. See THIRD-PARTY-NOTICES.md,
+      section 4, for the one place where game text does travel with the source.
 
 Full third-party terms, versions and pinned commits: THIRD-PARTY-NOTICES.md
 Upstream licence texts as shipped: vendor\gzcom-dll\LICENSE (LGPL-2.1),

@@ -1,5 +1,22 @@
 # Changelog
 
+## 4.0.8
+
+- **Both INI files the mod reads are now parsed with the ecosystem's
+  `sc4-dll-utilities` `IniReader`.** v4.0.7 converted our own
+  `SC4UIScale.ini`; this release moves the reads of the shared
+  `SC4GraphicsOptions.ini` (boot tier decision, ScaleRemap fallback and the
+  Graphic Options readouts) onto the same parser. The stated v4.0.7 reason
+  for keeping `GetPrivateProfile*` there was wrong: SC4GraphicsOptions.dll
+  parses that file with its own library, not `GetPrivateProfile*`, so there
+  was nothing to stay bug-compatible with. Missing or malformed files fall
+  back to defaults exactly as before. The remaining `GetPrivateProfile*`
+  calls read only our own ini's live-tune keys.
+- **sc4-dll-utilities is now a git submodule** (`vendor\sc4-dll-utilities`,
+  pinned to upstream commit cb52a04, verified byte-identical to the vendored
+  subset it replaces) instead of four copied files - same treatment as
+  gzcom-dll and MinHook. Fetch submodules after cloning, as documented.
+
 ## 4.0.7
 
 - **`SC4UIScale.ini` is now parsed with the ecosystem's `sc4-dll-utilities`

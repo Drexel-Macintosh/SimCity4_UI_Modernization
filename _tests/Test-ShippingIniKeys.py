@@ -16,10 +16,13 @@ WHAT IT CHECKS
     Every key=value line in _packaging/SC4UIScale.ini resolves to a real read in
     src/Settings.cpp or src/UiSpike.cpp, under the SAME section name.
 
-    Covers all four read paths - the two Win32 wide entry points, the ANSI one
-    UiSpike's live-tune poll uses, and Settings.cpp's own float helper
+    Covers five read paths - the two Win32 wide entry points, the ANSI one
+    UiSpike's live-tune poll uses, Settings.cpp's own float helper
     (GetPrivateProfileFloat, which has NO trailing W and was the reason the
-    first version of this check produced a false failure on ScaleFactor).
+    first version of this check produced a false failure on ScaleFactor), and
+    since v4.0.7 the vendored IniReader helpers in Settings.cpp, where sections
+    come from get_section_optional("Name") and every key read goes through the
+    gi/gu/gf lambdas as (sectionVar, "Key", ...).
 
 POSITIVE CONTROL
     The run asserts that an invented key is NOT reported as read. Without that,
@@ -49,6 +52,14 @@ CONST_TO_SECTION = {
     "Gestures": "Gestures",
 }
 
+# Since the v4.0.7 IniReader migration, Settings.cpp holds each section in an
+# optional named after it and reads keys through the gi/gu/gf lambdas.
+VAR_TO_SECTION = {
+    "scaling": "Scaling",
+    "spike": "UiSpike",
+    "logging": "Logging",
+}
+
 
 def keys_read_by_the_dll():
     src = ""
@@ -67,6 +78,10 @@ def keys_read_by_the_dll():
     # UiSpike's live-tune poll uses the ANSI form with literal section names.
     for m in re.finditer(r'GetPrivateProfile\w*?A\(\s*"(\w+)"\s*,\s*"(\w+)"', src):
         found.add((m.group(1), m.group(2)))
+
+    # Settings.cpp's IniReader path: gi/gu/gf(sectionVar, "Key", ...).
+    for m in re.finditer(r'\b(?:gi|gu|gf)\(\s*(\w+)\s*,\s*"(\w+)"', src):
+        found.add((VAR_TO_SECTION.get(m.group(1), m.group(1)), m.group(2)))
 
     return found
 

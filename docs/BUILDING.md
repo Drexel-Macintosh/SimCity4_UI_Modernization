@@ -15,9 +15,9 @@ msbuild src\SC4UIScale.vcxproj -p:Configuration=Release -p:Platform=Win32
 Output: `build\Release\SC4UIScale.dll`. Copy it into
 `Documents\SimCity 4\Plugins\` beside `SC4UIScale.ini`.
 
-`vendor\` carries gzcom-dll and MinHook as **git submodules**; both are compiled
-in. Clone with `--recursive`, or run `git submodule update --init` after a plain
-clone, before building:
+`vendor\` carries gzcom-dll, MinHook and sc4-dll-utilities as **git
+submodules**; all are compiled in. Clone with `--recursive`, or run
+`git submodule update --init` after a plain clone, before building:
 
 ```
 git clone --recursive <repo-url>
@@ -104,7 +104,8 @@ and each one shows up as a bright seam where a cell bleeds into its neighbour.
 
 ```
 src/       the plugin
-vendor/    gzcom-dll (LGPL-2.1) + MinHook (BSD-2) - git submodules, compiled in
+vendor/    gzcom-dll (LGPL-2.1) + MinHook (BSD-2) + sc4-dll-utilities (LGPL-2.1)
+           - git submodules, compiled in
 tools/     the package generators
 docs/      these documents
 ```

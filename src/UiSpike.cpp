@@ -49,12 +49,18 @@
 #include "cISC4App.h"
 #include "GZServPtrs.h"
 #include "MinHook.h"   // v2.32.0 SHOWHOOK: trampoline on cGZWin::SetFlag
+// sc4-dll-utilities (0xC0000054) IniReader - the ecosystem INI parser, git
+// submodule under vendor\sc4-dll-utilities (LGPL-2.1). Reads the shared
+// SC4GraphicsOptions.ini; Settings::Load uses it for our own ini.
+#include "IniReader.h"
 
 #include <cmath>
 #include <cstdlib>     // atoi (live-tune ini re-read)
 #include <intrin.h>   // _ReturnAddress (sub-flyout twin guard)
 #include <cstring>     // strchr/strlen (popup wrap idempotence)
 #include <cstdio>      // _snprintf_s (the DVLEG legend read-back line)
+#include <filesystem>  // IniReader path argument
+#include <optional>    // IniReader/IniSection optionals
 #include <string>      // the wrapped caption we build
 #include <set>         // #188 SMALLWIN per-epoch dedupe
 #include <Windows.h>   // SEH guard for probing hook return values
@@ -18925,17 +18931,36 @@ namespace
 	// read by nobody - so the dll's presence is a visit fact and both
 	// controls hide when it is absent. The scale selector is unaffected: it
 	// writes our own ini, which we own.
+	//
+	// Parsed with the vendored IniReader (same as Settings::Load). Missing
+	// file -> empty reader, malformed line -> parse aborts; both fall back
+	// to the same defaults GetPrivateProfile* used to supply. The whole-file
+	// parse costs microseconds at once-per-dialog-open frequency.
+	std::optional<IniSection> SelReadGfxSection(const wchar_t* p)
+	{
+		std::optional<IniReader> reader;
+		try
+		{
+			reader.emplace(std::filesystem::path(p));
+		}
+		catch (const std::exception&)
+		{
+			reader.reset();
+		}
+		return reader ? reader->get_section_optional("GraphicsOptions") : std::nullopt;
+	}
+
 	int SelReadGfxMode()
 	{
 		PerfProbe::Scope perf_("sel.iniRead");
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
-		wchar_t mode[40] = {};
-		GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
-			L"FullScreen", mode, 40, p);
-		return (_wcsicmp(mode, L"Windowed") == 0) ? kModeWindowed
-			: (_wcsicmp(mode, L"Borderless") == 0
-				|| _wcsicmp(mode, L"BorderlessFullScreen") == 0)
+		const std::optional<IniSection> opts = SelReadGfxSection(p);
+		const std::string mode =
+			opts ? opts->get_value("WindowMode", "FullScreen") : std::string("FullScreen");
+		return (_stricmp(mode.c_str(), "Windowed") == 0) ? kModeWindowed
+			: (_stricmp(mode.c_str(), "Borderless") == 0
+				|| _stricmp(mode.c_str(), "BorderlessFullScreen") == 0)
 				? kModeBorderless : kModeFullscreen;
 	}
 
@@ -18944,8 +18969,9 @@ namespace
 		PerfProbe::Scope perf_("sel.iniRead");
 		wchar_t p[MAX_PATH] = {};
 		SelGfxIniPath(p, MAX_PATH);
-		*w = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, p);
-		*h = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, p);
+		const std::optional<IniSection> opts = SelReadGfxSection(p);
+		*w = opts ? opts->get_converted_value<int>("WindowWidth", 0) : 0;
+		*h = opts ? opts->get_converted_value<int>("WindowHeight", 0) : 0;
 	}
 
 	// Our own ini's scale keys. Defaults mirror Settings::Load's.

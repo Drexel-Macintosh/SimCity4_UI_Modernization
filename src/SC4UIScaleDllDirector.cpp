@@ -19,7 +19,13 @@
 #include <Windows.h>
 #include <commctrl.h>
 #include <filesystem>
+#include <optional>
 #include <string>
+
+// sc4-dll-utilities (0xC0000054) - the ecosystem INI parser, a git submodule
+// under vendor\sc4-dll-utilities (LGPL-2.1, see that repo's LICENSE.txt).
+// Same parser Settings::Load uses for SC4UIScale.ini.
+#include "IniReader.h"
 
 #include "cIGZCOM.h"
 #include "cIGZFrameWork.h"
@@ -46,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.0.7"
+#define UISCALE_VERSION_STR "4.0.8"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -82,6 +88,26 @@ namespace
 		}
 
 		swprintf_s(out, outLen, L"%s%s", path, fileName);
+	}
+
+	// Parses an ini beside the DLL with the vendored ecosystem parser. A
+	// missing file constructs an empty reader; a malformed line aborts the
+	// whole parse and yields nullopt. Both fall back to the caller's
+	// defaults, exactly as when the file is absent.
+	std::optional<IniReader> TryParseSiblingIni(const wchar_t* fileName)
+	{
+		std::optional<IniReader> reader;
+		try
+		{
+			wchar_t path[MAX_PATH] = {};
+			GetDllSiblingPath(fileName, path, MAX_PATH);
+			reader.emplace(std::filesystem::path(path));
+		}
+		catch (const std::exception&)
+		{
+			reader.reset();
+		}
+		return reader;
 	}
 }
 
@@ -202,10 +228,11 @@ public:
 		// resolution (not the requested one), enable/stash the static data
 		// layers to match - BEFORE the game loads dats or probes FontStyle.ini.
 		{
-			wchar_t gfxIni[MAX_PATH] = {};
-			GetDllSiblingPath(L"SC4GraphicsOptions.ini", gfxIni, MAX_PATH);
-			const int reqW = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, gfxIni);
-			const int reqH = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, gfxIni);
+			const std::optional<IniReader> gfxIni = TryParseSiblingIni(L"SC4GraphicsOptions.ini");
+			const std::optional<IniSection> gfxOpts =
+				gfxIni ? gfxIni->get_section_optional("GraphicsOptions") : std::nullopt;
+			const int reqW = gfxOpts ? gfxOpts->get_converted_value<int>("WindowWidth", 0) : 0;
+			const int reqH = gfxOpts ? gfxOpts->get_converted_value<int>("WindowHeight", 0) : 0;
 
 			// KEY: what the game actually RENDERS the UI at differs from the
 			// requested WindowWidth/Height. With DirectX + dgVoodoo in
@@ -219,20 +246,20 @@ public:
 			//   DirectX + FullScreen/Borderless -> render = monitor native
 			//   DirectX + Windowed              -> render = requested size
 			//   Software (any mode)             -> render = requested size
-			wchar_t driver[32] = {};
-			GetPrivateProfileStringW(L"GraphicsOptions", L"Driver", L"DirectX", driver, 32, gfxIni);
-			const bool software = _wcsicmp(driver, L"Software") == 0;
+			const std::string driver =
+				gfxOpts ? gfxOpts->get_value("Driver", "DirectX") : std::string("DirectX");
+			const bool software = _stricmp(driver.c_str(), "Software") == 0;
 
-			wchar_t mode[40] = {};
-			GetPrivateProfileStringW(L"GraphicsOptions", L"WindowMode", L"FullScreen", mode, 40, gfxIni);
-			const bool windowed = _wcsicmp(mode, L"Windowed") == 0;
+			const std::string mode =
+				gfxOpts ? gfxOpts->get_value("WindowMode", "FullScreen") : std::string("FullScreen");
+			const bool windowed = _stricmp(mode.c_str(), "Windowed") == 0;
 			// BORDERLESS covers the whole screen and the game's own ini says
 			// outright that WindowWidth/Height are "ignored for the borderless
 			// full screen mode" - so that mode, and only that mode, renders at
 			// the desktop's size no matter what was requested.
 			const bool borderless =
-				_wcsicmp(mode, L"Borderless") == 0
-				|| _wcsicmp(mode, L"BorderlessFullScreen") == 0;
+				_stricmp(mode.c_str(), "Borderless") == 0
+				|| _stricmp(mode.c_str(), "BorderlessFullScreen") == 0;
 
 			int gfxW = reqW;
 			int gfxH = reqH;
@@ -263,9 +290,9 @@ public:
 				}
 				logger.WriteLine(
 					LogLevel::Info,
-					"AutoScale: DirectX %ls - render res = desktop %dx%d "
+					"AutoScale: DirectX %s - render res = desktop %dx%d "
 					"(requested %dx%d is ignored in borderless by the game's "
-					"own rule).", mode, gfxW, gfxH, reqW, reqH);
+					"own rule).", mode.c_str(), gfxW, gfxH, reqW, reqH);
 			}
 			else if (!software)
 			{
@@ -274,13 +301,13 @@ public:
 				// match, which is why the desktop resolution visibly changes.
 				logger.WriteLine(
 					LogLevel::Info,
-					"AutoScale: DirectX %ls - render res = requested %dx%d.",
-					mode, gfxW, gfxH);
+					"AutoScale: DirectX %s - render res = requested %dx%d.",
+					mode.c_str(), gfxW, gfxH);
 			}
 			else
 			{
 				logger.WriteLine(
-					LogLevel::Info, "AutoScale: Software %ls - render res = requested %dx%d.", mode, gfxW, gfxH);
+					LogLevel::Info, "AutoScale: Software %s - render res = requested %dx%d.", mode.c_str(), gfxW, gfxH);
 			}
 
 			// SC4GraphicsOptions.ini BELONGS TO THE OPTIONAL SC4GraphicsOptions.dll
@@ -544,10 +571,12 @@ public:
 				int internalH = settings.internalHeight;
 				if (internalW <= 0 || internalH <= 0)
 				{
-					wchar_t gfxIni[MAX_PATH] = {};
-					GetDllSiblingPath(L"SC4GraphicsOptions.ini", gfxIni, MAX_PATH);
-					internalW = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowWidth", 0, gfxIni);
-					internalH = GetPrivateProfileIntW(L"GraphicsOptions", L"WindowHeight", 0, gfxIni);
+					const std::optional<IniReader> gfxIni =
+						TryParseSiblingIni(L"SC4GraphicsOptions.ini");
+					const std::optional<IniSection> gfxOpts =
+						gfxIni ? gfxIni->get_section_optional("GraphicsOptions") : std::nullopt;
+					internalW = gfxOpts ? gfxOpts->get_converted_value<int>("WindowWidth", 0) : 0;
+					internalH = gfxOpts ? gfxOpts->get_converted_value<int>("WindowHeight", 0) : 0;
 				}
 				remap.EarlyInstall(internalW, internalH);
 			}
