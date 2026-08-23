@@ -81,14 +81,41 @@ a baked-in `64`. That break appears only at the tier that crosses the boundary,
 which reads as a tier mystery rather than an art change. Ask who divides by the
 art's size.
 
-## Known outside the boundary
+## History: two elements once wrongly called outside the boundary
 
-- **The paused / sim-speed screen-edge border and corner badge.** Drawn in raw
-  screen pixels — roughly a 2-3 px frame and a ~24 px badge — at every tier.
-  Six independent probes plus an offline decode of the art all came back
-  negative on the window layer.
-- **The doubled Mayor Rating bar in the region city-select bubble.** An A/B
-  comparison established the executable's own painter draws it.
+**No element of the shipped UI is currently known to sit outside the
+boundary.** These two were carried in this file as confirmed outside-the-
+boundary examples; both are now confirmed windows, and the finding below
+supersedes the two bullets that used to stand here.
+
+- **The paused / sim-speed screen-edge border and corner badge.** It IS a
+  window — `cSC4WinAlertBorder`, id `0x6A5E44B6`, vtable `0x00AB5B48` — born
+  full-screen and *never flipping visibility*, which is exactly why a
+  visibility probe could never fire on it. Art ships as three 120x120 sheets
+  (`0x14315E60/61/62`); its own 9-slice drawer is `0x008D9550` (exactly one
+  caller), distinct from the busy `0x008D8800` that serves `GZWinBMP`'s
+  `edgeimage=yes` path and `GZWinBtn`. Six probes and an art decode had come
+  back negative — every one of them was a visibility/render-side check, and
+  none could have fired on a window that never toggles visible. See
+  `tools\research\SC4-UI-ENGINE.md` §0, §4.6c.
+- **The doubled Mayor Rating bar in the region city-select bubble.** It IS a
+  window — `clsid=0xAA5D16A9` (`cSC4WinAuraBar`), `id=0x4A553000`, declared
+  102x11 in `I-ca539340` at depth 3 — cured as a data change. Two nulls had
+  put it outside, and neither carried a positive control: an `RGKID` dump
+  that stopped one level above the bar, and an A/B with
+  `RatingArrowPatch=0` that tested the HUD controller (`0x7E86C0-0x7E8A80`),
+  a different class with different art that was never involved. See
+  `tools\research\SC4-UI-ENGINE.md` §0.
+
+**Why the mistake happened both times:** every instrument used to place
+these outside the boundary was structurally incapable of seeing an
+inside-the-boundary element in the first place — a visibility flip on a
+window that is born visible and never changes, and a tree dump that stopped
+one depth short paired with an A/B run against the wrong class entirely. A
+null from an instrument that could not have seen the thing is not evidence
+the thing is outside the boundary; see the house laws `NULL IS NOT EVIDENCE`
+and `TWO BLIND INSTRUMENTS AGREEING = ONE`. The boundary table was wrong
+twice on exactly this failure mode before either was corrected.
 
 ## The one lever that reaches the render path
 
@@ -98,8 +125,11 @@ is a separate subsystem, and it runs through the dgVoodoo wrapper that the
 working scaled setups depend on, so such a hook stays gated off by default,
 log-only, with a revert path.
 
-Weigh the cost against the prize before starting. For the sim-speed border, the
-prize is a 2 px line.
+Weigh the cost against the prize before starting. History argues for
+weighing hard: both of this file's prior candidates for this lever (above)
+turned out to be ordinary windows once tested with an instrument capable of
+seeing them, so the render-path lever has never yet been the correct one for
+a shipped-UI element.
 
 Canonical narrative: `tools\research\SC4-UI-ENGINE.md` §0, "THE BOUNDARY OF THIS
 SDK".

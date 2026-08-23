@@ -72,7 +72,7 @@ Deduplicated across lenses. This is the publishable core, and it is genuinely SD
 | EFFDIR format | TGI `{0xEA5118B0, 0xEA5118B1, 0x00000001}`, 1,094,484 bytes decompressed, 1,149-entry name→index map. Child record: `[u32 nameLen][name][u8 type][u32 flags][9 f32 rot][3 f32 trans][f32 SCALE][u8 zoomMin][u8 zoomMax][u16 copies][u16 mult][4 f32 zoom ramps][2 u16 weights][u32 effectIndex]` — proven twice (semantically over 406 records, and by parser disassembly `ReadChild 0x5AB690` / `ReadTransform 0x5DA930`, scale read `0x5DAA2B` → `child+0x48`). |
 | Marker strips | Builder `0x5F5FB0` code-generates billboard strips: 24px content icons + 8.0f margins + 64.0f disc, each through px→world then `fmul` the per-zoom float table `.rdata 0xAA523C = {0.5,0.75,1.0,1.5,2.0}`. **Sole-consumer proven**: the only other `.text` reference (`0x5F74AB`) is a texture-loop end bound, not a size read. |
 | Signposts | `cSC4SignpostOccupant` clsid `0xAB72FBB3`, 0x590 bytes, ctor `0x5F5510`, factory `0x5F5CE0`, own iid `0x4B44FBE2`. Init = `vt(obj+0xC)` slot 3 = **`0x5F73A0`** (the older docs' "`0x5F7400`" is a phantom VA that decodes mid-instruction). Loads ten 8×8 FSH tiles `8B4A6560..67` as `{0x7AB50E44,0x1ABE787D,inst}` into `obj+0x54C..0x570`. Quad builder `0x5F20A0` uses a hardcoded **44.0f screen pixels** (`push` at `0x5F20AF`) + 150.0f pole raise; texture compose `0x5F12D0` in 52px cells. |
-| Renderer pick | `cISC43DRender vt+0x104` (slot 65) called at `0x4B8A38` — a ray-pick against drawn geometry, **no radius constant on the path**; wrapper `0x4B8A00` reached only from the control's two mouse handlers; whitelist fn `0x4B8880` (5 automata families) plus the signpost at `0x4B8947`. The 16.0f imms at `0x4B8B3D/0x4B8B42` are the one-cell **world-unit** hover quad — never patch them. |
+| Renderer pick | `cISC43DRender vt+0x104` (slot 65) called at `0x4B8A38` — a ray-pick against drawn geometry, **no radius constant on the path**; wrapper `0x4B8A00` reached only from the control's two mouse handlers; whitelist fn `0x4B8880` (5 automata families) plus the signpost at `0x4B8947`. **Compare chain resolved** (`disasm_at.py 0x4B8880`, offline): type (`vt+0x1C`) tested against `0x74758926`, `0x278128A0` (also the offer-proxy's `GetType()`, `REGRESSION.md:11934`), `0x2890D4DE`, `0xA823821E` (the automata **prop-family** id, `CodePatches.cpp:5481`), `0xC772BF98` — the first/second/third/fifth accept unconditionally, `0xA823821E` instead branches to a nested QI(`0xE9793A65`)+type-recheck against `0xAB72FBB3` (`cSC4SignpostOccupant`) at `0x4B8947`, which is the "plus the signpost" clause (§2.4 of `SC4-WORLD-OVERLAYS.md` has the full chain). The 16.0f imms at `0x4B8B3D/0x4B8B42` are the one-cell **world-unit** hover quad — never patch them. |
 | AddViewObject | `cISC43DRender::AddViewObject = vt+0x80 → 0x007C5D90`. Hooking it censuses **every object the renderer will draw** — the only enumerating instrument that exists for the renderer side. A live capture logged 8 HUD-chrome registrations (`0xAB4480/0xAB39D0/0xAB42F8/0xAB4624`) then three of class `0xAA8314` (ctor `0x00620770`, draw `0x00620500`), which was then eliminated by subtraction. |
 | Occupant highlight | No separate visual — the renderer tints the occupant's own model via `SetHighlight(mode, sendNow)` at `vt+0x44`. Query tool (clsid `0xC7AF928E`) uses mode 7 at `0x4CBF9D`; demolish (`0x46DDB5F1`) mode 5 at `0x4B99F6`; mayor-default control mode 5 at `0x4DB34A`. Change posts `kSC4MessageOccupantHighlightChange 0xA2D1C5B9` (`0x80D600`, the only ref). |
 | Marker per-object size | vt0 `0xAA4900`; slot 13 `SetSize` `0x5ED400` (each arg `fmul 10.0f` → ftol → `mov [this+0x5E/0x5F],al`), slot 14 `GetSize` `0x5ECA10`. **A marker carries its size in tenths of a world unit, byte-capped at 25.5 — and that field is also a spatial-index key**: inflating it to probe a visual made each marker span many more cells and hung the game. Writes are permanently disabled. |
@@ -100,64 +100,72 @@ Score = value to a modder (1–5) × tractability (1–5). Deduplicated: 35 raw 
 
 | # | Unknown | V | T | Score | Cost |
 |---|---|---|---|---|---|
-| 1 | **Does `GZWinBtn` stretch a state cell vertically?** (OPEN QUESTION O1) | 4 | 5 | **20** | One static disassembly |
-| 2 | `winflag_*` name→bit map (13 names, 3 bits known) | 4 | 4 | **16** | One deserializer table read |
+| ~~1~~ | ~~Does `GZWinBtn` stretch a state cell vertically?~~ (OPEN QUESTION O1) **CLOSED 2026-08-23** — disassembled `0x9B167D`→`0x9B1541`→`sub_9B09B7`→`0x9B0B34`: `F8`/`FA` (state-cell w/h, `[this+0xf8]/[this+0xfa]`) are copied from the image interface's own per-state rect (`call [iface+0xbc]`, `rect.right−left` / `rect.bottom−top`), never from `GetW()`/`GetH()` of the window. Vertical axis matches the horizontal `imageWidth/N` rule: both are SOURCE-sized, not window-stretched. Full chain: `SC4-UI-ENGINE.md` §2.7. | | | | |
+| ~~2~~ | ~~`winflag_*` name→bit map~~ **CLOSED 2026-08-23** — pinned via disassembled `GetFlag`/`SetFlag` sites (real slots `vt+0x10C`/`vt+0x110`, not the vendor header's `+0x108`/`+0x10C`): `visible`=`0x1`, `enabled`=`0x2`, `alphablend`=`0x4`, `moveable`=`0x100`, `sortable`=`0x800`, `pbuff`=`0x10000`, `pbufftrans`=`0x20000`, `pbufferase`=`0x40000`, `mousetrans`=`0x80000`, `ignoremouse`=`0x200000`, `acceptfocus`=`0x8000` — 11/13 with a measured test site (ctor `0x8903` decomposition plus `PlotComposite`/`IsPointInMe`/router disassembly already in-tree). `sizeable`=`0x200`, `pbuffvid`=`0x100000` remain header-only (`cIGZWin.h`), not independently disassembled. Full table + evidence: `SC4-UI-ENGINE.md` §3.1a; also noted in `SDK-GAPS.md` §5. | | | | |
 | 3 | **Zots** (no-power/water/job/car discs) — no census row at all | 4 | 4 | **16** | imm32 sweep, then one hook |
 | 4 | **The DX7 GDriver / 2D blit helper family** — no general model of the renderer | 5 | 3 | **15** | Log-only naked hook + 1 launch |
 | 5 | **The `0xC2C2EB0F` singleton window factory's output** (27 live-band sites) | 5 | 3 | **15** | Live hook + 1 session |
-| 6 | The five automata family ids in the pick whitelist `0x4B8880` | 3 | 5 | **15** | One compare chain, offline |
-| 7 | Have the two `ScaleDim`/`CellUnit` copies drifted? (no gate exists) | 3 | 5 | **15** | Pure source comparison |
+| ~~6~~ | ~~The five automata family ids in the pick whitelist `0x4B8880`~~ **CLOSED 2026-08-23** — disassembled offline (`disasm_at.py 0x4B8880`, byte-verified): `0x74758926`, `0x278128A0` (also seen as a live occupant `GetType()` in `REGRESSION.md:11934`), `0x2890D4DE`, `0xA823821E` (the automata prop-family id, `CodePatches.cpp:5481`), `0xC772BF98`. `0xA823821E` alone branches into the nested QI(`0xE9793A65`)+type-recheck against `0xAB72FBB3` (`cSC4SignpostOccupant`) at `0x4B8947` — the doc's "plus the signpost" clause. Full chain: `SC4-WORLD-OVERLAYS.md` §2.4. | | | | |
+| ~~7~~ | ~~Have the two `ScaleDim`/`CellUnit` copies drifted?~~ **CLOSED 2026-08-23** — YES, measured over the real 392-file `nam-1x` corpus at f=1.5 (`_tests\Test-ScaleDimParity.py`): width agrees on all 392, but 122 of 392 (every 176×44 sheet — the #150 shape) disagree on height, offline 66 vs runtime 68, because `ScaleTier.cpp`'s `ScaleDim` has no equivalent of `--height-exact-group`/`sNoHeightSnap`. Integer-tier no-op control holds (0/8000 at f=2,3). Full derivation: `SC4-UI-ENGINE.md` §4.6c.1. | | | | |
 | 8 | The other six **dispatch-indicator categories** (settles a printed contradiction) | 3 | 4 | **12** | Read jump table + 1 suppression launch |
-| 9 | The ~1,850 PNGs with no `.UI` ref — consumer census | 4 | 3 | **12** | Offline subtraction + imm32 scans |
+| ~~9~~ | ~~The ~1,850 PNGs with no `.UI` ref — consumer census~~ **PARTIALLY CLOSED 2026-08-23** — subtraction done against the real manifest (`tools/dbpf/extracted-png-tgi.csv`) union the actually-shipped `CODE_BOUND_TGIS` (341 pairs, evaluated in-process, not the §4.2 illustrative table) + ItemIcons (266) + HTML refs (59) + `.UI` refs (431): known-bound = 983 real PNGs (+26 dangling/wrong-group refs, independently matching `predictive-defect-sweep.md`'s "skipped: 22" log). **Residual = 1,297**, not ~1,850 — of the 1,853 PNGs with no `.UI` ref, only 556 are actually covered by a known non-`.UI` path. Bucketed by group and by instance-ID sub-family in `SDK-GAPS.md` §9: one candidate family is already-decoded-but-unstaged (`1421xx` = `MAYOR-MODE.md`'s mood band), two are genuinely new and unnamed (`1441xx` 288, `ec212Dxx/Exx` 106). | 3 | 3 | **9** | imm32 scan on `1441xx` + `ec212Dxx/Exx` |
 | 10 | Computed (non-literal) window ids — 89 of 162 SetID sites | 3 | 4 | **12** | SetID hook, one session |
 | 11 | **Resolution-as-GID for arbitrary resolutions** — a different architecture | 4 | 3 | **12** | Find the selector, one test dat |
 | 12 | Reconstruct `cISC4ViewObject3D` (no header exists) | 4 | 3 | **12** | Intersect vtables from the existing hook |
 | 13 | `gutters=` / `textoffsets=` / `tipoffsets=` consumers | 3 | 4 | **12** | `.rdata` string xref |
-| 14 | Depth-1+ nodes the code treats as roots (denominator excludes them by construction) | 3 | 4 | **12** | Re-run the ladder at all depths |
-| 15 | Sibling per-zoom float tables in `.rdata` (+ `.text` imm32) | 3 | 4 | **12** | One offline sweep |
+| 14 | ~~Depth-1+ nodes the code treats as roots~~ **PARTIALLY CLOSED 2026-08-23** — corpus side measured (see §F.4); code-side call-site count still open | 3 | 4 | **12** | Disassembler sweep of the winId-loader thunk's callers |
+| ~~15~~ | ~~Sibling per-zoom float tables in `.rdata` (+ `.text` imm32)~~ **CLOSED 2026-08-23** — offline `.rdata` byte sweep (isolated-exactly-5-window scan + `find_imm.py` consumer check) found three more families, none sharing a consumer with `0xAA523C`: **`0xA88170`={20,30,40,50,60}f, sole consumer `0x46CD03`** (screen-px zoom table feeding the CSI-adjacent dispatch-marker builder `0x46C8B0`, already logged in `CITY-SITUATION-INDICATORS.md:149`/`REGRESSION.md:13247`); **`0xAB4330`={1,2,4,8,16}f, sole consumer `0x751CB5`** (`fmul [ecx*4+0xAB4330]` in `sub_751C80`, indexed by the GLOBAL zoom var `[0xB4C70C]`, not a per-object field — new address, module unidentified); and **four byte-identical int32 copies of `{8,16,32,73,146}`** at `0xAA2B3C`/`0xAB8BCC`/`0xABACE0`/`0xABD668` — `0xABACE0` is the known region-camera Z-table (`CodePatches.cpp:193`, consumer `0x7CBE50`), `0xABD668` is a NEW 8-reference consumer (`0x8087AA`-`0x8088E4`, one `fild [edx*4+0xABD668]`/`fdivr` pair per slot, a different module), and `0xAA2B3C`/`0xAB8BCC` return ZERO `.text` imm32 hits — inconclusive (dead/unfolded duplicate data, or reached only by non-literal addressing a byte scan can't see). Full sweep + evidence: `SC4-WORLD-OVERLAYS.md` §2.5. | | | | |
 | 16 | #162's actual mechanism (see §D — 8 refuted hypotheses) | 4 | 2 | **8** | External capture + instrumented art |
-| 17 | Three named code-created windows with no known role | 2 | 4 | **8** | Read three builders |
+| ~~17~~ | ~~Three named code-created windows with no known role~~ **CLOSED 2026-08-23 for 2 of 3, partial for the 3rd** — static disasm of all three builders (`disasm_at.py`, byte-verified against `SimCity 4.exe` 1.1.641.0): `0x9AEDEF7C` and `0xA802B4EB` are fully identified (image-file browser and its `RecordedAnimations` folder-picker sibling); `sub_7BC350`'s own role is nailed (Photo Album content/backdrop populate) but its window's id/vtable link (`0x85202C0E`/`0xAB9980`) could not be re-confirmed statically — see below and `SC4-UI-ENGINE.md` §4.8. | | | | |
 | 18 | The TagKind sprite's literal size constant | 2 | 4 | **8** | Continue `0x00510690` past `0x5106E7` |
 | 19 | Network drag preview + footprint ok/notok spawner | 2 | 4 | **8** | `find_imm` on `0xA90920`/`0xA9093D` |
 | ~~20~~ | ~~MySim head bubble~~ **CLOSED 2026-08-19 (#191, user-confirmed)** - it is a GZWin pair 0x27DF05BE/BF, not renderer-side. Cure: kBmpxCityRoots + born-correct .UI. Aircraft landing ring still open. | | | | |
-| 21 | `cIGZWin` slots 95/96/97 (community names explicitly disowned) | 2 | 4 | **8** | Vtable diff across 23 classes |
+| ~~21~~ | ~~`cIGZWin` slots 95/96/97 (community names explicitly disowned)~~ **CLOSED 2026-08-23** — diffed `[vt+0x17C]`/`[vt+0x180]`/`[vt+0x184]` across all 111 window-class vtables in `tools/uimap/_work/wincensus.json` (a superset of the ~23 named classes): **zero overrides**, every class resolves to the same base bodies `0x0099C6F8`/`0x0099D57E`/`0x0099CF6A` — these three virtuals are non-polymorphic. Disassembly confirms the semantics: 95 `SetBufferToDrawTo` resolves the buffer via `GetPrivateBuffer()`/`GetParentWin()` walk (stopping at an ancestor with a private buffer or `WinFlag_DelayedPlot`), falling back to `cIGZGraphicSystem` for the root, then calls its own slot 98; 96 is 95-on-self-then-96-on-every-child (`[this+0x44]`); 97 writes `[this+0x24..0x30]` areaToDrawTo with the same ancestor-stopping rule as 95; 98 is the 96 recursion pattern applied to 97. Full derivation: `SDK-GAPS.md` §1. | | | | |
 | 22 | In-world Data View tint of the 3D city | 3 | 3 | **9** | AddViewObject differential |
 | 23 | Underground / subway / pipe views + in-world traffic density | 3 | 3 | **9** | Same differential |
 | 24 | Why GZWinText renders purple under runtime-only scaling | 2 | 3 | **6** | Dump `[this+0xE0]` on a purple vs black sibling |
 | 25 | Renderer-side highlight mode→tint mapping | 2 | 3 | **6** | Follow `vt+0x50` from `0x80D58E` |
 | 26 | The signpost kinds table + **is `0x5F20A0` live at all** | 2 | 3 | **6** | One SPTEX capture |
 | 27 | The unknown flyout `0x09DE8798` (script in no extracted corpus) | 2 | 3 | **6** | Log by mode + search all NINE archives |
-| 28 | The S3D format (no reader/writer exists) | 3 | 2 | **6** | Hand-decode the 244-byte arrow plate |
+| ~~28~~ | ~~The S3D format~~ **PARTIALLY CLOSED 2026-08-23** — hand-decoded the ConnectArrow arrow plate `{T=0x5AD0E817,G=0xBADB57F1,I=0x29F10000}` (`SimCity_1.dat` off=140503203). The register's "244 bytes" is the ON-DISK QFS/RefPack-COMPRESSED size; the format lives in the 336-byte decompressed buffer (DIR entry + embedded QFS header agree). Chunk chain `3DMD→HEAD→VERT→INDX→PRIM→MATS→ANIM→PROP→REGP` (8-byte tag+length headers, each body_end landing exactly on the next tag — except `ANIM`, whose length field is anomalous/unresolved); `VERT`=4-vertex textured quad (5 floats/vertex), `INDX`=6 indices `[0,1,2,3,0,2]` (2 triangles), `MATS` embeds the model's own name string `"29F10000_ConnectArrow_Ui8x1x3_Z1S"`. Full byte table + reproducer: `tools\research\overlays\row-15-neighbor-connection-arrows.md` §6, `python tools\dbpf\decode_s3d_plate.py`. NOT decoded: several numeric fields (HEAD's 2nd u16, VERT's pre-float 4 bytes, most of MATS, ANIM's post-tag u32) — one instance's fields, not a general reader/writer. | | | | |
 | 29 | The `.UI` deserializer's **completion path** | 5 | 1 | **5** | Open-ended; highest ceiling |
 | — | Lower tier: loading screens + cursor art (6), non-PNG oddballs at 2x (6), `font=NAME` tokenizer (3, operationally moot), the 44 animation-bank blobs (3) | | | | |
 
 ### B.2 The one I would attack next
 
-**#1 — read `GZWinBtn`'s Plot (class vt `0x00ADDAF0`, slot 88 = `0x9B167D`) and settle whether the destination *height* comes from the window rect or the source cell.**
+**~~#1 — read `GZWinBtn`'s Plot...~~ CLOSED 2026-08-23.** Disassembly of
+`0x9B167D`→`0x9B1541`→`sub_9B09B7` (`SC4-UI-ENGINE.md` §2.7) settles it:
+the state-cell's destination width AND height are both copied from the
+image interface's own per-state rect (`call [iface+0xbc]`, byte-verified),
+never from the window's `GetW()`/`GetH()`. Height is **SOURCE-sized**, same
+as the published horizontal rule — there is no vertical stretch to chase.
 
-Why this one, over the higher-ceiling candidates:
+Consequence for #177 (the `CellUnit`-snapped strip height, currently
+protected by a hand-maintained 44-entry exception list): the engine's own
+`GZWinBtn` draw path performs **no vertical divide at all** for state art —
+height is copied whole, not divided by a state count. A snap rule treating
+strip height as needing `/N` symmetry with width is solving a problem this
+class's draw path does not have. The corpus-side follow-up specified below
+is still the correct next step before trusting or retiring the hand list:
 
-- **It is a single static disassembly.** No launch, no hook, no arity guess, no risk to a save game. The identical read already settled `GZWinBMP`'s dst-follows-src behaviour, so the technique is proven on this exact question shape.
-- **It closes an OPEN QUESTION that is already in print.** `UI-ART-BINDING.md §3` publishes the horizontal rule (state = `imageWidth/N`, 875 buttons satisfy `pngW = 4·btnW`) and then says the vertical axis is unsettled. Publishing a reference with a stated open question one disassembly away from an answer is the worst of both worlds.
-- **It simultaneously adjudicates a live open defect.** #177 is the measured fact that a strip's *height* is snapped by `CellUnit` although the engine performs no vertical divide. That snap is currently protected by a **hand-maintained** 44-entry exception list — the exact "hand-lists rot" shape the project already ruled against. One answer converts #177 from list maintenance into a derivable rule, and tells you whether the `--height-exact-strips` revert (which broke `{46a006b0,14415860}`) had a different cause entirely.
-- **It de-risks a known entanglement.** `14415860` lives in `I-c973b411` — the same script as the #162 hairlines. Right now the height rule and the #162 mystery are coupled by a single revert, and nobody can act on either without moving the other blind. This read decouples them.
-- **The follow-up is derivable, not exploratory.** If height *is* window-derived, the correct corpus test is already specified: for every sheet in `cell-strips.txt`, collect all `.UI` nodes binding it and test whether any two have different y origins over the same x span. Empty derived set ⇒ `--height-exact-strips` is corpus-wide safe. Integer control is built in: 0 changes at 2x and 3x or the derivation is wrong.
+- **The follow-up is derivable, not exploratory.** For every sheet in `cell-strips.txt`, collect all `.UI` nodes binding it and test whether any two have different y origins over the same x span. Empty derived set ⇒ `--height-exact-strips` is corpus-wide safe. Integer control is built in: 0 changes at 2x and 3x or the derivation is wrong.
+- `14415860` (`I-c973b411`, coupled to the #162 hairlines by a single revert) can now be re-examined knowing the height rule itself is closed and SOURCE-sized — any remaining discrepancy there is #162's mechanism, not a live height-stretch question.
 
-**Runner-up, and it is a different kind of bet:** #4, the DrawArrays caller census. It is the single highest-*leverage* item in the survey — the render-art lens's one-sentence summary of the whole boundary is that everything past the UI buffer is "documented one visual at a time, by finding that visual's inline immediates, with no general model," and the CSI cost seventeen launches for exactly that reason. A log-only naked tail-jmp on the GDriver's DrawArrays slot, counting calls per caller-return-address, would name **every in-world drawer in the exe in one capture** and convert rows 8 and 10–16 of the census from "mechanism named, never seen running" to attributed. Do it after #1, and resolve the one-argument `SetTexture` call at `0x7AA075` first — a wrong arity there is a crash, not a null.
+**Next up:** #4, the DrawArrays caller census. It is the single highest-*leverage* item in the survey — the render-art lens's one-sentence summary of the whole boundary is that everything past the UI buffer is "documented one visual at a time, by finding that visual's inline immediates, with no general model," and the CSI cost seventeen launches for exactly that reason. A log-only naked tail-jmp on the GDriver's DrawArrays slot, counting calls per caller-return-address, would name **every in-world drawer in the exe in one capture** and convert rows 8 and 10–16 of the census from "mechanism named, never seen running" to attributed. Do it after #1, and resolve the one-argument `SetTexture` call at `0x7AA075` first — a wrong arity there is a crash, not a null.
 
 ### B.3 First probes, for the top of the list
 
 | # | Concrete first probe |
 |---|---|
-| 1 | Disassemble `0x9B167D` (GZWinBtn slot 88). Read the destination rect construction: does the height operand come from `[this+0xB0]−[this+0xAC]` (window) or from `srcH` / `imgH` (cell)? Then run the stacked-consumer derivation over `cell-strips.txt` described above. |
+| ~~1~~ | ~~Disassemble `0x9B167D`...~~ **DONE 2026-08-23** — height comes from the image interface's per-state rect (cell), not the window; see §B.1 item 1 and `SC4-UI-ENGINE.md` §2.7. Run the stacked-consumer derivation over `cell-strips.txt` (still open, corpus-side). |
 | 2 | Find the flag-name table in the `.UI` attribute dispatch near `0x94B995`/`0x94E516` and read the name→bit pairs directly. Corroborate two behaviourally with `GetFlag` (`[vt+0x10C]`) on a live window whose script sets them; `moveable`/`sizeable` are independently testable against the movable-window rig in `TRIAGE.md §8`. |
 | 3 | Sweep the exe for the four Zot instance ids as imm32 — `0x0FD10000`, `0x107A0000`, `0x1C430000`, `0x1C440000` — with `tools/research/udriveit/exe_instance_sweep.py`. The ConnectArrow precedent (one `push` at `0x6D4A66` named the creator) says a single site is enough. **If zero hits, they are data-driven**: hook the marker factory's `OccupantSize` read at `0x4A25D3` and log the exemplar TGI. State the positive control either way. |
 | 4 | Enumerate `.text` xrefs to the GDriver vtable slots (the `+0x0C` rule makes header-slot → real-offset mechanical), anchored on the two known sites: `0x007D2990`'s `[[this+0x30]]+0x0C` and the `sub_7A9D60` cloud draws. Then a log-only naked tail-jmp on the DrawArrays slot counting calls by caller return address for one session. |
 | 5 | Detour the singleton's create vcall (`[edx+0x34]` in the `sub_779660` pattern) and log clsid + returned pointer + the id subsequently stamped, for one city-load-to-quit session; cross-reference against the 27 owner functions in `funcs.json`. |
-| 6 | Disassemble the compare chain at `0x4B8880` and resolve each constant through `tools/sdk/lookup.py`. One offline pass, no launch. This is the cheapest item on the entire list. |
-| 7 | Run both `ScaleDim` implementations (`tools/upscale/Upscale2x.cs` vs `src/ScaleTier.cpp:1005`) over every sheet the runtime path touches at 1.5x and assert they agree, plus the house control that both are no-ops at 2x/3x. **The runtime copy has no equivalent of `sNineSliceOnly`/`sNoSnapThis`/`sNoHeightSnap` — it is the pre-#157/#160 form of the rule, and nothing gates the difference.** Pure offline source comparison. |
+| ~~6~~ | ~~Disassemble the compare chain at `0x4B8880`...~~ **DONE 2026-08-23** — see §B.1 item 6 and `SC4-WORLD-OVERLAYS.md` §2.4 for the five resolved ids. |
+| ~~7~~ | ~~Run both `ScaleDim` implementations...~~ **DONE 2026-08-23** — `_tests\Test-ScaleDimParity.py` runs both over the real 392-file `nam-1x` corpus at f=1.5: width agrees (392/392), height disagrees (122/392, all 176×44 sheets, offline 66 vs runtime 68 — the missing `sNoHeightSnap`). Integer-tier no-op control holds. Gate is RED by design (documents a real drift, not a gate bug); see §B.1 item 7 and `SC4-UI-ENGINE.md` §4.6c.1. |
 | 8 | Read the 7-entry jump table at `0x0046F71C` and each case's record initialiser, then re-run the CSIDRAW suppression hook (`CsiKill=1`) with a police/fire dispatch active. **If dispatch markers vanish too, census row 5 is re-attributed in one launch.** |
-| 9 | Subtract the known sets (431 `.UI` refs, 266 ItemIcons, the `html-image-refs.txt` harvest, the code-bound table in `SC4-UI-ENGINE.md §4.2`) from the 2,280-row extract manifest, then bucket the residue by **group** (already role-segregated) and scan `.text` for each residual GID as imm32. |
+| ~~9~~ | ~~Subtract the known sets...~~ **DONE 2026-08-23** — subtraction complete against the manifest, using the actually-shipped `CODE_BOUND_TGIS` list (evaluated in-process) rather than the §4.2 table. Residual = 1,297 real PNGs, bucketed by group and by 2-byte instance prefix in `SDK-GAPS.md` §9. Remaining: the `.text` imm32 scan for the two largest unnamed buckets, `1441xx` (288, twin groups) and `ec212Dxx`/`ec212Exx` (106). |
 | 10 | Hook `SetID` (slot `+0xFC`) for one session, log id + caller return address, bucket by owner function against `funcs.json`. The consecutive-run signature (12 ids at `0x12C`, 12 at `0x2F4`, 4 at `0x551`) makes families obvious immediately. |
 | 11 | Trace where the current resolution is formatted into a GID (the `.UI` deserialisation sites are catalogued in `§8.2`) and whether it is a lookup or a computed GID. If computed, **one test dat carrying a single trivially-different script under the current resolution's GID answers it in one launch** — and would mean per-resolution UIs are shippable with no runtime rewriting at all. |
 | 12 | Collect the vtables of every class seen through the existing AddViewObject hook (`0xAB4480`, `0xAB39D0`, `0xAB42F8`, `0xAB4624`, `0xAA8314`), intersect their slot layouts, write the recovered interface into a header. **The instrument already exists and already fires.** |
@@ -209,6 +217,7 @@ Why this one, over the higher-ceiling candidates:
 - **`crosscheck.py` is RED and its model is two weeks stale — verified this session.** `tools/uimap/constants.json` is dated **Aug 4 07:46**; `src/CodePatches.cpp` is **Aug 18 07:51**. Latest reading: 293 entries = 278 adjudicated (262 passed, **16 MISSED**) + 15 skipped, exit 1, 41 EXTRAS. **Until it is regenerated, no reasoning about the region-screen, intro-video or cost-box patch families from the offline model is valid.** (Note: two lenses quoted this gate as GREEN and RED respectively — they were reading runs from different dates. The mtimes adjudicate: the RED reading is the current one.)
 - **`gate_patch_families_combined.py` exits 1 on five unregistered tables** — the whole `#159` cost-box family (`kCostBoxHeightSite`, `kCostBoxWidthSite`, `kCostOriginBack`, `kCostOriginSite`, `kCostOriginStock`) shipped without entering the gate's WIDTHS map. **The only instrument that can see two byte patches colliding is silently blind to a whole family** — the exact gap #106 was built to close.
 - **`gate_namicons.py` exits 1** (392 orphans + 1 losing icon `0xD6482A2C`). Task #152 says fixed-because-NAM-is-not-installed; `PROBES-NEEDED` and `TRIAGE-PLAYBOOK` still list it red. Nobody has recorded which is true.
+- **`_tests\Test-ScaleDimParity.py` (new, register #7) exits 1** — the runtime ICONSYNTH `ScaleDim` (`ScaleTier.cpp:1309`) has no `sNoHeightSnap` equivalent, so any third-party ItemIcon of `{0x856DDBAC,0x6A386D26}` not already covered by our shipped package gets enlarged to height 68 at 1.5x where the offline pipeline ships 66 (measured on 122 of the 392 real `nam-1x` sources, all 176×44). Fix is a one-line port (`if (group == 0x6A386D26) return RoundHalfUp(v*factor);` before the `CellUnit` snap in `ScaleDim`, or an explicit height-exact parameter) — not yet done; this is engineering debt, not a research unknown.
 - **`[Probe] EdgeBlt` is lazy and not self-armed — a guaranteed null with no warning.** It shares `BltClassThunk` with ThinBlt but got no arming block; `EnsureBufferClassBltHook()` has three call sites and no `s_edgeArmed` symbol exists. One-line mirror of `UiSpike.cpp:12068-12082` with its own control line.
 - **U1 — `lineHeight` has never been measured at 1.5x or 3x**, so `prove_chart_legend.py` **skips 2,914 of 10,708 checks** (almost all vertical) at the two tiers shipped alongside 2x. A skip is never a pass. Two points do not determine the pt→px rule. The instrument and procedure already exist; it needs one rendered capture per tier.
 - **`gate_tiled_seam` +1px clip on `1441587b` (437 vs 436) accepted as benign** with no explanation beyond the clip direction. The house law says a residual that exists at one tier only *is* the defect — check 2x and 3x.
@@ -249,11 +258,11 @@ These would actively mislead a reader. Line numbers below were checked this sess
 ## F. Coverage honesty — what this survey could not see
 
 1. **This was a documentation survey, not a re-verification.** No lens launched the game, ran a gate, or disassembled anything new. **Every VA, offset and slot number in §A is inherited from the repo's notes.** The exe was never opened. What I verified independently this session is narrow and stated inline: file mtimes, the `0x43`/`kNeverScaleIds` absence, the NineSlice address spread, the `#165` and overlays-census contradictions, the stray `src` backup.
-2. **The in-world unknown list is a lower bound, by the census's own admission.** `SC4-WORLD-OVERLAYS.md` says "discover, don't trust the list" — and walking it against the game's feature surface turns up **at least five visuals with no row at all**: zots, the in-world Data View tint, underground/pipe/subway views, in-world traffic-density colouring, and network drag preview. These are discovery gaps, not attribution gaps, and there is no reason to think five is the total.
+2. **The in-world unknown list is a lower bound, by the census's own admission.** `SC4-WORLD-OVERLAYS.md` says "discover, don't trust the list" — and walking it against the game's feature surface turns up **at least five visuals with no row at all**: zots, the in-world Data View tint, underground/pipe/subway views, in-world traffic-density colouring, and network drag preview. These are discovery gaps, not attribution gaps, and there is no reason to think five is the total. (A sixth, the aircraft landing ring, is also open — row 20 above parks it as "still open", not closed.) **Corrected 2026-08-23** — `research/KNOWN-LIMITATIONS.md` previously listed all six as a settled "renderer-drawn, no sizing lever" boundary, contradicting this row; its "Not yet probed" section now states the discovery-gap framing and cites the §B.1 rows above instead.
 3. **Three creation channels are structurally invisible to every offline tool in the repo**, so no census built on them can be complete: the `0xC2C2EB0F` singleton factory (220 call edges across 129 functions; 27 in the live-UI band), the 89 of 162 `SetID` sites that pass a non-literal id, and the ~1,850 PNGs bound by no `.UI` ref. The project names the first as where the next genuinely-unknown defect will come from.
-4. **The coverage denominator counts depth-0 roots by construction.** `0x00004200` is a known depth-1 node the code addresses as a top-level handle; the ladder has never been re-run over all depths, so it is **unknown how many such nodes exist**, and each is a candidate for the "covered ancestor" assumption that has already failed.
+4. **The coverage denominator counts depth-0 roots by construction.** `0x00004200` is a known depth-1 node the code addresses as a top-level handle. **Measured 2026-08-23** (`tools\uimap\depth_ladder.py`, re-running the same tag grammar as `coverage_rederive.py` over all depths, positive-control-verified against `0x00004200` and all 7 previously-documented code winId pairs): **1,296 distinct ids exist at depth ≥1 somewhere in the 339-file corpus** (3,980 id-bearing occurrences: depth 1 = 2,010, depth 2 = 1,324, depth 3 = 641, depth 4 = 5) — the full candidate pool for the "covered ancestor" assumption failure mode. What remains unmeasured is narrower and harder: **how many of those 1,296 candidates the compiled code actually passes as a loader winId.** The repo's entire measured universe of such call sites is still the 7 pairs in `coverage-matrix.md` §0.6 (1 of 7 is depth-1+); closing the code-side count needs a disassembler enumerating every caller of the winId-loader thunk family and reading its pushed argument, not obtainable from the `.UI` corpus alone.
 5. **The lenses disagreed about the grading bar, and the publication must pick one.** The in-world lens flagged that several rows it graded DOCUMENTED (census rows 8, 10–16) would be **PARTIAL** under the repo's own stricter law — mechanism named, never seen running. I applied the task's stated bar (a concrete anchor that predicts behaviour), which is looser. **State which bar the published reference uses, rather than silently choosing.**
-6. **Two lenses quoted the same gate as GREEN and as RED.** Both quotes were accurate for their date; the mtimes adjudicate (RED is current). This is a general hazard: the repo's status lines are timestamped inconsistently, and several "CLOSED" markers in `START-HERE.md` are not supported by the ledger section they cite (§E#5, §E#6, plus `#122` — marked CLOSED USER-CONFIRMED while the ledger itself says nobody wrote a fix and flags the causal mechanism as an inference).
+6. **Two lenses quoted the same gate as GREEN and as RED.** Both quotes were accurate for their date; the mtimes adjudicate (RED is current). This is a general hazard: the repo's status lines are timestamped inconsistently, and several "CLOSED" markers in `START-HERE.md` are not supported by the ledger section they cite (§H#5, §H#6, plus `#122` — marked CLOSED USER-CONFIRMED while the ledger itself says nobody wrote a fix and flags the causal mechanism as an inference).
 7. **Some closures rest on saturated or single-trial instruments.** `#122`'s DBAR instrument saturated at its 300 cap; `#104`'s 9-run bisect is invalidated by two identical-configuration runs producing opposite outcomes; `#109`'s crash closure has two 1.5x captures and **no 3x capture**.
 8. **One backlog item is excluded from §D under a standing instruction from the author.** It is a known, documented item with a decoded mechanism; it is not an unknown, and its exclusion does not affect the unknowns inventory.
 9. **`_working-backup/` and `_incoming/` shadow copies exist** and were visible in my greps. Anything a reader greps in the published tree may return a stale duplicate of a corrected fact unless those trees are excluded from the export.
@@ -280,7 +289,7 @@ The most transferable material in this repo is not the address list — it is th
 14. **Lead any published issues page with what is already dead.** Five dead attributions on #176, ten refuted theories on #148, eight on #162, fifteen eliminations on #188. The refutation record is the expensive part, and it is the part that stops a reader repeating the work.
 ---
 
-## E. 2026-08-19 — #191 (Move In My Sim marker): what this register already knew
+## H. 2026-08-19 — #191 (Move In My Sim marker): what this register already knew
 
 ⭐ **THIS SECTION EXISTS BECAUSE THE REGISTER WAS NOT CONSULTED AND SHOULD HAVE
 BEEN.** Five patches were written for #191 before it was opened. Three rows
@@ -291,7 +300,7 @@ already covered the target, the method, and the risk:
 | **20** | *MySim head bubble + aircraft landing ring* — **"Free if #8 is done"** | This IS #191. Named, scored, and parked. |
 | **8** | *The other six dispatch-indicator categories* — "settles a **printed contradiction**" — "read jump table + 1 suppression launch" | The prescribed method. The "printed contradiction" is exactly what four patches walked into. |
 | **18** | *The TagKind sprite's literal size constant* — **"continue `0x00510690` past `0x5106E7`"** | The likely size lever, with the exact resume address. |
-| **28** | *The S3D format* — "hand-decode the **244-byte arrow plate**" | The green arrow is already known to be an **S3D mesh**, not a sprite. |
+| **28** | *The S3D format* — "hand-decode the **244-byte arrow plate**" | The green arrow is already known to be an **S3D mesh**, not a sprite. ⛔ **WRONG, corrected same day (see §H.5): the Move In My Sim green/red arrows are GZWinBMP 2D bitmaps `{46a006b0,13f15213}`/`{...,13f15214}`, not S3D.** Row 28's 244-byte plate is a DIFFERENT arrow — the row-15 neighbor-connection arrow's model — never the Move In marker's. |
 
 **A.4 already documents the TagKind spine** (live-confirmed): 25 `Tag1x1x3_*`
 exemplars bind a deliberately **NULL S3D** and carry a TagKind byte (property
@@ -300,19 +309,19 @@ ctor `0x004FBB40` → visitor `0x004FC710` → builder `0x004FBFE0`
 (jump table `0x004FC410` on tag−1) → factory `0x00505370` (`vt+0x3C`) →
 creator `0x00510690`.
 
-### E.1 New, measured 2026-08-19 — promote these into §B
+### H.1 New, measured 2026-08-19 — promote these into §B
 
 | item | status |
 |---|---|
 | **Move In My Sim click chain** | **SOLVED.** LTEXT `{6a231eaa,4ACE23B5}` → button `0xCA243E0C` (script `I-0a243d80`) → dispatcher `0x00776B43` (`cmp eax,0xCA243E0C ; je 0x00776B92`) → `0x00776B92` → **action `0x007755A0`**. Only TWO refs to the button id image-wide (the dispatcher and the `GetChildWindowFromID` at `0x00775002`), so there is exactly one handler. |
 | **Portrait ownership** | **SOLVED.** The 19 faces are preloaded together at `0x00775239` (loop `0x0077521B..`, 48-byte stride, registers each via `call [eax+0x94]`). Owner is a **`0x0077xxxx`** subsystem — the SAME module as the click handler. |
-| **Is the marker a window?** | **SOLVED — NO.** 37 full-depth dumps with it on screen: 623 ids in all of the last 8, **0 new** vs the first 5. Positive control: the Select-A-Sim grid appears in exactly one tick (88 transient ids). |
+| **Is the marker a window?** | ⛔ **THIS ROW IS WRONG — see §H.5.** "SOLVED — NO" was a false null: the 37-dump diff's baseline (first 5) was taken AFTER the marker's windows already existed (they first appear in dump #5, then persist, toggling `vis` only), so "0 new vs the first 5" could never have detected them. The marker IS a window pair, `0x27DF05BE`/`0x27DF05BF`. |
 | **Does the marker route through the `0x0046Cxxx` billboard system?** | **NO — eliminated ON SCREEN.** At 2.00 the log shows category-3 icon 32→64, shared pin quad 64→128, and MYSIMTEX UV divisor 64→128, all applied, with the marker unchanged. |
-| **The marker's DRAW and its size lever** | **STILL OPEN.** Downstream of `0x007755A0`. Row 18's resume address `0x5106E7` is the cheapest lead. |
+| **The marker's DRAW and its size lever** | **CLOSED, see §H.5.** `GZWinBMP` children of `0x27DF05BE`/`BF`; the lever was `kBmpxCityRoots` (blit-follows-window-size) plus a size-only skip of `GZWinMoveTo` in `ScalePanelRoot`, not a size constant downstream of `0x007755A0`. |
 | **What does `SIGNPOST` (`0x005F20AF`/`0x005F20BF`) actually move?** | **NEW UNKNOWN.** Applies at every tier (`balloon 44→88, raise 150→300` at 2x) across many sessions with **no eyes-on confirmation of its consumer anywhere**. Its own header records the attribution was already corrected once by screen evidence. Same profile as the `0x48E945B4` mislabel. Merge with row 26 ("is `0x5F20A0` live at all"). |
 | **`ARTFETCH` cannot see cached consumers** | **NEW STRUCTURAL FACT.** It hooks the fetch; the portraits are cached at load, so the draw never passes through it. Record beside the buffer-class fact in `reference-sc4-ui-sdk-boundary`. |
 
-### E.2 A category the SDK-boundary triage does not name
+### H.2 A category the SDK-boundary triage does not name
 
 The triage assumes an element is fully inside or fully outside the SDK. This one
 is **art-reachable, geometry-unreachable**:
@@ -326,7 +335,7 @@ screen and reads as "the staging failed".** #190 genuinely staged 72x82
 portraits, the game genuinely loads them (ARTFETCH proves the fetch), and the
 renderer draws at a size it computes itself — resampling the face back to 1x.
 
-### E.3 Correction to a published reference
+### H.3 Correction to a published reference
 
 `tools/research/CITY-SITUATION-INDICATORS.md` §3 says of `0x0046CCB9`:
 *"Patching it resizes unrelated indicators. Never touch it when working on
@@ -335,7 +344,7 @@ enumeration of `0x0046C8B0..0x0046D200`: one edge in, from `cmp [esi+4],4 ; jne`
 at `0x0046CC45`. Categories 3 and 4 merge at `0x46CB52` and split later, which
 is why the single-`jne` reading was wrong.
 
-### E.4 #191 — families ELIMINATED by cheap identification tests (2026-08-19)
+### H.4 #191 — families ELIMINATED by cheap identification tests (2026-08-19)
 
 Each of these cost one query and no patch. Recorded so they are never
 re-searched, and as the positive controls for the searches themselves.
@@ -356,16 +365,41 @@ either way.**
 
 ⚠ **`ConnectArrow_Ui8x1x3_Z1..Z5` IS STILL WORTH KNOWING**: it establishes the
 engine's convention for world-space UI markers — **one model per ZOOM level, not
-one model scaled**. If the Move In marker follows that convention, no pixel-side
-lever can ever resize it and the honest cure is per-zoom art, not a constant.
-That hypothesis is UNTESTED and must not be treated as fact.
+one model scaled**. The Move In marker does NOT follow this convention (see
+§H.5) — that hypothesis was tested and refuted, not merely left untested.
 
-**STILL OPEN**: what draws the Move In marker. Leads remaining, cheapest first —
-(1) the three running traces from `0x007755A0` forward; (2) whether the marker is
-an S3D/prop like row 28's 244-byte arrow plate; (3) the `0x0077xxxx` owner class
-identified from the preload at `0x00775239`.
+**RESOLVED, same day (dep 11:44:06), see §H.5**: what draws the Move In
+marker was neither of the three leads below. It is a **GZWin pair**
+(`0x27DF05BE`/`0x27DF05BF`) with `GZWinBMP` children — the earlier "SOLVED —
+NO" window-layer verdict in §H.1 was itself a false null (baseline taken
+after the windows already existed). Leads as they stood at the time, for the
+record: (1) the three running traces from `0x007755A0` forward; (2) whether
+the marker is an S3D/prop like row 28's 244-byte arrow plate — **refuted,
+it is 2D bitmap art**; (3) the `0x0077xxxx` owner class identified from the
+preload at `0x00775239` — correct in spirit (the click chain and portrait
+preload are real facts about the feature) but not the drawer.
 
-### E.5 #191 — the contradiction that is now the sharpest lead (2026-08-19)
+### H.5 CORRECTION — #191's real cause was a GZWin pair, not S3D/renderer-side
+
+Both the §E.1 "Is the marker a window? SOLVED — NO" line and the row-28 cross
+reference above are **stale**, superseded the same day by a later, definitive
+measurement (`_tests/REGRESSION.md`, "#191 CAUSE FOUND — AND MY OWN TEST WAS
+THE FALSE NULL"): the 37-dump window-layer null compared the LAST 8 dumps
+against the FIRST 5, and the marker's windows first appear in dump #5 — the
+target was baked into its own baseline, and being a persistent show/hide pair
+(never destroyed, only toggled `vis`) it could never register as "new". The
+marker is in fact **`0x27DF05BE`/`0x27DF05BF`**, parented to the 3D-view
+root, each with a `GZWinBMP` plate child (green art `{46a006b0,13f15213}`,
+red `{46a006b0,13f15214}`) plus a 36×41 portrait child. Cure: add both roots
+to `kBmpxCityRoots` (so the blit hook follows the window size) and skip
+`GZWinMoveTo` for them in `ScalePanelRoot` (their left/top are rewritten by
+the game every frame, already in final screen space — re-anchoring them is a
+second application of the scale). CLOSED 2026-08-19, user-confirmed
+("YOU GOT IT"). Register row 20 already carries the correct final summary;
+this note exists only so §E's mid-investigation lines stop reading as if the
+S3D lead were still open or ever panned out.
+
+### H.5 #191 — the contradiction that is now the sharpest lead (2026-08-19)
 
 USER, on zoom behaviour: *"It works identical to all other items on screen like
 the UDriveIt icons."* Constant on-screen size at every zoom = SCREEN-SPACE
@@ -409,7 +443,7 @@ which of the two draw paths a category-3 record takes — static, and it
 distinguishes the hypotheses without a build.
 
 
-### E.6 #191 CLOSED (2026-08-19, user-confirmed)
+### H.6 #191 CLOSED (2026-08-19, user-confirmed)
 
 Two halves, both required:
   * `0x27DF05BE` / `0x27DF05BF` -> `kBmpxCityRoots`. The sweep always resized

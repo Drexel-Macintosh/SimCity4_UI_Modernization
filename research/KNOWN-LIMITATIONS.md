@@ -1,9 +1,10 @@
 # Known limitations
 
 Every entry below is measured and bounded: what the player sees, what causes
-it, and where the boundary sits. The engine reference behind these entries is
-in `research/laws/`; the offline regression suite that holds them in place is
-in `_tests/`.
+it, and where the boundary sits — except the one item under "Not yet probed",
+which is flagged as such precisely because it does not meet that bar. The
+engine reference behind these entries is in `research/laws/`; the offline
+regression suite that holds them in place is in `_tests/`.
 
 ## On screen at scaled tiers
 
@@ -54,11 +55,6 @@ in `_tests/`.
   size it are patched and verified applied; the presentation rect is decided
   downstream of those numbers, so the video keeps its stock size at every
   tier.
-- **Some in-world overlays are not scaled.** Zot discs (no-power, no-water,
-  no-jobs), the in-world Data Views tint, the underground, subway and pipe
-  views, in-world traffic-density colouring, the network drag preview and the
-  aircraft landing ring are drawn by the renderer rather than by the window
-  layer the mod scales, and they expose no sizing lever.
 - **Coverage denominators.** Of 298 script-declared UI roots, 288 are covered
   (96.6%); of 17 code-created named windows, 11 (64.7%); combined 299 of 315,
   94.9%. Windows that are visible but unnameable are deliberately left out of
@@ -69,6 +65,26 @@ in `_tests/`.
   offline tool can read, so line height is measured at 1x and 2x from captures
   of the rendered screen. The chart-legend gate checks its vertical placement
   at those two tiers and records the fractional tiers as skipped.
+
+## Not yet probed
+
+- **Six in-world visuals have no ownership census — this is a discovery gap,
+  not a proven boundary.** Zot discs (no-power/water/job/car), the in-world
+  Data Views tint, the underground/subway/pipe views, in-world
+  traffic-density colouring, the network drag preview, and the aircraft
+  landing ring have never had a census row: no hook, no imm32 sweep, no
+  `AddViewObject` differential has run against any of them. Whether the
+  window layer can reach them is genuinely open, not settled — a prior
+  version of this document asserted "drawn by the renderer, no sizing
+  lever" for all six, which overstated what had actually been measured.
+  `research/UNKNOWNS-AND-NEXT-TARGETS.md` §B.1 tracks each with a scored
+  next probe and none has been closed: zots (row 3, imm32 sweep then one
+  hook), the network drag preview (row 19, `find_imm` on
+  `0xA90920`/`0xA9093D`), the in-world Data Views tint (row 22, `AddViewObject`
+  differential), the underground/subway/pipe views and traffic-density
+  colouring (row 23, same differential), and the aircraft landing ring
+  (row 20's note — parked, not closed). Do not cite this item as a
+  renderer-only boundary until one of those probes runs.
 
 ## Compatibility boundaries
 
