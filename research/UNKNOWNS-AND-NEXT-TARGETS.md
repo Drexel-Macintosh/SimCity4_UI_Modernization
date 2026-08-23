@@ -4,6 +4,8 @@
 
 **Grading bar used:** DOCUMENTED = the docs name a concrete mechanism that *predicts behaviour* — a VA, a struct offset, a vtable slot, a resource type/group, or a rule with a stated control. UNKNOWN = visible or known to exist, but nothing says what draws it, what sizes it, or how to change it. CLOSED-AS-IMPOSSIBLE = investigated with a stated positive control and proven unreachable. OPEN-DEFECT = mechanism known, work unfinished.
 
+**This register's newest content is dated 2026-08-19 (written against v3.0.2).** For anything after that — including a Graphics Options selector rewrite, a v3.14 flyout state-machine rewrite, and the sub-flyout arm-alignment defect added to §D.1 below — read `../CONTINUITY.md` first, then the newest-dated `../HANDOFF-*.md` in the repo root. Neither is summarized here.
+
 ---
 
 ## A. Documented well enough to publish as reference
@@ -211,6 +213,7 @@ is still the correct next step before trusting or retiring the hand list:
 | **#182** | `SyncStaticLayers` is the only caller of the per-package gating and runs on the AutoScale path only ⇒ with `AutoScale=0` no tier sync runs at boot, so a package stays 2x-active-by-pattern at a 1.5x tier and the #149 boot scan counts the icon covered. Half-fixed in v3.0.2. | Whether ScaleTier lines actually appear under `AutoScale=0`, and whether `IsOurPackage` was made tier-aware or only the sync path fixed. The ledger's own note says to read the manual-mode exclusion reason first — **that reason is not written down anywhere.** |
 | **#104** | The window-manager teardown spin. Cause relocated: the WinMgr valid set is **wholesale empty (1543 buckets, 0 entries)** before the window tree tears down. Layout-squeeze refuted by three disassembly passes; the ordinance+dept culprit pair refuted as sufficient by run15. Instruments shipped (SpinProbe, per-launch rate recorder). | **No loop has ever been named** — no EIP, no base rate. Two runs on 2026-08-03 with byte-identical config and identical actions produced opposite outcomes, which invalidates every single-trial cell of the 9-run bisect. The one positive measurement (46 of 47 threads parked) was lost to log truncation. |
 | — | Data Views scrollbar: `0xAA32BCE6` is in **both** `kAlwaysScaleCityIds` (→ `ScalePanelRoot`, `centerLeaves=false`, buttons 24×25→48×50) and `kGZWin_MenuContainer` (→ `ScaleMenuFlyouts`, `centerLeaves=true`, under which a 24×25 childless leaf trips `centerThisLeaf` and is recorded `scaledW == origW` **permanently**). | **Nothing enforces the ordering** — today the panel loop happens to run first, but that is incidental. Separately, the live geometry quoted for this family has **no log behind it** (grep of all five retained logs for `42B7C35` returns zero hits) and should be treated as unsourced. |
+| — | **Sub-flyout arm-alignment at >1x (v4.0.35, OPEN — post-dates this survey, added from `HANDOFF-2026-08-23.md`/`CONTINUITY.md`; not the same defect as row 24's item-strip derivation).** At 2x the second-level flyout's ring arm attaches to the wrong strip row and the strip's bottom items clip on short-count menus. Confirmed wrong: Sports Grounds (cnt=5), Plazas (cnt unconfirmed). Confirmed right: Build Park (cnt=11), Green Spaces (cnt=12). Mechanism measured: placement comes **entirely from the birth-path hook** (`src/UiSpike.cpp` ~7151–7218: `SubPlaceTop()` ~1167, then a count-blind empirical shift `SubContainerShiftPx() = f²·73−60` ~1272, then `gSubRingAutoY = legDY − dy` pins the ring); the sweep-time per-count formula `SubContainerShiftFromGeo()` (~1292) is dead code because its candidate-dock gate (~14715) never passed once in an instrumented session (`SUBGEO BTN` count = 0). Measured bottoms at 2x: cnt≥8 menus land at 1150 (the approved reference); cnt=5 lands at 1050 — exactly the 100px "too high" the user reports. User's law (verbatim): *"The bottom part of the flyout should be identical in all of these menus… it should build from that bottom and fill in above it."* | The birth-path override for cnt<8 that reproduces the cnt≥8 chain's bottom (1150 at 2x) instead of bare `SubPlaceTop`, which naively applied drops every 8-row menu 232px (tried in v4.0.36, full regression, rolled back same session — "the law was right, the constant was wrong"). Two formulations specified, neither shipped: (A) `top = approvedBottom − newH` with `approvedBottom` derived from the cnt≥8 chain minus its bornshift; (B) hardcoded `RoundHalfUp(287.5·f²)`, rejected as machine-specific. Also open: Plazas' true item count was never captured in an instrumented session (only cnt∈{5,11,12} logged) — if Plazas is actually cnt=11 it is born identical to Build Park and the report needs a fresh look. 1.5x/3x are completely unverified; every measurement above is 2x only. |
 
 ### D.2 Instrument and gate debt
 
@@ -381,7 +384,7 @@ preload are real facts about the feature) but not the drawer.
 
 ### H.5 CORRECTION — #191's real cause was a GZWin pair, not S3D/renderer-side
 
-Both the §E.1 "Is the marker a window? SOLVED — NO" line and the row-28 cross
+Both the §H.1 "Is the marker a window? SOLVED — NO" line and the row-28 cross
 reference above are **stale**, superseded the same day by a later, definitive
 measurement (`_tests/REGRESSION.md`, "#191 CAUSE FOUND — AND MY OWN TEST WAS
 THE FALSE NULL"): the 37-dump window-layer null compared the LAST 8 dumps
@@ -396,7 +399,7 @@ to `kBmpxCityRoots` (so the blit hook follows the window size) and skip
 the game every frame, already in final screen space — re-anchoring them is a
 second application of the scale). CLOSED 2026-08-19, user-confirmed
 ("YOU GOT IT"). Register row 20 already carries the correct final summary;
-this note exists only so §E's mid-investigation lines stop reading as if the
+this note exists only so §H's mid-investigation lines stop reading as if the
 S3D lead were still open or ever panned out.
 
 ### H.5 #191 — the contradiction that is now the sharpest lead (2026-08-19)
@@ -405,7 +408,7 @@ USER, on zoom behaviour: *"It works identical to all other items on screen like
 the UDriveIt icons."* Constant on-screen size at every zoom = SCREEN-SPACE
 billboard, exactly like the CSI/U-Drive-It indicators — which are also NOT
 windows, so this is fully consistent with the live-dump null. **The per-zoom
-world-geometry hypothesis (E.4) is therefore REFUTED, and the billboard system
+world-geometry hypothesis (H.4) is therefore REFUTED, and the billboard system
 is back in play.**
 
 CONFIRMED by disassembly this session:

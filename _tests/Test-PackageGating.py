@@ -72,6 +72,15 @@ UNGATED_BY_DESIGN = {
     # stock geometry with the scale-selector nodes. Nothing upstream to gate
     # on, and it is armed by the ABSENCE of a tier rather than by one.
     "zzz-SC4UIScale\\z_SC4UIScale_SelectorUI",
+    # WebText (2026-08-21): the region-website-button text+link override,
+    # gated on `!webBtnPresent` (WebButtonModPresent()) - the direct inverse
+    # of WebButtonUI's DepOkByName gate just below it in ScaleTier.cpp, not
+    # a missing gate. It ships when the Web Button Improvement Mod is ABSENT
+    # (so our own redirect text applies); WebButtonUI is the DepOkByName-
+    # gated package that swaps in an inert script when that mod IS present.
+    # No kThirdPartyDeps row because there is nothing to fail-disable on a
+    # mod update - it is a plain boolean toggle on the same presence check.
+    "z_SC4UIScale_WebText",
 }
 
 

@@ -172,11 +172,27 @@ def main():
     # SyncStaticLayers(1.0) is disable-all by its own contract, so the gate in
     # front of it has to be reachable when the user deliberately picks 1x.
     # `spikeAutoScale || tierActive` is not: both are false in that case.
-    m2 = re.search(r"if\s*\(([^)]*)\)\s*\n?\s*\{[^{}]*SyncStaticLayers\s*\(",
-                   director, flags=re.S)
+    #
+    # THERE ARE TWO SyncStaticLayers CALL SITES. The first, textually, is the
+    # unsupported-game-version refusal path - it always passes a literal
+    # 1.0f unconditionally and has nothing to check. The one this test cares
+    # about is the boot-arming call that passes the RUNTIME factor
+    # (settings.spikeScaleFactor); a plain "first match wins" regex finds the
+    # version-refusal call instead and reports ITS guard
+    # (gameVersion < kMinSupportedGameVersion) as if it were the boot-arming
+    # guard - a false positive that looks like a real regression. Filter to
+    # the call whose own argument is spikeScaleFactor.
+    def _find_runtime_factor_guard(pattern):
+        for cand in re.finditer(pattern, director, flags=re.S):
+            if "spikeScaleFactor" in cand.group(0):
+                return cand
+        return None
+
+    m2 = _find_runtime_factor_guard(
+        r"if\s*\(([^)]*)\)\s*\n?\s*\{[^{}]*SyncStaticLayers\s*\([^)]*\)")
     if not m2:
-        m2 = re.search(r"if\s*\(([^)]*)\)[^;]{0,600}?SyncStaticLayers\s*\(",
-                       director, flags=re.S)
+        m2 = _find_runtime_factor_guard(
+            r"if\s*\(([^)]*)\)[^;]{0,600}?SyncStaticLayers\s*\([^)]*\)")
     if not m2:
         failures.append("could not locate the guard in front of SyncStaticLayers.")
         print("  [stock factor unloads art] *** GUARD NOT FOUND ***")

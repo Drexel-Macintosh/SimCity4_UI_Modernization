@@ -441,6 +441,21 @@ community header's names for this band include argument-taking entries, so do
 not hook any of them with a typed thunk on the strength of a name alone
 (`SDK-GAPS.md` §1).
 
+**95–97 override census + disassembled semantics (2026-08-23):** diffed
+`[vt+0x17C]`/`[vt+0x180]`/`[vt+0x184]` across all 111 window-class vtables in
+`tools/uimap/_work/wincensus.json` — **zero overrides**; every class (named
+and anonymous) resolves to the same three base bodies, so these three
+virtuals are non-polymorphic in this build. Slot 95 `SetBufferToDrawTo`
+resolves `[this+0x68]` to its own private buffer (`[this+0x64]`) or, walking
+`GetParentWin()`, the nearest ancestor that owns one or carries
+`WinFlag_DelayedPlot` (`0x8000000`) — falling back to the `cIGZGraphicSystem`
+service for the tree root — then calls its own slot 98. Slot 96 is slot 95
+on self, then slot 96 recursively on every `[this+0x44]` child. Slot 97
+writes `[this+0x24..0x30]` areaToDrawTo using the identical ancestor-stopping
+rule as slot 95, so buffer and area always name the same drawing surface;
+slot 98 is the slot-96 recursion pattern applied to slot 97. Full derivation:
+`SDK-GAPS.md` §1.
+
 **Slot 89 `Plot` is load-bearing, not trivia:** it calls `[eax+0x1EC]` and only
 reaches `[eax+0x1F0]` if that returned true — so **a `[win+0x64]` private
 buffer cannot reach the screen without a paint on the same object in the same
@@ -980,6 +995,78 @@ fractional tiers the `14015549` ladder filmstrip is re-laid by
 rebuild that self-guards at integer factors, and the colour-key gate imports
 that module's ladder list rather than restating it.
 
+### 2.7 `GZWinBtn` — state-cell art is SOURCE-sized, not window-stretched (byte-verified)
+
+Answers register item #1 / OPEN QUESTION O1 (`UI-ART-BINDING.md §3` published the
+horizontal rule `imageWidth/N` and left the vertical axis unsettled — the
+corpus alone cannot distinguish the two hypotheses because in all 875 measured
+buttons `pngHeight == buttonHeight` by construction, so window-derived and
+source-derived height predict the identical pixel result).
+
+**Member map** (class vt `0x00ADDAF0`; `[this+4]` is the `cIGZWin` subobject,
+so field offsets below are relative to the outer `GZWinBtn`, and the
+window's own geometry is reached through `[this+4]`'s vtable):
+
+| offset | field | role |
+|---|---|---|
+| `+0xf4,+0xf6` | int16 x,y | state-cell's position, LOCAL to the window (`(x,y)` of a `(x,y,w,h)`-form rect) |
+| `+0xf8,+0xfa` | int16 w,h | state-cell's **size** — the value this item settles |
+| `+0x108` | ptr | the resolved image/state-provider interface (lazy-QI'd, IIDs `0x68963c54`/`0x68963c4c` as fallbacks) |
+| `+0xdc` bit `0x04` | flag | "has image" gate on the whole draw |
+| `+0xdc` bit `0x40` | flag | selects the alternate (`GetW()`-driven) sizing branch below — **never set** by the constructor (`0x9B1C27`, zeros `+0xdc` then ORs only `0x6a0`) or by any of the class's own `SetFlag(mask,bool)` call sites (`sub_9B13DD`); exhaustive scan of the class's ~5,600-byte code block (`0x9AE000-0x9B2E20`) found no `push`ed mask with bit `0x40` set anywhere |
+
+**Plot** (slot 88, `0x9B167D`) dispatches to the icon draw `0x9B1541`, which
+builds the destination rect as:
+`destLeft = winAbsX([this+0x28]) + F4 + pressedOffset`,
+`destTop = winAbsY([this+0x2c]) + F6 + pressedOffset`,
+`destRight = destLeft + F8`, `destBottom = destTop + FA`
+(`0x9B15C5-0x9B15EA`) — i.e. **position tracks the window's absolute screen
+origin, but size is whatever `F8`/`FA` currently hold.** The window's own
+`GetH()` (vt `+0xA8`) is never read on this path.
+
+**`F8`/`FA` are written in exactly one place, `sub_9B09B7`**, called from the
+class's `SetArea` override (`0x9B1397 → 0x9B0C08 → 0x9B09B7`) — so they
+refresh on every resize, but WHAT they are refreshed FROM is the question.
+With flag bit `0x40` clear (the constructor default, and — per the exhaustive
+scan above — the only value ever observed), `sub_9B09B7` takes the branch at
+`0x9B0B34`:
+
+```
+call [image_iface + 0xbc](&rectOut, state_a, state_b)   ; state_a/state_b from
+                                                          ; the button's own
+                                                          ; state tracker, [this+0x54]
+F8 = rectOut.right  - rectOut.left     ; 0x9B0B56-0x9B0B5C
+FA = rectOut.bottom - rectOut.top      ; 0x9B0B63-0x9B0B69
+```
+
+`rectOut` is the image interface's own per-state rect — the SOURCE cell's
+native pixel geometry for the currently-selected button state — with no
+window dimension as an input. **The vertical rule mirrors the horizontal
+one: both axes of the drawn state cell are sized off the ART, never off the
+window rect.** A resize moves the icon (position follows `winAbsX/Y`) but
+never stretches or squeezes it; art whose per-state cell height does not
+match the button's window height will overflow or leave a gap rather than
+scale to fit.
+
+(The bit-`0x40` branch, `0x9B0A49-0x9B0B32`, computes `FA` from `GetW()` of
+the window combined with an image-interface state-count call — evidence it
+exists for some non-standard button configuration — but no code path in the
+class's own attribute handling was found to ever set the bit, so it is not
+exercised by any `.UI`-authored button found so far. Flagged, not chased
+further: finding its trigger would need either a live `SetFlag(0x40,...)`
+capture across a full game session, or a corpus-wide diff of every shipped
+`GZWinBtn` node's `+0xdc` at runtime — an instrument beyond a static read.)
+
+**Consequence for #177** (the `CellUnit`-snapped strip height, currently
+protected by a 44-entry hand-maintained exception list): the engine performs
+no vertical divide for `GZWinBtn` state art at all — height is copied
+whole from the source rect, never divided by a state count the way width is.
+A snap rule that treats strip height as needing the same `/N` treatment as
+width is solving a problem the engine's own draw path does not have for this
+class; re-derive `--height-exact-strips` against `cell-strips.txt` per the
+corpus test in `research/UNKNOWNS-AND-NEXT-TARGETS.md` B.2 before trusting
+the hand list further.
+
 ---
 
 ## 3. The `.UI` script format
@@ -1034,6 +1121,70 @@ and `alphablend`); then `gutters` 4520, `image` 2962, `edgeimage`
 844, `imagerect` 839, `blttype` 540, plus `caption`/`captionres`, `font`,
 `tiptext`/`tipres`, `textoffsets`, `tipoffsets`. **There is no
 inset/edges/corners/slice attribute anywhere in the corpus.**
+
+#### 3.1a `winflag_*` name → runtime BIT, PINNED
+
+The base keyword table (`0x0094D641`–`0x0094E33A`) gives each name a
+sequential **parse-time token id**, `0xF01A`..`0xF026` (only `visible`
+=`0xF01A` and the two late-registered `acceptfocus`=`0xF025` /
+`alphablend`=`0xF026` are individually confirmed; the middle nine follow the
+corpus listing order above but were not re-disassembled one by one). **That
+token id is not the runtime flag.** The bit each name actually sets/clears in
+the live `[this+0xC8]` flags dword — tested through `GetFlag`/`SetFlag`, real
+slots `vt+0x10C`/`vt+0x110` (§1.4, §2.2) — is:
+
+| `.UI` name | runtime bit | evidence |
+|---|---|---|
+| `winflag_visible` | `0x1` | `IsVisible()` (`vt+0x11C`, `0x0099BDCE`) IS `GetFlag(1)`; `PlotComposite`'s visibility gate tests `flags & 1` |
+| `winflag_enabled` | `0x2` | `IsEnabled()` (`vt+0x120`, `0x0099BDD9`) IS `GetFlag(2)` |
+| `winflag_moveable` | `0x100` | ctors `0x0099DA15`/`0x0099DB3C` write `[this+0xC8]=0x8903` at birth — bit decomposition below |
+| `winflag_sizeable` | `0x200` | not independently disassembled — see caveat |
+| `winflag_sortable` | `0x800` | same `0x8903` ctor decomposition; qualitatively corroborated — `winflag_sortable=yes` on only 27/5,964 corpus nodes (`SDK-GAPS.md` §4) |
+| `winflag_pbuff` | `0x10000` | `PlotComposite`'s dirty path drives its draw-context alpha/buffer state off `GetFlag(0x10000 PrivateBuffer)` |
+| `winflag_pbufftrans` | `0x20000` | same dirty path: private-buffer erase is gated on `flags & 0x20000` |
+| `winflag_pbufferase` | `0x40000` | same test, paired: `flags & 0x40000` |
+| `winflag_pbuffvid` | `0x100000` | not independently disassembled — see caveat |
+| `winflag_mousetrans` | `0x80000` | base `IsPointInMe` (`0x0099C97C`) tests `GetFlag(0x80000)` to select the refined hit-test mask (§2.2 item 2) |
+| `winflag_ignoremouse` | `0x200000` | hit-test router (`0x0099DFA9`) skips a child on `GetFlag(0x200000)` (§2.2 item 1) |
+| `winflag_acceptfocus` | `0x8000` | same `0x8903` ctor decomposition |
+| `winflag_alphablend` | `0x4` | same dirty path: `GetFlag(4 AlphaBlend)` drives the draw-context alpha state |
+
+> **EVIDENCE (MEASURED).** `0x8903` = `1000 1001 0000 0011`b = bits
+> {0,1,8,11,15} = `0x1 | 0x2 | 0x100 | 0x800 | 0x8000` — Visible, Enabled,
+> **Moveable, Sortable, AcceptFocus**, exactly the "every window is BORN
+> visible" ctor constant already used in §7.2/§1.4
+> (`tools\research\_checkpoints\uimap-stage3-emu.md` "SECOND FOLLOW-UP", and
+> independently in `tools\research\_incoming\subsystems-02.md` §2.4's field
+> table, both against ctors `0x0099DA15`/`0x0099DB3C`). `GetFlag(1)` /
+> `GetFlag(2)` are the disassembled bodies of `IsVisible`/`IsEnabled`
+> (`tools\research\regionmap\slice-2.md` §0.1 cGZWin vtable map; also
+> `SDK-GAPS.md` line 42). `GetFlag(4 AlphaBlend)`, `GetFlag(0x10000
+> PrivateBuffer)`, and the raw `flags & 0x20000` / `flags & 0x40000` tests
+> are read directly off `PlotComposite`'s disassembly (`0x0099E62D`,
+> `subsystems-02.md` §2.4.2 step 4). `GetFlag(0x80000 MouseTrans)` is in base
+> `IsPointInMe` (`0x0099C97C`; `subsystems-01.md` line 100/226, folded into
+> §2.2 item 2 above). `GetFlag(0x200000 IgnoreMouse)` is in the hit-test
+> router (`0x0099DFA9`, §2.2 item 1; `SDK-GAPS.md` §2 lines 102–103).
+
+**⚠ Two names are not independently confirmed in this repo:
+`winflag_sizeable` (`0x200`) and `winflag_pbuffvid` (`0x100000`).** Both come
+only from the community `cIGZWin.h` `tWinFlag` enum
+(`vendor\gzcom-dll\gzcom-dll\include\cIGZWin.h`), which is otherwise a
+**perfect match** against every one of the 11 bits actually measured above —
+plus two more of its entries that aren't `.UI` keywords at all,
+`WinFlag_UseFade=0x20` (tested in `PlotComposite`'s own visibility gate) and
+`WinFlag_DelayedPlot=0x8000000` (the invalidation-walk wall, §2.4.1 lineage).
+13 of 15 header bits now have a disassembled test site; that is strong
+circumstantial support for the last two, not a measured one. Closing it
+outright needs a live `GetFlag(0x200)` / `GetFlag(0x100000)` capture, or the
+disassembly of whichever setter creates a `PrivateBufferVid` window.
+
+**Token id ≠ runtime bit — a third `.UI` generator cannot rely on the
+former.** The deserializer stores an *interned token id* in each
+`[tokenId][value]` record; only the per-class handler (not the tokenizer)
+decides which flag bit that record's value actually sets. Reordering the
+keyword-registration table would renumber the parse-time ids without moving
+a single runtime bit.
 
 ### 3.2 `area=` is CORNER form, absolute for roots, parent-relative for children
 
@@ -1542,21 +1693,37 @@ claim to scale an icon and a disagreement is a visible defect:
 | Copy | Scope | Where |
 |---|---|---|
 | offline art pipeline | the shipped dats | `tools\upscale\Upscale2x.cs` — `ScaleDim`, `CellUnit`, `kCellCounts = {3,4}` |
-| **runtime ICONSYNTH** | third-party ItemIcons enlarged live at boot | `src\ScaleTier.cpp` — `RoundHalfUp` `:966`, `kCellCounts` `:990`, `CellUnit` `:994`, `ScaleDim` `:1005`, `ResampleCells` `:1040` |
+| **runtime ICONSYNTH** | third-party ItemIcons enlarged live at boot | `src\ScaleTier.cpp` — `RoundHalfUp` `:1270`, `kCellCounts` `:1294`, `CellUnit` `:1298`, `ScaleDim` `:1309`, `ResampleCells` `:1342` |
 
 The runtime copy's header calls itself *"THE OFFLINE UPSCALER'S DIMENSION RULE,
 PORTED VERBATIM"* and carries the worked example that forced it:
 `h = 44, f = 1.5 -> 66`; `CellUnit(44) = 4`; `66 % 4 = 2`, so `down=64 up=68`, a
 **TIE**, and ties go **UP** to 68 — the same 68 the offline build reaches from
-its 88-tall stage art via 0.75. *Different starting point, identical answer.*
+its 88-tall stage art via 0.75. *Different starting point, identical answer* —
+**for that one worked example only. It is not the general case; see below.**
 
-**The two copies are not identical.** The runtime copy has
+**MEASURED 2026-08-23 (register #7, `_tests\Test-ScaleDimParity.py`): THE TWO
+COPIES HAVE DRIFTED, and it is live, not hypothetical.** The runtime copy has
 `kCellCounts = {3,4}` and **no** equivalent of the offline `sNineSliceOnly` /
-`sNoSnapThis` / `sNoHeightSnap` role scoping. Its only inputs are 4-state
-ItemIcon strips, for which `{3,4}`'s LCM is still a multiple of 4, so
-divisibility survives. The control that keeps the two from drifting: they must
-agree on every sheet the runtime path touches at 1.5x, and both must be no-ops
-at 2x/3x.
+`sNoSnapThis` / `sNoHeightSnap` role scoping — confirmed by reading
+`ScaleDim`'s signature (`int ScaleDim(int v, float factor)`, two arguments,
+one overload) and by the absence of any `NoHeightSnap`/`HeightExact` text
+anywhere in `ScaleTier.cpp`. That absence is not academic: `rebuild_namicons.py:43`
+builds the shipped NamIcons packages with `--height-exact-group 6A386D26` —
+`sNoHeightSnap` for exactly the TGI group (`{0x856DDBAC,0x6A386D26}`) the
+runtime ICONSYNTH path exists to enlarge (`ScaleTier.cpp:1656`'s
+`kIconType`/`kIconGroup` check). Run over the real 392-file 1x corpus in
+`tools\itemicons\nam-1x` at f=1.5: **WIDTH agrees on all 392** (the runtime's
+direct cell-first formula and the offline pipeline's plain-`ScaleDim`-then-
+round-to-4 happen to coincide here), but **122 of 392 sheets — every 176×44
+sheet in the corpus, the exact #150 disaster-flyout-thumbnail shape —
+disagree on HEIGHT: offline ships 66, the runtime ICONSYNTH path would
+enlarge the same TGI to 68.** Any third-party ItemIcon of this group NOT
+already covered by our shipped package hits the runtime path and gets the
+wrong (68) height at 1.5x. The control that keeps the two from drifting: they
+must agree on every sheet the runtime path touches at 1.5x, and both must be
+no-ops at 2x/3x — **the no-op control holds (proven, S3); the 1.5x agreement
+control does not (measured FAIL, S5).**
 
 The runtime path also carries **its own** per-cell resampler,
 `ResampleCells` (`src\ScaleTier.cpp:1040`) — the rule that a 4-state strip
@@ -1679,6 +1846,108 @@ Live > scripted ⇒ the extra children are code-created: row 3 (or row 1 if the
 whole window persists hidden). If the children ARE scripted but a *runtime
 re-lay* moves them anyway, data pre-scale cannot win — patch the re-lay
 (v2.37.0).
+
+---
+
+### 4.8 The three "role unknown" code-created windows (register #17) — Photo Album / recorded-animation export cluster
+
+Static disasm (`tools\research\disasm_at.py`, `SimCity 4.exe` 1.1.641.0 Steam,
+ImageBase `0x400000`), byte-verified against the shipped exe. Two of the three
+are now fully identified; the third's builder function is identified but its
+id↔vtable link is not.
+
+**`0x9AEDEF7C` — CONFIRMED: an image-file Open/Browse dialog's content list.**
+Its sole `SetID` site is inside a 656-byte vtable-only method at `0x79D8D0`
+(`funcs.json`: 0 direct callers, i.e. virtual-dispatch only). That method:
+sets its own window's area to `(20,20)-(424,288)` (`vt+0xDC`, the register's
+`SetArea4`), configures a grid via `vt+0x1AC` with args `(0x19,3,0xDC)`
+(25 rows, 3 columns, 220px cell), then gets/creates a helper object through
+the GZCOM singleton getter `0x90DDF1` using a 2-dword class-id pair
+`{0x1AA52EA4, 0x3AA52E64}` (stored at `[this+0xD8]`). Through that helper's
+`vt+0xC` it obtains a NEW child window, `SetID`s it `0x9AEDEF7C` (`0x79D95B`,
+`push 0x9AEDEF7C; call [eax+0x100]`), sizes it to `(parentW-8, parentH-8)`
+(an 8px inset filling the 404×288 parent almost entirely), sets a 4px
+margin (`vt+0x124`, args `4,4,4`), and adds it as the parent's child
+(`vt+0x38`). The SAME helper object is then fed **six placement-constructed
+`cRZString`s, each built from a literal C-string in `.rdata`**, one per
+`vt+0x54` call: `0xAB7DDC`=`"*.bmp"`, `0xAB7DD4`=`"*.png"`,
+`0xAB7DCC`=`"*.gif"`, `0xAB7DC4`=`"*.jpg"`, `0xAB7DBC`=`"*.jpeg"`,
+`0xAB7DB4`=`"*.tga"` (six consecutive 8-byte-apart `.rdata` slots, raw bytes
+read directly, not inferred) — a file-type filter list of exactly the six
+image formats. **This confirms the register's prior guess.** `0x9AEDEF7C` is
+the file-list/content pane of an image-file browser, not the browser's own
+outer dialog (which is `this` in `0x79D8D0` and carries no id found anywhere
+in `.text`/`.rdata`/`.data` by literal scan — likely a computed/hashed id,
+register unknown #10).
+
+**`0xA802B4EB` (vt `0x00AB6010`) — CONFIRMED: the "RecordedAnimations"
+folder browser.** `sub_7F0840` is a get-or-create singleton accessor
+(`GetChildWindowFromID(0xA802B4EB)` via `vt+0x88`; creates only if the
+caller's bool arg is true and none exists). On create it allocates 0x218
+bytes, constructs via `sub_796380` — which stamps `mov dword ptr [esi],
+0x00AB6010` at `0x796399`, directly confirming the vtable — then builds a
+default path as a placement-constructed `cRZString` (vtable `0x00A80810`,
+independently already on record as the `cRZString` vtable in
+`tools\research\regionmap\slice-3.md`/`slice-5.md`/`slice-7.md`) whose text
+is copied from the literal ASCII range `0xABCBA8`..`0xABCBBA` in `.rdata` —
+**`"RecordedAnimations"`** (18 chars, `0xABCBBA` is exactly the byte after
+the last char, i.e. a `(begin,end)` pointer pair into that literal) — then
+appends a trailing `\`. It calls `sub_795100(path, true)` (an Init-style
+method) on the new window, `SetID(0xA802B4EB)` (`0x7F094B`), adds it as a
+child of the manager (`vt+0x38`), and releases. A third reference site
+(`0x7F144D`, not traced further) is presumably the menu/command handler that
+opens it. **Conclusion: `0xA802B4EB` is the load/browse dialog for SC4's
+recorded camera-path ("movie") feature, defaulting to
+`...\RecordedAnimations\`.**
+
+**`0x85202C0E` (register-cited vt `0xAB9980`, `sub_7BC350`) — PARTIAL.**
+`sub_7BC350` itself is fully identified: it reads exemplar/property values
+`0x6A8CD21F, 0xAA8CD25D, 0xAA8CD14A, 0xAA8CD139, 0x4A8CD356(×2), 0x6A8CD222,
+0x8A8CC775(×2), 0xAA8CC64E, 0x8A8CC773, 0x4A8CD34E, 0xA8CD3FF, 0xA8CD401,
+0xA8CD400` from a passed-in property holder via `vt+0x8C`, and its own
+literal art-load at `0x7BC624` is `{0x856DDBAC, 0x1ABE787D, 0x2558A4CB}` —
+already on record in `tools\research\_incoming\sdkgaps-03.md` (the "ONE REAL
+GAP FOUND" passage) as the **Photo Album** panel's 296×222 backdrop, sourced
+from `I-4a8cc5ea` (captions "Photo Album"/"Albums"/"expand"/"Close", scripted
+root `0x0A8CD3EE`). `sub_7BC350`'s single caller (`0x7BCFA1`, `funcs.json`:
+1 caller) resolves its target child via property `0xA8CD3FF` (same Photo
+Album cluster) from a routine that also centers a 640×480 (`0x280×0x1E0`)
+dialog on screen. **`sub_7BC350` is the Photo Album panel's
+content/backdrop-populate routine — that half is closed.**
+
+What did NOT close: the literal id `0x85202C0E` occurs exactly twice in the
+whole image (`68 0E 2C 20 85`, `.text` only, no `.rdata`/`.data` hits) —
+`0x7B753B` and `0x7B7AA7` — and both are `GetChildWindowFromID`-style lookups
+belonging to a *different* get-or-create pair (`sub_7B7530`/`sub_7B7480`)
+whose constructed object's own vtable is stamped **`0x00AB9BF8`**, not
+`0xAB9980`. `0xAB9BF8` and `0xAB9980` are siblings, not the same class: they
+share ~85 of the first 90 vtable slots byte-for-byte (both inherit the
+documented `cIGZWin` layout — identical GZPaint at slot 87) but diverge at
+slots 0–2 (QI/AddRef/Release equivalents), 3, 4, 5, 55, 62, and 88 (Plot —
+`0x7C0220` for the `0xAB9980` sibling vs `0x7B6B30` for the `0xAB9BF8`
+sibling, matching the register's "Plot is per-class" note). `0xAB9BF8`'s
+own `OnCreate` (vtable slot 4, `0x7B7A80`, the function that does
+`SetID(0x85202C0E)`) builds a **standard image/video export-resolution
+preset list** — `160×120`, `320×240`, then successively larger 4:3-ish
+presets gated by comparisons against a live width up to `2048×~1536`,
+via repeated calls to `0x4467A0(w,h)` — behaviourally an "export size"
+picker, which fits the same Photo-Album/recorded-animation-export feature
+family as the other two windows above, but is not itself proven to be
+`sub_7BC350`'s object.
+
+**Net:** the id↔vtable pairing `0x85202C0E`↔`0xAB9980` printed in the
+original register entry could not be re-derived by static means in this
+pass — no code path was found connecting `sub_7BC350`'s caller (`0x7BCFA1`)
+to a literal `SetID(0x85202C0E)`, and the two places that literal DOES occur
+belong to the sibling vtable `0xAB9BF8` instead. `sub_7BC350`'s role (Photo
+Album content populate) is solid regardless of which id its window carries.
+**To close the id↔vtable link fully needs a live instrument**: break on the
+`SetID` call inside whichever function actually creates `sub_7BC350`'s
+target window (or dump `[this]` of the window returned by the property-`
+0xA8CD3FF` lookup at `0x7BCF3C` while the Photo Album panel is open
+in-game) — a static `.text`/`.rdata`/`.data` sweep cannot see a
+non-literal (computed/hashed) id, and register unknown #10 already notes
+89 of 162 `SetID` sites are non-literal.
 
 ---
 

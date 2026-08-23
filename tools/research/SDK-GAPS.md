@@ -70,6 +70,49 @@ Two further names to read from the binary rather than from the header:
   slots (134–138), reached from message ids 7, 8, 10, 11 and 13. Bind mouse
   handlers by slot number and message id, never by header name.
 
+**Slots 95–97 override census (2026-08-23).** Diffed `[vt+0x17C]`/`[vt+0x180]`/
+`[vt+0x184]` across all 111 window-class vtables in
+`tools/uimap/_work/wincensus.json` (`windowVtables` — the exe's whole measured
+population, a superset of the 29 named classes plus the anonymous flyout pair
+`0xAB6AA8`/`0xAB6D88`, the tooltip layer `0xAB6770`, the gauge class
+`0xAB46A0`, and every other detected window vtable). **Zero overrides**: every
+one resolves to the same three base addresses (`0x0099C6F8`/`0x0099D57E`/
+`0x0099CF6A`). These three virtuals are non-polymorphic in this build — no
+class, named or anonymous, customises them — so their semantics ARE the base
+`cGZWin` bodies below, with no per-class variation to reconcile.
+
+**What the base bodies do (disassembled 2026-08-23; confirms the community
+header's names for this band and extends them with the actual logic):**
+
+- **slot 95 `SetBufferToDrawTo()`** (`0x0099C6F8`, zero-arg). Resolves
+  `[this+0x68]` (bufferDrawnInto) to this window's own `GetPrivateBuffer()`
+  (slot 101, `[this+0x64]`) when non-null; otherwise walks `GetParentWin()`
+  (`vt+0x2C`) ancestor-by-ancestor until one either owns a private buffer or
+  itself carries `WinFlag_DelayedPlot` (`0x8000000`, tested via `GetFlag`
+  `vt+0x10C`) and inherits that ancestor's buffer. If the walk exhausts with
+  neither (the tree root's case) it falls back to the `cIGZGraphicSystem`
+  service (`kGZGraphicSystem_SystemServiceID 0xC416025C`, `REGION-SCREEN.md`
+  §"`[0x00B43C9C]`") via helper `0x00449560`. Also resolves `[this+0x6C]`
+  (draw context) by `QueryInterface(0xAB300B2B)` on whichever buffer was
+  found — a new iid, not otherwise documented in this repo. **Ends by calling
+  its own slot 98** (`SetAreaToDrawToRecursive`, `vt+0x188`): rebinding the
+  buffer always cascades into rederiving areaToDrawTo down the whole subtree.
+- **slot 96 `SetBufferToDrawToRecursive()`** (`0x0099D57E`). Calls slot 95 on
+  itself, then walks the child list at `[this+0x44]` calling slot 96 (itself,
+  `vt+0x180`) on every child — a literal recursive descent; the header's
+  `…Recursive` suffix is mechanically correct, not just nominal.
+- **slot 97 `SetAreaToDrawTo()`** (`0x0099CF6A`) — already independently
+  anchored via the `GZWinBMP` `areaToDrawTo` field write (§2 above).
+  Disassembly confirms both branches: private buffer non-null →
+  `[this+0x24..0x30] = (0,0, r−l, b−t)` (own w/h only); private buffer null →
+  the own rect walked up through `GetParentWin()`, accumulating each
+  ancestor's L/T, stopping at the **same** condition as slot 95's buffer
+  search (ancestor owns a private buffer, or ancestor carries
+  `WinFlag_DelayedPlot`) — so a window's buffer and its areaToDrawTo always
+  agree on which ancestor is "the" drawing surface. Slot 98
+  `SetAreaToDrawToRecursive` (`0x0099D5B7`) is the slot-96 recursion pattern
+  applied to slot 97 (self, then children).
+
 **Workaround.** Index by number from the table above. The window-vtable
 population scan is: whole-`.rdata` search for `[vt+87*4] == 0x0099BE4C` with
 `[vt]` and `[vt+88*4]` inside `.text` → 115 hits, the complete population.
@@ -425,7 +468,12 @@ liveness contract the game itself follows.
 - **The loader instantiates every depth-0 root** of a script regardless of
   which node the `rootWinId` selects — the id may name **any** node, not just
   a root (measured: `0x00004200` is a depth-1 child passed as the winId at
-  `0x007EEAE6`).
+  `0x007EEAE6`). The corpus-wide candidate pool for this pattern is measured
+  (`tools\uimap\depth_ladder.py`, 2026-08-23): **1,296 distinct ids sit at
+  depth ≥1** across the 339-file corpus. Which of those the compiled code
+  actually passes as a winId is unmeasured beyond the 7 documented pairs in
+  `coverage-matrix.md` §0.6 (1 of 7 is `0x00004200`) — needs a disassembler
+  sweep of the winId-loader thunk's callers, not the `.UI` corpus.
 - A fourth transient host: the app frame `0x6104489A` itself takes children
   (the missing-plugin-packs warning `0x2A5CFB2C`, added after the 3D view and
   therefore painting over it).
@@ -515,6 +563,19 @@ Consequence: a builder census keyed on the pushed ids lists `0x451`, `0x6D`,
 - **There are 13 `winflag_*` names, not 14** — 11 universal (5,964/5,964)
   plus `winflag_acceptfocus` (5,852) and `winflag_alphablend` (5,845). The
   exe registers exactly 13.
+- **The 13 names' runtime BITS are now pinned** (`SC4-UI-ENGINE.md` §3.1a) —
+  the `0xF01A..0xF026` ids above are parse-time tokens only, not the flag.
+  Measured via disassembled `GetFlag`/`SetFlag` call sites (real slots
+  `vt+0x10C`/`vt+0x110`, not the vendor header's `+0x108`/`+0x10C`):
+  `visible`=`0x1` (`IsVisible`=`GetFlag(1)`), `enabled`=`0x2`
+  (`IsEnabled`=`GetFlag(2)`), `alphablend`=`0x4`, `moveable`=`0x100`,
+  `sortable`=`0x800`, `pbuff`=`0x10000`, `pbufftrans`=`0x20000`,
+  `pbufferase`=`0x40000`, `mousetrans`=`0x80000`, `ignoremouse`=`0x200000`,
+  `acceptfocus`=`0x8000` — 11 of 13 with a disassembled test site.
+  `sizeable`=`0x200` and `pbuffvid`=`0x100000` are header-only (not
+  independently disassembled here) but consistent with a header that is
+  otherwise 13/13 correct including two non-`.UI` bits (`UseFade`=`0x20`,
+  `DelayedPlot`=`0x8000000`).
 - **`font=4888` is `font=default`.** The two numeric spellings in the stock
   corpus (`font=4888` ×45, `font=0x00001318` ×14) are one token, `0x1318`,
   which is the loader's own id for the keyword `default` (registration
@@ -808,6 +869,57 @@ The standing warning governs: the right class is not the right window.
   referenced by no exemplar and no `.UI`. The 89 px template width is the
   sidebar strip width; the group constant sits at `0x78EE15`, `0x7ECB50` and
   `0x7F038F`.
+- **Full residual census (register #9).** Manifest: `tools/dbpf/extracted-png-tgi.csv`
+  (2,280 rows, type `0x856DDBAC` only — byte-identical to
+  `tools/dbpf/extracted/SimCity_1/extract-manifest.csv`). Union of the four
+  known-bound sets — `.UI` refs (`refmap.csv`, 431 distinct `{gid,iid}`),
+  ItemIcons (`tools/itemicons/_work/item_icons.csv`, 266 distinct instances
+  in `6a386d26`), HTML `sc4://` refs (`html-image-refs.txt`, 59 pairs), and
+  the **shipped** `CODE_BOUND_TGIS` in `build_selective_safe.py` (341
+  distinct pairs, evaluated in-process — not the illustrative table in
+  `SC4-UI-ENGINE.md` §4.2) — is 1,009 pairs, of which **983 resolve to a
+  real manifest row and 26 do not**. The 26 are all already-named
+  dangling/wrong-group refs: 21 unused instance numbers inside the
+  `140155B4..F7` span plus `ec1392ac` (22 total — matches
+  `predictive-defect-sweep.md`'s independently-logged "missing 2x asset,
+  skipped: 22" exactly), the two Select-A-Sim/U-Drive-It stand-ins
+  `ea32f104`/`6b998f30`, one third-party (CAM_Intro.dat) dangling ref
+  `ea7f0eae`, and the wrong-group `{82b9b75b,e2b66db8}` above. **2,280 − 983
+  = 1,297 real PNGs with no currently-known binding path** — not the ~1,850
+  figure elsewhere in this doc, which only subtracts `.UI` refs and does not
+  net out paths 2/2b/3/4; of the 1,853 PNGs with no `.UI` ref, only 556 are
+  actually covered by a known non-`.UI` path, leaving 1,297 (70%) genuinely
+  unaccounted. By group: `1abe787d` 704, `46a006b0` 257, `ab7e5421` 93
+  (100%, already named above), `6a386d26` 90 (36 = the `0xMM0000NN` family
+  above, 54 unaccounted), `00000001` 61 (98% — a twin-coverage gap, not new
+  art: only `14416315` is `.UI`-referenced in this group), `ca133ecb` 41
+  (100%, the JFIF tutorial screenshots — no binder found for any of them),
+  `22dec92d` 27 (69%, entirely `0x00xxxxxx`-structured, unaccounted),
+  `6a1eed2c` 20 (100%, already named above), `a9179251` 4 (100%, already
+  named above).
+- **Inside the twin groups the residual clusters into named 2-byte
+  sub-families** (leading 4 hex digits, summed across `46A006B0` +
+  `1ABE787D` + `00000001`): **`1441xx` 288** — largest single bucket,
+  mechanism not identified; **`1401xx` 98** — same numeric family as the
+  shipped `140155B4..F7` span but with different mid-bytes, not yet staged;
+  **`1421xx` 85** — this is the **Mayor Mode mood/rating band already
+  decoded instance-by-instance in `MAYOR-MODE.md`** (`14215e20..2c`,
+  `30..35`, `40..46`, `50..55`, `60..64`, `70..76`, `80..86`, `d0..d5`,
+  `dd`) but **absent from `CODE_BOUND_TGIS`** — check whether Mayor Mode
+  art ships through a separate package script before assuming this is
+  unstaged; **`1431xx` 10** — extends the 3-member alert-border family
+  (`14315E60/61/62`) already in `CODE_BOUND_TGIS`. A second cluster is
+  **`ecxxxxxx`, 130 residual** (74 `1abe787d` + 56 `46a006b0`), in two
+  dense runs: `ec1392[98-ad]` (~22, already covered by
+  `html-image-refs.txt` for the `46A006B0` copy only — the `1ABE787D`
+  twin copy is the true residual, same twin-coverage gap as `00000001`
+  above) and `ec212d[80-9f]`/`ec212e[01-21]` (106, plus lone `ec238e71`)
+  — **no existing doc names this run; it is the next `.text` imm32 scan
+  target.** A third pattern recurs across `1abe787d`/`46a006b0`/
+  `ab7e5421`/`ca133ecb`/`6a1eed2c`: instance IDs sharing a low nibble on
+  the top byte across the even/odd top-nibble cycle (e.g.
+  `0b/2b/4b/6b/8b/ab/cb/eb`, or the `a`/`c` equivalents), hundreds of
+  instances total, cause not identified.
 - **Path 4 (runtime-generated pixels) has two sub-shapes:** 4a — no `image=`
   at all (invisible to every ref scan); 4b — dangling `image=` (counted,
   warned, and its `imagerect` is editable — right for the U-Drive-It pickers,

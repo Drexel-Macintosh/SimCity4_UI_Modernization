@@ -159,6 +159,18 @@ Three attributes control it (SC4D wiki property table plus empirical checks):
   standard styles the engine fits the state cell to the button area at least
   horizontally. Shared button strips are therefore handled as SHARED art: cloned
   and retargeted rather than replaced in place.
+  **Vertical axis CLOSED 2026-08-23** (byte-verified disassembly, not corpus
+  inference — the corpus alone cannot distinguish the two hypotheses, since
+  `pngHeight == buttonHeight` in every measured case regardless of which
+  mechanism is true): `GZWinBtn`'s draw (`0x9B167D`→`0x9B1541`) sizes the
+  destination cell from fields `[this+0xf8]/[this+0xfa]`, which
+  `sub_9B09B7` (called from `SetArea`) sets to the image interface's own
+  per-state rect width/height (`call [iface+0xbc]`) — **never** from the
+  window's `GetW()`/`GetH()`. Height is SOURCE-cell-sized, exactly like
+  width; a resize repositions the icon (it tracks the window's absolute
+  origin) but never stretches it vertically. Full mechanism, field map and
+  the one gated (unreachable in practice) alternate branch:
+  `SC4-UI-ENGINE.md` §2.7.
 
 ## 4. Sharing across screens (the blanket-2x killer)
 

@@ -148,7 +148,113 @@ and the out-pointer written by the [edx+0x3C] call.
   pixel-fixed predicts equal px. The prediction-vs-measurement pair is the
   #188-law acceptance test.
 
-## 6. Dead ends and unknowns
+## 6. THE S3D FORMAT — HAND-DECODE (register #28, 2026-08-23)
+
+`SimCity_1.dat` reports this resource's on-disk size as 244 bytes (offset
+140503203) — but the archive's compression directory (`DIR`, type
+`0xE86B1EEF`) lists `{T=0x5AD0E817,G=0xBADB57F1,I=0x29F10000}` with declared
+**uncompressed size 336**, and the 244 on-disk bytes carry the QFS/RefPack
+header (`10 FB` signature at byte 4, 3-byte big-endian decompressed-size field
+at bytes 6-8 = `0x000150` = **336**, agreeing with the `DIR` record
+independently). **The 244-byte figure in §1.4/§3 above and in the register is
+the compressed size; the format lives in the 336-byte decompressed buffer.**
+Decompressed here with a direct Python port of the `QfsDecompress` already in
+`tools\dbpf\DbpfExtract.cs`; reproducible via `python
+tools\dbpf\decode_s3d_plate.py` (extractions saved alongside it in
+`tools\dbpf\extracted-s3d\`).
+
+All offsets below are into the **336-byte decompressed buffer**.
+
+**Chunk chain** — a `tag(4 ASCII) + length(u32 LE, counts its OWN 8-byte
+header + body)` header repeats end-to-end: for every chunk except `ANIM`, the
+computed `body_end` lands exactly on the next tag's first byte with zero gap
+or overlap — measured, not assumed:
+
+| tag | @offset | declared len | body span | body (hex) |
+|---|---|---|---|---|
+| `3DMD` | 0 | *(no length field — see below)* | — | — |
+| `HEAD` | 8 | 12 | 16–19 (4B) | `01000500` |
+| `VERT` | 20 | 100 | 28–119 (92B) | *(see vertex table below)* |
+| `INDX` | 120 | 30 | 128–149 (22B) | `01000000000002000600000001000200030000000200` |
+| `PRIM` | 150 | 26 | 158–175 (18B) | `010000000100000000000000000006000000` |
+| `MATS` | 176 | 75 | 184–250 (67B) | `01000000ab00000004030100ff7f0000000000010000e51e0303000021000200` + string |
+| `ANIM` | 251 | **9301 — ANOMALOUS, see below** | real span 259–311 (~53B) | *(see below)* |
+| `PROP` | 312 | 12 | 320–323 (4B) | `00000000` (empty) |
+| `REGP` | 324 | 12 | 332–335 (4B) | `00000000` (empty — ends the file exactly at byte 335) |
+
+- **Bytes 0-7**: magic `3DMD` (4 ASCII bytes) followed by an **unresolved**
+  4-byte field (`68 25 00 00` = 9576 LE) that is NOT a chunk length (9576 >>
+  336) — likely a version/type/model-id field outside the tag+len convention.
+- **`HEAD` body** (4 bytes, `01 00 05 00`): two `u16` = `{1, 5}`, meaning
+  unresolved.
+- **`VERT` body** (92 bytes) — **fully decoded as a 4-vertex textured quad**:
+  - `u32` @28 = **1** (a leading `=1` field recurs at the start of `VERT`,
+    `INDX`, `PRIM` and `MATS` bodies — plausibly a per-chunk sub-record
+    count, all `1` because this model has exactly one vertex/index/primitive/
+    material group).
+  - `u16` @32 = 0, `u16` @34 = **4** → **vertex count = 4**.
+  - 4 bytes @36-39 (`01 40 00 80`) — unresolved (does not parse as a clean
+    float32; not yet attributed).
+  - **20× `float32` LE @40-119**, stride 20 bytes/vertex = 5 floats/vertex
+    (X, Y, Z, U, V), confirmed by the paired-corner symmetry of a flat quad:
+
+    | vtx | X | Y | Z | U | V | offset |
+    |---|---|---|---|---|---|---|
+    | 0 | 4.586182 | 14.457275 | 4.235352 | 0.993862 | 0.703125 | 40-59 |
+    | 1 | −3.037231 | 14.457520 | 7.393311 | 0.980469 | 0.703125 | 60-79 |
+    | 2 | −3.037354 | 1.753174 | 7.393311 | 0.980469 | 0.720982 | 80-99 |
+    | 3 | 4.586304 | 1.753174 | 4.235596 | 0.993862 | 0.720982 | 100-119 |
+
+    X, Y, Z and U each take exactly **two** distinct values shared by
+    diagonally-paired corners — the signature of a flat rectangular plate,
+    not an arbitrary mesh. (These are raw model-space coordinates; they were
+    NOT tested against the exemplar's `{8,3,1}` m `OccupantSize` — different
+    space, no claim of a match either way.)
+  - **`INDX` body** (22 bytes): `u32` @128=1 (leading-1 pattern again), `u16`
+    @132=0 / `u16` @134=2 (unresolved pair), `u16` @136 = **6** → index
+    count, then **6× `u16` indices @138-149 = `[0,1,2,3,0,2]`** — two
+    triangles, `(0,1,2)` and `(3,0,2)`, i.e. the quad split on the 0–2
+    diagonal. Consistent end-to-end with `VERT`'s 4 vertices.
+  - **`PRIM` body** (18 bytes): `u16` sequence `[1,0,1,0,0,0,0,6,0]` — the
+    `6` at offset 172 matches `INDX`'s index count; the remaining fields
+    (plausibly primitive-type / material-index / first-index) are
+    unresolved.
+  - **`MATS` body** (67 bytes): `u32` @184=1 (leading-1 pattern), `u32`
+    @188=171 (`0xAB`, unresolved), 24 unresolved bytes @192-215 (a `FF 7F`
+    byte pair @196-197 is *suggestive* of an alpha/blend value but
+    unconfirmed), then a **1-byte length prefix `0x22`=34 @216** immediately
+    followed by a **34-character un-terminated-until-next-byte ASCII string
+    @217-249**: `"29F10000_ConnectArrow_Ui8x1x3_Z1S"` (the model's own hex
+    instance id + the exemplar family/zoom/orientation name), then a NUL
+    @250. This is an independent, in-file confirmation of the TGI
+    attribution in §1 above — the model names itself.
+  - **`ANIM` — the one anomaly.** The `u32` immediately after the tag
+    (`55 24 00 00` @255-258 = 9301) does **not** fit the tag+len convention
+    that holds exactly for every other chunk in this file (only ~53 bytes
+    remain before `PROP` @312, not 9301−8). Whether this field means
+    something else entirely for `ANIM` records (a different unit, a
+    hash/type id) or is simply wrong is **undetermined** — flagged, not
+    guessed at. The real ~53-byte body decodes cleanly regardless: `u16`
+    @259=1, `u16` @261=30, `u32` @263=3, 6 zero bytes @267-272, `u16`
+    @273=1, then a **`u16` length prefix @275=27** followed by a
+    **27-byte NUL-terminated string @277-303**: `"ConnectArrow_Ui8x1x3_Z1S_0"`
+    (same family name + a `_0` take/frame suffix), then 8 more zero bytes
+    @304-311.
+  - **`PROP`/`REGP`**: both empty placeholders (4 zero-byte bodies each);
+    `REGP`'s body ends at byte 335, the last byte of the file — the chunk
+    chain tiles the entire 336-byte buffer with no slack.
+
+**What this settles for register #28**: a real, byte-cited partial decode of
+the Maxis S3D chunk format (`3DMD`/`HEAD`/`VERT`/`INDX`/`PRIM`/`MATS`/`ANIM`/
+`PROP`/`REGP`, 8-byte tag+length headers, a recurring leading `=1` sub-count,
+a 4-vertex/6-index/1-primitive/1-material textured quad) from one concrete
+instance. **Not decoded**: the `HEAD` body's second field, the `VERT` body's
+unresolved 4 bytes before the float array, most of `MATS`'s numeric fields,
+and — the standout anomaly — what `ANIM`'s post-tag `u32` actually encodes.
+No general S3D reader/writer exists yet; this is one instance's fields, not a
+schema proven across other S3Ds.
+
+## 7. Dead ends and unknowns
 
 - The meaning of edi ∈ {3,7,0xB} (network types? edges?) — unproven.
 - The owning class's NAME: `cSC4NeighborConnection` exists at .rdata 0xA896B0
@@ -162,6 +268,6 @@ and the out-pointer written by the [edx+0x3C] call.
 - vt slot index of 0x6D4860 within its exact vtable base (the 0xAB1CB0 vs
   0xAB1DD8 table boundary was not pinned precisely).
 
-## 7. Census row replacement (§3)
+## 8. Census row replacement (§3)
 
 | 15 | neighbor-connection arrows at city edges | marker occupant from exemplar `{6534284A, C977C536, 29F10000}` "UI8x1x3_ConnectArrow" — OccupantSize {8,3,1} m + own S3D `{5AD0E817, BADB57F1, 29F10000}` + LTEXT "Neighbor Connection"; sole creator `push 0x29F10000` at 0x6D4A66 (fn 0x6D4860, +15.5f cases {3,7,0xB}); drawn via the renderer direct-read iid 0xE4FDA3D4 (QI 0x6CE260 → this+4). NOT effects / signpost quad / marker strip (`tools\research\overlays\row-15-neighbor-connection-arrows.md`) | n-a presumed (world-anchored, metres) — eyes-on/probe owed | PARTIAL |

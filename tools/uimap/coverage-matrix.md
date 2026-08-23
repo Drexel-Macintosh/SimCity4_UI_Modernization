@@ -284,8 +284,40 @@ loads script `0x2bc9060f` and asks for **`0x00004200`, a depth-1 child**
 (`area=(246,-320,519,-143)`). Positive control: the same depth-tracked scan
 returns depth 0 for six other script→winId pairs. Also: `I-6a9455c9` has **two**
 depth-0 roots (`0x27df05bf` and `0x27df05be`, both 46x97), so "the root" is
-undefined for that script. **Re-running the ladder over all depths is cheap and
-should be done.**
+undefined for that script.
+
+**Ladder re-run over all depths — 2026-08-23, `tools\uimap\depth_ladder.py`.**
+Same corpus (339 files), same tag grammar and latin-1 decode as
+`coverage_rederive.py`; depth accounting balanced (`final_depth==0`,
+`min_depth==0`) on every file. Result:
+
+| depth | id-bearing nodes |
+|---|---|
+| 0 (the census denominator) | 337 |
+| 1 | 2010 |
+| 2 | 1324 |
+| 3 | 641 |
+| 4 | 5 |
+
+**1,296 distinct ids exist at depth ≥1 somewhere in the corpus** (3,980
+id-bearing occurrences) — that is the full candidate set of nodes a loader
+call could in principle address as a non-root winId, the way `0x00004200` is
+proven to be. `0x00004200` itself reproduces at **depth 1** in all three
+declaring scripts (`I-0b72f276`, `I-2bc9060f`, `I-ea287193`,
+`area=(246,-320,519,-143)`), matching the prior measurement exactly.
+
+**This closes the corpus-side half only.** Cross-checked against the 7
+script→winId pairs FINAL-3-PERCENT.md §4.0(b) pulled from disassembly, all 7
+reproduce their documented depth (6 at depth 0, 1 — `0x00004200` — at depth 1).
+That 7-pair set remains the **entire measured universe of code loader call
+sites** in the repo; it is not an exhaustive sweep of `.text`, so "1 of 7 is
+depth-1+" is not a rate that generalises. **The code-side count — how many
+loader call sites in the compiled binary actually target one of the 1,296
+depth≥1 candidate ids — is still open** and requires enumerating every caller
+of the winId-loader thunk family (`sub_5F9480`-style, per §4.0(b)) across
+`.text`, e.g. via `funcs.json`'s caller-count table plus a disassembler
+reading each call's pushed winId argument — not derivable from the `.UI`
+corpus alone.
 
 ### 0.7 Two data gaps found in passing
 

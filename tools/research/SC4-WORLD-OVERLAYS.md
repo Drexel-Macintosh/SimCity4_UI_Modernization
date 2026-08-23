@@ -265,8 +265,25 @@ the click target with it.
   only the inner glyph takes the click, not the grey around it.
 - Pick results are filtered by an **occupant-type whitelist** — `Accept` fn
   **`0x4B8880`**, accepting **5 automata families** **plus** the signpost
-  occupant accepted at `0x4B8947`. The compare chain at `0x4B8880` names the
-  five family ids.
+  occupant accepted at `0x4B8947`. **Compare chain disassembled** (offline,
+  `disasm_at.py 0x4B8880`, byte-verified against the shipped exe): the
+  candidate's type (`call [vt+0x1C]` at `0x4B8889`, result in eax) is tested
+  against five imm32 — `0x74758926` (`cmp` at `0x4B888C`), `0x278128A0`
+  (`0x4B8895` — independently corroborated as an occupant's own live
+  `GetType()` in the `#188` offer-proxy capture, `REGRESSION.md:11934`),
+  `0x2890D4DE` (`0x4B889C`), `0xA823821E` (`0x4B88A9` — the automata
+  **prop-family** type id: prop binder `0x496950`, ctor write
+  `CodePatches.cpp:5481/5504`, `REGRESSION.md:11814/11991/12009/12318`), and
+  `0xC772BF98` (`0x4B88B0`). Four of the five (`0x74758926`, `0x278128A0`,
+  `0x2890D4DE`, `0xC772BF98`) accept unconditionally, falling through to
+  `0x4B88BB`. `0xA823821E` does not — it branches to `0x4B8921`, which QIs the
+  candidate for iid `0xE9793A65` (the marker interface, array literal
+  `CodePatches.cpp:5221`) and re-checks *that* QI'd object's own type
+  (`call [vt+0x1C]`) against `0xAB72FBB3` (`cSC4SignpostOccupant`, the imm32
+  at `0x4B8947`) before accepting. This is the documented "plus the signpost"
+  clause: signposts report the same generic prop-family type id as other
+  automata props and are admitted only through this nested QI re-check, not
+  as a sixth top-level family.
 - Helper `0x4B8A00` wraps the pick; its sole caller chain is this control's
   **two mouse handlers** — the surgical place for a multi-sample pick detour
   if a visual ever grows without its click following.
@@ -328,6 +345,45 @@ multiplies all 5 table floats by the tier factor (1.5x →
 {0.75, 1.125, 1.5, 2.25, 3.0}), verify-before-write against the stock bit
 patterns, single VirtualProtect span, "MARKERZOOM table x1.50" log line. It
 reaches `0x5F5FB0`'s output — the route-trace family of §3 row 16.
+
+**SIBLING TABLES (register #15, closed 2026-08-23).** An offline `.rdata`
+byte sweep for tables of this shape (isolated exactly-5-entry monotonic
+windows, then `find_imm.py` to find each one's `.text` consumer) found three
+more families, none sharing a consumer with `0xAA523C` — patching this table
+still reaches only the marker-strip builder:
+
+- **`0xA88170`** = `{20.0, 30.0, 40.0, 50.0, 60.0}` (screen px). Sole
+  consumer `0x46CD03` (`mov edx,[ecx*4+0xA88170]`) inside a module built
+  around px→world helper `0x46C8B0` — the CSI-*adjacent* dispatch-marker
+  drawer, NOT this section's builder. Already logged in
+  `CITY-SITUATION-INDICATORS.md:149` and `_tests/REGRESSION.md:13247`
+  (flagged there as a plausible fit for the still-open #188 balloon, not yet
+  proven on screen — a scaled-table test produced no visible change).
+- **`0xAB4330`** = `{1.0, 2.0, 4.0, 8.0, 16.0}` (doubling ramp). Sole
+  consumer `0x751CB5` (`fmul dword ptr [ecx*4+0xAB4330]`) inside function
+  `0x751C80`, indexed by the **global** zoom/level var `[0xB4C70C]` (not a
+  per-object field) and gated by a per-object level cache
+  (`[ecx+0x14]` vs `[0xB0D700]`) plus a 4-way jump table at `0x751EB8` keyed
+  on `[ecx+0x18]`. New address — no other doc in this repo names function
+  `0x751C80`; module/subsystem unidentified (shape suggests an LOD/mip
+  scale-by-zoom helper, unconfirmed).
+- **`{8, 16, 32, 73, 146}` (int32)** exists as FOUR byte-identical copies:
+  `0xAA2B3C`, `0xAB8BCC`, `0xABACE0`, `0xABD668`. `0xABACE0` is the known
+  region-camera Z-depth table (`CodePatches.cpp:193`, sole consumer
+  `0x7CBE50` inside `sub_7CBE40`). `0xABD668` is a NEW consumer: 8 `.text`
+  references, all inside one function spanning `0x8087AA`-`0x8088E4`, each
+  `fild dword ptr [edx*4+0xABD668]` immediately followed by `fdivr` against
+  one of five other `.rdata` constants (`0xABD710`, `0xA95690`, `0xA8D45C`,
+  `0xA8E178`, `0xABD70C`) and stored to fields `[esi+0x14..0x38]` — a
+  different module from the region camera. `0xAA2B3C` and `0xAB8BCC` return
+  **zero** `.text` imm32 hits — inconclusive: either dead/unfolded duplicate
+  constant data (plausible in a 2003-era build with no read-only-data
+  folding) or reached only through non-literal/indirect addressing, which a
+  raw byte scan cannot see. Neither is proven live.
+
+Instrument: `find_imm.py <VA>` (sole-consumer proof) plus a Python PE-section
+byte sweep of `.rdata` for isolated exactly-5-element monotonic runs (float
+and int32); both are static reads of the shipped exe, no live session.
 
 **INSTRUMENT.** `SPSTRIP` (§4) — the strip-builder hook that rides SPPROBE
 mode 3, and the positive control for this lever.
@@ -397,7 +453,7 @@ the table**; add rows the moment a new in-world visual is reported.
 | 12 | plop direction arrow on a held lot | **Effects manager (§2.1) + EFFDIR (§2.2)** — named effect `Lot_Direction_Arrow`, spawned by the Lot Plop tool's preview refresh; zoom-gated to close zooms by three per-zoom child copies. NOT an S3D prop (control: a sweep of all 1,957 named S3Ds across the shipped archives found zero arrow/direction/compass names) | n-a (world-anchored, zoom-ramped) |
 | 13 | zone drag rectangle + zone color decals | **Lot-display CELL-QUAD BUILDER** (renderer world, code-generated — not effects, not a window): per-lot quads built by `0x6CC970` (vt slot 43 = +0xAC of vtable `0xAB1B98`; QI `0x6C3B80`) | n-a — world-anchoring derived from the builder |
 | 14 | god-mode terraform brush ring (in-world cursor circle) | **Effects manager (§2.1) — the cursor/brushEffect family, EFFDIR-defined (§2.2)**: named terrain-decal effects `mountain_tool_active` / `valley_tool_active` / `level_tool_active` / `smooth_tool_active` (+`_inactive` twins), each a parent with `_normal`/`_invert` decal children; `mayorlandscape_tool_*` = the mayor-mode landscape brush. Distinct from the WarriorUI terraform ring and the disaster-flyout ring sprite | n-a (world-anchored decal) |
-| 15 | neighbor-connection arrows at city edges | **THE MARKER-OCCUPANT FAMILY (§2.5) — and the family's Rosetta stone.** Exemplar **`UI8x1x3_ConnectArrow_29F1` {0x6534284A, 0xC977C536, 0x29F10000}** carrying **OccupantSize {8,3,1} m** at exemplar bytes 0x58/0x5C/0x60, read by the marker factory via property **`0x27812810` @`0x4A25D3`**; binds its own S3D `{0x5AD0E817,0xBADB57F1,0x29F10000}`; created by `0x6D4860` (push `0x29F10000` @`0x6D4A66`, +15.5f nudge `.rdata 0xAB1CA8`). **The name encodes the size**, and the size is exemplar data for this family — row 1's size, by contrast, is nine inline `imm32` floats inside `.text` | n-a (world units, no px imm, no zoom table on the path) |
+| 15 | neighbor-connection arrows at city edges | **THE MARKER-OCCUPANT FAMILY (§2.5) — and the family's Rosetta stone.** Exemplar **`UI8x1x3_ConnectArrow_29F1` {0x6534284A, 0xC977C536, 0x29F10000}** carrying **OccupantSize {8,3,1} m** at exemplar bytes 0x58/0x5C/0x60, read by the marker factory via property **`0x27812810` @`0x4A25D3`**; binds its own S3D `{0x5AD0E817,0xBADB57F1,0x29F10000}` (244B on-disk/QFS-compressed, 336B decompressed — hand-decoded chunk-by-chunk in `row-15-neighbor-connection-arrows.md` §6, register #28); created by `0x6D4860` (push `0x29F10000` @`0x6D4A66`, +15.5f nudge `.rdata 0xAB1CA8`). **The name encodes the size**, and the size is exemplar data for this family — row 1's size, by contrast, is nine inline `imm32` floats inside `.text` | n-a (world units, no px imm, no zoom table on the path) |
 | 16 | traffic/commute route overlay (query route trace) | **Signpost-occupant module** — GZCOM clsid `0xAB72FBB3`, ONE 0x590-byte class (ctor `0x5F5510`). **Sizing:** quad px = per-item pixel size (item vt+0x14, read `0x5F69CB`) → px→world `0x7F6690` on live view `[0xB43DD8]` (call `0x5F69E8`) → × **`0xAA523C[zoom]`** (`fmul` `0x5F69ED`; table read `fld [ecx*4+0xAA523C]` @`0x5F6064`) | pixel-derived ⇒ co-scaled by MARKERZOOM (`ApplyMarkerZoomScale`) |
 | 17 | in-world lot signs (casino/highway/player signs) | S3D lot props — world objects, not UI | n-a |
 | 18 | ambient shadows (windmill, helicopter) | effects manager child transforms (§2.2) | n-a (world-anchored) |
