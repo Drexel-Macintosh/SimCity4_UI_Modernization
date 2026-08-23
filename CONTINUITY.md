@@ -31,6 +31,20 @@ on screen. Not yet publicly released.
 | Deploy? | `_tests\Deploy-OnGameClose.ps1` — waits for the game to close. **The game runs ELEVATED; never kill it.** |
 | Prove a deploy? | `_tests\Test-DatIntegrity.ps1` (deployed==built hashes) + the python gates in `_tests\` (each self-describes; all must exit 0). |
 
+## Work in flight (2026-08-23): sub-flyout arm alignment
+
+The active defect is the sub-flyout (second-level flyout) arm attaching to
+the wrong strip row at scale factors above 1x — Sports Grounds (cnt=5) and
+Plazas wrong, Build Park (cnt=11) and Green Spaces (cnt=12) right, at 2x.
+The user's law: bottom-anchor every sub-flyout ("build from that bottom and
+fill in above it"). Key session finding: placement is decided ENTIRELY by
+the birth hook — the sweep dock gate never fires — and the birth hook's
+ring auto offset (`gSubRingAutoY = legDY - dy`) is a different quantity
+than the sweep formula was fed. A first bottom-anchor attempt regressed
+(ignored the 232px bornshift in the approved reference) and was rolled
+back; v4.0.35 is the deployed state. Full diagnosis, measurements, failed
+attempts, and the corrected next move: `HANDOFF-2026-08-23.md`.
+
 ## Work in flight (2026-08-20): the Graphic Options selector
 
 The active feature is an in-game settings panel injected into the game's own

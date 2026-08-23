@@ -1007,6 +1007,12 @@ namespace
 	// StripShiftRows: RETIRED (v4.0.30). Moving the strip independently
 	// breaks bar+strip alignment. Kept as an ini variable but never applied.
 	int     gSubStripShiftRows = 0;
+	// ContainerShiftRows (v4.0.31): RETIRED (v4.0.33). Replaced by the
+	// mathematical formula in SubContainerShiftFromGeo() which computes the
+	// exact shift from ring geometry at all scales and all counts.
+	int     gSubContainerShiftRows = 0;
+	// Fine-tune pixel offset added to the row-based shift (positive = more UP).
+	int     gSubContainerShiftFine = 0;
 	// #134: SUBGEO sits AFTER the atNative/atTarget gate, so a container the
 	// sweep does not recognise logs nothing at all - which is exactly the case
 	// that needs explaining. SUBCAND logs every candidate button BEFORE that
@@ -1015,6 +1021,7 @@ namespace
 	// kSubNativeDX (the game's own native container offset) was measured at
 	// f=2 and ASSUMED factor-independent, and 3x says otherwise.
 	int     gSubCandLog = 0;  // #134: pre-gate candidate dump, 24 lines max
+	int     gSubShiftLog = 0; // SUBSHIFT diagnostic, independent counter
 	int     gSubRingBltX = -1;
 	int     gSubRingBltY = -1;
 	int     gSubRingBufW = -1;
@@ -1241,6 +1248,73 @@ namespace
 	{
 		return gSubDockDY != kIniAuto
 			? gSubDockDY : kSubPlaceBias - RoundHalfUp(26.5 * gTierF);
+	}
+	// v4.0.33: container shift for sub-flyout arm alignment.
+	// The arm meets the strip at a row determined by the ring's buffer
+	// position. At 1x the arm meets at kTargetFromBottom rows from the
+	// visible bottom (measured ≈ 2.70 for all tall Build menus). At scale
+	// f the ring blit (ringBltY) doesn't scale linearly, so the arm meets
+	// a different row. The shift moves the container to compensate.
+	//
+	// Exact formula (sweep path, ringBltY known):
+	//   naturalRow = (ringBltY + autoY0 + ringHs/2 - stripTop) / rowPitch
+	//   targetRow  = visibleRows - kTargetFromBottom
+	//   shift      = (targetRow - naturalRow) * rowPitch
+	// where autoY0 = legT - tgtT (SubMath offset before container shift).
+	//
+	// Empirical fallback (birth path, ringBltY unknown):
+	//   shift = max(0, (f - 1.5)) * 160  [measured from 1.5x→2x data]
+	//
+	// Works for ALL counts — no cnt gate. StripTop = capHs for cnt ≥ 2
+	// (stripH > ringHs), so the shift is per container type, not per count.
+	// kSubArmTargetBottom: armRow_fromBottom at 1x target. Measured as
+	// 1.50 (bottom of Tourist Trap in the 8-row Build menu).
+	const double kSubArmTargetBottom = 1.50;
+	inline int32_t SubContainerShiftPx()
+	{
+		if (gTierF <= 1.0f) return 0;
+		// Empirical fallback for birth path (ringBltY unknown).
+		// At f=1.5 natural armRow≈2.70, at f=2.0≈3.52.
+		// shift = (natural - 1.50) * rowPitch
+		// f=1.5: (2.70-1.50)*73=88, f=2.0: (3.52-1.50)*98=198
+		const double f = static_cast<double>(gTierF);
+		if (f <= 1.0) return 0;
+		const double est = f * f * 73.0 - 60.0;
+		if (est <= 0.0) return 0;
+		return static_cast<int32_t>(RoundHalfUp(est));
+	}
+	// Exact shift from measured ring position. Called at sweep time when
+	// gSubRingBltY and autoY0 are available.
+	//   ringBltY: ring's blit Y in the container buffer (gSubRingBltY)
+	//   autoY0:   gSubRingAutoY before the container shift (legT - tgtT)
+	//   cnt:      strip item count (for computing stripTop / visibleRows)
+	// Returns: shift in pixels (positive = container moves UP).
+	inline int32_t SubContainerShiftFromGeo(
+		int32_t ringBltY, int32_t autoY0, int32_t cnt)
+	{
+		if (gTierF <= 1.0f || cnt < 1) return 0;
+		const double f = static_cast<double>(gTierF);
+		// UNSCALED SetLayout constants (tall: ringH=53, capH=25)
+		const int32_t ringHs = RoundHalfUp(53.0 * f);
+		const int32_t capHs  = RoundHalfUp(25.0 * f);
+		// Scaled strip item dims (itemH=44, spacing=5 at 1x)
+		const int32_t sItemH   = RoundHalfUp(44.0 * f);
+		const int32_t sSpacing = RoundHalfUp(5.0 * f);
+		const int32_t rowPitch = sItemH + sSpacing;
+		const int32_t visibleRows = cnt < 8 ? cnt : 8;
+		const int32_t stripH = (sItemH + sSpacing) * cnt - sSpacing;
+		const int32_t contentH =
+			(stripH > ringHs ? stripH : ringHs) + 2 * capHs;
+		const int32_t stripTop = (contentH - stripH) / 2;
+		// Natural armRow in the buffer (includes SubMath auto offset)
+		const double naturalRow =
+			static_cast<double>(ringBltY + autoY0 + ringHs / 2 - stripTop)
+			/ static_cast<double>(rowPitch);
+		const double targetRow =
+			static_cast<double>(visibleRows) - kSubArmTargetBottom;
+		const double needed = targetRow - naturalRow;
+		if (needed <= 0.0) return 0;
+		return static_cast<int32_t>(RoundHalfUp(needed * rowPitch));
 	}
 
 	// 0xABB26B0E treated as a god PANEL (scaled + bottom-anchor docked to
@@ -6966,7 +7040,7 @@ namespace
 			// Log-only until the stock value is known; then a guarded write
 			// mirrors InitScroll. Budget-capped, one line per open.
 			{
-				static int scLog = 6;
+				static int scLog = 20;
 				const int32_t cnt =
 					*reinterpret_cast<int32_t*>(so + 0xE8);
 				if (scLog > 0)
@@ -6993,6 +7067,88 @@ namespace
 		// position is the game's native one BY CONSTRUCTION, so the delta
 		// applies with no button search and no ring data. The sweep then
 		// recognises its own target (atTarget) and does nothing.
+		// SUBBORN (v4.0.31): log full builder geometry at birth for every
+		// sub-flyout. Captures1x baseline across all scale factors to
+		// derive the container shift mathematically. Fires once per open.
+		// Reset SUBGEO2 counter so each sub-flyout gets its own budget
+		// of ring blit position samples.
+		gSubGeoLog = 0;
+		{
+			static int sbLog = 30;
+			if (sbLog > 0 && strip)
+			{
+				sbLog--;
+				char* so = reinterpret_cast<char*>(strip);
+				char* co = reinterpret_cast<char*>(win);
+				const int32_t cnt =
+					*reinterpret_cast<int32_t*>(so + 0xE8);
+				const int32_t firstVis =
+					*reinterpret_cast<int32_t*>(so + 0xEC);
+				const int32_t sItemW =
+					*reinterpret_cast<int32_t*>(so + 0xF8);
+				const int32_t sItemH =
+					*reinterpret_cast<int32_t*>(so + 0xFC);
+				const int32_t sSpacing =
+					*reinterpret_cast<int32_t*>(so + 0x100);
+				// Container SetLayout fields — these are UNSCALED 1x
+				// values; the DLL scales the window size but the game's
+				// own layout data stays at 1x.
+				const int32_t barW1x =
+					*reinterpret_cast<int32_t*>(co + 0xE0);
+				const int32_t capH1x =
+					*reinterpret_cast<int32_t*>(co + 0xE4);
+				const int32_t midH1x =
+					*reinterpret_cast<int32_t*>(co + 0xE8);
+				const int32_t ringW1x =
+					*reinterpret_cast<int32_t*>(co + 0xEC);
+				const int32_t ringH1x =
+					*reinterpret_cast<int32_t*>(co + 0xF0);
+				const int32_t overlap1x =
+					*reinterpret_cast<int32_t*>(co + 0xF4);
+				const int32_t xAnc1x =
+					*reinterpret_cast<int32_t*>(co + 0xF8);
+				const int32_t yAnc1x =
+					*reinterpret_cast<int32_t*>(co + 0xFC);
+				// All scaled values for consistent computation
+				const int32_t ringHs =
+					RoundHalfUp(ringH1x * gTierF);
+				const int32_t capHs =
+					RoundHalfUp(capH1x * gTierF);
+				const int32_t stripH =
+					(sItemH + sSpacing) * cnt - sSpacing;
+				const int32_t contentH =
+					(stripH > ringHs ? stripH : ringHs)
+					+ 2 * capHs;
+				const int32_t stripTop =
+					(contentH - stripH) / 2;
+				const int32_t rowPitch = sItemH + sSpacing;
+				// armRow requires ringBltY from SUBGEO2; here we
+				// estimate assuming ring centred in container.
+				// Real armRow = (ringBltY + ringHs/2 - stripTop)
+				//               / rowPitch  [from SUBGEO2 data]
+				const float armRowEst =
+					static_cast<float>(contentH / 2 - stripTop)
+					/ static_cast<float>(rowPitch);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SUBBORN strip=%p f=%.2f cnt=%d "
+					"firstV=%d  sW=%d sH=%d sSp=%d  "
+					"barW=%d capH=%d midH=%d ringW=%d ringH=%d "
+					"ov=%d xA=%d yA=%d  "
+					"ringHs=%d capHs=%d  "
+					"contentH=%d stripH=%d stripTop=%d "
+					"rowPitch=%d armRow(est)=%.2f  "
+					"CONT(%d,%d %dx%d)",
+					strip, gTierF, cnt, firstVis,
+					sItemW, sItemH, sSpacing,
+					barW1x, capH1x, midH1x, ringW1x, ringH1x,
+					overlap1x, xAnc1x, yAnc1x,
+					ringHs, capHs,
+					contentH, stripH, stripTop,
+					rowPitch, armRowEst,
+					win->GetL(), win->GetT(),
+					newW, newH);
+			}
+		}
 		int32_t dx = 0, dy = 0;
 		if (gSubBornDockOn)
 		{
@@ -7038,6 +7194,22 @@ namespace
 					dy = SubPlaceTop(newH, cy, gLastViewH, gTierF) - nativeT;
 					// ...and hold the ring at the legacy dock, so the FIRST
 					// paint is already right and there is no attach-then-jump.
+					gSubRingAutoY = legDY - dy;
+				}
+			}
+			// v4.0.33: container shift at birth — empirical estimate.
+			// At birth, gSubRingBltY is not yet set for this menu, so
+			// use the scale-factor formula. Works for ALL counts.
+			if (gTierF > 1.0f && strip)
+			{
+				const int32_t shiftPx = SubContainerShiftPx();
+				if (shiftPx > 0)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: BORNSHIFT strip=%p shiftPx=%d "
+						"(empirical f=%.2f)",
+						strip, shiftPx, gTierF);
+					dy -= shiftPx;
 					gSubRingAutoY = legDY - dy;
 				}
 			}
@@ -13076,6 +13248,10 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// v4.0.27: strip-shift lever for sub-flyout families whose stock
 			// attach point is not where the game-native layout puts it
 			// (Build Park et al). Replaces the retired InitScroll write.
+			// v4.0.30: StripShiftRows RETIRED — breaks bar+strip alignment.
+			// v4.0.33: ContainerShiftRows/Fine RETIRED — replaced by the
+			// mathematical formula in SubContainerShiftFromGeo() which
+			// computes the exact shift from ring geometry at all scales.
 			GetPrivateProfileStringA("SubFlyout", "StripShiftRows", "", b, sizeof(b), kIni);
 			if (b[0]) gSubStripShiftRows = atoi(b);
 			// v4.0.15: ring-behind-strip mask switch (superseded by LayerFix
@@ -14348,6 +14524,8 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// so the next sweep has fresh data.
 			const bool ringFresh =
 				(gSubRingBufW == sub->GetW() && gSubRingBufH == sub->GetH());
+			// Reset SUBSHIFT counter on new menu (ring just painted).
+			if (ringFresh) { gSubShiftLog = 0; }
 			// #134: the POSITIVE CONTROL for SUBCAND. Without this, an empty
 			// SUBCAND log has two readings - "the sweep ran and no button
 			// matched" and "the sweep never ran" - and they need opposite
@@ -14378,7 +14556,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// firstVisible=2, putting Tourist Trap (full-list #7) at the
 			// ring's row. The fix is the guarded scroll write below at the
 			// born path - same pattern as the disaster InitScroll.
-			if (ringFresh && gSubGeoLog < 6)
+			if (ringFresh && gSubGeoLog < 40)
 			{
 				gSubGeoLog++;
 				int32_t stl = 0, stt = 0;
@@ -14408,6 +14586,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// shifts the strip independently. The ring arm alignment should
 			// be fixed by adjusting gSubRingAutoY, not by shifting the strip.
 			bool done = false;
+			bool subShiftLoggedThisSweep = false;
 			for (uint32_t pid : kParents)
 			{
 				if (done || !ringFresh) { break; }
@@ -14455,9 +14634,57 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					// 26px disagreement fails both tests, which silently ends
 					// the dock AND freezes the back-arrow click zone.
 					const int32_t tgtL = legL;
-					const int32_t tgtT = gSubMath
+					int32_t tgtT = gSubMath
 						? SubPlaceTop(sub->GetH(), bcy, pView->GetH(), gTierF)
 						: legT;
+					// v4.0.33: container shift from ring geometry (all counts).
+					// Uses gSubRingBltY (measured) and autoY0 = legT - tgtT
+					// to compute the exact shift needed for the arm to meet
+					// the strip at the target row.
+					if (gTierF > 1.0f)
+					{
+						cIGZWin* stw = sub->GetChildWindowFromID(0x8A2CAD8B);
+						if (stw && gSubRingBltY >= 0)
+						{
+							const int32_t cnt =
+								*reinterpret_cast<const int32_t*>(
+									reinterpret_cast<const char*>(stw) + 0xE4);
+							const int32_t autoY0 = legT - tgtT;
+							const int32_t shiftPx = SubContainerShiftFromGeo(
+								gSubRingBltY, autoY0, cnt);
+							if (shiftPx > 0)
+							{
+								tgtT -= shiftPx;
+							}
+							if (gSubShiftLog < 40 && !subShiftLoggedThisSweep)
+							{
+								subShiftLoggedThisSweep = true;
+								gSubShiftLog++;
+								// Duplicate the formula inline for diagnostic
+								const double f = static_cast<double>(gTierF);
+								const int32_t ringHs = RoundHalfUp(53.0 * f);
+								const int32_t capHs = RoundHalfUp(25.0 * f);
+								const int32_t sItemH = RoundHalfUp(44.0 * f);
+								const int32_t sSp = RoundHalfUp(5.0 * f);
+								const int32_t rp = sItemH + sSp;
+								const int32_t vr = cnt < 8 ? cnt : 8;
+								const int32_t sH = rp * cnt - sSp;
+								const int32_t cH = (sH > ringHs ? sH : ringHs) + 2 * capHs;
+								const int32_t sT = (cH - sH) / 2;
+								const double natRow =
+									static_cast<double>(gSubRingBltY + autoY0 + ringHs / 2 - sT)
+									/ static_cast<double>(rp);
+								const double tgtRow =
+									static_cast<double>(vr) - kSubArmTargetBottom;
+								Logger::Get().WriteLine(LogLevel::Debug,
+									"UiSpike: SUBSHIFT cnt=%d "
+									"ringBltY=%d autoY0=%d gAutoY=%d shift=%d "
+									"natRow=%.2f tgtRow=%.2f ringHs=%d sT=%d f=%.2f",
+									cnt, gSubRingBltY, autoY0, gSubRingAutoY,
+									shiftPx, natRow, tgtRow, ringHs, sT, gTierF);
+							}
+						}
+					}
 					const bool atNative = (abs(sl - natL) <= 3 && abs(st - natT) <= 3);
 					const bool atTarget = (abs(sl - tgtL) <= 3 && abs(st - tgtT) <= 3);
 					// #134: BEFORE the gate, so a container the sweep declines

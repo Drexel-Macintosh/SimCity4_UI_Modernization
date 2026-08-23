@@ -1,3 +1,72 @@
+2026-08-23  v4.0.35   SUB-FLYOUT CONTAINER SHIFT - THE FORMULA SHIPS, THE
+                      DEFECT IT TARGETS IS STILL OPEN
+
+  STATE AT HANDOFF: v4.0.35 deployed and user-verified UNCHANGED from the
+  pre-session state - Build Park (cnt=11) and Green Spaces (cnt=12) look
+  right at 2x; Sports Grounds (cnt=5) and Plazas (mayor column) still show
+  the arm attached too high with the strip's bottom items clipped. Full
+  diagnosis and next moves: HANDOFF-2026-08-23.md. Read that file first.
+
+  v4.0.31-v4.0.35 in one paragraph: the sub-flyout (the second-level
+  flyout that spawns off a first-level flyout button) needed its CONTAINER
+  shifted so the ring's arm meets the correct strip row at scale factors
+  above 1x. v4.0.31 shipped an ini-tunable row shift (ContainerShiftRows)
+  gated to cnt==11; v4.0.33 retired it for two computed paths - an
+  empirical birth shift SubContainerShiftPx() = f*f*73 - 60 px (applied to
+  EVERY menu at birth, count-blind) and a geometry formula
+  SubContainerShiftFromGeo() at sweep time (per-count, from the measured
+  ring blit Y). v4.0.34/v4.0.35 dialled kSubArmTargetBottom (the arm's
+  target row counted from the strip bottom) 2.70 -> 1.75 -> 1.50 against
+  the user's eyes on Build Park.
+
+  THE SESSION'S HARD-WON FACTS (all measured, all in the log):
+
+  1. THE SWEEP PATH NEVER FIRES. The sweep-time formula sits inside the
+     candidate-dock gate (`if (!atNative && !atTarget) continue;`), and
+     that gate did not pass ONCE in the entire instrumented session
+     (`SUBGEO BTN` count = 0, the gated success-path log). Containers are
+     born already positioned by the birth hook (SUBBORNHOOK) and stay
+     there; every pixel of sub-flyout placement the user sees comes from
+     the BIRTH path. The sweep formula - and the whole kSubArmTargetBottom
+     calibration against it - is currently DEAD CODE for placement.
+
+  2. THE RING'S AUTO OFFSET IS NOT legT - tgtT. SUBSHIFT logged autoY0
+     (= legT - tgtT, what the formula was fed) and gAutoY (= the live
+     gSubRingAutoY the ring actually draws with) side by side: cnt=5 gave
+     123 vs 355, cnt=11 gave 150 vs 429 - a constant ~2.3-row gap. The
+     birth hook writes gSubRingAutoY = legDY - dy (line ~7196/7212), which
+     is a DIFFERENT quantity. Any sweep formula that wants the arm's true
+     current row must consume gSubRingAutoY, not legT - tgtT.
+
+  3. THE BIRTH PATH IS THE REAL LEVER. At birth the hook knows: cnt,
+     newH, rowPitch, capHs, nativeT, cy (recovered from nativeT), and it
+     applies SubPlaceTop() - the game's own four-clamp placement law -
+     then the count-blind bornshift, then pins the ring with
+     gSubRingAutoY = legDY - dy. Measured bottoms at 2x: cnt=11 lands at
+     top 276 h 874 (bottom 1150, the APPROVED look); cnt=5 lands at top
+     470 h 580 (bottom 1050) - 100px higher, which is the user's defect.
+
+  4. THE USER'S LAW (stated twice, in layman's terms): "The bottom part
+     of the flyout should be identical in all of these menus. Basically
+     it should build from that bottom and fill in above it." I.e.
+     bottom-anchor: every menu's bottom at the same place, short strips
+     growing upward. A v4.0.36 attempt implemented this at birth but
+     calibrated the reference bottom from SubPlaceTop alone, forgetting
+     the 232px bornshift is part of the approved position - every 8-row
+     menu dropped exactly 232px (full regression) and the change was
+     ROLLED BACK within the hour. The law is still the law; the constant
+     was wrong. Correct reference: bottom = SubPlaceTop(full8H,...) +
+     full8H - 232 (or equivalently, reproduce the approved chain then
+     override only the short-count delta).
+
+  DIAGNOSTICS NOW IN PLACE (all Debug level unless noted): SUBBORN
+  (Info, full builder geometry at birth), SUBBORN2/SUBBORNHOOK (birth
+  scaling), SUBGEO2 (per-open assembly, ungated), SUBSHIFT (per-sweep
+  formula inputs incl. both autoY variants, own 40-slot counter reset on
+  ringFresh, one line per sweep), SUBCAND (candidate gate dump, 24 slots),
+  BORNSHIFT (Info, empirical birth shift). These are the instruments the
+  next session starts from; do not remove them before the defect closes.
+
 2026-08-22  v4.0.21   THE DISASTER FLYOUT - SCROLL, LAYERING, AND A DEFAULT-OFF
                       FLAG THAT WAS THE WHOLE BUG
 

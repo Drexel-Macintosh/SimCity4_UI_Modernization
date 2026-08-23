@@ -1,5 +1,24 @@
 # Changelog
 
+## 4.0.35
+
+- **Sub-flyout container shift (v4.0.31-v4.0.35): computed instead of
+  hand-tuned.** The second-level flyouts (the strip that spawns off a
+  first-level flyout button) now shift their container at birth by an
+  empirical scale-factor formula (`f²×73−60` px at birth, all counts),
+  replacing the retired ini-tunable `ContainerShiftRows`/`Fine`. A
+  per-count geometry formula (`SubContainerShiftFromGeo`) exists at sweep
+  time for when the sweep dock path is live. Calibrated against Build
+  Park at 2x (`kSubArmTargetBottom = 1.50` rows from strip bottom).
+- **Known open defect:** Sports Grounds (5-item strip) and the mayor
+  column's Plazas still attach the ring arm too high with the strip's
+  bottom clipped at 2x. Instrumentation (SUBBORN / SUBBORN2 / SUBGEO2 /
+  SUBSHIFT / SUBCAND / BORNSHIFT log lines) is in place for the next
+  pass; see `HANDOFF-2026-08-23.md` for the full diagnosis - the key
+  finding is that placement is decided entirely by the birth hook (the
+  sweep dock gate never fires), and the birth hook's ring auto offset is
+  a different quantity than the sweep formula was fed.
+
 ## 4.0.21
 
 - **Fixed: the Create Disasters flyout opened scrolled to the bottom of its

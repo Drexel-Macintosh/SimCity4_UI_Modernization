@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.0.30"
+#define UISCALE_VERSION_STR "4.0.35"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
