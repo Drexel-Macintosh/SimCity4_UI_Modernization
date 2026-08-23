@@ -1004,12 +1004,9 @@ namespace
 	// the dock/ring never moves; the strip and icons move to meet it.
 	// Build Park: stock arm meets row 7 ("Tourist Trap"); unpinned layout
 	// put row 5 ("Marina") -> shift = -2 rows. ini [SubFlyout]
-	// StripShiftRows. Applied TWO ways that must stay in lockstep:
-	//   - strip window: absolute per-sweep set (below)
-	//   - background bar art: per-Plot offset while THIS container plots
+	// StripShiftRows: RETIRED (v4.0.30). Moving the strip independently
+	// breaks bar+strip alignment. Kept as an ini variable but never applied.
 	int     gSubStripShiftRows = 0;
-	void*   gSubShiftContWin = nullptr;   // container win (sweep-captured)
-	int     gBarShiftY = 0;               // live px, valid during its Plot
 	// #134: SUBGEO sits AFTER the atNative/atTarget gate, so a container the
 	// sweep does not recognise logs nothing at all - which is exactly the case
 	// that needs explaining. SUBCAND logs every candidate button BEFORE that
@@ -2032,12 +2029,6 @@ int    gRingDockY = 40;              // disaster container dock Y offset (ini Do
 		// hand-tuned for that flyout; the trace shows it is just "keep the
 		// widened bar flush right", which every container of this class needs.
 		const int dx0 = d[0] + BarDXEff();
-		// BACKGROUND SHIFT (v4.0.28): when the strip shifted up (StripShift-
-		// Rows), the bar art must follow or the pill keeps a long empty tail
-		// below the last icon. Same delta, applied to the dst Y of every
-		// tile this family's buffer draws - caps and spine alike. The ring
-		// block is untouched: it never passes through here.
-		int bgShiftY = gBarShiftY;   // v4.0.29: set per-Plot by SlotThunk
 		// CAPS ARE NEVER Y-DOUBLED (v2.18.4, reverting v2.17.2/.3). The
 		// doubled cap's lower half got overdrawn by the square fill tiles the
 		// game paints AFTER the top cap, leaving square shoulders poking past
@@ -2046,7 +2037,7 @@ int    gRingDockY = 40;              // disaster container dock Y offset (ini Do
 		// confirmed on screen CORRECT look; the original "seam" this doubling
 		// chased was actually the alpha-halo + ring-position issues, fixed
 		// separately. x-widening only, exactly like disaster.
-		const int dy0 = d[1] + bgShiftY;
+		const int dy0 = d[1];
 		if (!asrc || !cdst || astride <= 0 || cstride <= 0) return;
 		// v2.24.0 (audit B2): fractional NN like Upscale2x.cs - dest width is
 		// RoundHalfUp(sw*W) and each dest column samples src floor(ox/W). At
@@ -4387,16 +4378,6 @@ int    gRingDockY = 40;              // disaster container dock Y offset (ini Do
 		void** ctxSavedVt = nullptr;
 		if (IDX == 88)
 		{
-			// v4.0.29: arm the background shift for THIS Plot only - the
-			// flag is meaningful exclusively inside the container's own
-			// draw call tree (bar tiles + LayerFix replay), so other
-			// windows sharing the buffer class are never touched.
-			gBarShiftY =
-				(gSubStripShiftRows != 0 && gSubShiftContWin != nullptr
-					&& self == gSubShiftContWin)
-				? RoundHalfUp(static_cast<double>(gSubStripShiftRows)
-					* 49.0 * gTierF)
-				: 0;
 			int32_t* mm = reinterpret_cast<int32_t*>(self);
 			// (PER-FIELD ISOLATION [gFieldMask, v2.7.90] and WINDOW-RECT DOUBLE
 			// [gWinScale, v2.7.96] deleted v2.24.0, audit C6/C7: both dead at 0
@@ -8642,8 +8623,6 @@ void UiSpike::Disarm()
 	// them explicitly (the second-city law); the base metrics are stock
 	// constants and deliberately survive.
 	gSubLastStrip = nullptr;
-	gSubShiftContWin = nullptr;  // v4.0.29: shift identity dies with the city
-	gBarShiftY = 0;
 	gDisLastStrip = nullptr;
 	gDisDockValid = false;    // v2.39.3: new city, new toolbar
 	// v4.0.10: the derived dock re-measures on every open, so a stale stock
@@ -14420,49 +14399,14 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					stl, stt, stw ? stw->GetW() : 0,
 					stw ? stw->GetH() : 0);
 			}
-			// STRIP SHIFT (v4.0.27 - the disaster-arc pattern applied to the
-			// shared sub-flyout): the dock/ring NEVER moves; the strip window
-			// and its icons shift inside the container to meet it. Target =
-			// the game's own centred stripTop plus the configured row shift
-			// (design rows x 49px, scaled). Absolute-set per sweep tick so a
-			// game re-Place cannot walk it back; gated to the parks family by
-			// the count==11 shape guard until other families are measured.
-			if (gSubStripShiftRows != 0 && ringFresh)
-			{
-				cIGZWin* stw = sub->GetChildWindowFromID(0x8A2CAD8B);
-				if (stw)
-				{
-					// v4.0.29: remember the container WINDOW for the
-					// Plot-scoped bar shift (SlotThunk arms gBarShiftY).
-					gSubShiftContWin = sub;
-					const int32_t cnt =
-						*reinterpret_cast<const int32_t*>(
-							reinterpret_cast<const char*>(stw) + 0xE4);
-					if (cnt == 11)
-					{
-						const int32_t nativeT =
-							(sub->GetH() - stw->GetH()) >> 1;
-						const int32_t tgtT = nativeT + ScaleRound(
-							static_cast<double>(gSubStripShiftRows) * 49.0,
-							gTierF);
-						const int32_t curT = stw->GetT();
-						if (tgtT != curT)
-						{
-							stw->GZWinMoveTo(0, tgtT - curT);
-							static int ssLog = 6;
-							if (ssLog > 0)
-							{
-								ssLog--;
-								Logger::Get().WriteLine(LogLevel::Info,
-									"UiSpike: STRIPSHIFT strip relT %d -> %d "
-									"(native %d + rows %+d) f=%.2f",
-									curT, tgtT, nativeT,
-									gSubStripShiftRows, gTierF);
-							}
-						}
-					}
-				}
-			}
+			// STRIP SHIFT (v4.0.27): RETIRED. Moving the strip child window
+			// independently of the container breaks bar+strip alignment —
+			// the bar art is painted into the container buffer at the
+			// builder-computed positions and covers the full container
+			// height. Every working flyout (mayor, god tools, first-level)
+			// keeps the strip and bar in their builder positions and never
+			// shifts the strip independently. The ring arm alignment should
+			// be fixed by adjusting gSubRingAutoY, not by shifting the strip.
 			bool done = false;
 			for (uint32_t pid : kParents)
 			{
