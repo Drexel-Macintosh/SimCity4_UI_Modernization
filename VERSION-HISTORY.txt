@@ -1,3 +1,150 @@
+2026-08-23  v4.0.38   SUB-FLYOUT SHORT-STRIP MISALIGNMENT - ROOT CAUSE
+                      FOUND AND FIXED (offline-verified, NOT YET LIVE
+                      TESTED - the user's next launch confirms it)
+
+  THIRD ATTEMPT AT THE SAME DEFECT, THIS TIME THE REAL CAUSE. v4.0.35
+  shipped a flat, count-blind empirical shift; v4.0.36 generalized a
+  per-bar mB-clamp check (SubBarClampsAt8Rows/SubSharedBottom) that
+  correctly fixed the ONE bar it targeted (Parks) but left every other
+  short-count bar (Police/Fire/Education/Hospitals, all cnt<8) exactly
+  as broken as before - a fresh 1x/2x click-through census confirmed
+  it, all four still reported broken under the "fixed" build.
+
+  ROOT CAUSE: SubPlaceTop()'s bottom screen margin was computed as
+  `gLastViewH - marginT` - the DESKTOP resolution (1600 on this
+  session's 2400x1600 screen). The real game function (sub_79AD00,
+  disassembled in tools/uimap/SUBFLYOUT-BUILDER.md) uses a completely
+  different, LIVE value: `mB`, computed by the caller as
+  `(3D-view-height) - 10`, already available as a raw Place() parameter
+  the code was logging but never actually using for this. Measured:
+  mB=1166 while gLastViewH=1600 - a 434px gap that is the game's own
+  bottom HUD/toolbar reserving screen space. Using the wrong (larger)
+  margin meant SubPlaceTop's own bottom clamp fired at the wrong
+  threshold; the v4.0.33 empirical bornshift papered over that gap for
+  exactly ONE content height (the 8-row cap, 874px) because that is the
+  only case it was ever tuned against - it does not close the same gap
+  for a shorter container, which is exactly why the short bars stayed
+  broken through two "fixes."
+
+  THE FIX: SubPlaceTopMb() - the SAME four clamps SubPlaceTop already
+  had, but mT/mB come directly from the live Place() call (already in
+  scope, zero recovery) instead of being re-derived from a desktop
+  resolution. This ELIMINATES the entire SubSharedBottom/
+  SubBarClampsAt8Rows/SubContainerShiftPx apparatus for the regular
+  sub-flyout: with the real margin, ANY bar whose own content is tall
+  enough to reach it clamps there automatically, giving every 8-row-
+  capped menu on a bar the SAME shared bottom with no per-bar gate, and
+  every short menu simply centers on its own toolbar button. One
+  formula, no branching, no tuned constant.
+
+  VERIFIED FOUR WAYS BEFORE BUILDING: hand arithmetic; the REAL
+  disassembled sub_79AD00 queried directly under Unicorn emulation
+  (bit-exact match for all 7 measured Civic Tools buttons); algebraic
+  identity with the old formula at f=1 for the unclamped case,
+  reproducing three numbers already on record from an unrelated
+  measurement (Hospitals/Education/Rewards native tops); and every
+  cnt>=8 button on the Civic Tools bar independently converging on one
+  shared bottom. _tests/Test-SubFlyoutPlacement.py rewritten to prove
+  all of this offline; DLL builds clean; every other offline gate still
+  green (one pre-existing, unrelated, already-tracked failure in
+  Test-ScaleDimParity.py - register item #7, not caused by this change).
+
+  KNOWN, FLAGGED, NOT YET RECONFIRMED: the already-approved Build Park/
+  Green Spaces/Sports Grounds/Plazas family's shared bottom moves from
+  1150 (the old, eyeballed value) to 1166 (the new, derived-not-tuned
+  value) - 16px, about 1% of screen height. 1150 was never proven
+  exactly correct, only "close enough to look right"; this needs the
+  user's own eyes-on confirmation at the next launch, per standing
+  practice for any live/visual claim.
+
+  ADVERSARIAL REVIEW (same day, before any deploy) CAUGHT THREE REAL
+  ISSUES, ALL NOW CORRECTED OR DOCUMENTED - not swept under the rug:
+
+  1. A comment in this same code (and in the law file) claimed "the
+     disaster twin keeps its original chain, unchanged." FALSE, and
+     always has been: control-flow analysis proves that branch is
+     UNREACHABLE - the disaster twin fully docks and returns earlier in
+     the same function, before this dock section is ever reached. A
+     pre-existing documentation bug, not introduced today; corrected in
+     both the code comments and the law file. The disaster twin's REAL
+     docking logic (GODDOCK) was not examined and remains out of scope.
+
+  2. The load-bearing emulator verification ("reproduces the real
+     function bit-exact") was run correctly but from a throwaway,
+     never-committed script - no reproducible artifact backed the claim.
+     Fixed: tools\uimap\emu\emu_subplacetopmb_model.py now commits that
+     exact verification, testing every Civic Tools button AT ITS OWN
+     REAL item count (cnt 3/5/6/3/8/8/8), not a fixed n=8 - closing a
+     real gap in the PRE-EXISTING emu_subsharedbottom_model.py, which
+     never emulated a short-count case at all and is now marked
+     retired-code-only.
+
+  3. CONFIRMED, NOT CAUSED BY THIS FIX: the sub-flyout's back-arrow
+     scroll control and click-forwarding have been silently
+     non-functional on any menu with more items than fit (Landmarks,
+     Rewards, Parks, anything over 8 items) - a second, independent
+     placement formula inside the periodic sweep never agrees with the
+     birth hook closely enough to arm the back-arrow hit zone, and
+     measured evidence (SUBGEO BTN count=0, recorded before this fix)
+     shows this was ALREADY true beforehand. This fix does not make it
+     worse - the failure mode is the feature silently doing nothing,
+     gated by a -1 sentinel, not a wrong-place click - but it does not
+     fix it either, and now further diverges from what the sweep
+     expects. Needs its own dedicated pass: mirror SubPlaceTopMb into
+     the sweep and retire SubContainerShiftFromGeo there too, so birth
+     and sweep agree again. Full detail in the law file.
+
+  NOT YET DEPLOYED to the live game - offline-verified only, ready for
+  the user's next test session.
+
+2026-08-23  v4.0.37   #182 - EMPTY FontStyle.ini CRASHED THE CITY-SELECT
+                      SCREEN. FIXED AT RUNTIME AND AT THE ROOT.
+
+  WHAT HAPPENED: every release v4.0.1-v4.0.9 shipped an empty FontStyle.ini
+  placeholder (added so sc4pac could track/uninstall the font file the DLL
+  generates at runtime - an sc4pac maintainer's own suggested fix for a
+  real orphaned-file complaint). SyncFont's font-preservation logic
+  (#115/#118) could not byte-match that empty file to any shipped tier
+  font, so it wrongly snapshotted it as the PLAYER'S OWN pre-existing font
+  (.user-original). Any later trip to stock tier restored that empty
+  snapshot over the live FontStyle.ini, and the game crashed
+  (ACCESS_VIOLATION, sub_7B4150) loading the city-select screen. Reproduced
+  directly this session: switching to 1x on an affected install crashed on
+  the region/city-select screen; 2x (scaled tier, live font present and
+  non-empty) opened fine, which is exactly what an empty-file-at-stock bug
+  predicts and confirmed the mod's OWN packaging was the cause, not a
+  third-party conflict.
+
+  FIX, TWO LAYERS:
+  1. RUNTIME (ScaleTier.cpp): an empty file is now recognized as ours by
+     construction (IsEmptyFile) - never snapshotted as .user-original,
+     never restored, and any install that already has a corrupted empty
+     snapshot self-heals on its next stock-tier boot. No manual file
+     surgery needed for existing affected users.
+  2. PACKAGING, THE ROOT CAUSE (Build-Dist.ps1): the placeholder shipped
+     under the game's OWN live filename - the one thing a manual,
+     by-hand mod removal has no way to recognize as ours, since it carries
+     none of the z_SC4UIScale_ naming every other package uses. A user who
+     deletes this mod by hand and misses that one file leaves a landmine
+     that crashes a COMPLETELY VANILLA install, no DLL involved, forever.
+     Renamed to z_SC4UIScale_FontStyle.ini: sc4pac still gets a real file
+     it installed and can delete on uninstall (nothing about sc4pac's
+     mechanism requires the literal name "FontStyle.ini" - it tracks
+     whatever is in the package), a manual "delete everything named
+     z_SC4UIScale_" cleanup now catches it, and Install.ps1's existing
+     wildcard uninstall sweep removes it for free. The game never reads
+     this exact filename, so being empty is harmless in every state:
+     mod present, mod absent, or half-removed.
+
+  VERIFIED: both 2x and 1x confirmed working on the affected install after
+  the fix (user, live game). Plugins folder integrity re-checked after the
+  session's manual file surgery (Test-DatIntegrity.ps1): all 5 tier-managed
+  package families correctly armed at 2x.
+
+  STILL OPEN: the Police/Fire/Education/Hospitals short-strip sub-flyout
+  misalignment from the v4.0.35 handoff (see below) - untouched this
+  session, deprioritized while this crash was live.
+
 2026-08-23  v4.0.35   SUB-FLYOUT CONTAINER SHIFT - THE FORMULA SHIPS, THE
                       DEFECT IT TARGETS IS STILL OPEN
 

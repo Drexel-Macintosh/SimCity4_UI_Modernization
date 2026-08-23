@@ -998,6 +998,12 @@ namespace
 	// the previous menu is never applied to the wrong window (blits fire every
 	// frame vs the 4x/sec sweep, so "stale" self-corrects within a frame).
 	int     gSubGeoLog = 0;   // #95: SUBGEO assembly dump, 8 lines max
+	// FIX (2026-08-23 review): SUBGEO2 used to share gSubGeoLog with the
+	// original SUBGEO above - two consumers incrementing one counter meant
+	// adding SUBGEO2 silently halved SUBGEO's documented 8-line budget
+	// (both hit the shared cap after ~4 lines each). Separate counter,
+	// same per-open reset site (SubPlaceDetour's birth hook).
+	int     gSubGeo2Log = 0;  // SUBGEO2 dump, independent of gSubGeoLog, 40 lines max
 	// STRIP SHIFT (v4.0.27): vertical shift of the sub-flyout strip window
 	// (and its icons) inside the container, in DESIGN ROWS (1 row = 49px:
 	// item 44 + spacing 5). Negative = up. This is the disaster-arc pattern:
@@ -1181,6 +1187,52 @@ namespace
 		if (top < floorT) { top = floorT; }
 		return top;
 	}
+	// SubPlaceTopMb: the SAME four clamps as SubPlaceTop, but marg_b comes
+	// from the game's own MEASURED Place() parameter `mB` directly, never
+	// re-derived from a desktop/monitor viewH (2026-08-23, root-cause pass).
+	//
+	// `sub_79AD00`'s REAL bottom margin is `mB`, a LIVE value the caller
+	// (`sub_7EAEB0`) computes as `this[0x18C]->GetY() - 10`
+	// (SUBFLYOUT-BUILDER.md ss3.1). WHAT `this[0x18C]` actually IS has not
+	// been independently re-verified this pass - "the 3D view's own
+	// Y-extent" is that doc's own reading, not re-confirmed here; an
+	// adversarial review (2026-08-23) noted it could equally be a
+	// position rather than a height, possibly tied to this mod's OWN HUD
+	// scaling rather than something tier-independent. What IS directly
+	// measured and certain: `mB` is NOT the desktop resolution.
+	// SubPlaceTop's `margB = viewH - marginT` (viewH = gLastViewH, the
+	// desktop height) was always the wrong quantity for this family:
+	// measured 2026-08-23, mB=1166 on a 1600-tall desktop - a 434px gap.
+	// Re-verified against the real `sub_79AD00` under Unicorn
+	// (tools/uimap/emu/emu_subplacetopmb_model.py, committed and
+	// re-runnable - not a throwaway script): feeding it fully-scaled
+	// content/item metrics with the RAW measured mT=10/mB=1166 reproduces
+	// this function's output bit-exact for every measured Civic Tools
+	// button AT ITS OWN REAL COUNT (cnt 3/5/6/3/8/8/8, cy 397..997), not
+	// just the one bar the mB-clamp fix
+	// originally targeted.
+	//
+	// mT is passed the same way, for the same reason: measured constant
+	// (10) regardless of tier - the sub-flyout builder's own screen-margin
+	// literals are never patched by this mod (post-birth resize, not
+	// born-2x - see tools/uimap/SUBFLYOUT-BUILDER.md ss5), so re-deriving
+	// margT from `f` was accidentally consistent with the measured value
+	// only because the top clamp never binds for any button measured so
+	// far, not because RoundHalfUp(10*f) is actually correct.
+	inline int32_t SubPlaceTopMb(int32_t contentH, int32_t cy, int32_t mT,
+		int32_t mB, float f)
+	{
+		const int32_t fE8  = RoundHalfUp(25 * f);
+		const int32_t fF4  = RoundHalfUp(53 * f);
+		const int32_t f100 = RoundHalfUp(29 * f);
+		int32_t top = (fF4 >> 1) - (contentH >> 1) + cy - f100;
+		if (top < mT) { top = mT; }
+		if (top > mB - contentH) { top = mB - contentH; }
+		if (top > cy - f100 - fE8) { top = cy - f100 - fE8; }
+		const int32_t floorT = cy + fF4 - contentH + fE8 - f100;
+		if (top < floorT) { top = floorT; }
+		return top;
+	}
 	// [Flyout] SubMath. DEFAULT 0 - REVERTED THE SAME SESSION IT SHIPPED
 	// (v2.45.1). The math above is genuinely correct about the CONTAINER: it
 	// reproduces the game's own Place 32/32 at n=1..8 x f=1/1.5/2/3, and with
@@ -1315,6 +1367,116 @@ namespace
 		const double needed = targetRow - naturalRow;
 		if (needed <= 0.0) return 0;
 		return static_cast<int32_t>(RoundHalfUp(needed * rowPitch));
+	}
+
+	// RETIRED FROM THE BIRTH HOOK (2026-08-23, third pass) - superseded by
+	// SubPlaceTopMb (see its comment). This whole mB-clamp-gate +
+	// hypothetical-8-row apparatus was compensating for SubPlaceTop's own
+	// wrong margin (viewH-derived, not the real mB); once that root cause
+	// is fixed the shared-bottom property falls out of the plain formula
+	// for free, on every bar's own real content height, no gate needed.
+	// Left defined (dead code, no current caller) rather than deleted
+	// until the new formula is live-verified on screen, so a fallback
+	// costs a one-line revert instead of a re-derivation.
+	//
+	// SubSharedBottom: the bottom-anchor law (2026-08-23, live-measured).
+	// Every sub-flyout spawned from the SAME first-level flyout button
+	// shares ONE bottom edge regardless of its own row count - the
+	// user's law, stated twice: "The bottom part of the flyout should be
+	// identical in all of these menus... build from that bottom and
+	// fill in above it."
+	//
+	// MEASURED (SUBPLACE log, 2x): the raw Place() parameters cy=997,
+	// mT=10, mB=1166 are IDENTICAL across every sub-flyout spawned from
+	// a given first-level flyout, regardless of item count - they
+	// belong to the flyout BAR, not to the individual clicked button.
+	// The approved 8-row containers (Build Park cnt=11, Green Spaces
+	// cnt=12) sit with their NATIVE (1x) top at EXACTLY mB - full8H_1x
+	// (1166 - 437 = 729, bit-identical to the measured native CONT
+	// top) - i.e. mB IS the native bottom margin the game's own
+	// Place() clamps a tall-enough container to. This reproduces that
+	// SAME clamp for an 8-row-EQUIVALENT container through the
+	// EXISTING (proven) SubPlaceTop + bornshift chain, giving the
+	// shared SCALED bottom every sub-flyout should target - regardless
+	// of its OWN actual row count.
+	//
+	// For an ACTUAL 8-row container this is mathematically a no-op:
+	// its own native top already equals mB - full8H_1x by
+	// construction, so this makes ZERO change to the already-approved
+	// cnt>=8 result (verified: reproduces Build Park/Green Spaces'
+	// measured dy=-453 and bottom=1150 at 2x exactly - see
+	// _tests/Test-SubFlyoutPlacement.py). For cnt<8 it gives the SAME
+	// shared bottom instead of the container's own (shorter, higher)
+	// native clamp - predicted Sports Grounds result (top=570,
+	// bottom=1150) matches the independent estimate already on record
+	// in HANDOFF-2026-08-23.md, derived before this measurement existed.
+	// SubBarClampsAt8Rows: does THIS first-level flyout bar's own raw `cy`
+	// put an 8-row-equivalent container's NATIVE top past the game's own
+	// bottom margin `mB`? Used by SubSharedBottom below to choose which
+	// reference anchor a bar's 8-row-equivalent container actually uses -
+	// the mB-clamped one, or the bar's own raw cy.
+	//
+	// MEASURED (2026-08-23, live SUBPLACE capture, two rounds): round 1
+	// (Build Park's bar): cy=997 clamps; 895/797/697/595/497/397/
+	// 679/799/919 (nine other bars, one launch each) do NOT. Round 2 (all
+	// SEVEN buttons on ONE bar - "Civic Tools" - walked one at a time,
+	// confirmed by the user): cy 397/497/595/697/797/895/997, monotonic
+	// top-to-bottom down the button column - only the LAST (bottom, 997)
+	// clamps; the other six do not. This check is entirely in NATIVE (1x)
+	// terms - no scaling, no per-menu name, no hardcoded cy - so it
+	// generalizes to every tier and every bar automatically.
+	inline bool SubBarClampsAt8Rows(int32_t cy, int32_t mB)
+	{
+		const int32_t full8H_1x = 2 * 25 + 8 * (44 + 5) - 5;   // = 437
+		const int32_t hypNativeTop8 = 26 - (full8H_1x >> 1) + cy - 29;
+		return hypNativeTop8 > (mB - full8H_1x);
+	}
+
+	// SubSharedBottom: the bottom-anchor law, generalized per-bar
+	// (2026-08-23, second pass - see the law file's "generalizing past
+	// one bar" section for the full derivation and the regression this
+	// replaces).
+	//
+	// EVERY first-level flyout bar has its OWN natural "8-row-equivalent
+	// bottom" - the scaled position an 8-row container FROM THAT BAR's
+	// button would land at. For a bar whose cy clamps against mB (only
+	// one measured so far: the Build Park/Green Spaces/Sports
+	// Grounds/Plazas bar), that natural bottom is the mB-derived one. For
+	// every other bar (confirmed: 9 distinct cy values across two
+	// measurement rounds, including all six OTHER buttons on the SAME
+	// "Civic Tools" bar as the clamping one), it is simply that bar's own
+	// unclamped position - so cyRef below is the bar's own raw `cy`
+	// whenever SubBarClampsAt8Rows says no clamp applies.
+	//
+	// Applying THIS bottom to every sub-flyout on a bar (not just its
+	// short ones) is PROVABLY a no-op for that bar's own cnt>=8 members:
+	// substituting cyRef=cy (the unclamped case) makes
+	// `top = SubSharedBottom(...) - newH` reduce algebraically to EXACTLY
+	// the existing per-button recovered-cy chain those containers already
+	// used (both take the SAME cy, feed the SAME SubPlaceTop, subtract
+	// the SAME bornshift) - there is no second formula to keep in sync,
+	// just one law applied to every count on every bar.
+	inline int32_t SubSharedBottom(int32_t cy, int32_t mB, int32_t viewH,
+		float f)
+	{
+		// UNSCALED SetLayout constants for the tall sub-flyout picker -
+		// the same literals SubContainerShiftFromGeo above already
+		// trusts (capH=25, itemH=44, spacing=5 at 1x).
+		const int32_t full8H_1x = 2 * 25 + 8 * (44 + 5) - 5;   // = 437
+		int32_t cyRef = cy;
+		if (SubBarClampsAt8Rows(cy, mB))
+		{
+			const int32_t hypotheticalNativeT8 = mB - full8H_1x;
+			cyRef = hypotheticalNativeT8 + (full8H_1x >> 1) + 3;
+		}
+		const int32_t capHs = RoundHalfUp(25.0 * f);
+		const int32_t itemHs = RoundHalfUp(44.0 * f);
+		const int32_t spacingS = RoundHalfUp(5.0 * f);
+		const int32_t full8H_scaled =
+			2 * capHs + 8 * (itemHs + spacingS) - spacingS;
+		const int32_t modelTop8 =
+			SubPlaceTop(full8H_scaled, cyRef, viewH, f);
+		return modelTop8 - SubContainerShiftPx() + full8H_scaled;
 	}
 
 	// 0xABB26B0E treated as a god PANEL (scaled + bottom-anchor docked to
@@ -6740,6 +6902,25 @@ namespace
 			reinterpret_cast<char*>(self) + 4);
 		if (!isDisaster && win->GetID() != 0x8A6E61E0) { return; }
 
+		// SUBPLACE (2026-08-23 diagnostic, no behavior change): the RAW
+		// Place() parameters, never logged before. mT/mB are the game's
+		// OWN bottom-margin clamp inputs - candidate source for the
+		// shared sub-flyout bottom line the user's bottom-anchor law
+		// requires (see HANDOFF-2026-08-23.md law L1). Logged before any
+		// of our own math touches cy, so this is the pristine value.
+		{
+			static int spLog = 40;
+			if (spLog > 0)
+			{
+				spLog--;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SUBPLACE self=%p kind=%s f=%.2f w=%d h=%d "
+					"cx=%d cy=%d mT=%d mB=%d viewH=%d",
+					self, isDisaster ? "DIS" : "SUB", gTierF, w, h, cx,
+					cy, mT, mB, gLastViewH);
+			}
+		}
+
 		char* obj = reinterpret_cast<char*>(self);
 		int32_t* sr = reinterpret_cast<int32_t*>(obj + 0x108);  // strip L,T,R,B
 		const int32_t l = win->GetL(), t = win->GetT();
@@ -7070,9 +7251,18 @@ namespace
 		// SUBBORN (v4.0.31): log full builder geometry at birth for every
 		// sub-flyout. Captures1x baseline across all scale factors to
 		// derive the container shift mathematically. Fires once per open.
-		// Reset SUBGEO2 counter so each sub-flyout gets its own budget
-		// of ring blit position samples.
+		// Reset SUBGEO/SUBGEO2/SUBSHIFT counters here - birth is the one
+		// genuine per-open EDGE event. FIX (2026-08-23 review): SUBSHIFT
+		// used to reset on `ringFresh` in the sweep, which is a LEVEL
+		// condition (true continuously once the ring has painted, not just
+		// on the first tick), so its reset ran on every sweep tick and
+		// defeated its own 40-line-per-open budget - it became an
+		// unconditional per-tick emitter for as long as the flyout stayed
+		// open. Resetting once here, at the only real "new menu" moment,
+		// is what the sweep's own comment already claimed it was doing.
 		gSubGeoLog = 0;
+		gSubGeo2Log = 0;
+		gSubShiftLog = 0;
 		{
 			static int sbLog = 30;
 			if (sbLog > 0 && strip)
@@ -7162,55 +7352,140 @@ namespace
 			const int32_t legDY = dy;
 			gSubRingAutoX = 0;   // X is never modelled, so this stays 0
 			gSubRingAutoY = 0;
-			// #95 PHASE 2: use the same validated model here, so BIRTH and the
-			// SWEEP agree. They must: the sweep only re-docks a container it
-			// finds at the native OR the target position, so if birth used the
-			// old constant and the sweep the model, the container would sit at
-			// neither and never be docked at all.
-			// The button centre is not in scope at birth, so RECOVER it by
-			// inverting the game's own 1x expression:
-			//     nativeTop = (53>>1) - (ch>>1) + cy - 29
-			//  => cy        = nativeTop + (ch>>1) + 3
-			// and SELF-CHECK it: recomputing the 1x top from that cy must
-			// reproduce nativeTop. If it does not, a 1x clamp fired and the
-			// inversion is not valid - fall back to the constant delta and let
-			// the sweep (which has the real button) correct it.
-			if (gSubMath && ch > 0)
+			// #95 PHASE 3, ROOT CAUSE (2026-08-23, third pass - see
+			// SubPlaceTopMb's comment for the full derivation, and
+			// research/laws/project-sc4-flyout-bottom-anchor.md for the
+			// write-up). The v4.0.36 SubSharedBottom generalization
+			// (mB-clamp gate + hypothetical-8-row cyRef substitution +
+			// flat SubContainerShiftPx bornshift) was itself built on a
+			// wrong quantity: SubPlaceTop's own bottom margin was
+			// `gLastViewH - marginT` (the DESKTOP height), not the
+			// game's own measured `mB` (a 434px gap on a 1600-tall
+			// desktop at 2x - the bottom HUD/toolbar, not scaling
+			// error). That one wrong margin is what made the flat
+			// bornshift "necessary": it was compensating for a clamp
+			// that fired at the wrong threshold, and the compensation
+			// only ever cancelled cleanly for the ONE content height
+			// (874, the 8-row cap) it was tuned against - CONFIRMED
+			// 2026-08-23 by directly querying the real sub_79AD00 under
+			// Unicorn (tools/uimap/emu) with the measured mT=10/mB=1166
+			// and fully-scaled item metrics: it reproduces this
+			// function's own SUBANCHOR predictions bit-exact, and
+			// SEPARATELY reproduces three ALREADY-measured native (f=1)
+			// positions on record for Hospitals/Education/Rewards.
+			//
+			// With margB = mB directly, EVERY bar's OWN real content
+			// height (short or tall) naturally clamps to the SAME
+			// shared bottom whenever that bar's cy is large enough to
+			// reach it - the user's "identical bottom" law falls out of
+			// the corrected formula with no hypothetical-8-row hack, no
+			// per-bar clamp gate, and no empirical shift constant.
+			// SubSharedBottom/SubBarClampsAt8Rows/SubContainerShiftPx
+			// are retired from this path.
+			//
+			// mT/mB are ALREADY the live Place() parameters for THIS
+			// open, at whatever tier and resolution are active - no
+			// per-tier constant to keep in sync, and no assumption that
+			// needs revisiting if a 4x tier is ever added.
+			//
+			// The `else if (isDisaster)` branch below is UNREACHABLE DEAD
+			// CODE, confirmed by control-flow (adversarial review,
+			// 2026-08-23) - see its own comment. `isDisaster` is always
+			// false by the time execution reaches this dock section; the
+			// disaster twin is fully handled and returned from the
+			// GODDOCK block far above. It is NOT "the disaster twin's
+			// live path, unchanged" - it has never run.
+			//
+			// CONFIRMED, NOT YET FIXED (same review): the sweep-time
+			// mirror (~UiSpike.cpp:14883 at review time, search
+			// `SubPlaceTop(sub->GetH()` ) still uses the OLD viewH-margin
+			// formula plus `SubContainerShiftFromGeo`, so it now
+			// disagrees with THIS formula's output for cnt>=8 bars
+			// (Landmarks/Rewards/Parks: birth lands at 292, the sweep's
+			// own target sits near 276-ish). That candidate-match path
+			// was ALREADY measured this session to never succeed under
+			// the OLD birth formula either (`SUBGEO BTN` count stayed 0
+			// for the whole instrumented session, so the back-arrow hit
+			// zone it initializes was already not being refreshed) - this
+			// change does not newly break a working feature, but it does
+			// NOT restore the "birth and sweep agree" invariant a retired
+			// comment here used to assert, and it should not be read as
+			// having done so. See the law file's "what is still open"
+			// section before touching the sweep block.
+			if (!isDisaster && gSubMath && ch > 0)
 			{
-				const int32_t nativeL = win->GetL();
 				const int32_t nativeT = win->GetT();
-				const int32_t cy = nativeT + (ch >> 1) + 3;
-				const int32_t check = (53 >> 1) - (ch >> 1) + cy - 29;
-				if (check == nativeT)
+				const int32_t top = SubPlaceTopMb(newH, cy, mT, mB, gTierF);
+				// ABSOLUTE -> RELATIVE: GZWinMoveTo moves BY, not TO.
+				dy = top - nativeT;
+				// Hold the ring at the legacy dock, so the FIRST paint
+				// is already right and there is no attach-then-jump.
+				gSubRingAutoY = legDY - dy;
+				static int sAnchorLog = 40;
+				if (sAnchorLog > 0)
 				{
-					// Y only - X keeps the constant, exactly as the sweep does
-					// (see the tgtL comment there). The recovered cy and the
-					// sweep's BUTTON CENTRE are provably the SAME number:
-					// substituting the game's own ringY = (ch>>1) - 26 into the
-					// measured natT law gives natT = bcy - (ch>>1) - 3, which
-					// is the game's own nativeT = cy - (ch>>1) - 3. So birth
-					// and the sweep feed the model an identical anchor and
-					// cannot disagree - which they MUST not, per above.
-					dy = SubPlaceTop(newH, cy, gLastViewH, gTierF) - nativeT;
-					// ...and hold the ring at the legacy dock, so the FIRST
-					// paint is already right and there is no attach-then-jump.
-					gSubRingAutoY = legDY - dy;
+					sAnchorLog--;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: SUBANCHOR strip=%p f=%.2f cy=%d mT=%d "
+						"mB=%d newH=%d nativeT=%d top=%d dy=%d",
+						strip, gTierF, cy, mT, mB,
+						newH, nativeT, top, dy);
 				}
 			}
-			// v4.0.33: container shift at birth — empirical estimate.
-			// At birth, gSubRingBltY is not yet set for this menu, so
-			// use the scale-factor formula. Works for ALL counts.
-			if (gTierF > 1.0f && strip)
+			else if (isDisaster)
 			{
-				const int32_t shiftPx = SubContainerShiftPx();
-				if (shiftPx > 0)
+				// UNREACHABLE - CONFIRMED BY CONTROL FLOW, NOT A GUESS
+				// (adversarial review, 2026-08-23). `isDisaster` cannot be
+				// true here: the `if (isDisaster) { ... return; }` block
+				// far above (~line 6966) unconditionally returns before
+				// this dock section is ever reached, so execution only
+				// arrives here with `isDisaster == false`. This branch,
+				// and everything in it (the recovered-cy chain, the
+				// `SubContainerShiftPx()` bornshift), has been dead code
+				// since AT LEAST v2.39.0 - it never ran, on any build,
+				// including every version before this session's changes.
+				//
+				// PRIOR COMMENTS IN THIS FILE AND IN research/laws/
+				// project-sc4-flyout-bottom-anchor.md claiming "the
+				// disaster twin still uses the old recovered-cy chain,
+				// unchanged" ARE WRONG - the disaster twin is fully
+				// docked and returned from the GODDOCK block above
+				// (~line 6994) and never reaches here. Do not port a fix
+				// onto this branch expecting it to run; it will not.
+				//
+				// Left in place, unreached, rather than deleted: if the
+				// disaster twin ever gets its own live-measured mT/mB fix
+				// (see the law file's "what is still open" list), fixing
+				// the actual GODDOCK path is the right target, not this.
+				// SubPlaceTop() and SubContainerShiftPx() remain defined
+				// (both still referenced by dead code below and by
+				// SubSharedBottom, also unreferenced from the live path -
+				// see that function's own retirement comment).
+				if (gSubMath && ch > 0)
 				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: BORNSHIFT strip=%p shiftPx=%d "
-						"(empirical f=%.2f)",
-						strip, shiftPx, gTierF);
-					dy -= shiftPx;
+					const int32_t nativeT = win->GetT();
+					const int32_t cyR = nativeT + (ch >> 1) + 3;
+					dy = SubPlaceTop(newH, cyR, gLastViewH, gTierF)
+						- nativeT;
 					gSubRingAutoY = legDY - dy;
+				}
+				if (gTierF > 1.0f && strip)
+				{
+					const int32_t shiftPx = SubContainerShiftPx();
+					if (shiftPx > 0)
+					{
+						static int sBornShiftLog = 40;
+						if (sBornShiftLog > 0)
+						{
+							sBornShiftLog--;
+							Logger::Get().WriteLine(LogLevel::Info,
+								"UiSpike: BORNSHIFT strip=%p shiftPx=%d "
+								"(empirical f=%.2f)",
+								strip, shiftPx, gTierF);
+						}
+						dy -= shiftPx;
+						gSubRingAutoY = legDY - dy;
+					}
 				}
 			}
 			if (dx != 0 || dy != 0)
@@ -7259,11 +7534,19 @@ namespace
 		if (gSubBornLog2 < 10)
 		{
 			gSubBornLog2++;
+			// cnt re-read here (the SUBBORN block's own local died at the
+			// close of its brace above) so this final-numbers line can be
+			// correlated to a strip's item count without cross-referencing
+			// the earlier SUBBORN line by pointer alone.
+			const int32_t cnt2 = strip
+				? *reinterpret_cast<int32_t*>(
+					reinterpret_cast<char*>(strip) + 0xE8)
+				: -1;
 			Logger::Get().WriteLine(LogLevel::Debug,
-				"UiSpike: SUBBORN2 0x8A6E61E0 born x%.2f: container %dx%d -> "
-				"%dx%d at (%d,%d)%+d%+d, strip rel(%d,%d) %dx%d -> (%d,%d) "
-				"%dx%d, items x%.2f%s.",
-				gTierF, cw, ch, newW, newH, l, t, dx, dy,
+				"UiSpike: SUBBORN2 0x8A6E61E0 born x%.2f cnt=%d: container "
+				"%dx%d -> %dx%d at (%d,%d)%+d%+d, strip rel(%d,%d) %dx%d -> "
+				"(%d,%d) %dx%d, items x%.2f%s.",
+				gTierF, cnt2, cw, ch, newW, newH, l, t, dx, dy,
 				osl, ost, osw, osh, sr[0], sr[1],
 				sr[2] - sr[0], sr[3] - sr[1], gTierF,
 				stripWin ? "" : " (STRIP WINDOW NOT RESOLVED)");
@@ -14524,8 +14807,13 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// so the next sweep has fresh data.
 			const bool ringFresh =
 				(gSubRingBufW == sub->GetW() && gSubRingBufH == sub->GetH());
-			// Reset SUBSHIFT counter on new menu (ring just painted).
-			if (ringFresh) { gSubShiftLog = 0; }
+			// FIX (2026-08-23 review): the SUBSHIFT counter reset used to
+			// live here, gated on ringFresh - a LEVEL condition true on
+			// every tick once the ring has painted, not an edge, so it
+			// reset the counter right back to 0 immediately before its own
+			// gate check ran and defeated the 40-line cap entirely. The
+			// reset now lives at the actual per-open edge event, in
+			// SubPlaceDetour's birth hook, alongside SUBGEO/SUBGEO2.
 			// #134: the POSITIVE CONTROL for SUBCAND. Without this, an empty
 			// SUBCAND log has two readings - "the sweep ran and no button
 			// matched" and "the sweep never ran" - and they need opposite
@@ -14556,9 +14844,9 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// firstVisible=2, putting Tourist Trap (full-list #7) at the
 			// ring's row. The fix is the guarded scroll write below at the
 			// born path - same pattern as the disaster InitScroll.
-			if (ringFresh && gSubGeoLog < 40)
+			if (ringFresh && gSubGeo2Log < 40)
 			{
-				gSubGeoLog++;
+				gSubGeo2Log++;
 				int32_t stl = 0, stt = 0;
 				cIGZWin* stw = sub->GetChildWindowFromID(0x8A2CAD8B);
 				if (stw) { AbsoluteTopLeft(stw, stl, stt); }
@@ -14649,39 +14937,53 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 							const int32_t cnt =
 								*reinterpret_cast<const int32_t*>(
 									reinterpret_cast<const char*>(stw) + 0xE4);
-							const int32_t autoY0 = legT - tgtT;
-							const int32_t shiftPx = SubContainerShiftFromGeo(
-								gSubRingBltY, autoY0, cnt);
-							if (shiftPx > 0)
+							// FIX (2026-08-23 review): cnt was read with no
+							// upper bound - SubContainerShiftFromGeo only
+							// guards cnt<1. A strip caught mid-repopulate
+							// (item list rebuilding on the same tick the
+							// sweep runs) or an unexpected layout at this
+							// offset could hand an out-of-range cnt straight
+							// into stripH/contentH and produce an oversized
+							// shiftPx, applied unconditionally to tgtT below
+							// with no further check. No shipped category
+							// approaches 64 items; this is a shape sanity
+							// bound, not a tuned gameplay limit.
+							if (cnt >= 1 && cnt <= 64)
 							{
-								tgtT -= shiftPx;
-							}
-							if (gSubShiftLog < 40 && !subShiftLoggedThisSweep)
-							{
-								subShiftLoggedThisSweep = true;
-								gSubShiftLog++;
-								// Duplicate the formula inline for diagnostic
-								const double f = static_cast<double>(gTierF);
-								const int32_t ringHs = RoundHalfUp(53.0 * f);
-								const int32_t capHs = RoundHalfUp(25.0 * f);
-								const int32_t sItemH = RoundHalfUp(44.0 * f);
-								const int32_t sSp = RoundHalfUp(5.0 * f);
-								const int32_t rp = sItemH + sSp;
-								const int32_t vr = cnt < 8 ? cnt : 8;
-								const int32_t sH = rp * cnt - sSp;
-								const int32_t cH = (sH > ringHs ? sH : ringHs) + 2 * capHs;
-								const int32_t sT = (cH - sH) / 2;
-								const double natRow =
-									static_cast<double>(gSubRingBltY + autoY0 + ringHs / 2 - sT)
-									/ static_cast<double>(rp);
-								const double tgtRow =
-									static_cast<double>(vr) - kSubArmTargetBottom;
-								Logger::Get().WriteLine(LogLevel::Debug,
-									"UiSpike: SUBSHIFT cnt=%d "
-									"ringBltY=%d autoY0=%d gAutoY=%d shift=%d "
-									"natRow=%.2f tgtRow=%.2f ringHs=%d sT=%d f=%.2f",
-									cnt, gSubRingBltY, autoY0, gSubRingAutoY,
-									shiftPx, natRow, tgtRow, ringHs, sT, gTierF);
+								const int32_t autoY0 = legT - tgtT;
+								const int32_t shiftPx = SubContainerShiftFromGeo(
+									gSubRingBltY, autoY0, cnt);
+								if (shiftPx > 0)
+								{
+									tgtT -= shiftPx;
+								}
+								if (gSubShiftLog < 40 && !subShiftLoggedThisSweep)
+								{
+									subShiftLoggedThisSweep = true;
+									gSubShiftLog++;
+									// Duplicate the formula inline for diagnostic
+									const double f = static_cast<double>(gTierF);
+									const int32_t ringHs = RoundHalfUp(53.0 * f);
+									const int32_t capHs = RoundHalfUp(25.0 * f);
+									const int32_t sItemH = RoundHalfUp(44.0 * f);
+									const int32_t sSp = RoundHalfUp(5.0 * f);
+									const int32_t rp = sItemH + sSp;
+									const int32_t vr = cnt < 8 ? cnt : 8;
+									const int32_t sH = rp * cnt - sSp;
+									const int32_t cH = (sH > ringHs ? sH : ringHs) + 2 * capHs;
+									const int32_t sT = (cH - sH) / 2;
+									const double natRow =
+										static_cast<double>(gSubRingBltY + autoY0 + ringHs / 2 - sT)
+										/ static_cast<double>(rp);
+									const double tgtRow =
+										static_cast<double>(vr) - kSubArmTargetBottom;
+									Logger::Get().WriteLine(LogLevel::Debug,
+										"UiSpike: SUBSHIFT cnt=%d "
+										"ringBltY=%d autoY0=%d gAutoY=%d shift=%d "
+										"natRow=%.2f tgtRow=%.2f ringHs=%d sT=%d f=%.2f",
+										cnt, gSubRingBltY, autoY0, gSubRingAutoY,
+										shiftPx, natRow, tgtRow, ringHs, sT, gTierF);
+								}
 							}
 						}
 					}

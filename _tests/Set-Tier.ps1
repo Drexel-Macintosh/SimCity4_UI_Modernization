@@ -58,6 +58,23 @@ param(
 $ErrorActionPreference = "Stop"
 $plug = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins')
 $zzz = Join-Path $plug "zzz-SC4UIScale"
+
+# AUTHORITATIVE dependency-gated package list (2026-08-23 fix - see the
+# family loop below for why). Parsed from src\ScaleTier.cpp the SAME way
+# Test-DatIntegrity.ps1's drift check does, rather than a fourth hand-kept
+# copy of a list that has already rotted twice (Deploy-OnGameClose.ps1's
+# own $DEPENDENCY_GATED array was missing WebButtonUI until this same
+# session). A package NOT in this list has no dependency at all - it is
+# tier-gated only, and "currently disarmed" never means "its mod is
+# absent" for it.
+$DEPENDENCY_GATED_NAMES = New-Object System.Collections.Generic.HashSet[string]
+try {
+    $scaleTierSrc = Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) "src\ScaleTier.cpp") -Raw -ErrorAction Stop
+    [regex]::Matches($scaleTierSrc, 'DepOkByName[^)]*?(z_SC4UIScale_[A-Za-z0-9]+)') |
+        ForEach-Object { [void]$DEPENDENCY_GATED_NAMES.Add($_.Groups[1].Value) }
+} catch {
+    Write-Warning "could not read src\ScaleTier.cpp to derive the dependency-gated package list - falling back to the old 'no active tier = gated' heuristic for every family, which is known to misfire after a deploy leaves everything at the 1x baseline."
+}
 $ini = Join-Path $plug "SC4UIScale.ini"
 # Tier "1" has NO package tag on purpose: a 1x baseline means EVERY
 # tier package is disabled and the game runs on its own stock art. It is
@@ -322,12 +339,28 @@ if (-not $want) {
 foreach ($key in ($fam.Keys | Sort-Object)) {
     $tiers = $fam[$key]
     $name = $key.Split("|")[1]
-    # IF NO TIER IS ACTIVE, THIS PACKAGE IS DEPENDENCY-GATED OFF (its mod is
-    # not installed). Leave it alone. Re-enabling it here would inject our
-    # frozen copy of someone else's UI into a game that does not have that mod
-    # - exactly what Test-ThirdPartyGates.ps1 exists to catch.
+    # IF NO TIER IS ACTIVE **AND THIS PACKAGE IS ACTUALLY DEPENDENCY-GATED**
+    # (per src\ScaleTier.cpp's own DepOkByName calls, not a guess), leave it
+    # alone - its mod may not be installed, and re-enabling it here would
+    # inject our frozen copy of someone else's UI into a game that does not
+    # have that mod, exactly what Test-ThirdPartyGates.ps1 exists to catch.
+    #
+    # FIX (2026-08-23): this used to apply "no active tier -> gated off" to
+    # EVERY family, tier-only ones included. A package with NO dependency at
+    # all (DialogStatic, ItemIcons, ItemIconsSub, CsiIcons, UncoveredIcons,
+    # SelectiveArt) has no "mod absent" state to protect - being fully
+    # disarmed just means it is sitting at the 1x baseline for some OTHER
+    # reason (Deploy-OnGameClose.ps1 preserving a baseline it found, not
+    # this script's own -Tier 1 run - the ONLY case the $forced/restore-file
+    # mechanism below was built for). MEASURED 2026-08-23: a deploy that
+    # preserved a 1x baseline left DialogStatic/ItemIcons/ItemIconsSub/
+    # CsiIcons/UncoveredIcons all fully disarmed with no restore-file ever
+    # written, so `-Tier 2` reported "0 rename(s)" and silently left 2x
+    # running with 1x art - the exact "wrong in the safe-looking direction"
+    # failure this file's own header warns about, just via a new trigger.
     $anyActive = @($ALLTAGS | Where-Object { $tiers[$_] -and $tiers[$_].active }).Count
-    if ($anyActive -eq 0 -and -not $forced.Contains($key)) { $gated++; continue }
+    $isDependencyGated = $DEPENDENCY_GATED_NAMES.Contains($name)
+    if ($anyActive -eq 0 -and $isDependencyGated -and -not $forced.Contains($key)) { $gated++; continue }
     foreach ($t in $ALLTAGS) {
         if (-not $tiers[$t]) { continue }
         $cur = $tiers[$t].path

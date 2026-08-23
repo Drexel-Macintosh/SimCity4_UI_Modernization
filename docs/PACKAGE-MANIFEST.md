@@ -64,6 +64,16 @@ tier over the probed `FontStyle.ini` at boot. Note this reaches
 `GZWinText`/button captions only — rich text goes through the HTML engine
 instead (see [HOW-IT-WORKS.md](HOW-IT-WORKS.md)).
 
+`z_SC4UIScale_FontStyle.ini` — an empty, inert marker file, present only so a
+package manager (sc4pac) has something of ours to install and later delete.
+The game never reads this exact name (only `<install>\Plugins\FontStyle.ini`,
+which the DLL manages at runtime and is never shipped in the bundle — see
+`_packaging\Build-Dist.ps1`'s `#182` comment). Branding it with the standard
+`z_SC4UIScale_` prefix means a manual, by-hand removal of this mod catches it
+the same way it catches every other package; a leftover live-named
+`FontStyle.ini` with no DLL to manage it was the exact shape of the #182
+crash.
+
 ---
 
 ## Package contents

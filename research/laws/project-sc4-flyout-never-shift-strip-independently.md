@@ -84,5 +84,10 @@ in their builder-computed, mutually-aligned positions.
 ## Related laws
 
 - `project-sc4-flyout-never-prescroll.md` — scroll is never the fix either
+- `project-sc4-flyout-bottom-anchor.md` — the SAME container-vs-strip
+  boundary this law establishes is why the bottom-anchor fix moves the
+  CONTAINER (via `gSubRingAutoY`/`dy`), never the strip, when it needed a
+  sub-flyout's ring to meet a different, shared row across menus of
+  different item counts.
 - `GOD-MODE-FLYOUTS.md` — container Plot pipeline, bar tile anatomy
 - `SUBFLYOUT-BUILDER.md` — builder constants, `Place()` formula, strip centering

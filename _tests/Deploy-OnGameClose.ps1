@@ -442,7 +442,11 @@ $DEPENDENCY_GATED = @(
     "z_SC4UIScale_WarriorUI",     # Warrior's UI mod
     "z_SC4UIScale_ThirdPartyUI",  # assorted third-party UI overrides
     "z_SC4UIScale_SaveWarningUI", # save-warning mod
-    "z_SC4UIScale_NamIcons"       # NAM
+    "z_SC4UIScale_NamIcons",      # NAM
+    "z_SC4UIScale_WebButtonUI"    # cyclone-boom Web Button Improvement Mod
+    # (added 2026-08-21 in ScaleTier.cpp; this list was never updated to
+    # match - caught by Test-DatIntegrity.ps1's dependency-gate-drift check,
+    # 2026-08-23. See that check's own comment for the two failure shapes.)
 )
 foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
     if (-not (Test-Path $dir)) { continue }

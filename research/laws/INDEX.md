@@ -33,6 +33,7 @@ against `SimCity 4.exe` 1.1.641 unless a note says otherwise.
 - [Pre-Scale Windows While They Are Hidden](feedback-sc4-prescale-while-hidden.md) — scaling before first show so no stock frame is ever painted.
 - [The Reactive Sweep and the 1x Flash](feedback-sc4-reactive-sweep-flashes.md) — the architecture behind the mode-transition flash and the born-scaled cure.
 - [Born-Correct Flyouts](project-sc4-flash-subflyouts.md) — the creation-time hooks that make nested sub-flyouts arrive scaled, docked and promoted.
+- [Sub-Flyout Bottom Anchor](project-sc4-flyout-bottom-anchor.md) — the shared, MEASURED `Place()` margin every sub-flyout's bottom edge must dock to, the two formulas that looked right and weren't, and the reusable method for extending the fix to other menu families.
 - [The City Map Jump at City Load](project-sc4-city-map-jump.md) — the dock minimap's late snap and blank interval at the start of play.
 - [Data Views Legend: Scale the Origin, Not the Step](project-sc4-dataviews-legend.md) — the single re-lay routine at `sub_007A04F0` and the eight patch sites inside it.
 - [The Sub-Flyout Ring Law](reference-sc4-subflyout-ring-law.md) — the ring, stem and strip as one welded sprite, and the Y coordinate that seats it.

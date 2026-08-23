@@ -110,7 +110,8 @@ Write-Output "  + z_SC4UIScale_SelectorUI-1x.dat (stock-tier selector; the DLL a
 Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $plugOut "SC4UIScale.ini") -Force
 $copied++
 
-# --- an EMPTY FontStyle.ini placeholder, so a package manager can own it -----
+# --- an EMPTY z_SC4UIScale_FontStyle.ini placeholder, so a package manager --
+# --- can own something, WITHOUT ever shipping a live-named FontStyle.ini ---
 # FontStyle.ini itself is never in this bundle by build - the DLL GENERATES it
 # at boot by copying one of the three tier sources (FontStyle-2x.ini etc.)
 # over it, and the dat-integrity gate deliberately has no row for it (see its
@@ -126,19 +127,49 @@ $copied++
 # FontStyle.ini file should be included in the ZIP file, and then the mod
 # would overwrite that file."
 #
-# So the bundle ships a zero-byte placeholder. SyncFont's own preservation
-# logic (#115/#118, ScaleTier.cpp) already handles this safely: an empty file
-# is not byte-identical to any tier font source, so on first boot it is
-# backed up once as FontStyle.ini.user-original (harmless - nobody restores
-# an empty file on purpose) and the real tier font is copied over it in the
-# same pass, exactly as if no file had existed at all. No DLL change needed;
-# this is a packaging-only fix.
-New-Item -ItemType File -Path (Join-Path $plugOut "FontStyle.ini") -Force | Out-Null
-if ((Get-Item (Join-Path $plugOut "FontStyle.ini")).Length -ne 0) {
-    throw "FontStyle.ini placeholder is not empty - sc4pac needs a zero-byte file, not a real one"
+# #182 (2026-08-23): shipping that placeholder AT THE LIVE NAME is what
+# caused a real, severe, shipped crash. SyncFont's own preservation logic
+# (#115/#118) saw the empty file on first boot, could not byte-match it to
+# any tier source, and - before the #182 fix - wrongly snapshotted it as the
+# PLAYER'S OWN font (".user-original"). Any later trip to stock tier restored
+# that empty snapshot over the live FontStyle.ini, and the game crashed
+# (ACCESS_VIOLATION in sub_7B4150) loading the city-select screen. The
+# runtime now recognizes an empty file as ours by construction and never
+# snapshots or restores one (IsEmptyFile, ScaleTier.cpp) - but that only
+# repairs installs that already have the DLL. A user who deletes this mod
+# BY HAND (rather than through sc4pac, or before ever launching the game
+# again) has no DLL left to run that repair, and a loose, unbranded
+# "FontStyle.ini" sitting in Plugins is easy to miss - it carries none of
+# this mod's z_SC4UIScale_/zzz-SC4UIScale naming, so nothing marks it as
+# ours to a person cleaning up by hand. Left behind empty, it is a landmine
+# that crashes a COMPLETELY VANILLA game (no DLL involved at all) the next
+# time any city loads.
+#
+# THE FIX: never ship a file at the literal live name. The placeholder is
+# renamed to z_SC4UIScale_FontStyle.ini - a name the game engine never reads
+# (only <install>\Plugins\FontStyle.ini is probed), so sc4pac still gets a
+# real file it installed and can delete on uninstall, a manual cleanup that
+# greps for "z_SC4UIScale_" now catches it like every other package, and
+# Install.ps1's existing "z_SC4UIScale_*" uninstall sweep (dist-template\
+# Install.ps1) already removes it for free. Being empty is now harmless
+# regardless of whether the mod is present, absent, or half-removed, because
+# nothing - not the game, not our own DLL - ever reads this exact filename;
+# it exists purely so a package manager has something of ours to own.
+New-Item -ItemType File -Path (Join-Path $plugOut "z_SC4UIScale_FontStyle.ini") -Force | Out-Null
+if ((Get-Item (Join-Path $plugOut "z_SC4UIScale_FontStyle.ini")).Length -ne 0) {
+    throw "z_SC4UIScale_FontStyle.ini placeholder is not empty - sc4pac needs a zero-byte file, not a real one"
+}
+if (Test-Path (Join-Path $plugOut "FontStyle.ini")) {
+    # #182's exact failure mode reintroduced: a literal live-named FontStyle.ini
+    # in the bundle is a landmine for anyone who removes this mod by hand.
+    # Refuse to ship it rather than silently repeat the incident.
+    throw ("a literal FontStyle.ini exists in the bundle output - this must " +
+           "never ship (see the #182 comment above this check); only " +
+           "z_SC4UIScale_FontStyle.ini belongs here")
 }
 $copied++
-Write-Output "  + FontStyle.ini (empty placeholder, so sc4pac can track and uninstall the file the DLL generates)"
+Write-Output ("  + z_SC4UIScale_FontStyle.ini (empty placeholder, so sc4pac can track and " +
+    "uninstall a file of ours - never the live FontStyle.ini the DLL generates, per #182)")
 
 # --- the two files with no build source --------------------------------------
 # Deploy-OnGameClose deliberately does not touch these; neither can be rebuilt,

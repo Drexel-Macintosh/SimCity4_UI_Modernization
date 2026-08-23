@@ -1,5 +1,60 @@
 # Changelog
 
+## 4.0.38
+
+- **Root-caused and fixed the short-strip sub-flyout misalignment**
+  (Police/Fire/Education/Hospitals and any other category with fewer
+  than 8 items at 2x/1.5x/3x). The two prior attempts this cycle
+  (v4.0.35's flat empirical shift, v4.0.36's per-bar mB-clamp
+  generalization) both left these menus broken because neither addressed
+  the real bug: `SubPlaceTop()`'s bottom screen margin was derived from
+  the desktop resolution, not the game's own live view-height parameter
+  (`mB`) — a 434px gap on a 1600-tall desktop that is the game's bottom
+  HUD, not scaling error. The corrected formula (`SubPlaceTopMb()`, using
+  the measured `mT`/`mB` directly) makes every short menu center on its
+  own toolbar button and makes every tall (8-row-capped) menu on a bar
+  converge on the identical shared bottom automatically — no per-bar
+  special case, no empirical shift constant. Verified against the real
+  disassembled game function under emulation before shipping. One known
+  side effect, not yet visually reconfirmed: the already-approved Build
+  Park/Green Spaces/Sports Grounds/Plazas family's shared bottom moves
+  by 16px (1150 → 1166), the derived-not-tuned value.
+- **Confirmed (adversarial review), not caused by the above: the
+  sub-flyout back-arrow scroll control and click-forwarding have been
+  silently non-functional** on any menu with more items than fit
+  visually (Landmarks, Rewards, Parks, any category over 8 items),
+  independent of this release. A second, still-unfixed placement
+  formula inside the periodic sweep never agreed with the birth hook's
+  position closely enough to activate the code that arms the back-arrow
+  hit zone. Not something this release introduces or fixes - flagged
+  now because verifying the placement fix is what surfaced it. Tracked
+  in `research/laws/project-sc4-flyout-bottom-anchor.md`.
+
+## 4.0.37
+
+- **Fixed a real, severe crash: an empty `FontStyle.ini` could crash the game
+  loading the city-select screen (#182).** Every release from v4.0.1 through
+  v4.0.9 shipped an empty `FontStyle.ini` placeholder (added so sc4pac could
+  track and uninstall the font file the DLL generates at runtime). The
+  existing font-preservation logic could not byte-match that empty file to
+  any of our shipped tier fonts, so it wrongly snapshotted it as the
+  player's own pre-existing font (`.user-original`); any later trip to the
+  stock tier restored that empty snapshot over the live `FontStyle.ini`, and
+  the game crashed (`ACCESS_VIOLATION` in `sub_7B4150`) the next time any
+  city loaded. `ScaleTier::SyncFont` now recognizes an empty file as ours by
+  construction, never snapshots or restores one, and self-heals any install
+  that already has a corrupted empty snapshot on its next stock-tier boot —
+  no manual file surgery required.
+- **Root-caused the same bug at the packaging level.** The sc4pac
+  placeholder shipped under the game's own live filename, so a player who
+  removed this mod by hand (rather than through sc4pac) could leave an
+  empty, unbranded `FontStyle.ini` behind with no DLL left to repair it —
+  a landmine that crashes a completely vanilla game. The placeholder is
+  renamed to `z_SC4UIScale_FontStyle.ini`: sc4pac still gets a real file it
+  installed and can delete, a manual "remove everything named
+  z_SC4UIScale\_" cleanup now catches it like every other package, and the
+  game never reads that filename at all.
+
 ## 4.0.35
 
 - **Sub-flyout container shift (v4.0.31-v4.0.35): computed instead of

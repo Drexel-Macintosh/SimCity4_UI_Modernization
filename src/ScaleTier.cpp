@@ -100,6 +100,30 @@ namespace
 		return same;
 	}
 
+	// #182 (2026-08-23): a REAL FontStyle.ini is never empty - the format is a
+	// list of style lines, so 0 bytes can only be the placeholder we ship in
+	// the release zip so sc4pac has a file to track (v4.0.1). An empty file
+	// is OURS by construction, exactly like a byte-identical tier source, and
+	// must never be treated as the player's real original: measured live,
+	// 2026-08-23 - an empty file got snapshotted as .user-original (the gap
+	// below did not know "empty" counts as ours), the stock-tier restore then
+	// faithfully copied that empty snapshot back over the live file, and the
+	// game crashed loading the city-select screen (ACCESS_VIOLATION in
+	// sub_7B4150, the tile-paint callback, on a font fetch that found nothing
+	// because the live file defined zero styles) - a stock/1x baseline is
+	// supposed to be the safest state this mod can produce, not the one that
+	// crashes. A file with no bytes cannot be "the user's font" under any
+	// interpretation, so this check needs no byte comparison at all.
+	bool IsEmptyFile(const wchar_t* path)
+	{
+		WIN32_FILE_ATTRIBUTE_DATA fad = {};
+		if (!GetFileAttributesExW(path, GetFileExInfoStandard, &fad))
+		{
+			return false;
+		}
+		return fad.nFileSizeHigh == 0 && fad.nFileSizeLow == 0;
+	}
+
 	// #118: is `live` one of OUR shipped tier fonts rather than the player's own?
 	// Returns the matching tag ("-2x" etc.) or nullptr if it matches none.
 	//
@@ -659,19 +683,22 @@ namespace
 		if (FileExists(live) && !FileExists(userOrig))
 		{
 			const wchar_t* ourTag = MatchesAnyTierFontSource(live, srcDir);
-			if (ourTag != nullptr)
+			if (ourTag != nullptr || IsEmptyFile(live))
 			{
-				// Ours, not theirs. Taking no snapshot is the SAFE outcome:
-				// with no .user-original the stock tier moves our file aside
+				// Ours, not theirs (#182: empty is ours by construction - see
+				// IsEmptyFile). Taking no snapshot is the SAFE outcome: with
+				// no .user-original the stock tier moves our file aside
 				// instead of restoring a wrong one, which leaves the player
 				// exactly where they were.
 				Logger::Get().WriteLine(
 					LogLevel::Info,
-					"ScaleTier: %ls is OUR %ls font (byte-identical), not the "
-					"user's - no .user-original taken. This is an upgrade "
-					"install; snapshotting here would have made our own scaled "
-					"font masquerade as the user's original (#118).",
-					live, ourTag);
+					"ScaleTier: %ls is OUR %ls (not the user's) - no "
+					".user-original taken. This is an upgrade install; "
+					"snapshotting here would have made our own font "
+					"masquerade as the user's original (#118/#182).",
+					live, ourTag != nullptr
+						? L"shipped tier font (byte-identical)"
+						: L"empty sc4pac-tracking placeholder");
 			}
 			else if (CopyFileW(live, userOrig, TRUE))
 			{
@@ -684,6 +711,26 @@ namespace
 
 		if (activeTag == nullptr)
 		{
+			// #182 SELF-HEAL: a .user-original from before this fix may
+			// already BE the corrupted empty snapshot (see IsEmptyFile's
+			// comment - this is exactly the file that crashed the game
+			// loading the city-select screen). Discard it here rather than
+			// trust it: a real user font is never 0 bytes, so this can only
+			// ever throw away a bad snapshot, never a genuine one. Every
+			// affected install repairs itself on its next stock-tier boot
+			// with this fix, with no manual file surgery required.
+			if (FileExists(userOrig) && IsEmptyFile(userOrig))
+			{
+				DeleteFileW(userOrig);
+				Logger::Get().WriteLine(
+					LogLevel::Info,
+					"ScaleTier: discarded an empty .user-original for %ls - "
+					"it could only be our own corrupted #182 snapshot, never "
+					"the player's real font, and restoring it crashes the "
+					"game loading the city-select screen. Falling through to "
+					"remove the live file instead, so the game's own built-in "
+					"font table applies.", live);
+			}
 			// STOCK TIER = the game as the player had it. Restore their original
 			// if we kept one; only then move ours aside. Note the missing
 			// MOVEFILE_REPLACE_EXISTING - a stale aside from a previous run is
@@ -730,15 +777,24 @@ namespace
 				{
 					const wchar_t* asideTag =
 						MatchesAnyTierFontSource(aside, srcDir);
-					if (asideTag != nullptr)
+					if (asideTag != nullptr || IsEmptyFile(aside))
 					{
+						// #182: an empty aside is ours by construction (same
+						// reasoning as IsEmptyFile's own comment) - without
+						// this, a stale empty stash would fail the SAME test
+						// asideTag uses, get left in place, and the
+						// MoveFileExW below would then fail (err 183) and
+						// strand the live (possibly also empty) file exactly
+						// where the game reads it.
 						DeleteFileW(aside);
 						Logger::Get().WriteLine(LogLevel::Info,
 							"ScaleTier: dropped a stale %ls stash so the live "
-							"font can be put aside - it was byte-identical to "
-							"our own %ls source, and leaving it there is what "
-							"kept a scaled font live at the stock tier.",
-							kDisabledSuffix, asideTag);
+							"font can be put aside - it was %ls, and leaving "
+							"it there is what kept a scaled (or empty, #182) "
+							"font live at the stock tier.",
+							kDisabledSuffix, asideTag != nullptr
+								? L"byte-identical to our own tier source"
+								: L"an empty sc4pac-tracking placeholder");
 					}
 					else
 					{
