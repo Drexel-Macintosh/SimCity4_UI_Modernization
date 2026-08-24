@@ -461,8 +461,9 @@ the table**; add rows the moment a new in-world visual is reported.
 | 20 | pause/alert screen border | window `cSC4WinAlertBorder` id `0x6A5E44B6` (ENGINE §0 — window world, despite drawing over the view) | correct |
 | 21 | minimap / Data Views / region bakes | window-owned surfaces (§2.6) | correct |
 | 22 | fireworks / celebration effects | effects manager (§2.1) | n-a |
+| 23 | zot warning discs (no-power / no-water / no-road / no-job balloons over buildings) | **THE MARKER-OCCUPANT FAMILY (§2.5) — spawned as CITY PROPS by a per-building zot state machine.** Four updaters of the row-13 drawer-host class (`0x6CABB0` NoPower, `0x6CAE30` NoWater, `0x6CAFC0` NoCar/NoWork, `0x6CBF40` region sweep) + the landfill simulator's hand-inlined NoCar (`0x6BB3B0`), all funneling into `AddZot 0x6C98C0` (kinds **4=NoPower > 5=NoWater > 6=NoCar > 7=NoWork**, lower wins, attr iid `0xC999C45E`, prop stamped `0x48E95539`) → `cSC4PropManager::AddLotProp` (vt+0x68 = `0x4A2670`, vtable `0xA8F928`) at building-top **+3.0f** (`0xA85074`). Exemplars `{0x6534284A,0xC977C536}` `Zot_*` ×4 (OccupantGroups `0x5001` = "Prop: Zot"); 80 S3Ds `{0x5AD0E817,0xBADB57F1, base\|zoom<<8\|rot<<4}`, sized by **S3D vertex metres** (Z1 plate 15.57×23.97 m, Z5 box ~13.4 m) — OccupantSize `{12,12,2}` is a simulator footprint the render never reads. Exactly four ship (three exhaustive corpus scans). Full chain: `overlays/row-23-zots.md` (closes register B#3) | n-a (world-anchored: zero `0x7F6690` callers in `0x6BA000-0x6CD000` against the 18-caller control; click-transparent on pick `0x4B8880`) |
 
-**Census tally: 22 rows, every owning system identified.** Row 1's owner is
+**Census tally: 23 rows, every owning system identified.** Row 1's owner is
 the CSI drawer `0x0046D990`, identified by SUPPRESSION on screen and
 confirmed on screen at 3x after the fix shipped; row 5's drawer is settled
 the same way at 1.5x. Rows 11/13/14/16 are DERIVED from the owning code or
