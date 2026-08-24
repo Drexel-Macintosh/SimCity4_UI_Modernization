@@ -1,9 +1,8 @@
 # Row 23 — zot warning discs (no-power / no-water / no-road / no-job balloons over buildings)
 
-**Date:** 2026-08-23 · **Grade: PARTIAL** (every VA below was derived once and then
+**Date:** 2026-08-23, live-confirmed 2026-08-24 · **Grade: DOCUMENTED** (every VA below was derived once and then
 independently re-derived by an adversarial second pass — 40+ claims, zero refuted —
-but no live capture has run, and the doc's evidence law forbids DOCUMENTED without
-one) · **Verdict: world-anchored prop occupants — correct at every tier by
+and the §5 live zoom pair has now confirmed the prediction on screen) · **Verdict: world-anchored prop occupants — correct at every tier by
 construction; no cure, no lever, nothing for the mod to do.** VA basis:
 `SimCity 4.exe` 1.1.641.0, ImageBase `0x400000`.
 
@@ -114,7 +113,33 @@ renderer ray-pick (`0x4B8880`): GetType returns the interned prop instance id
 and the `0xA823821E` family channel's nested QI re-check demands signpost type
 `0xAB72FBB3`, which the base prop class is not.
 
-## §5 Live probe (not yet run — the PARTIAL→DOCUMENTED gate)
+## §5 ✅ LIVE PROBE RUN 2026-08-24 — PREDICTION CONFIRMED ON SCREEN
+
+**Grade PARTIAL → DOCUMENTED.** The user supplied a zoom pair of the same city
+(Centropolis, 11/26/192, identical date/population/balance in both frames, so
+nothing but the camera changed).
+
+- **Zoomed out:** the no-power zots render as small dots scattered over the tile.
+- **Zoomed in:** the same zots render as large red roundels with a yellow
+  lightning bolt, tens of pixels across.
+
+The zots **scale with the camera**, exactly as §3 predicts for geometry sized in
+S3D vertex **world metres**. A pixel-fixed drawer would have produced identical
+pixel sizes in both frames; it did not.
+
+⭐ **The negative control landed in the same two frames, unplanned and better
+than the one requested.** The blue dispatch balloons (car / helicopter glyphs)
+appear in BOTH frames at **essentially the same pixel size** despite the large
+zoom change — i.e. they are **pixel-fixed**, which is precisely what the
+dispatch-indicator decode (register #8) says: those categories are sized by the
+inline screen-space immediates (32.0f/35.0f), not by world geometry. So one
+image pair simultaneously confirms *world-anchored* for zots and *pixel-fixed*
+for the dispatch family, using each as the other's control. That is the
+strongest single piece of evidence in this row.
+
+**Consequence, unchanged:** zots need no cure at any tier, by construction.
+
+## §5b Original probe spec (retained for method)
 
 Spawn lever: cheat **`0xAA7A2746` "TastyZots"** (registered @`0x7E9A09`) or an
 organically unpowered lot. Acceptance: screenshot pair at adjacent zooms — a

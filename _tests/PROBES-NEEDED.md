@@ -813,3 +813,48 @@ archives" purely because it looked at a path that does not exist on this machine
 (Documents is OneDrive-redirected). **A scan of nothing returns a confident
 zero.** Before believing any negative below, quote the line that proves the
 instrument ran.
+
+---
+
+## 9.7 RESULTS — the 2026-08-24 launches
+
+**PROBE A (zot zoom pair) — ✅ CLOSED, prediction confirmed.** Zots scale with
+the camera; census row 23 is now **DOCUMENTED**. ⭐ The run delivered a better
+negative control than the one specified: the **blue dispatch balloons appear in
+both frames at the same pixel size** while the zots grow, so a single image pair
+proves *world-anchored* for zots and *pixel-fixed* for the dispatch family, each
+acting as the other's control. Full account in
+`tools/research/overlays/row-23-zots.md` §5.
+
+**PROBE D (view-object differential) — ✅ INSTRUMENT WORKS, drawable NAMED.**
+13 view objects in the plain city view → **15** after switching to a data view.
+The added class is vtable **`0x00ABB614`**, absent from the baseline: a five-slot
+`cISC4ViewObject3D` (Draw `+0x0C` = `0x007DC9F0`, default Pick `+0x10` =
+`0x00735290`, `+0x14` null) constructed at `0x7DCC10` with **16.0f** cell
+constants and a packed half-alpha colour `0x80C000C0`. Still open: which view owns
+which instance — one more capture toggling views **one at a time**.
+
+> ⚠⚠ **THE FIRST ATTEMPT AT PROBE D PRODUCED A SILENT NULL AND COST A LAUNCH.**
+> `[Probe] ViewListRepeat` was read, but the probe that honours it installs only
+> under `MissionBubbleFx >= 3`, so the log had no `VIEWLIST` line and **nothing
+> said why**. This is verbatim the defect §D.2 of the register already recorded
+> against `[Probe] EdgeBlt` — *"lazy and not self-armed — a guaranteed null with
+> no warning"* — written into a NEW probe one day after that entry was read.
+> **THE RULE, now enforced in code: a probe key MUST arm its own probe.** When
+> adding a probe, trace the install chain to its gate before asking for a launch,
+> and make the arming line print its own positive control.
+
+**PROBE B (dispatch indicators) — PARTIAL, and it raised a possible DEFECT.**
+The numbered pin (a "4") sits over the dispatch **station**, showing units
+deployed — consistent with categories 0/1/2 drawing a NUMBER. But the user
+reports numbers **missing from the pins** at 2x. That is a scaling-defect
+hypothesis, not a grade confirmation, and it needs the 1x control:
+
+- **At 1x**, open the Fire dispatch tool and look at the pins over deployed units.
+- **YES (defect real):** numbers visible at 1x, absent at 2x ⇒ the number draw
+  (rec+0x10 through `'%d'` at `.rdata 0xA8281C`, gated on record flag bit 1) is
+  being lost at scaled tiers — a NEW open defect, and the first one this arc.
+- **NO:** numbers absent at 1x too ⇒ nothing is broken; the pins simply only
+  carry a count in some states.
+- **CONTROL:** the "4" over the station must be visible in BOTH captures — if it
+  is missing at 1x as well, the comparison is void.
