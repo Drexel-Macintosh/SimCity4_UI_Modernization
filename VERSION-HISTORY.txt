@@ -1,3 +1,84 @@
+2026-08-23  v4.0.40   CREATE DISASTERS FLYOUT REBUILT FROM SCRATCH -
+                      USER-CONFIRMED "IT'S PERFECT", PIXEL-VERIFIED
+
+  THE USER'S ORDER, after six same-day failed patches to the ring/bar
+  junction: "study the 1x disaster flyout and rebuild this flyout scale
+  code from scratch. It's the very first one we ever built so code wise
+  it's the youngest." Executed as a planned rebuild, not a seventh patch.
+
+  WHY EVERY PATCH FAILED - THE ARCHITECTURE: the old pipeline corrected
+  each painted element separately against the game's own re-flowed
+  mixed-1x/2x layout (Plot re-anchors the bar to the LIVE 2x window with
+  1x fields while the ring stays at its 1x position - proven by running
+  the REAL disassembled Plot at both window sizes under Unicorn,
+  tools/flyout-sim/emu_plot.py, goldens committed in _tests/golden/).
+  Seven knobs accreted: hand-tuned ring seat (RingDX=16/RingDY=153),
+  seat-scaling extrapolation, bar shift+widen, LayerFix replay,
+  RingUnderStrip viewport clip, a neck-penetration clip, DISHEAL. The
+  junction between independently-corrected elements could never be
+  right by construction.
+
+  THE REBUILD - ONE INVARIANT: at factor f, the live buffer equals the
+  stock 1x buffer magnified by f. Each element draw is classified by its
+  own signature (ring / top cap / bottom cap / spine tile), mapped to
+  its stock dst, scaled by f, nearest-upscaled, RGBA-copied, in stock
+  order (bar first, ring last = on top). Stock geometry, measured not
+  inferred: buffer 141x339; caps at x88..141 (two DIFFERENT source
+  sprites); spine a repeating 53x12 tile phase-locked to the cap edge
+  (per-tile mapping is ill-posed - the game re-flows tile COUNT to the
+  live height - so the first tile arrival draws the whole scaled region
+  and the rest drop); ring src(0,0,94,62) dst(0,138,94,200), confirmed
+  BYTE-IDENTICAL between stock and 2x captures (it never re-flows). The
+  weld - ring right edge overlapping the bar left edge by exactly
+  rhu(6f), ring on top - is geometrically exact at every tier by
+  definition of barLeft = rhu(94f) - rhu(6f).
+
+  THE DOCK, DERIVED NOT TUNED: DockX=7 / DockY=47 in closed form from
+  documented stock data only (_vanilla-reference button table + the
+  builder constants) - the game's own unclamped Place output relative
+  to the toolbar. Lands within 2px of the user-accepted 2026-07-28 seat
+  at f=2 (predicted dock (24,516); the live log's GODDOCK line shows
+  born (63,688) -> docked (24,516), exactly the prediction). RingDX/
+  RingDY are dead under the rebuild - the dock is the ONLY position
+  lever, which also resolves the long-standing contradiction with the
+  ring law ("never nudge the sprite") and closes #123 (1.5x seat never
+  re-verified) by construction.
+
+  PROVEN BEFORE BUILT, VERIFIED AFTER: _tests/Test-DisasterDrawRebuild.py
+  (new gate) - identity at f=1 against the real emulated draw list,
+  gap/overlap-free coverage and exact weld at 1.5/2/3 across the
+  born-scale rounding envelope, 3 negative controls. Live: user-
+  confirmed ("IT'S PERFECT"), and the auto-captured buffer dump shows
+  uniform (255,114,0)@a153 straight across the weld row with the bar
+  edge at exactly x=176 - the seam is gone at the pixel level, not just
+  to the eye. Hover cap-cell swaps (the game changes cap source cells
+  on hover) carry through automatically since each draw uses its own
+  call's src.
+
+  KILL SWITCH: [Disaster] DrawRebuild=0 restores the legacy path
+  verbatim (project convention). Scheduled for the NEXT release, after
+  a period of silence: delete the legacy ring block, the disaster bar
+  arm, seat-scaling, gRingDX/gRingDY/gRingUnderStrip/gLayerFix + the
+  gBarCache machinery, and their ini keys. BarDX/BarW + DrawBarScaled
+  stay (the sub-flyout family consumes them). DISHEAL kept as an
+  invariant-enforcer for now.
+
+  ALSO v4.0.39, same evening, the one real pre-rebuild fix that
+  survives it: the SCROLLINIT guard compared the strip's spacing field
+  against its already-scaled value but ran BEFORE the scaling - failed
+  every open, so the scroll reset never ran and the ring sat beside the
+  wrong pair of disasters. Now compares against the captured stock
+  value. (The same evening's three compositing experiments on the
+  junction - soft-edge skip, raw overwrite, clipped alpha-over replay -
+  are all superseded by the rebuild and documented as rejected in
+  DrawBarScaled's comment.)
+
+  STILL OPEN / NEXT: a true 1x reference screenshot of the open
+  disaster flyout for _vanilla-reference/captures/ (none exists; the
+  emulator-derived stock geometry stands in as ground truth meanwhile);
+  1.5x/3x eyes-on spot checks (expected correct by construction);
+  next-release deletion of the legacy path.
+
 2026-08-23  v4.0.38   SUB-FLYOUT SHORT-STRIP MISALIGNMENT - ROOT CAUSE
                       FOUND AND FIXED (offline-verified, NOT YET LIVE
                       TESTED - the user's next launch confirms it)

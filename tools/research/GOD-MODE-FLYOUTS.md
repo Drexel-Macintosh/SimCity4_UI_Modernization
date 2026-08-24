@@ -176,18 +176,42 @@ is a stretch-blit of a 141×339 buffer onto a 282×678 window. The compact look 
 inherent to the stock art's thin bar and small thumbnails magnified by a bitmap
 stretch, rather than the real 2× sub-windows Terraform uses.
 
-### The four container draws at 1x
+### The four container draws — ⚠ CORRECTED 2026-08-23: the table below is the 2x-WINDOW RE-FLOW, not stock 1x
 
-Running the real container `Plot()` against a synthetic object under a CPU
-emulator, with the buffer and draw-context vtable calls stubbed, captures the
-exact rects `Plot` feeds each draw:
+**This section was mis-titled "at 1x" and that mislabel cost real
+debugging time.** The rects below were captured with the emulator object's
+window rect at its live MODDED state (282x678 — see `emu_plot.py`'s
+default fields), with 1x layout fields: the bar is right-anchored to the
+DOUBLED window (`282−53 = 229`), i.e. this is the mixed-1x/2x re-flow the
+game produces at 2x, which is exactly the layout the mod's draw hooks
+receive and must reconstruct from. Only the ring rect is stock-identical
+(left-anchored, Y from a field — confirmed byte-identical at both window
+sizes).
+
+TRUE STOCK 1x (window = buffer = 141x339; run
+`python tools/flyout-sim/emu_plot.py --fields a8=0,ac=0,b0=141,b4=339 --buf=141,339`,
+golden in `_tests/golden/disaster-stock-1x-drawlist.txt`):
 
 ```
-bar-top cap  dst(229,0,  282,25)   x[229-282]  width 53 from field 0xe0  (right-anchored)
-bar-spine    dst(229,25, 282,653)  drawn by the ARC helper 0x8d8bc0 (TILES)
+bar-top cap  src(94,0,147,25)    dst(88,0,  141,25)
+bar-spine    src(94,25,147,37)   dst(88,25, 141,314)  25 tiles of 53x12, last clipped to 1 row
+bar-bot cap  src(147,37,200,62)  dst(88,314,141,339)  a DIFFERENT source sprite than the top cap
+ring/circle  src(0,0,94,62)      dst(0,138, 94,200)   ring right 94 overlaps bar left 88 by 6px - THE WELD
+```
+
+The 2x-window re-flow (window = buffer = 282x678, `emu_plot.py` defaults,
+golden in `_tests/golden/disaster-live-2x-drawlist.txt`):
+
+```
+bar-top cap  dst(229,0,  282,25)   x[229-282]  width 53 from field 0xe0  (right-anchored to the LIVE window)
+bar-spine    dst(229,25, 282,653)  53 tiles via the tiler 0x8d8bc0
 bar-bot cap  dst(229,653,282,678)
-ring/circle  dst(0,138,  94,200)   x[0-94]     width 94 from field 0xec  (LEFT-anchored)
+ring/circle  dst(0,138,  94,200)   x[0-94]     LEFT-anchored, identical to stock
 ```
+
+The v4.0.40 rebuild (see `_tests/REGRESSION.md` "DISASTER FLYOUT REBUILD")
+maps each re-flowed draw back to its stock rect and scales it by f, which
+is why the weld is exact at every tier with zero tuning.
 
 With all six fields doubled the ring reaches 188 wide and the bar 106 — the
 correct 2× target, where the ring encircles the 2× button and the bar is twice

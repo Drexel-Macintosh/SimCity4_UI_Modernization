@@ -168,7 +168,39 @@ goldens at each accepted milestone. See `golden\MANIFEST.md`.
   from a DPI-aware process (SetProcessDPIAware + SetCursorPos +
   mouse_event; same foreground/rect gates). The game's own input is fine.
 
-## God-mode flyouts / Disaster click fix (v2.11.25, 2026-07-28)
+## DISASTER FLYOUT REBUILD (v4.0.40, 2026-08-23) — SUPERSEDES the per-element treatment below
+
+**USER-CONFIRMED ("IT'S PERFECT") + pixel-verified.** After six same-day
+failed patches to the ring/bar junction, the disaster flyout's PAINT
+pipeline was rebuilt from scratch on one invariant: **at factor f the live
+buffer equals the stock 1x buffer magnified by f.** Each element draw is
+classified by its own signature (ring / top cap / bottom cap / spine tile)
+and redrawn at stock-geometry-times-f, in stock order (bar first, RING ON
+TOP). The weld is `barLeft = rhu(94f) − rhu(6f)`; the spine is drawn as
+one phase-locked region on the first tile's arrival (per-tile stock-y
+mapping is ill-posed — the game re-flows tile COUNT to the live height).
+The dock is DERIVED (`DockX=7 / DockY=47` closed-form from the vanilla
+button table + builder constants; live-verified: GODDOCK docked (24,516),
+exactly the prediction) — RingDX/RingDY seat-nudging is DEAD under the
+rebuild, resolving the old contradiction with the ring law.
+
+- Gate: `python _tests\Test-DisasterDrawRebuild.py` (identity vs the REAL
+  emulated Plot at f=1; exact weld + gap/overlap-free coverage at
+  1.5/2/3; negative controls). Goldens: `_tests/golden/disaster-*.txt`
+  from `tools/flyout-sim/emu_plot.py`.
+- Kill switch: `[Disaster] DrawRebuild=0` = the legacy path below,
+  verbatim, kept ONE release. `[Disaster] BufDump=N` dumps the container
+  buffer for offline pixel checks (`tools/research/render_disbuf.py`).
+  ⚠ under LiveTune the ini re-read re-arms BufDump — set it back to 0
+  when done or it dumps forever.
+- The RingDX/RingDY/DockX/DockY ini values in the section below are the
+  LEGACY path's; under the rebuild the compiled derived defaults apply
+  unless the ini explicitly overrides.
+- Scheduled next release: delete the legacy ring block, disaster bar arm,
+  seat-scaling, gRingDX/gRingDY/gRingUnderStrip/gLayerFix + gBarCache
+  machinery. BarDX/BarW + DrawBarScaled stay (sub-flyout family).
+
+## God-mode flyouts / Disaster click fix (v2.11.25, 2026-07-28) — paint/dock parts SUPERSEDED by the v4.0.40 rebuild above; click/claim parts still live
 
 All five god flyouts are 2x and USER-CONFIRMED, including Disaster's
 full-width picture clicks (the container's custom hit-claim `[this+0xe0]` +
@@ -381,12 +413,18 @@ tools\research\MAYOR-MODE.md "v2.17.0":
   captured values (4x pitch, giant single items, most menus broken).
   Doubled/missing items across flyouts = someone made the sweep write
   fields again.
-- Bar END CAPS (v2.18.4, FINAL): caps are x-widened ONLY (106x25), NEVER
-  y-doubled - identical to the user-confirmed disaster look. The v2.17.2
-  doubling left square tile shoulders poking past the arc at both pill ends
-  (the game paints fill tiles AFTER the top cap, overdrawing a doubled
-  cap's lower half). Square corners poking from a pill's ends = someone
-  re-added cap y-scaling.
+- Bar END CAPS (v2.18.4; SCOPE NARROWED v4.0.40): caps are x-widened ONLY
+  (106x25), NEVER y-doubled - **for the SUB-FLYOUT (mayor) family**, which
+  still runs the legacy per-element pipeline. The v2.17.2 doubling left
+  square tile shoulders poking past the arc at both pill ends (the game
+  paints fill tiles AFTER the top cap, overdrawing a doubled cap's lower
+  half). ⚠ v4.0.40 DELIBERATELY y-scales the caps for the DISASTER family
+  - that trap was an artifact of the old mixed pipeline: under the rebuild
+  WE draw every spine pixel (the game's re-flowed tiles all return 0), the
+  scaled spine starts exactly at the scaled cap's lower edge, and the
+  overdraw is impossible. Square corners on the MAYOR flyouts = someone
+  re-added cap y-scaling there; y-scaled caps on the DISASTER flyout are
+  correct and user-confirmed (see DISASTER FLYOUT REBUILD below).
 - ALPHA (v2.17.3): both pixel compositors (sub-flyout ring 2x + bar/caps)
   skip pixels with 0 < alpha < 128 - the submenus mod's frame art is RGBA
   and its semi-transparent edges painted a dark halo/square edge. Stock

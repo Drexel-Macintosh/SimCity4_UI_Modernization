@@ -1,5 +1,33 @@
 # Changelog
 
+## 4.0.40
+
+- **Create Disasters flyout rebuilt from scratch on one invariant: at
+  scale factor f, the flyout's rendering equals the stock 1x rendering
+  magnified by f.** The old pipeline (the first flyout this project ever
+  scaled) corrected each painted element separately — a hand-tuned ring
+  seat, a bar shift+widen, a layer-order replay, two clip fixes — so the
+  junction between elements could never be right by construction; six
+  same-day patches to the ring/bar "tail" junction all failed for that
+  reason. The rebuild classifies each element draw (ring, bar caps,
+  spine) and redraws it at its disassembly-derived stock geometry times
+  f, in stock order. The ring/bar weld, the strip overlap, and 1.5x/3x
+  correctness all follow from the math, with zero per-tier tuning. The
+  ring's dock position is now fully derived from documented stock data
+  (retiring the hand-tuned RingDX/RingDY seat entirely — the dock is the
+  only position lever). Proven against the real emulated game code
+  offline before shipping (`_tests/Test-DisasterDrawRebuild.py`), then
+  user-confirmed on screen. `[Disaster] DrawRebuild=0` restores the old
+  path for one release as a safety lever.
+
+## 4.0.39
+
+- **Fixed: the Create Disasters flyout opened with the ring beside the
+  wrong pair of disasters.** The scroll-reset guard compared the strip's
+  spacing field against its already-scaled value, but ran before the
+  scaling had happened — so it failed on every open and the reset never
+  ran. It now compares against the captured stock value.
+
 ## 4.0.38
 
 - **Root-caused and fixed the short-strip sub-flyout misalignment**

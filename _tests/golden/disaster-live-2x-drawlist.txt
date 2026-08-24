@@ -1,0 +1,23 @@
+=== fields ===
+  0x0E0 = 53
+  0x0E4 = 25
+  0x0E8 = 12
+  0x0EC = 94
+  0x0F0 = 62
+  0x0F4 = 6
+  0x100 = 138
+  window 282x678  buffer 282x678
+=== captured draw ops ===
+  buffer-blit      srcRect=(94, 0, 147, 25) dstRect=(229, 0, 282, 25) (a=0x11000000,0x0)
+  SPINE-CALL       srcRect=(94, 25, 147, 37) dstRect=(229, 25, 282, 653) (a=0x12000000,0x200FFBEC)
+  spine-tile      [1] srcRect=(94, 25, 147, 37) dstRect=(229, 25, 282, 37)
+  spine-tile      [2] srcRect=(94, 25, 147, 37) dstRect=(229, 37, 282, 49)
+  spine-tile      [3] srcRect=(94, 25, 147, 37) dstRect=(229, 49, 282, 61)
+  spine-tile      [4] srcRect=(94, 25, 147, 37) dstRect=(229, 61, 282, 73)
+  spine-tile      [25] srcRect=(94, 25, 147, 37) dstRect=(229, 313, 282, 325)
+  spine-tile      [50] srcRect=(94, 25, 147, 37) dstRect=(229, 613, 282, 625)
+  buffer-blit      srcRect=(147, 37, 200, 62) dstRect=(229, 653, 282, 678) (a=0x11000000,0x0)
+  buffer-blit      srcRect=(0, 0, 94, 62) dstRect=(0, 138, 94, 200) (a=0x11000000,0x0)
+  screen-composite srcRect=(0, 0, 282, 678) dstRect=(0, 0, 0, 0) (a=0x12000000,0x0)
+  --> spine drawn as 53 tile-Blts (TILING, not stretch)
+wrote renders/live-2x.png
