@@ -292,7 +292,9 @@ The fill sheet {46a006b0,14015584} is a **six-cell strip**: states=6 is carried 
 - Community cIGZWin header (vendor/gzcom-dll) slot numbering is confirmed by game code for
   `GetW +0xA4, GetH +0xA8, GetArea* +0xC0, SetW +0xCC, SetSize +0xD4, SetArea4 +0xDC,
   GZWinMoveTo +0xE0, GetChildAsRecursive +0x94, ShowWindow +0x110/Hide +0x114 (observed),
-  SetID +0xFC` — but it drifts in the high region: the **draw-self virtual is empirically slot 88
+  GetID +0xFC / SetID +0x100` (⚠ corrected 2026-08-24 — this note read "SetID +0xFC" for months;
+  `+0xFC` is a zero-arg GETTER, byte-proven on `cGZWinText` vtable `0xADFEB8`. The error was
+  independently spotted in `regionmap/slice-1.md` and never propagated here) — but it drifts in the high region: the **draw-self virtual is empirically slot 88
   (vtable+0x160)**, found by diffing the four class vtables (identical base impls everywhere
   except overridden slots). Window rect lives at `this+0xA8..0xB4` (L,T,R,B) on the cIGZWin
   subobject; TrendBar's draw sees it at `this+0x24..0x30` (different subobject offset).

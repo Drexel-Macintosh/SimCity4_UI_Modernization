@@ -6080,7 +6080,18 @@ namespace CodePatches
 			InterlockedIncrement(&gSpQuadCalls);
 			if (gSpQuadLogs >= 24) { return; }
 			++gSpQuadLogs;
+			// ⚠ 2026-08-24 (register #26): this read [this+0x70] and CALLED IT
+			// "kind". It is not. [+0x70] is the SUB-INDEX; the kind the 7-way
+			// draw dispatch at .text 0x5F1708 switches on is [+0x74], whose
+			// only writer is the virtual setter 0x5F0D00 (primary vtable slot
+			// 9), body literally `mov [ecx+0x74],eax`. Any capture from an
+			// older DLL mis-names every kind and cannot be compared with one
+			// from this build. Both fields are logged now.
 			const uint32_t kind = self
+				? *reinterpret_cast<const uint32_t*>(
+					static_cast<const uint8_t*>(self) + 0x74)
+				: 0xFFFFFFFFu;
+			const uint32_t subIndex = self
 				? *reinterpret_cast<const uint32_t*>(
 					static_cast<const uint8_t*>(self) + 0x70)
 				: 0xFFFFFFFFu;
@@ -6090,8 +6101,9 @@ namespace CodePatches
 			memcpy(&imm, reinterpret_cast<const void*>(
 				base - kImageBase + kSignpostSizeSite + 1), 4);
 			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: SPQUAD #%ld this=%p kind=%u imm=%.1f.",
-				gSpQuadCalls, self, kind, static_cast<double>(imm));
+				"CodePatches: SPQUAD #%ld this=%p kind=%u sub=%u imm=%.1f.",
+				gSpQuadCalls, self, kind, subIndex,
+				static_cast<double>(imm));
 		}
 		__declspec(naked) void SpQuadDetour()
 		{
@@ -6110,13 +6122,20 @@ namespace CodePatches
 			InterlockedIncrement(&gSpTexCalls);
 			if (gSpTexLogs >= 24) { return; }
 			++gSpTexLogs;
+			// ⚠ 2026-08-24 (register #26): same defect as SPQUAD above - the
+			// field called "kind" here was [+0x70], the SUB-INDEX. The kind
+			// the 7-way draw dispatch (.text 0x5F1708) switches on is [+0x74].
 			const uint32_t kind = self
+				? *reinterpret_cast<const uint32_t*>(
+					static_cast<const uint8_t*>(self) + 0x74)
+				: 0xFFFFFFFFu;
+			const uint32_t subIndex = self
 				? *reinterpret_cast<const uint32_t*>(
 					static_cast<const uint8_t*>(self) + 0x70)
 				: 0xFFFFFFFFu;
 			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: SPTEX #%ld this=%p kind=%u.",
-				gSpTexCalls, self, kind);
+				"CodePatches: SPTEX #%ld this=%p kind=%u sub=%u.",
+				gSpTexCalls, self, kind, subIndex);
 		}
 		__declspec(naked) void SpTexDetour()
 		{
