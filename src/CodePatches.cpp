@@ -4207,6 +4207,11 @@ namespace CodePatches
 		int   gSpriteOffset = 0;     // byte offset into the sprite; 0 = OFF
 		int   gSpriteKind = 0;       // 0 = float, 1 = int32, 2 = two int16
 		float gSpriteScale = 0.0f;   // <= 1.01 = disarmed
+		// [UiSpike] CsiCountPlate - overrides the factor applied to the count
+		// plate height at 0x0046CB09 ONLY. <= 0 = follow the tier (shipped
+		// behaviour). See ApplyCsiIndicatorScale for why this one immediate is
+		// separable: its quad is CENTRED, so the height is also a position.
+		float gCsiCountPlate = 0.0f;
 		int   gBubbleHits = 0;
 		int   gBubbleLogs = 0;
 		bool  gBubbleStack = false;  // mode >= 3: log the caller stack
@@ -4594,10 +4599,43 @@ namespace CodePatches
 					return;
 				}
 			}
+			// ⚠ 2026-08-24 — THE COUNT PLATE IS A CENTRED QUAD.
+			// Its consumer (0x0046EC2C) does `fmul [0xA84D2C]` (= 0.5) on BOTH
+			// +0xD0 and +0xD4 and negates, building the vertices as
+			// ± half-extents around the anchor. So scaling the HEIGHT grows the
+			// plate UP as well as down: at f=2 the top edge rises ~7 units and
+			// collides with the helmet art above it - user-reported and
+			// screenshot-confirmed at 2x, correct at 1x.
+			//
+			// Scaling the height is still NECESSARY (unscaled, the font-scaled
+			// glyphs are clipped out of existence - the ORIGINAL defect this
+			// entry was added for, see the kCsiQuad comment). So the two known
+			// failure modes are opposite ends of one missing anchor term, and
+			// the value that separates them has never been measured on screen.
+			//
+			// [UiSpike] CsiCountPlate makes exactly that one immediate
+			// separately tunable so ONE launch can find it, instead of a fourth
+			// guess: <= 0 (default) keeps the shipped behaviour (full tier
+			// factor); 1.0 pins the stock 14.0 for an A/B against the original
+			// clipping; anything between trades clipping against overlap.
+			// Deliberately scoped to 0x0046CB09 ALONE - every other immediate
+			// keeps the both-or-neither guarantee above.
 			for (int k = 0; k < n; ++k)
 			{
 				float* p = reinterpret_cast<float*>(
 					kCsiQuad[k].va + base - kImageBase);
+				if (kCsiQuad[k].va == 0x0046CB09 && gCsiCountPlate > 0.0f)
+				{
+					*p = kCsiQuad[k].stock * gCsiCountPlate;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: CSI count plate OVERRIDE x%.2f -> %.1f "
+						"px (tier would give %.1f). Centred quad: the plate "
+						"grows UP and down, so a smaller value pulls the digit "
+						"clear of the hat and a larger one clips it.",
+						gCsiCountPlate, kCsiQuad[k].stock * gCsiCountPlate,
+						kCsiQuad[k].stock * factor);
+					continue;
+				}
 				DWORD old = 0;
 				if (!VirtualProtect(p, sizeof(float), PAGE_READWRITE, &old))
 				{
@@ -6980,6 +7018,14 @@ namespace CodePatches
 			gSpriteScale = static_cast<float>(_wtof(buf));
 			// <= 0 means "follow the tier", matching MissionBubbleScale.
 			if (gSpriteScale <= 0.0f) { gSpriteScale = factor; }
+			// The count plate's own factor. Read here so it is available
+			// BEFORE ApplyCsiIndicatorScale runs below - the same
+			// arm-before-the-consumer discipline the gBubbleScale comment
+			// upstream was written to enforce.
+			wchar_t cbuf[32] = {};
+			GetPrivateProfileStringW(L"UiSpike", L"CsiCountPlate", L"0",
+				cbuf, 32, iniPath);
+			gCsiCountPlate = static_cast<float>(_wtof(cbuf));
 		}
 		// #188 PIXTABLE: the per-zoom SCREEN-PIXEL size table at .rdata
 		// 0x00A88170 {20,30,40,50,60, 60,14,32,35,64}, sole consumer
