@@ -844,7 +844,32 @@ which instance — one more capture toggling views **one at a time**.
 > adding a probe, trace the install chain to its gate before asking for a launch,
 > and make the arming line print its own positive control.
 
-**PROBE B (dispatch indicators) — PARTIAL, and it raised a possible DEFECT.**
+**PROBE B (dispatch indicators) — ✅ CLOSED 2026-08-24. NO DEFECT; the
+number-vs-picture split is CONFIRMED, and the suspected regression did not
+reproduce.**
+
+The 1x control was run and the pins **do** carry numbers — a purple pin reading
+**4** and a yellow pin reading **5** (with a fire-helmet glyph above the digit),
+plus a plain red helmet pin carrying **no** number, and a `4 available` tooltip.
+Crucially the 2x capture **also** showed a numbered pin (a white **4** over the
+dispatch district), so numbers are present at BOTH tiers and the earlier
+"numbers went away" impression is **not** a scaling defect. What the pair
+actually demonstrates is the decoded behaviour itself, on screen:
+
+- some pins draw a **NUMBER** (the deployed-unit count over the station) —
+  register #8 categories 0/1/2, rendered via `rec+0x10` through `'%d'` at
+  `.rdata 0xA8281C`, gated on record flag bit 1;
+- others draw a **PICTURE** only (the helmet / car / portrait glyph families).
+
+Both kinds are visible simultaneously in the same frame at both tiers, which is
+exactly what the offline decode predicts and is the observation that closes the
+grade debt. ⚠ Still NOT settled by this pair: which *category id* owns which pin
+colour — the colours seen (purple, yellow, red) do not map cleanly onto the
+decoded art table (fire = red `0x144161A1`, police = blue `0x144161A2`, MySim =
+purple `0x144161A3`), and a dark screenshot is the wrong instrument for a colour
+claim. Treat the colour→category mapping as OPEN.
+
+**Original hypothesis, retained as a refuted lead:**
 The numbered pin (a "4") sits over the dispatch **station**, showing units
 deployed — consistent with categories 0/1/2 drawing a NUMBER. But the user
 reports numbers **missing from the pins** at 2x. That is a scaling-defect
