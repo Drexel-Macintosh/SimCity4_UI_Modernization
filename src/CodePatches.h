@@ -329,6 +329,13 @@ namespace CodePatches
 	// Idempotent; safe to call every PostCityInit.
 	void InstallPickProbe();
 
+	// True when [Probe] ViewListRepeat is set, so the caller can install the
+	// view-object probe even if MissionBubbleFx has not been raised. Reads the
+	// ini directly: it is called from the message handler BEFORE
+	// InstallViewObjProbe has run, so it cannot rely on that function's cached
+	// value. A probe key must arm its own probe.
+	bool ViewListRepeatRequested();
+
 	// #188 ARTFETCH. Installed from the DIRECTOR CONSTRUCTOR, not PostAppInit:
 	// the signpost FRAME sheets never appeared in a PostAppInit-armed capture
 	// even though our 2x override of them demonstrably moved a balloon on

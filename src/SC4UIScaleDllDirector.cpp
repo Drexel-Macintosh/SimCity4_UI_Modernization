@@ -1054,7 +1054,16 @@ public:
 			// #188 elimination instrument: the render singleton exists only
 			// after city init, so the Pick probe installs here (tiny: a few
 			// reads + one MinHook; idempotent).
-			if (settings.spikeScaleAll && settings.spikeMissionBubbleFx >= 3)
+			// ⚠ 2026-08-24: this used to require MissionBubbleFx >= 3 ONLY,
+			// which made [Probe] ViewListRepeat a GUARANTEED SILENT NULL - the
+			// key was read, but the probe that honours it was never installed,
+			// so the log had no VIEWLIST line and nothing said why. That is
+			// verbatim the "lazy and not self-armed" defect this project
+			// already recorded against [Probe] EdgeBlt, and it cost a live
+			// session. A probe key must ARM ITS OWN PROBE.
+			if (settings.spikeScaleAll
+				&& (settings.spikeMissionBubbleFx >= 3
+					|| CodePatches::ViewListRepeatRequested()))
 			{
 				CodePatches::InstallPickProbe();
 			}

@@ -7392,6 +7392,16 @@ namespace CodePatches
 			"registrations.", static_cast<unsigned>(tva));
 	}
 
+	bool ViewListRepeatRequested()
+	{
+		wchar_t ini[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
+			MAX_PATH);
+		wchar_t* s = wcsrchr(ini, L'\\');
+		if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+		return GetPrivateProfileIntW(L"Probe", L"ViewListRepeat", 0, ini) > 0;
+	}
+
 	void InstallPickProbe()
 	{
 		InstallViewObjProbe();
