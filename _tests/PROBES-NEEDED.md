@@ -883,3 +883,67 @@ hypothesis, not a grade confirmation, and it needs the 1x control:
   carry a count in some states.
 - **CONTROL:** the "4" over the station must be visible in BOTH captures — if it
   is missing at 1x as well, the comparison is void.
+
+
+---
+
+## 9.8 RESULTS — the all-data-views capture (2026-08-24)
+
+### ⛔ NEGATIVE RESULT that kills the follow-up plan (#22/#23)
+
+24 enumerations across a session in which the user cycled **every** data view.
+Totals: 13 → (one void walk) → 13 ×8 → **14** → 14 for the remaining fourteen
+dumps. **Exactly ONE change in the whole session**: `0x00ABB614` +1 at 11:38:28.
+It never disappeared, never re-added, and **no other view produced any delta at
+all**. Eight distinct vtables were seen; seven are in 23/23 dumps.
+
+**Therefore counting view objects CANNOT identify which view owns which
+drawable, and the plan in §9.4 ("one capture toggling views one at a time") is
+dead.** Two readings survive and the count cannot separate them:
+
+1. `0x00ABB614` is ONE overlay object, created lazily on first data-view use and
+   then **re-parameterised** per view — which fits its constructor exactly (a
+   packed colour at `[+0x2C]`, 16.0f cell constants). Every later view reuses it,
+   so the population never changes.
+2. The in-world tint is **not a view object at all**, and `0x00ABB614` is an
+   unrelated one-shot.
+
+**The discriminator is no longer a count — it is the COLOUR FIELD.** Next probe
+must log `[obj+0x2C]` (and ideally `[obj+0x1C..0x28]`) for every `0x00ABB614`
+instance on each enumeration. If that dword changes as the view changes,
+reading 1 is proven and the row closes; if it never changes, reading 2 is proven
+and the hunt moves to the terrain/material path. **Do not ask for another
+counting capture.**
+
+### ⚠ LIVE DEFECT CONFIRMED — the deployment count overlaps the hat at 2x
+
+User-supplied 2x crop: on the fire-dispatch pins the **helmet art and the count
+digit overlap**; the digit should sit BELOW the hat. At 1x the same pins render
+correctly (helmet above, digit below, clearly separated).
+
+**This is not a new discovery and that is the important part** — the project
+already diagnosed it, and the fix is ALREADY APPLIED AND LIVE. `kCsiQuad` carries
+`{ 0x0046CB09, 14.0f, "count plate height (text categories)" }`, whose own
+comment reads *"at 2x the glyphs are twice as tall inside a quad that is still 14
+— and the number under the deployment hat disappears"*, and the live log confirms
+it ran: `CSI indicators x2.00 … count plate height 14.0 -> 28.0 px (text types)`,
+11 immediates applied. That entry also carries a `WHY THIS IS BACK AFTER BEING
+REVERTED` note, so it has been wrong at least once before.
+
+⇒ **Scaling the plate HEIGHT is necessary and not sufficient.** The height now
+matches the glyphs, but the plate's PLACEMENT relative to the icon is still
+stock, so the taller plate grows upward into the helmet. Candidate levers, read
+this session from the text-category setup:
+
+```
+0x0046CAF0  fild [esp+0x48]          ; MEASURED text width  -> +0xD0
+0x0046CB03  mov  [esi+0xD4], 14.0f   ; plate height         -> ALREADY SCALED
+0x0046CB0D  mov  [esp+0x24], 0.3f    ; <-- CANDIDATE: normalised placement
+0x0046CB15  mov  [esp+0x20], 0.0f    ; <-- its partner
+0x0046CB1D  mov  [esp+0x7C], 0xA80810
+```
+
+**Do NOT patch `0.3f` on this reading alone.** Two facts must come first: what
+consumes `[esp+0x20]/[esp+0x24]`, and whether the overlap is the plate moving up
+or the *icon* growing down (the category-3 icon immediate is also scaled, 32→64).
+The 1x/2x pair already in hand is the control for any candidate fix.
