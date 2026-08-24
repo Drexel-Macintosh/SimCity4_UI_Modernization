@@ -699,3 +699,117 @@ it" test.
 
 14. Hand back `SC4UIScale.log`, `SC4UIScale-104.csv`, and the `Trace-CityOpen` CSV.
 15. Set `SpinProbe` back to `0` **only if** you do not want the per-launch CSV row; leaving it at 10 is what accumulates the #107 rates from ordinary play, at no cost.
+
+---
+
+# ═══ SECTION 9 — THE 2026-08-24 OPEN SET (v4.0.41) ═══
+
+**Everything above this line was written 2026-08-15 against v3.0.0 and its
+per-defect entries are HISTORY — several of those defects shipped fixes long
+since. The pre-flight in §0 and the hook-eagerness law in §1 still apply
+verbatim; re-read both before any launch.**
+
+After the offline unknowns sweep (register rows #3, #5, #8, #9, #11, #12, #13,
+#18, #27 + the lower tier all closed), exactly this much is left that a live
+run — and only a live run — can settle. Ordered cheapest-first.
+
+## 9.0 What is ALREADY armable vs what needs a build
+
+| Probe | Build needed? | Why |
+|---|---|---|
+| **A. Zot zoom pair** | **NO** | pure screenshots + a cheat |
+| **B. Dispatch-indicator eyes-on** | **NO** | pure observation |
+| **C. #16 hairlines at 1.5×** | **NO** | external capture only |
+| **D. #22/#23 view-object differential** | **YES — one small lever** | `VIEWLIST` fires **once at frame 400** (`CodePatches.cpp:7321`), so it cannot do a before/after diff. Needs a `[Probe] ViewListRepeat=N` key re-running the existing enumerator every N frames, log-only, default 0. Nothing else changes |
+| **E. #24 purple GZWinText** | **YES — one small lever** | needs a dump of `[this+0xE0]` (the font-style GUID slot, `SC4-UI-ENGINE.md` §Fonts) on a purple vs a black sibling |
+| **F. #5 font-registry remainder** | **YES** | detour spec + arities already written (run journal, `wf_6e2e24df-377`) |
+| **G. #4 draw-call census** | **YES** | spec is being produced by the running lane |
+
+**Do A–C first.** They cost one launch, need no rebuild, and B/C are pure
+"look at the screen" — the cheapest evidence in the project.
+
+## 9.1 PROBE A — the zot zoom pair (closes row 23's grade, PARTIAL → DOCUMENTED)
+
+The offline decode says zots are **world-anchored props sized by S3D vertex
+metres**, so they must scale with the camera exactly like a building. That
+prediction has never been checked on screen.
+
+- **Setup:** any city with a powered building. Type the cheat **`TastyZots`**
+  (registered `0x7E9A09`) — or simply bulldoze a power line and wait for the
+  no-power balloon.
+- **Do:** with a zot on screen, screenshot at one zoom level, then press the
+  zoom-in key **once** and screenshot again **without moving the camera**.
+- **YES (world-anchored, as predicted):** the zot roughly **doubles** in pixels
+  between the two shots, like the building under it.
+- **NO (refutes the whole row):** it stays the same pixel size — that would mean
+  a pixel-fixed path we did not find, and row 23 must reopen.
+- **NEGATIVE CONTROL, in the same two frames:** a **route-query signpost**
+  (census row 16) is pixel-derived and must **NOT** double. If both double, or
+  neither does, the comparison is broken, not the theory.
+
+## 9.2 PROBE B — the seven dispatch indicators (eyes-on for row #8)
+
+All seven categories were decoded offline; six are named. This confirms the
+naming and settles the census-row-5 contradiction on screen.
+
+- **Do:** cause a **fire** (and separately a **police** call) and look at the
+  marker over the responding vehicle; then start a **U-Drive-It** mission and
+  look at both the offer balloon and the marker over the car you drive.
+- **Report, per marker:** does it show a **NUMBER** or a **PICTURE**?
+- **Predicted:** fire (cat 0) and police (cat 1) draw a **number**; the MySim
+  bubble (3) and the CSI offer balloon (4) draw a **picture**; the driving
+  bubble (5) and the white **plumb bob** over your vehicle (6) are their own art.
+- **Why it matters:** the number-vs-picture split is the load-bearing half of the
+  offline decode, and it is visible without any instrument.
+
+## 9.3 PROBE C — #162's two phantom hairlines, 1.5× only
+
+Eight hypotheses are refuted (§D.1) and **every offline explanation is
+exhausted**; the one live signal is an 18×2 band tiled 19× along the bottom edge
+of a 340×155 buffer — 1× nine-slice geometry inside a scaled frame.
+
+- **Setup:** force **tier 1.5×** (`_tests\Set-Tier.ps1 -Tier 1.5`), then launch.
+- **Do:** photograph the **mayor's-hat** button and an **advisor portrait** with
+  an **external camera or a second machine** — ⚠ **an in-process capture cannot
+  see this** (the composited surface is GPU-only; nine builds proved it, §C).
+- **Also capture the SAME two elements at 2×** in a second launch as the control:
+  the hairlines are 1.5×-only, so their absence at 2× is what makes the 1.5×
+  image evidence rather than a photo of a button.
+
+## 9.4 PROBE D — the view-object differential (#22 in-world data-view tint, #23 underground/pipe views)
+
+The instrument mostly exists: `VIEWLIST` already enumerates the renderer's four
+pass lists (`renderer+0x188/0x18C/0x190/0x194`) — offsets independently
+re-confirmed by this session's `cISC4ViewObject3D` reconstruction. It just fires
+**once**, so it cannot diff.
+
+- **Lever to add (small, house-style, log-only, default off):**
+  `[Probe] ViewListRepeat=N` → re-run the existing enumeration every N frames.
+- **Do:** with it armed, capture a baseline in the plain city view, switch to a
+  **Data View** (and separately the **underground/pipe** view), and let it
+  enumerate again.
+- **The answer is the DIFF:** any object class present only while the view is on
+  is that view's drawable. If the lists are identical, the tint is **not** a view
+  object — that is a real answer too, and it points at the terrain/material path.
+- **POSITIVE CONTROL:** the enumeration must print a non-zero `GRAND TOTAL` in
+  both captures. A zero total means the enumerator did not run and the diff is
+  meaningless — do not read an empty diff as "no difference".
+
+## 9.5 PROBE E — why GZWinText renders purple under runtime-only scaling (#24)
+
+- **Lever to add:** dump `[this+0xE0]` (GZWinText's font-style GUID, written by
+  `SetFontStyleByGUID`; see §Fonts) for a **purple** control and a **black**
+  sibling in the same window, log-only.
+- **Predicted:** purple = the fallback GUID `0x68963C4C` (i.e. the style lookup
+  missed), black = a real style. If both carry the same GUID the cause is not the
+  style binding and the row must be rewritten.
+
+## 9.6 The standing law for all of the above
+
+Every one of these entries names its positive control **because a null without
+one is a refusal, not a finding** — the rule §1 of this file exists to enforce,
+and the rule this session broke once more: an archive scan reported "zero plugin
+archives" purely because it looked at a path that does not exist on this machine
+(Documents is OneDrive-redirected). **A scan of nothing returns a confident
+zero.** Before believing any negative below, quote the line that proves the
+instrument ran.
