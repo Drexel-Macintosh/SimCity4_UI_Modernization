@@ -241,3 +241,56 @@ Recorded because the failure modes generalise.
    with a solid block filling the cell turns the destination rect into
    something directly readable off one screenshot. A *hollow* frame is better
    still — it measures the art while leaving whatever is behind it visible.
+
+
+---
+
+## 5. ⚠ THE COUNT PLATE IS CENTRED — why scaling its height moved the number INTO the hat
+
+**User-reported at 2x, 2026-08-24, and byte-proven the same day.** On the fire /
+police dispatch pins the **deployment digit overlaps the helmet art**; it should
+sit below it. At 1x the same pins render correctly.
+
+**This is the second failure of the same constant, and the history matters.**
+`kCsiQuad` already carries `{ 0x0046CB09, 14.0f, "count plate height (text
+categories)" }`, added because at 2x the font-scaled glyphs were twice as tall
+inside a quad still 14 units high, so *the number disappeared*. That fix is
+applied and live (`CSI indicators x2.00 … count plate height 14.0 -> 28.0 px`).
+It made the number visible and **moved the defect rather than removing it.**
+
+**The mechanism, from the consumer at `0x0046EC2C`:**
+
+```
+0x0046EC2C  fld  [esi+0xD0]      ; plate WIDTH
+0x0046EC32  fmul [0xA84D2C]      ; x 0.5   -> half width
+0x0046EC38  fld  [esi+0xD4]      ; plate HEIGHT
+0x0046EC3E  fmul [0xA84D2C]      ; x 0.5   -> half height
+0x0046EC44  fld st(1) / fchs     ; -half...
+0x0046EC4F  fld st(1) / fchs
+```
+
+`0xA84D2C = 0.5`. **The quad is built as ± half-extents, i.e. CENTRED on its
+anchor.** Therefore scaling the height grows the plate **symmetrically, up and
+down** — at f=2 the top edge rises by `(14f − 14)/2 = 7` and collides with the
+icon above it.
+
+> ### ⭐ THE LAW THIS MINTS
+> **Scaling a CENTRED quad moves two edges, not one.** A size constant whose
+> consumer multiplies by 0.5 and negates is a half-extent: changing it is a
+> change to POSITION as well as SIZE. Before scaling any such constant, find its
+> consumer and check for the `fmul 0.5` / `fchs` pair — and if it is centred,
+> pair every size change with an anchor shift of **half the delta**, or the
+> element grows into its neighbour.
+
+**The fix shape (derived, NOT yet built):** hold the top edge still by moving the
+plate's anchor **down by half the height increase**, `7·(f−1)` in plate units.
+Scaling the height alone is necessary (the glyphs need the room) and provably
+insufficient.
+
+**Do not** simply revert `0x0046CB09` — that restores the ORIGINAL defect, where
+the number is clipped out of existence. The two failure modes are opposite ends
+of the same missing anchor term.
+
+**Controls already in hand:** a 1x capture (correct: helmet above, digit below,
+clearly separated) and a 2x capture (overlapping). Any candidate fix must
+reproduce the 1x relationship at 2x, with the 1x shot unchanged.

@@ -7236,9 +7236,47 @@ namespace CodePatches
 							reinterpret_cast<uintptr_t>(
 								*static_cast<void**>(obj)) - base + kImageBase);
 					}
-					Logger::Get().WriteLine(LogLevel::Info,
-						"CodePatches: VIEWLIST layer%d[%d] obj=%p "
-						"vt=0x%08X key=0x%08X.", layers[k], n, obj, vtVa, key);
+					// #22/#23: the OVERLAY class 0x00ABB614 is created ONCE and
+					// then re-used - a 24-dump session cycling every data view
+					// changed the population exactly once, so COUNTING cannot
+					// say which view owns it. Its ctor (0x7DCC10) writes 16.0f
+					// cell constants at [+0x1C]/[+0x20], their 1/16 reciprocals
+					// at [+0x24]/[+0x28], and a packed colour at [+0x2C]. If
+					// that colour tracks the selected view, the object IS the
+					// data-view tint; if it never moves, the tint is not a view
+					// object and the hunt goes to the terrain path. So dump the
+					// STATE, not just the identity - the field is the
+					// discriminator the count could never be.
+					uint32_t f1C = 0, f20 = 0, f24 = 0, f28 = 0, f2C = 0;
+					bool haveFields = false;
+					if (vtVa == 0x00ABB614
+						&& reinterpret_cast<uintptr_t>(obj) > 0x10000)
+					{
+						const uint32_t* w =
+							reinterpret_cast<const uint32_t*>(
+								static_cast<uint8_t*>(obj));
+						f1C = w[0x1C / 4]; f20 = w[0x20 / 4];
+						f24 = w[0x24 / 4]; f28 = w[0x28 / 4];
+						f2C = w[0x2C / 4];
+						haveFields = true;
+					}
+					if (haveFields)
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"CodePatches: VIEWLIST layer%d[%d] obj=%p "
+							"vt=0x%08X key=0x%08X | OVERLAY "
+							"+1C=%08X +20=%08X +24=%08X +28=%08X "
+							"COLOR+2C=%08X.",
+							layers[k], n, obj, vtVa, key,
+							f1C, f20, f24, f28, f2C);
+					}
+					else
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"CodePatches: VIEWLIST layer%d[%d] obj=%p "
+							"vt=0x%08X key=0x%08X.",
+							layers[k], n, obj, vtVa, key);
+					}
 					++n;
 					void* next = *reinterpret_cast<void**>(node);
 					// IDENTIFY BY SUBTRACTION, aimed from the ini so a wrong
