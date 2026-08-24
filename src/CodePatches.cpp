@@ -5055,30 +5055,33 @@ namespace CodePatches
 			// from 0x5E0438 before the pins ever drew. A billboard is
 			// primType 6 with count 4 (gdcap.cpp's proven table); strips are
 			// not pins.
+			// PER-CALLER CAP, not per-position dedupe: position-keyed dedupe
+			// was defeated twice by effect sprites that MOVE every frame -
+			// each new position read as "fresh" and one system ate the whole
+			// budget before the pins drew. Capping each submit SITE at 6
+			// lines makes flooding structurally impossible: every drawer in
+			// the game gets at most 6 rows, so the helmet drawer cannot be
+			// crowded out no matter how many fires are burning.
 			bool fresh = false;
 			if (verts && count == 4 && prim == 6)
 			{
-				static struct { uint32_t r; float x, y; } seen[48] = {};
-				static int seenN = 0;
-				fresh = true;
-				for (int k = 0; k < seenN; ++k)
+				static struct { uint32_t r; int n; } sites[64] = {};
+				static int siteN = 0;
+				int idx = -1;
+				for (int k = 0; k < siteN; ++k)
 				{
-					if (seen[k].r == ret
-						&& seen[k].x > verts[0] - 0.5f
-						&& seen[k].x < verts[0] + 0.5f
-						&& seen[k].y > verts[1] - 0.5f
-						&& seen[k].y < verts[1] + 0.5f)
-					{
-						fresh = false;
-						break;
-					}
+					if (sites[k].r == ret) { idx = k; break; }
 				}
-				if (fresh && seenN < 48)
+				if (idx < 0 && siteN < 64)
 				{
-					seen[seenN].r = ret;
-					seen[seenN].x = verts[0];
-					seen[seenN].y = verts[1];
-					++seenN;
+					idx = siteN++;
+					sites[idx].r = ret;
+					sites[idx].n = 0;
+				}
+				if (idx >= 0 && sites[idx].n < 6)
+				{
+					++sites[idx].n;
+					fresh = true;
 				}
 			}
 			if (fresh && gDqSubmitLogs < 200)
