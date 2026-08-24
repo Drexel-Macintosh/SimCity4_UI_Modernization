@@ -4994,6 +4994,56 @@ namespace CodePatches
 				static_cast<int>(t[8]), static_cast<int>(t[9]));
 		}
 
+		// #8 THE STACK-SHIFT CONSTANT - why the deployment count sat ON the
+		// helmet at 2x, and why three size patches could not move it.
+		//
+		// The digit is not part of the pin. It is a SECOND indicator record,
+		// and a record's two quads share ONE centre - there is no
+		// digit-below-helmet offset anywhere in the draw. The 1x layout comes
+		// from the COLLISION system: overlapping indicator boxes push the
+		// newcomer away by the float at .rdata 0xA88260 (stock 43.0f), probing
+		// DOWN first (0x46E52A), then up, right, left. At 2x every size term
+		// scales (pin imms, plate, PIXTABLE) except this shift, so the count
+		// record moves 43 stock px against a 128 px balloon and lands mid-hat.
+		// It also forces the measured A/B null: the plate height changes the
+		// digit's own quad, never its collision-shifted position.
+		//
+		// Blast radius, byte-swept: exactly 8 imm32 refs to 0xA88260 -
+		// 0x46E558/0x46E571 (down), 0x46E5C8/0x46E5E1 (up), 0x46E638/0x46E655
+		// (right), 0x46E6B5/0x46E6CE (left) - all four probe directions inside
+		// cSC4DispatchVehicleView::Draw. Sole consumer. A solo indicator never
+		// reads it, so 1x and every non-stacked pin are pixel-identical by
+		// construction.
+		void ApplyStackShift(float want)
+		{
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			float* p = reinterpret_cast<float*>(
+				0x00A88260 + base - kImageBase);
+			// Never-repin rule: the stock bytes must read exactly 43.0f
+			// (0x422C0000) or another mod / a prior partial write owns them.
+			if (*p != 43.0f)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: STACKSHIFT 0x00A88260 reads %.2f, expected "
+					"43.00 - REFUSED (nothing written).", *p);
+				return;
+			}
+			DWORD old = 0;
+			if (!VirtualProtect(p, sizeof(float), PAGE_READWRITE, &old))
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: STACKSHIFT VirtualProtect failed.");
+				return;
+			}
+			*p = 43.0f * want;
+			VirtualProtect(p, sizeof(float), old, &old);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: STACKSHIFT 0x00A88260 x%.2f -> %.1f px - the "
+				"indicator collision push (digit-under-hat spacing). Solo "
+				"pins unaffected by construction.", want, *p);
+		}
+
 		void ApplySignpostScale(float want)
 		{
 			const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
@@ -7046,6 +7096,11 @@ namespace CodePatches
 		// and this module (0x46Cxxx-0x46Fxxx) is untouched by all ten
 		// eliminations. Scaling the table is the test.
 		if (factor > 1.01f && mode >= 2) { ApplyPixelTable(factor); }
+		// #8 stack-shift: rides the same gate as every other CSI-family
+		// patch. STAGED pending the adversarial verify verdict on the
+		// digit-anchor decode; the function refuses unless the stock bytes
+		// match, so a wrong verdict costs a log line, not a corruption.
+		if (factor > 1.01f && mode >= 2) { ApplyStackShift(factor); }
 		// THE CSI QUAD - the actual balloon size (0x00A8819C = 42 px).
 		if (factor > 1.01f && mode >= 2) { ApplyCsiScale(factor); }
 		// #188 SHIPS ON BY DEFAULT (mode 2). The offer balloon is the

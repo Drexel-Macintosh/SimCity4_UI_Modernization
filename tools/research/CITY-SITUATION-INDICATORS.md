@@ -294,3 +294,36 @@ of the same missing anchor term.
 **Controls already in hand:** a 1x capture (correct: helmet above, digit below,
 clearly separated) and a 2x capture (overlapping). Any candidate fix must
 reproduce the 1x relationship at 2x, with the 1x shot unchanged.
+
+
+## 5b. ✅ RESOLVED 2026-08-24 — the overlap was never inside the record
+
+§5's centred-quad analysis is byte-true but was aimed at the WRONG mechanism, and
+the live A/B proved it: holding the plate height at stock 14 (override log-proven)
+changed nothing on screen. The full decode (adversarially verified, 6/6 claims,
+verdict SHIP) found:
+
+- **A record's two quads share ONE centre** — the pin quad and the digit quad are
+  translated to the identical point (the 42×42 box centre). No intra-record term
+  separates digit from helmet, so a single record is scale-invariant and can never
+  produce a tier-dependent overlap.
+- **The digit lives in a SECOND indicator record**, stacked onto the helmet
+  record's anchor by the COLLISION probe: overlapping boxes displace the newcomer
+  by **43.0f (`.rdata 0xA88260`)**, probing down/up/right/left (down first,
+  `0x46E52A`). That 43 is screen pixels and was the one unscaled term.
+- The numbers reproduce everything: 1x balloon [ay−11, ay+53] vs digit
+  [ay+57, ay+71] = 4px clear; 2x balloon [ay−43, ay+85] covers digit
+  [ay+50, ay+78] = the defect; plate-held-at-14 leaves the digit band covered =
+  the A/B null, forced.
+- **Fix SHIPPED: `ApplyStackShift`** — scale `0xA88260` by the tier factor
+  (86.0 at 2x), same gate as the CSI patches, never-repin stock check
+  (`0x422C0000`), log line `STACKSHIFT 0x00A88260 x%.2f`. Sole consumer proven:
+  exactly 8 `.text` refs, all four probe pairs inside the dispatch view's Draw.
+  Solo indicators never read it ⇒ CSI/MySim/pin and 1x are pixel-identical by
+  construction; stacked separations scale with the art, which is correct.
+
+⚠ The §5 law (centred quads: size is also position) STANDS as a law — it just
+was not this defect's mechanism. Residual, stated honestly: the two-record
+stacking premise is elimination-forced and matches both screenshots, but the
+specific record pairing has not been logged live; the shipped patch's on-screen
+result is the discriminator (digit drops exactly 43px further at 2x).
