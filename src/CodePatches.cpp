@@ -7193,6 +7193,17 @@ namespace CodePatches
 	RenderDrawFn gRenderDrawOrig = nullptr;
 	volatile LONG gFrameCount = 0;
 	bool gViewListDumped = false;
+	// [Probe] ViewListRepeat=N - re-enumerate every N frames after the first
+	// dump, log-only, default 0 = OFF (shipped behaviour is byte-identical to
+	// before). Added 2026-08-24 for register #22/#23: the in-world data-view
+	// tint and the underground/pipe views are answered by a DIFFERENCE between
+	// two enumerations, and a one-shot dump at frame 400 cannot produce one.
+	// The player switches the view between two dumps; any class present in the
+	// second and absent from the first is that view's drawable. If the two
+	// lists are identical, the tint is NOT a view object - a real answer that
+	// re-points the hunt at the terrain/material path.
+	int  gViewListRepeat = 0;
+	LONG gViewListNextAt = 0;
 	bool gDrawHooked = false;
 
 	void DumpViewObjectLists(void* renderer)
@@ -7275,6 +7286,24 @@ namespace CodePatches
 		{
 			gViewListDumped = true;
 			DumpViewObjectLists(self);
+			if (gViewListRepeat > 0)
+			{
+				gViewListNextAt = f + gViewListRepeat;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: VIEWLIST repeat ARMED every %d frames "
+					"(next at %ld). Switch the data view between dumps; the "
+					"DIFFERENCE is the answer. A zero GRAND TOTAL means the "
+					"walk did not run - do not read that as 'no difference'.",
+					gViewListRepeat, gViewListNextAt);
+			}
+		}
+		else if (gViewListRepeat > 0 && gViewListDumped
+			&& f >= gViewListNextAt)
+		{
+			gViewListNextAt = f + gViewListRepeat;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: VIEWLIST re-enumeration at frame %ld.", f);
+			DumpViewObjectLists(self);
 		}
 		return gRenderDrawOrig(self, edx);
 	}
@@ -7290,6 +7319,13 @@ namespace CodePatches
 			if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
 			gViewSuppress = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"BalloonViewSuppress", 0, ini));
+			gViewListRepeat = static_cast<int>(GetPrivateProfileIntW(
+				L"Probe", L"ViewListRepeat", 0, ini));
+			if (gViewListRepeat > 0 && gViewListRepeat < 30)
+			{
+				// Below ~1 s the log floods and the diff becomes unreadable.
+				gViewListRepeat = 30;
+			}
 			wchar_t kb[32] = {};
 			GetPrivateProfileStringW(L"UiSpike", L"BalloonViewKill", L"0",
 				kb, 32, ini);
