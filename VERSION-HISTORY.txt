@@ -73,11 +73,18 @@
   are all superseded by the rebuild and documented as rejected in
   DrawBarScaled's comment.)
 
-  STILL OPEN / NEXT: a true 1x reference screenshot of the open
-  disaster flyout for _vanilla-reference/captures/ (none exists; the
-  emulator-derived stock geometry stands in as ground truth meanwhile);
-  1.5x/3x eyes-on spot checks (expected correct by construction);
-  next-release deletion of the legacy path.
+  CLOSED SAME EVENING: 1.5x and 3x eyes-on spot checks - user-confirmed
+  good, the first time the disaster ring has EVER been verified at 1.5x
+  (the #123 debt is now closed with evidence, not just by construction).
+  And the true 1x reference capture now exists: the user ran a stock
+  session (boot log confirms ScaleFactor=1.00, DLL inert) and the open
+  flyout is banked as _vanilla-reference/captures/
+  disaster-flyout-1x-settle.jpg - the first on-disk 1x capture of this
+  flyout, and the literal image the rebuild's invariant magnifies.
+
+  STILL OPEN / NEXT: next-release deletion of the legacy path (the
+  DrawRebuild=0 arm, seat-scaling, gRingDX/gRingDY/gRingUnderStrip/
+  gLayerFix + gBarCache machinery and their ini keys).
 
 2026-08-23  v4.0.38   SUB-FLYOUT SHORT-STRIP MISALIGNMENT - ROOT CAUSE
                       FOUND AND FIXED (offline-verified, NOT YET LIVE
