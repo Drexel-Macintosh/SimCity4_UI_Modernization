@@ -5043,10 +5043,17 @@ namespace CodePatches
 			// for even existed. A static quad re-submitted every frame is one
 			// fact, not thirty. Log a (ret, v0) combination only when it is
 			// new or has moved > 0.5px; the cache is per-site-per-position.
+			// FILTER WIDENED 2026-08-24: the range filter [0x46D990,0x46F240)
+			// measured the dispatch view perfectly - and proved the HELMET
+			// balloons never come from it. The stock cat-0 pin texture
+			// (0x144161A1) is an EMPTY RING; the helmet pins the user
+			// photographs are another system's quads, invisible to the old
+			// filter by construction. Log every 4-vertex quad submission
+			// (deduped) so the helmet drawer names itself by return address.
 			bool fresh = false;
-			if (ret >= 0x0046D990 && ret < 0x0046F240 && verts && count == 4)
+			if (verts && count == 4)
 			{
-				static struct { uint32_t r; float x, y; } seen[16] = {};
+				static struct { uint32_t r; float x, y; } seen[48] = {};
 				static int seenN = 0;
 				fresh = true;
 				for (int k = 0; k < seenN; ++k)
@@ -5061,7 +5068,7 @@ namespace CodePatches
 						break;
 					}
 				}
-				if (fresh && seenN < 16)
+				if (fresh && seenN < 48)
 				{
 					seen[seenN].r = ret;
 					seen[seenN].x = verts[0];
