@@ -1,3 +1,30 @@
+2026-08-24  v4.1.0    EMERGENCY-PIN DIGIT FIXED ("It's perfect now") + STACKSHIFT
+
+  The deployment-count digit on the fire-dispatch billboard pins sat ON the
+  helmet art at 2x, half its proper relative size - the exact untested blast
+  radius the v4.0.x #188 close-out flagged in bold ("do not record #188 as
+  fully verified until an emergency marker has been seen at a scaled tier").
+  Root cause found by MEASUREMENT, not theory: the DISPATCHQUAD probe (a
+  SubmitPrimitive vertex-payload census with per-caller caps) captured the
+  pin and digit quads at BOTH tiers, and the subtraction showed the digit's
+  box height (14px) and seat (9px) are stock inline immediates at
+  0x5F1EED/0x5F1EFD inside builder helper 0x5F1D00 - unscaled while the
+  balloon and pole rode the existing SIGNPOST patch. The model forces all
+  four measured rects with zero free parameters (digitH/pinH = 14/(150f);
+  centre = 1-30/(150f)). Fix: ApplyPinDigitScale (x f, never-repin, one
+  VirtualProtect span, PINDIGIT log line), COUPLED to SIGNPOST-applied so a
+  half-patched pin is impossible. kind-4 route-query signposts draw no digit
+  quad - untouched. Adversarial verdict SHIP-WITH-CHANGES, 8/8 claims
+  confirmed; the one change (the coupling) implemented. User-confirmed 2x.
+
+  Also in this arc: ApplyStackShift (0xA88260 43->43f) - stacked indicator
+  balloons no longer overlap each other at scaled tiers (visibly confirmed);
+  solo pins provably unaffected. The white-ring dispatch indicators measured
+  HEALTHY at both tiers (quads dead-centred to 0.1px) - five earlier patch
+  attempts aimed at that system are documented in REGRESSION.md with the
+  laws they minted (measure the quads; a probe key arms its own probe at
+  EVERY factor; per-caller caps for draw censuses).
+
 2026-08-23  v4.0.41   LEGACY DISASTER PATH DELETED; RELEASE CUT
 
   The deletion the v4.0.40 entry scheduled, pulled forward on the user's

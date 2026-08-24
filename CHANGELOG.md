@@ -1,5 +1,24 @@
 # Changelog
 
+## 4.1.0 (2026-08-24)
+
+- **Fixed: the deployment-count digit on emergency/dispatch pins** (fire-station
+  pins and the player-dropped pin) overlapped the helmet art at scaled tiers.
+  Root cause measured live at 1x and 2x: the digit's box height and seat offset
+  are stock inline constants (14px/9px) that never rode the tier while the pin
+  balloon and pole did. `ApplyPinDigitScale` scales both, coupled to the
+  existing signpost balloon patch so a half-patched pin is impossible.
+  User-confirmed at 2x.
+- **Fixed: stacked indicator balloons overlapped each other** at scaled tiers —
+  the collision probe offset (43px, screen-space) now rides the tier
+  (`ApplyStackShift`). Solo pins byte-provably unaffected.
+- New research instrumentation (all log-only, ini-gated, default off):
+  `[Probe] DispatchQuad` (submitted-quad census with per-caller caps),
+  `[Probe] ViewListRepeat` (repeating renderer view-object enumeration),
+  `[UiSpike] CsiCountPlate` (dispatch-view count-plate A/B lever).
+  Probe keys now arm their own probes at every tier and always log their
+  resolved values.
+
 ## 4.0.41
 
 - **Deleted the disaster flyout's legacy scaling path** (~28KB of code),

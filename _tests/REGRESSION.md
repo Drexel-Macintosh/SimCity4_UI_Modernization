@@ -16565,3 +16565,63 @@ THIRD-PARTY-NOTICES.md cover the code, and the one tracked third-party input
 BUILD INPUT, not shipped content.
 
 ⛔ #147 was recorded as "explicitly blocked by #146" - that block is now lifted.
+
+
+### 2026-08-24 — ⭐ EMERGENCY-PIN DIGIT FIXED (v4.1.0, USER: "It's perfect now") — and the ledger's own 2026-08-18 debt paid
+
+**The defect:** on the fire-dispatch billboard pins (per-station yellow pins,
+the player-dropped red pin), the deployment-count digit at 2x sat ON the helmet
+art at half its proper relative size. At 1x it sits correctly in the balloon's
+lower third. This is exactly the blast radius the #188 close-out recorded as
+UNTESTED in bold ("do not record #188 as fully verified until an emergency
+marker has been seen at a scaled tier") — the user's eyes-on paid that debt six
+days later and found the defect the warning predicted.
+
+**The mechanism (measured, then byte-proven, adversarially verified 8/8):**
+the digit quad is built by `0x5F1D00` (sole caller `0x5F25CC` inside the pin
+builder `0x5F20A0`) as `top = raise − world(14)/cos − world(9)/cos`,
+`height = world(14)/cos`. The raise rides ApplySignpostScale's 150→150f patch;
+**14.0f (box) and 9.0f (seat) are stock inline immediates** at
+`0x5F1EED`/`0x5F1EFD`. So at 2x the digit kept its stock height and seat while
+the balloon doubled. The model forces all four live-measured quad rects with
+zero free parameters: digitH/pinH = 14/(150f) → 0.0933/0.0467 vs measured
+0.0932/0.0465; centre fraction 1−30/(150f) → 0.800/0.900 vs measured
+0.8001/0.9001.
+
+**The fix:** `ApplyPinDigitScale` — both immediates ×f, house pattern
+(never-repin on exact stock bits, one VirtualProtect span, self-proving
+PINDIGIT log line), **coupled to SIGNPOST-applied** (`gSignpostApplied`): a
+scaled digit on a stock balloon is the half-patched state, so PINDIGIT refuses
+if SIGNPOST refused. kind-4 route-query signposts draw no digit quad
+(draw-side clear @`0x5F288F`) — MARKERZOOM family untouched. Digit WIDTH
+deliberately untouched (font-measured, already rides the tier).
+
+**The road there — five wrong fixes and what each one taught:**
+1. Scaling the *dispatch-view* plate height (twice, incl. a voided A/B whose
+   key landed in the wrong ini section) — that system's digit was healthy.
+2. The centred-quad anchor theory — real mechanism, wrong system.
+3. STACKSHIFT `0xA88260` 43→86 — real fix for a REAL defect (record-vs-record
+   balloon overlap, visibly cured), but not this one. KEPT.
+4. The signpost balloon/raise patch was ALREADY serving this family — the
+   defect was two constants further in.
+
+**Laws minted / re-proven, at cost:**
+- ⭐ **MEASURE THE QUADS, NOT THE THEORY.** Five patches were reasoned from
+  disassembly; the fix came from the DISPATCHQUAD probe (SubmitPrimitive
+  `0x7D2990` hook logging submitted vertex payloads). Two captures of the same
+  instrument at both tiers turned an unfalsifiable argument into a two-line
+  subtraction. The probe stays in the DLL (`[Probe] DispatchQuad`, default 0).
+- ⭐ **A PROBE KEY MUST ARM ITS OWN PROBE — checked at EVERY factor.** Five
+  silent-null launches in one day: EdgeBlt's documented shape, ViewListRepeat
+  gated behind MissionBubbleFx, CsiCountPlate in the wrong ini section,
+  DISPATCHQUAD below a 1x-declining gate, then inside a function the stock
+  branch never calls. The arming now lives in the tier-decision tail (the one
+  path that runs at every factor) and every lever ALWAYS logs its resolved
+  value.
+- ⭐ **PER-CALLER CAPS, never global budgets, for draw-census probes.** Two
+  captures were flooded by fire-effect sprites (moving quads defeat
+  position-dedupe). Six lines per submit site × 64 sites made flooding
+  structurally impossible and found the pin sites immediately.
+- **The white-ring dispatch indicators (cSC4DispatchVehicleView) are HEALTHY
+  at both tiers** — pin and digit quads dead-centred on each other to 0.1px,
+  measured at 1x and 2x. Do not touch them again for this symptom.

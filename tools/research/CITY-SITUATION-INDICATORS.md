@@ -327,3 +327,18 @@ was not this defect's mechanism. Residual, stated honestly: the two-record
 stacking premise is elimination-forced and matches both screenshots, but the
 specific record pairing has not been logged live; the shipped patch's on-screen
 result is the discriminator (digit drops exactly 43px further at 2x).
+
+
+## 6. ✅ RESOLVED 2026-08-24 (v4.1.0) — the helmet pins were never this system
+
+The §5/§5b hunt was chasing the right symptom in the wrong module. The helmet
+deployment pins are the **billboard-pin class in `0x5F1xxx`** (ctor `0x5F1730`,
+heap-allocated from the dispatch band), whose balloon/raise our SIGNPOST patch
+already scaled; the digit quad is built by `0x5F1D00` with two stock inline
+immediates (box 14.0f @`0x5F1EED`, seat 9.0f @`0x5F1EFD`) that never rode the
+tier. `ApplyPinDigitScale` fixes it (coupled to SIGNPOST-applied). THIS
+system's (cSC4DispatchVehicleView) own text-category records were measured
+HEALTHY at both tiers — pin and digit quads dead-centred on each other to
+0.1px — and the §5 centred-quad law stands as a law. The `CsiCountPlate`
+lever stays as an A/B instrument. Full saga + laws: `_tests/REGRESSION.md`
+2026-08-24 entry.

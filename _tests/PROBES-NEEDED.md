@@ -947,3 +947,14 @@ this session from the text-category setup:
 consumes `[esp+0x20]/[esp+0x24]`, and whether the overlap is the plate moving up
 or the *icon* growing down (the category-3 icon immediate is also scaled, 32→64).
 The 1x/2x pair already in hand is the control for any candidate fix.
+
+
+## 9.9 CLOSED 2026-08-24 — the emergency-pin digit (v4.1.0)
+
+Eleven launches end-to-end, closed by measurement: DISPATCHQUAD captured the
+pin/digit quads at both tiers, the subtraction named two stock immediates
+(box 14 / seat 9 in `0x5F1D00`), `ApplyPinDigitScale` ships them ×f coupled to
+SIGNPOST-applied. User-confirmed. Probes disarmed in the live ini
+(`DispatchQuad=0`, `ViewListRepeat=0`, `CsiCountPlate=0`); all three levers
+remain in the DLL for future sessions. The five silent-null launches and the
+two flooded captures along the way are written into REGRESSION.md as laws.
