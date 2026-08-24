@@ -5037,8 +5037,39 @@ namespace CodePatches
 			const uint32_t ret = static_cast<uint32_t>(
 				reinterpret_cast<uintptr_t>(_ReturnAddress())
 				- base + kImageBase);
-			if (ret >= 0x0046D990 && ret < 0x0046F240
-				&& gDqSubmitLogs < 60 && verts && count == 4)
+			// CHANGE-DETECTION, not a bigger cap: the first capture burned
+			// all 60 lines on two persistent CSI balloons in ~2 seconds,
+			// finishing five seconds BEFORE the fire dispatch it was armed
+			// for even existed. A static quad re-submitted every frame is one
+			// fact, not thirty. Log a (ret, v0) combination only when it is
+			// new or has moved > 0.5px; the cache is per-site-per-position.
+			bool fresh = false;
+			if (ret >= 0x0046D990 && ret < 0x0046F240 && verts && count == 4)
+			{
+				static struct { uint32_t r; float x, y; } seen[16] = {};
+				static int seenN = 0;
+				fresh = true;
+				for (int k = 0; k < seenN; ++k)
+				{
+					if (seen[k].r == ret
+						&& seen[k].x > verts[0] - 0.5f
+						&& seen[k].x < verts[0] + 0.5f
+						&& seen[k].y > verts[1] - 0.5f
+						&& seen[k].y < verts[1] + 0.5f)
+					{
+						fresh = false;
+						break;
+					}
+				}
+				if (fresh && seenN < 16)
+				{
+					seen[seenN].r = ret;
+					seen[seenN].x = verts[0];
+					seen[seenN].y = verts[1];
+					++seenN;
+				}
+			}
+			if (fresh && gDqSubmitLogs < 200)
 			{
 				++gDqSubmitLogs;
 				__try
