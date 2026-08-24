@@ -358,6 +358,15 @@ foreach ($key in ($fam.Keys | Sort-Object)) {
     # written, so `-Tier 2` reported "0 rename(s)" and silently left 2x
     # running with 1x art - the exact "wrong in the safe-looking direction"
     # failure this file's own header warns about, just via a new trigger.
+    # SELECTIVEART IS A STABLE-FILENAME PACKAGE - NEVER RENAME ITS SOURCES
+    # (2026-08-23, caught by Test-DatIntegrity the same day the fix above
+    # shipped): its three -<tier>.dat.x1-disabled files are CONTENT SOURCES
+    # for the stable z_SC4UIScale_SelectiveArt.dat and must stay stashed at
+    # every tier; the dedicated block below content-swaps the stable file.
+    # The 2026-08-23 fix above stopped skipping tier-only families here,
+    # which let this generic rename loop arm SelectiveArt's -2x SOURCE at a
+    # live name - two copies of the same TGIs racing on load order.
+    if ($name -eq "z_SC4UIScale_SelectiveArt") { $gated++; continue }
     $anyActive = @($ALLTAGS | Where-Object { $tiers[$_] -and $tiers[$_].active }).Count
     $isDependencyGated = $DEPENDENCY_GATED_NAMES.Contains($name)
     if ($anyActive -eq 0 -and $isDependencyGated -and -not $forced.Contains($key)) { $gated++; continue }

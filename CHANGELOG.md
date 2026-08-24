@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.0.41
+
+- **Deleted the disaster flyout's legacy scaling path** (~28KB of code),
+  scheduled since the v4.0.40 rebuild and executed after user acceptance
+  at 2x, 1.5x, and 3x: the hand-tuned ring seat (RingDX/RingDY) and its
+  seat-scaling extrapolation, the RingUnderStrip viewport clip, the
+  neck-penetration clip, the LayerFix bar-tile cache/replay machinery,
+  the DrawRebuild kill switch itself, and a years-dead unreachable
+  disaster branch in the sub-flyout birth hook. The ini keys RingDX,
+  RingDY, RingUnderStrip, LayerFix, and DrawRebuild no longer exist
+  (BarDX/BarW remain — the mayor sub-flyout family still uses them). The
+  v4.0.40 uniform stock-transform is now the only disaster paint
+  pipeline.
+
 ## 4.0.40
 
 - **Create Disasters flyout rebuilt from scratch on one invariant: at

@@ -1,3 +1,37 @@
+2026-08-23  v4.0.41   LEGACY DISASTER PATH DELETED; RELEASE CUT
+
+  The deletion the v4.0.40 entry scheduled, pulled forward on the user's
+  order ("DO it, push the changes and issue a new release") after their
+  acceptance at 2x AND the same-evening 1.5x/3x spot checks. Removed
+  (~28KB): the legacy disaster ring block (seat-scaling RingDX/RingDY +
+  the v2.71.8 extrapolation, RingUnderStrip viewport clip, neck-
+  penetration clip, DISRING/RINGVERIFY/BARSEAM diagnostics, the old
+  in-block DISBUFDUMP), the disaster arm of the bar block (BARSRC probe,
+  per-mode DrawBarScaled variants kBarCopy/kBarOver + incl/excl clips -
+  DrawBarScaled is back to the plain v4.0.21 blend, sub-flyout only),
+  the whole LAYER FIX bar-tile cache (BarTile/gBarCache/BarCachePush -
+  its only drain was the replay retired 2026-08-23, so the fill was
+  pure waste for both families), the gDisRebuild kill switch (with no
+  legacy path to revert to, DrawRebuild=0 would have been a broken
+  state, not a lever), the RingDX/RingDY/RingUnderStrip/LayerFix/
+  DrawRebuild ini keys, and the years-unreachable `else if (isDisaster)`
+  branch in SubPlaceDetour's dock section (control-flow-proven dead,
+  adversarial review 2026-08-23). DisDockXEff/DisDockYEff reduce to
+  explicit-ini-else-7/47 (the derived closed-form dock). KEPT: BarDX/
+  BarW + DrawBarScaled (the mayor sub-flyout family consumes them),
+  StripDump/BufDump diagnostics, all born-scale/click/scroll machinery.
+
+  Gates after the deletion, all green: Test-DisasterDrawRebuild,
+  Test-SubFlyoutPlacement, Test-ShippingIniKeys, Test-MutationCount-
+  Invariant, emu_subplacetopmb_model, Test-SubRingLock (311).
+
+  Released as SimCity4_UI_Modernization v4.0.41 - the first GitHub
+  release since v4.0.9, covering the whole v4.0.10..v4.0.41 arc: the
+  #182 FontStyle crash fix (runtime self-heal + the placeholder rename),
+  the sub-flyout short-strip root-cause fix (SubPlaceTopMb), the
+  disaster InitScroll ordering fix, the disaster paint rebuild, and
+  this deletion.
+
 2026-08-23  v4.0.40   CREATE DISASTERS FLYOUT REBUILT FROM SCRATCH -
                       USER-CONFIRMED "IT'S PERFECT", PIXEL-VERIFIED
 

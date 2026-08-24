@@ -2094,7 +2094,11 @@ namespace
 	                                     // (self) at the ring pos, color-keying
 	                                     // magenta. Skips the game's 1x ring blit.
 	                                     // Both buffers are the same readable class.
-	int    gRingDX = 16;                  // v2.9.7 history; USER-ACCEPTED 2026-07-28 (REGRESSION.md v2.11.25)
+	// (v4.0.41) gRingDX/gRingDY (the hand-tuned f=2 ring seat) and
+	// gRingUnderStrip are DELETED with the legacy disaster path - the
+	// rebuild's stock-proportional geometry needs no seat nudge and no
+	// viewport clip (the strip window occludes via normal z-order, as at
+	// stock). The dock (DisDockXEff/DisDockYEff) is the only position lever.
 	// v4.0.16: initial scroll (first-visible ITEM index) written to the
 	// disaster strip once per open. Measured 2026-08-22: the strip draws 6
 	// rows of pitch 98 at dst-Y 0/98/196/294/392/490 and the ring centre
@@ -2103,13 +2107,6 @@ namespace
 	// field was observed at 3 (= bottom of the 9-item list, 6 visible), so
 	// the wrong disasters sat beside the ring. ini [Disaster] InitScroll.
 	int    gDisInitScroll = 0;
-	// v4.0.15: mask the 2x ring blit where it overlaps the strip viewport.
-	// The ring paints straight into the shared buffer, so window z-order
-	// never applies and its right arc ("tail") stamped over the thumbnails
-	// at x184..204. Skipping those pixels == true z-order: opaque cells
-	// cover the ring, gaps still reveal it. ini [Disaster] RingUnderStrip.
-	int    gRingUnderStrip = 1;
-	int    gRingDY = 153;                 // v2.10 live-tunable; accepted value (pairs with DockY, see below)
 	// 2026-08-23 REBUILD: both dock offsets become kIniAuto sentinels
 	// resolved through DisDockXEff()/DisDockYEff() (declared beside the
 	// rebuild code, before BltClassThunk). Explicit ini still wins; the
@@ -2127,7 +2124,7 @@ namespace
 	//     2026-07-28 seat at f=2 - cross-checked in the plan - while
 	//     being fully derived, so 1.5x/3x follow with no per-tier tuning
 	//     (closes #123).
-	//   rebuild OFF -> the accepted legacy values (-2 / 40), unchanged.
+	//   (The legacy values -2 / 40 died with the legacy path, v4.0.41.)
 	//
 	// The old hand-tuned history (kept for the record): DockY=40 was the
 	// stock-parity correction of a 130 that sat ~180px too low; RingDY
@@ -2161,151 +2158,24 @@ namespace
 			? gBarDX : 53 - RoundHalfUp(53.0 * BarWidenEff());
 	}
 
-	// v2.71.8 (3x tier): the v2.71.6 RingDXEff/RingDYEff helpers lived here.
-	// They scaled the RingDX/RingDY correction by (f-1), anchoring it at f=1 =
-	// the game's own 1x anchor. That anchor is the UNDOCKED stock seat, so the
-	// (f-1) law drifted at 3x (8px right, 7px low - "flyout circle not 1:1
-	// docked"). The ring seat now uses SEAT-SCALING, computed inline at the
-	// disaster ring blit below (it needs the sprite size sw/sh): keep the
-	// ring's centre at its f=2 docked seat scaled by f/2. gRingDX/gRingDY are
-	// still the f=2 tuning values; only the tier extrapolation changed.
-
-	// LAYER FIX (v2.11): the game paints BAR tiles first, then the RING, so the
-	// 2x ring's right arc/neck lands ON TOP of the bar's left edge -> the circle
-	// covers the strip (wrong order). We want Circle -> Strip -> Pictures. Fix:
-	// cache each bar tile as it draws, and after the ring upscale REPLAY the tiles
-	// on top, so the strip's orange covers the circle's right arc (smooth lead-in).
-	// Same-orange double-draw elsewhere is harmless. Live-toggle via ini LayerFix.
-	// DEFAULT 0 (USER-ACCEPTED 2026-07-28, REGRESSION.md v2.11.25): for THIS
-	// family the replay opened a junction seam - our substituted 2x ring means
-	// the stock connector between ring and bar is never painted, and re-drawing
-	// bar tiles over the ring exposed it. Native bar->ring order welds cleanly.
-	// The v2.11 comment above describes why replay helps in general; the
-	// disaster family's accepted look wins. Mayor sub-flyouts are unaffected:
-	// they fill gBarCache but the only DRAIN is the disaster block above (#135),
-	// so this flag changes nothing for them.
-	int    gLayerFix = 1;
-	//                      ^ v4.0.19: DEFAULT ON. This replay IS the user's
-	//                      z-spec - connector back, orange strip middle: the ring
-	//                      block draws the 2x ring incl. its tail LAST, so the
-	//                      cached bar tiles must be re-stamped over it or the
-	//                      tail sits ON TOP of the strip (user report 2026-08-22,
-	//                      "Orange Strip being below the Circle Dock ARM"). It
-	//                      shipped default-off with nobody noticing that this
-	//                      left tail-over-strip as the out-of-box look.
-	struct BarTile { void* a1; int32_t s[4]; int32_t d[4]; };
-	// The cache GROWS ON DEMAND. It was a fixed 64-slot array, and a heavy
-	// install saturated it MID-PAINT (user log 2026-08-22: "BARCACHE saturated
-	// at 64 tiles - LayerFix replay is INCOMPLETE", fired during flyout paints)
-	// - part of the paint then draws without replay and reads as "some assets
-	// don't scale". A tile is 40 bytes, so even the ceiling costs well under a
-	// megabyte for the process lifetime.
-	static const int kBarCacheStart = 64;    // the old fixed cap
-	static const int kBarCacheMax   = 16384; // 640 KB ceiling; not reached in practice
-	BarTile* gBarCache    = nullptr;
-	int      gBarCacheN   = 0;
-	int      gBarCacheCap = 0;               // allocated slots
-	// v2.39.10 (task #84): WHICH CONTAINER OWNS THE CACHED TILES.
-	// The fill site is family-agnostic - `gDisasterDrawTuning ? destIsContainer
-	// : destIsSubContainer` - so BOTH the disaster container and the mayor
-	// sub-flyout container fill this cache, but the only DRAIN is inside the
-	// DISASTER ring block. So after a sub-flyout painted, its tiles sat here
-	// indefinitely (cap 64), holding raw `a1` atlas pointers across opens and
-	// across a city switch, and the next disaster ring draw would have
-	// replayed FOREIGN tiles onto the disaster container.
-	// The cache is a WITHIN-ONE-PAINT structure; owner-keying makes that
-	// explicit: a different `self` means a new paint, so discard first.
-	void*   gBarCacheOwner = nullptr;
-	bool    gBarCacheSatLogged = false;
-
-	// Grows the cache on demand and appends one tile. Returns false only when
-	// the paint cannot be fully cached - the hard ceiling was reached, or
-	// allocation failed - which the CALLER must surface (NO SILENT CAPS).
-	// Growth is amortised O(1) doubling; the one-time crossing of the old
-	// fixed cap is logged so a heavy install is visible in the log instead of
-	// silently behaving differently from ours.
-	bool BarCachePush(void* a1, const int32_t* s, const int32_t* d)
-	{
-		if (gBarCacheN == gBarCacheCap)
-		{
-			const int newCap = gBarCacheCap ? gBarCacheCap * 2 : kBarCacheStart;
-			if (newCap > kBarCacheMax) return false;
-			BarTile* grown = static_cast<BarTile*>(
-				realloc(gBarCache, static_cast<size_t>(newCap) * sizeof(BarTile)));
-			if (!grown) return false;   // keep the old buffer valid
-			if (gBarCacheN == kBarCacheStart)
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: BARCACHE grew past its old %d-tile cap "
-					"(%d -> %d tiles) - this install's flyout paints need "
-					"more bar-tile replay than the fixed array held.",
-					kBarCacheStart, gBarCacheN, newCap);
-			gBarCache = grown;
-			gBarCacheCap = newCap;
-		}
-		BarTile& t = gBarCache[gBarCacheN++];
-		t.a1 = a1;
-		t.s[0] = s[0]; t.s[1] = s[1]; t.s[2] = s[2]; t.s[3] = s[3];
-		t.d[0] = d[0]; t.d[1] = d[1]; t.d[2] = d[2]; t.d[3] = d[3];
-		return true;
-	}
+	// (v4.0.41) The LAYER FIX bar-tile cache (BarTile/gBarCache/
+	// BarCachePush, v2.11..v4.0.21) and the ring seat-scaling helpers were
+	// DELETED with the legacy disaster path: the cache's only drain was the
+	// disaster ring block's replay (retired 2026-08-23, deleted v4.0.41),
+	// so the fill was pure waste for both families. History: REGRESSION.md
+	// "DISASTER FLYOUT REBUILD" + VERSION-HISTORY.txt v4.0.40.
 
 	// Draw one BAR tile: read the atlas (a1), x-upscale by gBarWiden, write into
 	// the container (self) at (d[0]+gBarDX, d[1]), color-keying magenta. Shared by
 	// the live draw and the post-ring replay so both paint identically.
-	// 2026-08-23 (user report: disaster "circle tail" and the strip bar do
-	// not fuse at 2x the way they do at 1x and on the regular sub-flyout).
-	// FOUR live experiments converged on the real model, and it is not any
-	// of the blend-bookkeeping theories the first three attempts assumed.
-	//
-	// THE BUFFER MODEL (GOD-MODE-FLYOUTS.md "The Plot pipeline", full
-	// disassembly of 0x79B0E0): the disaster container's Plot draws
-	// EXACTLY four elements - bar top cap, bar spine tiles, bar bottom
-	// cap, ring - into a PERSISTENT buffer it NEVER clears and NEVER
-	// paints a background into. The buffer's alpha channel is applied
-	// ONCE, at the final screen composite ([0x68]->Blt of the whole
-	// buffer). In that world every element draw must be an RGBA COPY -
-	// last-writer-wins, bit-identical on every repaint - which is exactly
-	// what our own 2x ring blit does, and the ring is visually correct.
-	//
-	// DrawBarScaled instead BLENDED soft pixels against the buffer and
-	// stamped alpha=255. Against a never-cleared buffer that is doubly
-	// wrong: the blend reads stale garbage (first paint) or its own prior
-	// output (every later paint - each repaint drifts the colour toward
-	// the source = the spine turning BRIGHT), and alpha=255 turns the
-	// art's soft fade into opaque mud that composites against nothing
-	// (the "melted" seam / translucent gap at the tail).
-	//
-	// THREE REJECTED SAME-DAY ATTEMPTS, kept as evidence - each treated a
-	// symptom of the above as the disease: (1) skip soft pixels in the
-	// immediate draw -> replay accumulated against last paint's output,
-	// BRIGHTER; (2) overwrite raw source at alpha=255 -> the fade stamped
-	// at full saturation, hard bright bar; (3) restore blend + clip the
-	// replay to the ring rect -> removed the within-paint double blend
-	// but the immediate blend still accumulated across repaints, and
-	// alpha=255 still killed the fade. All three misread the buffer as a
-	// framebuffer; it is a sprite-assembly scratchpad.
-	//
-	// THE FIX - per-family modes, because the regular sub-flyout's
-	// blended bar is USER-CONFIRMED CORRECT for its own buffer content
-	// and must not change:
-	//   kBarBlend - the v4.0.21 behaviour, unchanged. Sub-flyout only.
-	//   kBarCopy  - RGBA copy preserving source alpha (the stock element
-	//               op). The disaster's immediate draw: deterministic on
-	//               every repaint, fade preserved for the one real
-	//               composite at screen time.
-	//   kBarOver  - true alpha-over (rgb blended by src alpha, dest alpha
-	//               raised, never lowered). The disaster's LayerFix
-	//               replay: clipped to the ring's freshly-copied rect, so
-	//               the bar's soft edge fuses INTO the neck art instead
-	//               of replacing it - and because both inputs (immediate
-	//               copy + ring copy) are rewritten fresh each repaint,
-	//               the result is deterministic, never accumulating.
-	static const int kBarBlend = 0;
-	static const int kBarCopy  = 1;
-	static const int kBarOver  = 2;
-	void DrawBarScaled(void* self, void* a1, const int32_t* s, const int32_t* d,
-		const int32_t* incl = nullptr, const int32_t* excl = nullptr,
-		int mode = kBarBlend)
+	// (v4.0.41) SUB-FLYOUT ONLY since the disaster rebuild: the disaster
+	// family's bar draws are reconstructed by DrawDisasterElementScaled
+	// below and never reach this function. The 2026-08-23 per-mode
+	// copy/over variants that briefly lived here (three rejected
+	// compositing experiments on the disaster junction) are recorded in
+	// VERSION-HISTORY.txt v4.0.40 - the junction was a LAYER-ORDER +
+	// geometry problem no compositing mode could fix.
+	void DrawBarScaled(void* self, void* a1, const int32_t* s, const int32_t* d)
 	{
 		int32_t* af = reinterpret_cast<int32_t*>(a1);
 		int32_t* cf = reinterpret_cast<int32_t*>(self);
@@ -2354,19 +2224,6 @@ namespace
 			{
 				const int cx = dx0 + ox;
 				if (cx < 0 || cx >= cW) continue;
-				// CLIP RECTS (2026-08-23, see the function comment): `incl`
-				// restricts the REPLAY call to the ring's freshly-overwritten
-				// blit rect; `excl` carves out the strip-viewport hole the
-				// ring blit itself skipped (RingUnderStrip) - pixels there
-				// were NOT freshly painted, so blending over them would be
-				// the exact double composite this fix removes.
-				if (incl && (cx < incl[0] || cx >= incl[2]
-					|| cy < incl[1] || cy >= incl[3]))
-					continue;
-				if (excl && excl[2] > excl[0]
-					&& cx >= excl[0] && cx < excl[2]
-					&& cy >= excl[1] && cy < excl[3])
-					continue;
 				const uint8_t* sp = srow + (s[0] + static_cast<int>(ox / barW)) * 4;
 				if (sp[0] == 0xFF && sp[1] == 0x00 && sp[2] == 0xFF)
 					continue;
@@ -2377,11 +2234,7 @@ namespace
 				// exactly what carries the pill's fade over the dock arm.
 				// Skipping it left a navy sliver where the fade should be
 				// (user screenshot 2026-08-22). Stock blends every nonzero
-				// source pixel; so do we now. (2026-08-23: two one-day
-				// variants of this branch - skip-soft-edges, then
-				// overwrite-raw-source - both live-tested WORSE; see the
-				// function comment. The single plain blend below is the
-				// user-confirmed-correct path the sub-flyout runs.)
+				// source pixel; so do we now.
 				uint8_t* dp = drow + cx * 4;
 				const uint8_t sa = sp[3];
 				if (sa == 0)
@@ -2391,34 +2244,9 @@ namespace
 					dp[0] = sp[0]; dp[1] = sp[1]; dp[2] = sp[2];
 					dp[3] = sp[3];
 				}
-				else if (mode == kBarCopy)
-				{
-					// The stock element op (see the function comment): the
-					// soft pixel is STORED with its own alpha, applied once
-					// at the screen composite. Identical output on every
-					// repaint by construction.
-					dp[0] = sp[0]; dp[1] = sp[1]; dp[2] = sp[2];
-					dp[3] = sa;
-				}
-				else if (mode == kBarOver)
-				{
-					// True alpha-over for the replay: the bar's soft edge
-					// blends INTO whatever this paint freshly put beneath
-					// it (the ring copy, or the immediate bar copy), and
-					// the stored alpha only ever rises - never the
-					// alpha=255 stamp that killed the fade.
-					dp[0] = static_cast<uint8_t>(
-						(sp[0] * sa + dp[0] * (255 - sa) + 127) / 255);
-					dp[1] = static_cast<uint8_t>(
-						(sp[1] * sa + dp[1] * (255 - sa) + 127) / 255);
-					dp[2] = static_cast<uint8_t>(
-						(sp[2] * sa + dp[2] * (255 - sa) + 127) / 255);
-					if (sa > dp[3]) { dp[3] = sa; }
-				}
 				else
 				{
-					// kBarBlend - v4.0.21, unchanged: the regular
-					// sub-flyout's user-confirmed-correct path.
+					// v4.0.21: single alpha blend, user-confirmed correct.
 					dp[0] = static_cast<uint8_t>(
 						(sp[0] * sa + dp[0] * (255 - sa) + 127) / 255);
 					dp[1] = static_cast<uint8_t>(
@@ -2503,12 +2331,11 @@ namespace
 	// entire "fused" look.
 	//
 	// kIniAuto sentinel matches this file's existing convention (SubDockDX
-	// etc.) - "not set by ini" rather than a magic literal.
-	int gDisRebuild = 1;   // ini [Disaster] DrawRebuild - default ON. 0 =
-	                       // the legacy per-element-correction path,
-	                       // verbatim, kept one release as a revert lever
-	                       // (project convention: BornScale/BornDock/
-	                       // BornMetrics all ship as switches, not deletes).
+	// etc.) - "not set by ini" rather than a magic literal. The one-release
+	// DrawRebuild kill switch and the whole legacy path it guarded were
+	// deleted in v4.0.41 after user acceptance at 2x/1.5x/3x.
+	// (v4.0.41) gDisRebuild / [Disaster] DrawRebuild deleted: the legacy
+	// path it reverted to is gone, so the rebuild is THE pipeline.
 	bool gDisSpineDrawn = false;   // per-paint latch: has this paint's
 	                               // spine region already been drawn?
 	                               // Reset when the TOP CAP arrives (it is
@@ -2524,11 +2351,11 @@ namespace
 	// form derivation of 7/47 (documented stock data, zero tuning).
 	inline int32_t DisDockXEff()
 	{
-		return gRingDockX != kIniAuto ? gRingDockX : (gDisRebuild ? 7 : -2);
+		return gRingDockX != kIniAuto ? gRingDockX : 7;
 	}
 	inline int32_t DisDockYEff()
 	{
-		return gRingDockY != kIniAuto ? gRingDockY : (gDisRebuild ? 47 : 40);
+		return gRingDockY != kIniAuto ? gRingDockY : 47;
 	}
 
 	inline int32_t DisBarLeft(float f)
@@ -2545,7 +2372,7 @@ namespace
 		return RoundHalfUp(25.0 * f);
 	}
 
-	// Pure RGBA copy (the kBarCopy semantics DrawBarScaled already proved
+	// Pure RGBA copy (the stock element op the 2026-08-23 measurements proved
 	// correct for this never-cleared buffer - see that function's own
 	// comment for why a blend here is wrong): nearest-neighbour upscale
 	// from (sx0,sy0)-relative source pixels into an explicit dst rect,
@@ -2945,11 +2772,11 @@ namespace
 			// the disaster container's element draws by ITS OWN signature
 			// (measured from the real emulated Plot, goldens in
 			// _tests/golden/) and redraws it at stock-geometry-times-f.
-			// Every handled draw returns 0, so with gDisRebuild on the
-			// legacy ring/bar corrections below never see a disaster draw.
+			// Every handled draw returns 0 - nothing downstream ever sees
+			// a disaster element draw.
 			// The sub-flyout family (destIsSubContainer) is untouched by
 			// construction - this gate requires gDisasterDrawTuning.
-			if (gDisRebuild && gDisasterDrawTuning && destIsContainer
+			if (gDisasterDrawTuning && destIsContainer
 				&& a1 && gTierF > 1.01f)
 			{
 				const int sw = s[2] - s[0], sh = s[3] - s[1];
@@ -2982,10 +2809,9 @@ namespace
 					return 0;
 				}
 				// Anything else (unknown draw into the container) falls
-				// through untouched - the legacy blocks below are gated
-				// off under gDisRebuild, so an unmatched draw lands at 1x
-				// rather than being double-corrected. DISREBUILD logging
-				// plus DISBUFDUMP make such a draw visible if one exists.
+				// through untouched and lands at 1x rather than being
+				// mis-corrected. DISREBUILD logging plus DISBUFDUMP make
+				// such a draw visible if one exists.
 				(void)dw;
 			}
 			// DIAGNOSTIC (ini StripDump): throttled log of ring/bar draws + the
@@ -3185,280 +3011,14 @@ namespace
 						d[0], d[1], d[2], d[3], jw, jh, a1);
 				}
 			}
-			// gDisasterDrawTuning: the ring upscale and its RingDX/RingDY were
-			// measured for the DISASTER flyout. The sub-flyout container is the
-			// same class and passes destIsContainer, so it must be excluded.
-			// !gDisRebuild (2026-08-23): LEGACY PATH - superseded by the
-			// rebuild dispatch above; kept verbatim one release as the
-			// DrawRebuild=0 revert lever, then scheduled for deletion.
-			if (!gDisRebuild
-				&& gRing2xBlit && gDisasterDrawTuning && a1 && d[0] == 0 && destIsContainer)
-			{
-				const int sw = s[2] - s[0], sh = s[3] - s[1];
-				if (sw > 80 && sw < 120 && sh > 40 && sh < 90)   // the ring (94x62)
-				{
-					int32_t* af = reinterpret_cast<int32_t*>(a1);     // atlas
-					int32_t* cf = reinterpret_cast<int32_t*>(self);   // container
-					uint8_t* asrc = reinterpret_cast<uint8_t*>(
-						static_cast<uintptr_t>(static_cast<uint32_t>(af[15])));
-					uint8_t* cdst = reinterpret_cast<uint8_t*>(
-						static_cast<uintptr_t>(static_cast<uint32_t>(cf[15])));
-					const int astride = af[16], cstride = cf[16];
-					const int cW = cf[7] - cf[5], cH = cf[8] - cf[6];
-					const int sx0 = s[0], sy0 = s[1];
-					// v2.71.8 (3x tier): SEAT-SCALING, replacing v2.71.6's
-					// (f-1)*ini law. That law anchored the correction at f=1 =
-					// the game's own 1x anchor d[] - but d[] is the UNDOCKED
-					// stock seat, not a docked one: the ring sits on button 4
-					// only once the dock runs, and the dock is a scaled
-					// placement. The docked seat therefore scales linearly with
-					// the tier, so keep the ring's CENTRE at its f=2 seat scaled
-					// by f/2. Centre at f=2 = d[]+RingDX/DY + (sw,sh) (half the
-					// 2x sprite == the 1x size); scale that by f/2 and subtract
-					// the scaled half-size to get the top-left. Bit-identical at
-					// f=2 (even-int RoundHalfUp, exact /2). At f=3 this moves the
-					// seat (32,444)->(24,437): the (f-1) law was 8px right and
-					// 7px low - the "flyout circle not 1:1 docked" report.
-					const int cx2 = d[0] + gRingDX + sw;   // ring centre-x @ f=2
-					const int cy2 = d[1] + gRingDY + sh;   // ring centre-y @ f=2
-					const int dx0 = (gTierF <= 1.01f) ? d[0]
-						: RoundHalfUp(cx2 * gTierF / 2.0)
-							- RoundHalfUp(sw * gTierF) / 2;
-					const int dy0 = (gTierF <= 1.01f) ? d[1]
-						: RoundHalfUp(cy2 * gTierF / 2.0)
-							- RoundHalfUp(sh * gTierF) / 2;
-					// v2.24.0 (audit B1): fractional NN (Upscale2x.cs method) in
-					// place of the hardwired *2 / >>1. At f=2: RoundHalfUp(sh*2)
-					// = sh*2 and floor(oy/2.0) = oy>>1, bit-identical.
-					const int ringDstW = FloorScale(sw, gTierF);   // FLOOR, see decl
-					const int ringDstH = FloorScale(sh, gTierF);   // FLOOR, see decl
-					// 2026-08-23 (user report: disaster ring "tail connects
-					// to the stripe incorrectly"): the disaster's own ring
-					// seat has never been logged. dx0/dy0 is where this
-					// blit actually lands in the container buffer (cW/cH);
-					// the strip's own live rect is logged separately by
-					// DISBORN, so the two can be compared directly.
-					{
-						static int sDisRingLog = 40;
-						if (sDisRingLog > 0)
-						{
-							sDisRingLog--;
-							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: DISRING self=%p f=%.2f d=(%d,%d) "
-								"ring1x=%dx%d gRingDX=%d gRingDY=%d "
-								"cx2=%d cy2=%d dx0=%d dy0=%d dst=%dx%d "
-								"buf=%dx%d",
-								self, gTierF, d[0], d[1], sw, sh,
-								gRingDX, gRingDY, cx2, cy2, dx0, dy0,
-								ringDstW, ringDstH, cW, cH);
-						}
-					}
-					// RING UNDER STRIP (v4.0.15). This blit writes into the
-					// shared paint buffer, so window z-order never applies:
-					// the ring's right arc stamped straight over the strip
-					// thumbnails (measured 2026-08-22: 2x ring spans x16..204,
-					// strip viewport starts at x184). Masking those pixels is
-					// exactly true z-order - opaque cells cover the ring, and
-					// the gaps between cells still reveal it beneath. The
-					// viewport sits at design (92,25) 44x289 in the container
-					// (Place: stripTop=(contentH-stripH)>>1; verified live as
-					// rel(184,50) 88x578 at f=2), so the clip derives per tier.
-					int clipL = 0, clipT = 0, clipR = -1, clipB = -1;
-					if (gRingUnderStrip && gTierF > 1.01f)
-					{
-						clipL = RoundHalfUp(92.0 * gTierF);
-						clipT = RoundHalfUp(25.0 * gTierF);
-						clipR = clipL + RoundHalfUp(44.0 * gTierF);
-						clipB = clipT + RoundHalfUp(289.0 * gTierF);
-					}
-					// v4.0.17 verification: what this block actually drew and
-					// masked, three paints' worth - the overlap survived two
-					// fixes built on assumed coordinates, so print the real
-					// ones plus how many pixels the mask truly skipped.
-					{
-						static int rvn = 0;
-						if (rvn < 3)
-						{
-							rvn++;
-							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: RINGVERIFY ring dst=(%d,%d) "
-								"%dx%d buf=%dx%d clip=[%d..%d)x[%d..%d)",
-								dx0, dy0, ringDstW, ringDstH, cW, cH,
-								clipL, clipR, clipT, clipB);
-						}
-					}
-					// NECK PENETRATION CLIP (2026-08-23, after the LayerFix
-					// replay retirement put the ring back ON TOP in stock
-					// order). STOCK GEOMETRY, documented not tuned
-					// (GOD-MODE-FLYOUTS.md "four container draws at 1x"):
-					// ring dst x ends at 94, bar starts at 141-53 = 88 -
-					// the neck's flat right cut penetrates the pillar by
-					// exactly 6px at 1x, which is what reads as "fused".
-					// Scaled, that is RoundHalfUp(6*f). Our ring is ALSO
-					// seat-shifted right (dx0=16 at 2x - the user-approved
-					// on-button position), which stretched the penetration
-					// to 28px and parked the neck's cut visibly mid-pillar
-					// ("the tail's tip is going over the bar pillar").
-					// Clip the blit at barLeft + the stock-proportional
-					// penetration: the neck interior is the pillar's exact
-					// colour (BARSEAM: both (255,114,0)a153), so the only
-					// visible effect is the neck's outline strokes ending
-					// at the stock-equivalent depth. The ellipse half of
-					// the sprite never reaches this x, so a whole-blit
-					// clip is safe.
-					const int ringMaxX = (cW
-						- RoundHalfUp(53.0 * BarWidenEff()))
-						+ RoundHalfUp(6.0 * gTierF);
-					if (asrc && cdst && astride > 0 && cstride > 0)
-					{
-						for (int oy = 0; oy < ringDstH; oy++)
-						{
-							const int cy = dy0 + oy;
-							if (cy < 0 || cy >= cH) continue;
-							const bool inClipY = cy >= clipT && cy < clipB;
-							const uint8_t* srow = asrc
-								+ (sy0 + static_cast<int>(oy / gTierF)) * astride;
-							uint8_t* drow = cdst + cy * cstride;
-							for (int ox = 0; ox < ringDstW; ox++)
-							{
-								const int cx = dx0 + ox;
-								if (cx < 0 || cx >= cW) continue;
-								if (cx >= ringMaxX)
-									continue;   // stock-depth neck cut
-								if (inClipY && cx >= clipL && cx < clipR)
-									continue;   // behind the strip viewport
-								const uint8_t* sp = srow
-									+ (sx0 + static_cast<int>(ox / gTierF)) * 4;
-								if (sp[0] == 0xFF && sp[1] == 0x00 && sp[2] == 0xFF)
-									continue;   // magenta color-key = transparent
-								uint8_t* dp = drow + cx * 4;
-								dp[0] = sp[0]; dp[1] = sp[1]; dp[2] = sp[2]; dp[3] = sp[3];
-							}
-						}
-					}
-					// LAYER FIX REPLAY: RETIRED 2026-08-23. It replayed the
-					// cached bar tiles ON TOP of the ring (Circle -> Strip),
-					// inverting the game's own bar -> ring order. Its
-					// original purpose - stopping the 2x ring's arc from
-					// stamping over the strip PICTURES (v2.11) - has been
-					// served since v4.0.15 by RingUnderStrip's viewport
-					// clip inside the ring blit above, which is surgical
-					// where the replay was blunt. What the replay still
-					// DID do, measured 2026-08-23 (DISBUFDUMP - the full
-					// container buffer rendered offline): it drew the bar
-					// pillar's left fade columns OVER the ring's neck,
-					// cutting the tail off with a hard vertical edge and
-					// intermediate-colour fringe (BARSEAM x176 =
-					// (175,118,73) where both neighbours are (255,114,0)) -
-					// the user-visible "the strip is sitting on top of the
-					// circle tail". Stock order - bar first, RING ON TOP -
-					// is the designed junction: the neck's soft outline
-					// carves into the pillar, which is exactly the fused
-					// 1x look. Three same-day compositing variants of the
-					// replay (see DrawBarScaled's comment) all failed
-					// because no compositing mode fixes a wrong LAYER
-					// ORDER. The cache fill and this clearing stay: the
-					// cache is still a within-one-paint structure, and
-					// leaving stale atlas pointers across paints was the
-					// v2.39.10 bug regardless of what consumes them.
-					if (gLayerFix)
-					{
-						gBarCacheN = 0;
-						gBarCacheOwner = nullptr;
-						gBarCacheSatLogged = false;
-					}
-					// BARSEAM (2026-08-23 MEASUREMENT): the final buffer
-					// content along the neck row after ring + replay -
-					// the exact scanline the on-screen seam runs through.
-					{
-						static int sSeamLog = 8;
-						if (sSeamLog > 0 && cdst && cstride > 0)
-						{
-							sSeamLog--;
-							const int sy2 = dy0 + ringDstH / 2;
-							if (sy2 >= 0 && sy2 < cH)
-							{
-								static const int kX[11] = { 150, 170, 176,
-									185, 195, 204, 215, 230, 250, 270, 278 };
-								char buf[512];
-								int n = _snprintf_s(buf, sizeof(buf),
-									_TRUNCATE,
-									"UiSpike: BARSEAM y=%d bufW=%d |", sy2, cW);
-								for (int i = 0; i < 11 && n > 0; i++)
-								{
-									if (kX[i] >= cW) { break; }
-									const uint8_t* p = cdst + sy2 * cstride
-										+ kX[i] * 4;
-									n += _snprintf_s(buf + n,
-										sizeof(buf) - n, _TRUNCATE,
-										" x%d(%d,%d,%d,a%d)",
-										kX[i], p[0], p[1], p[2], p[3]);
-								}
-								Logger::Get().WriteLine(LogLevel::Info,
-									"%s", buf);
-							}
-						}
-					}
-					// DISBUFDUMP (2026-08-23 MEASUREMENT): the whole
-					// container buffer to a file beside the DLL, twice
-					// (first paint + a later one), so the assembled chrome
-					// can be rendered and inspected offline pixel-for-
-					// pixel - separating "the buffer is wrong" from "the
-					// buffer is right and the wrongness happens at the
-					// screen composite / behind the window". Path derived
-					// from our own module, same pattern as SpinProbe's
-					// ResolveCsvPath - never hardcoded.
-					{
-						static int sBufDump = 2;
-						if (sBufDump > 0 && cdst && cstride > 0
-							&& cW > 0 && cH > 0 && cW <= 4096 && cH <= 4096)
-						{
-							sBufDump--;
-							HMODULE selfMod = nullptr;
-							wchar_t dp2[MAX_PATH] = {};
-							if (GetModuleHandleExW(
-									GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-									GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-									reinterpret_cast<LPCWSTR>(&gBarCacheN),
-									&selfMod)
-								&& GetModuleFileNameW(selfMod, dp2, MAX_PATH))
-							{
-								wchar_t* sl = nullptr;
-								for (wchar_t* p = dp2; *p; p++)
-								{
-									if (*p == L'\\' || *p == L'/') { sl = p; }
-								}
-								if (sl)
-								{
-									*(sl + 1) = L'\0';
-									wchar_t name[48];
-									swprintf_s(name, L"SC4UIScale-disbuf%d.bin",
-										1 - sBufDump);
-									wcscat_s(dp2, MAX_PATH, name);
-									FILE* f = nullptr;
-									if (_wfopen_s(&f, dp2, L"wb") == 0 && f)
-									{
-										const int32_t hdr[3] = { cW, cH,
-											cstride };
-										fwrite("DBUF", 1, 4, f);
-										fwrite(hdr, sizeof(int32_t), 3, f);
-										for (int y2 = 0; y2 < cH; y2++)
-										{
-											fwrite(cdst + y2 * cstride, 4,
-												cW, f);
-										}
-										fclose(f);
-										Logger::Get().WriteLine(LogLevel::Info,
-											"UiSpike: DISBUFDUMP wrote %dx%d "
-											"buffer -> %ls", cW, cH, dp2);
-									}
-								}
-							}
-						}
-					}
-					return 0;   // skip the game's 1x ring blit
-				}
-			}
+			// (v4.0.41) The LEGACY disaster ring block - seat-scaling
+			// (RingDX/RingDY + v2.71.8 extrapolation), the RingUnderStrip
+			// viewport clip, the neck-penetration clip, the retired LayerFix
+			// replay and its diagnostics (DISRING/RINGVERIFY/BARSEAM) - was
+			// DELETED after one release behind [Disaster] DrawRebuild=0, per
+			// the approved rebuild plan. The dispatch above owns every
+			// disaster element draw. History: VERSION-HISTORY.txt v4.0.40
+			// and REGRESSION.md "DISASTER FLYOUT REBUILD".
 			// ---- SUB-FLYOUT RING 2x (v2.15.0, derived from the RCAL trace) ----
 			// The shared sub-flyout container paints its circle as an 80x53
 			// sprite at dst(0,94) into a 258x482 buffer - measured, not guessed:
@@ -3552,107 +3112,16 @@ namespace
 			// selfW-53" (4px slop). The old absolute 200..400 band was only
 			// true at f=2 and rejected every bar tile at 1.5x (141/159).
 			if (a1 && d[0] >= selfW - 53 - 4 && d[0] < selfW
-				// (2026-08-23) the disaster arm is LEGACY under gDisRebuild -
-				// the rebuild dispatch above owns every disaster bar draw
-				// (and returns 0 before reaching here); the sub-flyout arm
-				// is untouched.
-				&& (gDisasterDrawTuning
-					? (destIsContainer && !gDisRebuild) : destIsSubContainer)
+				// (v4.0.41) SUB-FLYOUT ONLY: every disaster bar draw is owned
+				// by the rebuild dispatch above (which returns 0 before this
+				// point); the disaster legacy arm is deleted.
+				&& !gDisasterDrawTuning && destIsSubContainer
 				&& (BarWidenEff() > 1.0f || BarDXEff() != 0))
 			{
 				if (BarWidenEff() > 1.0f)
 				{
-					// Cache this tile so the ring block can replay it on top
-					// (LAYER FIX), then draw it now so the bar renders even on
-					// frames where the ring never draws.
-					if (gLayerFix)
-					{
-						// v2.39.10: OWNER-KEY THE CACHE. A different container
-						// means a different paint, so anything still here is
-						// stale - discard it rather than letting the disaster
-						// ring block replay a sub-flyout's tiles (or vice
-						// versa) and rather than holding its atlas pointers.
-						if (self != gBarCacheOwner)
-						{
-							gBarCacheN = 0;
-							gBarCacheOwner = self;
-							gBarCacheSatLogged = false;
-						}
-						if (!BarCachePush(a1, s, d) && !gBarCacheSatLogged)
-						{
-							// NO SILENT CAPS: an incomplete cache means an
-							// incomplete LayerFix replay, which would read as
-							// "the fix stopped working" with nothing in the
-							// log to say so.
-							gBarCacheSatLogged = true;
-							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: BARCACHE refused tile #%d (ceiling "
-								"%d or out of memory) on ptr%p - LayerFix "
-								"replay is INCOMPLETE for this paint.",
-								gBarCacheN + 1, kBarCacheMax, self);
-						}
-					}
-					// BARSRC / BARUND (2026-08-23 MEASUREMENT, after four
-					// failed compositing theories): dump what the bar
-					// tile's SOURCE pixels actually are, what a4 carries,
-					// and what sits UNDERNEATH in the buffer before we
-					// write. This decides between "source is bright and
-					// stock darkens it via a modulation we drop" vs
-					// "source is dark and our draw corrupts it" vs
-					// "underneath is wrong". Disaster family only.
-					if (gDisasterDrawTuning)
-					{
-						static int sBarSrcLog = 8;
-						if (sBarSrcLog > 0)
-						{
-							sBarSrcLog--;
-							int32_t* af = reinterpret_cast<int32_t*>(a1);
-							int32_t* cf = reinterpret_cast<int32_t*>(self);
-							const uint8_t* ap = reinterpret_cast<uint8_t*>(
-								static_cast<uintptr_t>(
-									static_cast<uint32_t>(af[15])));
-							const uint8_t* cp = reinterpret_cast<uint8_t*>(
-								static_cast<uintptr_t>(
-									static_cast<uint32_t>(cf[15])));
-							const int ast = af[16], cst = cf[16];
-							const int sy = s[1] + (s[3] - s[1]) / 2;
-							const int dy = d[1] + (s[3] - s[1]) / 2;
-							const int dxb = d[0] + BarDXEff();
-							char buf[512];
-							int n = _snprintf_s(buf, sizeof(buf), _TRUNCATE,
-								"UiSpike: BARSRC a4=%p src(%d,%d) row%d |",
-								a4, s[0], s[1], sy);
-							for (int i = 0; i < 5 && n > 0; i++)
-							{
-								const uint8_t* p = ap + sy * ast
-									+ (s[0] + i * 13) * 4;
-								n += _snprintf_s(buf + n, sizeof(buf) - n,
-									_TRUNCATE, " (%d,%d,%d,a%d)",
-									p[0], p[1], p[2], p[3]);
-							}
-							n += _snprintf_s(buf + n, sizeof(buf) - n,
-								_TRUNCATE, " | UND dst row%d x%d |", dy, dxb);
-							for (int i = 0; i < 5 && n > 0; i++)
-							{
-								const uint8_t* p = cp + dy * cst
-									+ (dxb + i * 26) * 4;
-								n += _snprintf_s(buf + n, sizeof(buf) - n,
-									_TRUNCATE, " (%d,%d,%d,a%d)",
-									p[0], p[1], p[2], p[3]);
-							}
-							Logger::Get().WriteLine(LogLevel::Info, "%s", buf);
-						}
-					}
-					// PER-FAMILY MODE (see DrawBarScaled's comment). The
-					// regular sub-flyout keeps its user-confirmed v4.0.21
-					// blend. The DISASTER's element draws must be RGBA
-					// COPIES - its Plot never clears the buffer and never
-					// paints a background (GOD-MODE-FLYOUTS.md pipeline),
-					// so a blend here reads stale/self content and
-					// accumulates across repaints; the copy is the stock
-					// op and is deterministic by construction.
-					DrawBarScaled(self, a1, s, d, nullptr, nullptr,
-						gDisasterDrawTuning ? kBarCopy : kBarBlend);
+					// v4.0.21 single blend - the user-confirmed sub-flyout path.
+					DrawBarScaled(self, a1, s, d);
 					return 0;   // skip the original 1x-wide bar blit
 				}
 				d[0] += BarDXEff();   // widen==1: shift only
@@ -8058,13 +7527,12 @@ namespace
 			// per-tier constant to keep in sync, and no assumption that
 			// needs revisiting if a 4x tier is ever added.
 			//
-			// The `else if (isDisaster)` branch below is UNREACHABLE DEAD
-			// CODE, confirmed by control-flow (adversarial review,
-			// 2026-08-23) - see its own comment. `isDisaster` is always
-			// false by the time execution reaches this dock section; the
-			// disaster twin is fully handled and returned from the
-			// GODDOCK block far above. It is NOT "the disaster twin's
-			// live path, unchanged" - it has never run.
+			// (v4.0.41) An `else if (isDisaster)` branch that lived here for
+			// years was UNREACHABLE dead code (control-flow proven,
+			// adversarial review 2026-08-23: the disaster twin fully docks
+			// and returns from the GODDOCK block far above) and has been
+			// DELETED. The disaster twin's real path is GODDOCK + the
+			// v4.0.40 rebuild dispatch in BltClassThunk.
 			//
 			// CONFIRMED, NOT YET FIXED (same review): the sweep-time
 			// mirror (~UiSpike.cpp:14883 at review time, search
@@ -8102,62 +7570,6 @@ namespace
 						"mB=%d newH=%d nativeT=%d top=%d dy=%d",
 						strip, gTierF, cy, mT, mB,
 						newH, nativeT, top, dy);
-				}
-			}
-			else if (isDisaster)
-			{
-				// UNREACHABLE - CONFIRMED BY CONTROL FLOW, NOT A GUESS
-				// (adversarial review, 2026-08-23). `isDisaster` cannot be
-				// true here: the `if (isDisaster) { ... return; }` block
-				// far above (~line 6966) unconditionally returns before
-				// this dock section is ever reached, so execution only
-				// arrives here with `isDisaster == false`. This branch,
-				// and everything in it (the recovered-cy chain, the
-				// `SubContainerShiftPx()` bornshift), has been dead code
-				// since AT LEAST v2.39.0 - it never ran, on any build,
-				// including every version before this session's changes.
-				//
-				// PRIOR COMMENTS IN THIS FILE AND IN research/laws/
-				// project-sc4-flyout-bottom-anchor.md claiming "the
-				// disaster twin still uses the old recovered-cy chain,
-				// unchanged" ARE WRONG - the disaster twin is fully
-				// docked and returned from the GODDOCK block above
-				// (~line 6994) and never reaches here. Do not port a fix
-				// onto this branch expecting it to run; it will not.
-				//
-				// Left in place, unreached, rather than deleted: if the
-				// disaster twin ever gets its own live-measured mT/mB fix
-				// (see the law file's "what is still open" list), fixing
-				// the actual GODDOCK path is the right target, not this.
-				// SubPlaceTop() and SubContainerShiftPx() remain defined
-				// (both still referenced by dead code below and by
-				// SubSharedBottom, also unreferenced from the live path -
-				// see that function's own retirement comment).
-				if (gSubMath && ch > 0)
-				{
-					const int32_t nativeT = win->GetT();
-					const int32_t cyR = nativeT + (ch >> 1) + 3;
-					dy = SubPlaceTop(newH, cyR, gLastViewH, gTierF)
-						- nativeT;
-					gSubRingAutoY = legDY - dy;
-				}
-				if (gTierF > 1.0f && strip)
-				{
-					const int32_t shiftPx = SubContainerShiftPx();
-					if (shiftPx > 0)
-					{
-						static int sBornShiftLog = 40;
-						if (sBornShiftLog > 0)
-						{
-							sBornShiftLog--;
-							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: BORNSHIFT strip=%p shiftPx=%d "
-								"(empirical f=%.2f)",
-								strip, shiftPx, gTierF);
-						}
-						dy -= shiftPx;
-						gSubRingAutoY = legDY - dy;
-					}
 				}
 			}
 			if (dx != 0 || dy != 0)
@@ -9776,12 +9188,8 @@ void UiSpike::Disarm()
 	gDisStockValid = false;
 	gDisChromeHealed = nullptr;  // v2.39.4: heal again next city
 	gDisDockLogged = nullptr;    // v2.39.5: next open logs its dock line
-	// v2.39.10 (task #84): the bar-tile cache holds RAW ATLAS POINTERS and a
-	// container pointer. Both die with the city; the second-city lifecycle law
-	// (a function-local static holding a dead pointer) applies verbatim.
-	gBarCacheN = 0;
-	gBarCacheOwner = nullptr;
-	gBarCacheSatLogged = false;
+	// (v4.0.41) the bar-tile cache and its Disarm resets died with the
+	// legacy disaster path.
 	gReadyCount = 0;          // gReadyWins latch table: per-city rebuild
 	healPhase = 0;            // ADVHEAL state machine re-arms
 	healDoneStrip = nullptr;  // ADVHEAL re-heals next city's strip
@@ -14207,18 +13615,12 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				GetPrivateProfileStringA("UiSpike", "LiveTune", "", b, sizeof(b), kIni);
 				s_liveTune = b[0] ? atoi(b) : 0;
 			}
-			// 2026-08-23 REBUILD lever + diagnostics. DrawRebuild=0 restores
-			// the legacy per-element path verbatim (one-release revert
-			// lever, project convention); BufDump=N writes N full container-
-			// buffer dumps beside the DLL for offline pixel verification.
-			GetPrivateProfileStringA("Disaster", "DrawRebuild", "", b, sizeof(b), kIni);
-			if (b[0]) gDisRebuild = atoi(b);
+			// (v4.0.41) DrawRebuild / RingDX / RingDY / RingUnderStrip /
+			// LayerFix ini keys DELETED with the legacy disaster path.
+			// BufDump=N writes N container-buffer dumps beside the DLL for
+			// offline pixel verification (render_disbuf.py).
 			GetPrivateProfileStringA("Disaster", "BufDump", "", b, sizeof(b), kIni);
 			if (b[0]) gDisBufDump = atoi(b);
-			GetPrivateProfileStringA("Disaster", "RingDX", "", b, sizeof(b), kIni);
-			if (b[0]) gRingDX = atoi(b);
-			GetPrivateProfileStringA("Disaster", "RingDY", "", b, sizeof(b), kIni);
-			if (b[0]) gRingDY = atoi(b);
 			GetPrivateProfileStringA("Disaster", "DockX", "", b, sizeof(b), kIni);
 			if (b[0]) gRingDockX = atoi(b);
 			GetPrivateProfileStringA("Disaster", "DockY", "", b, sizeof(b), kIni);
@@ -14235,16 +13637,13 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// computes the exact shift from ring geometry at all scales.
 			GetPrivateProfileStringA("SubFlyout", "StripShiftRows", "", b, sizeof(b), kIni);
 			if (b[0]) gSubStripShiftRows = atoi(b);
-			// v4.0.15: ring-behind-strip mask switch (superseded by LayerFix
-			// default-on for the visible defect, kept as a scoped fallback).
-			GetPrivateProfileStringA("Disaster", "RingUnderStrip", "", b, sizeof(b), kIni);
-			if (b[0]) gRingUnderStrip = atoi(b);
+			// (v4.0.41) RingUnderStrip + LayerFix keys deleted with the
+			// legacy disaster path. BarDX/BarW stay: the SUB-FLYOUT family
+			// still consumes them (DrawBarScaled).
 			GetPrivateProfileStringA("Disaster", "BarDX", "", b, sizeof(b), kIni);
 			if (b[0]) gBarDX = atoi(b);
 			GetPrivateProfileStringA("Disaster", "BarW", "", b, sizeof(b), kIni);
 			if (b[0]) gBarWiden = static_cast<float>(atof(b));   // v2.24.0: float (1.5 legal)
-			GetPrivateProfileStringA("Disaster", "LayerFix", "", b, sizeof(b), kIni);
-			if (b[0]) gLayerFix = atoi(b);
 			// v2.39.0 task #5: born-at-Place size for the first-level flyout.
 			// Live so a bad size can be switched off mid-session without a
 			// rebuild, and WITHOUT touching the sub-flyout's own lever.
