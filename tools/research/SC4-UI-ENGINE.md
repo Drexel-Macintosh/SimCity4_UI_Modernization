@@ -1172,7 +1172,7 @@ why one general rule never fit it:
 | class | field | shape | consumer, and what it means there |
 |---|---|---|---|
 | `GZWinText` | `+0xE4`/`+0xE5` | **signed** byte pair | caption re-layout `0x9C1E6D`, as a symmetric inset. **Center-align ignores gutterY.** Ctor default (2,2), but the deserializer **force-writes (0,0) when the attribute is absent** — so "no `gutters=`" is not "ctor default" |
-| `GZWinBtn` | `+0x102` L, `+0x103` T, `+0x104` R, `+0x105` B | **four unsigned** bytes | `sub_9B09B7` builds the content box `[gL, gT, W−gR, H−gB]` that seats the state cell / icon. The 2-value form duplicates symmetrically; **other arities are silently dropped** |
+| `GZWinBtn` | `+0x102` L, `+0x103` T, `+0x104` R, `+0x105` B | **four unsigned** bytes, ctor-zeroed ⇒ default (0,0,0,0) | the **recompute routine `0x9B0C08`** (10 rel32 callers; gate `[this+0xDC]&4` @`0x9B0D76`) builds the content box `[gL, gT, W−gR, H−gB]` @`0x9B0D76-0x9B0DC7` and passes it to seat helper `0x9B0B87`. Further readers inside the same routine: `0x9B0D14`, `0x9B0E83/93`, `0x9B0F67/74/7E/87`. Getters: `vt+0x80` = `0x9B008D` (L/T only), `vt+0x7C` = `0x9B0116` (all four). The 2-value form duplicates symmetrically; **other arities are silently dropped** |
 | `GZWinTextEdit` | `+0x158`/`+0x15C` | **dword** pair | the text draw origin and visible width. Ctor default (5,0) — `0x9BFFCC` is `mov dword [esi+0x158], 5`, which is the long-cited "gutter default 5" now with a field behind it |
 
 Ten classes consume `gutters=` in total (10 deserializer sites, matching 10

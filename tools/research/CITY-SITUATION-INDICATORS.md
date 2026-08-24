@@ -133,14 +133,33 @@ inner glyph is clickable, not the surrounding pin.
 > NON-CSI branch. Patching it resizes unrelated indicators.
 > Never touch it when working on CSIs.
 >
-> ⚠ **BLAST RADIUS WIDENED 2026-08-24** (register #8, all seven categories
-> decoded): that `32.0f` is not category 3's alone — **all six non-CSI categories
-> share it.** Category 4 (the CSI) is the *only* one that writes its own size
-> (35.0f → `+0xD0/+0xD4` with a computed NextPow2); every other indicator —
-> fire pin (0), police pin (1), the dormant number-pin family (2), the MySim head
-> bubble (3), the U-Drive-It driving bubble (5), and the player-vehicle plumb bob
-> (6) — reads this one immediate. Touching it is a **six-visual** change, and the
-> per-category roster is in the register row for #8.
+> ✅ **RE-VERIFIED 2026-08-24 — the law as written above is CORRECT, and a
+> "widening" correction posted earlier the same day was WRONG and has been
+> reverted.** A decode lane claimed this `32.0f` was shared by all six non-CSI
+> categories; an adversarial verifier refuted it and a hand byte-check settled it.
+> The real size assignment, exhaustively scanned over the builder
+> `0x46C8B0-0x46D0F0` (every write to `+0xD0`/`+0xD4` — there are exactly four
+> pairs, no more):
+>
+> | category | `+0xD0` / `+0xD4` | site |
+> |---|---|---|
+> | 0/1/2 — the **numbered** fire/police/dormant squad pins | computed text width, then `14.0f` | `fstp` `0x46CAFD` + `0x46CB03` |
+> | **3 — MySim head bubble** | **`32.0f` in both** | `0x46CCB9` → `0x46CCBE`/`0x46CCC4` |
+> | 4 — **the CSI** | `35.0f` + computed NextPow2 | `0x46CC47` → `0x46CC4D`/`0x46CC53` |
+> | 5/6 — driving bubble, player-vehicle plumb bob | **zero** (`edx`, cleared at `0x46C920`) | `0x46CB39`/`0x46CB3F` |
+>
+> Why: the size block is reachable **only** through the icon path, whose sole
+> entries are the two `je 0x46CB52` at `0x46C928` and `0x46C931` — taken on
+> `category == 3` and `category == 4` respectively (`mov eax,[esi+4]` @`0x46C922`,
+> then `cmp eax,3` / `cmp eax,4`). The number path and the no-flag path exit with
+> `jmp 0x46CCE2` @`0x46CB34` and `jmp 0x46CCDA` @`0x46CB4D`, both of which **jump
+> past** the block. Inside it, `cmp dword[esi+4],4` @`0x46CC41` sends 4 to the
+> 35.0f store and everything reaching there otherwise — i.e. only 3 — to
+> `0x46CCB9`.
+>
+> ⇒ `0x46CCB9` is the **MySim head bubble's** size. Patching it does **not** touch
+> fire/police numbers, the driving bubble, or the plumb bob. Still never touch it
+> when working on CSIs — the reason is unchanged, the blast radius is one visual.
 
 ---
 
