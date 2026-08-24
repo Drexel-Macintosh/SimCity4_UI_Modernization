@@ -5050,8 +5050,13 @@ namespace CodePatches
 			// photographs are another system's quads, invisible to the old
 			// filter by construction. Log every 4-vertex quad submission
 			// (deduped) so the helmet drawer names itself by return address.
+			// prim==6 (QUADS) ONLY: the unfiltered pass was flooded by the
+			// effects manager's fire sprites - 200 lines of prim=1 strips
+			// from 0x5E0438 before the pins ever drew. A billboard is
+			// primType 6 with count 4 (gdcap.cpp's proven table); strips are
+			// not pins.
 			bool fresh = false;
-			if (verts && count == 4)
+			if (verts && count == 4 && prim == 6)
 			{
 				static struct { uint32_t r; float x, y; } seen[48] = {};
 				static int seenN = 0;
