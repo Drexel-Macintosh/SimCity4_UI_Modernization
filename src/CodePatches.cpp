@@ -7026,6 +7026,15 @@ namespace CodePatches
 			GetPrivateProfileStringW(L"UiSpike", L"CsiCountPlate", L"0",
 				cbuf, 32, iniPath);
 			gCsiCountPlate = static_cast<float>(_wtof(cbuf));
+			// ALWAYS log the resolved value. The first A/B launch was VOID
+			// because the key sat in the wrong ini section, read as 0, and
+			// nothing said so - the third silent-null of this class in one
+			// day. A lever that can be mis-armed must print what it resolved
+			// to, every time, so an inert setting can never be read as a
+			// result.
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: CsiCountPlate resolved to %.2f "
+				"(0 = follow tier; read from [UiSpike]).", gCsiCountPlate);
 		}
 		// #188 PIXTABLE: the per-zoom SCREEN-PIXEL size table at .rdata
 		// 0x00A88170 {20,30,40,50,60, 60,14,32,35,64}, sole consumer
