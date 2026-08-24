@@ -4994,6 +4994,137 @@ namespace CodePatches
 				static_cast<int>(t[8]), static_cast<int>(t[9]));
 		}
 
+		// ---- DISPATCHQUAD: measure the dispatch pins' REAL drawn rects -----
+		// Five patches in, the digit still sits on the helmet at 2x, and the
+		// byte-traced "both quads share one centre" model contradicts the
+		// screen. The screen outranks the trace, so this probe measures the
+		// actual vertex data the game submits, and the next patch is chosen
+		// by those coordinates - not by another disassembly argument.
+		//
+		// Hook 1: SubmitPrimitive 0x7D2990 - the 47-byte straight-line
+		// wrapper (one call = exactly one DrawArrays), __thiscall ret 0x10:
+		// (prim, fmt, count, vertsPtr). Vertex stride 0x14 = {x,y,z,u,v};
+		// position is the first 3 floats (proven in gdcap.cpp's notes).
+		// Logged only when the caller's return address lies inside the
+		// dispatch view's Draw (0x46D990..0x46F240) - quad A (pin) and
+		// quad B (digit) then identify themselves by retaddr.
+		// Hook 2: AddIndicator 0x46F240, __thiscall ret 0x10:
+		// (target, category, iconOrNumber, namePtr) - settles how many
+		// records one station actually creates.
+		// Both LOG-ONLY: always call the original, never skip, never write.
+		// Armed by [Probe] DispatchQuad=1; the key arms its own probe and the
+		// resolved value is always logged (the ViewListRepeat/CsiCountPlate
+		// lessons - a silent lever must be impossible).
+		int  gDqOn = 0;
+		volatile LONG gDqSubmitCalls = 0;
+		int  gDqSubmitLogs = 0;
+		volatile LONG gDqAddCalls = 0;
+		int  gDqAddLogs = 0;
+		typedef void(__fastcall* DqSubmitFn)(void*, void*, uint32_t, uint32_t,
+			uint32_t, const float*);
+		typedef void(__fastcall* DqAddFn)(void*, void*, void*, uint32_t,
+			uint32_t, void*);
+		DqSubmitFn gDqSubmitOrig = nullptr;
+		DqAddFn    gDqAddOrig = nullptr;
+		bool gDqInstalled = false;
+
+		void __fastcall DqSubmitDetour(void* self, void* edx, uint32_t prim,
+			uint32_t fmt, uint32_t count, const float* verts)
+		{
+			InterlockedIncrement(&gDqSubmitCalls);
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uint32_t ret = static_cast<uint32_t>(
+				reinterpret_cast<uintptr_t>(_ReturnAddress())
+				- base + kImageBase);
+			if (ret >= 0x0046D990 && ret < 0x0046F240
+				&& gDqSubmitLogs < 60 && verts && count == 4)
+			{
+				++gDqSubmitLogs;
+				__try
+				{
+					// stride 0x14 = 5 floats; x,y are floats 0 and 1.
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: DISPATCHQUAD #%ld ret=0x%08X prim=%u "
+						"v0=(%.1f,%.1f) v1=(%.1f,%.1f) v2=(%.1f,%.1f) "
+						"v3=(%.1f,%.1f).",
+						gDqSubmitCalls, ret, prim,
+						verts[0], verts[1], verts[5], verts[6],
+						verts[10], verts[11], verts[15], verts[16]);
+				}
+				__except (EXCEPTION_EXECUTE_HANDLER)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: DISPATCHQUAD #%ld ret=0x%08X verts "
+						"unreadable.", gDqSubmitCalls, ret);
+				}
+			}
+			gDqSubmitOrig(self, edx, prim, fmt, count, verts);
+		}
+
+		void __fastcall DqAddDetour(void* self, void* edx, void* target,
+			uint32_t category, uint32_t iconOrNumber, void* namePtr)
+		{
+			InterlockedIncrement(&gDqAddCalls);
+			if (gDqAddLogs < 40)
+			{
+				++gDqAddLogs;
+				const uintptr_t base =
+					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				const uint32_t ret = static_cast<uint32_t>(
+					reinterpret_cast<uintptr_t>(_ReturnAddress())
+					- base + kImageBase);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: DQADD #%ld this=%p target=%p cat=%u "
+					"arg3=0x%08X ret=0x%08X.", gDqAddCalls, self, target,
+					category, iconOrNumber, ret);
+			}
+			gDqAddOrig(self, edx, target, category, iconOrNumber, namePtr);
+		}
+
+		void InstallDispatchQuadProbe()
+		{
+			if (gDqInstalled) { return; }
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			// Never-repin: both prologues byte-verified before hooking.
+			// 0x7D2990: 8B 54 24 10 56 52 (mov edx,[esp+0x10]; push esi; push edx)
+			// 0x46F240: 81 EC 68 02 00 00 (sub esp,0x268)
+			uint8_t* p1 = reinterpret_cast<uint8_t*>(
+				base - kImageBase + 0x007D2990);
+			uint8_t* p2 = reinterpret_cast<uint8_t*>(
+				base - kImageBase + 0x0046F240);
+			static const uint8_t kSub[6] = { 0x8B, 0x54, 0x24, 0x10, 0x56, 0x52 };
+			static const uint8_t kAdd[6] = { 0x81, 0xEC, 0x68, 0x02, 0x00, 0x00 };
+			if (memcmp(p1, kSub, 6) != 0 || memcmp(p2, kAdd, 6) != 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: DISPATCHQUAD prologue mismatch "
+					"(0x7D2990=%02X%02X.. 0x46F240=%02X%02X..) - REFUSED.",
+					p1[0], p1[1], p2[0], p2[1]);
+				return;
+			}
+			const MH_STATUS init = MH_Initialize();
+			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
+			if (MH_CreateHook(p1, reinterpret_cast<void*>(&DqSubmitDetour),
+					reinterpret_cast<void**>(&gDqSubmitOrig)) != MH_OK
+				|| MH_EnableHook(p1) != MH_OK
+				|| MH_CreateHook(p2, reinterpret_cast<void*>(&DqAddDetour),
+					reinterpret_cast<void**>(&gDqAddOrig)) != MH_OK
+				|| MH_EnableHook(p2) != MH_OK)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: DISPATCHQUAD hook install FAILED.");
+				return;
+			}
+			gDqInstalled = true;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: DISPATCHQUAD armed on 0x7D2990 + 0x46F240 "
+				"(log-only). POSITIVE CONTROL: a fire dispatch on screen "
+				"must produce DISPATCHQUAD lines; zero lines with pins "
+				"visible = the probe is broken, not the theory.");
+		}
+
 		// #8 THE STACK-SHIFT CONSTANT - why the deployment count sat ON the
 		// helmet at 2x, and why three size patches could not move it.
 		//
@@ -7085,6 +7216,14 @@ namespace CodePatches
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: CsiCountPlate resolved to %.2f "
 				"(0 = follow tier; read from [UiSpike]).", gCsiCountPlate);
+			// DISPATCHQUAD probe - a probe key arms its own probe, and the
+			// resolved value is always logged.
+			gDqOn = static_cast<int>(GetPrivateProfileIntW(
+				L"Probe", L"DispatchQuad", 0, iniPath));
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: DispatchQuad resolved to %d "
+				"(read from [Probe]).", gDqOn);
+			if (gDqOn != 0) { InstallDispatchQuadProbe(); }
 		}
 		// #188 PIXTABLE: the per-zoom SCREEN-PIXEL size table at .rdata
 		// 0x00A88170 {20,30,40,50,60, 60,14,32,35,64}, sole consumer
