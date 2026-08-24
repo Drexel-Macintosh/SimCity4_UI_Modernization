@@ -5221,6 +5221,8 @@ namespace CodePatches
 				"pins unaffected by construction.", want, *p);
 		}
 
+		bool gSignpostApplied = false;
+
 		void ApplySignpostScale(float want)
 		{
 			const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
@@ -5277,6 +5279,92 @@ namespace CodePatches
 				static_cast<double>(newSize), static_cast<double>(newRaise),
 				static_cast<uint32_t>(kSignpostSizeSite),
 				static_cast<uint32_t>(kSignpostRaiseSite));
+			gSignpostApplied = true;
+		}
+
+		// #8/emergency pins — the DEPLOYMENT-COUNT DIGIT on the billboard
+		// pins (fire-station yellow pins, the dropped red pin). Measured live
+		// at both tiers (DISPATCHQUAD probe, 2026-08-24): the digit quad is
+		// built by 0x5F1D00 (sole caller 0x5F25CC inside the pin builder
+		// 0x5F20A0) as
+		//     top    = raise - world(14)/cos(pitch) - world(9)/cos(pitch)
+		//     height = world(14)/cos(pitch)
+		// where raise rides ApplySignpostScale's 150->150f patch but 14.0f
+		// (box height, imm @0x5F1EED) and 9.0f (seat gap, imm @0x5F1EFD) are
+		// STOCK inline push-imm32 constants. So at 2x the digit kept its
+		// stock 14px height and 23px below-pin-top seat while the balloon
+		// doubled: half the proper relative size, drifted from the balloon's
+		// lower third up onto the helmet art - the user's screenshots at
+		// every step. The model forces all four measured rects with zero free
+		// parameters (digitH/pinH = 14/(150f) -> 0.0933/0.0467 vs measured
+		// 0.0932/0.0465; centre frac 1-30/(150f) -> 0.800/0.900 vs measured
+		// 0.8001/0.9001). Scaling both immediates by f makes both ratios
+		// f-invariant: the 1x layout, reproduced at every tier.
+		//
+		// Blast radius (adversarially verified 8/8, SHIP-WITH-CHANGES):
+		// sole-caller function; the pooled .rdata twins 0xAA4F18/1C are dead;
+		// kind-4 (route-query signposts, the MARKERZOOM family) never draws
+		// the digit quad (draw-side clear @0x5F288F) - untouched. Digit
+		// WIDTH is deliberately left alone: it is font-measured and already
+		// rides the tier via FontStyle.
+		//
+		// THE REQUIRED COUPLING (the verifier's one change): this applies
+		// ONLY after ApplySignpostScale actually took. A scaled digit on a
+		// stock balloon is the same half-patched state as the reverse - the
+		// cost-box law. gSignpostApplied is set at SIGNPOST's success point
+		// and nowhere else.
+		void ApplyPinDigitScale(float want)
+		{
+			if (!gSignpostApplied)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: PINDIGIT skipped - SIGNPOST did not apply, "
+					"and a scaled digit on a stock balloon is the "
+					"half-patched state.");
+				return;
+			}
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t delta = base - kImageBase;
+			uint8_t* pb = reinterpret_cast<uint8_t*>(0x005F1EEC + delta);
+			uint8_t* pg = reinterpret_cast<uint8_t*>(0x005F1EFC + delta);
+			uint32_t curB = 0, curG = 0;
+			memcpy(&curB, pb + 1, 4);
+			memcpy(&curG, pg + 1, 4);
+			// Never-repin: push opcode + exact stock bits (14.0f / 9.0f).
+			if (pb[0] != 0x68 || curB != 0x41600000
+				|| pg[0] != 0x68 || curG != 0x41100000)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: PINDIGIT sites unexpected (%02X %08X / "
+					"%02X %08X) - REFUSED, digit stays stock.",
+					pb[0], curB, pg[0], curG);
+				return;
+			}
+			const float newBox = 14.0f * want;
+			const float newSeat = 9.0f * want;
+			uint32_t boxBits = 0, seatBits = 0;
+			memcpy(&boxBits, &newBox, 4);
+			memcpy(&seatBits, &newSeat, 4);
+			// One VirtualProtect spanning both sites (0x15 bytes, one page) -
+			// the same nested-protect-RWX-leak avoidance as SIGNPOST.
+			const SIZE_T span = static_cast<SIZE_T>((pg + 5) - pb);
+			DWORD oldProt = 0;
+			if (!VirtualProtect(pb, span, PAGE_EXECUTE_READWRITE, &oldProt))
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: PINDIGIT VirtualProtect failed - skipped.");
+				return;
+			}
+			memcpy(pb + 1, &boxBits, 4);
+			memcpy(pg + 1, &seatBits, 4);
+			VirtualProtect(pb, span, oldProt, &oldProt);
+			FlushInstructionCache(GetCurrentProcess(), pb, span);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: PINDIGIT box 14 -> %.1f px, seat 9 -> %.1f px "
+				"at 0x005F1EEC/0x005F1EFC (digit rides the tier; kind-4 "
+				"signposts draw no digit, unaffected).",
+				static_cast<double>(newBox), static_cast<double>(newSeat));
 		}
 
 		// ---- #188 PROBE MODE (ini MissionBubbleFx=3) -----------------------
@@ -7242,6 +7330,9 @@ namespace CodePatches
 		// diagnostic knob: feeding a 5.0 probe value into the pole quad
 		// would blow the mayor-hat sign to 220px and read as a new bug.
 		if (factor > 1.01f && mode >= 2) { ApplySignpostScale(factor); }
+		// PINDIGIT rides the same gate AND requires SIGNPOST to have taken
+		// (checked inside - the coupling the verifier required).
+		if (factor > 1.01f && mode >= 2) { ApplyPinDigitScale(factor); }
 		// The LIVE lever (the two above are the dormant twin + the glow):
 		// the marker per-zoom table, sole consumer = the balloon strip
 		// builder. This is the patch that moves the on-screen balloon.
