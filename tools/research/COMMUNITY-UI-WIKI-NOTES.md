@@ -12,18 +12,27 @@ byte verification, per the standing rule.
   measurement**: both are corner form `(l,t,r,b)` — see `SC4-UI-ENGINE.md`
   (button-row and `14015545` proofs). This is the reference case for why this page
   is a leads file.
+- It spells the button tip-offset attribute **`tipsoffset`**. **No such token
+  exists in the exe** (2026-08-24 tokenizer trace): the real attribute is
+  **`tipoffsets`**, GZWinBtn-only. The wiki's own per-control parts list spells it
+  correctly — the attribute *table* entry is the typo.
+- Its `gutters=` note says the optional second pair is general. **Measured:
+  Btn/Grid only** — GZWinText takes a signed byte pair, GZWinTextEdit a dword
+  pair, and non-matching arities are silently dropped.
 
 ## Deltas that feed open unknowns (research/UNKNOWNS-AND-NEXT-TARGETS.md)
 
-### → #11 Resolution-as-GID
-The wiki states the authoring convention generally: a resolution-specific `.UI` is
+### → #11 Resolution-as-GID — ✅ LEAD CONFIRMED AND CLOSED 2026-08-24
+The wiki stated the authoring convention generally: a resolution-specific `.UI` is
 shipped with *the screen resolution as its GID*, digits literal (800×600 →
-`08000600`). Consequence: the encoding rule is **decimal digits read as hex
-nibbles**, so the GID for any target resolution is derivable — 2400×1600 →
-`0x24001600`, 1024×768 → `0x10240768`. The register's one-test-dat experiment can
-be built without first finding the exe's formatter. Open half unchanged: whether
-the engine *computes* the current resolution's GID (arbitrary resolutions work) or
-consults a fixed set (only 0x08000600 exists in the corpus).
+`08000600`). **The exe agrees exactly.** The loader computes it per load:
+`sprintf(buf, "0x%.4u%.4u", mainWinW, mainWinH)` (format string `.rdata 0xAD50AC`,
+pushed @`0x94B279`) then hex-parses it into the GROUP slot and `TestForKey`s it,
+restoring the caller's group on a miss. So the rule is literally *decimal digits
+re-read as hex nibbles*, and **arbitrary resolutions are first-class** — the wiki
+line was the single most valuable thing on the page. Full chain in the register
+(#11) and `SC4-UI-ENGINE.md`. This is the page's win: a community sentence that
+predicted a mechanism, and the mechanism was there.
 
 ### → B#2 winflag map (the attribute-name side)
 Wiki-attested `.UI` flag-attribute names **absent from our measured 13-flag map**:
@@ -34,15 +43,13 @@ Wiki-attested `.UI` flag-attribute names **absent from our measured 13-flag map*
 These three are the expected-name seed list for the register's probe #2 (read the
 name→bit table in the attribute dispatch near `0x94B995`/`0x94E516`).
 
-### → #13 gutters / textoffsets / tipsoffset consumers
-Wiki-stated intended semantics (consumers still unverified):
-- `gutters=` — reserved space around a control, `(hor,vert[,hor1,vert1])`; first
-  pair top/left, optional second pair bottom/right, "used for buttons".
-  Consistent with our arithmetic proof that gutters ≠ 9-slice inset.
-- `textoffsets=` — position offset of the caption text on the control, `(x,y)`.
-- `tipsoffset=` — offset the tip text appears at, `(x,y)` (per-control-parts list
-  spells it `tipoffsets` on GZWinBtn — the name may vary by deserializer).
-This upgrades #13 from "meaning unknown" to "spec stated, consumer VAs unknown".
+### → #13 gutters / textoffsets / tipoffsets consumers — ✅ CLOSED 2026-08-24
+The wiki's semantics were broadly right and are now backed by consumer VAs, with
+two corrections (see the WRONG section above: the `tipsoffset` spelling, and the
+optional second pair being Btn/Grid-only). Notably the wiki could not have known
+the load-bearing part: **`tipoffsets` is inert on stock art**, because its only
+consumer gates on a `tipflag=` bit whose default leaves it clear. Full field map
+and reader VAs in the register (#13) and `SC4-UI-ENGINE.md`.
 
 ## Corroborations (already measured on our side)
 

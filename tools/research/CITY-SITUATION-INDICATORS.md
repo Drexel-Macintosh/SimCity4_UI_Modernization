@@ -130,8 +130,17 @@ and the clickable area are the same rectangle.** Confirmed on screen: only the
 inner glyph is clickable, not the surrounding pin.
 
 > **Law:** `0x0046CCB9` is the identical instruction shape holding `32.0f` on the
-> NON-CSI branch (category 3). Patching it resizes unrelated indicators.
+> NON-CSI branch. Patching it resizes unrelated indicators.
 > Never touch it when working on CSIs.
+>
+> ⚠ **BLAST RADIUS WIDENED 2026-08-24** (register #8, all seven categories
+> decoded): that `32.0f` is not category 3's alone — **all six non-CSI categories
+> share it.** Category 4 (the CSI) is the *only* one that writes its own size
+> (35.0f → `+0xD0/+0xD4` with a computed NextPow2); every other indicator —
+> fire pin (0), police pin (1), the dormant number-pin family (2), the MySim head
+> bubble (3), the U-Drive-It driving bubble (5), and the player-vehicle plumb bob
+> (6) — reads this one immediate. Touching it is a **six-visual** change, and the
+> per-category roster is in the register row for #8.
 
 ---
 
