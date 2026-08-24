@@ -1051,6 +1051,9 @@ resolution-control memory). SC4GraphicsOptions.ini: Software / 1024x768
 / Windowed (prev values in the park dir). SC4TouchControls untouched
 (hard rule). RESTORE = one command: _tests\Restore-StockPark.ps1
 (game closed), then expect "tier 2.00 (scaling active)" on next launch.
+[2026-08-23: that one-off script has been retired — the restore below ran
+clean and the park backup dir no longer exists. Live stock instrument =
+Set-StockCompare.ps1.]
 Captures land in _tests\captures\stock-budget\.
 
 ## ✅ STOCK REFERENCE CAPTURED + PRODUCTION RESTORED (2026-07-30 13:2x)

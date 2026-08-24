@@ -92,16 +92,15 @@ $DENY_NAME = @(
     "CameraController.cpp", "CameraController.h",
     "version.h",                      # PLUGIN_VERSION_STR - the touch DLL's
     "HANDOFF-TO-QWEN.md", "FRESH-INSTALL.md",
-    "HANDOFF.md", "RUN-SHEET-NEXT-SESSION.md", "audit-tour.txt",
+    "HANDOFF.md", "RUN-SHEET-NEXT-SESSION.md",
     "HANDOFF-god-mode-flyouts.md", "BUILDER-CENSUS.md", "CONSTANT-MAP.md",
     "extracted-png-tgi.csv", "art-dims.csv", "idcollide.py",
-    "FontStyle.default.ini", "FontStyle.installroot-copy.ini",
-    "FontStyle.candidate.ini", "FontStyle-15x.gen.ini", "FontStyle-3x.gen.ini",
+    "FontStyle.default.ini", "FontStyle.candidate.ini",
     ".pii-tokens"
 )
 $DENY_PATTERN = @(
     "*_probe.py.throwaway",            # placeholder; the named ones follow
-    "dock_patch_probe.py", "dock_recess_probe.py",
+    # (dock_*_probe.py + the lane1/2 probes were deleted from the tree 2026-08-23)
     "lane1_*_probe.py", "lane2_*_probe.py", "lane4_*_probe.py",
     "*.log", "*.bak", "*.bak-*", "state.json", "*.dat", "*.ui", "*.png",
     "*.dll", "*.exe", "*.pdb", "package-list*.txt"

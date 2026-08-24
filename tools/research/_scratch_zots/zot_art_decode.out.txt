@@ -1,0 +1,223 @@
+#### CONTROL: ConnectArrow 0x29F10000 base model
+== ConnectArrow 0x29F10000 : 336 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=4 fmt=01400080
+     v0  X=    4.5862 Y=   14.4573 Z=    4.2354  U=0.993862 V=0.703125
+     v1  X=   -3.0372 Y=   14.4575 Z=    7.3933  U=0.980469 V=0.703125
+     v2  X=   -3.0374 Y=    1.7532 Z=    7.3933  U=0.980469 V=0.720982
+     v3  X=    4.5863 Y=    1.7532 Z=    4.2356  U=0.993862 V=0.720982
+   INDX grp0 a=0 b=2 n=6 idx=[0, 1, 2, 3, 0, 2]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 6, 0]
+   MATS name='29F10000_ConnectArrow_Ui8x1x3_Z1S'  tex=0x1EE50000  rawhex=01000000ab00000004030100ff7f0000000000010000e51e03030000210002002232394631303030
+   ANIM a=1 b=30 c=3 names=['ConnectArrow_Ui8x1x3_Z1S_0']
+CONTROL PASS
+== Zot_NoPower_0fd1 model 0x0FD10000 (SimCity_1.dat) : 318 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=4 fmt=01400080
+     v0  X=    9.2104 Y=   24.4380 Z=    5.6382  U=0.056250 V=0.242188
+     v1  X=   -5.1709 Y=   24.4380 Z=   11.5950  U=0.031250 V=0.242188
+     v2  X=   -5.1709 Y=    0.4722 Z=   11.5952  U=0.031250 V=0.275521
+     v3  X=    9.2104 Y=    0.4722 Z=    5.6382  U=0.056250 V=0.275521
+   INDX grp0 a=0 b=2 n=6 idx=[0, 1, 2, 3, 0, 2]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 6, 0]
+   MATS name='0fd10000_NoPower_Zot_Z1S'  tex=0x1EE50010  rawhex=01000000a300000004030100ff7f0000000000011000e51e03030000210002001930666431303030
+   ANIM a=1 b=30 c=3 names=['NoPower_Zot_Z1S_0']
+== Zot_NoPower_0fd1 model 0x0FD10400 (SimCity_1.dat) : 402 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=7 fmt=01400080
+     v0  X=   -6.6829 Y=   12.8466 Z=    6.6769  U=0.480469 V=0.243137
+     v1  X=    6.7033 Y=   12.8466 Z=    6.6769  U=0.819051 V=0.341176
+     v2  X=    6.7033 Y=   12.8466 Z=   -6.7238  U=0.960784 V=0.101961
+     v3  X=   -6.6829 Y=   12.8466 Z=   -6.7238  U=0.618264 V=0.000000
+     v4  X=   -6.6829 Y=   -0.0043 Z=    6.6769  U=0.480469 V=0.490196
+     v5  X=    6.7033 Y=   -0.0043 Z=    6.6769  U=0.819051 V=0.588235
+     v6  X=    6.7033 Y=   -0.0043 Z=   -6.7238  U=0.960784 V=0.349020
+   INDX grp0 a=0 b=2 n=18 idx=[0, 1, 2, 2, 3, 0, 4, 5, 1, 1, 0, 4, 5, 6, 2, 2, 1, 5]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 18, 0]
+   MATS name='0fd10400_NoPower_Zot_Z5S'  tex=0x1E060400  rawhex=01000000a300000004030100ff7f0000000000010004061e03030000210002001930666431303430
+   ANIM a=1 b=30 c=3 names=['NoPower_Zot_Z5S_0']
+
+== Zot_NoCar_107A model 0x107A0000 (SimCity_1.dat) : 314 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=4 fmt=01400080
+     v0  X=    9.2104 Y=   24.4380 Z=    5.6382  U=0.192969 V=0.242188
+     v1  X=   -5.1709 Y=   24.4380 Z=   11.5950  U=0.167969 V=0.242188
+     v2  X=   -5.1709 Y=    0.4722 Z=   11.5952  U=0.167969 V=0.275521
+     v3  X=    9.2104 Y=    0.4722 Z=    5.6382  U=0.192969 V=0.275521
+   INDX grp0 a=0 b=2 n=6 idx=[0, 1, 2, 3, 0, 2]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 6, 0]
+   MATS name='107A0000_NoCar_Zot_Z1S'  tex=0x1EE50010  rawhex=01000000a300000004030100ff7f0000000000011000e51e03030000210002001731303741303030
+   ANIM a=1 b=30 c=3 names=['NoCar_Zot_Z1S_0']
+== Zot_NoCar_107A model 0x107A0400 (SimCity_1.dat) : 398 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=7 fmt=01400080
+     v0  X=   -6.6829 Y=   12.8466 Z=    6.6769  U=0.480469 V=0.243137
+     v1  X=    6.7033 Y=   12.8466 Z=    6.6769  U=0.819051 V=0.341176
+     v2  X=    6.7033 Y=   12.8466 Z=   -6.7238  U=0.960784 V=0.101961
+     v3  X=   -6.6829 Y=   12.8466 Z=   -6.7238  U=0.618264 V=0.000000
+     v4  X=   -6.6829 Y=   -0.0043 Z=    6.6769  U=0.480469 V=0.490196
+     v5  X=    6.7033 Y=   -0.0043 Z=    6.6769  U=0.819051 V=0.588235
+     v6  X=    6.7033 Y=   -0.0043 Z=   -6.7238  U=0.960784 V=0.349020
+   INDX grp0 a=0 b=2 n=18 idx=[0, 1, 2, 2, 3, 0, 4, 5, 1, 1, 0, 4, 5, 6, 2, 2, 1, 5]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 18, 0]
+   MATS name='107A0400_NoCar_Zot_Z5S'  tex=0x1E060410  rawhex=01000000a300000004030100ff7f0000000000011004061e03030000210002001731303741303430
+   ANIM a=1 b=30 c=3 names=['NoCar_Zot_Z5S_0']
+
+== Zot_NoWater_1c43 model 0x1C430000 (SimCity_1.dat) : 318 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=4 fmt=01400080
+     v0  X=    9.2104 Y=   24.4380 Z=    5.6382  U=0.700781 V=0.304688
+     v1  X=   -5.1709 Y=   24.4380 Z=   11.5950  U=0.675781 V=0.304688
+     v2  X=   -5.1709 Y=    0.4722 Z=   11.5952  U=0.675781 V=0.338021
+     v3  X=    9.2104 Y=    0.4722 Z=    5.6382  U=0.700781 V=0.338021
+   INDX grp0 a=0 b=2 n=6 idx=[0, 1, 2, 3, 0, 2]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 6, 0]
+   MATS name='1c430000_NoWater_Zot_Z1S'  tex=0x1EE50010  rawhex=01000000a300000004030100ff7f0000000000011000e51e03030000210002001931633433303030
+   ANIM a=1 b=30 c=3 names=['NoWater_Zot_Z1S_0']
+== Zot_NoWater_1c43 model 0x1C430400 (SimCity_1.dat) : 402 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=7 fmt=01400080
+     v0  X=   -6.6829 Y=   12.8466 Z=    6.6769  U=0.480469 V=0.243137
+     v1  X=    6.7033 Y=   12.8466 Z=    6.6769  U=0.819051 V=0.341176
+     v2  X=    6.7033 Y=   12.8466 Z=   -6.7238  U=0.960784 V=0.101961
+     v3  X=   -6.6829 Y=   12.8466 Z=   -6.7238  U=0.618264 V=0.000000
+     v4  X=   -6.6829 Y=   -0.0043 Z=    6.6769  U=0.480469 V=0.490196
+     v5  X=    6.7033 Y=   -0.0043 Z=    6.6769  U=0.819051 V=0.588235
+     v6  X=    6.7033 Y=   -0.0043 Z=   -6.7238  U=0.960784 V=0.349020
+   INDX grp0 a=0 b=2 n=18 idx=[0, 1, 2, 2, 3, 0, 4, 5, 1, 1, 0, 4, 5, 6, 2, 2, 1, 5]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 18, 0]
+   MATS name='1c430400_NoWater_Zot_Z5S'  tex=0x1E060420  rawhex=01000000a300000004030100ff7f0000000000012004061e03030000210002001931633433303430
+   ANIM a=1 b=30 c=3 names=['NoWater_Zot_Z5S_0']
+
+== Zot_NoWork_1c44 model 0x1C440000 (SimCity_1.dat) : 316 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=4 fmt=01400080
+     v0  X=    9.2104 Y=   24.4380 Z=    5.6382  U=0.673437 V=0.257812
+     v1  X=   -5.1709 Y=   24.4380 Z=   11.5950  U=0.648438 V=0.257812
+     v2  X=   -5.1709 Y=    0.4722 Z=   11.5952  U=0.648438 V=0.291146
+     v3  X=    9.2104 Y=    0.4722 Z=    5.6382  U=0.673437 V=0.291146
+   INDX grp0 a=0 b=2 n=6 idx=[0, 1, 2, 3, 0, 2]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 6, 0]
+   MATS name='1c440000_NoWork_Zot_Z1S'  tex=0x1EE50010  rawhex=01000000a300000004030100ff7f0000000000011000e51e03030000210002001831633434303030
+   ANIM a=1 b=30 c=3 names=['NoWork_Zot_Z1S_0']
+== Zot_NoWork_1c44 model 0x1C440400 (SimCity_1.dat) : 400 bytes decompressed
+   HEAD ver 1.5
+   VERT grp0 a=0 n=7 fmt=01400080
+     v0  X=   -6.6829 Y=   12.8466 Z=    6.6769  U=0.515625 V=0.243137
+     v1  X=    6.7033 Y=   12.8466 Z=    6.6769  U=0.854208 V=0.341176
+     v2  X=    6.7033 Y=   12.8466 Z=   -6.7238  U=0.995940 V=0.101961
+     v3  X=   -6.6829 Y=   12.8466 Z=   -6.7238  U=0.653420 V=0.000000
+     v4  X=   -6.6829 Y=   -0.0043 Z=    6.6769  U=0.515625 V=0.490196
+     v5  X=    6.7033 Y=   -0.0043 Z=    6.6769  U=0.854208 V=0.588235
+     v6  X=    6.7033 Y=   -0.0043 Z=   -6.7238  U=0.995940 V=0.349020
+   INDX grp0 a=0 b=2 n=18 idx=[0, 1, 2, 2, 3, 0, 4, 5, 1, 1, 0, 4, 5, 6, 2, 2, 1, 5]
+   PRIM u16[] = [1, 0, 1, 0, 0, 0, 0, 18, 0]
+   MATS name='1c440400_NoWork_Zot_Z5S'  tex=0x1ED30400  rawhex=01000000a300000004030100ff7f0000000000010004d31e03030000210002001831633434303430
+   ANIM a=1 b=30 c=3 names=['NoWork_Zot_Z5S_0']
+
+#### TEXTURES (type 0x7AB50E44)
+tex {T=0x7AB50E44,G=0x1ABE787D,I=0x1E060400} SimCity_2.dat  entries=['code=0x60 256x256']
+tex {T=0x7AB50E44,G=0x1ABE787D,I=0x1E060410} SimCity_2.dat  entries=['code=0x60 256x256']
+tex {T=0x7AB50E44,G=0x1ABE787D,I=0x1E060420} SimCity_2.dat  entries=['code=0x60 256x256']
+tex {T=0x7AB50E44,G=0x1ABE787D,I=0x1ED30400} SimCity_2.dat  entries=['code=0x60 256x256']
+tex {T=0x7AB50E44,G=0x1ABE787D,I=0x1EE50010} SimCity_2.dat  entries=['code=0x60 256x256']
+
+#### EXEMPLAR CENSUS G=0xC977C536 names containing 'zot'
+exemplars scanned in group: 2371
+  I=0x0FD10000  Zot_NoPower_0fd1
+  I=0x107A0000  Zot_NoCar_107A
+  I=0x1C430000  Zot_NoWater_1c43
+  I=0x1C440000  Zot_NoWork_1c44
+census control (4 known zots present): PASS
+
+#### S3D GROUP 0xBADB57F1
+total S3D instances in group: 43495
+  base 0x0FD1****: 0x0FD10000, 0x0FD10010, 0x0FD10020, 0x0FD10030, 0x0FD10100, 0x0FD10110, 0x0FD10120, 0x0FD10130, 0x0FD10200, 0x0FD10210, 0x0FD10220, 0x0FD10230, 0x0FD10300, 0x0FD10310, 0x0FD10320, 0x0FD10330, 0x0FD10400, 0x0FD10410, 0x0FD10420, 0x0FD10430
+  base 0x107A****: 0x107A0000, 0x107A0010, 0x107A0020, 0x107A0030, 0x107A0100, 0x107A0110, 0x107A0120, 0x107A0130, 0x107A0200, 0x107A0210, 0x107A0220, 0x107A0230, 0x107A0300, 0x107A0310, 0x107A0320, 0x107A0330, 0x107A0400, 0x107A0410, 0x107A0420, 0x107A0430
+  base 0x1C43****: 0x1C430000, 0x1C430010, 0x1C430020, 0x1C430030, 0x1C430100, 0x1C430110, 0x1C430120, 0x1C430130, 0x1C430200, 0x1C430210, 0x1C430220, 0x1C430230, 0x1C430300, 0x1C430310, 0x1C430320, 0x1C430330, 0x1C430400, 0x1C430410, 0x1C430420, 0x1C430430
+  base 0x1C44****: 0x1C440000, 0x1C440010, 0x1C440020, 0x1C440030, 0x1C440100, 0x1C440110, 0x1C440120, 0x1C440130, 0x1C440200, 0x1C440210, 0x1C440220, 0x1C440230, 0x1C440300, 0x1C440310, 0x1C440320, 0x1C440330, 0x1C440400, 0x1C440410, 0x1C440420, 0x1C440430
+  base 0x29F1****: 0x29F10000, 0x29F10010, 0x29F10020, 0x29F10030, 0x29F10100, 0x29F10110, 0x29F10120, 0x29F10130, 0x29F10200, 0x29F10210, 0x29F10220, 0x29F10230, 0x29F10300, 0x29F10310, 0x29F10320, 0x29F10330, 0x29F10400, 0x29F10410, 0x29F10420, 0x29F10430
+
+  byte-scan of ALL 43495 S3Ds in group for b'Zot' (decompressed — text scanners are blind to QFS)
+  scanned=43495 decompress-failed=0
+  S3D 0x0FD10000: ['0fd10000_NoPower_Zot_Z1S', 'NoPower_Zot_Z1S_0']
+  S3D 0x0FD10010: ['0fd10010_NoPower_Zot_Z1W', 'NoPower_Zot_Z1W_0']
+  S3D 0x0FD10020: ['0fd10020_NoPower_Zot_Z1N', 'NoPower_Zot_Z1N_0']
+  S3D 0x0FD10030: ['0fd10030_NoPower_Zot_Z1E', 'NoPower_Zot_Z1E_0']
+  S3D 0x0FD10100: ['0fd10100_NoPower_Zot_Z2S', 'NoPower_Zot_Z2S_0']
+  S3D 0x0FD10110: ['0fd10110_NoPower_Zot_Z2W', 'NoPower_Zot_Z2W_0']
+  S3D 0x0FD10120: ['0fd10120_NoPower_Zot_Z2N', 'NoPower_Zot_Z2N_0']
+  S3D 0x0FD10130: ['0fd10130_NoPower_Zot_Z2E', 'NoPower_Zot_Z2E_0']
+  S3D 0x0FD10200: ['0fd10200_NoPower_Zot_Z3S', 'NoPower_Zot_Z3S_0']
+  S3D 0x0FD10210: ['0fd10210_NoPower_Zot_Z3W', 'NoPower_Zot_Z3W_0']
+  S3D 0x0FD10220: ['0fd10220_NoPower_Zot_Z3N', 'NoPower_Zot_Z3N_0']
+  S3D 0x0FD10230: ['0fd10230_NoPower_Zot_Z3E', 'NoPower_Zot_Z3E_0']
+  S3D 0x0FD10300: ['0fd10300_NoPower_Zot_Z4S', 'NoPower_Zot_Z4S_0']
+  S3D 0x0FD10310: ['0fd10310_NoPower_Zot_Z4W', 'NoPower_Zot_Z4W_0']
+  S3D 0x0FD10320: ['0fd10320_NoPower_Zot_Z4N', 'NoPower_Zot_Z4N_0']
+  S3D 0x0FD10330: ['0fd10330_NoPower_Zot_Z4E', 'NoPower_Zot_Z4E_0']
+  S3D 0x0FD10400: ['0fd10400_NoPower_Zot_Z5S', 'NoPower_Zot_Z5S_0']
+  S3D 0x0FD10410: ['0fd10410_NoPower_Zot_Z5W', 'NoPower_Zot_Z5W_0']
+  S3D 0x0FD10420: ['0fd10420_NoPower_Zot_Z5N', 'NoPower_Zot_Z5N_0']
+  S3D 0x0FD10430: ['0fd10430_NoPower_Zot_Z5E', 'NoPower_Zot_Z5E_0']
+  S3D 0x107A0000: ['107A0000_NoCar_Zot_Z1S', 'NoCar_Zot_Z1S_0']
+  S3D 0x107A0010: ['107A0010_NoCar_Zot_Z1W', 'NoCar_Zot_Z1W_0']
+  S3D 0x107A0020: ['107A0020_NoCar_Zot_Z1N', 'NoCar_Zot_Z1N_0']
+  S3D 0x107A0030: ['107A0030_NoCar_Zot_Z1E', 'NoCar_Zot_Z1E_0']
+  S3D 0x107A0100: ['107A0100_NoCar_Zot_Z2S', 'NoCar_Zot_Z2S_0']
+  S3D 0x107A0110: ['107A0110_NoCar_Zot_Z2W', 'NoCar_Zot_Z2W_0']
+  S3D 0x107A0120: ['107A0120_NoCar_Zot_Z2N', 'NoCar_Zot_Z2N_0']
+  S3D 0x107A0130: ['107A0130_NoCar_Zot_Z2E', 'NoCar_Zot_Z2E_0']
+  S3D 0x107A0200: ['107A0200_NoCar_Zot_Z3S', 'NoCar_Zot_Z3S_0']
+  S3D 0x107A0210: ['107A0210_NoCar_Zot_Z3W', 'NoCar_Zot_Z3W_0']
+  S3D 0x107A0220: ['107A0220_NoCar_Zot_Z3N', 'NoCar_Zot_Z3N_0']
+  S3D 0x107A0230: ['107A0230_NoCar_Zot_Z3E', 'NoCar_Zot_Z3E_0']
+  S3D 0x107A0300: ['107A0300_NoCar_Zot_Z4S', 'NoCar_Zot_Z4S_0']
+  S3D 0x107A0310: ['107A0310_NoCar_Zot_Z4W', 'NoCar_Zot_Z4W_0']
+  S3D 0x107A0320: ['107A0320_NoCar_Zot_Z4N', 'NoCar_Zot_Z4N_0']
+  S3D 0x107A0330: ['107A0330_NoCar_Zot_Z4E', 'NoCar_Zot_Z4E_0']
+  S3D 0x107A0400: ['107A0400_NoCar_Zot_Z5S', 'NoCar_Zot_Z5S_0']
+  S3D 0x107A0410: ['107A0410_NoCar_Zot_Z5W', 'NoCar_Zot_Z5W_0']
+  S3D 0x107A0420: ['107A0420_NoCar_Zot_Z5N', 'NoCar_Zot_Z5N_0']
+  S3D 0x107A0430: ['107A0430_NoCar_Zot_Z5E', 'NoCar_Zot_Z5E_0']
+  S3D 0x1C430000: ['1c430000_NoWater_Zot_Z1S', 'NoWater_Zot_Z1S_0']
+  S3D 0x1C430010: ['1c430010_NoWater_Zot_Z1W', 'NoWater_Zot_Z1W_0']
+  S3D 0x1C430020: ['1c430020_NoWater_Zot_Z1N', 'NoWater_Zot_Z1N_0']
+  S3D 0x1C430030: ['1c430030_NoWater_Zot_Z1E', 'NoWater_Zot_Z1E_0']
+  S3D 0x1C430100: ['1c430100_NoWater_Zot_Z2S', 'NoWater_Zot_Z2S_0']
+  S3D 0x1C430110: ['1c430110_NoWater_Zot_Z2W', 'NoWater_Zot_Z2W_0']
+  S3D 0x1C430120: ['1c430120_NoWater_Zot_Z2N', 'NoWater_Zot_Z2N_0']
+  S3D 0x1C430130: ['1c430130_NoWater_Zot_Z2E', 'NoWater_Zot_Z2E_0']
+  S3D 0x1C430200: ['1c430200_NoWater_Zot_Z3S', 'NoWater_Zot_Z3S_0']
+  S3D 0x1C430210: ['1c430210_NoWater_Zot_Z3W', 'NoWater_Zot_Z3W_0']
+  S3D 0x1C430220: ['1c430220_NoWater_Zot_Z3N', 'NoWater_Zot_Z3N_0']
+  S3D 0x1C430230: ['1c430230_NoWater_Zot_Z3E', 'NoWater_Zot_Z3E_0']
+  S3D 0x1C430300: ['1c430300_NoWater_Zot_Z4S', 'NoWater_Zot_Z4S_0']
+  S3D 0x1C430310: ['1c430310_NoWater_Zot_Z4W', 'NoWater_Zot_Z4W_0']
+  S3D 0x1C430320: ['1c430320_NoWater_Zot_Z4N', 'NoWater_Zot_Z4N_0']
+  S3D 0x1C430330: ['1c430330_NoWater_Zot_Z4E', 'NoWater_Zot_Z4E_0']
+  S3D 0x1C430400: ['1c430400_NoWater_Zot_Z5S', 'NoWater_Zot_Z5S_0']
+  S3D 0x1C430410: ['1c430410_NoWater_Zot_Z5W', 'NoWater_Zot_Z5W_0']
+  S3D 0x1C430420: ['1c430420_NoWater_Zot_Z5N', 'NoWater_Zot_Z5N_0']
+  S3D 0x1C430430: ['1c430430_NoWater_Zot_Z5E', 'NoWater_Zot_Z5E_0']
+  S3D 0x1C440000: ['1c440000_NoWork_Zot_Z1S', 'NoWork_Zot_Z1S_0']
+  S3D 0x1C440010: ['1c440010_NoWork_Zot_Z1W', 'NoWork_Zot_Z1W_0']
+  S3D 0x1C440020: ['1c440020_NoWork_Zot_Z1N', 'NoWork_Zot_Z1N_0']
+  S3D 0x1C440030: ['1c440030_NoWork_Zot_Z1E', 'NoWork_Zot_Z1E_0']
+  S3D 0x1C440100: ['1c440100_NoWork_Zot_Z2S', 'NoWork_Zot_Z2S_0']
+  S3D 0x1C440110: ['1c440110_NoWork_Zot_Z2W', 'NoWork_Zot_Z2W_0']
+  S3D 0x1C440120: ['1c440120_NoWork_Zot_Z2N', 'NoWork_Zot_Z2N_0']
+  S3D 0x1C440130: ['1c440130_NoWork_Zot_Z2E', 'NoWork_Zot_Z2E_0']
+  S3D 0x1C440200: ['1c440200_NoWork_Zot_Z3S', 'NoWork_Zot_Z3S_0']
+  S3D 0x1C440210: ['1c440210_NoWork_Zot_Z3W', 'NoWork_Zot_Z3W_0']
+  S3D 0x1C440220: ['1c440220_NoWork_Zot_Z3N', 'NoWork_Zot_Z3N_0']
+  S3D 0x1C440230: ['1c440230_NoWork_Zot_Z3E', 'NoWork_Zot_Z3E_0']
+  S3D 0x1C440300: ['1c440300_NoWork_Zot_Z4S', 'NoWork_Zot_Z4S_0']
+  S3D 0x1C440310: ['1c440310_NoWork_Zot_Z4W', 'NoWork_Zot_Z4W_0']
+  S3D 0x1C440320: ['1c440320_NoWork_Zot_Z4N', 'NoWork_Zot_Z4N_0']
+  S3D 0x1C440330: ['1c440330_NoWork_Zot_Z4E', 'NoWork_Zot_Z4E_0']
+  S3D 0x1C440400: ['1c440400_NoWork_Zot_Z5S', 'NoWork_Zot_Z5S_0']
+  S3D 0x1C440410: ['1c440410_NoWork_Zot_Z5W', 'NoWork_Zot_Z5W_0']
+  S3D 0x1C440420: ['1c440420_NoWork_Zot_Z5N', 'NoWork_Zot_Z5N_0']
+  S3D 0x1C440430: ['1c440430_NoWork_Zot_Z5E', 'NoWork_Zot_Z5E_0']
+  models with 'Zot' beyond the 4 known bases+zooms: 60

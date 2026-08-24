@@ -1,0 +1,77 @@
+  0x004A4380  51                       push ecx
+  0x004A4381  57                       push edi
+  0x004A4382  8B F9                    mov edi, ecx
+  0x004A4384  8A 47 0C                 mov al, byte ptr [edi + 0xc]
+  0x004A4387  84 C0                    test al, al
+  0x004A4389  0F 85 3E 01 00 00        jne 0x4a44cd
+  0x004A438F  C6 47 0C 01              mov byte ptr [edi + 0xc], 1
+  0x004A4393  A0 58 17 B2 00           mov al, byte ptr [0xb21758]
+  0x004A4398  84 C0                    test al, al
+  0x004A439A  75 23                    jne 0x4a43bf
+  0x004A439C  8B 0D 94 3C B4 00        mov ecx, dword ptr [0xb43c94]
+  0x004A43A2  6A 00                    push 0
+  0x004A43A4  C6 05 58 17 B2 00 01     mov byte ptr [0xb21758], 1
+  0x004A43AB  8B 01                    mov eax, dword ptr [ecx]
+  0x004A43AD  68 30 2A 4A 00           push 0x4a2a30
+  0x004A43B2  FF 90 14 01 00 00        call dword ptr [eax + 0x114]
+  0x004A43B8  8B CF                    mov ecx, edi
+  0x004A43BA  E8 51 FF FF FF           call 0x4a4310
+  0x004A43BF  8B 0D B0 3C B4 00        mov ecx, dword ptr [0xb43cb0]
+  0x004A43C5  8B 11                    mov edx, dword ptr [ecx]
+  0x004A43C7  56                       push esi
+  0x004A43C8  6A 00                    push 0
+  0x004A43CA  68 D8 F9 A8 00           push 0xa8f9d8
+  0x004A43CF  68 A2 F1 EA 0B           push 0xbeaf1a2
+  0x004A43D4  FF 52 18                 call dword ptr [edx + 0x18]
+  0x004A43D7  8B 35 CC 3C B4 00        mov esi, dword ptr [0xb43ccc]
+  0x004A43DD  85 F6                    test esi, esi
+  0x004A43DF  74 39                    je 0x4a441a
+  0x004A43E1  8B 06                    mov eax, dword ptr [esi]
+  0x004A43E3  55                       push ebp
+  0x004A43E4  68 02 96 B7 A6           push 0xa6b79602
+  0x004A43E9  8D 6F 04                 lea ebp, [edi + 4]
+  0x004A43EC  55                       push ebp
+  0x004A43ED  8B CE                    mov ecx, esi
+  0x004A43EF  FF 50 14                 call dword ptr [eax + 0x14]
+  0x004A43F2  8B 16                    mov edx, dword ptr [esi]
+  0x004A43F4  68 5B B6 CD 06           push 0x6cdb65b
+  0x004A43F9  55                       push ebp
+  0x004A43FA  8B CE                    mov ecx, esi
+  0x004A43FC  FF 52 14                 call dword ptr [edx + 0x14]
+  0x004A43FF  8B 06                    mov eax, dword ptr [esi]
+  0x004A4401  68 C1 1E D3 26           push 0x26d31ec1
+  0x004A4406  55                       push ebp
+  0x004A4407  8B CE                    mov ecx, esi
+  0x004A4409  FF 50 14                 call dword ptr [eax + 0x14]
+  0x004A440C  8B 16                    mov edx, dword ptr [esi]
+  0x004A440E  68 A2 F1 EA 0B           push 0xbeaf1a2
+  0x004A4413  55                       push ebp
+  0x004A4414  8B CE                    mov ecx, esi
+  0x004A4416  FF 52 14                 call dword ptr [edx + 0x14]
+  0x004A4419  5D                       pop ebp
+  0x004A441A  8B 47 14                 mov eax, dword ptr [edi + 0x14]
+  0x004A441D  85 C0                    test eax, eax
+  0x004A441F  75 0F                    jne 0x4a4430
+  0x004A4421  A1 0C 3D B4 00           mov eax, dword ptr [0xb43d0c]
+  0x004A4426  8B C8                    mov ecx, eax
+  0x004A4428  89 47 14                 mov dword ptr [edi + 0x14], eax
+  0x004A442B  8B 11                    mov edx, dword ptr [ecx]
+  0x004A442D  FF 52 04                 call dword ptr [edx + 4]
+  0x004A4430  8B 47 18                 mov eax, dword ptr [edi + 0x18]
+  0x004A4433  85 C0                    test eax, eax
+  0x004A4435  75 0F                    jne 0x4a4446
+  0x004A4437  A1 A8 3C B4 00           mov eax, dword ptr [0xb43ca8]
+  0x004A443C  8B C8                    mov ecx, eax
+  0x004A443E  89 47 18                 mov dword ptr [edi + 0x18], eax
+  0x004A4441  8B 11                    mov edx, dword ptr [ecx]
+  0x004A4443  FF 52 04                 call dword ptr [edx + 4]
+  0x004A4446  8B 47 1C                 mov eax, dword ptr [edi + 0x1c]
+  0x004A4449  85 C0                    test eax, eax
+  0x004A444B  75 40                    jne 0x4a448d
+  0x004A444D  6A 14                    push 0x14
+  0x004A444F  E8 8C 11 14 00           call 0x5e55e0
+  0x004A4454  8B F0                    mov esi, eax
+  0x004A4456  83 C4 04                 add esp, 4
+  0x004A4459  85 F6                    test esi, esi
+  0x004A445B  74 26                    je 0x4a4483
+  0x004A445D  8B CE                    mov ecx, esi

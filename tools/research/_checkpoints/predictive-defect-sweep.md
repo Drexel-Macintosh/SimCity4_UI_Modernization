@@ -214,7 +214,7 @@ visibly inconsistent with its own family.
    *does* reach `0xAA32BCE6` since v2.21.2 — can never correct it. **The 1x size
    is latched, not transient.**
 4. **The arithmetic proof.** The project's own grand-tour baseline
-   (`_tests\audit-tour.txt`, transcribed in REGRESSION.md ~line 201) recorded
+   (the audit-tour raw dump — retired 2026-08-23, its content transcribed in REGRESSION.md ~line 201) recorded
    `0x4A32CA92` as one of only five on-screen 1x misses:
    ```
    ON-SCREEN    id=0x4A32CA92 d11  pos(979,26) 22x20 kids=0
