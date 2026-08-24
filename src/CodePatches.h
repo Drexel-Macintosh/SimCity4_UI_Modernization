@@ -329,6 +329,11 @@ namespace CodePatches
 	// Idempotent; safe to call every PostCityInit.
 	void InstallPickProbe();
 
+	// DISPATCHQUAD: arm the dispatch-pin measurement probe from the tier
+	// decision tail (any factor). Log-only, gated by [Probe] DispatchQuad;
+	// always logs the resolved value.
+	void ArmDispatchQuadProbe();
+
 	// True when [Probe] ViewListRepeat is set, so the caller can install the
 	// view-object probe even if MissionBubbleFx has not been raised. Reads the
 	// ini directly: it is called from the message handler BEFORE

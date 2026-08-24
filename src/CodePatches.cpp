@@ -7159,30 +7159,31 @@ namespace CodePatches
 		}
 	}
 
+	// Public arming entry for the DISPATCHQUAD probe. Called from the
+	// DllDirector's tier-decision tail - the one site that provably runs at
+	// EVERY factor. Its two previous homes each produced a silent-null
+	// launch: below the wantFix decline (skipped at 1.0 by the gate), then
+	// above it but inside a function the stock branch never calls at all.
+	// A probe that exists to measure the 1x control CANNOT live anywhere in
+	// the scaling arm path, period.
+	void ArmDispatchQuadProbe()
+	{
+		wchar_t dqIni[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
+			dqIni, MAX_PATH);
+		wchar_t* s = wcsrchr(dqIni, L'\\');
+		if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+		gDqOn = static_cast<int>(GetPrivateProfileIntW(
+			L"Probe", L"DispatchQuad", 0, dqIni));
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: DispatchQuad resolved to %d "
+			"(read from [Probe]; armed from the tier-decision tail, "
+			"any factor).", gDqOn);
+		if (gDqOn != 0) { InstallDispatchQuadProbe(); }
+	}
+
 	void InstallMissionBubbleScale(float factor, int mode, float overrideScale)
 	{
-		// DISPATCHQUAD probe - armed BEFORE every gate in this function,
-		// because it must fire at ANY tier: the whole point of the 1x control
-		// capture is to measure the un-patched geometry, and the first
-		// placement of this block sat below the `wantFix` decline, which
-		// early-returns at factor 1.0 - the probe would silently never arm at
-		// exactly the tier the control needs. Caught by tracing the call path
-		// BEFORE the launch instead of adjudicating a void log after it. The
-		// probe is log-only and tier-independent; a probe key arms its own
-		// probe, and the resolved value is always logged.
-		{
-			wchar_t dqIni[MAX_PATH] = {};
-			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
-				dqIni, MAX_PATH);
-			wchar_t* s = wcsrchr(dqIni, L'\\');
-			if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
-			gDqOn = static_cast<int>(GetPrivateProfileIntW(
-				L"Probe", L"DispatchQuad", 0, dqIni));
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: DispatchQuad resolved to %d "
-				"(read from [Probe]; armed pre-gate, any tier).", gDqOn);
-			if (gDqOn != 0) { InstallDispatchQuadProbe(); }
-		}
 		if (mode <= 0) { return; }
 		// overrideScale is the no-rebuild tuning knob (ini
 		// MissionBubbleScale): <= 0 follows the tier factor (the general

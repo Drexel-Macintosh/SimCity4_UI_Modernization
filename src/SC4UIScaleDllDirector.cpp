@@ -461,6 +461,18 @@ public:
 			// layout (log, 2026-08-19).
 			UiSpike::SetTierMirror(settings.spikeScaleFactor);
 
+			// DISPATCHQUAD probe - armed HERE, on the one path that runs at
+			// EVERY factor, because its whole purpose includes measuring the
+			// STOCK 1x geometry. Its previous home (InstallMissionBubbleScale)
+			// is never even CALLED at factor 1.00 - the stock branch above
+			// forces every scaling subsystem off - so the second 1x capture
+			// died exactly like the first four silent nulls: key read nowhere,
+			// nothing logged, nothing armed. The probe is log-only and
+			// key-gated ([Probe] DispatchQuad, default 0), so a 1x baseline
+			// WITHOUT the key remains fully inert per the doctrine above; a
+			// baseline WITH the key is a measurement session by definition.
+			CodePatches::ArmDispatchQuadProbe();
+
 			// #182: the sync runs for MANUAL tiers too. This gate used to be
 			// AutoScale-only, and that is the SECOND instance of the exact
 			// failure documented for #149 below ("AutoScale=0 - a supported
