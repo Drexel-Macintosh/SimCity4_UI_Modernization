@@ -24,6 +24,7 @@
 # ---- 2. re-include the tracked trees -------------------------------
 !/.gitignore
 !/HANDOFF-2026-08-23.md
+!/HANDOFF-2026-08-25-carbon.md
 !/src/
 !/vendor/
 !/docs/
