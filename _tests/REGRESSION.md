@@ -16859,3 +16859,50 @@ fingerprints the first copy found, the game renders the last one); and the
 DLL warns when a reskin is installed with no carbon packages present at all
 — the public-bundle case, which no gate could ever have caught because the
 packages simply do not exist to be checked.
+
+## 2026-08-25 (#197) — THE GOD DAY/NIGHT DOCK: a constant that described a script nobody loads any more
+
+USER-REPORTED at 1.5x AND 2x (and expected at 3x). That tier signature is the
+whole diagnosis: a defect present at an INTEGER factor cannot be
+offset-parity, cell-divide, or any snap/rounding artefact — every one of
+those is a no-op at 2x by construction. What survives is a stock-derived
+CONSTANT multiplied by the factor, applied to geometry that is no longer
+stock: the error is then proportional (32*f = 48 px at 1.5x, 64 at 2x, 96 at
+3x) and vanishes only at 1x, where nothing of ours runs.
+
+MEASURED, both corpora, same instrument: in the day/night script
+{96a006b0,aa356502} the 0x0000AAAA alignment marker moves (4,90,78,148) ->
+(4,122,78,180) under the Scoty Carbon Skin — a pure +32 design-px
+translation, identical size. `kDayNightOffY = 160` encodes where the STOCK
+marker sits, so the dock seated the whole flyout 32*f too low.
+
+⭐ THE CODE HAD ALREADY WRITTEN ITS OWN POST-MORTEM. The MDRIFT alarm beside
+this dock says, verbatim, that these constants are toolbar-anchored and that
+"a live/design mismatch means a mod replaced this script and the constant no
+longer describes it" — and then changed nothing, by design. It was right
+about the mechanism years before the mod arrived and could not act on it,
+because it had NO STOCK REFERENCE to compare against: its "design" value is
+just the LIVE marker divided by the factor, so it can only ever print two
+numbers that agree. AN ALARM THAT COMPARES A VALUE AGAINST ITSELF IS NOT AN
+ALARM. If a diagnostic names a hazard, give it the constant that would let it
+detect the hazard, or it is a comment with a log line attached.
+
+CURE (#197, [Flyout] GodMarkerFix, default 1): compare the LIVE marker
+against the measured stock marker scaled the same way and correct the dock by
+the delta. IDENTITY ON STOCK BY CONSTRUCTION — both sides are the same number
+on an unmodded install, so the LOCKED v2.7.25 docks cannot move; the
+correction only fires when a mod actually moved the marker, which is exactly
+the case the old comment described.
+
+TWO MEASUREMENTS THAT CHANGED THE ANSWER, both from re-measuring rather than
+trusting a report:
+1. Terrain-fx rides the SAME window through a DIFFERENT script
+   ({..,aaa44448}, marker (4,30) in stock AND carbon) — unchanged, delta 0,
+   deliberately untouched. A lane had claimed it shared the day/night marker
+   and was equally wrong.
+2. Terraform {..,e9923283} moves its marker (4,90)->(4,0) but ALSO moves its
+   root 225->315 — the pair cancels in carbon's own layout — and a second
+   stock script (09923283) declares the same window id with a different
+   marker (3,27), which offline measurement cannot disambiguate at runtime.
+   So terraform is INSTRUMENTED (MFIX-DIAG), not corrected: a locked,
+   user-verified dock does not move on a number I cannot pin.

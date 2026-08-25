@@ -9094,6 +9094,11 @@ namespace
 	// one line per id per city via MDockShouldLog (ids XORed so a god-path
 	// entry cannot silence its mayor-path twin).
 	int gMDockAlarm = 1;
+	// #197: apply the god-path marker delta (see the correction site). Default
+	// ON. It is an identity on a stock install - the kill switch exists so a
+	// user who hits a bad interaction can get the old behaviour back in one
+	// ini line rather than waiting for a build.
+	int gGodMarkerFix = 1;
 	bool MDockShouldLog(uint32_t id)
 	{
 		for (int i = 0; i < gMDockLoggedN; i++)
@@ -13858,6 +13863,10 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// Diagnostic ONLY; it never moves a window. Default 1.
 			GetPrivateProfileStringA("Flyout", "MarkerAlarm", "", b, sizeof(b), kIni);
 			if (b[0]) gMDockAlarm = atoi(b);
+			// #197: GodMarkerFix - correct the god dock when a mod moved the
+			// script's 0x0000AAAA marker. Identity on stock; default 1.
+			GetPrivateProfileStringA("Flyout", "GodMarkerFix", "", b, sizeof(b), kIni);
+			if (b[0]) gGodMarkerFix = atoi(b);
 			// #95: SubMath - the sub-flyout placement model (validated 32/32 vs
 			// the game's own sub_79AD00). 1 = model (default), 0 = the legacy
 			// fixed delta, which is wrong by up to 197px at 8 items.
@@ -15833,6 +15842,86 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			}
 			int32_t targetL = tbLiveL + ScaleRound(d.offX, f);
 			int32_t targetT = tbLiveT + ScaleRound(offY, f);
+			// #197 MARKER-DELTA CORRECTION (2026-08-25, user-reported: the god
+			// day/night ring sat low at BOTH 1.5x AND 2x).
+			//
+			// The constants above encode where the STOCK script puts its
+			// 0x0000AAAA alignment marker. A reskin may move that marker, and
+			// then the constant no longer describes the script - which the
+			// MDRIFT alarm below has always said in words while changing
+			// nothing. MEASURED for the Scoty Carbon Skin: in the day/night
+			// script {96a006b0,aa356502} the marker moves (4,90,78,148) ->
+			// (4,122,78,180): a pure +32 design-px translation, same size. Our
+			// dock therefore seated the whole flyout 32*f too LOW - 48 px at
+			// 1.5x, 64 at 2x, 96 at 3x. That signature is why the user saw it
+			// at 1.5x AND 2x: it is proportional, not a rounding artefact, so
+			// every parity/snap explanation is excluded by construction.
+			//
+			// THE CORRECTION IS AN IDENTITY ON STOCK. It compares the LIVE
+			// marker against the stock marker scaled the same way; on an
+			// unmodded install both sides are the same number and the delta is
+			// exactly 0, so the LOCKED v2.7.25 stock docks cannot move.
+			//
+			// Terrain-fx rides the same window through a different script
+			// ({..,aaa44448}, marker (4,30) in BOTH stock and carbon), so its
+			// delta is 0 and it is deliberately left alone - the measurement
+			// says carbon did not touch it.
+			if (gGodMarkerFix)
+			{
+				int32_t stockMarkerT = -1;
+				if (d.id == 0xCA35CBED)
+				{
+					stockMarkerT = dayNightActive ? 90 : 30;
+				}
+				// TERRAFORM (0x49923239) is REPORTED, NOT CORRECTED - on
+				// purpose. Its script {96a006b0,e9923283} also moves its
+				// marker under carbon (4,90 -> 4,0), but carbon moves that
+				// script's ROOT down by the same 90 (225 -> 315), so the two
+				// cancel in carbon's own layout - and a SECOND stock script
+				// (09923283, the mayor landscape flyout) declares the same
+				// window id with a different marker (3,27), which no offline
+				// measurement here can disambiguate at runtime. This dock is
+				// LOCKED and user-verified; it does not move on a measurement
+				// I cannot yet pin. The line below is what tells us whether it
+				// needs the same cure, from one launch.
+				if (d.id == 0x49923239)
+				{
+					cIGZWin* tmk = win->GetChildWindowFromID(0x0000AAAA);
+					if (tmk != nullptr && MDockShouldLog(d.id ^ 0x20000000u))
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: MFIX-DIAG 0x49923239 terraform marker "
+							"live t=%d; stock e9923283=%d (x%.2f=%d), stock "
+							"09923283=%d (x%.2f=%d). NOT corrected - report "
+							"whether the terraform ring seats on its button.",
+							tmk->GetT(), 90, f, ScaleRound(90, f),
+							27, f, ScaleRound(27, f));
+					}
+				}
+				cIGZWin* mk = win->GetChildWindowFromID(0x0000AAAA);
+				if (stockMarkerT >= 0 && mk != nullptr)
+				{
+					const int32_t stockLiveT = ScaleRound(stockMarkerT, f);
+					const int32_t deltaLive = mk->GetT() - stockLiveT;
+					// >2 px: below that it is rounding, not a moved marker.
+					if (deltaLive > 2 || deltaLive < -2)
+					{
+						targetT -= deltaLive;
+						if (MDockShouldLog(d.id ^ 0x40000000u))
+						{
+							Logger::Get().WriteLine(LogLevel::Info,
+								"UiSpike: MFIX 0x%08X %ls marker live t=%d vs "
+								"stock t=%d (x%.2f = %d) -> dock corrected by "
+								"%+d px. A mod moved this script's alignment "
+								"marker; the toolbar constant alone would seat "
+								"the flyout that far off.",
+								d.id, dayNightActive ? L"day/night" : L"terrain-fx",
+								mk->GetT(), stockMarkerT, f, stockLiveT,
+								-deltaLive);
+						}
+					}
+				}
+			}
 			// #95 PHASE 1 - MARKER-DRIFT ALARM (diagnostic only, no behaviour).
 			// The plan proposed converting THIS path to the live-marker rule
 			// too. That premise did NOT survive the source: these offsets are
