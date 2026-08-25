@@ -28,7 +28,11 @@ KEEP = [
     "w_scoty_Carbon_SubMenu-Essential",
     "y_scoty_CAM_Extended_Essentials",
     "y_scoty_Carbon_NAM",
+    # un-pruned 2026-08-25: user installed region-view-census-ui + warrior's
+    # god-terraforming; both carbon add-ons re-kept.
+    "y_scoty_Carbon_RegionCensusDLL",
     "z_scoty_Carbon_BuildingStyles",
+    "z_scoty_Carbon_GodMod",
 ]
 
 

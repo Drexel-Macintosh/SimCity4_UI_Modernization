@@ -447,6 +447,41 @@ Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_NamIcons-3x.dat" "$zzz\z_SC4UI
 Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_WebButtonUI-2x.dat" "$zzz\z_SC4UIScale_WebButtonUI-2x.dat" -Force
 Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_WebButtonUI-15x.dat" "$zzz\z_SC4UIScale_WebButtonUI-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat" "$zzz\z_SC4UIScale_WebButtonUI-3x.dat.x1-disabled" -Force
+# ---- ZCarbon* (v4.3.0, 2026-08-25): Scoty Carbon Skin adaptations ----------
+# Carbon-sourced scaled twins of every TGI the skin and our packages both
+# cover; gated in ScaleTier on the skin's dats at exact sizes. Z-late base
+# names are LOAD-BEARING (must sort after every sibling in zzz- to win shared
+# TGIs; REGRESSION.md 2026-08-25 "zzz-INTERNAL SORT TRAP").
+# ⚠ DELIBERATELY parser-invisible to Build-Dist (named-parameter Copy-Item):
+# these dats are built FROM the skin author's pixels and MUST NEVER enter the
+# public dist bundle ("ship the GENERATOR, never the art" — and never another
+# modder's art). Build-Dist carries a hard assert that no ZCarbon file lands
+# in a bundle; if you rewrite these lines into the bare positional form the
+# parser WILL bundle them and that assert is the only net.
+Copy-Item -Path "$proj\tools\dialog-static\z_SC4UIScale_ZCarbonUI.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonUI-2x.dat" -Force
+Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonUI-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonUI-15x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonUI-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonUI-3x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\dialog-static\z_SC4UIScale_ZCarbonCamUI.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonCamUI-2x.dat" -Force
+Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonCamUI-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonCamUI-15x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonCamUI-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonCamUI-3x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\dialog-static\z_SC4UIScale_ZCarbonSaveWarning.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonSaveWarning-2x.dat" -Force
+Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonSaveWarning-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonSaveWarning-15x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonSaveWarning-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonSaveWarning-3x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\selective-safe\z_SC4UIScale_ZCarbonArt.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonArt-2x.dat" -Force
+Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonArt-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonArt-15x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonArt-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonArt-3x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\selective-safe\z_SC4UIScale_ZCarbonStyles.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonStyles-2x.dat" -Force
+Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonStyles-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonStyles-15x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonStyles-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonStyles-3x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\selective-safe\z_SC4UIScale_ZCarbonNam.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonNam-2x.dat" -Force
+Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonNam-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonNam-15x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonNam-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonNam-3x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\selective-safe\z_SC4UIScale_ZCarbonGodMod.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonGodMod-2x.dat" -Force
+Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonGodMod-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonGodMod-15x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonGodMod-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonGodMod-3x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\research\carbon\z_SC4UIScale_ZCarbonIcons.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonIcons-2x.dat" -Force
+Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonIcons-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonIcons-15x.dat.x1-disabled" -Force
+Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonIcons-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonIcons-3x.dat.x1-disabled" -Force
 # FONT TIER SOURCES (#57 phase 4, 2026-08-02). These were NEVER in this
 # script - the three FontStyle-*.ini files in Plugins were placed BY HAND, and
 # they rotted exactly as task #58's dats did. MEASURED: the deployed
@@ -534,10 +569,21 @@ $DEPENDENCY_GATED = @(
     "z_SC4UIScale_ThirdPartyUI",  # assorted third-party UI overrides
     "z_SC4UIScale_SaveWarningUI", # save-warning mod
     "z_SC4UIScale_NamIcons",      # NAM
-    "z_SC4UIScale_WebButtonUI"    # cyclone-boom Web Button Improvement Mod
-    # (added 2026-08-21 in ScaleTier.cpp; this list was never updated to
-    # match - caught by Test-DatIntegrity.ps1's dependency-gate-drift check,
-    # 2026-08-23. See that check's own comment for the two failure shapes.)
+    "z_SC4UIScale_WebButtonUI",   # cyclone-boom Web Button Improvement Mod
+    "z_SC4UIScale_ZCarbonUI",          # Scoty Carbon Skin core dats
+    "z_SC4UIScale_ZCarbonArt",         # Scoty Carbon Skin core dats
+    "z_SC4UIScale_ZCarbonIcons",       # Scoty Carbon Skin core dats
+    "z_SC4UIScale_ZCarbonSaveWarning", # Carbon's save-warning redeclaration dat
+    "z_SC4UIScale_ZCarbonCamUI",       # Carbon's CAM redeclaration dat
+    "z_SC4UIScale_ZCarbonStyles",      # Carbon's BuildingStyles redeclaration dat
+    "z_SC4UIScale_ZCarbonNam",         # Carbon's NAM redeclaration dat
+    "z_SC4UIScale_ZCarbonGodMod"       # Carbon's GodMod redeclaration dat - warrior twin
+    # NOTE: WebButtonUI was added 2026-08-21 in ScaleTier.cpp and this list was
+    # never updated to match - caught by Test-DatIntegrity.ps1's drift check,
+    # 2026-08-23. Keep every entry ABOVE this comment: the drift check's lazy
+    # regex captures the array only up to the FIRST close-paren, and a comment
+    # containing one hides everything after it. Measured 2026-08-25 - seven
+    # entries placed below this comment were invisible to the check.
 )
 foreach ($dir in @($our, "$plug\zzz-SC4UIScale")) {
     if (-not (Test-Path $dir)) { continue }

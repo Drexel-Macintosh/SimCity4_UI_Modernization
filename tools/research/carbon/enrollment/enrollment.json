@@ -1,0 +1,5398 @@
+{
+ "generated": "2026-08-25",
+ "packages": {
+  "ZCarbonArt": {
+   "scripts": [
+    {
+     "g": "96a006b0",
+     "i": "2a2aed99",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2bc9060f",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2bc90671",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "49889894",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4992f764",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4bc906b5",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "69e3d347",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6bb27447",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6bc9065a",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "899302fc",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa1f1f57",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa356502",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa53e3ea",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa920991",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI-15x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aaa44448",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "abb0120f",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "c973b411",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "c9930681",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "cbc3c2b9",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "cbc905cd",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "e9923283",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "e99237ff",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "e9949936",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    }
+   ],
+   "art": [
+    {
+     "g": "46a006b0",
+     "i": "0bba7a64",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "0bc6638a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "0c0d45f9",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c10",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c20",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c30",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c40",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c50",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c60",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c70",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c80",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14c90",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13d14ca0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "13d14ca3",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14f70",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14f80",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14f91",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fa0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fb0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fb1",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fb2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fb3",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fb5",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fb6",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fb8",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15230",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15240",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15241",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15246",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15249",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f1524c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f1524d",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15260",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15261",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15262",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15263",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15264",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15265",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15266",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015541",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015542",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015543",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015544",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015545",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015546",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015547",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015548",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015549",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1401554a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1401554b",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1401554c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015550",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015555",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015556",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015557",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015558",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015570",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015571",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015572",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015573",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015574",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015575",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015576",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015577",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015578",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015579",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1401557a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1401557c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015580",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015583",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015590",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015591",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015592",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14015593",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b1",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b3",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b5",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b6",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b7",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b8",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155b9",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155c9",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155d0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155d1",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155d2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155d3",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155d4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155d5",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155d6",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155d7",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155e5",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155f0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155f1",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155f2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155f3",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155f4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155f5",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155f6",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "140155f7",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e21",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e22",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e23",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e24",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e25",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e26",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e28",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e2a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e2b",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e2c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e30",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e31",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e32",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e34",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e35",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e40",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e41",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e42",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e43",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e44",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e45",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e50",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e51",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e53",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e54",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e60",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e63",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e70",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e71",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e72",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e73",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e74",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e75",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e76",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14215e80",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14315e60",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14315e61",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14315e62",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415860",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415870",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415872",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415873",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415874",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415875",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415876",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415878",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415879",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441587a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441587b",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415880",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415881",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415882",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415883",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415886",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415887",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415888",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14415889",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441588a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161e9",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161ea",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f7",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f8",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416241",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416244",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416250",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416251",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416252",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416253",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416254",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416255",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416256",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416257",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416258",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416259",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441625a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441625b",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441625c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441625d",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441625e",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441625f",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416300",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416301",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416302",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI-15x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416303",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416304",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416307",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441630d",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441630f",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416312",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416313",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416314",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416315",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416316",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416317",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416318",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416319",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441631a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441631b",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416327",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2b70529b",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2bbeb1af",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2bc1198a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2bfeb0cb",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2bfeb0cc",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2bfeb0cd",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2bfeb0ce",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2bfeb0cf",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "46a006a8",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "4b8da4a4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "4b9eba86",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "4bbe9c7d",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "53244588",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "6bb93cb5",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "6bfb1b69",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "6bfb1b70",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "8b7866f1",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "8bb230d4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "8bbea9d1",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "8bc5f104",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ab7052bd",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ab9e7552",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "abb172fa",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "abb172fb",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "abbead86",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "c2b66daa",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbb16e5c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbb16e5d",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbb16e5e",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbbeab61",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbc26c9a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbc26c9b",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbc3c2b8",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbc5f115",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cc05a721",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "e2b14588",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ea7f0eae",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "eb68c1b2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "eb68c1b3",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "eb7c4bd6",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ebb27830",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ebbeaaf5",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ebbeabf9",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ebbeacf6",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ebbeadd7",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "ebbeae28",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    }
+   ],
+   "n_scripts": 23,
+   "n_art": 247
+  },
+  "ZCarbonCamUI": {
+   "scripts": [
+    {
+     "g": "96a006b0",
+     "i": "12121201",
+     "carbon_src": "y_scoty_CAM_Extended_Essentials",
+     "ours": [
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a554f6d",
+     "carbon_src": "y_scoty_CAM_Extended_Essentials",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "9b868f68",
+     "carbon_src": "y_scoty_CAM_Extended_Essentials",
+     "ours": [
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa8b999e",
+     "carbon_src": "y_scoty_CAM_Extended_Essentials",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca8b8564",
+     "carbon_src": "y_scoty_CAM_Extended_Essentials",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca8cbf0f",
+     "carbon_src": "y_scoty_CAM_Extended_Essentials",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ea565970",
+     "carbon_src": "y_scoty_CAM_Extended_Essentials",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+     ]
+    }
+   ],
+   "art": [],
+   "n_scripts": 7,
+   "n_art": 0
+  },
+  "ZCarbonGodMod": {
+   "scripts": [
+    {
+     "g": "96a006b0",
+     "i": "09923283",
+     "carbon_src": "z_scoty_Carbon_GodMod",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "cb95403e",
+     "carbon_src": "z_scoty_Carbon_GodMod",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-3x.dat.x1-disabled"
+     ]
+    }
+   ],
+   "art": [
+    {
+     "g": "46a006b0",
+     "i": "14215e27",
+     "carbon_src": "z_scoty_Carbon_GodMod",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "eb7c4d3b",
+     "carbon_src": "z_scoty_Carbon_GodMod",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_WarriorUI-3x.dat.x1-disabled"
+     ]
+    }
+   ],
+   "n_scripts": 2,
+   "n_art": 2
+  },
+  "ZCarbonNam": {
+   "scripts": [
+    {
+     "g": "96a006b0",
+     "i": "abc0ed33",
+     "carbon_src": "y_scoty_Carbon_NAM",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    }
+   ],
+   "art": [
+    {
+     "g": "46a006b0",
+     "i": "6bbe7795",
+     "carbon_src": "y_scoty_Carbon_NAM",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat"
+     ]
+    }
+   ],
+   "n_scripts": 1,
+   "n_art": 1
+  },
+  "ZCarbonSaveWarning": {
+   "scripts": [
+    {
+     "g": "96a006b0",
+     "i": "0a55161d",
+     "carbon_src": "w_scoty_Carbon_CB_SaveWarning_optA",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a553aa4",
+     "carbon_src": "w_scoty_Carbon_CB_SaveWarning_optA",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-3x.dat.x1-disabled"
+     ]
+    }
+   ],
+   "art": [],
+   "n_scripts": 2,
+   "n_art": 0
+  },
+  "ZCarbonStyles": {
+   "scripts": [
+    {
+     "g": "96a006b0",
+     "i": "6bc61f19",
+     "carbon_src": "z_scoty_Carbon_BuildingStyles",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-3x.dat.x1-disabled"
+     ]
+    }
+   ],
+   "art": [
+    {
+     "g": "46a006b0",
+     "i": "cbc3c2b9",
+     "carbon_src": "z_scoty_Carbon_BuildingStyles",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-15x.dat",
+      "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-2x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-3x.dat.x1-disabled"
+     ]
+    }
+   ],
+   "n_scripts": 1,
+   "n_art": 1
+  },
+  "ZCarbonUI": {
+   "scripts": [
+    {
+     "g": "96a006b0",
+     "i": "0a243d80",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a2dd355",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a4d0c43",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a562a05",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a5cf71d",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a7df315",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a8b819e",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a8b98fe",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a8b9a67",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a8b9c43",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a8b9c6a",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0a8cd184",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "0bbc06b6",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a41436b",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a41436c",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a5621ee",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a564884",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a56675c",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a567dc1",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a5e7490",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a8b7e1c",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a8b97c1",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a8b99d0",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2a8b9df2",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2bb16d50",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2c02ba84",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "2c096de6",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a551b4c",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a562da5",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a565d13",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a5665eb",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a566c14",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a566d6e",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a5672bf",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a5a89d4",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a5a89d5",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a5e7ed3",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a89b3f2",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a8b7fe7",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a8b9396",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a8b9936",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a8b9c92",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a8b9dab",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4a8cc5ea",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4bbc080f",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4bf325e8",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4c0969e2",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "4c47800e",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a51506f",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a555a84",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a561b3a",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a562f56",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a566151",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a5e73c0",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a8b9875",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a8b9acc",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6a8b9af3",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "6b704690",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a4d0a17",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a554483",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a5ab1cb",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a5ab1cc",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a5ab1cd",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a5ab1ce",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a5ab1cf",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a5ab1d0",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a5e7bd2",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a7e052f",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+      "zzz-SC4UIScale\\z_SC4UIScale_SelectorUI-1x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a8b95b0",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a8b9811",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a8b98a7",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a8b9d12",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "8a948d49",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa554aea",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa555346",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa561f93",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa565036",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa565f5b",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa5661eb",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa5bef41",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa5e14cc",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa5e60d1",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa8b9755",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "aa8b9971",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "abfaef15",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ac096ac7",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ac3b72f6",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca4d0b22",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca539340",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca53f06e",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca551016",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca566f94",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca56783a",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca8b8408",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca8b96c2",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca8b9845",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca8b9aa2",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca8b9ce7",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ca8b9d40",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "cc097fc0",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "cc313f17",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ea5655e4",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ea566a49",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ea89b6c3",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ea8b82db",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ea8cc3c6",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "eaaeec1b",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ebd0d36c",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "96a006b0",
+     "i": "ec096e72",
+     "carbon_src": "scoty_Carbon_Files",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    }
+   ],
+   "art": [
+    {
+     "g": "1abe787d",
+     "i": "0c0e0f3c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13e14fb7",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15213",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15250",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15251",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15253",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15254",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f15255",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f1525e",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "13f1525f",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161e0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161e2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "144161e4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161e4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161eb",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "144161ee",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161ee",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f1",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f3",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f5",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f6",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "144161f9",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441620e",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441620f",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416210",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416211",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416212",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416214",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416215",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416216",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416217",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416218",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416219",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441621a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441621b",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441621c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416220",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416220",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416221",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416222",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416223",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416224",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416225",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416226",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416227",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416228",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416229",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441622a",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "1441622c",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416240",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416240",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416243",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416245",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416245",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416246",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416264",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416270",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416271",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416272",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "14416273",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416280",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416321",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416322",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416324",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416325",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "14416326",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2bc3ac85",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2c201cb0",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2c201cb1",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "2c201cb2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "46a006a4",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "46a006a6",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "46a006a7",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "4bc3a5ae",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "4bfc52c2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "4c02b518",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "4c0f0d31",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "8bc38238",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "1abe787d",
+     "i": "8c0e0f2d",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbbab0ae",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbec3db2",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbfb3730",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbfb3731",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cbfb3732",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    },
+    {
+     "g": "46a006b0",
+     "i": "cc1a735d",
+     "carbon_src": "scoty_carbon_PNG",
+     "ours": [
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+      "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled"
+     ]
+    }
+   ],
+   "n_scripts": 109,
+   "n_art": 87
+  }
+ },
+ "clones_carbon_sourced": [],
+ "skipped": [
+  {
+   "tgi": "2026960b/6a231eaa/0a5128f3",
+   "why": "WebText - deliberate carbon win"
+  },
+  {
+   "tgi": "856ddbac/46a006b0/0c0305c3",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/46a006b0/0c0305c4",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/46a006b0/0c0305c5",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/46a006b0/0c0305c6",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/46a006b0/4bb1305d",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/46a006b0/4bb1305e",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/46a006b0/4bb1305f",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/46a006b0/4bb13060",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/6a386d26/00001111",
+   "why": "covered by built ZCarbonIcons"
+  },
+  {
+   "tgi": "856ddbac/6a386d26/144161ec",
+   "why": "covered by built ZCarbonIcons"
+  }
+ ],
+ "ownership_moves": [
+  {
+   "tgi": "00000000/96a006b0/0a55161d",
+   "to": "ZCarbonSaveWarning",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/12121201",
+   "to": "ZCarbonCamUI",
+   "ours": [
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/2a554f6d",
+   "to": "ZCarbonCamUI",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/6a553aa4",
+   "to": "ZCarbonSaveWarning",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/6bc61f19",
+   "to": "ZCarbonStyles",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/9b868f68",
+   "to": "ZCarbonCamUI",
+   "ours": [
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/aa8b999e",
+   "to": "ZCarbonCamUI",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/ca8b8564",
+   "to": "ZCarbonCamUI",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/ca8cbf0f",
+   "to": "ZCarbonCamUI",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "00000000/96a006b0/ea565970",
+   "to": "ZCarbonCamUI",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-15x.dat",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "856ddbac/46a006b0/cbc3c2b9",
+   "to": "ZCarbonStyles",
+   "ours": [
+    "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled",
+    "010-SC4UIScale\\z_SC4UIScale_SelectiveArt.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI-3x.dat.x1-disabled"
+   ]
+  },
+  {
+   "tgi": "856ddbac/46a006b0/ea7f0eae",
+   "to": "ZCarbonArt",
+   "ours": [
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-15x.dat",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-2x.dat.x1-disabled",
+    "zzz-SC4UIScale\\z_SC4UIScale_CamUI-3x.dat.x1-disabled"
+   ]
+  }
+ ]
+}

@@ -316,7 +316,42 @@ $EXPECTED = @(
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_CamUI-15x.dat"; entries = 22 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_CamUI-3x.dat";  entries = 22 },
   # ALWAYS-ON (untagged, never gated): LTEXT overrides matching WebRedirect
-  @{ name = "010-SC4UIScale\z_SC4UIScale_WebText.dat";          entries = 3 }
+  @{ name = "010-SC4UIScale\z_SC4UIScale_WebText.dat";          entries = 3 },
+  # ---- ZCarbon* (v4.3.0, 2026-08-25): Scoty Carbon Skin adaptations ----
+  # Carbon-sourced scaled twins, gated on the skin's dats at exact sizes;
+  # "NOT FOUND (live or gated)" with the skin removed is correct behaviour.
+  # Z-late names are load-bearing (REGRESSION.md "zzz-INTERNAL SORT TRAP").
+  # ZCarbonUI: 109 carbon scripts + 87 enrolled art + 1 carbon-styled clone.
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-2x.dat";  entries = 197 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-15x.dat"; entries = 197 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-3x.dat";  entries = 197 },
+  # ZCarbonCamUI: carbon's 7 CAM-dialog redeclarations + 3 CAM sheets.
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-2x.dat";  entries = 10 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-15x.dat"; entries = 10 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-3x.dat";  entries = 10 },
+  # ZCarbonSaveWarning: carbon's two confirm-dialog scripts (art rides ZCarbonUI).
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-2x.dat";  entries = 2 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-15x.dat"; entries = 2 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-3x.dat";  entries = 2 },
+  # ZCarbonIcons: 8 CSI balloons x BOTH twin groups + 2 item strips.
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-2x.dat";  entries = 18 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-15x.dat"; entries = 18 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-3x.dat";  entries = 18 },
+  # ZCarbonNam / ZCarbonStyles: 1 script + 1 art each.
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-2x.dat";  entries = 2 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-15x.dat"; entries = 2 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-3x.dat";  entries = 2 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-2x.dat";  entries = 2 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-15x.dat"; entries = 2 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-3x.dat";  entries = 2 },
+  # ZCarbonArt / ZCarbonGodMod entry counts land with the final build
+  # (rows added in the same session - see the deploy manifest).
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-2x.dat";  entries = 269 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-15x.dat"; entries = 269 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-3x.dat";  entries = 269 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-2x.dat";  entries = 4 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-15x.dat"; entries = 4 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-3x.dat";  entries = 4 }
 )
 # Font package sources must exist beside the DLL
 $FONT_SOURCES = @("010-SC4UIScale\FontStyle-2x.ini", "010-SC4UIScale\FontStyle-15x.ini", "010-SC4UIScale\FontStyle-3x.ini")
@@ -449,6 +484,36 @@ $BUILT_PAIRS = @(
   @{ b = "tools\fonts\FontStyle.candidate.ini";                       d = "010-SC4UIScale\FontStyle-2x.ini" }
   @{ b = "tools\packages\15x\FontStyle-15x.ini";                      d = "010-SC4UIScale\FontStyle-15x.ini" }
   @{ b = "tools\packages\3x\FontStyle-3x.ini";                        d = "010-SC4UIScale\FontStyle-3x.ini" }
+  # ---- ZCarbon* (v4.3.0): carbon-sourced, gated, local-only (never in the
+  # public bundle - Build-Dist asserts that). 2x untagged from the emitting
+  # builder's dir, 15x/3x from tools\packages\<tag>\, same as their siblings.
+  # NOTE the DbpfPack timestamp law (REGRESSION.md 2026-08-25): these hashes
+  # match only because deploy COPIES the built file; any rebuild must be
+  # redeployed before this suite runs.
+  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonUI.dat";            d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonUI-15x.dat";         d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonUI-3x.dat";           d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-3x.dat" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonCamUI.dat";         d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonCamUI-15x.dat";      d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonCamUI-3x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-3x.dat" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonSaveWarning.dat";   d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonSaveWarning-15x.dat"; d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonSaveWarning-3x.dat";  d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-3x.dat" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonArt.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonArt-15x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonArt-3x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-3x.dat" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonNam.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonNam-15x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonNam-3x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-3x.dat" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonStyles.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonStyles-15x.dat";     d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonStyles-3x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-3x.dat" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonGodMod.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonGodMod-15x.dat";     d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonGodMod-3x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-3x.dat" }
+  @{ b = "tools\research\carbon\z_SC4UIScale_ZCarbonIcons.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonIcons-15x.dat";      d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonIcons-3x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-3x.dat" }
 )
 $nHash = 0
 foreach ($pair in $BUILT_PAIRS) {

@@ -95,6 +95,15 @@ ZERO sheets were scanned (a scan of nothing is a REFUSAL, not a clean bill).
     python gate_key_integrity.py --dir <dir> --factor <f>   # e.g. a stage dir
                                   (stage clone names resolve via I xor
                                    0x53430001, the SELECTIVE-SAFE.md scheme)
+    python gate_key_integrity.py --dir <dir> --factor <f> --src1x <dir>
+                                  # override the 1x ground-truth tree (default
+                                  # tools\dbpf\extracted\SimCity_1). Used by
+                                  # build_selective_safe.py --carbon: a stage
+                                  # built from the Carbon Skin's own 1x
+                                  # payloads must be gated against THOSE
+                                  # payloads, never the stock extract - the
+                                  # instrument must be scoped to the channel
+                                  # that produced the art.
     python gate_key_integrity.py --selftest          # prove the gate goes RED
 
 Offline, read-only over the corpora (--selftest writes only under a temp dir).
@@ -189,10 +198,13 @@ def load_cell_strips():
     return strips
 
 
-def index_sources():
-    """{(g,i): path} over the 1x extract, recursive (the upscaler recurses)."""
+def index_sources(src_root=None):
+    """{(g,i): path} over the 1x extract, recursive (the upscaler recurses).
+
+    src_root overrides the stock extract (--src1x): a stage built from a
+    third-party mod's own 1x payloads is gated against THAT tree."""
     idx = {}
-    for root, _dirs, files in os.walk(SRC1X):
+    for root, _dirs, files in os.walk(src_root or SRC1X):
         for fn in files:
             m = TGI_RE.match(fn)
             if m:
@@ -592,10 +604,22 @@ def main():
         sys.exit(__doc__)
     strips = load_cell_strips()
     ladders = load_ladders()
-    src_index = index_sources()
+    # --src1x (2026-08-25, --carbon support): override the ground-truth tree.
+    # Parsed with the same bounds-check idiom as flag_value below (which is
+    # defined after the selftest branch, so inline here).
+    src_root = None
+    if "--src1x" in argv:
+        j = argv.index("--src1x")
+        if j + 1 >= len(argv):
+            sys.exit("--src1x requires a value")
+        src_root = argv[j + 1]
+        if not os.path.isdir(src_root):
+            sys.exit("FATAL: --src1x %s is not a directory - cannot gate "
+                     "against a missing ground truth." % src_root)
+    src_index = index_sources(src_root)
     if not src_index:
         sys.exit("FATAL: no TGI-named PNGs under %s - cannot gate against a "
-                 "missing ground truth." % SRC1X)
+                 "missing ground truth." % (src_root or SRC1X))
 
     if "--selftest" in argv:
         return selftest(src_index, strips, ladders)

@@ -115,8 +115,14 @@ OUT_DIR = os.path.join(TOOLS, "dialog-static")
 _ap = argparse.ArgumentParser(description="Region-screen dialog static-scale builder (factor-parametric).")
 _ap.add_argument("--factor", type=float, default=2.0,
                  help="scale factor: 2 (default, bit-identical), 1.5, or 3")
+_ap.add_argument("--carbon", action="store_true",
+                 help="ALSO build the carbon-gated ZCarbon* twin packages from "
+                      "the Carbon skin's own payloads. The normal outputs are "
+                      "byte-identical either way; carbon only ADDS stages and "
+                      "dats.")
 _args, _ = _ap.parse_known_args()
 FACTOR = _args.factor
+CARBON = _args.carbon
 
 
 def _factor_tag(f):
@@ -317,6 +323,67 @@ def tp_stage_dir(pkg):
 def tp_out_dat(pkg):
     return os.path.join(PKG_DIR if TAG else OUT_DIR,
                         "z_SC4UIScale_%s%s.dat" % (pkg, ("-" + TAG) if TAG else ""))
+
+
+# ---------------------------------------------------------------------------
+# CARBON SKIN TWIN PACKAGES (--carbon, 2026-08-25)
+# ---------------------------------------------------------------------------
+# Scoty Carbon Skin 1.5 redeclares many stock .UI scripts and art sheets this
+# builder's packages cover, and it WINS the load order (z____scoty_mods\ is a
+# late subfolder). With --carbon we ALSO build carbon-gated twin packages
+# (zzz-SC4UIScale\z_SC4UIScale_ZCarbon*.dat): the CARBON payloads run through
+# the IDENTICAL transform as their stock/TP twins, with CARBON's own 1x art
+# upscaled at the build factor. Without --carbon the build is byte-identical
+# to before; with it the normal outputs are STILL byte-identical - carbon only
+# adds stages and dats.
+#
+# WHICH ROWS ARE OURS is decided by the enrollment table, generated against
+# our own shipped dats: this builder handles a package's rows only when the
+# row's "ours" names a dat THIS builder produces (DialogStatic / CamUI /
+# SaveWarningUI):
+#   ZCarbonUI           twins of root TARGETS scripts + their art
+#   ZCarbonCamUI        twins of the CamUI TP_TARGETS scripts
+#   ZCarbonSaveWarning  twins of the SaveWarningUI TP_TARGETS scripts
+# ZCarbonArt / ZCarbonStyles / ZCarbonNam belong to the selective-safe /
+# itemicons lanes and are skipped here with a NOTE, never silently.
+CARBON_RESEARCH = os.path.join(TOOLS, "research", "carbon")
+CARBON_ENROLLMENT = os.path.join(CARBON_RESEARCH, "enrollment",
+                                 "enrollment.json")
+CARBON_SRC_DIR = os.path.join(CARBON_RESEARCH, "builder-inputs",
+                              "thirdparty-src")
+CARBON_ART_DIR = os.path.join(CARBON_RESEARCH, "builder-inputs",
+                              "thirdparty-art")
+# carbon package -> the TP package whose transform it twins (None = root
+# TARGETS semantics). Keys are also the output dat basenames via tp_out_dat.
+CARBON_PACKAGES = {
+    "ZCarbonUI": None,
+    "ZCarbonCamUI": "CamUI",
+    "ZCarbonSaveWarning": "SaveWarningUI",
+}
+# A row is ours only when its "ours" names a dat this builder produces.
+CARBON_OURS_RE = re.compile(
+    r"z_SC4UIScale_(DialogStatic|CamUI|SaveWarningUI)[-.]", re.I)
+
+# ART THAT DOES NOT EXIST ANYWHERE - the CARBON copy of TP_ART_DANGLING, held
+# to the same evidence bar (a Plugins-wide null PLUS a positive control from
+# the same session, 2026-08-25):
+#   {20d5ade0,454182f0}  referenced by CARBON's city-info script 9b868f68
+#     (carbon-ADDED - CAM's own copy of that script does not reference it).
+#     tools\dbpf\who_owns_tgi.py --group 20d5ade0 454182f0
+#         -> NO HOLDER FOUND (game archives + Plugins root + all subfolders)
+#     positive control, same session: {c3e123bd,cfe4e42f} resolved to 2
+#     holders through the same code path. Nothing draws at 1x, so nothing can
+#     fail to draw at any tier. Consulted for CARBON entries ONLY - a stock or
+#     TP twin can never hide behind this set.
+CARBON_ART_DANGLING = {
+    (0x20D5ADE0, 0x454182F0),
+}
+
+
+def carbon_stage_dir(pkg):
+    return os.path.join(OUT_DIR, "stage-carbon-%s%s"
+                        % (pkg, ("-" + TAG) if TAG else ""))
+
 
 TARGET_GID = 0x96A006B0
 
@@ -1225,8 +1292,15 @@ def scaled_area(nd):
 
 
 def verify_doubled(fn, orig_roots, new_text, art_plan, styles, runtime2x=(),
-                   seated=()):
+                   seated=(), art_dims=None):
     """Re-parse the edited script and assert every edit landed exactly.
+
+    `art_dims`, when given, is a callable (gid, iid) -> ((w1,h1), (ws,hs)) or
+    None, overriding WHICH sheet the #157 full-crop snap measures. CARBON
+    entries pass it so the crop is checked against CARBON's 1x sheet and OUR
+    carbon-up output rather than the stock preview - the same rule, aimed at
+    the art this package actually ships. None = the stock behaviour, byte for
+    byte.
 
     `seated` is the ONLY way an area is allowed to differ from an exact
     scale, and it is NOT a bypass - it is a DIFFERENT, STRICTER assertion.
@@ -1288,9 +1362,11 @@ def verify_doubled(fn, orig_roots, new_text, art_plan, styles, runtime2x=(),
             # arithmetic one.
             if art2x and o.images:
                 g0, i0 = o.images[0][0], o.images[0][1]
-                a1 = art_1x_dims(g0, i0)
+                _ov = art_dims(g0, i0) if art_dims is not None else None
+                a1 = _ov[0] if _ov else art_1x_dims(g0, i0)
                 if a1 is not None and (o.imagerect[0][2], o.imagerect[0][3]) == a1:
-                    sc = png_dims(os.path.join(UPSCALE_DIR, tgi_png_name(g0, i0)))
+                    sc = (_ov[1] if _ov else
+                          png_dims(os.path.join(UPSCALE_DIR, tgi_png_name(g0, i0))))
                     if sc is not None:
                         want = (want[0], want[1], sc[0], sc[1])
             if nnd.imagerect is None or nnd.imagerect[0] != want:
@@ -1466,7 +1542,9 @@ def main():
     # Empty in place, file by file; only files this builder emits; never the
     # directory itself (these trees live under OneDrive, which holds a handle
     # on the folder and makes rmdir fail even when the files delete fine).
-    for stage_dir in [STAGE] + [tp_stage_dir(p) for p in TP_PACKAGES]:
+    for stage_dir in ([STAGE] + [tp_stage_dir(p) for p in TP_PACKAGES]
+                      + ([carbon_stage_dir(p) for p in sorted(CARBON_PACKAGES)]
+                         if CARBON else [])):
         if os.path.isdir(stage_dir):
             for fn in os.listdir(stage_dir):
                 if STAGE_FILE_RE.match(fn):
@@ -1560,6 +1638,27 @@ def main():
     # the winner (see TP_TARGETS above).
     KNOWN_THIRD_PARTY_TARGETS = {}
     tp_handled = {int(i, 16) for (i, _n, _p) in TP_TARGETS}
+    # ---- CARBON ENROLLMENT (read in BOTH modes) --------------------------
+    # The winner assert below needs it even in a plain run: with the Carbon
+    # skin installed, winning-corpus.json reports ~109 of our TARGETS as
+    # carbon-held, and the HANDLING for those is the ZCarbon* twin packages
+    # (built by --carbon runs) - the root package content stays stock-sourced
+    # either way, which is correct because the ZCarbon dats are the override.
+    # Accepting an enrolled iid is an ACCOUNTING of handled ownership, not a
+    # weakening: any plugin-held target NOT covered by enrollment stays FATAL
+    # exactly as before.
+    carbon_enrolled = {}   # iid_s -> enrollment package (scripts, ALL packages)
+    carbon_enr = None
+    if os.path.isfile(CARBON_ENROLLMENT):
+        with open(CARBON_ENROLLMENT, "r", encoding="utf-8") as f:
+            carbon_enr = json.load(f)
+        for _pkg, _rows in carbon_enr["packages"].items():
+            for _r in _rows.get("scripts", []):
+                if _r.get("g") == "%08x" % TARGET_GID:
+                    carbon_enrolled.setdefault(_r["i"], _pkg)
+    if CARBON and carbon_enr is None:
+        sys.exit("FATAL --carbon: enrollment table missing: %s"
+                 % CARBON_ENROLLMENT)
     wc_path = os.path.join(TOOLS, "uiscripts", "winning-corpus.json")
     if os.path.isfile(wc_path):
         with open(wc_path, "r", encoding="utf-8") as f:
@@ -1574,12 +1673,18 @@ def main():
               if int(e["group"], 16) == TARGET_GID}
         bad = []
         handled = 0
+        carbon_accept = defaultdict(list)
         for (iid_s, name) in TARGETS:
             iid = int(iid_s, 16)
             if iid not in tp:
                 continue
             if iid in tp_handled:
                 handled += 1
+            elif iid_s in carbon_enrolled:
+                # Carbon-held target whose scaled carbon copy ships in the
+                # ZCarbon* twin packages - handled ownership, accounted
+                # loudly below, never silently.
+                carbon_accept[carbon_enrolled[iid_s]].append(iid_s)
             elif iid not in KNOWN_THIRD_PARTY_TARGETS:
                 bad.append((iid_s, name, tp[iid]))
         if bad:
@@ -1594,6 +1699,10 @@ def main():
         if handled:
             print("   winner assert: %d plugin-owned target(s), all built from "
                   "the winning script" % handled)
+        for _pkg in sorted(carbon_accept):
+            print("   winner assert: carbon-held, shipped scaled by the "
+                  "ZCarbon packages: %d target(s) via %s"
+                  % (len(carbon_accept[_pkg]), _pkg))
         # A TP_TARGET whose script is NOT plugin-owned is a STALE override: the
         # mod is gone (or renamed) and our copy would fight the stock script.
         stale = sorted(tp_handled - set(tp))
@@ -1633,6 +1742,100 @@ def main():
     build_list = [(iid_s, iid_s, name, None) for (iid_s, name) in TARGETS]
     build_list += [(iid_s + "@tp", iid_s, name, pkg)
                    for (iid_s, name, pkg) in TP_TARGETS]
+
+    # ---- CARBON twin sources + build-list entries (--carbon) -------------
+    # Keyed "<iid>@carbon". Each entry mirrors its twin's treatment EXACTLY:
+    # a ZCarbonUI iid rides the root-TARGETS transform, a ZCarbonCamUI /
+    # ZCarbonSaveWarning iid rides the TP transform of its TP_TARGETS twin
+    # (tp_pkg carries the TWIN package so the shared code paths key the same
+    # way; carbon_pkgs[key] carries the CARBON package the output ships in).
+    carbon_pkgs = {}         # build_list key -> ZCarbon* package
+    carbon_dialog = []       # per-entry records for the carbon report section
+    carbon_have = set()      # (gid,iid) carbon supplies a 1x png for
+    carbon_art_rows = []     # enrolled ZCarbonUI art rows, enrollment order
+    carbon_skipped = []      # (what, why) NOTE lines - skipped, never silent
+    if CARBON:
+        root_names = dict(TARGETS)
+        tp_pkg_of = {i: p for (i, _n, p) in TP_TARGETS}
+        tp_names = {i: n for (i, n, _p) in TP_TARGETS}
+        for cpkg in sorted(CARBON_PACKAGES):
+            twin_tp = CARBON_PACKAGES[cpkg]
+            for row in carbon_enr["packages"][cpkg]["scripts"]:
+                iid_s = row["i"]
+                if not any(CARBON_OURS_RE.search(o)
+                           for o in row.get("ours", [])):
+                    carbon_skipped.append(
+                        ("%s script %s" % (cpkg, iid_s),
+                         "its 'ours' names no dat this builder produces"))
+                    continue
+                if twin_tp is None:
+                    if iid_s not in root_names:
+                        sys.exit("FATAL --carbon: %s script %s has no root "
+                                 "TARGETS twin - enrollment and this builder "
+                                 "disagree; re-generate the enrollment."
+                                 % (cpkg, iid_s))
+                    cname = root_names[iid_s]
+                else:
+                    if tp_pkg_of.get(iid_s) != twin_tp:
+                        sys.exit("FATAL --carbon: %s script %s has no %s "
+                                 "TP_TARGETS twin - enrollment and this "
+                                 "builder disagree; re-generate the "
+                                 "enrollment." % (cpkg, iid_s, twin_tp))
+                    cname = tp_names[iid_s]
+                src_path = os.path.join(CARBON_SRC_DIR, target_fn(iid_s))
+                if not os.path.isfile(src_path):
+                    sys.exit("FATAL --carbon: carbon source missing: %s\n"
+                             "  Re-extract the winner-resolved carbon "
+                             "payloads (tools\\research\\carbon\\)."
+                             % src_path)
+                with open(src_path, "r", encoding="latin-1", newline="") as f:
+                    ctext = f.read()
+                # The carbon twin gets the SAME pre-pass as its stock twin:
+                # the Graphic Options selector nodes are injected into the
+                # winning copy too, or arming carbon would un-ship the
+                # in-game scale selector.
+                ctext, _cn = inject_res_readout(ctext, target_fn(iid_s))
+                if _cn:
+                    print("   #192 res/scale readout: %d node(s) injected "
+                          "into the CARBON copy of %s"
+                          % (_cn, target_fn(iid_s)))
+                key = iid_s + "@carbon"
+                target_data[key] = (ctext, parse_ui(ctext))
+                carbon_pkgs[key] = cpkg
+                build_list.append((key, iid_s, cname + " (carbon)", twin_tp))
+        for cpkg in sorted(carbon_enr["packages"]):
+            if cpkg in CARBON_PACKAGES:
+                continue
+            rows = carbon_enr["packages"][cpkg]
+            carbon_skipped.append(
+                ("package %s (%d script + %d art row(s))"
+                 % (cpkg, len(rows.get("scripts", [])),
+                    len(rows.get("art", []))),
+                 "owned by the selective-safe/itemicons lanes, not this "
+                 "builder"))
+        for r in carbon_enr["packages"]["ZCarbonUI"].get("art", []):
+            if any(CARBON_OURS_RE.search(o) for o in r.get("ours", [])):
+                carbon_art_rows.append((int(r["g"], 16), int(r["i"], 16)))
+            else:
+                carbon_skipped.append(
+                    ("ZCarbonUI art %s/%s" % (r["g"], r["i"]),
+                     "its 'ours' names no dat this builder produces"))
+        for afn in os.listdir(CARBON_ART_DIR):
+            m2 = re.match(r"T-(?:0x)?[0-9a-f]{8}_G-(?:0x)?([0-9a-f]{8})"
+                          r"_I-(?:0x)?([0-9a-f]{8})\.png", afn, re.I)
+            if m2:
+                carbon_have.add((int(m2.group(1), 16), int(m2.group(2), 16)))
+        _no_png = [t for t in carbon_art_rows if t not in carbon_have]
+        if _no_png:
+            sys.exit("FATAL --carbon: %d enrolled art row(s) have no 1x png "
+                     "in %s: %s"
+                     % (len(_no_png), CARBON_ART_DIR,
+                        ", ".join("{%08x,%08x}" % t for t in _no_png)))
+        for (what, why) in carbon_skipped:
+            print("   NOTE carbon: skipped %s - %s" % (what, why))
+        print("Carbon twins: %d script(s) + %d enrolled art row(s) across %s"
+              % (len(carbon_pkgs), len(carbon_art_rows),
+                 ", ".join(sorted(CARBON_PACKAGES))))
 
     # ---- GLOBAL art plan across all six dialogs ----
     # A TGI referenced only by the six (and by selective-safe-handled refs) is
@@ -1819,6 +2022,85 @@ def main():
               "conflict - retire them: %s"
               % (len(_stale), ", ".join("{%08x,%08x}" % k for k in sorted(_stale))))
 
+    # ---- CARBON: plan coverage + carbon art upscale (--carbon) -----------
+    # The stock art_plan above is computed WITHOUT the carbon entries on
+    # purpose - inserting carbon TGIs into all_target_tgis could reorder the
+    # clone-collision walk and flip a stock fallback, changing the normal
+    # dats. Carbon refs are covered AFTER the plan is frozen: every carbon
+    # script ref must already be in the plan (measured: all but one are), or
+    # in CARBON_ART_DANGLING with its who_owns_tgi evidence.
+    carbon_up_dir = os.path.join(OUT_DIR, "carbon-art-up%s"
+                                 % (("-" + TAG) if TAG else ""))
+    carbon_up = {}            # (gid,iid) -> upscaled png path, this factor
+    if CARBON:
+        for t in CARBON_ART_DANGLING:
+            art_plan.setdefault(
+                t, ("left1x", None,
+                    "carbon dangling ref - proven absent everywhere "
+                    "(who_owns_tgi.py null + positive control, 2026-08-25)"))
+        _c_missing = sorted(
+            {(g, i)
+             for k in carbon_pkgs
+             for nd in walk(target_data[k][1])
+             for (g, i, _, _) in nd.images} - set(art_plan))
+        if _c_missing:
+            sys.exit("FATAL --carbon: %d carbon script ref(s) have no "
+                     "art_plan entry and no dangling proof: %s\n"
+                     "  A new Carbon version added art this builder has "
+                     "never judged - resolve each with tools\\dbpf\\"
+                     "who_owns_tgi.py before enrolling it."
+                     % (len(_c_missing),
+                        ", ".join("{%08x,%08x}" % t for t in _c_missing)))
+        if os.path.isdir(carbon_up_dir):
+            for fn2 in os.listdir(carbon_up_dir):
+                os.remove(os.path.join(carbon_up_dir, fn2))
+        else:
+            os.makedirs(carbon_up_dir)
+        # The SAME invocation as the third-party art pass below - one rule,
+        # every consumer wired to it (#157: nine-slice CellUnit, no-snap,
+        # no-smooth, height-exact strips AND slabs). Runs BEFORE the edit
+        # pass because the #157 crop snap must measure THESE outputs.
+        r = subprocess.run([os.path.join(TOOLS, "upscale", "Upscale2x.exe"),
+                            CARBON_ART_DIR, carbon_up_dir,
+                            "--factor", str(FACTOR),
+                            "--normalize-names", "--nine-slice",
+                            os.path.join(TOOLS, "upscale", "nine-slice.txt"),
+                            "--no-snap",
+                            os.path.join(TOOLS, "upscale", "no-snap.txt"),
+                            "--no-smooth",
+                            os.path.join(TOOLS, "upscale", "no-smooth.txt"),
+                            "--height-exact-strips",
+                            os.path.join(TOOLS, "upscale",
+                                         "height-exact-strips.txt"),
+                            "--height-exact-strips",
+                            os.path.join(TOOLS, "upscale",
+                                         "height-exact-slabs.txt")],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            sys.exit("CARBON ART UPSCALE FAILED:\n" + r.stderr + r.stdout)
+        for fn2 in os.listdir(carbon_up_dir):
+            m2 = re.match(r"T-(?:0x)?[0-9a-f]{8}_G-(?:0x)?([0-9a-f]{8})"
+                          r"_I-(?:0x)?([0-9a-f]{8})\.png", fn2, re.I)
+            if m2:
+                carbon_up[(int(m2.group(1), 16), int(m2.group(2), 16))] = \
+                    os.path.join(carbon_up_dir, fn2)
+        print("Carbon art upscaled x%g: %d sheet(s) -> %s"
+              % (FACTOR, len(carbon_up), os.path.basename(carbon_up_dir)))
+
+    def carbon_art_dims(gid, iid):
+        """#157 for CARBON entries: (1x dims, scaled dims) measured off
+        CARBON's own sheet and OUR carbon-up output - never the stock
+        preview. Carbon is mostly stock-dimensioned, but a deliberately
+        resized sheet snapped against the stock preview would be the #157
+        defect with extra steps. None = not carbon-supplied; the caller
+        falls back to the stock rule."""
+        if (gid, iid) not in carbon_have or (gid, iid) not in carbon_up:
+            return None
+        c1 = png_dims(os.path.join(
+            CARBON_ART_DIR,
+            "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid)))
+        return (c1, png_dims(carbon_up[(gid, iid)]))
+
     # ---- per-dialog edit pass ----
     per_dialog = []       # dicts, TARGETS order
     tp_dialog = []        # third-party overrides -> their own package
@@ -1872,11 +2154,25 @@ def main():
 
     for (key, iid_s, name, tp_pkg) in build_list:
         is_tp = tp_pkg is not None
+        c_pkg = carbon_pkgs.get(key)
+        is_carbon = c_pkg is not None
         # TGIs whose pixels this script's OWN package ships scaled.
         tp_scaled_here = frozenset(k for k, p in tp_art_staged.items()
                                    if is_tp and p == tp_pkg)
+        if is_carbon and is_tp:
+            # The CARBON TP package ships the twin mod's bitmaps (upscaled
+            # from the mod's own 1x, same machinery as the twin) AND any
+            # carbon-supplied left1x-action ref is staged carbon-up by this
+            # run (in ZCarbonUI in place, or in this package when ZCarbonUI
+            # does not carry it) - so such a ref's rect must scale with those
+            # pixels. Only left1x-action refs consult this set, so the
+            # wholesale carbon_have union is exact in effect.
+            tp_scaled_here = tp_scaled_here | frozenset(carbon_have)
         text, roots = target_data[key]
-        fn = tp_srcs[key] if is_tp else target_fn(iid_s)
+        if is_carbon:
+            fn = target_fn(iid_s) + "@carbon"
+        else:
+            fn = tp_srcs[key] if is_tp else target_fn(iid_s)
         edits = []
         area_count = 0
         rect_log = []
@@ -1956,9 +2252,15 @@ def main():
                     # This is #154's law one layer down: window, bitmap and the
                     # CROP between them are three numbers, and the crop is the
                     # one nobody scales on purpose.
-                    art_full = art_1x_dims(gid, iid)
+                    # For a CARBON entry the crop follows the CARBON sheet:
+                    # 1x dims from carbon's own png, scaled dims from OUR
+                    # carbon-up output - never the stock preview (#157 aimed
+                    # at the art this package actually ships).
+                    _cdims = carbon_art_dims(gid, iid) if is_carbon else None
+                    art_full = _cdims[0] if _cdims else art_1x_dims(gid, iid)
                     if art_full is not None and (r, b) == art_full:
-                        scaled = png_dims(os.path.join(UPSCALE_DIR, tgi_png_name(gid, iid)))
+                        scaled = (_cdims[1] if _cdims else
+                                  png_dims(os.path.join(UPSCALE_DIR, tgi_png_name(gid, iid))))
                         if scaled is not None and (nr, nb) != scaled:
                             rect_snap_log.append(
                                 (nd.clsid, "%dx%d" % (nr, nb), "%dx%d" % scaled))
@@ -2050,7 +2352,9 @@ def main():
         # out of step with the edit pass above.
         n_nodes = verify_doubled(fn, roots, new_text, art_plan, styles,
                                  tuple(RUNTIME_BOUND_2X.get(iid_s, ()))
-                                 + tuple(tp_scaled_here), seated_ids)
+                                 + tuple(tp_scaled_here), seated_ids,
+                                 art_dims=carbon_art_dims if is_carbon
+                                 else None)
         if leaf_sized:
             print("   (%s: %d art leaf/leaves SIZE-derived x%g, +/-1px, "
                   "position unchanged - #155)" % (fn, len(leaf_sized), FACTOR))
@@ -2090,6 +2394,15 @@ def main():
                                   r"_I-(?:0x)?([0-9a-f]{8})\.png", afn, re.I)
                     if m2:
                         tp_art_have.add((int(m2.group(2), 16), int(m2.group(3), 16)))
+            # For a CARBON entry, a carbon-supplied sheet is a real payload
+            # we upscale - the same statement thirdparty-art\ makes for the
+            # twin mod - and carbon's own proven-absent set applies. Both are
+            # scoped to carbon entries so a stock or CAM twin can never hide
+            # behind them.
+            _dangle = TP_ART_DANGLING | (CARBON_ART_DANGLING if is_carbon
+                                         else set())
+            if is_carbon:
+                tp_art_have = tp_art_have | carbon_have
             # THE OLD MESSAGE OVER-CLAIMED, and this file has a law about
             # that (#153: verify the failure message before believing its
             # implication). The condition is an OR, so a ref that is merely
@@ -2098,13 +2411,13 @@ def main():
             # bitmap that has never existed. Split the two branches so each
             # says what is actually true about it.
             in_store = [t for (_c, t) in left1x_controls
-                        if t in store_tgis and t not in TP_ART_DANGLING]
+                        if t in store_tgis and t not in _dangle]
             unaccounted = [t for (_c, t) in left1x_controls
                            if t not in store_tgis and t not in tp_art_have
-                           and t not in TP_ART_DANGLING]
+                           and t not in _dangle]
             dangling = [t for (_c, t) in left1x_controls if t in tp_art_have]
             proven_absent = [t for (_c, t) in left1x_controls
-                             if t in TP_ART_DANGLING]
+                             if t in _dangle]
             if in_store:
                 sys.exit("FATAL %s: third-party override references art that "
                          "EXISTS at 1x but has no 2x asset: %s" % (fn, ", ".join(
@@ -2128,14 +2441,19 @@ def main():
                       "thirdparty-art\\: %s)" % (fn, len(dangling), ", ".join(
                           "{%08x,%08x}" % t for t in sorted(set(dangling)))))
 
-        with open(os.path.join(tp_stage_dir(tp_pkg) if is_tp else STAGE,
-                               target_out(iid_s)),
+        if is_carbon:
+            out_stage = carbon_stage_dir(c_pkg)
+        elif is_tp:
+            out_stage = tp_stage_dir(tp_pkg)
+        else:
+            out_stage = STAGE
+        with open(os.path.join(out_stage, target_out(iid_s)),
                   "w", encoding="latin-1", newline="") as f:
             f.write(new_text)
 
         root = roots[0]
-        (tp_dialog if is_tp else per_dialog).append({
-            "pkg": tp_pkg,
+        rec = {
+            "pkg": tp_pkg, "cpkg": c_pkg,
             "iid_s": iid_s, "name": name, "fn": fn,
             "root_clsid": root.clsid, "root_id": root.wid,
             "root_area": root.area[0] if root.area else None,
@@ -2143,14 +2461,18 @@ def main():
             "rect_log": rect_log, "font_counts": font_counts,
             "art_refs": art_refs, "left1x": left1x_controls,
             "no_rect_2x": no_rect_2x,
+            "rect_snap": rect_snap_log,
             # first child's rect, for the third-party golden check: asserting a
             # NESTED node (origin AND size) is a real test of the transform,
             # where the root alone only tests the outer box.
             "kid_area": (root.children[0].area[0]
                          if root.children and root.children[0].area else None),
-        })
+        }
+        (carbon_dialog if is_carbon
+         else (tp_dialog if is_tp else per_dialog)).append(rec)
         print("%s %-40s areas=%d rects2x=%d fonts=%d refs=%d"
-              % ("TP-EDIT" if is_tp else "edited ", fn, area_count, len(rect_log),
+              % ("CARBON " if is_carbon else ("TP-EDIT" if is_tp else "edited "),
+                 fn, area_count, len(rect_log),
                  sum(font_counts.values()), sum(art_refs.values())))
 
     # ---- Credits HTML LTEXT (per-factor font-size bump) ----
@@ -2383,6 +2705,196 @@ def main():
     print("Packed %s: %d entries, %d bytes -- listing verified"
           % (os.path.basename(OUT_DAT), len(entry_lines), size))
 
+    # ---- CARBON PACKAGES (--carbon): art staging + pack ------------------
+    carbon_pack_info = []     # (pkg, n_scripts, n_art, n_entries, bytes)
+    carbon_art_report = []    # (pkg, (gid,iid), staged_name|None, note)
+    if CARBON:
+        # ZCarbonUI art: the enrolled rows, each by the IN-RUN art plan so
+        # every carbon script's retargeted ref lands on the same TGI its
+        # stock twin uses. left1x stages NOTHING: unscaled windows must keep
+        # drawing carbon's own 1x original.
+        zui_stage = carbon_stage_dir("ZCarbonUI")
+        carbon_inplace = set()
+        for (gid, iid) in carbon_art_rows:
+            action, clone, _r3 = art_plan.get((gid, iid), (None, None, None))
+            if action == "left1x":
+                carbon_art_report.append(
+                    ("ZCarbonUI", (gid, iid), None,
+                     "left1x per plan - carbon's own 1x keeps drawing"))
+                continue
+            if action == "clone":
+                out_name = tgi_png_name(*clone)
+                note = "carbon-up at the CLONE TGI (original stays carbon 1x)"
+            elif action == "inplace":
+                out_name = tgi_png_name(gid, iid)
+                note = "carbon-up IN PLACE"
+                carbon_inplace.add((gid, iid))
+            else:
+                # In enrollment but absent from the plan: art our root
+                # package ships in-place for scripts carbon did NOT
+                # redeclare - the carbon-styled pixels must win the same TGI.
+                out_name = tgi_png_name(gid, iid)
+                note = ("carbon-up IN PLACE (not referenced by any target "
+                        "script this run)")
+                carbon_inplace.add((gid, iid))
+            src = carbon_up.get((gid, iid))
+            if src is None:
+                sys.exit("FATAL --carbon: no upscaled output for enrolled "
+                         "art {%08x,%08x}" % (gid, iid))
+            shutil.copy2(src, os.path.join(zui_stage, out_name))
+            carbon_art_report.append(("ZCarbonUI", (gid, iid), out_name, note))
+        # The cross-builder clone permission binds THIS package too: a
+        # code-bound TGI permitted as a CLONE rests on the original payload
+        # staying 1x for the code consumer - writing it in place here would
+        # break that from a different dat.
+        _cviol = sorted(_cb_cloned & carbon_inplace)
+        if _cviol:
+            sys.exit("FATAL --carbon: %d code-bound TGI(s) permitted as "
+                     "CLONES are written IN PLACE by ZCarbonUI: %s"
+                     % (len(_cviol),
+                        ", ".join("{%08x,%08x}" % v for v in _cviol)))
+        # CLONE COVERAGE FOR CARBON-OWNED SOURCES (2026-08-25 follow-up).
+        # A carbon script whose ref the plan CLONES points at OUR clone TGI,
+        # whose root-package payload is STOCK-styled - so an armed carbon
+        # dialog would draw a stock sheet in a carbon frame. If carbon owns
+        # the SOURCE payload (a png in builder-inputs\thirdparty-art\ - the
+        # FILE decides, not the enrollment package: e2b66db8 is enrolled to
+        # ZCarbonArt while its clone id belongs to THIS plan), stage
+        # carbon-up pixels AT THE CLONE TGI here too. Cross-package sourcing
+        # is deliberate: ZCarbonUI and ZCarbonArt share the same gate. The
+        # original TGI is still never written by this rule, so the
+        # cross-builder clone permission holds.
+        _zui_names = {n for (p, t, n, _no) in carbon_art_report
+                      if p == "ZCarbonUI" and n is not None}
+        _all_crefs = sorted({(g, i)
+                             for k in carbon_pkgs
+                             for nd in walk(target_data[k][1])
+                             for (g, i, _, _) in nd.images})
+        for (g, i) in _all_crefs:
+            action, clone, _r3 = art_plan.get((g, i), (None, None, None))
+            if action != "clone" or (g, i) not in carbon_have:
+                continue
+            out_name = tgi_png_name(*clone)
+            if out_name in _zui_names:
+                continue   # already carried (e.g. an enrolled clone row)
+            src = carbon_up.get((g, i))
+            if src is None:
+                sys.exit("FATAL --carbon: no upscaled output for carbon-owned "
+                         "clone source {%08x,%08x}" % (g, i))
+            shutil.copy2(src, os.path.join(zui_stage, out_name))
+            _zui_names.add(out_name)
+            carbon_art_report.append(
+                ("ZCarbonUI", (g, i), out_name,
+                 "carbon-up at the plan's CLONE TGI (carbon-owned source; "
+                 "clone re-styled so carbon dialogs stop drawing the stock "
+                 "sheet)"))
+        zui_staged = {t for (p, t, n, _no) in carbon_art_report
+                      if p == "ZCarbonUI" and n is not None}
+
+        # TP carbon packages: satisfy every ref the package's scripts make -
+        # the strict left1x law already held in the edit pass, this stages
+        # the pixels that claim rested on. CAM's bitmaps ride the existing
+        # up_tmp outputs; the package must carry them itself because it wins
+        # over the twin dat when armed.
+        up_tmp2 = os.path.join(OUT_DIR, "thirdparty-art-up%s"
+                               % (("-" + TAG) if TAG else ""))
+        for cpkg in sorted(CARBON_PACKAGES):
+            twin_tp = CARBON_PACKAGES[cpkg]
+            if twin_tp is None:
+                continue
+            crefs = sorted({(g, i)
+                            for k, p in carbon_pkgs.items() if p == cpkg
+                            for nd in walk(target_data[k][1])
+                            for (g, i, _, _) in nd.images})
+            for (g, i) in crefs:
+                if (g, i) in TP_ART_DANGLING or (g, i) in CARBON_ART_DANGLING:
+                    continue
+                if (g, i) in zui_staged:
+                    # carbon-up ships in ZCarbonUI, which is armed whenever
+                    # carbon is - covered without a duplicate payload here
+                    continue
+                if (g, i) in carbon_have:
+                    # carbon-owned, not shipped by ZCarbonUI (left1x or
+                    # unplanned) - this package stages it itself. Checked
+                    # BEFORE the twin mod's bitmaps on purpose: if carbon
+                    # restyles a sheet the twin also owns, the carbon sheet
+                    # is the one the rect math measured (carbon_art_dims).
+                    src = carbon_up.get((g, i))
+                    if src is None:
+                        sys.exit("FATAL --carbon: no upscaled output for %s "
+                                 "ref {%08x,%08x}" % (cpkg, g, i))
+                    shutil.copy2(src, os.path.join(carbon_stage_dir(cpkg),
+                                                   tgi_png_name(g, i)))
+                    carbon_art_report.append(
+                        (cpkg, (g, i), tgi_png_name(g, i),
+                         "carbon-up IN PLACE (carbon-owned TP ref)"))
+                    continue
+                if tp_art_staged.get((g, i)) == twin_tp:
+                    # the twin mod's own bitmap, upscaled by the existing
+                    # machinery into up_tmp this run
+                    src = os.path.join(up_tmp2, tgi_png_name(g, i))
+                    if not os.path.isfile(src):
+                        sys.exit("FATAL --carbon: %s needs the twin mod's "
+                                 "bitmap {%08x,%08x} but %s is missing"
+                                 % (cpkg, g, i, src))
+                    shutil.copy2(src, os.path.join(carbon_stage_dir(cpkg),
+                                                   tgi_png_name(g, i)))
+                    carbon_art_report.append(
+                        (cpkg, (g, i), tgi_png_name(g, i),
+                         "twin mod's bitmap, upscaled (self-sufficient "
+                         "package)"))
+                    continue
+                if art_plan.get((g, i), (None,))[0] in ("inplace", "clone"):
+                    # stock art, staged scaled by the root package exactly
+                    # like the twin's refs
+                    continue
+                sys.exit("FATAL --carbon: %s ref {%08x,%08x} is not covered "
+                         "by any staging rule - the strict left1x law's "
+                         "claim has no pixels behind it." % (cpkg, g, i))
+
+        # State B (carbon absent): the twin built THIS run takes over -
+        # assert it is really staged, mirroring the TP stock-twin assert.
+        for k in sorted(carbon_pkgs):
+            iid_s2 = k[:-len("@carbon")]
+            twin_tp2 = CARBON_PACKAGES[carbon_pkgs[k]]
+            twin_stage = STAGE if twin_tp2 is None else tp_stage_dir(twin_tp2)
+            if not os.path.isfile(os.path.join(twin_stage,
+                                               target_out(iid_s2))):
+                sys.exit("FATAL --carbon: no twin staged for %s (%s) - "
+                         "nothing would scale this dialog once carbon is "
+                         "removed." % (iid_s2, carbon_pkgs[k]))
+
+        for cpkg in sorted(CARBON_PACKAGES):
+            sdir = carbon_stage_dir(cpkg)
+            odat = tp_out_dat(cpkg)
+            files = os.listdir(sdir)
+            n_c = len(files)
+            if n_c == 0:
+                print("Carbon stage %s: empty - nothing packed" % cpkg)
+                continue
+            n_cs = sum(1 for f2 in files if f2.lower().endswith(".ui"))
+            print("Carbon stage %s: %d script(s) + %d art -> packing..."
+                  % (cpkg, n_cs, n_c - n_cs))
+            r = subprocess.run([PACKER, sdir, odat],
+                               capture_output=True, text=True)
+            print(r.stdout.strip())
+            if r.returncode != 0:
+                sys.exit("CARBON PACK FAILED (%s):\n%s" % (cpkg, r.stderr))
+            r = subprocess.run([PACKER, "--list", odat],
+                               capture_output=True, text=True)
+            c_lines = [ln for ln in r.stdout.splitlines()
+                       if re.match(r"0x[0-9A-Fa-f]{8} 0x[0-9A-Fa-f]{8} "
+                                   r"0x[0-9A-Fa-f]{8} ", ln)]
+            if len(c_lines) != n_c:
+                sys.exit("FATAL: %s pack has %d entries but staged %d files"
+                         % (cpkg, len(c_lines), n_c))
+            print("   packed %s (%d entries) -> %s"
+                  % (os.path.basename(odat), n_c,
+                     ("tools\\packages\\%s\\" % TAG) if TAG
+                     else "tools\\dialog-static\\"))
+            carbon_pack_info.append((cpkg, n_cs, n_c - n_cs, n_c,
+                                     os.path.getsize(odat)))
+
     # ---- REPORT.md ----
     art_log = [(tgi,) + art_plan[tgi] for tgi in all_target_tgis]
     lines = []
@@ -2608,6 +3120,55 @@ def main():
     a("modified. (Nothing was deployed by the build; the dat lives only in")
     a("`tools\\dialog-static\\` until copied by hand.)")
     a("")
+    if CARBON and carbon_pack_info:
+        a("## Carbon twin packages (`--carbon`)")
+        a("")
+        a("Built from the Carbon skin's own winner-resolved payloads through the")
+        a("IDENTICAL transform as their twins; carbon-gated, shipped from")
+        a("`zzz-SC4UIScale\\`. The packages above are byte-identical with or")
+        a("without `--carbon` - carbon only ADDS these dats.")
+        a("")
+        for (cpkg, n_cs, n_ca, n_ce, c_sz) in carbon_pack_info:
+            a("### %s (`%s`, %d entries, %d bytes)"
+              % (cpkg, os.path.basename(tp_out_dat(cpkg)), n_ce, c_sz))
+            a("")
+            a("%d carbon script(s):" % n_cs)
+            a("")
+            for d in carbon_dialog:
+                if d["cpkg"] != cpkg:
+                    continue
+                ra = d["root_area"]
+                a("- `I-%s` %s: root %s id=%s, 1x %dx%d -> %s %dx%d"
+                  % (d["iid_s"], d["name"], d["root_clsid"],
+                     fmt_id(d["root_id"]), ra[2] - ra[0], ra[3] - ra[1],
+                     FACTOR_LABEL,
+                     scale_len(ra[2]) - scale_len(ra[0]),
+                     scale_len(ra[3]) - scale_len(ra[1])))
+            _rows = [x for x in carbon_art_report if x[0] == cpkg]
+            _staged_rows = [x for x in _rows if x[2] is not None]
+            if _rows:
+                a("")
+                a("%d art row(s), %d staged:" % (len(_rows), len(_staged_rows)))
+                a("")
+                for (_p, (g, i), n2, note) in _rows:
+                    a("- `{%08x,%08x}` -> %s (%s)"
+                      % (g, i, ("`%s`" % n2) if n2 else "NOT STAGED", note))
+            a("")
+        _csnaps = [(d["fn"], s) for d in carbon_dialog
+                   for s in d.get("rect_snap", ())]
+        if _csnaps:
+            a("Carbon `#157` crop snaps (rect follows the CARBON sheet):")
+            a("")
+            for (cfn, (cls, arith, actual)) in _csnaps:
+                a("- %s %s: arithmetic %s -> art-actual %s"
+                  % (cfn, cls, arith, actual))
+            a("")
+        if carbon_skipped:
+            a("Enrollment rows skipped (not this builder's):")
+            a("")
+            for (what, why) in carbon_skipped:
+                a("- %s - %s" % (what, why))
+            a("")
     with open(REPORT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print("Wrote " + REPORT)
@@ -2643,6 +3204,23 @@ def main():
     if unmapped_fonts:
         print("UNMAPPED fonts (left as-is): " + ", ".join(sorted(unmapped_fonts)))
     print("Package: %s (%d entries, %d bytes)" % (OUT_DAT, len(entry_lines), size))
+    if CARBON:
+        print("\n=== CARBON SUMMARY ===")
+        for (cpkg, n_cs, n_ca, n_ce, c_sz) in carbon_pack_info:
+            print("%-20s scripts=%d art=%d entries=%d -> %s"
+                  % (cpkg, n_cs, n_ca, n_ce,
+                     os.path.basename(tp_out_dat(cpkg))))
+        _nleft = sum(1 for x in carbon_art_report if x[2] is None)
+        if _nleft:
+            print("carbon art rows left 1x per plan (nothing staged): %d"
+                  % _nleft)
+        _csnaps = [(d["fn"], s) for d in carbon_dialog
+                   for s in d.get("rect_snap", ())]
+        for (cfn, (cls, arith, actual)) in _csnaps:
+            print("carbon #157 snap %s %s: %s -> %s"
+                  % (cfn, cls, arith, actual))
+        for (what, why) in carbon_skipped:
+            print("carbon skipped: %s - %s" % (what, why))
 
 
 if __name__ == "__main__":

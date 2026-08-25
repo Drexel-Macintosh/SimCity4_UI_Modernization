@@ -348,6 +348,56 @@ namespace
 		// mis-geometried - same reasoning as NamIcons.
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI",
 		  L"z_Full Screen - Web Button Improvement Mod", true, 0, nullptr, 0 },
+		// ---- Scoty Carbon Skin 1.5 (v4.3.0) ----------------------------------
+		// Seven carbon-sourced override packages, every one built FROM the
+		// skin's own dats, so every row pins EXACT filename + EXACT byte size
+		// (the SaveWarningUI reasoning: our copies hard-code Carbon's layout,
+		// so a skin update MUST disable us - stale carbon geometry/art would
+		// be visibly wrong, while falling back is merely un-carbon'd).
+		// Every row ALSO pins scoty_Carbon_Files.dat: it is the skin's core
+		// dat, so "present and unchanged" means the WHOLE skin is the version
+		// we built from, not just the one file a package was cut from.
+		// The Z-late base names (ZCarbon*) are LOAD-BEARING: they must sort
+		// after every existing zzz package so they win shared TGIs when armed
+		// (see _tests\REGRESSION.md 2026-08-25 "zzz-INTERNAL SORT TRAP").
+		//
+		// Scaled copies of Carbon's .UI scripts - hard-code its rects.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonUI",
+		  L"scoty_carbon_PNG.dat", false, 3460148,
+		  L"scoty_Carbon_Files.dat", 268639 },
+		// Upscaled copies of Carbon's panel/background art at its own TGIs.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonArt",
+		  L"scoty_carbon_PNG.dat", false, 3460148,
+		  L"scoty_Carbon_Files.dat", 268639 },
+		// Upscaled copies of Carbon's icon strips at its own TGIs.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonIcons",
+		  L"scoty_carbon_PNG.dat", false, 3460148,
+		  L"scoty_Carbon_Files.dat", 268639 },
+		// Carbon's variant of the save-warning confirm dialogs (option A dat).
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonSaveWarning",
+		  L"w_scoty_Carbon_CB_SaveWarning_optA.dat", false, 3853,
+		  L"scoty_Carbon_Files.dat", 268639 },
+		// Carbon's CAM-extended panels - its rects, not CAM's own.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonCamUI",
+		  L"y_scoty_CAM_Extended_Essentials.dat", false, 28646,
+		  L"scoty_Carbon_Files.dat", 268639 },
+		// Carbon's building-styles panel skin.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonStyles",
+		  L"z_scoty_Carbon_BuildingStyles.dat", false, 10270,
+		  L"scoty_Carbon_Files.dat", 268639 },
+		// Carbon's NAM-facing skin pieces.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonNam",
+		  L"y_scoty_Carbon_NAM.dat", false, 166501,
+		  L"scoty_Carbon_Files.dat", 268639 },
+		// Carbon's restyle of warrior's God-Terraforming mod: the GodMod dat
+		// redeclares EXACTLY WarriorUI's four TGIs (scripts 09923283/CB95403E
+		// + art EB7C4D3B/14215E27), so this package must out-sort WarriorUI
+		// (Z-late) and be built from the GodMod dat's own payloads. Armed on
+		// that dat alone: it constitutes the compact layouts by itself, so it
+		// is correct even if warrior's original is removed.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonGodMod",
+		  L"z_scoty_Carbon_GodMod.dat", false, 21005,
+		  L"scoty_Carbon_Files.dat", 268639 },
 	};
 	const int kThirdPartyDepCount =
 		static_cast<int>(sizeof(kThirdPartyDeps) / sizeof(kThirdPartyDeps[0]));
@@ -2811,6 +2861,37 @@ namespace ScaleTier
 			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI", depOk));
+			// ---- Scoty Carbon Skin packages (v4.3.0) -----------------------
+			// One call per kThirdPartyDeps Carbon row - a dep row without its
+			// SyncDat call is silently inert (#119, WarriorUI, recorded just
+			// above). All seven arm only with the skin present and unchanged;
+			// with it gone or updated they turn off and our stock-derived
+			// packages take over.
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonUI",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonUI", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonArt",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonArt", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonIcons",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonIcons", depOk));
+			SyncDat(pluginsRoot,
+				L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonSaveWarning",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonSaveWarning", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonCamUI",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonCamUI", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonStyles",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonStyles", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonNam",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonNam", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonGodMod",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonGodMod", depOk));
 		}
 		// SelectiveArt: ONE stable filename, content-swapped - see
 		// SyncDatStable's own comment for why (the sc4pac uninstall trap).

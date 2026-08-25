@@ -1,3 +1,24 @@
+2026-08-25  v4.3.0-dev  SCOTY CARBON SKIN SUPPORT (local, pending boot verification)
+
+  Full Carbon Skin 1.5 compatibility: eight dependency-gated ZCarbon*
+  override packages (1.5x/2x/3x each) built FROM the skin's own payloads
+  by the builders' new --carbon modes - ZCarbonUI 197, ZCarbonArt 269,
+  ZCarbonCamUI 10, ZCarbonIcons 18 (CSI balloons into BOTH twin groups;
+  carbon ships zero 1ABE787D twins so its own reskins never drew),
+  ZCarbonGodMod 4 (warrior-mod restyle), ZCarbonSaveWarning/Styles/Nam.
+  Z-late names are load-bearing (zzz-INTERNAL SORT TRAP law); every gate
+  pins exact filename + byte size, so a skin update disarms cleanly to
+  the stock-look layer. Carbon-absent is the DEFAULT state (user order:
+  players add/remove plugins at will; handle every combination).
+  Never redistributed: Build-Dist hard-asserts no carbon-derived file
+  enters the public bundle; skin users build locally from the shipped
+  generators. Also newly handled: warrior god-terraforming (WarriorUI
+  arms - exact pin match) + region-view-census-ui (zero overlap).
+  Gates at close: final winner census GREEN (494/494, zero collateral),
+  Test-DatIntegrity ALL PASS (50 dats, 56 hashes, 14 gates),
+  ThirdPartyGates ALL PASS. New law: DbpfPack stamps pack time into DBPF
+  header bytes 24-31 - dat equality proofs zero them first.
+
 2026-08-24  v4.2.0    THE SUBFOLDER MOVE (breaking layout change)
 
   ⚠ CORRECTED ON THE MAIDEN BOOT: the game's DLL LOADER IS TOP-LEVEL ONLY

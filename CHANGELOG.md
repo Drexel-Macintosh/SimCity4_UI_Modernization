@@ -1,5 +1,42 @@
 # Changelog
 
+## 4.3.0-dev (2026-08-25, local — pending boot verification) — Scoty Carbon Skin support
+
+- **Full Scoty Carbon Skin 1.5 compatibility** via eight new dependency-gated
+  override packages (`z_SC4UIScale_ZCarbon*`, 1.5×/2×/3× each), built FROM
+  the skin's own payloads by the existing builders' new `--carbon` modes:
+  ZCarbonUI (197 entries: carbon's 109 dialog scripts + 87 art + 1
+  carbon-styled clone), ZCarbonArt (269: 23 selective scripts + 246 art),
+  ZCarbonCamUI (10), ZCarbonSaveWarning (2), ZCarbonIcons (18: the CSI
+  balloons duplicated into BOTH twin groups — carbon ships no `1ABE787D`
+  twins, so its own balloon reskins never drew — plus 2 item strips),
+  ZCarbonStyles (2), ZCarbonNam (2), ZCarbonGodMod (4: carbon's restyle of
+  warrior's god-terraforming mod, exactly WarriorUI's four TGIs).
+- **The Z-late names are load-bearing** (`ZCarbon*` sorts after every zzz
+  sibling — the zzz-INTERNAL SORT TRAP law): armed, they win the shared
+  TGIs; gate-dark (skin absent/updated — every gate pins exact filename +
+  byte size), everything falls back to the stock-look layer untouched.
+  Most users don't have the skin; absent is the default state and costs
+  nothing.
+- **Never redistributed**: the ZCarbon dats deploy locally only. The
+  bundle builder carries a hard assert that no carbon-derived file can
+  enter the public dist (the deploy lines are deliberately invisible to
+  its parser, and the assert is the net under that). Skin users build
+  locally from the shipped generators (`tools\research\carbon\`).
+- New handled mods this session (user-installed): warrior's
+  god-terraforming-in-mayor-mode (existing WarriorUI package arms — files
+  match its pins exactly) and null-45's region-view-census-ui (carbon's
+  add-on for it is a private-group `.UI`, zero overlap — no package
+  needed).
+- Verification: per-TGI final winner census GREEN (494/494 colliding TGIs
+  owned by our packages, zero collateral drift, 12 intended takeovers
+  itemized); Test-DatIntegrity ALL PASS (50 dats, 56 deployed==built
+  hashes, 14 gates drift-checked); Test-ThirdPartyGates ALL PASS (14
+  gates, real fingerprints). New law recorded: DbpfPack stamps pack time
+  into DBPF header bytes 24–31 — dat equality proofs must zero them.
+- Upstream note for the skin's author: `tools\research\UPSTREAM-CARBON-REPORT.md`
+  (includes one real defect report — the CSI twin-group gap).
+
 ## 4.2.0 (2026-08-24) — BREAKING LAYOUT CHANGE: two folders + the root DLL pair
 
 - **The install shrinks from ~23 loose root files to two folders plus the

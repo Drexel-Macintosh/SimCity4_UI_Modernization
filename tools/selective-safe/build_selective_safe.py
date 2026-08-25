@@ -24,6 +24,7 @@ No game files are touched; everything happens under tools\.
 
 import argparse
 import csv
+import json
 import math
 import os
 import re
@@ -66,8 +67,15 @@ OUT_DIR = os.path.join(TOOLS, "selective-safe")
 _ap = argparse.ArgumentParser(description="Selective-safe UI art override builder (factor-parametric).")
 _ap.add_argument("--factor", type=float, default=2.0,
                  help="scale factor: 2 (default, bit-identical), 1.5, or 3")
+_ap.add_argument("--carbon", action="store_true",
+                 help="ALSO emit the Scoty Carbon Skin override packages "
+                      "(ZCarbonArt / ZCarbonStyles / ZCarbonNam) from the "
+                      "carbon builder-inputs, alongside - never instead of - "
+                      "the normal outputs. Without it the build is "
+                      "byte-identical to before the flag existed.")
 _args, _ = _ap.parse_known_args()
 FACTOR = _args.factor
+CARBON = _args.carbon
 
 
 def _factor_tag(f):
@@ -107,6 +115,47 @@ else:
 PNG_TYPE = 0x856DDBAC
 UI_TYPE = 0x00000000
 CLONE_XOR = 0x53430001  # "SC" 0x5343 + 0x0001 marker; documented in SELECTIVE-SAFE.md
+
+# ---------------------------------------------------------------------------
+# --carbon: Scoty Carbon Skin 1.5 override packages (2026-08-25).
+#
+# Carbon redeclares many stock .UI scripts and art PNGs that this builder's
+# SelectiveArt / ThirdPartyUI packages cover, and its copies load from a
+# Plugins subfolder that BEATS our root package (the load-order law - the
+# same mechanism as the CoriBoom Building Styles flow above the TP section).
+# The cure is the same shape: re-win those TGIs from zzz- packages whose
+# content is built from CARBON'S OWN payloads (winner-resolved, QFS-
+# decompressed into builder-inputs\ by the carbon research arc), scaled by
+# the same pipeline as everything else. THIS builder owns the enrollment
+# packages whose "ours" rows name its dats:
+#   ZCarbonArt    - carbon twins of SelectiveArt's art + scripts
+#   ZCarbonStyles - carbon twin of the ThirdPartyUI CoriBoom flow
+#   ZCarbonNam    - carbon twin of the NAM-held script + its art
+#   ZCarbonGodMod - carbon twin of the WarriorUI flow (warrior's god-
+#                   terraforming-in-mayor-mode replaces stock flyout scripts
+#                   I-09923283 / I-cb95403e; carbon's GodMod add-on
+#                   redeclares those SAME TGIs, so it gets the same
+#                   third-party treatment as ZCarbonStyles - 2026-08-25)
+# ZCarbonUI / ZCarbonCamUI / ZCarbonSaveWarning belong to other builders and
+# are only NOTED here. Everything carbon is ADDITIVE: without --carbon the
+# outputs are byte-identical, and with it the normal outputs still are.
+# ---------------------------------------------------------------------------
+CARBON_ROOT = os.path.join(TOOLS, "research", "carbon")
+CARBON_ENROLLMENT = os.path.join(CARBON_ROOT, "enrollment", "enrollment.json")
+CARBON_SRC_UI = os.path.join(CARBON_ROOT, "builder-inputs", "thirdparty-src")
+CARBON_SRC_ART = os.path.join(CARBON_ROOT, "builder-inputs", "thirdparty-art")
+CARBON_PKGS_HERE = ("ZCarbonArt", "ZCarbonStyles", "ZCarbonNam",
+                    "ZCarbonGodMod")
+# The packages built by the THIRD-PARTY (every-window-scaled) flow, in build
+# order: (package name, stage dir base, upscale work dir base). The selective
+# packages (ZCarbonArt / ZCarbonNam) are listed separately in the driver.
+CARBON_TP_PKGS = (
+    ("ZCarbonStyles", "stage-carbon-styles", "carbon-styles-up"),
+    ("ZCarbonGodMod", "stage-carbon-godmod", "carbon-godmod-up"),
+)
+# Premise-skips collected by the lenient (carbon) art-repair passes, for the
+# carbon summary: (pass, sheet-or-name, reason).
+_carbon_pass_skips = []
 
 # Window IDs the runtime scaling layer doubles (city-HUD panels + subtrees).
 SCALED_WINDOW_IDS = {
@@ -1021,18 +1070,24 @@ ADVISOR_FACE_SEATS = [
 ]
 
 
-def _seat_one_tag(text, wid):
+def _seat_one_tag(text, wid, lenient=False):
     """The ONLY tag carrying this id, or FATAL. Ids are NOT keys in general -
     0x0000AAAA appears 3x and 0x6A15C782 twice in these very files - so this
-    asserts uniqueness rather than trusting it."""
+    asserts uniqueness rather than trusting it. lenient=True (--carbon)
+    returns None instead of FATALing - the caller skips the pass loudly."""
     pat = re.compile(r"<LEGACY[^>]*\sid=0x%08x\b[^>]*>" % wid, re.I)
     hits = pat.findall(text)
     if len(hits) != 1:
+        if lenient:
+            return None, ("id 0x%08X occurs %d times (need exactly 1)"
+                          % (wid, len(hits)))
         sys.exit("FATAL seat: id 0x%08X occurs %d times (need exactly 1)"
                  % (wid, len(hits)))
     m = pat.search(text)
     ma = re.search(_SEAT_AREA, m.group(0))
     if not ma:
+        if lenient:
+            return None, "id 0x%08X has no area=" % wid
         sys.exit("FATAL seat: id 0x%08X has no area=" % wid)
     return m, tuple(int(x) for x in ma.groups())
 
@@ -1042,12 +1097,19 @@ def _seat_aperture_state0(stage_dir, gid, iid, nstates=4):
 
     Flood-fills the OUTSIDE transparency from the border, so what remains is
     the enclosed hole the portrait shows through. Same build-time pixel read
-    that neutralize_dock_recess() already does."""
+    that neutralize_dock_recess() already does.
+
+    stage_dir may be ONE dir or an ordered LIST of dirs (first hit wins).
+    The --carbon script pass measures the CARBON stage first and falls back
+    to the main stage for sheets carbon does not own - the sheet measured
+    must be the sheet that SHIPS for that ref."""
     names = [tgi_png_name(gid, iid), tgi_png_name(gid, iid ^ CLONE_XOR)]
-    hits = [n for n in names if os.path.isfile(os.path.join(stage_dir, n))]
+    dirs = [stage_dir] if isinstance(stage_dir, str) else list(stage_dir)
+    hits = [os.path.join(d, n) for d in dirs for n in names
+            if os.path.isfile(os.path.join(d, n))]
     if not hits:
         return None, None
-    w, h, px, _ = _png_read_rgba(os.path.join(stage_dir, hits[0]))
+    w, h, px, _ = _png_read_rgba(hits[0])
     cw = w // nstates
     tr = [[px[(y * w + x) * 4 + 3] < 32 for x in range(cw)] for y in range(h)]
     seen = [[False] * cw for _ in range(h)]
@@ -1072,22 +1134,46 @@ def _seat_aperture_state0(stage_dir, gid, iid, nstates=4):
             max(ys) - min(ys) + 1), (cw, h)
 
 
-def seat_faces_on_apertures(text, seats, stage_dir, fn):
+def seat_faces_on_apertures(text, seats, stage_dir, fn, lenient=False):
     """Seat a child on its frame's MEASURED ART APERTURE instead of on its own
     independently-rounded edge. Run AFTER double_subtree_areas.
 
     Every guard below FAILS THE BUILD rather than degrading quietly: if the art
     ever moves, this must stop, not silently seat a face onto a hole that is no
     longer there.
+
+    lenient=True (--carbon): the guards are STOCK-measured premises (the
+    ADVISOR_FACE_SEATS offsets, the aperture=face-size contract), and carbon
+    REDREW these frames - measured 2026-08-25: carbon's aperture sits at 1x
+    offset (2,2), not stock's (2,1), which the exact integer-tier G1 catches.
+    On any guard failure the WHOLE pass is abandoned loudly (returning the
+    text unmodified, moved=None) so the faces keep their
+    double_subtree_areas positions - a premise skip, never a FATAL and never
+    a half-seated row. Stock-side guards are unchanged.
     """
+    orig = text
+
+    def _skip(reason):
+        print("CARBON-SKIP #152 advisor seat in %s: %s" % (fn, reason))
+        _carbon_pass_skips.append(("#152 advisor seat", fn, reason))
+        return orig, None
+
     moved = []
     for (face_id, frame_id, gid, iid, off1x) in seats:
-        _, fr = _seat_one_tag(text, frame_id)
-        mfa, fa = _seat_one_tag(text, face_id)
+        mfr, fr = _seat_one_tag(text, frame_id, lenient)
+        if mfr is None:
+            return _skip(fr)
+        mfa, fa = _seat_one_tag(text, face_id, lenient)
+        if mfa is None:
+            return _skip(fa)
         frw, frh = fr[2] - fr[0], fr[3] - fr[1]
         faw, fah = fa[2] - fa[0], fa[3] - fa[1]
         ap, cell = _seat_aperture_state0(stage_dir, gid, iid)
         if ap is None:
+            if lenient:
+                return _skip("no interior aperture in staged sheet "
+                             "0x%08X/0x%08X (cell %s) - art moved or is not "
+                             "staged" % (gid, iid, cell))
             sys.exit("FATAL seat 0x%08X: no interior aperture in staged sheet "
                      "0x%08X/0x%08X (cell %s) - art moved or is not staged"
                      % (face_id, gid, iid, cell))
@@ -1106,6 +1192,11 @@ def seat_faces_on_apertures(text, seats, stage_dir, fn):
         #    Still FATAL beyond one pixel: that is the #151 class (a sampler
         #    that re-times the sheet), which must never pass silently.
         if abs(ap[0] - want_off[0]) > 1 or abs(ap[1] - want_off[1]) > 1:
+            if lenient:
+                return _skip("aperture origin %s != ScaleRound(%s,%g)=%s on "
+                             "0x%08X - the skin redrew the frame; faces stay "
+                             "on their subtree-scaled positions"
+                             % (ap[:2], off1x, FACTOR, want_off, face_id))
             sys.exit("FATAL seat 0x%08X: aperture origin %s != "
                      "ScaleRound(%s,%g)=%s"
                      % (face_id, ap[:2], off1x, FACTOR, want_off))
@@ -1113,16 +1204,25 @@ def seat_faces_on_apertures(text, seats, stage_dir, fn):
         #    height EQUALS the window height (141==141 at 1.5x; exact at 2x/3x).
         #    Without this the y arithmetic is comparing two different spaces.
         if ch != frh:
+            if lenient:
+                return _skip("art cell h %d != frame window h %d on 0x%08X"
+                             % (ch, frh, face_id))
             sys.exit("FATAL seat 0x%08X: art cell h %d != frame window h %d - "
                      "y is not 1:1, an aperture row is not a window row"
                      % (face_id, ch, frh))
         # G3 the x squeeze is at most 1px over the whole cell (83->82 at 1.5x),
         #    below one pixel of aperture offset under floor OR centre sampling.
         if not 0 <= cw - frw <= 1:
+            if lenient:
+                return _skip("art cell w %d vs frame window w %d on 0x%08X - "
+                             "x squeeze outside [0,1]" % (cw, frw, face_id))
             sys.exit("FATAL seat 0x%08X: art cell w %d vs frame window w %d - "
                      "x squeeze outside [0,1]" % (face_id, cw, frw))
         # G4 the face is sized to the hole.
         if (ap[2], ap[3]) != (faw, fah):
+            if lenient:
+                return _skip("aperture %dx%d != face %dx%d on 0x%08X"
+                             % (ap[2], ap[3], faw, fah, face_id))
             sys.exit("FATAL seat 0x%08X: aperture %dx%d != face %dx%d"
                      % (face_id, ap[2], ap[3], faw, fah))
         d = (fr[0] + want_off[0] - fa[0], fr[1] + want_off[1] - fa[1])
@@ -1130,6 +1230,8 @@ def seat_faces_on_apertures(text, seats, stage_dir, fn):
             continue                    # INTEGER TIER: NOTHING IS WRITTEN
         # G5 a seat, never a nudge (#148).
         if abs(d[0]) > 1 or abs(d[1]) > 1:
+            if lenient:
+                return _skip("delta %s exceeds 1px on 0x%08X" % (d, face_id))
             sys.exit("FATAL seat 0x%08X: delta %s exceeds 1px" % (face_id, d))
         new = (fa[0] + d[0], fa[1] + d[1], fa[2] + d[0], fa[3] + d[1])
         newtag = re.sub(_SEAT_AREA, "area=(%d,%d,%d,%d)" % new,
@@ -1837,12 +1939,19 @@ def _dock_sat(px, stride, x, y):
 TOOLBAR_RAIL_SHEET = (0x46A006B0, 0x14015546)
 
 
-def smooth_toolbar_rail():
+def smooth_toolbar_rail(stage_dir=None, src1x_dir=None, lenient=False):
     """Re-derive the staged toolbar-rail copy from the 1x extract with
     alpha-premultiplied BILINEAR at the identical output dims. Geometry is
     untouched (same WxH); only the edge fuses. The sheet is pure alpha
     (0 key px, measured) so nothing can smear into a colour key - and this
-    pass re-verifies that before writing."""
+    pass re-verifies that before writing.
+
+    --carbon (lenient=True): the pass runs over the CARBON stage with
+    carbon's own 1x payload as the source, and every premise failure SKIPS
+    the pass loudly instead of FATALing - carbon redrew the art, so the
+    stock defect (and the stock premises) may simply not exist there. The
+    stock-side premises (lenient=False) are unchanged and stay FATAL."""
+    stage_dir = stage_dir or STAGE
     if abs(FACTOR - round(FACTOR)) < 1e-9:
         print("Toolbar rail: SKIPPED at integer factor %g - NN edges are "
               "uniform, the stitching cannot occur" % FACTOR)
@@ -1853,28 +1962,43 @@ def smooth_toolbar_rail():
         sys.exit("FATAL: the #162 toolbar-rail pass needs Pillow at "
                  "fractional factors - without it the hairline ships back")
     gid, iid = TOOLBAR_RAIL_SHEET
+
+    def _skip_or_die(reason):
+        if lenient:
+            print("CARBON-SKIP #162 rail %08x/%08x: %s" % (gid, iid, reason))
+            _carbon_pass_skips.append(("#162 rail", "%08x/%08x" % (gid, iid),
+                                       reason))
+            return True
+        sys.exit("FATAL: " + reason)
+
     name = tgi_png_name(gid, iid)
-    dst = os.path.join(STAGE, name)
+    dst = os.path.join(stage_dir, name)
     if not os.path.isfile(dst):
-        sys.exit("FATAL: toolbar rail %08x/%08x is not staged - the #162 fix "
-                 "would ship silently unapplied" % (gid, iid))
-    src1x = os.path.join(TOOLS, "dbpf", "extracted", "SimCity_1",
+        if _skip_or_die("toolbar rail %08x/%08x is not staged - the #162 fix "
+                        "would ship silently unapplied" % (gid, iid)):
+            return
+    src1x = os.path.join(src1x_dir or os.path.join(TOOLS, "dbpf", "extracted",
+                                                   "SimCity_1"),
                          "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid))
     if not os.path.isfile(src1x):
-        sys.exit("FATAL: 1x extract missing for the toolbar rail: %s" % src1x)
+        if _skip_or_die("1x extract missing for the toolbar rail: %s" % src1x):
+            return
     one = Image.open(src1x).convert("RGBA")
     tw, th = Image.open(dst).size
     if (tw, th) != (scale_len(one.width), scale_len(one.height)):
-        sys.exit("FATAL: staged rail %dx%d != scale_len of 1x %dx%d - dims "
-                 "drifted, re-measure before smoothing"
-                 % (tw, th, one.width, one.height))
+        if _skip_or_die("staged rail %dx%d != scale_len of 1x %dx%d - dims "
+                        "drifted, re-measure before smoothing"
+                        % (tw, th, one.width, one.height)):
+            return
     sp = one.load()
     key = sum(1 for y in range(one.height) for x in range(one.width)
               if sp[x, y][3] > 0 and sp[x, y][0] > 250 and sp[x, y][1] < 5
               and sp[x, y][2] > 250)
     if key:
-        sys.exit("FATAL: toolbar rail now holds %d key-magenta px - bilinear "
-                 "would smear the key; pass withdrawn, re-measure" % key)
+        if _skip_or_die("toolbar rail now holds %d key-magenta px - bilinear "
+                        "would smear the key; pass withdrawn, re-measure"
+                        % key):
+            return
     # Premultiply -> bilinear -> unpremultiply, so fully-transparent black
     # cannot bleed dark halos into the fused edge.
     pre = Image.new("RGBA", one.size)
@@ -1931,10 +2055,15 @@ def _premul_bilinear(img, tw, th):
     return out
 
 
-def fuse_mode_button_edges():
+def fuse_mode_button_edges(stage_dir=None, src1x_dir=None, lenient=False):
     """Edge-band-only fuse for the four mode-button strips at fractional
     factors. A pixel joins the band when the staged NN copy is semi-alpha
-    there, or any 4-neighbour crosses an opaque/transparent boundary."""
+    there, or any 4-neighbour crosses an opaque/transparent boundary.
+
+    --carbon (lenient=True): carbon stage + carbon 1x source; per-sheet
+    premise failures SKIP that sheet loudly instead of FATALing (carbon
+    redrew the art). Stock-side premises unchanged."""
+    stage_dir = stage_dir or STAGE
     if abs(FACTOR - round(FACTOR)) < 1e-9:
         print("Mode-button edges: SKIPPED at integer factor %g" % FACTOR)
         return
@@ -1944,21 +2073,36 @@ def fuse_mode_button_edges():
         sys.exit("FATAL: the #162 mode-button pass needs Pillow at "
                  "fractional factors")
     for gid, iid in MODE_BUTTON_SHEETS:
+        def _skip_or_die(reason, gid=gid, iid=iid):
+            if lenient:
+                print("CARBON-SKIP #162 mode-button %08x/%08x: %s"
+                      % (gid, iid, reason))
+                _carbon_pass_skips.append(("#162 mode-button",
+                                           "%08x/%08x" % (gid, iid), reason))
+                return True
+            sys.exit("FATAL: " + reason)
+
         name = tgi_png_name(gid, iid)
-        dst = os.path.join(STAGE, name)
+        dst = os.path.join(stage_dir, name)
         if not os.path.isfile(dst):
-            sys.exit("FATAL: mode-button sheet %08x/%08x not staged - the "
-                     "#162 fix would ship partially applied" % (gid, iid))
-        src1x = os.path.join(TOOLS, "dbpf", "extracted", "SimCity_1",
+            if _skip_or_die("mode-button sheet %08x/%08x not staged - the "
+                            "#162 fix would ship partially applied"
+                            % (gid, iid)):
+                continue
+        src1x = os.path.join(src1x_dir or os.path.join(TOOLS, "dbpf",
+                                                       "extracted",
+                                                       "SimCity_1"),
                              "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid))
         if not os.path.isfile(src1x):
-            sys.exit("FATAL: 1x extract missing: %s" % src1x)
+            if _skip_or_die("1x extract missing: %s" % src1x):
+                continue
         one = Image.open(src1x).convert("RGBA")
         nn = Image.open(dst).convert("RGBA")
         tw, th = nn.size
         if (tw, th) != (scale_len(one.width), scale_len(one.height)):
-            sys.exit("FATAL: staged %08x %dx%d != scale_len of 1x %dx%d"
-                     % (iid, tw, th, one.width, one.height))
+            if _skip_or_die("staged %08x %dx%d != scale_len of 1x %dx%d"
+                            % (iid, tw, th, one.width, one.height)):
+                continue
         smooth = _premul_bilinear(one, tw, th)
         np_, sm = nn.load(), smooth.load()
         fused = 0
@@ -1978,18 +2122,31 @@ def fuse_mode_button_edges():
                     np_[x, y] = sm[x, y]
                     fused += 1
         if fused == 0:
-            sys.exit("FATAL: mode-button %08x edge band came up EMPTY - the "
-                     "instrument found nothing to fuse, which contradicts "
-                     "the measured stitching; re-measure" % iid)
+            # Nothing was modified above (the band assignment is the only
+            # write), so a lenient skip here leaves the sheet untouched.
+            if _skip_or_die("mode-button %08x edge band came up EMPTY - the "
+                            "instrument found nothing to fuse, which "
+                            "contradicts the measured stitching; re-measure"
+                            % iid):
+                continue
         nn.save(dst)
         print("Mode-button edges: #162 fix - %08x/%08x fused %d edge px "
               "(icons untouched, NN-crisp interior)" % (gid, iid, fused))
 
 
-def neutralize_dock_recess():
+def neutralize_dock_recess(stage_dir=None, lenient=False):
     """Repaint the baked fake map in the STAGED dock sheet with the recess
     plate. Hard no-op (nothing read, nothing written) when the real map covers
-    the recess exactly - see dock_recess_exactly_fillable()."""
+    the recess exactly - see dock_recess_exactly_fillable().
+
+    --carbon (lenient=True): runs over the CARBON stage; the premise checks
+    (rect fits, rect actually holds the baked fake map) already read the
+    STAGED sheet - which in the carbon flow is derived from CARBON's 1x - so
+    they measure carbon's art by construction. Premise failures SKIP loudly
+    instead of FATALing; the post-write positive control stays FATAL in both
+    modes (a fill that failed to clear the block is a broken write, not a
+    premise)."""
+    stage_dir = stage_dir or STAGE
     recess = scale_len(DOCK_FAKEMAP_1X[2])
     if dock_recess_exactly_fillable():
         print("Dock recess: SKIPPED at factor %g - recess edge %d is a power "
@@ -2000,24 +2157,35 @@ def neutralize_dock_recess():
           "%d is not a power of two, so the real map cannot cover it and the "
           "remainder would show baked terrain" % (FACTOR, recess))
     gid, iid = DOCK_SHEET
+
+    def _skip_or_die(reason):
+        if lenient:
+            print("CARBON-SKIP dock recess %08x/%08x: %s" % (gid, iid, reason))
+            _carbon_pass_skips.append(("dock recess",
+                                       "%08x/%08x" % (gid, iid), reason))
+            return True
+        sys.exit("FATAL: " + reason)
+
     names = [tgi_png_name(gid, iid), tgi_png_name(gid, iid ^ CLONE_XOR)]
-    hits = [n for n in names if os.path.isfile(os.path.join(STAGE, n))]
+    hits = [n for n in names if os.path.isfile(os.path.join(stage_dir, n))]
     if not hits:
-        sys.exit("FATAL: dock sheet %08x/%08x is not staged, so the recess fix "
-                 "would ship silently unapplied. Looked for %s in %s"
-                 % (gid, iid, " / ".join(names), STAGE))
+        if _skip_or_die("dock sheet %08x/%08x is not staged, so the recess fix "
+                        "would ship silently unapplied. Looked for %s in %s"
+                        % (gid, iid, " / ".join(names), stage_dir)):
+            return
     l0, t0, w0, h0 = DOCK_FAKEMAP_1X
     left, top = scale_len(l0), scale_len(t0)
     bw, bh = scale_len(w0), scale_len(h0)
     flank = max(1, scale_len(3))          # 3 source px each side, in output px
     for name in hits:
-        path = os.path.join(STAGE, name)
+        path = os.path.join(stage_dir, name)
         w, h, px, chunks = _png_read_rgba(path)
         stride = w * 4
         if left - flank < 0 or left + bw + flank > w or top < 0 or top + bh > h:
-            sys.exit("FATAL: dock recess rect (%d,%d) %dx%d +/-%d flank does "
-                     "not fit the staged sheet %dx%d (%s)"
-                     % (left, top, bw, bh, flank, w, h, name))
+            if _skip_or_die("dock recess rect (%d,%d) %dx%d +/-%d flank does "
+                            "not fit the staged sheet %dx%d (%s)"
+                            % (left, top, bw, bh, flank, w, h, name)):
+                continue
         # VERIFY BEFORE WRITE: the rect must actually BE the fake map. If the
         # art is ever re-extracted and the block moves, abort rather than paint
         # grey over the wrong pixels.
@@ -2025,10 +2193,36 @@ def neutralize_dock_recess():
                  for x in range(left, left + bw, 4)]
         n_sat = sum(1 for (x, y) in probe if _dock_sat(px, stride, x, y) > 60)
         if n_sat < len(probe) * 0.6:
-            sys.exit("FATAL: dock recess rect (%d,%d) %dx%d holds only %d/%d "
-                     "saturated probe px - that is not the baked fake map. "
-                     "Re-measure DOCK_FAKEMAP_1X against the 1x extract."
-                     % (left, top, bw, bh, n_sat, len(probe)))
+            if _skip_or_die("dock recess rect (%d,%d) %dx%d holds only %d/%d "
+                            "saturated probe px - that is not the baked fake "
+                            "map. Re-measure DOCK_FAKEMAP_1X against the 1x "
+                            "extract." % (left, top, bw, bh, n_sat,
+                                          len(probe))):
+                continue
+        # PREMISE 2 (added 2026-08-25 for --carbon; measured, not guessed):
+        # the fill reconstructs the PLATE from the flanking pixels, and the
+        # post-fill control then demands ZERO saturated px inside the rect -
+        # which is only a coherent pair of steps if the plate itself is
+        # UNSATURATED. Stock measures 0/384 saturated flank px; the Carbon
+        # skin measures 183/384 (a green-tinted plate), where a plate-median
+        # fill writes SATURATED colour into the rect and the control can
+        # never pass (it failed with 8736 residual px before this gate
+        # existed). GATE ON THE CONDITION YOU DEPEND ON: stock passes at 0%,
+        # so >5% fails - stock-side that means the plate art changed
+        # (re-measure), carbon-side it means the skin's plate is coloured
+        # art and its own recess look is deliberately kept.
+        flank_px = [(x, y) for y in range(top, top + bh)
+                    for dx in range(1, flank + 1)
+                    for x in (left - dx, left + bw - 1 + dx)]
+        n_flank_sat = sum(1 for (x, y) in flank_px
+                          if _dock_sat(px, stride, x, y) > 60)
+        if n_flank_sat > len(flank_px) * 0.05:
+            if _skip_or_die("recess PLATE flank holds %d/%d saturated px - "
+                            "the plate is coloured art, so a plate-median "
+                            "fill cannot neutralize the block (stock "
+                            "control: 0 of 384). The skin's own recess look "
+                            "is kept." % (n_flank_sat, len(flank_px))):
+                continue
         fills = []
         for y in range(top, top + bh):
             s = []
@@ -2119,59 +2313,86 @@ QUERY_PAIR_SHEETS = (
 )
 
 
-def clamp_query_pair_cells():
+def clamp_query_pair_cells(stage_dir=None, src1x_dir=None, lenient=False):
     """#172: trim each state cell of the two staged query-pair sheets to the
     scaled window R(36f) x R(21f). Top-left kept, right/bottom overhang
     dropped, cells repacked at the new pitch. Idempotent: a sheet already at
     the target passes through untouched (unlike the dock fill, which relies
-    on the stage re-copy and asserts on a second run)."""
+    on the stage re-copy and asserts on a second run).
+
+    --carbon (lenient=True): carbon stage + carbon 1x payload as the premise
+    source; premise failures SKIP that sheet loudly instead of FATALing
+    (carbon redrew the art). Post-write positive controls stay FATAL in both
+    modes. Stock-side premises unchanged."""
+    stage_dir = stage_dir or STAGE
     n = QUERY_PAIR_STATES
     tw, th = scale_len(QUERY_PAIR_WIN_1X[0]), scale_len(QUERY_PAIR_WIN_1X[1])
     for gid, iid in QUERY_PAIR_SHEETS:
+        def _skip_or_die(reason, gid=gid, iid=iid):
+            if lenient:
+                print("CARBON-SKIP #172 query pair %08x/%08x: %s"
+                      % (gid, iid, reason))
+                _carbon_pass_skips.append(("#172 query pair",
+                                           "%08x/%08x" % (gid, iid), reason))
+                return True
+            sys.exit("FATAL #172: " + reason)
+
         names = [tgi_png_name(gid, iid), tgi_png_name(gid, iid ^ CLONE_XOR)]
-        hits = [nm for nm in names if os.path.isfile(os.path.join(STAGE, nm))]
+        hits = [nm for nm in names
+                if os.path.isfile(os.path.join(stage_dir, nm))]
         if not hits:
-            sys.exit("FATAL #172: query-pair sheet %08x/%08x is not staged - "
-                     "the clamp would ship silently unapplied. Looked for %s "
-                     "in %s" % (gid, iid, " / ".join(names), STAGE))
+            if _skip_or_die("query-pair sheet %08x/%08x is not staged - "
+                            "the clamp would ship silently unapplied. Looked "
+                            "for %s in %s"
+                            % (gid, iid, " / ".join(names), stage_dir)):
+                continue
         # PREMISE CHECK against the pristine 1x extract: the overhang being
         # trimmed must exist in STOCK. If the art is ever re-extracted
         # differently, abort rather than trim the wrong pixels.
-        src1x = os.path.join(TOOLS, "dbpf", "extracted", "SimCity_1",
+        src1x = os.path.join(src1x_dir or os.path.join(TOOLS, "dbpf",
+                                                       "extracted",
+                                                       "SimCity_1"),
                              "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid))
         wh1 = png_wh(src1x)
         if not wh1:
-            sys.exit("FATAL #172: 1x extract missing/unreadable for %08x/%08x "
-                     "(%s) - cannot verify the stock-overhang premise"
-                     % (gid, iid, src1x))
+            if _skip_or_die("1x extract missing/unreadable for %08x/%08x "
+                            "(%s) - cannot verify the stock-overhang premise"
+                            % (gid, iid, src1x)):
+                continue
         w1, h1 = wh1
         if w1 % n:
-            sys.exit("FATAL #172: 1x sheet %s is %dx%d - width not divisible "
-                     "by %d states" % (os.path.basename(src1x), w1, h1, n))
+            if _skip_or_die("1x sheet %s is %dx%d - width not divisible "
+                            "by %d states"
+                            % (os.path.basename(src1x), w1, h1, n)):
+                continue
         ov_w = w1 // n - QUERY_PAIR_WIN_1X[0]
         ov_h = h1 - QUERY_PAIR_WIN_1X[1]
         if ov_w < 0 or ov_h < 0:
-            sys.exit("FATAL #172: 1x cell %dx%d is SMALLER than the %dx%d "
-                     "window - the stock premise inverted. Extending art is "
-                     "the reverted #148/#156; never do it here."
-                     % (w1 // n, h1, QUERY_PAIR_WIN_1X[0], QUERY_PAIR_WIN_1X[1]))
+            if _skip_or_die("1x cell %dx%d is SMALLER than the %dx%d "
+                            "window - the stock premise inverted. Extending "
+                            "art is the reverted #148/#156; never do it here."
+                            % (w1 // n, h1, QUERY_PAIR_WIN_1X[0],
+                               QUERY_PAIR_WIN_1X[1])):
+                continue
         for nm in hits:
-            path = os.path.join(STAGE, nm)
+            path = os.path.join(stage_dir, nm)
             w, h, px, chunks = _png_read_rgba(path)
             if w % n:
-                sys.exit("FATAL #172: staged %s width %d not divisible by %d "
-                         "states" % (nm, w, n))
+                if _skip_or_die("staged %s width %d not divisible by %d "
+                                "states" % (nm, w, n)):
+                    continue
             cw = w // n
             if cw == tw and h == th:
                 print("#172 query-pair clamp: %s already %dx%d (cell %dx%d) - "
                       "no-op" % (nm, w, h, cw, h))
                 continue
             if cw < tw or h < th:
-                sys.exit("FATAL #172: staged %s cell %dx%d is SMALLER than "
-                         "the scaled window %dx%d - this clamp only ever "
-                         "TRIMS; an extend branch is the dead end paid for "
-                         "twice (see clamp_rect_to_art)."
-                         % (nm, cw, h, tw, th))
+                if _skip_or_die("staged %s cell %dx%d is SMALLER than "
+                                "the scaled window %dx%d - this clamp only "
+                                "ever TRIMS; an extend branch is the dead end "
+                                "paid for twice (see clamp_rect_to_art)."
+                                % (nm, cw, h, tw, th)):
+                    continue
             # Trim bound. F14 (review 2026-08-16): the "+2px snap slack"
             # exists ONLY for fractional factors (the 1.5x CellUnit snap adds
             # at most that here). At an INTEGER factor scale_len is exact
@@ -2180,19 +2401,23 @@ def clamp_query_pair_cells():
             # 3x would just mask real art drift.
             if abs(FACTOR - round(FACTOR)) < 1e-9:
                 if (cw - tw, h - th) != (scale_len(ov_w), scale_len(ov_h)):
-                    sys.exit("FATAL #172: staged %s cell %dx%d vs window "
-                             "%dx%d - trim (%d,%d) != stock overhang (%d,%d) "
-                             "scaled, at an INTEGER factor where the trim is "
-                             "provably exact (no snap, no slack); the art "
-                             "moved, re-measure before trimming."
-                             % (nm, cw, h, tw, th,
-                                cw - tw, h - th, ov_w, ov_h))
+                    if _skip_or_die("staged %s cell %dx%d vs window "
+                                    "%dx%d - trim (%d,%d) != stock overhang "
+                                    "(%d,%d) scaled, at an INTEGER factor "
+                                    "where the trim is provably exact (no "
+                                    "snap, no slack); the art moved, "
+                                    "re-measure before trimming."
+                                    % (nm, cw, h, tw, th,
+                                       cw - tw, h - th, ov_w, ov_h)):
+                        continue
             elif (cw - tw) > scale_len(ov_w) + 2 or (h - th) > scale_len(ov_h) + 2:
-                sys.exit("FATAL #172: staged %s cell %dx%d vs window %dx%d - "
-                         "trim (%d,%d) exceeds stock overhang (%d,%d) scaled "
-                         "+ 2px snap slack; the art moved, re-measure before "
-                         "trimming." % (nm, cw, h, tw, th,
-                                        cw - tw, h - th, ov_w, ov_h))
+                if _skip_or_die("staged %s cell %dx%d vs window %dx%d - "
+                                "trim (%d,%d) exceeds stock overhang (%d,%d) "
+                                "scaled + 2px snap slack; the art moved, "
+                                "re-measure before trimming."
+                                % (nm, cw, h, tw, th,
+                                   cw - tw, h - th, ov_w, ov_h)):
+                    continue
             key_trim = 0   # colour-key px in the DISCARDED region (informational)
             stride = w * 4
             for s in range(n):
@@ -2244,7 +2469,7 @@ def clamp_query_pair_cells():
 # MISSION_BUBBLE_FIXED96 constants; the staging half is in main()'s
 # code-bound loop, the honesty half is the routing gate after it, and the
 # key-integrity half is the gate split at the pack step.
-def build_mission_bubble_fixed96():
+def build_mission_bubble_fixed96(src_dir=None, dir_tag=""):
     """Regenerate the mission-bubble family from the PRISTINE 1x sources at
     the FIXED x3 design multiple, via the canonical resampler with the
     Rebuild-Corpus.ps1 flag set. Returns {(gid, iid): generated PNG path}
@@ -2255,19 +2480,30 @@ def build_mission_bubble_fixed96():
     FATAL, never quiet: a missing 1x source, a failed resampler run, a
     missing output, or an output whose dims are not EXACTLY
     MISSION_BUBBLE_FIXED96_MULT x the MEASURED 1x dims each abort the build.
+
+    src_dir/dir_tag (--carbon): regenerate from a THIRD-PARTY 1x payload dir
+    instead of the stock extract, into side-by-side work dirs - same
+    canonical invocation, same asserts. Defaults reproduce the stock flow
+    byte for byte.
     """
     sfx = ("-%s" % TAG) if TAG else ""
-    src_tmp = os.path.join(OUT_DIR, "bubble96-src" + sfx)
-    out_dir = os.path.join(OUT_DIR, "bubble96" + sfx)
+    src_tmp = os.path.join(OUT_DIR, "bubble96-src" + dir_tag + sfx)
+    out_dir = os.path.join(OUT_DIR, "bubble96" + dir_tag + sfx)
     fresh_dir(src_tmp)
     fresh_dir(out_dir)
     src_wh = {}
     for (gid, iid) in sorted(MISSION_BUBBLE_FIXED96):
-        p = _src1x_path(gid, iid)
+        if src_dir is None:
+            p = _src1x_path(gid, iid)
+        else:
+            p = os.path.join(src_dir, "T-%08x_G-%08x_I-%08x.png"
+                             % (PNG_TYPE, gid, iid))
+            p = p if os.path.isfile(p) else None
         if p is None:
             sys.exit("FATAL #186: pristine 1x source missing for %08x/%08x "
                      "in %s - cannot regenerate (law 64: from pristine, "
-                     "never a resize of a resize)" % (gid, iid, SRC1X_DIR))
+                     "never a resize of a resize)"
+                     % (gid, iid, src_dir or SRC1X_DIR))
         wh = png_wh(p)
         if wh is None:
             sys.exit("FATAL #186: 1x source unreadable for %08x/%08x (%s)"
@@ -2339,6 +2575,671 @@ def build_mission_bubble_fixed96():
         print("   %08x/%08x  1x %dx%d -> %dx%d"
               % (gid, iid, w1, h1, wh[0], wh[1]))
     return out
+
+
+# ---------------------------------------------------------------------------
+# --carbon IMPLEMENTATION. Everything below is reached ONLY under --carbon;
+# without the flag none of it runs and the build is byte-identical.
+#
+# The carbon script transform MIRRORS main()'s scaled-.UI edit loop (and the
+# third-party loop for ZCarbonStyles) rather than refactoring it - a
+# deliberate duplication: the stock loop's bytes are hash-frozen by the
+# acceptance contract, and a shared function would put every future carbon
+# tweak one typo away from moving them. If the main loop changes, change
+# carbon_transform_script in the SAME build (law 75 - name every other path
+# that needs the cure).
+# ---------------------------------------------------------------------------
+
+# Mirror of redraw_ladder.py's LADDERS, INFORMATIONAL ONLY (the gate parses
+# the authoritative list itself; this copy only drives a log note - if it
+# rots, a note goes missing, nothing ships wrong).
+_CARBON_LADDER_TGIS = {(0x46A006B0, 0x14015549), (0x1ABE787D, 0x14015549)}
+
+
+def _carbon_upscale(tgis, work_name, corpus_flags):
+    """Copy the carbon 1x payloads for `tgis` into a work dir and run the
+    canonical upscaler at FACTOR.
+
+    corpus_flags=True  -> the FULL Rebuild-Corpus.ps1 flag set (all six
+                          derived lists + --smooth-unkeyed --supersample):
+                          the carbon twin of the preview corpus product.
+    corpus_flags=False -> the six derived lists only: the carbon twin of the
+                          third-party art pass (which deliberately omits the
+                          smoothing flags).
+    NEVER writes into tools\\upscale\\preview-* (that would confound the stock
+    ground truth) - everything lands under OUT_DIR. Returns the output dir.
+    """
+    sfx = ("-%s" % TAG) if TAG else ""
+    src_tmp = os.path.join(OUT_DIR, work_name + "-src" + sfx)
+    out_dir = os.path.join(OUT_DIR, work_name + sfx)
+    fresh_dir(src_tmp)
+    fresh_dir(out_dir)
+    for (g, i) in sorted(set(tgis)):
+        p = os.path.join(CARBON_SRC_ART,
+                         "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, g, i))
+        if not os.path.isfile(p):
+            sys.exit("FATAL carbon: 1x payload missing for %08x/%08x (%s) - "
+                     "enrollment and builder-inputs disagree; re-run the "
+                     "carbon staging arc before building" % (g, i, p))
+        shutil.copy2(p, os.path.join(src_tmp, os.path.basename(p)))
+    up = os.path.join(TOOLS, "upscale")
+    exe = os.path.join(up, "Upscale2x.exe")
+    if not os.path.isfile(exe):
+        sys.exit("FATAL carbon: %s missing - build it first "
+                 "(upscale\\Build.ps1)" % exe)
+    argvv = [exe, src_tmp, out_dir, "--factor", str(FACTOR),
+             "--normalize-names"]
+    for flag, name in (("--cell-strips", "cell-strips.txt"),
+                       ("--nine-slice", "nine-slice.txt"),
+                       ("--no-snap", "no-snap.txt"),
+                       ("--no-smooth", "no-smooth.txt"),
+                       ("--height-exact-strips", "height-exact-strips.txt"),
+                       ("--height-exact-strips", "height-exact-slabs.txt")):
+        lp = os.path.join(up, name)
+        if not os.path.isfile(lp):
+            sys.exit("FATAL carbon: derived list %s missing - regenerate it "
+                     "(find_cell_strips.py and friends); building without it "
+                     "un-ships a confirmed fix." % lp)
+        argvv += [flag, lp]
+    if corpus_flags:
+        argvv += ["--smooth-unkeyed", "--supersample"]
+    r = subprocess.run(argvv, capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit("FATAL carbon: art upscale failed for %s (exit %d):\n%s%s"
+                 % (work_name, r.returncode, r.stderr, r.stdout))
+    return out_dir
+
+
+def carbon_transform_script(iid, cstage, art_dirs, seat_dirs, refs, avail,
+                            clones, cb_inplace, store_tgis, warned):
+    """The IDENTICAL selective transform main() applies to the stock copy of
+    this iid, with CARBON's .ui text as input. Same clone TGIs, same
+    imagerect scaling with the #95 clamp measured against the art that ships
+    (art_dirs order: carbon stage first, then the main stage, then the
+    pristine upscale), same font GUID conversion, same per-script special
+    edits keyed on iid. NO other area scaling - selective semantics, areas
+    are runtime-scaled.
+
+    Returns (fn, n_ret, n_dbl, n_left1x, unchanged)."""
+    fn = "T-00000000_G-96a006b0_I-%s.ui" % iid
+    path = os.path.join(CARBON_SRC_UI, fn)
+    if not os.path.isfile(path):
+        sys.exit("FATAL carbon: script payload missing: %s" % path)
+    with open(path, "r", encoding="latin-1", newline="") as f:
+        text = f.read()
+    roots = parse_ui(text)
+    if not mark_scaled(roots):
+        print("   [carbon] WARNING %s: carbon's copy declares NO scaled-window "
+              "root (the stock copy does) - refs stay unretargeted; fonts and "
+              "per-script edits still apply" % fn)
+    edits = []
+    n_ret = n_dbl = n_left1x = 0
+    for nd in walk(roots):
+        if not nd.scaled or not nd.images:
+            continue
+        control_art_doubled = False
+        last_art = None      # #95: the ref whose art this rect crops
+        for (gid, iid2, vs, ve) in nd.images:
+            key = (gid, iid2)
+            doubled = avail.get(key, False)
+            if not doubled and key in cb_inplace:
+                # CARBON DIVERGENCE, deliberate and narrow: the stock corpus
+                # cannot reference a code-bound TGI from a scaled node (the
+                # cb classifier only stages refs-free TGIs), so the stock
+                # loop never sees this case. Carbon's redrawn scripts CAN -
+                # and that art ships 2x in place (normal package + carbon
+                # twin), so the rect must follow it. No retarget: in-place.
+                doubled = True
+            if not doubled:
+                n_left1x += 1
+                if key not in store_tgis:
+                    carbon_1x = os.path.isfile(os.path.join(
+                        CARBON_SRC_ART,
+                        "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid2)))
+                    kind = ("CARBON-1X - carbon ships its own 1x art for "
+                            "this ref (left as-is)" if carbon_1x else
+                            "DANGLING .UI ref - runtime-supplied pixels "
+                            "(task #47 family)")
+                else:
+                    kind = ("MISSING-2X - 1x art WILL draw wrong in a "
+                            "scaled frame")
+                warned.add((gid, iid2, kind))
+                continue
+            control_art_doubled = True
+            last_art = key
+            if key in clones:
+                cg, ci = clones[key]
+                edits.append((vs, ve, "{%08x,%08x}" % (cg, ci)))
+                n_ret += 1
+        if control_art_doubled and nd.imagerect is not None:
+            (l, t, r, b), vs, ve = nd.imagerect
+            ap = None
+            if last_art is not None:
+                ag, ai = last_art
+                if (ag, ai) in clones:
+                    ag, ai = clones[(ag, ai)]
+                cands = [os.path.join(d, tgi_png_name(ag, ai))
+                         for d in art_dirs]
+                cands.append(os.path.join(UPSCALE_DIR, tgi_png_name(ag, ai)))
+                for cand in cands:
+                    if os.path.isfile(cand):
+                        ap = cand
+                        break
+            cl, ct, cr, cb2 = clamp_rect_to_art(
+                l, t, r, b, ap,
+                last_art[0] if last_art else 0,
+                last_art[1] if last_art else 0)
+            edits.append((vs, ve, "(%d,%d,%d,%d)" % (cl, ct, cr, cb2)))
+            n_dbl += 1
+    new_text = text
+    for (s, e, rep) in sorted(edits, key=lambda x: -x[0]):
+        new_text = new_text[:s] + rep + new_text[e:]
+
+    def font_sub(m2):
+        name = m2.group(1)
+        guid = FONT_GUIDS.get(name)
+        if guid:
+            font_sub.converted[name] = font_sub.converted.get(name, 0) + 1
+            return "font=" + guid
+        font_sub.unknown.add(name)
+        return m2.group(0)
+    font_sub.converted = {}
+    font_sub.unknown = set()
+    # --- per-script special edits, keyed on iid: IDENTICAL to main() ---
+    if fn.endswith("_I-2a2aed99.ui"):
+        def widen_marquee(mm):
+            l, t, r, b = (int(x) for x in mm.group(2, 3, 4, 5))
+            return "%sarea=(%d,%d,%d,%d)" % (
+                mm.group(1), l, t, l + scale_len(r - l), b)
+        new_text, n_marq = re.subn(
+            r'(id=0xaa12f33c\s+)area=\((\d+),(\d+),(\d+),(\d+)\)',
+            widen_marquee, new_text)
+        if n_marq != 1:
+            sys.exit("FATAL carbon: marquee area edit matched %d times in %s"
+                     % (n_marq, fn))
+        print("   [carbon] marquee 0xaa12f33c design width x%g in %s"
+              % (FACTOR, fn))
+    if fn.endswith("_G-08000600_I-c973b411.ui"):
+        new_text, n_qp = re.subn(
+            r'(id=0x99887766\s+)area=\(95,85,132,106\)',
+            r'\g<1>area=(95,85,131,106)', new_text)
+        if n_qp != 1:
+            sys.exit("FATAL carbon #172: query twin harmonization matched %d "
+                     "times in %s (expected exactly 1)" % (n_qp, fn))
+        print("   [carbon] #172 query pair: twin Query width 37 -> 36 in %s"
+              % fn)
+    if fn.endswith("_I-2bc90671.ui"):
+        new_text, n_seat = re.subn(
+            r'(id=0x(?:09e418fe|c9e41918)\s[^<>]*?)align=lefttop',
+            r'\g<1>align=leftcenter', new_text)
+        if n_seat != 2:
+            sys.exit("FATAL carbon #184: HUD plate align rewrite matched %d "
+                     "node(s) in %s (expected exactly 2). Carbon's copy "
+                     "diverged from the stock plate - re-verify before "
+                     "shipping." % (n_seat, fn))
+        print("   [carbon] #184 HUD plate: funds + population align "
+              "lefttop -> leftcenter (2 nodes) in %s" % fn)
+    if fn.endswith("_I-aa920991.ui"):
+        new_text, n_bub = re.subn(
+            r'(id=0xc9e41918\s[^<>]*?)align=lefttop',
+            r'\g<1>align=leftbottom', new_text)
+        if n_bub != 1:
+            sys.exit("FATAL carbon #183: region bubble align rewrite matched "
+                     "%d node(s) in %s (expected exactly 1)" % (n_bub, fn))
+        print("   [carbon] #183 region bubble: population align "
+              "lefttop -> leftbottom (1 node) in %s" % fn)
+    if fn.endswith("_I-cbc905cd.ui") or fn.endswith("_I-4a160034.ui"):
+        new_text, n_adv, lf_adv = double_subtree_areas(new_text, "6a15c767",
+                                               scale_len)
+        if n_adv < 15:
+            sys.exit("FATAL carbon: advisor strip subtree matched only %d "
+                     "area= in %s (expected >=15)" % (n_adv, fn))
+        print("   [carbon] advisor strip 0x6a15c767 subtree areas x%g (%d, "
+              "%d art leaf/leaves SIZE-derived - #170) in %s"
+              % (FACTOR, n_adv, lf_adv, fn))
+        # #152 seats measure the sheet that SHIPS for each frame: the CARBON
+        # stage first, the main stage for frames carbon does not own.
+        # lenient: the seat offsets are STOCK-measured premises and carbon
+        # redrew the frames (aperture at (2,2), stock (2,1)) - a guard miss
+        # abandons the pass loudly (seated=None) instead of FATALing, and
+        # the faces keep their subtree-scaled positions.
+        new_text, seated = seat_faces_on_apertures(
+            new_text, ADVISOR_FACE_SEATS, seat_dirs, fn, lenient=True)
+        if seated is None:
+            seated = []
+        else:
+            print("   [carbon] advisor faces seated on art aperture x%g (%d "
+                  "moved) in %s" % (FACTOR, len(seated), fn))
+            if abs(FACTOR - round(FACTOR)) < 1e-9 and seated:
+                sys.exit("FATAL carbon: seat pass moved %d windows at integer "
+                         "factor %g - it MUST be a no-op there"
+                         % (len(seated), FACTOR))
+            if abs(FACTOR - 1.5) < 1e-9 and len(seated) != 7:
+                sys.exit("FATAL carbon: seat pass moved %d/7 at 1.5x in %s"
+                         % (len(seated), fn))
+    if fn.endswith("_I-aa3acdfe.ui") or fn.endswith("_I-cbc3c2b9.ui"):
+        for broot in ("aa3ac002", "ca4c332d", "aa3ac001", "aa3ac000"):
+            new_text, n_bud, lf_bud = double_subtree_areas(new_text, broot,
+                                                   scale_len)
+            if n_bud < 5:
+                sys.exit("FATAL carbon: budget subtree 0x%s matched only %d "
+                         "area= in %s (expected >=5)" % (broot, n_bud, fn))
+            print("   [carbon] budget 0x%s subtree areas x%g (%d, %d art "
+                  "leaf SIZE-derived) in %s"
+                  % (broot, FACTOR, n_bud, lf_bud, fn))
+    if fn.endswith("_I-6bc9065a.ui") or fn.endswith("_I-ea2871aa.ui"):
+        for groot, floor_n in (("8a8b5b71", 8), ("8a8b5b72", 4),
+                               ("0a4a8176", 15)):
+            new_text, n_g, lf_g = double_subtree_areas(new_text, groot,
+                                                scale_len)
+            if n_g < floor_n:
+                sys.exit("FATAL carbon: Graphs subtree 0x%s matched only %d "
+                         "area= in %s (expected >=%d)"
+                         % (groot, n_g, fn, floor_n))
+            print("   [carbon] Graphs 0x%s subtree areas x%g (%d) in %s"
+                  % (groot, FACTOR, n_g, fn))
+    if "id=0x4bcb938a" in new_text:
+        new_text, n_dash, lf_dash = double_subtree_areas(new_text, "4bcb938a",
+                                                scale_len)
+        if n_dash < 3:
+            sys.exit("FATAL carbon: dashboard subtree matched only %d area= "
+                     "in %s (expected >=3)" % (n_dash, fn))
+        print("   [carbon] dashboard 0x4bcb938a subtree areas x%g (%d, %d "
+              "art leaf SIZE-derived) in %s" % (FACTOR, n_dash, lf_dash, fn))
+    if "id=0xec1a5cbf" in new_text:
+        new_text, n_var, lf_var = double_subtree_areas(new_text, "ec1a5cbf",
+                                               scale_len)
+        if n_var < 1:
+            sys.exit("FATAL carbon: console-variant 0xec1a5cbf subtree "
+                     "matched no area= in %s (expected >=1)" % fn)
+        print("   [carbon] console variant 0xec1a5cbf subtree areas x%g "
+              "(%d, %d art leaf SIZE-derived) in %s"
+              % (FACTOR, n_var, lf_var, fn))
+    new_text = FONT_NAME_RE.sub(font_sub, new_text)
+    if font_sub.converted:
+        print("   [carbon] font-token GUIDs %s: %s" % (fn, ", ".join(
+            "%s x%d" % kv for kv in sorted(font_sub.converted.items()))))
+    if font_sub.unknown:
+        print("   [carbon] font-token UNMAPPED in %s: %s"
+              % (fn, ", ".join(sorted(font_sub.unknown))))
+    m = re.match(r"T-00000000_G-([0-9a-f]{8})_I-([0-9a-f]{8})\.ui", fn)
+    out_name = "T-0x%08x_G-0x%s_I-0x%s.ui" % (UI_TYPE, m.group(1), m.group(2))
+    with open(os.path.join(cstage, out_name), "w", encoding="latin-1",
+              newline="") as f:
+        f.write(new_text)
+    return (fn, n_ret, n_dbl, n_left1x, new_text == text)
+
+
+def carbon_tp_transform_script(src_path, sstage, art_dirs, refs, avail,
+                               clones, exclusive_set, cb_inplace):
+    """Mirror of the third-party (.UI treated wholly scaled) transform in
+    main()'s TP loop, applied to CARBON's redeclaration of the same TGI.
+    Returns (fn, n_ret, n_dbl)."""
+    tp_fn = os.path.basename(src_path)
+    m = re.match(r"T-(\w{8})_G-(\w{8})_I-(\w{8})\.ui", tp_fn)
+    if not m:
+        sys.exit("FATAL carbon: third-party UI name not TGI-shaped: " + tp_fn)
+    with open(src_path, "r", encoding="latin-1") as f:
+        tp_text = f.read()
+    tp_roots = parse_ui(tp_text)
+    tp_edits = []
+    n_ret = n_dbl = 0
+    for nd in walk(tp_roots):
+        if not nd.images:
+            continue
+        art_doubled = False
+        tp_last_art = None       # #95
+        for (gid, iid, vs, ve) in nd.images:
+            key = (gid, iid)
+            if key in clones:
+                cg, ci = clones[key]
+                tp_edits.append((vs, ve, "{%08x,%08x}" % (cg, ci)))
+                n_ret += 1
+                art_doubled = True
+            elif key in refs and avail.get(key) and key in exclusive_set:
+                art_doubled = True       # 2x in place at the same TGI
+            elif key in cb_inplace:
+                art_doubled = True       # code-bound, staged 2x in place
+            if art_doubled and tp_last_art is None:
+                tp_last_art = key
+        if art_doubled and nd.imagerect is not None:
+            (l, t, r, b), vs, ve = nd.imagerect
+            ap = None
+            if tp_last_art is not None:
+                ag, ai = tp_last_art
+                if (ag, ai) in clones:
+                    ag, ai = clones[(ag, ai)]
+                cands = [os.path.join(d, tgi_png_name(ag, ai))
+                         for d in art_dirs]
+                cands.append(os.path.join(UPSCALE_DIR, tgi_png_name(ag, ai)))
+                for cand in cands:
+                    if os.path.isfile(cand):
+                        ap = cand
+                        break
+            cl, ct, cr, cb2 = clamp_rect_to_art(
+                l, t, r, b, ap,
+                tp_last_art[0] if tp_last_art else 0,
+                tp_last_art[1] if tp_last_art else 0)
+            tp_edits.append((vs, ve, "(%d,%d,%d,%d)" % (cl, ct, cr, cb2)))
+            n_dbl += 1
+    tp_new = tp_text
+    for (s, e, rep) in sorted(tp_edits, key=lambda x: -x[0]):
+        tp_new = tp_new[:s] + rep + tp_new[e:]
+
+    def tp_font_sub(m2):
+        guid = FONT_GUIDS.get(m2.group(1))
+        return ("font=" + guid) if guid else m2.group(0)
+    tp_new = FONT_NAME_RE.sub(tp_font_sub, tp_new)
+    out_name = "T-0x%s_G-0x%s_I-0x%s.ui" % (m.group(1), m.group(2), m.group(3))
+    with open(os.path.join(sstage, out_name), "w",
+              encoding="latin-1", newline="") as f:
+        f.write(tp_new)
+    print("   [carbon] third-party UI %s: retargets=%d rectx%g=%d"
+          % (tp_fn, n_ret, FACTOR, n_dbl))
+    return (tp_fn, n_ret, n_dbl)
+
+
+def _carbon_gate(dirpath, factor, label):
+    """#181 over a carbon stage, with the CARBON 1x payload dir as ground
+    truth (--src1x). A carbon key-set violation is a FATAL, same as stock."""
+    pngs = [f for f in os.listdir(dirpath) if f.lower().endswith(".png")]
+    if not pngs:
+        print("   [carbon] gate %s: no PNGs staged - #181 not applicable"
+              % label)
+        return
+    gate = os.path.join(TOOLS, "upscale", "gate_key_integrity.py")
+    r = subprocess.run([sys.executable, gate, "--dir", dirpath,
+                        "--factor", str(factor), "--src1x", CARBON_SRC_ART],
+                       capture_output=True, text=True)
+    if r.stdout:
+        print(r.stdout.rstrip())
+    if r.returncode != 0:
+        sys.exit("CARBON KEY-INTEGRITY GATE FAILED on %s (exit %d): the "
+                 "staged carbon art carries colour-key damage - NOT packing."
+                 "\n%s" % (label, r.returncode, r.stderr))
+
+
+def _pack_carbon(stage_dir, base):
+    """Pack one carbon stage; 2x untagged into tools\\selective-safe\\,
+    tagged into tools\\packages\\<tag>\\ - the existing TP convention. Entry
+    count verified via DbpfPack --list against the staged file count."""
+    out = os.path.join(
+        PKG_DIR if TAG else OUT_DIR,
+        "z_SC4UIScale_%s%s.dat" % (base, ("-" + TAG) if TAG else ""))
+    r = subprocess.run([PACKER, stage_dir, out], capture_output=True, text=True)
+    if r.returncode != 0:
+        sys.exit("CARBON PACK FAILED (%s):\n%s" % (base, r.stderr))
+    r = subprocess.run([PACKER, "--list", out], capture_output=True, text=True)
+    n_listed = sum(1 for line in r.stdout.splitlines()
+                   if re.match(r"0x[0-9A-Fa-f]{8} 0x[0-9A-Fa-f]{8} "
+                               r"0x[0-9A-Fa-f]{8} ", line))
+    n_staged = len(os.listdir(stage_dir))
+    if n_listed != n_staged:
+        sys.exit("FATAL carbon: %s lists %d entries but %d were staged - the "
+                 "pack dropped or invented content" % (out, n_listed, n_staged))
+    size = os.path.getsize(out)
+    print("   [carbon] packed %s: %d entries (staged %d), %d bytes"
+          % (os.path.basename(out), n_listed, n_staged, size))
+    return out, n_listed
+
+
+def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
+                          cb_conflict, cb_missing, fixed96_pinned, store_tgis):
+    """The --carbon flow: emit ZCarbonArt / ZCarbonNam / ZCarbonStyles from
+    Carbon's own payloads, alongside (never instead of) the normal outputs.
+    Runs AFTER the normal pack, so every stock stage it measures against is
+    the one that shipped this run."""
+    print("\n=== CARBON (--carbon): Scoty Carbon Skin override packages ===")
+    if not os.path.isfile(CARBON_ENROLLMENT):
+        sys.exit("FATAL carbon: enrollment missing: %s" % CARBON_ENROLLMENT)
+    with open(CARBON_ENROLLMENT, "r", encoding="utf-8") as f:
+        enr = json.load(f)
+    pkgs = enr["packages"]
+    for name in sorted(pkgs):
+        if name not in CARBON_PKGS_HERE:
+            p = pkgs[name]
+            print("NOTE: enrollment package %s SKIPPED here (another builder "
+                  "owns it): %d script(s) + %d art"
+                  % (name, p.get("n_scripts", len(p.get("scripts", []))),
+                     p.get("n_art", len(p.get("art", [])))))
+    for row in enr.get("skipped", []):
+        print("NOTE: enrollment skipped row %s: %s"
+              % (row.get("tgi"), row.get("why")))
+    for name in CARBON_PKGS_HERE:
+        if name not in pkgs:
+            sys.exit("FATAL carbon: enrollment has no package %r" % name)
+
+    excl_set = set(exclusive)
+    cbs = set(cb_staged)
+    cbc = set(cb_conflict)
+    cbm = set(cb_missing)
+    f96p = set(fixed96_pinned)
+    # TGIs that ship 2x IN PLACE at the original name this run (either side):
+    # the predicate the carbon script transforms use for "the art follows".
+    cb_inplace = set(cbs)
+    summary = []
+    n_clamp_before = len(_rect_clamped)
+
+    # ---- ZCarbonArt + ZCarbonNam: selective packages ----
+    art_stage_path = None
+    for pkg_name, stage_base in (("ZCarbonArt", "stage-carbon-art"),
+                                 ("ZCarbonNam", "stage-carbon-nam")):
+        p = pkgs[pkg_name]
+        art_tgis = [(int(a["g"], 16), int(a["i"], 16)) for a in p["art"]]
+        script_iids = [s["i"] for s in p["scripts"]]
+        cstage = os.path.join(OUT_DIR,
+                              stage_base + (("-" + TAG) if TAG else ""))
+        fresh_dir(cstage)
+        print("\n[carbon] %s: %d enrolled script(s) + %d enrolled art"
+              % (pkg_name, len(script_iids), len(art_tgis)))
+
+        plan_inplace, plan_clone, plan_cb, plan_f96, skipped = [], [], [], [], []
+        for t in art_tgis:
+            if t in clones:
+                plan_clone.append(t)
+            elif t in refs:
+                if t in excl_set and avail.get(t):
+                    plan_inplace.append(t)
+                else:
+                    rec = refs[t]
+                    why = ("untouched (UNSCALED-only refs)" if not rec["scaled"]
+                           else "left-1x (no 2x asset this run)")
+                    skipped.append((t, why))
+            elif t in cbs:
+                if t in MISSION_BUBBLE_FIXED96 and t in f96p:
+                    plan_f96.append(t)
+                else:
+                    plan_cb.append(t)
+            elif t in cbc:
+                skipped.append((t, "cb_conflict refusal honoured (normal run "
+                                   "refuses it too)"))
+            elif t in cbm:
+                skipped.append((t, "code-bound but no tier asset in the "
+                                   "normal run"))
+            else:
+                skipped.append((t, "not staged by the normal run"))
+        for t, why in skipped:
+            print("   [carbon] art %08x/%08x NOT staged: %s"
+                  % (t[0], t[1], why))
+
+        to_up = plan_inplace + plan_clone + plan_cb
+        n_in = n_cl = n_cb = n_f96 = 0
+        if to_up:
+            up_dir = _carbon_upscale(to_up, stage_base.replace(
+                "stage-carbon", "carbon-art-up"), corpus_flags=True)
+            for t in plan_inplace + plan_cb:
+                src = os.path.join(up_dir, tgi_png_name(*t))
+                if not os.path.isfile(src):
+                    sys.exit("FATAL carbon: upscaler produced no output for "
+                             "%08x/%08x" % t)
+                shutil.copy2(src, os.path.join(cstage, tgi_png_name(*t)))
+            n_in, n_cb = len(plan_inplace), len(plan_cb)
+            for t in plan_clone:
+                src = os.path.join(up_dir, tgi_png_name(*t))
+                if not os.path.isfile(src):
+                    sys.exit("FATAL carbon: upscaler produced no output for "
+                             "%08x/%08x" % t)
+                cg, ci = clones[t]
+                # UNSCALED windows must keep drawing carbon's own 1x
+                # original - the carbon-up copy lands at the CLONE TGI ONLY.
+                shutil.copy2(src, os.path.join(cstage, tgi_png_name(cg, ci)))
+            n_cl = len(plan_clone)
+        lad = [t for t in to_up if t in _CARBON_LADDER_TGIS]
+        if lad and abs(FACTOR - round(FACTOR)) >= 1e-9:
+            for t in lad:
+                print("   [carbon] NOTE ladder sheet %08x/%08x staged as "
+                      "plain NN: redraw_ladder.py is a STOCK-channel "
+                      "instrument (it re-lays from the stock 1x extract) and "
+                      "must not repaint carbon art; the #181 gate checks the "
+                      "ladder invariants on the NN copy instead" % t)
+        if plan_f96:
+            # #186: carbon owns a pinned family member - regenerate the
+            # carbon fixed-96 twin from CARBON's 1x via the same canonical
+            # invocation, and stage it at the same name.
+            f96 = build_mission_bubble_fixed96(src_dir=CARBON_SRC_ART,
+                                               dir_tag="-carbon")
+            for t in plan_f96:
+                shutil.copy2(f96[t], os.path.join(cstage, tgi_png_name(*t)))
+            n_f96 = len(plan_f96)
+        elif pkg_name == "ZCarbonArt":
+            print("   [carbon] #186 mission bubble: carbon does not "
+                  "redeclare any pinned family member - no carbon fixed-96 "
+                  "twin to build")
+
+        # ---- art-repair passes on the CARBON copies, premise-gated ----
+        def _owned_here(sheets):
+            return any(os.path.isfile(os.path.join(cstage, tgi_png_name(g, i)))
+                       or os.path.isfile(os.path.join(
+                           cstage, tgi_png_name(g, i ^ CLONE_XOR)))
+                       for (g, i) in sheets)
+        if _owned_here([DOCK_SHEET]):
+            neutralize_dock_recess(stage_dir=cstage, lenient=True)
+        if _owned_here(QUERY_PAIR_SHEETS):
+            clamp_query_pair_cells(stage_dir=cstage,
+                                   src1x_dir=CARBON_SRC_ART, lenient=True)
+        if _owned_here([TOOLBAR_RAIL_SHEET]):
+            smooth_toolbar_rail(stage_dir=cstage,
+                                src1x_dir=CARBON_SRC_ART, lenient=True)
+        if _owned_here(MODE_BUTTON_SHEETS):
+            fuse_mode_button_edges(stage_dir=cstage,
+                                   src1x_dir=CARBON_SRC_ART, lenient=True)
+
+        # ---- scripts: the identical selective transform, carbon text in ----
+        art_dirs = [cstage] + ([art_stage_path] if art_stage_path else []) \
+            + [STAGE]
+        seat_dirs = [cstage] + ([art_stage_path] if art_stage_path else []) \
+            + [STAGE]
+        warned = set()
+        script_stats = []
+        for iid in script_iids:
+            script_stats.append(carbon_transform_script(
+                iid, cstage, art_dirs, seat_dirs, refs, avail, clones,
+                cb_inplace, store_tgis, warned))
+        for fn2, n_ret, n_dbl, n_l1, same in script_stats:
+            print("   [carbon] %-42s retargets=%-3d rectx%g=%-3d left1x=%-3d%s"
+                  % (fn2, n_ret, FACTOR, n_dbl, n_l1,
+                     "  [UNCHANGED]" if same else ""))
+        for (gid, iid2, kind) in sorted(warned):
+            print("   [carbon] WARNING LEFT1X {%08x,%08x} in a SCALED frame: "
+                  "%s" % (gid, iid2, kind))
+
+        # ---- #181 gate, then pack ----
+        # #186 split (mirrors main): pinned members were produced at the pin
+        # multiple - gate them at their OWN producing factor.
+        pin_dir = None
+        if plan_f96:
+            pin_dir = os.path.join(OUT_DIR, stage_base + "-bubble96-gate"
+                                   + (("-" + TAG) if TAG else ""))
+            fresh_dir(pin_dir)
+            for t in plan_f96:
+                os.replace(os.path.join(cstage, tgi_png_name(*t)),
+                           os.path.join(pin_dir, tgi_png_name(*t)))
+        _carbon_gate(cstage, FACTOR, pkg_name)
+        if pin_dir:
+            _carbon_gate(pin_dir, float(MISSION_BUBBLE_FIXED96_MULT),
+                         pkg_name + " #186 pinned family")
+            for t in plan_f96:
+                os.replace(os.path.join(pin_dir, tgi_png_name(*t)),
+                           os.path.join(cstage, tgi_png_name(*t)))
+        out, n_entries = _pack_carbon(cstage, pkg_name)
+        summary.append((pkg_name, len(script_stats), n_in, n_cl, n_cb, n_f96,
+                        len(skipped), out, n_entries))
+        if pkg_name == "ZCarbonArt":
+            art_stage_path = cstage
+
+    # ---- third-party-flow packages: ZCarbonStyles + ZCarbonGodMod ----
+    # Carbon twins of the ThirdPartyUI / WarriorUI flows: the mod being
+    # twinned replaces whole stock scripts, so every window is treated as
+    # scaled (the TP transform), and the art rides the TP flag set. CAUTION
+    # honoured by construction: GodMod's two sheets are carbon-RESIZED
+    # (14215e27 172x262, eb7c4d3b 223x83 - neither matches stock), so every
+    # dim lookup measures the carbon payload/stage, never the stock upscale.
+    for (tp_name, tp_stage_base, tp_up_base) in CARBON_TP_PKGS:
+        p = pkgs[tp_name]
+        sstage = os.path.join(OUT_DIR,
+                              tp_stage_base + (("-" + TAG) if TAG else ""))
+        fresh_dir(sstage)
+        art_tgis = [(int(a["g"], 16), int(a["i"], 16)) for a in p["art"]]
+        print("\n[carbon] %s: %d script(s) + %d art (third-party "
+              "legacy-root flow, carbon-sourced)"
+              % (tp_name, len(p["scripts"]), len(art_tgis)))
+        n_sty_art = 0
+        if art_tgis:
+            # #95 order: art BEFORE scripts, so the imagerect clamp measures
+            # the art that ships. TP flag set (no smoothing flags) - same as
+            # the ThirdPartyUI/WarriorUI pass this mirrors.
+            up_dir = _carbon_upscale(art_tgis, tp_up_base,
+                                     corpus_flags=False)
+            for t in art_tgis:
+                src = os.path.join(up_dir, tgi_png_name(*t))
+                if not os.path.isfile(src):
+                    sys.exit("FATAL carbon: upscaler produced no output for "
+                             "%08x/%08x" % t)
+                shutil.copy2(src, os.path.join(sstage, tgi_png_name(*t)))
+                n_sty_art += 1
+            print("   [carbon] %s ART upscaled x%g and staged: %d file(s)"
+                  % (tp_name, FACTOR, n_sty_art))
+        sty_dirs = [sstage] + ([art_stage_path] if art_stage_path else []) \
+            + [STAGE]
+        sty_stats = []
+        for s in p["scripts"]:
+            src_path = os.path.join(CARBON_SRC_UI,
+                                    "T-00000000_G-%s_I-%s.ui"
+                                    % (s["g"], s["i"]))
+            if not os.path.isfile(src_path):
+                sys.exit("FATAL carbon: %s script payload missing: %s"
+                         % (tp_name, src_path))
+            sty_stats.append(carbon_tp_transform_script(
+                src_path, sstage, sty_dirs, refs, avail, clones, excl_set,
+                cb_inplace))
+        _carbon_gate(sstage, FACTOR, tp_name)
+        out, n_entries = _pack_carbon(sstage, tp_name)
+        summary.append((tp_name, len(sty_stats), n_sty_art, 0, 0, 0, 0,
+                        out, n_entries))
+
+    # ---- carbon summary ----
+    carbon_clamps = _rect_clamped[n_clamp_before:]
+    print("\n=== CARBON SUMMARY ===")
+    for (name, n_scr, n_in, n_cl, n_cb, n_f96, n_skip, out,
+         n_entries) in summary:
+        print("%s: %d script(s), %d in-place art, %d clone art, %d "
+              "code-bound art, %d fixed-96, %d enrolled art skipped -> %s "
+              "(%d entries)" % (name, n_scr, n_in, n_cl, n_cb, n_f96,
+                                n_skip, os.path.basename(out), n_entries))
+    if carbon_clamps:
+        print("carbon #95 imagerect clamps (measured against the carbon-"
+              "staged art):")
+        for (g, i, asked, actual) in carbon_clamps:
+            print("   {%08x,%08x}: asked %dx%d -> art is %dx%d"
+                  % (g, i, asked[0], asked[1], actual[0], actual[1]))
+    if _carbon_pass_skips:
+        print("carbon art-repair passes PREMISE-SKIPPED (carbon redrew the "
+              "art; the stock defect may not exist there):")
+        for (pass_name, sheet, reason) in _carbon_pass_skips:
+            print("   %s %s: %s" % (pass_name, sheet, reason))
+    else:
+        print("carbon art-repair passes: no premise skips - every applicable "
+              "pass ran on the carbon copies")
 
 
 def main():
@@ -3301,6 +4202,15 @@ def main():
           % (len(cb_staged), len(cb_conflict), len(cb_handled), len(cb_missing)))
     print("Edited .UI staged: %d" % len(edit_stats))
     print("Package: %s (%d bytes, %d entries)" % (OUT_DAT, size, n_listed))
+
+    # ---- --carbon: the Scoty Carbon Skin override packages, ADDITIVE ----
+    # Runs after the normal pack so every stock artifact it measures against
+    # (STAGE contents, the refmap classification, the cb_* routing) is the
+    # one this very run shipped.
+    if CARBON:
+        build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
+                              cb_conflict, cb_missing, fixed96_pinned,
+                              store_tgis)
 
 
 if __name__ == "__main__":

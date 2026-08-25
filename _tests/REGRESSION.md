@@ -16764,3 +16764,16 @@ DbpfExtract.exe is the decompressing extractor; the banner is not evidence
 about payload encoding. Third-party dats also self-override (intra-folder
 alphabetical last-wins), so per-TGI source extraction must winner-resolve
 INSIDE the mod before any payload is used.
+
+## 2026-08-25 (carbon implementation) — DbpfPack dats are never raw-byte-identical
+
+**DbpfPack.exe stamps dateCreated/dateModified into header bytes 24-31 at
+pack time** — measured: packing the SAME stage twice differs at exactly
+those 8 bytes and nowhere else. Consequences: (a) a raw SHA256 can never
+prove two builds equal — content comparison must zero bytes 24-31 first
+(instrument: dat_content_sha pattern, dialog-static carbon acceptance);
+(b) Test-DatIntegrity's DEPLOYED==BUILT raw-hash check stays valid ONLY
+because deploy COPIES the built file — any rebuild between deploys goes
+red on timestamps alone, which is indistinguishable from real drift until
+content-hashed. The 2026-08-25 morning "DEPLOYED != BUILT x5" scare was
+exactly this: rebuilt dats, identical content, new header stamps.

@@ -31,7 +31,11 @@ KEEP = {
     "w_scoty_Carbon_SubMenu-Essential",
     "y_scoty_CAM_Extended_Essentials",
     "y_scoty_Carbon_NAM",
+    # un-pruned 2026-08-25: user installed region-view-census-ui + warrior's
+    # god-terraforming-in-mayor-mode.
+    "y_scoty_Carbon_RegionCensusDLL",
     "z_scoty_Carbon_BuildingStyles",
+    "z_scoty_Carbon_GodMod",
 }
 
 TYPE_NAMES = {
@@ -89,12 +93,16 @@ def main():
             if base in KEEP:
                 carbon_kept[tgi].append(base)
 
-    # 2. Our side, live enumeration
+    # 2. Our side, live enumeration - ARMED AND DISARMED both. A gate-dark
+    # package (.dat.x1-disabled, e.g. WarriorUI before its mod arrived) is
+    # still ours and still collides the day its gate opens; the first census
+    # missed the GodMod<->WarriorUI overlap exactly this way (2026-08-25).
     ours = defaultdict(list)     # tgi -> [relpath]
     for sub in ("010-SC4UIScale", "zzz-SC4UIScale"):
         d = os.path.join(PLUG, sub)
         for fn in sorted(os.listdir(d)):
-            if not fn.lower().endswith(".dat"):
+            low = fn.lower()
+            if not (low.endswith(".dat") or low.endswith(".dat.x1-disabled")):
                 continue
             rel = sub + "\\" + fn
             for tgi, size in list_dat(os.path.join(d, fn)):

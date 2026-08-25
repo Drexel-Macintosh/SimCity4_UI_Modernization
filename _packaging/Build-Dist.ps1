@@ -32,7 +32,9 @@ if (-not (Test-Path $deployScript)) { throw "deploy manifest not found: $deployS
 
 # --- version comes from the code, never from a doc ---------------------------
 $verSrc = Get-Content (Join-Path $proj "src\SC4UIScaleDllDirector.cpp") -Raw
-if ($verSrc -notmatch '#define\s+UISCALE_VERSION_STR\s+"([0-9.]+)"') {
+# Suffixed dev versions ("4.3.0-dev") are legal here - a dev bundle is how
+# the ZCarbon exclusion assert gets exercised before a release exists.
+if ($verSrc -notmatch '#define\s+UISCALE_VERSION_STR\s+"([0-9.]+(?:-[A-Za-z0-9]+)?)"') {
     throw "could not read UISCALE_VERSION_STR from SC4UIScaleDllDirector.cpp"
 }
 $version = $Matches[1]
@@ -126,6 +128,25 @@ foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
     $copied++
 }
 Write-Output "  + z_SC4UIScale_CsiIcons tiers (rescued from the parser blind spot - see comment)"
+
+# --- ZCarbon EXCLUSION ASSERT (v4.3.0, 2026-08-25) --------------------------
+# The z_SC4UIScale_ZCarbon* packages are built FROM Scoty Carbon Skin's own
+# pixels and geometry. They deploy locally (Deploy-OnGameClose uses the
+# named-parameter Copy-Item form there, DELIBERATELY invisible to the parser
+# above) but MUST NEVER ship in the public bundle - that would redistribute
+# another modder's art (.gitignore policy (c): "nothing from other modders").
+# Players with the skin build them locally; the generators ARE in the repo.
+# This assert is the net under the deliberate blind spot: if anyone rewrites
+# the deploy lines into the positional form, the parser bundles them and this
+# goes red instead of shipping scoty's work.
+$leaked = Get-ChildItem $bundle -Recurse -File | Where-Object { $_.Name -match 'ZCarbon' }
+if ($leaked) {
+    $leaked | ForEach-Object { Write-Output ("    LEAKED: " + $_.FullName) }
+    throw ("$($leaked.Count) ZCarbon file(s) entered the bundle - these are " +
+           "carbon-skin-derived and must never be distributed. Remove them from " +
+           "the parse path; they deploy locally only.")
+}
+Write-Output "  ZCarbon exclusion assert: clean (carbon-derived dats stay local-only)"
 
 # PARSED-COUNT GATE: the next expression-built Copy-Item drops a package
 # invisibly; keep a floor under the total so the drop goes red not silent.

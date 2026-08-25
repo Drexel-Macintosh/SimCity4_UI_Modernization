@@ -46,10 +46,21 @@ $fArgs = @()
 $tag   = "2x default"
 if ($Factor) { $fArgs = @("--factor", $Factor); $tag = ($Factor + "x") }
 
+# --carbon (v4.3.0): the two layout builders also emit the ZCarbon* packages
+# when the Scoty Carbon Skin inputs are staged. PRESENCE-GATED on the derived
+# input tree, not on the flag: a machine without the skin (most users) builds
+# plain and stays green; a machine with the staged payloads must exercise the
+# carbon path or the gate proves nothing about it.
+$carbonArgs = @()
+if (Test-Path (Join-Path $tools "research\carbon\builder-inputs\thirdparty-src")) {
+    $carbonArgs = @("--carbon")
+    Write-Output "Carbon inputs present - ZCarbon packages included in this gate"
+}
+
 # name, script, args. Order is a dependency chain, not a preference.
 $BUILDERS = @(
-    @{ n = "selective-safe";   s = "selective-safe\build_selective_safe.py"; a = $fArgs },
-    @{ n = "dialog-static";    s = "dialog-static\build_dialog_static.py";   a = $fArgs },
+    @{ n = "selective-safe";   s = "selective-safe\build_selective_safe.py"; a = $fArgs + $carbonArgs },
+    @{ n = "dialog-static";    s = "dialog-static\build_dialog_static.py";   a = $fArgs + $carbonArgs },
     @{ n = "itemicons-stage";  s = "itemicons\stage_icons.py";               a = $fArgs },
     @{ n = "itemicons-sub";    s = "itemicons\build_itemicons_sub.py";       a = $fArgs },
     # Both of these are genuinely factor-INDEPENDENT, not an oversight:
@@ -116,6 +127,25 @@ if ($code -eq 0) {
     $results += @{ n = "csi-icons"; ok = $false; why = ("exit " + $code) }
 }
 Pop-Location
+
+# ---- ZCarbonIcons (v4.3.0): carbon-sourced CSI balloons + item strips.
+# Positional factor like csi-icons; emits straight into the house locations
+# so no copy step. Runs only when the carbon inputs are staged.
+if ($carbonArgs.Count -gt 0) {
+    Push-Location (Join-Path $tools "research\carbon")
+    $zciFactor = if ($Factor) { $Factor } else { "2" }
+    $out = & python "build_carbon_icons.py" $zciFactor 2>&1
+    $code = $LASTEXITCODE
+    if ($code -eq 0) {
+        Write-Output "PASS     zcarbon-icons"
+        $results += @{ n = "zcarbon-icons"; ok = $true; why = "" }
+    } else {
+        Write-Output ("FAIL     zcarbon-icons  (exit {0})" -f $code)
+        @($out) | Select-Object -Last 6 | ForEach-Object { Write-Output ("    " + $_) }
+        $results += @{ n = "zcarbon-icons"; ok = $false; why = ("exit " + $code) }
+    }
+    Pop-Location
+}
 
 # ---- NamIcons: needs its 1x sources recovered first (another mod's files,
 # same shape as ItemIconsSub), then always builds all three tiers in one run.

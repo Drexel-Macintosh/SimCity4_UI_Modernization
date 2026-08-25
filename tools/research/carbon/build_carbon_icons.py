@@ -140,9 +140,16 @@ def main():
         fatal("staged %d, expected %d - refusing a partial family"
               % (made, len(CSI_ICONS) * len(CSI_GROUPS) + len(ITEM_STRIPS)))
 
-    outdir = os.path.join(HERE, "proto-packages")
-    os.makedirs(outdir, exist_ok=True)
-    dat = os.path.join(outdir, "z_SC4UIScale_ZCarbonIcons%s.dat" % tag)
+    # House emit convention (CamUI pattern): untagged 2x in the builder's own
+    # dir, tagged tiers in tools\packages\<tag>\. All dats are gitignored
+    # (allowlist + global *.dat) - carbon pixels never reach the public repo.
+    if tag == "-2x":
+        outdir = HERE
+        dat = os.path.join(outdir, "z_SC4UIScale_ZCarbonIcons.dat")
+    else:
+        outdir = os.path.join(PROJ, "tools", "packages", tag.lstrip("-"))
+        os.makedirs(outdir, exist_ok=True)
+        dat = os.path.join(outdir, "z_SC4UIScale_ZCarbonIcons%s.dat" % tag)
     if os.path.exists(dat):
         os.remove(dat)
     r = subprocess.run([PACKER, stage, dat], capture_output=True, text=True)

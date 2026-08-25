@@ -1,6 +1,6 @@
 # Region-screen dialogs -- static 1.5x (`z_SC4UIScale_DialogStatic-15x.dat`)
 
-Built 2026-08-20 by `build_dialog_static.py`. STANDALONE package: the game creates each
+Built 2026-08-25 by `build_dialog_static.py`. STANDALONE package: the game creates each
 of the 164 region-screen dialogs/popups already doubled from an edited copy of its
 .UI script and lays out the children itself. No runtime scaling involved; runtime
 docking of the region-dialog roots must stay disabled while testing. The recipe is
@@ -2780,3 +2780,246 @@ That is the whole footprint: the package only ADDS same-TGI .UI overrides and
 new-TGI PNG clones (plus one exclusive in-place PNG override); no game file is
 modified. (Nothing was deployed by the build; the dat lives only in
 `tools\dialog-static\` until copied by hand.)
+
+## Carbon twin packages (`--carbon`)
+
+Built from the Carbon skin's own winner-resolved payloads through the
+IDENTICAL transform as their twins; carbon-gated, shipped from
+`zzz-SC4UIScale\`. The packages above are byte-identical with or
+without `--carbon` - carbon only ADDS these dats.
+
+### ZCarbonCamUI (`z_SC4UIScale_ZCarbonCamUI-15x.dat`, 10 entries, 150134 bytes)
+
+7 carbon script(s):
+
+- `I-12121201` Civic query panel (CAM-only, 292x260) (carbon): root GZWinGen id=0x10000005, 1x 292x260 -> 1.5x 438x390
+- `I-2a554f6d` Query panel (CAM override, 300x480) (carbon): root GZWinGen id=0x10000005, 1x 300x500 -> 1.5x 450x750
+- `I-9b868f68` City info screen (CAM-only, 600x525, 116 nodes) (carbon): root GZWinGen id=0x10000005, 1x 608x540 -> 1.5x 912x810
+- `I-aa8b999e` Query panel (CAM override, 404x346) (carbon): root GZWinGen id=0x10000005, 1x 404x346 -> 1.5x 606x519
+- `I-ca8b8564` Query panel (CAM override, 292x287 moved) (carbon): root GZWinGen id=0x10000005, 1x 292x287 -> 1.5x 438x431
+- `I-ca8cbf0f` Generic one-button popup (CAM override, 500x175) (carbon): root GZWinGen id=0xaa8def97, 1x 500x175 -> 1.5x 750x263
+- `I-ea565970` Query panel (CAM override, 304x297) (carbon): root GZWinGen id=0x10000005, 1x 304x297 -> 1.5x 456x446
+
+3 art row(s), 3 staged:
+
+- `{46a006b0,d685c764}` -> `T-0x856ddbac_G-0x46a006b0_I-0xd685c764.png` (twin mod's bitmap, upscaled (self-sufficient package))
+- `{c3e123bd,cfe4e42f}` -> `T-0x856ddbac_G-0xc3e123bd_I-0xcfe4e42f.png` (twin mod's bitmap, upscaled (self-sufficient package))
+- `{ca120e98,2d7c4d1b}` -> `T-0x856ddbac_G-0xca120e98_I-0x2d7c4d1b.png` (twin mod's bitmap, upscaled (self-sufficient package))
+
+### ZCarbonSaveWarning (`z_SC4UIScale_ZCarbonSaveWarning-15x.dat`, 2 entries, 8206 bytes)
+
+2 carbon script(s):
+
+- `I-0a55161d` Quit confirm (save-warning override) (carbon): root GZWinGen id=0xaa921f4f, 1x 270x162 -> 1.5x 405x243
+- `I-6a553aa4` Exit to Region confirm (save-warning override) (carbon): root GZWinGen id=0xaa921f4f, 1x 270x162 -> 1.5x 405x243
+
+### ZCarbonUI (`z_SC4UIScale_ZCarbonUI-15x.dat`, 197 entries, 1314565 bytes)
+
+109 carbon script(s):
+
+- `I-0a243d80` Select A My Sim (Sim-mode sim picker) (carbon): root GZWinGen id=0x6a243d9e, 1x 434x381 -> 1.5x 651x572
+- `I-0a2dd355` Tutorial page (also an HTML-fed pane - see list D) (carbon): root GZWinGen id=0x4a35b0f2, 1x 473x308 -> 1.5x 710x462
+- `I-0a4d0c43` Reconcile Edges (boundaries match) (carbon): root GZWinGen id=0x6a4d0a59, 1x 357x152 -> 1.5x 535x228
+- `I-0a562a05` Query panel 0a562a05 (carbon): root GZWinGen id=0x10000005, 1x 292x120 -> 1.5x 438x180
+- `I-0a5cf71d` Game Over / Run for Senator (carbon): root GZWinGen id=0x2a5cfb2c, 1x 355x218 -> 1.5x 532x327
+- `I-0a7df315` Play Options (carbon): root GZWinGen id=0x2a57db82, 1x 699x523 -> 1.5x 1049x785
+- `I-0a8b819e` Query panel 0a8b819e (carbon): root GZWinGen id=0x10000005, 1x 292x203 -> 1.5x 438x305
+- `I-0a8b98fe` Query panel 0a8b98fe (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-0a8b9a67` Query panel 0a8b9a67 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-0a8b9c43` Query panel 0a8b9c43 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-0a8b9c6a` Query panel 0a8b9c6a (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-0a8cd184` Start New City bubble (carbon): root 0x89e1567c id=0x0a551c50, 1x 216x165 -> 1.5x 324x247
+- `I-0bbc06b6` Advisor toast (blue) (carbon): root GZWinGen id=0xebbc081e, 1x 450x246 -> 1.5x 675x369
+- `I-2a41436b` Establish City (carbon): root GZWinGen id=0x6a414973, 1x 434x234 -> 1.5x 651x351
+- `I-2a41436c` Obliterate City confirm (carbon): root GZWinGen id=0x27df05be, 1x 339x200 -> 1.5x 509x300
+- `I-2a5621ee` Query panel 2a5621ee (carbon): root GZWinGen id=0x10000005, 1x 292x181 -> 1.5x 438x272
+- `I-2a564884` Query panel 2a564884 (carbon): root GZWinGen id=0x10000005, 1x 292x225 -> 1.5x 438x338
+- `I-2a56675c` Query panel 2a56675c (carbon): root GZWinGen id=0x10000005, 1x 292x138 -> 1.5x 438x207
+- `I-2a567dc1` Building query (short variant) (carbon): root GZWinGen id=0x10000005, 1x 292x330 -> 1.5x 438x495
+- `I-2a5e7490` Query panel 2a5e7490 (carbon): root GZWinGen id=0x10000005, 1x 502x213 -> 1.5x 753x320
+- `I-2a8b7e1c` Query panel 2a8b7e1c (carbon): root GZWinGen id=0x10000005, 1x 292x242 -> 1.5x 438x363
+- `I-2a8b97c1` Query panel 2a8b97c1 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-2a8b99d0` Query panel 2a8b99d0 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-2a8b9df2` Query panel 2a8b9df2 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-2bb16d50` Advisor toast (green) (carbon): root GZWinGen id=0xebb16d71, 1x 450x246 -> 1.5x 675x369
+- `I-2c02ba84` Query panel 2c02ba84 (carbon): root 0x89e1567c id=0x10000006, 1x 216x136 -> 1.5x 324x204
+- `I-2c096de6` Query panel 2c096de6 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-4a551b4c` Quit confirm (region screen) (carbon): root GZWinGen id=0xaa921f4f, 1x 330x109 -> 1.5x 495x164
+- `I-4a562da5` Query panel 4a562da5 (carbon): root GZWinGen id=0x10000005, 1x 292x205 -> 1.5x 438x308
+- `I-4a565d13` Query panel 4a565d13 (carbon): root GZWinGen id=0x10000005, 1x 292x211 -> 1.5x 438x317
+- `I-4a5665eb` Query panel 4a5665eb (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-4a566c14` Query panel 4a566c14 (carbon): root GZWinGen id=0x10000005, 1x 292x205 -> 1.5x 438x308
+- `I-4a566d6e` Query panel 4a566d6e (carbon): root GZWinGen id=0x10000005, 1x 292x210 -> 1.5x 438x315
+- `I-4a5672bf` Building query (tall variant) (carbon): root GZWinGen id=0x10000005, 1x 292x443 -> 1.5x 438x665
+- `I-4a5a89d4` Advisor toast (salmon) (carbon): root GZWinGen id=0x4a9db60c, 1x 450x246 -> 1.5x 675x369
+- `I-4a5a89d5` Advisor toast (salmon B) (carbon): root GZWinGen id=0x4a9db60c, 1x 528x450 -> 1.5x 792x675
+- `I-4a5e7ed3` Query panel 4a5e7ed3 (carbon): root GZWinGen id=0x10000005, 1x 502x172 -> 1.5x 753x258
+- `I-4a89b3f2` Can't-save-during-disaster confirm (carbon): root GZWinGen id=0x2a96ed21, 1x 300x128 -> 1.5x 450x192
+- `I-4a8b7fe7` Query panel 4a8b7fe7 (carbon): root GZWinGen id=0x10000005, 1x 292x242 -> 1.5x 438x363
+- `I-4a8b9396` Query panel 4a8b9396 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-4a8b9936` Query panel 4a8b9936 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-4a8b9c92` Query panel 4a8b9c92 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-4a8b9dab` Query panel 4a8b9dab (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-4a8cc5ea` Photo Album (carbon): root GZWinGen id=0x0a8cd3ee, 1x 683x582 -> 1.5x 1024x873
+- `I-4bbc080f` Advisor toast (peach) (carbon): root GZWinGen id=0xebbc081e, 1x 450x246 -> 1.5x 675x369
+- `I-4bf325e8` U-Drive-It Select vehicle for <MySim> (carbon): root GZWinGen id=0xcbf32603, 1x 434x447 -> 1.5x 651x671
+- `I-4c0969e2` Query panel 4c0969e2 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-4c47800e` Query panel 4c47800e (carbon): root GZWinGen id=0x10000005, 1x 292x221 -> 1.5x 438x332
+- `I-6a51506f` Query panel 6a51506f (carbon): root GZWinGen id=0x10000005, 1x 292x210 -> 1.5x 438x315
+- `I-6a555a84` Query panel 6a555a84 (carbon): root GZWinGen id=0x10000005, 1x 292x221 -> 1.5x 438x332
+- `I-6a561b3a` Query panel 6a561b3a (carbon): root GZWinGen id=0x10000005, 1x 292x223 -> 1.5x 438x335
+- `I-6a562f56` Query panel 6a562f56 (carbon): root GZWinGen id=0x10000005, 1x 292x283 -> 1.5x 438x425
+- `I-6a566151` Query panel 6a566151 (carbon): root GZWinGen id=0x10000005, 1x 292x221 -> 1.5x 438x332
+- `I-6a5e73c0` Tutorial exit confirm (carbon): root GZWinGen id=0xea5e748c, 1x 330x113 -> 1.5x 495x169
+- `I-6a8b9875` Query panel 6a8b9875 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-6a8b9acc` Query panel 6a8b9acc (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-6a8b9af3` Query panel 6a8b9af3 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-6b704690` Label Tool (map annotation) (carbon): root GZWinGen id=0x8a8dfcf5, 1x 409x142 -> 1.5x 614x213
+- `I-8a4d0a17` Reconcile Edges (variant 3) (carbon): root GZWinGen id=0x6a4d0a59, 1x 357x182 -> 1.5x 535x273
+- `I-8a554483` Query panel 8a554483 (carbon): root GZWinGen id=0x10000005, 1x 292x274 -> 1.5x 438x411
+- `I-8a5ab1cb` Region Name (Create Region) (carbon): root GZWinGen id=0xea5ba0d1, 1x 330x168 -> 1.5x 495x252
+- `I-8a5ab1cc` Load Region (carbon): root GZWinGen id=0x4a5ba0e7, 1x 330x188 -> 1.5x 495x282
+- `I-8a5ab1cd` City Import (carbon): root GZWinGen id=0x0a5ba192, 1x 330x188 -> 1.5x 495x282
+- `I-8a5ab1ce` Delete Region confirm (carbon): root GZWinGen id=0x6a5ba20c, 1x 300x158 -> 1.5x 450x237
+- `I-8a5ab1cf` Quit confirm (are-you-sure) (carbon): root GZWinGen id=(no id), 1x 313x128 -> 1.5x 469x192
+- `I-8a5ab1d0` Delete City confirm (carbon): root GZWinGen id=0x8a5ab1d0, 1x 302x128 -> 1.5x 453x192
+- `I-8a5e7bd2` Query panel 8a5e7bd2 (carbon): root GZWinGen id=0x10000005, 1x 502x213 -> 1.5x 753x320
+- `I-8a7e052f` Graphic Options (carbon): root GZWinGen id=0x2a57cb82, 1x 722x558 -> 1.5x 1083x837
+- `I-8a8b95b0` Query panel 8a8b95b0 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-8a8b9811` Query panel 8a8b9811 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-8a8b98a7` Query panel 8a8b98a7 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-8a8b9d12` Query panel 8a8b9d12 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-8a948d49` Query panel 8a948d49 (carbon): root GZWinGen id=0x10000005, 1x 292x144 -> 1.5x 438x216
+- `I-aa554aea` Query panel aa554aea (carbon): root GZWinGen id=0x10000005, 1x 292x229 -> 1.5x 438x344
+- `I-aa555346` Query panel aa555346 (carbon): root GZWinGen id=0x10000005, 1x 292x182 -> 1.5x 438x273
+- `I-aa561f93` Query panel aa561f93 (carbon): root GZWinGen id=0x10000005, 1x 292x160 -> 1.5x 438x240
+- `I-aa565036` Query panel aa565036 (carbon): root GZWinGen id=0x10000005, 1x 292x210 -> 1.5x 438x315
+- `I-aa565f5b` Query panel aa565f5b (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-aa5661eb` Query panel aa5661eb (carbon): root GZWinGen id=0x10000005, 1x 292x211 -> 1.5x 438x317
+- `I-aa5bef41` Query panel aa5bef41 (carbon): root GZWinGen id=0x10000005, 1x 292x165 -> 1.5x 438x248
+- `I-aa5e14cc` Query panel aa5e14cc (carbon): root GZWinGen id=0x10000005, 1x 502x214 -> 1.5x 753x321
+- `I-aa5e60d1` Clock time popup (carbon): root GZWinGen id=0xca5e6261, 1x 92x30 -> 1.5x 138x45
+- `I-aa8b9755` Query panel aa8b9755 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-aa8b9971` Query panel aa8b9971 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-abfaef15` U-Drive-It Select pedestrian style (carbon): root GZWinGen id=0xcbf32603, 1x 434x299 -> 1.5x 651x449
+- `I-ac096ac7` Query panel ac096ac7 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-ac3b72f6` Query panel ac3b72f6 (carbon): root GZWinGen id=0x10000005, 1x 292x221 -> 1.5x 438x332
+- `I-ca4d0b22` Reconcile Edges (highlighted areas confirm) (carbon): root GZWinGen id=0x6a4d0a59, 1x 357x157 -> 1.5x 535x236
+- `I-ca539340` Existing-city bubble (carbon): root 0x89e1567c id=0x0a551c50, 1x 258x250 -> 1.5x 387x375
+- `I-ca53f06e` Audio Options (carbon): root GZWinGen id=0xea53f5db, 1x 330x471 -> 1.5x 495x707
+- `I-ca551016` Credits (carbon): root GZWinGen id=0x0a592004, 1x 525x284 -> 1.5x 787x426
+- `I-ca566f94` Query panel ca566f94 (carbon): root GZWinGen id=0x10000005, 1x 292x230 -> 1.5x 438x345
+- `I-ca56783a` Building query (residential) (carbon): root GZWinGen id=0x10000005, 1x 292x334 -> 1.5x 438x501
+- `I-ca8b8408` Query panel ca8b8408 (carbon): root GZWinGen id=0x10000005, 1x 292x252 -> 1.5x 438x378
+- `I-ca8b96c2` Query panel ca8b96c2 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-ca8b9845` Query panel ca8b9845 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-ca8b9aa2` Query panel ca8b9aa2 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-ca8b9ce7` Query panel ca8b9ce7 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-ca8b9d40` Query panel ca8b9d40 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-cc097fc0` Query panel cc097fc0 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+- `I-cc313f17` Query panel cc313f17 (carbon): root GZWinGen id=0x10000005, 1x 292x193 -> 1.5x 438x290
+- `I-ea5655e4` Query panel ea5655e4 (carbon): root GZWinGen id=0x10000005, 1x 292x283 -> 1.5x 438x425
+- `I-ea566a49` Query panel ea566a49 (carbon): root GZWinGen id=0x10000005, 1x 292x172 -> 1.5x 438x258
+- `I-ea89b6c3` Missing plugin-packs warning (city load) (carbon): root GZWinGen id=0x2a5cfb2c, 1x 355x238 -> 1.5x 532x357
+- `I-ea8b82db` Query panel ea8b82db (carbon): root GZWinGen id=0x10000005, 1x 292x255 -> 1.5x 438x383
+- `I-ea8cc3c6` Generic message box (code-driven confirms) (carbon): root GZWinGen id=0x8a8dfcf5, 1x 364x192 -> 1.5x 546x288
+- `I-eaaeec1b` Exit to Region (in-city, play-city variant) (carbon): root GZWinGen id=0x6aaeec4a, 1x 330x157 -> 1.5x 495x236
+- `I-ebd0d36c` Select A Bridge (network across water) (carbon): root GZWinGen id=0x0c525b9e, 1x 411x373 -> 1.5x 617x559
+- `I-ec096e72` Query panel ec096e72 (carbon): root GZWinGen id=0x10000005, 1x 292x134 -> 1.5x 438x201
+
+88 art row(s), 88 staged:
+
+- `{1abe787d,0c0e0f3c}` -> `T-0x856ddbac_G-0x1abe787d_I-0x0c0e0f3c.png` (carbon-up IN PLACE)
+- `{46a006b0,13e14fb7}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13e14fb7.png` (carbon-up IN PLACE)
+- `{46a006b0,13f15213}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13f15213.png` (carbon-up IN PLACE)
+- `{46a006b0,13f15250}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13f15250.png` (carbon-up IN PLACE)
+- `{46a006b0,13f15251}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13f15251.png` (carbon-up IN PLACE)
+- `{46a006b0,13f15253}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13f15253.png` (carbon-up IN PLACE)
+- `{46a006b0,13f15254}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13f15254.png` (carbon-up IN PLACE)
+- `{46a006b0,13f15255}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13f15255.png` (carbon-up IN PLACE)
+- `{46a006b0,13f1525e}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13f1525e.png` (carbon-up IN PLACE)
+- `{46a006b0,13f1525f}` -> `T-0x856ddbac_G-0x46a006b0_I-0x13f1525f.png` (carbon-up IN PLACE)
+- `{46a006b0,144161e0}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161e0.png` (carbon-up IN PLACE)
+- `{46a006b0,144161e2}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161e2.png` (carbon-up IN PLACE)
+- `{1abe787d,144161e4}` -> `T-0x856ddbac_G-0x1abe787d_I-0x144161e4.png` (carbon-up IN PLACE)
+- `{46a006b0,144161e4}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161e4.png` (carbon-up IN PLACE)
+- `{46a006b0,144161eb}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161eb.png` (carbon-up IN PLACE)
+- `{1abe787d,144161ee}` -> `T-0x856ddbac_G-0x1abe787d_I-0x144161ee.png` (carbon-up IN PLACE)
+- `{46a006b0,144161ee}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161ee.png` (carbon-up IN PLACE)
+- `{46a006b0,144161f1}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161f1.png` (carbon-up IN PLACE)
+- `{46a006b0,144161f2}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161f2.png` (carbon-up IN PLACE)
+- `{46a006b0,144161f3}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161f3.png` (carbon-up IN PLACE)
+- `{46a006b0,144161f4}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161f4.png` (carbon-up IN PLACE)
+- `{46a006b0,144161f5}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161f5.png` (carbon-up IN PLACE)
+- `{46a006b0,144161f6}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161f6.png` (carbon-up IN PLACE)
+- `{46a006b0,144161f9}` -> `T-0x856ddbac_G-0x46a006b0_I-0x144161f9.png` (carbon-up IN PLACE)
+- `{46a006b0,1441620e}` -> `T-0x856ddbac_G-0x46a006b0_I-0x1441620e.png` (carbon-up IN PLACE)
+- `{46a006b0,1441620f}` -> `T-0x856ddbac_G-0x46a006b0_I-0x1441620f.png` (carbon-up IN PLACE)
+- `{46a006b0,14416210}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416210.png` (carbon-up IN PLACE)
+- `{46a006b0,14416211}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416211.png` (carbon-up IN PLACE)
+- `{46a006b0,14416212}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416212.png` (carbon-up IN PLACE)
+- `{46a006b0,14416214}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416214.png` (carbon-up IN PLACE)
+- `{46a006b0,14416215}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416215.png` (carbon-up IN PLACE)
+- `{46a006b0,14416216}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416216.png` (carbon-up IN PLACE)
+- `{46a006b0,14416217}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416217.png` (carbon-up IN PLACE)
+- `{46a006b0,14416218}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416218.png` (carbon-up IN PLACE)
+- `{46a006b0,14416219}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416219.png` (carbon-up IN PLACE)
+- `{46a006b0,1441621a}` -> `T-0x856ddbac_G-0x46a006b0_I-0x1441621a.png` (carbon-up IN PLACE)
+- `{46a006b0,1441621b}` -> `T-0x856ddbac_G-0x46a006b0_I-0x1441621b.png` (carbon-up IN PLACE)
+- `{46a006b0,1441621c}` -> `T-0x856ddbac_G-0x46a006b0_I-0x1441621c.png` (carbon-up IN PLACE)
+- `{1abe787d,14416220}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416220.png` (carbon-up IN PLACE)
+- `{46a006b0,14416220}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416220.png` (carbon-up IN PLACE)
+- `{46a006b0,14416221}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416221.png` (carbon-up IN PLACE)
+- `{46a006b0,14416222}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416222.png` (carbon-up IN PLACE)
+- `{46a006b0,14416223}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416223.png` (carbon-up IN PLACE)
+- `{1abe787d,14416224}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416224.png` (carbon-up IN PLACE)
+- `{46a006b0,14416225}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416225.png` (carbon-up IN PLACE)
+- `{46a006b0,14416226}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416226.png` (carbon-up IN PLACE)
+- `{46a006b0,14416227}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416227.png` (carbon-up IN PLACE)
+- `{46a006b0,14416228}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416228.png` (carbon-up IN PLACE)
+- `{46a006b0,14416229}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416229.png` (carbon-up IN PLACE)
+- `{46a006b0,1441622a}` -> `T-0x856ddbac_G-0x46a006b0_I-0x1441622a.png` (carbon-up IN PLACE)
+- `{46a006b0,1441622c}` -> `T-0x856ddbac_G-0x46a006b0_I-0x1441622c.png` (carbon-up IN PLACE)
+- `{1abe787d,14416240}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416240.png` (carbon-up IN PLACE)
+- `{46a006b0,14416240}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416240.png` (carbon-up IN PLACE)
+- `{46a006b0,14416243}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416243.png` (carbon-up IN PLACE)
+- `{1abe787d,14416245}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416245.png` (carbon-up IN PLACE)
+- `{46a006b0,14416245}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416245.png` (carbon-up IN PLACE)
+- `{1abe787d,14416246}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416246.png` (carbon-up IN PLACE)
+- `{46a006b0,14416264}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416264.png` (carbon-up IN PLACE)
+- `{1abe787d,14416270}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416270.png` (carbon-up IN PLACE)
+- `{1abe787d,14416271}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416271.png` (carbon-up IN PLACE)
+- `{1abe787d,14416272}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416272.png` (carbon-up IN PLACE)
+- `{1abe787d,14416273}` -> `T-0x856ddbac_G-0x1abe787d_I-0x14416273.png` (carbon-up IN PLACE)
+- `{46a006b0,14416280}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416280.png` (carbon-up IN PLACE)
+- `{46a006b0,14416321}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416321.png` (carbon-up IN PLACE)
+- `{46a006b0,14416322}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416322.png` (carbon-up IN PLACE)
+- `{46a006b0,14416324}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416324.png` (carbon-up IN PLACE)
+- `{46a006b0,14416325}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416325.png` (carbon-up IN PLACE)
+- `{46a006b0,14416326}` -> `T-0x856ddbac_G-0x46a006b0_I-0x14416326.png` (carbon-up IN PLACE)
+- `{46a006b0,2bc3ac85}` -> `T-0x856ddbac_G-0x46a006b0_I-0x2bc3ac85.png` (carbon-up IN PLACE)
+- `{46a006b0,2c201cb0}` -> `T-0x856ddbac_G-0x46a006b0_I-0x2c201cb0.png` (carbon-up IN PLACE)
+- `{46a006b0,2c201cb1}` -> `T-0x856ddbac_G-0x46a006b0_I-0x2c201cb1.png` (carbon-up IN PLACE)
+- `{46a006b0,2c201cb2}` -> `T-0x856ddbac_G-0x46a006b0_I-0x2c201cb2.png` (carbon-up IN PLACE)
+- `{46a006b0,46a006a4}` -> `T-0x856ddbac_G-0x46a006b0_I-0x46a006a4.png` (carbon-up IN PLACE)
+- `{46a006b0,46a006a6}` -> `T-0x856ddbac_G-0x46a006b0_I-0x46a006a6.png` (carbon-up IN PLACE)
+- `{46a006b0,46a006a7}` -> `T-0x856ddbac_G-0x46a006b0_I-0x46a006a7.png` (carbon-up IN PLACE)
+- `{46a006b0,4bc3a5ae}` -> `T-0x856ddbac_G-0x46a006b0_I-0x4bc3a5ae.png` (carbon-up IN PLACE)
+- `{46a006b0,4bfc52c2}` -> `T-0x856ddbac_G-0x46a006b0_I-0x4bfc52c2.png` (carbon-up IN PLACE)
+- `{46a006b0,4c02b518}` -> `T-0x856ddbac_G-0x46a006b0_I-0x4c02b518.png` (carbon-up IN PLACE)
+- `{46a006b0,4c0f0d31}` -> `T-0x856ddbac_G-0x46a006b0_I-0x4c0f0d31.png` (carbon-up IN PLACE)
+- `{46a006b0,8bc38238}` -> `T-0x856ddbac_G-0x46a006b0_I-0x8bc38238.png` (carbon-up IN PLACE)
+- `{1abe787d,8c0e0f2d}` -> `T-0x856ddbac_G-0x1abe787d_I-0x8c0e0f2d.png` (carbon-up IN PLACE)
+- `{46a006b0,cbbab0ae}` -> `T-0x856ddbac_G-0x46a006b0_I-0xcbbab0ae.png` (carbon-up IN PLACE)
+- `{46a006b0,cbec3db2}` -> `T-0x856ddbac_G-0x46a006b0_I-0xcbec3db2.png` (carbon-up IN PLACE)
+- `{46a006b0,cbfb3730}` -> `T-0x856ddbac_G-0x46a006b0_I-0xcbfb3730.png` (carbon-up IN PLACE)
+- `{46a006b0,cbfb3731}` -> `T-0x856ddbac_G-0x46a006b0_I-0xcbfb3731.png` (carbon-up IN PLACE)
+- `{46a006b0,cbfb3732}` -> `T-0x856ddbac_G-0x46a006b0_I-0xcbfb3732.png` (carbon-up IN PLACE)
+- `{46a006b0,cc1a735d}` -> `T-0x856ddbac_G-0x46a006b0_I-0xcc1a735d.png` (carbon-up IN PLACE)
+- `{46a006b0,e2b66db8}` -> `T-0x856ddbac_G-0x46a006b0_I-0xb1f56dba.png` (carbon-up at the plan's CLONE TGI (carbon-owned source; clone re-styled so carbon dialogs stop drawing the stock sheet))
+
+Enrollment rows skipped (not this builder's):
+
+- package ZCarbonArt (25 script + 249 art row(s)) - owned by the selective-safe/itemicons lanes, not this builder
+- package ZCarbonNam (1 script + 1 art row(s)) - owned by the selective-safe/itemicons lanes, not this builder
+- package ZCarbonStyles (1 script + 1 art row(s)) - owned by the selective-safe/itemicons lanes, not this builder

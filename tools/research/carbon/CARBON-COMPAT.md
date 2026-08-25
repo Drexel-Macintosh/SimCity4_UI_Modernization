@@ -171,10 +171,36 @@ broken at any fractional tier.
 7. Boot + eyes-on at 1.5x/2x (user): dep gates green, skin coherent,
    scaled. Then ledger/memory/release per house law.
 
+## 2026-08-25 implementation addenda
+
+- **User confirmed Interface Transparency is ON** (the skin's requirement).
+- **Two more mods installed by the user and handled**: warrior's
+  god-terraforming-in-mayor-mode (150-mods, files match WarriorUI's gate
+  pins exactly — the existing package arms with zero changes) and
+  null-45's region-view-census-ui (DLL at Plugins root + dat in 150-mods).
+  Carbon's two matching add-on dats were un-pruned into the installed skin
+  (now 12 dats).
+- **Eighth package `z_SC4UIScale_ZCarbonGodMod`**: carbon's GodMod dat
+  redeclares EXACTLY WarriorUI's four TGIs (scripts `09923283`/`CB95403E`,
+  art `EB7C4D3B`/`14215E27`); Z-late beats WarriorUI when armed; gate =
+  `z_scoty_Carbon_GodMod.dat` (21,005) + core. Built by the selective-safe
+  lane (WarriorUI's twin flow). Carbon's RegionCensus dat is one `.UI` in
+  the census DLL's private group `0x9CB6053F` — zero overlap, un-prune IS
+  the handling (live check: does the region screen scale its window?).
+- **Census v2**: includes DISARMED dats (`.dat.x1-disabled`) — the first
+  census missed the GodMod↔WarriorUI overlap because WarriorUI was
+  gate-dark. Intersection stays 494 TGIs.
+- **DbpfPack timestamp law**: dats are never raw-byte-identical across
+  runs (header 24–31 = pack-time stamps); equality proofs zero those bytes
+  (REGRESSION.md 2026-08-25).
+- **Design order (user)**: users add/remove plugins AT WILL — presence
+  gates handle every combination; carbon-absent is the DEFAULT state; the
+  public bundle never carries carbon-derived dats (Build-Dist assert),
+  carbon users build locally from the shipped generators. All packages
+  ship 1.5×/2×/3×.
+
 ## Open items for the live session (cannot be resolved offline)
 
-1. Interface Transparency state: stored in `Documents\SimCity 4\SimCity 4.cfg`
-   (binary; format not reversed). Carbon requires it ON. Check the graphics
-   options panel once, or reverse the cfg flag later.
-2. The 179 carbon-only TGIs under runtime scaling — eyes-on pass.
-3. Boot verification of gates + winners after the ZCarbonUI build.
+1. The 179 carbon-only TGIs under runtime scaling — eyes-on pass.
+2. Boot verification of gates + winners after the ZCarbon deploy.
+3. Region-census DLL window under region-screen runtime scaling — eyes-on.
