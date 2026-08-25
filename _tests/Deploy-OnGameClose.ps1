@@ -6,7 +6,113 @@
 $ErrorActionPreference = "Stop"
 $proj = (Split-Path -Parent $PSScriptRoot)
 $plug = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins')
+# v4.2.0 (subfolder move): OUR files live in Plugins\010-SC4UIScale\ - the
+# number prefix keeps us loading BEFORE 050-load-first\ and 150-mods\, so the
+# root packages keep LOSING to the mods they are designed to lose to (that
+# losing is the compatibility gate). zzz-SC4UIScale\ stays a TOP-LEVEL folder,
+# unchanged - its whole purpose is sorting after those same mod folders.
+$our = Join-Path $plug '010-SC4UIScale'
+if (-not (Test-Path $our)) { New-Item -ItemType Directory $our | Out-Null }
 
+# #104: the game HANGS ON SHUTDOWN often enough that this loop blocked twice in
+# one session (2026-08-03) - the window closes, the PROCESS does not exit, and
+# the wait spun silently until the user noticed and used End Task. Silence was
+# the real defect: the operator could not tell "still playing" from "hung".
+#
+# We do NOT kill the process. Standing order: the game runs ELEVATED and holds
+# the DLL and the dats open; killing it risks a half-written file. This only
+# reports, and keeps waiting, so the deploy remains safe to leave running.
+$waited = 0
+$nagAt = 60
+while ($p = Get-Process -Name "SimCity 4" -ErrorAction SilentlyContinue) {
+    if ($waited -ge $nagAt) {
+        # -f binds tighter than +, so it formatted only the LAST string of a
+        # parenthesised concatenation and the earlier {0}/{1} shipped through
+        # literally (observed 2026-08-03: "pid {0} still running after {1}s").
+        # A wait-loop that cannot say what it is waiting on is the exact defect
+        # this warning exists to cure, so build the message first, format last.
+        $msg = "SimCity 4 (pid {0}) still running after {1}s. If you have already " +
+            "closed the window this is task #104 - the process outlives it. " +
+            "End Task on 'SimCity 4' and this deploy will continue by itself. " +
+            "NOT killing it here: the game is elevated and holds the dats open."
+        Write-Warning ($msg -f $p.Id, $waited)
+        $nagAt += 60
+    }
+    Start-Sleep -Seconds 5
+    $waited += 5
+}
+if ($waited -ge 60) {
+    Write-Output ("game exited after {0}s of waiting - deploying now." -f $waited)
+}
+# ---- ONE-TIME LEGACY-LAYOUT MIGRATION (v4.2.0) ------------------------------
+# Before v4.2.0 all of these lived at the Plugins ROOT. Two classes:
+#   MOVE  - user state the deploy never writes (settings, history, snapshots):
+#           carried into 010-SC4UIScale\ if not already there.
+#   DELETE - build products the deploy/DLL recreate in the new home. The root
+#           DLL is the critical one: left behind, BOTH copies would load as
+#           two directors. Runs only when legacy files exist; logs each file.
+$MIGRATE_MOVE = @("SC4UIScale.ini", "SC4UIScale-104.csv", "SC4UIScale.gcap",
+    "SC4UIScale.compare-state.txt", ".sc4uiscale-tier1-restore.txt",
+    "FontStyle.ini.user-original")
+$MIGRATE_DELETE = @("SC4UIScale.dll", "SC4UIScale.log", "FontStyle.ini",
+    "FontStyle.ini.x1-disabled", "FontStyle-2x.ini", "FontStyle-15x.ini",
+    "FontStyle-3x.ini")
+# Catch-all for SC4UIScale-namespace strays the two lists miss (an .ini.bak2
+# was the first, caught by Test-DatIntegrity's root red check on the
+# migration's maiden run): anything left matching our name that is in
+# NEITHER list gets MOVED, preserving it.
+Get-ChildItem $plug -Filter "SC4UIScale*" -File -ErrorAction SilentlyContinue |
+    Where-Object { $MIGRATE_DELETE -notcontains $_.Name -and $MIGRATE_MOVE -notcontains $_.Name } |
+    ForEach-Object { $MIGRATE_MOVE += $_.Name }
+foreach ($name in $MIGRATE_MOVE) {
+    $old = Join-Path $plug $name
+    if (Test-Path $old) {
+        $new = Join-Path $our $name
+        if (Test-Path $new) {
+            Remove-Item $old -Force
+            Write-Output ("  MIGRATED (root copy dropped, new home already has it): " + $name)
+        } else {
+            Move-Item $old $new -Force
+            Write-Output ("  MIGRATED root -> 010-SC4UIScale: " + $name)
+        }
+    }
+}
+foreach ($name in $MIGRATE_DELETE) {
+    $old = Join-Path $plug $name
+    if (Test-Path $old) {
+        if ($name -eq "SC4UIScale.log") {
+            # Preserve the legacy log's capture before dropping it.
+            $capDir = "$proj\_tests\captures"
+            if (-not (Test-Path $capDir)) { New-Item -ItemType Directory $capDir | Out-Null }
+            $stamp = (Get-Item $old).LastWriteTime.ToString("yyyy-MM-dd-HHmmss")
+            $dst = Join-Path $capDir ("SC4UIScale-{0}.log" -f $stamp)
+            if (-not (Test-Path $dst)) { Copy-Item $old $dst -Force }
+        }
+        Remove-Item $old -Force
+        Write-Output ("  MIGRATED (legacy root copy removed): " + $name)
+    }
+}
+# Legacy root packages: any remaining z_SC4UIScale_* at the root. Fresh copies
+# land in 010-SC4UIScale\ below; a same-named root leftover would only confuse
+# audits (root loads EARLIER, so it cannot even shadow the new copy). MenuFix
+# and other hand-placed strays are MOVED, not deleted - they are user
+# decisions, not build products.
+Get-ChildItem $plug -Filter "z_SC4UIScale_*" -File -ErrorAction SilentlyContinue |
+    ForEach-Object {
+        $new = Join-Path $our $_.Name
+        if (Test-Path $new) {
+            Remove-Item $_.FullName -Force
+            Write-Output ("  MIGRATED (stale root package removed): " + $_.Name)
+        } else {
+            Move-Item $_.FullName $new -Force
+            Write-Output ("  MIGRATED root package -> 010-SC4UIScale: " + $_.Name)
+        }
+    }
+# (v4.2.0: this snapshot MOVED here, AFTER the migration - it reads the
+# 010-SC4UIScale folder, and on a legacy install the families are not
+# THERE until the migration runs. Snapshotting first recorded nothing
+# and the restore left two tiers armed - caught by Test-DatIntegrity
+# on the migration's first run.)
 # ---- ARMED-TIER SNAPSHOT (2026-08-19) --------------------------------------
 # Which tier is LIVE right now, per tier-managed family, recorded BEFORE any
 # copy runs. The family blocks below each hard-code 2x as the armed tier; on a
@@ -38,7 +144,7 @@ $TIER_FAMILIES = @(
 # The newest log wins; this script preserves the previous log before every
 # deploy, so there is always at least one to read.
 $TIER_FROM_LOG = $null
-$logs = @(Get-ChildItem $plug -Filter "SC4UIScale*.log" -File -ErrorAction SilentlyContinue |
+$logs = @(Get-ChildItem $our -Filter "SC4UIScale*.log" -File -ErrorAction SilentlyContinue |
           Sort-Object LastWriteTime -Descending)
 foreach ($lg in $logs) {
     $m = [regex]::Matches((Get-Content $lg.FullName -Raw -ErrorAction SilentlyContinue),
@@ -52,7 +158,7 @@ foreach ($lg in $logs) {
 
 $ARMED_BEFORE = @{}
 foreach ($fam in $TIER_FAMILIES) {
-    $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $plug }
+    $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $our }
     if (-not (Test-Path $dir)) { continue }
     $live = @()
     foreach ($tier in @("15x","2x","3x")) {
@@ -84,37 +190,8 @@ if ($ARMED_BEFORE.Count) {
 # either present-and-armed or absent-and-stashed, no tier tag to read - so
 # the only question worth asking beforehand is whether it was armed AT ALL,
 # matching $anyArmedBefore's role for the tag-based families below.
-$selectiveArtArmedBefore = Test-Path (Join-Path $plug "z_SC4UIScale_SelectiveArt.dat")
-# #104: the game HANGS ON SHUTDOWN often enough that this loop blocked twice in
-# one session (2026-08-03) - the window closes, the PROCESS does not exit, and
-# the wait spun silently until the user noticed and used End Task. Silence was
-# the real defect: the operator could not tell "still playing" from "hung".
-#
-# We do NOT kill the process. Standing order: the game runs ELEVATED and holds
-# the DLL and the dats open; killing it risks a half-written file. This only
-# reports, and keeps waiting, so the deploy remains safe to leave running.
-$waited = 0
-$nagAt = 60
-while ($p = Get-Process -Name "SimCity 4" -ErrorAction SilentlyContinue) {
-    if ($waited -ge $nagAt) {
-        # -f binds tighter than +, so it formatted only the LAST string of a
-        # parenthesised concatenation and the earlier {0}/{1} shipped through
-        # literally (observed 2026-08-03: "pid {0} still running after {1}s").
-        # A wait-loop that cannot say what it is waiting on is the exact defect
-        # this warning exists to cure, so build the message first, format last.
-        $msg = "SimCity 4 (pid {0}) still running after {1}s. If you have already " +
-            "closed the window this is task #104 - the process outlives it. " +
-            "End Task on 'SimCity 4' and this deploy will continue by itself. " +
-            "NOT killing it here: the game is elevated and holds the dats open."
-        Write-Warning ($msg -f $p.Id, $waited)
-        $nagAt += 60
-    }
-    Start-Sleep -Seconds 5
-    $waited += 5
-}
-if ($waited -ge 60) {
-    Write-Output ("game exited after {0}s of waiting - deploying now." -f $waited)
-}
+$selectiveArtArmedBefore = Test-Path (Join-Path $our "z_SC4UIScale_SelectiveArt.dat")
+
 # #105/#107: PRESERVE THE LOG BEFORE THE NEXT LAUNCH DESTROYS IT.
 # SC4UIScale.log is RECREATED on every game launch. On 2026-08-03 that silently
 # destroyed the run-14 SPINPROBE capture - the only recording of the spinning
@@ -122,7 +199,7 @@ if ($waited -ge 60) {
 # deploy is immediately followed by a launch, so this is the last safe moment.
 # Named by the log's OWN mtime, not "now", so the file keeps the timestamp of
 # the run it came from.
-$srcLog = "$plug\SC4UIScale.log"
+$srcLog = "$our\SC4UIScale.log"
 if (Test-Path $srcLog) {
     $capDir = "$proj\_tests\captures"
     if (-not (Test-Path $capDir)) { New-Item -ItemType Directory $capDir | Out-Null }
@@ -133,22 +210,22 @@ if (Test-Path $srcLog) {
         Write-Output ("preserved previous run log -> {0}" -f (Split-Path $dest -Leaf))
     }
 }
-Copy-Item "$proj\build\Release\SC4UIScale.dll" "$plug\SC4UIScale.dll" -Force
+Copy-Item "$proj\build\Release\SC4UIScale.dll" "$our\SC4UIScale.dll" -Force
 # SelectiveArt (v4.0.3, STABLE-FILENAME PILOT): all three tier sources ship
 # PERMANENTLY suffixed - none of them is "the active one" by filename any
 # more. The DLL's SyncDatStable copies the right tier's bytes onto the one
 # stable name below at boot, so sc4pac (or a manual deploy re-run) always
 # finds z_SC4UIScale_SelectiveArt.dat under the SAME name regardless of tier.
-Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat" "$plug\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled" -Force
-Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat" "$plug\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled" -Force
-Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat" "$plug\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat" "$our\z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat" "$our\z_SC4UIScale_SelectiveArt-15x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat" "$our\z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled" -Force
 # The STABLE file itself: ships as the 2x content by default (today's
 # out-of-the-box tier), and SyncDatStable rewrites it to match whatever the
 # player's own AutoScale/selector choice resolves to on next boot.
-Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat" "$plug\z_SC4UIScale_SelectiveArt.dat" -Force
-Copy-Item "$proj\tools\dialog-static\z_SC4UIScale_DialogStatic.dat" "$plug\z_SC4UIScale_DialogStatic-2x.dat" -Force
-Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat" "$plug\z_SC4UIScale_DialogStatic-15x.dat.x1-disabled" -Force
-Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat" "$plug\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_SelectiveArt.dat" "$our\z_SC4UIScale_SelectiveArt.dat" -Force
+Copy-Item "$proj\tools\dialog-static\z_SC4UIScale_DialogStatic.dat" "$our\z_SC4UIScale_DialogStatic-2x.dat" -Force
+Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat" "$our\z_SC4UIScale_DialogStatic-15x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat" "$our\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled" -Force
 
 # ITEM ICONS - ADDED 2026-08-03 (#116). These were MISSING from this script
 # for its whole life, and ScaleTier actively tier-manages them
@@ -167,9 +244,9 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat" "$plug\z_SC
 # (it is what SelectiveArt/DialogStatic do too - the 2x tier's source carries
 # no tag). Deploying from the tagged copy makes DatIntegrity FAIL, which is
 # how this was caught rather than shipped.
-Copy-Item "$proj\tools\itemicons\z_SC4UIScale_ItemIcons.dat" "$plug\z_SC4UIScale_ItemIcons-2x.dat" -Force
-Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_ItemIcons-15x.dat" "$plug\z_SC4UIScale_ItemIcons-15x.dat.x1-disabled" -Force
-Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ItemIcons-3x.dat" "$plug\z_SC4UIScale_ItemIcons-3x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\itemicons\z_SC4UIScale_ItemIcons.dat" "$our\z_SC4UIScale_ItemIcons-2x.dat" -Force
+Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_ItemIcons-15x.dat" "$our\z_SC4UIScale_ItemIcons-15x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ItemIcons-3x.dat" "$our\z_SC4UIScale_ItemIcons-3x.dat.x1-disabled" -Force
 # SaveWarningUI (v2.38.0, task #79c): 2x copies of the two in-city quit/exit
 # confirm scripts built from the save-warning MOD's versions. MUST land in the
 # zzz-SC4UIScale SUBFOLDER - root Plugins files load BEFORE subfolders, so a
@@ -284,7 +361,7 @@ if (Test-Path $selSrc) {
 #
 # WebText is now deployed here (user decision 2026-08-05: ship it - it makes the
 # visible text match the WebRedirect the DLL already performs at every tier).
-Copy-Item "$proj\tools\webtext\z_SC4UIScale_WebText.dat" "$plug\z_SC4UIScale_WebText.dat" -Force
+Copy-Item "$proj\tools\webtext\z_SC4UIScale_WebText.dat" "$our\z_SC4UIScale_WebText.dat" -Force
 # MenuFix is STILL NOT DEPLOYED, and now for the honest reason rather than a
 # wrong one: it rewrites CAM's gameplay submenu data rather than scaling any
 # UI, so shipping it is a decision about a THIRD-PARTY mod's content, not about
@@ -370,9 +447,9 @@ Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat" "$zzz\z_SC
 # tools\packages\2x\ directory. It is byte-identical to make_fontstyle.py's
 # factor-2 output apart from its hand-written ";;" banner (asserted by
 # --selfcheck).
-Copy-Item "$proj\tools\fonts\FontStyle.candidate.ini" "$plug\FontStyle-2x.ini" -Force
-Copy-Item "$proj\tools\packages\15x\FontStyle-15x.ini" "$plug\FontStyle-15x.ini" -Force
-Copy-Item "$proj\tools\packages\3x\FontStyle-3x.ini" "$plug\FontStyle-3x.ini" -Force
+Copy-Item "$proj\tools\fonts\FontStyle.candidate.ini" "$our\FontStyle-2x.ini" -Force
+Copy-Item "$proj\tools\packages\15x\FontStyle-15x.ini" "$our\FontStyle-15x.ini" -Force
+Copy-Item "$proj\tools\packages\3x\FontStyle-3x.ini" "$our\FontStyle-3x.ini" -Force
 # ---- REFRESH THE *ACTIVE* TIER (2026-08-05) --------------------------------
 # Every non-2x tier above is deployed to "<name>.x1-disabled". The DLL ACTIVATES
 # a tier at boot by RENAMING it - dropping the .x1-disabled suffix. So once the
@@ -401,7 +478,7 @@ Copy-Item "$proj\tools\packages\3x\FontStyle-3x.ini" "$plug\FontStyle-3x.ini" -F
 # BACKWARDS in time. Test-DatIntegrity's deployed==built hash caught it.
 # Restricting to -15x/-3x removes the collision: case (b) on a non-active tier
 # leaves no unsuffixed twin, so `Test-Path $active` is already false.
-foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
+foreach ($dir in @($our, "$plug\zzz-SC4UIScale")) {
     if (-not (Test-Path $dir)) { continue }
     Get-ChildItem $dir -Filter "*.x1-disabled" -File -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -match '-(15x|3x)\.dat\.x1-disabled$' } |
@@ -448,7 +525,7 @@ $DEPENDENCY_GATED = @(
     # match - caught by Test-DatIntegrity.ps1's dependency-gate-drift check,
     # 2026-08-23. See that check's own comment for the two failure shapes.)
 )
-foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
+foreach ($dir in @($our, "$plug\zzz-SC4UIScale")) {
     if (-not (Test-Path $dir)) { continue }
     Get-ChildItem $dir -Filter "*-2x.dat.x1-disabled" -File -ErrorAction SilentlyContinue |
         ForEach-Object {
@@ -465,7 +542,7 @@ foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
 # Tier-gated-only packages: a stale -2x.x1-disabled twin beside an armed -2x.dat
 # is leftover state, not a decision. The armed file is correct; drop the twin so
 # the next run cannot mistake it for a gate again.
-foreach ($dir in @($plug, "$plug\zzz-SC4UIScale")) {
+foreach ($dir in @($our, "$plug\zzz-SC4UIScale")) {
     if (-not (Test-Path $dir)) { continue }
     Get-ChildItem $dir -Filter "*-2x.dat.x1-disabled" -File -ErrorAction SilentlyContinue |
         ForEach-Object {
@@ -502,7 +579,7 @@ foreach ($fam in $TIER_FAMILIES) {
     $want = $ARMED_BEFORE[$fam.Base]
     if (-not $want -and -not $anyArmedBefore) {
         # Deliberate 1x baseline: disarm everything the copies above re-armed.
-        $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $plug }
+        $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $our }
         if (-not (Test-Path $dir)) { continue }
         foreach ($tier in @("15x","2x","3x")) {
             $live = Join-Path $dir ($fam.Base + "-" + $tier + ".dat")
@@ -514,7 +591,7 @@ foreach ($fam in $TIER_FAMILIES) {
         continue
     }
     if (-not $want) { continue }
-    $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $plug }
+    $dir = if ($fam.Sub) { Join-Path $plug $fam.Sub } else { $our }
     if (-not (Test-Path $dir)) { continue }
     foreach ($tier in @("15x","2x","3x")) {
         $live  = Join-Path $dir ($fam.Base + "-" + $tier + ".dat")
@@ -540,7 +617,7 @@ foreach ($fam in $TIER_FAMILIES) {
 # bare between deploy and launch is exactly the "file, game and selector
 # disagree" half-state $anyArmedBefore exists to prevent for every other
 # family, and Test-DatIntegrity's armed-tier check inspects this window.
-$selArtStable = Join-Path $plug "z_SC4UIScale_SelectiveArt.dat"
+$selArtStable = Join-Path $our "z_SC4UIScale_SelectiveArt.dat"
 $selArtStash = $selArtStable + ".x1-disabled"
 if (-not $selectiveArtArmedBefore -and -not $anyArmedBefore) {
     if (Test-Path $selArtStable) {
@@ -553,7 +630,7 @@ if (-not $selectiveArtArmedBefore -and -not $anyArmedBefore) {
 }
 
 $a = (Get-Item "$proj\build\Release\SC4UIScale.dll").Length
-$b = (Get-Item "$plug\SC4UIScale.dll").Length
+$b = (Get-Item "$our\SC4UIScale.dll").Length
 if ($a -ne $b) { Write-Output "DEPLOY SIZE MISMATCH src=$a dst=$b"; exit 1 }
 # The old line here named only SelectiveArt + DialogStatic and was how the
 # ItemIcons omission stayed invisible - it read as a complete manifest.

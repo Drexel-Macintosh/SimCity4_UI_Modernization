@@ -63,8 +63,8 @@ python tools\fonts\make_fontstyle.py                   # font tables
 ```
 
 Each builder takes a scale factor and writes a `z_SC4UIScale_*.dat`. Deploy
-those to `Documents\SimCity 4\Plugins\`, with the third-party ones in the
-`zzz-SC4UIScale\` subfolder.
+those to `Documents\SimCity 4\Plugins-SC4UIScale\` (v4.2.0 layout),
+with the third-party overrides in the top-level `zzz-SC4UIScale\` subfolder.
 
 ### Three rules that are not optional
 

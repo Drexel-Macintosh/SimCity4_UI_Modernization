@@ -202,6 +202,13 @@ def main():
     print("\n3. LOAD ORDER - our folder must sort after the mod's")
     check(OUR_FOLDER > NAM_FOLDER,
           "'%s' > '%s' so our override wins" % (OUR_FOLDER, NAM_FOLDER))
+    # v4.2.0 second premise: the MAIN packages moved from the Plugins root
+    # into 010-SC4UIScale\, whose whole contract is loading BEFORE the big
+    # mod folders (the root packages are designed to LOSE those fights).
+    check("010-SC4UIScale" < "050-load-first" and "010-SC4UIScale" < "150-mods"
+          and "010-SC4UIScale" < NAM_FOLDER,
+          "'010-SC4UIScale' sorts before 050-/150-/770- so the main "
+          "packages keep losing to CAM/mods by design")
 
     print("\n3b. PER-TGI LOAD ORDER - no mod may win any icon we claim to cover")
     # THE FOLDER CHECK ABOVE IS NOT ENOUGH, and believing it cost a visible

@@ -16694,3 +16694,35 @@ for THE KEY, not just a==0); a marker probe must mark EVERY sheet the family
 can draw (round 1's ten .ui-declared sheets missed the code-fetched ones);
 and the engine's gdType is a SMALL-INTEGER enum (push 3 = 16-bit at
 0x7D4B15) — GL-shaped constants in a census are a silent null.
+
+## 2026-08-24 (night) — v4.2.0 subfolder move: the law
+
+**BESIDE-THE-DLL IS NOT THE PLUGINS ROOT.** With the DLL in
+`Plugins\010-SC4UIScale\`, seven subsystems that used the DLL's own folder as
+a stand-in for the Plugins root would have gone blind SILENTLY: the six
+third-party dependency gates (every gated package permanently dark, greens
+everywhere), the uncovered-icon scan (UNCOVERED=0 forever = #149 returns),
+web-button detection ×2 (redirect armed against an installed mod), and the
+SC4GraphicsOptions.ini pair (AutoScale falls back to the monitor guess; the
+selector writes an orphan ini). Law: any path that names ANOTHER mod's file
+roots at `PluginsRoot()` (walk up to the dir literally named `Plugins`, ≤2
+levels, loud fallback); "beside the DLL" is only ever for files WE own.
+
+**A FOLDER'S NAME IS ITS LOAD-ORDER CONTRACT.** The main packages are
+designed to LOSE to `050-load-first\`/`150-mods\` (losing IS the gate —
+measured damage list: CAM dialogs shrink, 36 styles drop to 4). Subfolders
+load alphabetically after root files, so the new home had to sort BEFORE
+those mods: `010-`. The zzz folder's contract (sort after them) is unchanged.
+Both contracts are now mechanically checked in gate_namicons.py — and the
+per-TGI winner census (1,496 TGIs, before/after, identical winners required)
+is the gate, because "the folder check was present, passing, and useless"
+is already on this ledger.
+
+**A MANIFEST PARSER'S BLIND SPOT SHIPS SILENTLY, TWICE NOW.** Build-Dist
+derives the bundle by parsing the deploy script; expression-built Copy-Item
+lines are invisible to it. SelectorUI was the first casualty (rescued with an
+assert); CsiIcons was the second — absent from EVERY bundle since
+2026-08-18, found only because this move forced a re-read of the parser.
+Rescued the same way + a bundle-size floor. Law: every rescue block gets an
+assert, and the TOTAL gets a floor, because the next blind spot is already
+being written.

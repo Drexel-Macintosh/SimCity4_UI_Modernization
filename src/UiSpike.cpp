@@ -20110,13 +20110,17 @@ namespace
 	}
 
 	// ---- PATHS -----------------------------------------------------------
-	// SC4GraphicsOptions.ini sits beside the DLL, same as our own ini.
+	// SC4GraphicsOptions.ini belongs to a THIRD-PARTY DLL that lives at the
+	// PLUGINS ROOT. v4.2.0: with our DLL in Plugins\010-SC4UIScale\, "beside
+	// the DLL" would miss it (reads fall to defaults, and the selector would
+	// WRITE an orphan ini into our folder that nothing reads) - so this
+	// resolves against the real root, shared with ScaleTier. Every consumer
+	// (SelReadGfxMode/Res, SelGraphicsDllPresent, SelWriteGraphicsIni) goes
+	// through this one path source.
 	void SelGfxIniPath(wchar_t* out, size_t outLen)
 	{
 		wchar_t path[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
-		wchar_t* lastSlash = wcsrchr(path, L'\\');
-		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
+		ScaleTier::GetPluginsRootW(path, MAX_PATH);
 		swprintf_s(out, outLen, L"%sSC4GraphicsOptions.ini", path);
 	}
 

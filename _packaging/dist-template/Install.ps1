@@ -62,16 +62,28 @@ if ($Uninstall) {
             if ($PSCmdlet.ShouldProcess($_.FullName, "remove")) { Remove-Item $_.FullName -Force }
             $removed++
         }
-    foreach ($extra in @("SC4UIScale.log", "FontStyle-2x.ini", "FontStyle-15x.ini", "FontStyle-3x.ini")) {
-        $t = Join-Path $plug $extra
-        if (Test-Path $t) {
-            if ($PSCmdlet.ShouldProcess($t, "remove")) { Remove-Item $t -Force }
-            $removed++
+    # DLL-generated files in the mod folder, and any pre-v4.2.0 leftovers at
+    # the Plugins root (older releases installed everything there).
+    $ourDir = Join-Path $plug "010-SC4UIScale"
+    foreach ($base in @($ourDir, $plug)) {
+        foreach ($extra in @("SC4UIScale.dll", "SC4UIScale.ini", "SC4UIScale.log",
+                             "SC4UIScale.gcap", "SC4UIScale-104.csv", "FontStyle.ini",
+                             "FontStyle-2x.ini", "FontStyle-15x.ini", "FontStyle-3x.ini")) {
+            $t = Join-Path $base $extra
+            if (Test-Path $t) {
+                if ($PSCmdlet.ShouldProcess($t, "remove")) { Remove-Item $t -Force }
+                $removed++
+            }
         }
     }
-    $zzz = Join-Path $plug "zzz-SC4UIScale"
-    if ((Test-Path $zzz) -and -not (Get-ChildItem $zzz -Recurse -File)) {
-        if ($PSCmdlet.ShouldProcess($zzz, "remove empty folder")) { Remove-Item $zzz -Recurse -Force }
+    foreach ($dirName in @("010-SC4UIScale", "zzz-SC4UIScale")) {
+        # Only remove a folder that is now EMPTY - anything left (the
+        # preserved FontStyle.ini.user-original above all) stays visible for
+        # the user to recover.
+        $d = Join-Path $plug $dirName
+        if ((Test-Path $d) -and -not (Get-ChildItem $d -Recurse -File)) {
+            if ($PSCmdlet.ShouldProcess($d, "remove empty folder")) { Remove-Item $d -Recurse -Force }
+        }
     }
     Write-Output "removed $removed file(s)."
     Write-Output ""
@@ -81,6 +93,44 @@ if ($Uninstall) {
 }
 
 # --- install ------------------------------------------------------------------
+# v4.2.0 LAYOUT MIGRATION: releases before 4.2.0 installed ~20 files at the
+# Plugins ROOT; this release lives entirely in Plugins\010-SC4UIScale\ (+ the
+# zzz-SC4UIScale overrides folder). Clean the old root files first - the root
+# DLL especially, which would otherwise load as a SECOND copy of this mod.
+$legacyMoved = 0
+$ourDir = Join-Path $plug "010-SC4UIScale"
+foreach ($keep in @("SC4UIScale.ini", "FontStyle.ini.user-original",
+                    "SC4UIScale-104.csv")) {
+    # user state from the old layout: carry it into the new home
+    $old = Join-Path $plug $keep
+    if (Test-Path $old) {
+        if (-not (Test-Path $ourDir)) { New-Item -ItemType Directory $ourDir -Force | Out-Null }
+        $new = Join-Path $ourDir $keep
+        if (-not (Test-Path $new)) {
+            if ($PSCmdlet.ShouldProcess($old, "migrate to 010-SC4UIScale")) { Move-Item $old $new -Force }
+        } else {
+            if ($PSCmdlet.ShouldProcess($old, "remove legacy root copy")) { Remove-Item $old -Force }
+        }
+        $legacyMoved++
+    }
+}
+foreach ($stale in @("SC4UIScale.dll", "SC4UIScale.log", "SC4UIScale.gcap",
+                     "FontStyle.ini", "FontStyle.ini.x1-disabled",
+                     "FontStyle-2x.ini", "FontStyle-15x.ini", "FontStyle-3x.ini",
+                     "z_SC4UIScale_FontStyle.ini")) {
+    $old = Join-Path $plug $stale
+    if (Test-Path $old) {
+        if ($PSCmdlet.ShouldProcess($old, "remove legacy root file")) { Remove-Item $old -Force }
+        $legacyMoved++
+    }
+}
+Get-ChildItem $plug -Filter "z_SC4UIScale_*" -File -ErrorAction SilentlyContinue |
+    ForEach-Object {
+        if ($PSCmdlet.ShouldProcess($_.FullName, "remove legacy root package")) { Remove-Item $_.FullName -Force }
+        $legacyMoved++
+    }
+if ($legacyMoved) { Write-Output "migrated/removed $legacyMoved file(s) from the pre-4.2.0 root layout." }
+
 # Never clobber a user's existing FontStyle.ini; the DLL has its own
 # preservation logic but an installer should not create the situation.
 $copied = 0
@@ -93,6 +143,13 @@ foreach ($rel in $owned) {
             New-Item -ItemType Directory -Path $toDir -Force | Out-Null
         }
     }
+    # The user's SETTINGS survive an upgrade: the bundle ini installs only
+    # when no ini exists yet (fresh install, or the migration above already
+    # carried the old one into place). Every other file is ours to replace.
+    if ((Split-Path $rel -Leaf) -eq "SC4UIScale.ini" -and (Test-Path $to)) {
+        Write-Output "kept your existing SC4UIScale.ini (settings preserved)"
+        continue
+    }
     if ($PSCmdlet.ShouldProcess($to, "copy")) { Copy-Item $from $to -Force }
     $copied++
 }
@@ -100,5 +157,5 @@ foreach ($rel in $owned) {
 Write-Output "installed $copied file(s)."
 Write-Output ""
 Write-Output "Start SimCity 4. The UI should be visibly larger at the main menu."
-Write-Output "If it is not, read $plug\SC4UIScale.log - the first lines say which"
-Write-Output "resolution was detected and which scale tier was chosen."
+Write-Output "If it is not, read $plug\010-SC4UIScale\SC4UIScale.log - the first"
+Write-Output "lines say which resolution was detected and which tier was chosen."

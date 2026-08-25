@@ -23,10 +23,15 @@ development builds that were never published.
 
        Documents\SimCity 4\Plugins\
 
-   Keep the folder structure. The  zzz-SC4UIScale\  subfolder MUST stay a
-   subfolder - SimCity 4 loads root files before subfolders, and those files
-   have to win against other mods. Putting them in the root breaks them
-   silently.
+   Keep the folder structure. The mod is exactly TWO subfolders:
+
+       Plugins\010-SC4UIScale\    (the mod itself)
+       Plugins\zzz-SC4UIScale\    (overrides that must load after other mods)
+
+   Both names are load-bearing - SimCity 4 loads plugin folders in name
+   order, and each folder's position is chosen so the right files win (and
+   deliberately LOSE) against other mods. Do not rename them, and do not
+   move their contents to the Plugins root.
 
 3. Start the game. That is it.
 
@@ -44,7 +49,7 @@ The UI will be visibly larger the moment you reach the main menu.
 
 If nothing changed, open:
 
-    Documents\SimCity 4\Plugins\SC4UIScale.log
+    Documents\SimCity 4\Plugins-SC4UIScale\SC4UIScale.log
 
 The first few lines report the resolution it detected and the tier it chose.
 The log is rewritten on every launch, so read it after the run you care about.
@@ -64,15 +69,15 @@ a failure; the log says so explicitly.
   UNINSTALL
 -------------------------------------------------------------------------------
 
-Delete these from  Documents\SimCity 4\Plugins\ :
+Delete these TWO FOLDERS from  Documents\SimCity 4\Plugins\ :
 
-    SC4UIScale.dll
-    SC4UIScale.ini
-    SC4UIScale.log
-    z_SC4UIScale_*.dat            (every file starting z_SC4UIScale_)
-    FontStyle-2x.ini, FontStyle-15x.ini, FontStyle-3x.ini
-    FontStyle.ini                 (see the note below before deleting)
+    010-SC4UIScale\               (the whole folder - see the FontStyle
+                                  note below before deleting)
     zzz-SC4UIScale\               (the whole folder)
+
+(If you upgraded from a release before v4.2.0 and ever see loose files named
+SC4UIScale.* or z_SC4UIScale_* at the Plugins root, they are leftovers from
+the old layout - delete those too.)
 
 AND ONE FILE IN THE GAME'S OWN FOLDER. The game only reads a loose font file
 from its install directory, so the mod copies the matching font there on every
@@ -95,7 +100,7 @@ and regions are never touched.
   SETTINGS
 -------------------------------------------------------------------------------
 
-SC4UIScale.ini sits beside the DLL and is commented throughout. You do not
+SC4UIScale.ini sits beside the DLL (in 010-SC4UIScale\) and is commented throughout. You do not
 need to touch it. The two keys worth knowing:
 
     ScaleAll=1        the in-city UI. Set 0 to disable that half.
@@ -171,6 +176,6 @@ unaffiliated modification and contains no EA code.
 
 SHA256SUMS.txt lists a hash for every file under Plugins\. To check them:
 
-    Get-FileHash .\Plugins\SC4UIScale.dll -Algorithm SHA256
+    Get-FileHash .\Plugins-SC4UIScale\SC4UIScale.dll -Algorithm SHA256
 
 and compare against the matching line.

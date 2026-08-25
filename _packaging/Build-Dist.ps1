@@ -39,13 +39,17 @@ $version = $Matches[1]
 if (-not $OutRoot) { $OutRoot = Join-Path $proj "dist" }
 $bundle = Join-Path $OutRoot "SC4UIScale-v$version"
 $plugOut = Join-Path $bundle "Plugins"
+# v4.2.0 (subfolder move): the bundle ships TWO folders under Plugins\ -
+# 010-SC4UIScale (everything of ours that used to sit at the root) and
+# zzz-SC4UIScale (the overrides, unchanged). Install/uninstall = two folders.
+$ourOut = Join-Path $plugOut "010-SC4UIScale"
 $zzzOut = Join-Path $plugOut "zzz-SC4UIScale"
 
 Write-Output "SC4UIScale v$version  ->  $bundle"
 
 # --- parse the deploy manifest ----------------------------------------------
 $lines = Get-Content $deployScript
-$rx = '^\s*Copy-Item\s+"\$proj\\([^"]+)"\s+"\$(plug|zzz)\\([^"]+)"'
+$rx = '^\s*Copy-Item\s+"\$proj\\([^"]+)"\s+"\$(plug|our|zzz)\\([^"]+)"'
 $items = @()
 foreach ($l in $lines) {
     if ($l -match $rx) {
@@ -66,6 +70,7 @@ Write-Output "  parsed $($items.Count) file(s) from the deploy manifest"
 # --- assemble ----------------------------------------------------------------
 if (Test-Path $bundle) { Remove-Item $bundle -Recurse -Force }
 New-Item -ItemType Directory -Path $plugOut -Force | Out-Null
+New-Item -ItemType Directory -Path $ourOut -Force | Out-Null
 New-Item -ItemType Directory -Path $zzzOut -Force | Out-Null
 
 $missing = @()
@@ -73,7 +78,7 @@ $copied = 0
 foreach ($it in $items) {
     $src = Join-Path $proj $it.Src
     if (-not (Test-Path $src)) { $missing += $it.Src; continue }
-    $dstDir = if ($it.Dest -eq "zzz") { $zzzOut } else { $plugOut }
+    $dstDir = switch ($it.Dest) { "zzz" { $zzzOut } "our" { $ourOut } default { $plugOut } }
     Copy-Item $src (Join-Path $dstDir $it.Name) -Force
     $copied++
 }
@@ -106,8 +111,32 @@ Copy-Item $selectorSrc (Join-Path $zzzOut "z_SC4UIScale_SelectorUI-1x.dat") -For
 $copied++
 Write-Output "  + z_SC4UIScale_SelectorUI-1x.dat (stock-tier selector; the DLL arms or stashes it at boot)"
 
+# CsiIcons: SAME parser blindness, found 2026-08-24 - the deploy copies it
+# through an expression-built loop, so the regex never saw it and it was
+# ABSENT FROM EVERY DIST BUNDLE since 2026-08-18. Rescued exactly like
+# SelectorUI: explicit copies + a hard assert. (UncoveredIcons is the loop's
+# other member and stays OUT by design - it is rebuilt per-install from the
+# player's own Plugins tree, so a shipped copy would be someone else's.)
+foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
+    $csiSrc = Join-Path $proj ("tools\packages\" + $t[0] + "\z_SC4UIScale_CsiIcons-" + $t[0] + ".dat")
+    if (-not (Test-Path $csiSrc)) {
+        throw "CsiIcons source missing: $csiSrc - the U-Drive-It offer-balloon icons would silently drop out of the bundle again"
+    }
+    Copy-Item $csiSrc (Join-Path $zzzOut ("z_SC4UIScale_CsiIcons-" + $t[0] + ".dat" + $t[1])) -Force
+    $copied++
+}
+Write-Output "  + z_SC4UIScale_CsiIcons tiers (rescued from the parser blind spot - see comment)"
+
+# PARSED-COUNT GATE: the next expression-built Copy-Item drops a package
+# invisibly; keep a floor under the total so the drop goes red not silent.
+if ($copied -lt 40) {
+    throw ("bundle holds only $copied files - the deploy manifest parse has gone " +
+           "blind to something (floor is 40). Diff the deploy script against the " +
+           "parse before shipping.")
+}
+
 # the shipping user ini - the packaging copy, not the developer one
-Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $plugOut "SC4UIScale.ini") -Force
+Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $ourOut "SC4UIScale.ini") -Force
 $copied++
 
 # --- an EMPTY z_SC4UIScale_FontStyle.ini placeholder, so a package manager --
@@ -155,11 +184,11 @@ $copied++
 # regardless of whether the mod is present, absent, or half-removed, because
 # nothing - not the game, not our own DLL - ever reads this exact filename;
 # it exists purely so a package manager has something of ours to own.
-New-Item -ItemType File -Path (Join-Path $plugOut "z_SC4UIScale_FontStyle.ini") -Force | Out-Null
-if ((Get-Item (Join-Path $plugOut "z_SC4UIScale_FontStyle.ini")).Length -ne 0) {
+New-Item -ItemType File -Path (Join-Path $ourOut "z_SC4UIScale_FontStyle.ini") -Force | Out-Null
+if ((Get-Item (Join-Path $ourOut "z_SC4UIScale_FontStyle.ini")).Length -ne 0) {
     throw "z_SC4UIScale_FontStyle.ini placeholder is not empty - sc4pac needs a zero-byte file, not a real one"
 }
-if (Test-Path (Join-Path $plugOut "FontStyle.ini")) {
+if ((Test-Path (Join-Path $plugOut "FontStyle.ini")) -or (Test-Path (Join-Path $ourOut "FontStyle.ini"))) {
     # #182's exact failure mode reintroduced: a literal live-named FontStyle.ini
     # in the bundle is a landmine for anyone who removes this mod by hand.
     # Refuse to ship it rather than silently repeat the incident.
@@ -230,7 +259,7 @@ $header = @(
 )
 Set-Content -Path $manifest -Value ($header + $rows) -Encoding utf8
 
-$dllHash = (Get-FileHash (Join-Path $plugOut "SC4UIScale.dll") -Algorithm SHA256).Hash
+$dllHash = (Get-FileHash (Join-Path $ourOut "SC4UIScale.dll") -Algorithm SHA256).Hash
 $total = (Get-ChildItem $plugOut -Recurse -File | Measure-Object -Property Length -Sum).Sum
 
 Write-Output ""

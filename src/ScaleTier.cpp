@@ -62,6 +62,52 @@ namespace
 		}
 	}
 
+	// v4.2.0 (subfolder move): the Documents PLUGINS ROOT, distinct from
+	// DllDir(). With the DLL living in Plugins\010-SC4UIScale\, "beside the
+	// DLL" is no longer the Plugins root - and seven subsystems (dependency
+	// gates, the uncovered-icon scan, web-button detection, the
+	// SC4GraphicsOptions.ini read/write pair) need the ROOT to find OTHER
+	// mods' files. Walk up from DllDir until the leaf directory is named
+	// "Plugins" (at most 2 levels - the DLL is designed to sit exactly one
+	// level down); if no ancestor is named Plugins (a dev tree, or a user
+	// who renamed the folder chain), fall back to DllDir and SAY SO - a
+	// silent wrong root here reads as "no third-party mods installed".
+	void PluginsRoot(wchar_t* out, size_t outLen)
+	{
+		DllDir(out, outLen);
+		wchar_t probe[MAX_PATH];
+		wcscpy_s(probe, MAX_PATH, out);
+		for (int up = 0; up < 3; up++)
+		{
+			// probe ends with a backslash; the leaf name sits between the
+			// last two separators.
+			size_t len = wcslen(probe);
+			if (len < 2) { break; }
+			probe[len - 1] = L'\0';                    // drop trailing sep
+			wchar_t* leaf = wcsrchr(probe, L'\\');
+			if (!leaf) { break; }
+			if (_wcsicmp(leaf + 1, L"Plugins") == 0)
+			{
+				probe[len - 1] = L'\\';                // restore trailing sep
+				wcscpy_s(out, outLen, probe);
+				return;
+			}
+			*(leaf + 1) = L'\0';                       // ascend one level
+		}
+		// Fallback: DllDir itself. Logged once - every resolver states its
+		// resolved value, and this one failing silently would blind every
+		// third-party gate.
+		static bool s_warned = false;
+		if (!s_warned)
+		{
+			s_warned = true;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: PluginsRoot - no ancestor named 'Plugins' within "
+				"2 levels of the DLL; falling back to the DLL's own folder. "
+				"Third-party dependency detection may be blind.");
+		}
+	}
+
 	bool FileExists(const wchar_t* p)
 	{
 		const DWORD a = GetFileAttributesW(p);
@@ -346,7 +392,10 @@ namespace
 			}
 			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
+				// v4.2.0: 010-SC4UIScale joins the skip list - a dependency
+				// must never be satisfied by our own packages.
 				if (_wcsicmp(fd.cFileName, L"zzz-SC4UIScale") == 0
+					|| _wcsicmp(fd.cFileName, L"010-SC4UIScale") == 0
 					|| _wcsicmp(fd.cFileName, L"_dllstash") == 0)
 				{
 					continue;
@@ -2008,6 +2057,11 @@ namespace IconSynth
 
 namespace ScaleTier
 {
+	void GetPluginsRootW(wchar_t* out, size_t outLen)
+	{
+		PluginsRoot(out, outLen);
+	}
+
 	// THE fit predicate. Extracted from Decide 2026-08-19 so the in-game
 	// selector can ask the same question the boot path asks, rather than
 	// carrying its own copy of 880/558/800/600 - a second copy would be a
@@ -2388,11 +2442,12 @@ namespace ScaleTier
 	// invokes it UNCONDITIONALLY.
 	void SyncSelectorPackage(bool stockTier)
 	{
-		// Same directory every other package is synced in: the DLL's own
-		// folder, which IS the Documents Plugins folder (see SyncStaticLayers).
-		wchar_t docPlugins[MAX_PATH];
-		DllDir(docPlugins, MAX_PATH);
-		SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_SelectorUI",
+		// v4.2.0: zzz-SC4UIScale stays a TOP-LEVEL Plugins folder (its whole
+		// purpose is sorting after 150-mods etc.), so with the DLL living in
+		// 010-SC4UIScale\ the sync dir is the PLUGINS ROOT, not DllDir.
+		wchar_t pluginsRoot[MAX_PATH];
+		PluginsRoot(pluginsRoot, MAX_PATH);
+		SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_SelectorUI",
 			L"-1x", stockTier);
 		Logger::Get().WriteLine(LogLevel::Info,
 			"ScaleTier: SelectorUI-1x %ls (tier is %ls). This is the ONLY "
@@ -2430,8 +2485,12 @@ namespace ScaleTier
 	void ScanUncoveredIcons(float factor)
 	{
 		if (factor <= 1.0f) { return; }
+		// v4.2.0: this scan's whole purpose is enumerating THIRD-PARTY icon
+		// art, so its root is the real Plugins root - scoped to DllDir it
+		// would see only our own folder, report UNCOVERED=0, and every
+		// third-party icon would silently regress to the #149 shape.
 		wchar_t plugDir[MAX_PATH];
-		DllDir(plugDir, MAX_PATH);
+		PluginsRoot(plugDir, MAX_PATH);
 		size_t pl = wcslen(plugDir);
 		while (pl > 0 && plugDir[pl - 1] == 92) { plugDir[--pl] = 0; }
 		IconSynth::ScanAndReport(plugDir, factor);
@@ -2487,6 +2546,13 @@ namespace ScaleTier
 		DllDir(docPlugins, MAX_PATH);
 		wchar_t instPlugins[MAX_PATH];
 		InstallPluginsDir(instPlugins, MAX_PATH);
+		// v4.2.0: our own packages live beside the DLL (docPlugins =
+		// Plugins\010-SC4UIScale\); everything that faces OTHER mods -
+		// dependency walks, web-button detection, the zzz-SC4UIScale
+		// overrides (a TOP-LEVEL folder by design) - roots at the real
+		// Plugins root.
+		wchar_t pluginsRoot[MAX_PATH];
+		PluginsRoot(pluginsRoot, MAX_PATH);
 
 		// WEB BUTTON IMPROVEMENT MOD - INVERSE GATE. When the mod is installed
 		// it owns the region website button (its own LTEXT + link), so our
@@ -2496,7 +2562,7 @@ namespace ScaleTier
 		// Runs before the factor guard below so it applies at every tier,
 		// including stock. (The ShellExecute redirect is gated separately in
 		// the director.)
-		const bool webBtnPresent = WebButtonModPresent(docPlugins);
+		const bool webBtnPresent = WebButtonModPresent(pluginsRoot);
 		SyncDat(docPlugins, L"z_SC4UIScale_WebText", L"", !webBtnPresent);
 
 		// #182 GUARD (adversarial review 2026-08-17): now that MANUAL factors
@@ -2549,13 +2615,13 @@ namespace ScaleTier
 			wchar_t hit[MAX_PATH] = {};
 			DWORD sz = 0;
 			bool present = FindPluginFile(
-				docPlugins, dep.modFile, dep.prefixMatch, 4, hit, MAX_PATH, &sz);
+				pluginsRoot, dep.modFile, dep.prefixMatch, 4, hit, MAX_PATH, &sz);
 			bool sizeOk = (dep.modSize == 0) || (sz == dep.modSize);
 			if (present && sizeOk && dep.modFile2 != nullptr)
 			{
 				wchar_t hit2[MAX_PATH] = {};
 				DWORD sz2 = 0;
-				const bool p2 = FindPluginFile(docPlugins, dep.modFile2,
+				const bool p2 = FindPluginFile(pluginsRoot, dep.modFile2,
 					dep.prefixMatch, 4, hit2, MAX_PATH, &sz2);
 				const bool s2 = (dep.modSize2 == 0) || (sz2 == dep.modSize2);
 				if (!p2 || !s2)
@@ -2618,7 +2684,7 @@ namespace ScaleTier
 			// subfolders, so a root dat can NEVER override a subfolder dat -
 			// such overrides must sit in a folder sorting after the target
 			// ("zzz-SC4UIScale" beats "150-mods").
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_ItemIconsSub",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ItemIconsSub",
 				pkg.tag, match);
 			// #196 (2026-08-18): CsiIcons was MISSING from this list entirely -
 			// zero occurrences of "CsiIcons" anywhere in this file - while
@@ -2649,7 +2715,7 @@ namespace ScaleTier
 			// archives, so unlike CamUI/WarriorUI/ThirdPartyUI there is no mod
 			// whose presence it must be conditioned on. Tier-gated only, which
 			// is exactly the ItemIconsSub shape directly above.
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_CsiIcons",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_CsiIcons",
 				pkg.tag, match);
 			// SUBFOLDER package (#149): ItemIcons that a THIRD-PARTY LOT
 			// supplies and no package of ours covered - the Lighted Palm Plaza
@@ -2669,7 +2735,7 @@ namespace ScaleTier
 			// the player something broken. A dependency gate here would fail
 			// the whole package on a harmless upstream re-release (#139's
 			// reason for presence-only gating, one step further).
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_UncoveredIcons",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_UncoveredIcons",
 				pkg.tag, match);
 			// SUBFOLDER package (v2.38.0, task #79c): 2x copies of the two
 			// in-city quit/exit confirm scripts, built from the save-warning
@@ -2677,7 +2743,7 @@ namespace ScaleTier
 			// beats our root DialogStatic package. Gated on that mod: with it
 			// gone, this turns off and our root stock-derived copy - which
 			// then wins over SimCity_1.dat - scales the stock dialog instead.
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_SaveWarningUI", depOk));
 			// SUBFOLDER package (v2.38.3): 2x copies of the SIX dialog-static
@@ -2685,7 +2751,7 @@ namespace ScaleTier
 			// being installed and unchanged - with CAM gone this turns off and
 			// our root stock-derived copies take over, which is the correct
 			// unmodded behaviour.
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_CamUI",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_CamUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_CamUI", depOk));
 			// SUBFOLDER package (v2.20.2, task #44): 2x-transformed copies of
@@ -2697,7 +2763,7 @@ namespace ScaleTier
 			// mod removed our copy of ITS script would otherwise keep its
 			// 36-slot UI on screen (measured: our 532x640 beats the stock
 			// 531x406). Presence only, no size check: see kThirdPartyDeps.
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_ThirdPartyUI", depOk));
 			// SUBFOLDER package (v2.47.0, task #94): 2x copies of warrior's
@@ -2713,7 +2779,7 @@ namespace ScaleTier
 			// MEASURED: z_SC4UIScale_WarriorUI-2x.dat was live in Plugins with
 			// no .x1-disabled twin while the other subfolder packages had one.
 			// Gated now on the same EXACT NAME + SIZE pair as SaveWarningUI.
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_WarriorUI",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_WarriorUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_WarriorUI", depOk));
 			// SUBFOLDER package (#139, 2026-08-05): 2x/1.5x/3x copies of NAM's
@@ -2722,14 +2788,14 @@ namespace ScaleTier
 			// SUBFOLDERS (the load-order law above), and NAM is a subfolder
 			// (770-network-addon-mod\), so a root override could never win.
 			// "zzz-" sorts after "770-", so this one does.
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_NamIcons", depOk));
 			// WebButtonUI (2026-08-21): cyclone-boom Web Button Improvement
 			// Mod's web-button bitmap, per tier, gated on the mod - without this
 			// SyncDat the tiers stay in whatever state they were deployed and
 			// 2x art crops/stretches at every other factor.
-			SyncDat(docPlugins, L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI",
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI", depOk));
 		}

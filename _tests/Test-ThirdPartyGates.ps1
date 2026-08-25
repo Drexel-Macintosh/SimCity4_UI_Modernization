@@ -53,7 +53,7 @@ Write-Output ("Parsed {0} third-party dependency row(s) from ScaleTier.cpp" -f $
 
 # The DLL skips its own folder so a package cannot satisfy its own dependency.
 $all = Get-ChildItem -LiteralPath $plugins -Recurse -File -ErrorAction SilentlyContinue |
-       Where-Object { $_.FullName -notmatch '\\zzz-SC4UIScale\\' -and $_.FullName -notmatch '\\_dllstash\\' }
+       Where-Object { $_.FullName -notmatch '\\zzz-SC4UIScale\\' -and $_.FullName -notmatch '\\010-SC4UIScale\\' -and $_.FullName -notmatch '\\_dllstash\\' }
 
 $failures = @()
 foreach ($d in $deps) {

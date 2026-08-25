@@ -1,5 +1,33 @@
 # Changelog
 
+## 4.2.0 (2026-08-24) — BREAKING LAYOUT CHANGE: the mod now lives in two folders
+
+- **The install is now exactly two folders**: `Plugins\010-SC4UIScale\` (the
+  DLL, ini, log, fonts, and all main packages — everything that used to
+  clutter the Plugins root, ~23 loose files) and the unchanged
+  `Plugins\zzz-SC4UIScale\` overrides folder. Uninstall = delete two folders.
+  The `010-` prefix is load-bearing: it keeps the main packages loading
+  BEFORE `050-load-first\` and `150-mods\`, so CAM, the 36-style mod,
+  save-warning and their kin keep beating our stock-derived copies exactly
+  as they did at the root (that losing is the compatibility mechanism).
+- Both the dev deploy and the release `Install.ps1` auto-migrate old
+  root-layout installs: user state (ini, history, font snapshot) moves into
+  the new folder; stale root copies — the old root DLL above all — are
+  removed. `Test-DatIntegrity` now goes red on any root leftover.
+- New `PluginsRoot()` resolution in the DLL: every subsystem that hunts
+  OTHER mods' files (the six third-party dependency gates, the
+  uncovered-icon scan, web-button detection, and the `SC4GraphicsOptions.ini`
+  read/write pair) now roots at the real Plugins root instead of "beside the
+  DLL" — required for the move, and logged like every resolver.
+- Fixed in passing: `z_SC4UIScale_CsiIcons-*.dat` (the U-Drive-It offer
+  balloon icons) was **absent from every dist bundle since 2026-08-18** —
+  the bundle builder's manifest parser could not see its expression-built
+  deploy line. Rescued explicitly, with a bundle-size floor so the next
+  silent drop goes red. Also hardened eight sibling-path buffers against a
+  path-length overflow.
+- sc4pac note: package paths changed; the channel entry (maintained
+  externally) needs a matching update.
+
 ## 4.1.1 (2026-08-24, local instrumented build — not a public release)
 
 - No gameplay or scaling changes. Research instrumentation that closed three

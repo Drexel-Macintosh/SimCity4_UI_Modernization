@@ -35,13 +35,16 @@ $DocPlugins  = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity
 $InstallRoot = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe"
 $InstPlugins = Join-Path $InstallRoot "Plugins"
 $GfxIni      = Join-Path $DocPlugins "SC4GraphicsOptions.ini"
-$StateFile   = Join-Path $DocPlugins "SC4UIScale.compare-state.txt"
+# v4.2.0 (subfolder move): our home inside Plugins.
+$OurDir      = Join-Path $DocPlugins "010-SC4UIScale"
+$StateFile   = Join-Path $OurDir "SC4UIScale.compare-state.txt"
 $OffSuffix   = ".compare-off"
 
 # EVERY directory this script may rename a file in. Both directions read this
 # list, so they cannot drift apart again.
 $TouchedDirs = @(
     $DocPlugins
+    $OurDir
     (Join-Path $DocPlugins "zzz-SC4UIScale")
     $InstPlugins
     $InstallRoot
@@ -52,7 +55,9 @@ $TouchedDirs = @(
 # Only files WITHOUT an existing gating suffix (.x1-disabled) are touched.
 function Get-OurLiveFiles {
     $files = @()
-    $files += Get-ChildItem -Path $DocPlugins -Filter "SC4UIScale.dll" -ErrorAction SilentlyContinue
+    $files += Get-ChildItem -Path $OurDir -Filter "SC4UIScale.dll" -ErrorAction SilentlyContinue
+    $files += Get-ChildItem -Path $OurDir -Filter "z_SC4UIScale_*.dat" -ErrorAction SilentlyContinue
+    # legacy root copies (pre-4.2.0 layout) still come off if present:
     $files += Get-ChildItem -Path $DocPlugins -Filter "z_SC4UIScale_*.dat" -ErrorAction SilentlyContinue
     # zzz-SC4UIScale subfolder: our 2x copies of OTHER MODS' scripts
     # (ThirdPartyUI / CamUI / SaveWarningUI). These MUST come off in stock
@@ -61,6 +66,7 @@ function Get-OurLiveFiles {
     # (a Franken-capture of exactly the panel being measured). The .dat
     # filter already excludes .x1-disabled files, same as the root scan.
     $files += Get-ChildItem -Path (Join-Path $DocPlugins "zzz-SC4UIScale") -Filter "z_SC4UIScale_*.dat" -ErrorAction SilentlyContinue
+    $files += Get-ChildItem -Path $OurDir -Filter "FontStyle.ini" -ErrorAction SilentlyContinue
     $files += Get-ChildItem -Path $DocPlugins -Filter "FontStyle.ini" -ErrorAction SilentlyContinue
     $files += Get-ChildItem -Path $InstPlugins -Filter "FontStyle.ini" -ErrorAction SilentlyContinue
     # 2026-08-05: THE THIRD COPY, and it was missing for months. Our own font
@@ -170,6 +176,7 @@ function Assert-StockClean {
 
 function Show-Status {
     $off = @(Get-ChildItem -Path $DocPlugins -Filter "*$OffSuffix" -ErrorAction SilentlyContinue)
+    $off += @(Get-ChildItem -Path $OurDir -Filter "*$OffSuffix" -ErrorAction SilentlyContinue)
     $off += @(Get-ChildItem -Path $InstPlugins -Filter "*$OffSuffix" -ErrorAction SilentlyContinue)
     $off += @(Get-ChildItem -Path (Join-Path $DocPlugins "zzz-SC4UIScale") -Filter "*$OffSuffix" -ErrorAction SilentlyContinue)
     # MEASURED, not inferred from how many files this script renamed. Those

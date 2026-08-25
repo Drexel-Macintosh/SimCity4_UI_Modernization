@@ -1,5 +1,6 @@
 #include "WebRedirect.h"
 #include "Logger.h"
+#include "ScaleTier.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -112,10 +113,12 @@ namespace
 	// file name (its dat name varies by option A/B/C and version).
 	bool WebButtonModPresent()
 	{
+		// v4.2.0: the mod being hunted lives ANYWHERE under the Plugins
+		// root; with our DLL in Plugins\010-SC4UIScale\ a module-dir walk
+		// would only see our own folder and keep the redirect armed against
+		// an installed mod. Root resolution shared with ScaleTier.
 		wchar_t dir[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), dir, MAX_PATH);
-		wchar_t* lastSlash = wcsrchr(dir, L'\\');
-		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
+		ScaleTier::GetPluginsRootW(dir, MAX_PATH);
 		const wchar_t* needle = L"web button improvement mod";
 		try
 		{

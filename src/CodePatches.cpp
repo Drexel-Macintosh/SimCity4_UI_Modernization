@@ -4409,7 +4409,7 @@ namespace CodePatches
 			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
 				MAX_PATH);
 			wchar_t* sl = wcsrchr(ini, 92);   // L'\' written as its code unit
-			if (sl) { wcscpy_s(sl + 1, 32, L"SC4UIScale.ini"); }
+			if (sl) { wcscpy_s(sl + 1, MAX_PATH - ((sl + 1) - ini), L"SC4UIScale.ini"); }
 			gCsiKill = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"CsiKill", 0, ini));
 			const uintptr_t base =
@@ -4787,7 +4787,7 @@ namespace CodePatches
 			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
 				MAX_PATH);
 			wchar_t* sl = wcsrchr(ini, 92);   // L'\' as its code unit
-			if (sl) { wcscpy_s(sl + 1, 32, L"SC4UIScale.ini"); }
+			if (sl) { wcscpy_s(sl + 1, MAX_PATH - ((sl + 1) - ini), L"SC4UIScale.ini"); }
 			wchar_t spec[512] = {};
 			GetPrivateProfileStringW(L"UiSpike", L"CsiAim", L"", spec, 512, ini);
 			if (spec[0] == 0) { return; }
@@ -7276,7 +7276,7 @@ namespace CodePatches
 		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
 			dqIni, MAX_PATH);
 		wchar_t* s = wcsrchr(dqIni, L'\\');
-		if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+		if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - dqIni), L"SC4UIScale.ini"); }
 		gDqOn = static_cast<int>(GetPrivateProfileIntW(
 			L"Probe", L"DispatchQuad", 0, dqIni));
 		Logger::Get().WriteLine(LogLevel::Info,
@@ -7372,7 +7372,7 @@ namespace CodePatches
 		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
 			ini, MAX_PATH);
 		wchar_t* s = wcsrchr(ini, L'\\');
-		if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+		if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - ini), L"SC4UIScale.ini"); }
 		gGpuCapN = static_cast<int>(GetPrivateProfileIntW(
 			L"Probe", L"GpuCap", 0, ini));
 		Logger::Get().WriteLine(LogLevel::Info,
@@ -7519,7 +7519,7 @@ namespace CodePatches
 		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
 			ini, MAX_PATH);
 		wchar_t* s = wcsrchr(ini, L'\\');
-		if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+		if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - ini), L"SC4UIScale.ini"); }
 		gFgMax = static_cast<int>(GetPrivateProfileIntW(
 			L"Probe", L"FontGuid", 0, ini));
 		Logger::Get().WriteLine(LogLevel::Info,
@@ -7648,7 +7648,7 @@ namespace CodePatches
 			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
 				iniPath, MAX_PATH);
 			wchar_t* slash = wcsrchr(iniPath, L'\\');
-			if (slash) { wcscpy_s(slash + 1, 32, L"SC4UIScale.ini"); }
+			if (slash) { wcscpy_s(slash + 1, MAX_PATH - ((slash + 1) - iniPath), L"SC4UIScale.ini"); }
 			gSpriteOffset = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"BalloonSpriteOffset", 0, iniPath));
 			gSpriteKind = static_cast<int>(GetPrivateProfileIntW(
@@ -8055,7 +8055,7 @@ namespace CodePatches
 			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
 				MAX_PATH);
 			wchar_t* s = wcsrchr(ini, L'\\');
-			if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+			if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - ini), L"SC4UIScale.ini"); }
 			gViewSuppress = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"BalloonViewSuppress", 0, ini));
 			const int vlrRaw = static_cast<int>(GetPrivateProfileIntW(
@@ -8155,7 +8155,7 @@ namespace CodePatches
 		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
 			MAX_PATH);
 		wchar_t* s = wcsrchr(ini, L'\\');
-		if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+		if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - ini), L"SC4UIScale.ini"); }
 		return GetPrivateProfileIntW(L"Probe", L"ViewListRepeat", 0, ini) > 0;
 	}
 

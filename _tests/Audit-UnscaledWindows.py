@@ -122,7 +122,7 @@ def main():
     proj = os.path.dirname(here)
     ap = argparse.ArgumentParser()
     ap.add_argument("--log", default=os.path.expandvars(
-        r"%USERPROFILE%\OneDrive\Documents\SimCity 4\Plugins\SC4UIScale.log"))
+        r"%USERPROFILE%\OneDrive\Documents\SimCity 4\Plugins\010-SC4UIScale\SC4UIScale.log"))
     ap.add_argument("--scripts", default=os.path.join(proj, "tools", "uiscripts", "extracted"))
     ap.add_argument("--factor", type=float, default=2.0)
     args = ap.parse_args()

@@ -18,6 +18,14 @@ namespace ScaleTier
 	// Falls back to 1.0 (stock, scaling dormant) when nothing fits.
 	float Decide(int width, int height);
 
+	// v4.2.0 (subfolder move): the Documents PLUGINS ROOT - walks up from
+	// the DLL's folder (which now lives in Plugins\010-SC4UIScale\) to the
+	// nearest ancestor named "Plugins", at most 2 levels; falls back to the
+	// DLL's own folder with a one-shot log line. Every consumer that hunts
+	// OTHER mods' files (dependency gates, SC4GraphicsOptions.ini, icon
+	// scans) MUST use this, never the DLL sibling path.
+	void GetPluginsRootW(wchar_t* out, size_t outLen);
+
 	// The fit predicate ALONE, without the "is it installed" and
 	// "largest first" parts of Decide. Published so the in-game scale
 	// selector can grey out a factor this resolution cannot carry, using the

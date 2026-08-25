@@ -8,6 +8,9 @@ $ErrorActionPreference = "Stop"
 $proj = Split-Path $PSScriptRoot -Parent
 $packer = Join-Path $proj "tools\dbpf\DbpfPack.exe"
 $plugins = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins')
+# v4.2.0 (subfolder move): our files live in the 010-SC4UIScale subfolder;
+# zzz-SC4UIScale stays top-level. Row names below carry their folder.
+$our = Join-Path $plugins '010-SC4UIScale'
 
 # name pattern (live or gated), expected entry count
 $EXPECTED = @(
@@ -159,13 +162,13 @@ $EXPECTED = @(
   # 476 = 461 + 15 My Sims family arts (v2.22.0: roots 0x698894D3 /
   # 0xCA1F1D9C / 0xAA1F1EC5, script I-aa1f1f57 - the panel came OFF the
   # kNeverScaleIds deferral; see REGRESSION.md "MY SIMS").
-  @{ name = "z_SC4UIScale_SelectiveArt-2x.dat";  entries = 696 },
+  @{ name = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-2x.dat";  entries = 696 },
   # STABLE FILE (v4.0.3 pilot): the one name SC4 loads and sc4pac tracks.
   # 696 holds regardless of WHICH tier's bytes are currently copied in -
   # every tier source carries the same count by construction (see the note
   # at the top of this table) - so this stays a valid, tier-independent
   # check rather than a snapshot of one specific tier's content.
-  @{ name = "z_SC4UIScale_SelectiveArt.dat";     entries = 696 },
+  @{ name = "010-SC4UIScale\z_SC4UIScale_SelectiveArt.dat";     entries = 696 },
   # DialogStatic 255 -> 259 (2026-07-29, Batch A, task #54): the last three
   # bucket-D text-bearing roots joined TARGETS in build_dialog_static.py -
   # I-6b704690 Label Tool (root 0x8A8DFCF5, shared with the generic message
@@ -174,8 +177,8 @@ $EXPECTED = @(
   # sibling button (0x000A0000). All three roots are ALSO in kNeverScaleIds.
   # +4 not +3: the three scripts plus one art asset that became referenced.
   # Same 259 at every tier by construction (one builder, --factor only).
-  @{ name = "z_SC4UIScale_DialogStatic-2x.dat";  entries = 265 },  # 262 -> 261 2026-08-16: #178 CAM splash {ea7f0eae} now ships ONLY in gated CamUI, ALL tiers consistent. USER DECISION STILL OWED on 262 (ship ungated); flip back if decided
-  @{ name = "z_SC4UIScale_ItemIcons-2x.dat";     entries = 356 },
+  @{ name = "010-SC4UIScale\z_SC4UIScale_DialogStatic-2x.dat";  entries = 265 },  # 262 -> 261 2026-08-16: #178 CAM splash {ea7f0eae} now ships ONLY in gated CamUI, ALL tiers consistent. USER DECISION STILL OWED on 262 (ship ungated); flip back if decided
+  @{ name = "010-SC4UIScale\z_SC4UIScale_ItemIcons-2x.dat";     entries = 356 },
   # 124 = 55 submenus-mod + 69 other-plugin icons (2026-07-29 landmarks
   # pass): CAM System Integration Module (73: submenu-extended + DLC/Maxis
   # landmark buildings; NOTE ~half its exemplars are TEXT format - the
@@ -234,10 +237,10 @@ $EXPECTED = @(
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-2x.dat"; entries = 4 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-15x.dat"; entries = 4 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-3x.dat"; entries = 4 },
-  @{ name = "z_SC4UIScale_SelectiveArt-15x.dat"; entries = 696 },
-  @{ name = "z_SC4UIScale_DialogStatic-15x.dat"; entries = 265 }, # #178: see the -2x row note (2026-08-16)
-  @{ name = "z_SC4UIScale_SelectiveArt-3x.dat";  entries = 696 },   # #136: was 651; #190: was 655
-  @{ name = "z_SC4UIScale_DialogStatic-3x.dat";  entries = 265 }, # #178: see the -2x row note (2026-08-16)
+  @{ name = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-15x.dat"; entries = 696 },
+  @{ name = "010-SC4UIScale\z_SC4UIScale_DialogStatic-15x.dat"; entries = 265 }, # #178: see the -2x row note (2026-08-16)
+  @{ name = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-3x.dat";  entries = 696 },   # #136: was 651; #190: was 655
+  @{ name = "010-SC4UIScale\z_SC4UIScale_DialogStatic-3x.dat";  entries = 265 }, # #178: see the -2x row note (2026-08-16)
   # SelectorUI-1x (2026-08-19): the scale selector at the STOCK tier. ONE
   # entry by design - Graphic Options and nothing else. If this count ever
   # moves, the stock tier has started shipping scaled art, which is the
@@ -250,8 +253,8 @@ $EXPECTED = @(
   # the Sub builder verifies its name set against the shipped 2x pack-sub, so
   # counts are 266/130 at every tier by construction. ScaleTier.cpp already
   # synced these bases for all four package tags - the packages were the gap.
-  @{ name = "z_SC4UIScale_ItemIcons-15x.dat";    entries = 356 },
-  @{ name = "z_SC4UIScale_ItemIcons-3x.dat";     entries = 356 },
+  @{ name = "010-SC4UIScale\z_SC4UIScale_ItemIcons-15x.dat";    entries = 356 },
+  @{ name = "010-SC4UIScale\z_SC4UIScale_ItemIcons-3x.dat";     entries = 356 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-15x.dat"; entries = 130 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-3x.dat";  entries = 130 },
   # UNCOVERED THIRD-PARTY ITEM ICONS (#149, 2026-08-15). Icons a custom LOT
@@ -313,10 +316,10 @@ $EXPECTED = @(
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_CamUI-15x.dat"; entries = 22 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_CamUI-3x.dat";  entries = 22 },
   # ALWAYS-ON (untagged, never gated): LTEXT overrides matching WebRedirect
-  @{ name = "z_SC4UIScale_WebText.dat";          entries = 3 }
+  @{ name = "010-SC4UIScale\z_SC4UIScale_WebText.dat";          entries = 3 }
 )
 # Font package sources must exist beside the DLL
-$FONT_SOURCES = @("FontStyle-2x.ini", "FontStyle-15x.ini", "FontStyle-3x.ini")
+$FONT_SOURCES = @("010-SC4UIScale\FontStyle-2x.ini", "010-SC4UIScale\FontStyle-15x.ini", "010-SC4UIScale\FontStyle-3x.ini")
 
 $failures = @()
 foreach ($e in $EXPECTED) {
@@ -333,8 +336,8 @@ foreach ($f in $FONT_SOURCES) {
 }
 
 # SC4UIScale.dll must be present.
-if (-not (Test-Path "$plugins\SC4UIScale.dll")) {
-  $failures += "missing $plugins\SC4UIScale.dll"
+if (-not (Test-Path "$our\SC4UIScale.dll")) {
+  $failures += "missing $our\SC4UIScale.dll"
 }
 # MENUFIX: REPORTED, NOT GATED (2026-08-18).
 # Deploy-OnGameClose deliberately does not copy it - it rewrites CAM's GAMEPLAY
@@ -365,6 +368,19 @@ if ($others.Count) {
     "folder (" + (($others | ForEach-Object { $_.Name }) -join ", ") + "). Any of " +
     "them can affect a UI-scaling result; rule them out before blaming this mod.")
 }
+# v4.2.0 MIGRATION GATE: after the subfolder move, NO SC4UIScale-owned file
+# may remain at the Plugins root. A root leftover is not cosmetic - a root
+# SC4UIScale.dll would load as a SECOND director beside the real one, and a
+# root dat confuses every ownership audit. RED, not a note.
+$legacyRoot = @(Get-ChildItem $plugins -File -ErrorAction SilentlyContinue |
+  Where-Object { $_.Name -like "z_SC4UIScale_*" -or $_.Name -like "SC4UIScale.*" -or $_.Name -like "SC4UIScale-*" -or
+                 $_.Name -like "FontStyle-*.ini" -or $_.Name -eq "FontStyle.ini.user-original" -or
+                 $_.Name -eq ".sc4uiscale-tier1-restore.txt" -or
+                 $_.Name -eq "SC4UIScale.compare-state.txt" })
+foreach ($lf in $legacyRoot) {
+  $failures += ("LEGACY-LAYOUT leftover at the Plugins ROOT: " + $lf.Name +
+    " (run _tests\Deploy-OnGameClose.ps1 - its migration block moves/removes these)")
+}
 # DEPLOYED == BUILT (task #58 root cause, 2026-08-02). The ThirdPartyUI
 # package was absent from Deploy-OnGameClose.ps1, so its deployed copy froze
 # at the 2026-07-29 build epoch; when the art classification later changed,
@@ -375,13 +391,13 @@ if ($others.Count) {
 # canonical build output is asserted here; add a row whenever a new package
 # is added to the deploy script.
 $BUILT_PAIRS = @(
-  @{ b = "build\Release\SC4UIScale.dll";                              d = "SC4UIScale.dll" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_SelectiveArt.dat";        d = "z_SC4UIScale_SelectiveArt-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat";      d = "z_SC4UIScale_SelectiveArt-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat";        d = "z_SC4UIScale_SelectiveArt-3x.dat" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_DialogStatic.dat";         d = "z_SC4UIScale_DialogStatic-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat";      d = "z_SC4UIScale_DialogStatic-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat";        d = "z_SC4UIScale_DialogStatic-3x.dat" }
+  @{ b = "build\Release\SC4UIScale.dll";                              d = "010-SC4UIScale\SC4UIScale.dll" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_SelectiveArt.dat";        d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat";      d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat";        d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-3x.dat" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_DialogStatic.dat";         d = "010-SC4UIScale\z_SC4UIScale_DialogStatic-2x.dat" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat";      d = "010-SC4UIScale\z_SC4UIScale_DialogStatic-15x.dat" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat";        d = "010-SC4UIScale\z_SC4UIScale_DialogStatic-3x.dat" }
   @{ b = "tools\packages\1x\z_SC4UIScale_SelectorUI-1x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat" }
   @{ b = "tools\dialog-static\z_SC4UIScale_SaveWarningUI.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-2x.dat" }
   @{ b = "tools\packages\15x\z_SC4UIScale_SaveWarningUI-15x.dat";     d = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-15x.dat" }
@@ -417,9 +433,9 @@ $BUILT_PAIRS = @(
   # refuses to pack unless every strip measures zero drift and carries the
   # hover border, and tools\uimap\emu\sim_itemicon_states.py sweeps whatever
   # IS deployed across tier x icon x state.
-  @{ b = "tools\itemicons\z_SC4UIScale_ItemIcons.dat";                d = "z_SC4UIScale_ItemIcons-2x.dat" }
+  @{ b = "tools\itemicons\z_SC4UIScale_ItemIcons.dat";                d = "010-SC4UIScale\z_SC4UIScale_ItemIcons-2x.dat" }
   @{ b = "tools\itemicons\_work\z_SC4UIScale_ItemIconsSub-2x.dat";    d = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-2x.dat" }
-  @{ b = "tools\webtext\z_SC4UIScale_WebText.dat";                    d = "z_SC4UIScale_WebText.dat" }
+  @{ b = "tools\webtext\z_SC4UIScale_WebText.dat";                    d = "010-SC4UIScale\z_SC4UIScale_WebText.dat" }
   # FONTS (#57 phase 4, 2026-08-02). Fonts were the ONE asset family with no
   # deployed-vs-built assertion - existence-checked only, a few lines above -
   # and that is precisely why they drifted unnoticed: the deployed 1.5x/3x
@@ -430,9 +446,9 @@ $BUILT_PAIRS = @(
   # tools\packages\2x\. Do NOT add a row for the live FontStyle.ini: the DLL
   # writes that at boot from the active tier's file (ScaleTier::SyncFont), so
   # it is a runtime product, not a deployed artifact.
-  @{ b = "tools\fonts\FontStyle.candidate.ini";                       d = "FontStyle-2x.ini" }
-  @{ b = "tools\packages\15x\FontStyle-15x.ini";                      d = "FontStyle-15x.ini" }
-  @{ b = "tools\packages\3x\FontStyle-3x.ini";                        d = "FontStyle-3x.ini" }
+  @{ b = "tools\fonts\FontStyle.candidate.ini";                       d = "010-SC4UIScale\FontStyle-2x.ini" }
+  @{ b = "tools\packages\15x\FontStyle-15x.ini";                      d = "010-SC4UIScale\FontStyle-15x.ini" }
+  @{ b = "tools\packages\3x\FontStyle-3x.ini";                        d = "010-SC4UIScale\FontStyle-3x.ini" }
 )
 $nHash = 0
 foreach ($pair in $BUILT_PAIRS) {
@@ -563,8 +579,8 @@ if (-not $psBlock.Success) {
 # majority-agreement check below - this gate is exactly the kind PRESENCE
 # IS NOT ARMING exists to keep honest, so it does not get to sit out.
 $tierFamilies = @(
-  @{ Dir = $plugins;                          Base = "z_SC4UIScale_DialogStatic" },
-  @{ Dir = $plugins;                          Base = "z_SC4UIScale_ItemIcons"    },
+  @{ Dir = $our;                              Base = "z_SC4UIScale_DialogStatic" },
+  @{ Dir = $our;                              Base = "z_SC4UIScale_ItemIcons"    },
   @{ Dir = "$plugins\zzz-SC4UIScale";         Base = "z_SC4UIScale_ItemIconsSub" },
   @{ Dir = "$plugins\zzz-SC4UIScale";         Base = "z_SC4UIScale_CsiIcons"     }
 )
@@ -590,7 +606,7 @@ foreach ($fam in $tierFamilies) {
 # filename - the stable file's name never changes, so "which tier is this"
 # can only be answered by asking which of the three (always-suffixed)
 # sources it currently matches byte-for-byte.
-$selArtStablePath = Join-Path $plugins "z_SC4UIScale_SelectiveArt.dat"
+$selArtStablePath = Join-Path $our "z_SC4UIScale_SelectiveArt.dat"
 if (-not (Test-Path $selArtStablePath)) {
   $selArtStablePath = "$selArtStablePath.x1-disabled"
 }
@@ -598,7 +614,7 @@ if (Test-Path $selArtStablePath) {
   $stableHash = (Get-FileHash $selArtStablePath -Algorithm SHA256).Hash
   $selArtMatches = @()
   foreach ($tier in @("15x", "2x", "3x")) {
-    $srcPath = Join-Path $plugins ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $tier)
+    $srcPath = Join-Path $our ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $tier)
     if (-not (Test-Path $srcPath)) { continue }
     if ((Get-FileHash $srcPath -Algorithm SHA256).Hash -eq $stableHash) {
       $selArtMatches += $tier
@@ -642,7 +658,7 @@ foreach ($tag in $BUBBLE_TIERS.Keys) {
   # it is computed with the project's one rounding convention (law 89,
   # RoundHalfUp) so the gate and the builder cannot drift apart.
   $want = [int][Math]::Floor($BUBBLE.Design * $BUBBLE_TIERS[$tag] + 0.5)
-  $p = Join-Path $plugins ("z_SC4UIScale_SelectiveArt-{0}.dat" -f $tag)
+  $p = Join-Path $our ("z_SC4UIScale_SelectiveArt-{0}.dat" -f $tag)
   if (-not (Test-Path $p)) { $p = "$p.x1-disabled" }
   if (-not (Test-Path $p)) { $failures += ("#100 bubble: no SelectiveArt-$tag package deployed"); continue }
   try {

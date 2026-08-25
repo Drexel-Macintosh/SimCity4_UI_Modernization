@@ -58,6 +58,11 @@ param(
 $ErrorActionPreference = "Stop"
 $plug = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins')
 $zzz = Join-Path $plug "zzz-SC4UIScale"
+# v4.2.0 (subfolder move): our files live in Plugins-SC4UIScale\;
+# SC4GraphicsOptions.ini and dgVoodoo.conf stay at the REAL Plugins root
+# (they belong to other components).
+$our = Join-Path $plug '010-SC4UIScale'
+if (-not (Test-Path $our)) { New-Item -ItemType Directory $our | Out-Null }
 
 # AUTHORITATIVE dependency-gated package list (2026-08-23 fix - see the
 # family loop below for why). Parsed from src\ScaleTier.cpp the SAME way
@@ -75,7 +80,7 @@ try {
 } catch {
     Write-Warning "could not read src\ScaleTier.cpp to derive the dependency-gated package list - falling back to the old 'no active tier = gated' heuristic for every family, which is known to misfire after a deploy leaves everything at the 1x baseline."
 }
-$ini = Join-Path $plug "SC4UIScale.ini"
+$ini = Join-Path $our "SC4UIScale.ini"
 # Tier "1" has NO package tag on purpose: a 1x baseline means EVERY
 # tier package is disabled and the game runs on its own stock art. It is
 # the honest control for a before/after comparison - and the reason this
@@ -148,7 +153,7 @@ function Get-Families {
     # A "family" is one package across its three tiers, in one folder.
     $fam = @{}
     $script:_dupTiers = @()
-    foreach ($dir in @($plug, $zzz)) {
+    foreach ($dir in @($our, $zzz)) {
         if (-not (Test-Path $dir)) { continue }
         Get-ChildItem $dir -File -Filter "z_SC4UIScale_*" -ErrorAction SilentlyContinue |
             ForEach-Object {
@@ -185,7 +190,7 @@ function Get-Families {
 
 function Show-State {
     $fam = Get-Families
-    $font = Join-Path $plug "FontStyle.ini"
+    $font = Join-Path $our "FontStyle.ini"
     Write-Output ""
     Write-Output ("{0,-34} {1}" -f "package", "active tier")
     Write-Output ("-" * 52)
@@ -200,13 +205,13 @@ function Show-State {
     # PERMANENTLY suffixed, so Get-Families' generic by-filename scan can
     # never see it as active. That is not a report of its real state; ask
     # by CONTENT instead, same technique Test-DatIntegrity.ps1 uses.
-    $selArtStable = Join-Path $plug "z_SC4UIScale_SelectiveArt.dat"
+    $selArtStable = Join-Path $our "z_SC4UIScale_SelectiveArt.dat"
     if (-not (Test-Path $selArtStable)) { $selArtStable = "$selArtStable.x1-disabled" }
     if (Test-Path $selArtStable) {
         $h = (Get-FileHash $selArtStable -Algorithm SHA256).Hash
         $which = "unrecognised"
         foreach ($t in $ALLTAGS) {
-            $src = Join-Path $plug ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $t)
+            $src = Join-Path $our ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $t)
             if ((Test-Path $src) -and (Get-FileHash $src -Algorithm SHA256).Hash -eq $h) { $which = $t }
         }
         $isArmed = $selArtStable -notlike "*.x1-disabled"
@@ -235,7 +240,7 @@ function Show-State {
         $h = (Get-FileHash $font -Algorithm SHA256).Hash
         $which = "unrecognised"
         foreach ($t in $ALLTAGS) {
-            $c = Join-Path $plug ("FontStyle-{0}.ini" -f $t)
+            $c = Join-Path $our ("FontStyle-{0}.ini" -f $t)
             if ((Test-Path $c) -and (Get-FileHash $c -Algorithm SHA256).Hash -eq $h) { $which = $t }
         }
         Write-Output ("FontStyle.ini matches: {0}" -f $which)
@@ -319,7 +324,7 @@ $switched = 0; $gated = 0
 # -Tier 1: "packages: 0 rename(s); 11 family(ies) left dependency-gated off",
 # i.e. the 3x tier silently had no art. So 1x RECORDS what it switched off,
 # and the next real tier uses that record instead of guessing.
-$restoreFile = Join-Path $plug ".sc4uiscale-tier1-restore.txt"
+$restoreFile = Join-Path $our ".sc4uiscale-tier1-restore.txt"
 $forced = New-Object System.Collections.Generic.HashSet[string]
 if (-not $want) {
     $live = @()
@@ -332,7 +337,16 @@ if (-not $want) {
     Write-Output ("1x: recorded {0} live package(s) so a later tier can restore them." -f $live.Count)
 } elseif (Test-Path $restoreFile) {
     foreach ($line in (Get-Content $restoreFile)) {
-        if ($line.Trim()) { [void]$forced.Add($line.Trim()) }
+        $rec = $line.Trim()
+        if (-not $rec) { continue }
+        # v4.2.0 migration: records are keyed "dir|name", and pre-move
+        # records carry the OLD Plugins-root dir for the Sub="" families.
+        # Rewrite those to the new home so a restore file written before the
+        # move still restores instead of silently matching nothing.
+        if ($rec.StartsWith("$plug|")) {
+            $rec = "$our|" + $rec.Substring("$plug|".Length)
+        }
+        [void]$forced.Add($rec)
     }
     Write-Output ("restoring {0} package(s) recorded by the 1x baseline." -f $forced.Count)
 }
@@ -390,7 +404,7 @@ if ($want -and (Test-Path $restoreFile)) { Remove-Item $restoreFile -Force }
 # only a fixed name whose CONTENT must be overwritten. Same two branches as
 # SyncDatStable in ScaleTier.cpp (kept in sync by hand; this is a dev tool,
 # not the shipped sync path).
-$selArtStable = Join-Path $plug "z_SC4UIScale_SelectiveArt.dat"
+$selArtStable = Join-Path $our "z_SC4UIScale_SelectiveArt.dat"
 $selArtOff = "$selArtStable.x1-disabled"
 if (-not $want) {
     if (Test-Path $selArtStable) {
@@ -401,7 +415,7 @@ if (-not $want) {
     if ((-not (Test-Path $selArtStable)) -and (Test-Path $selArtOff)) {
         Move-Item $selArtOff $selArtStable -Force
     }
-    $selArtSrc = Join-Path $plug ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $want)
+    $selArtSrc = Join-Path $our ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $want)
     if (-not (Test-Path $selArtSrc)) {
         Write-Warning ("SelectiveArt: source for tier {0} not found ({1}) - stable file left as-is." -f $want, $selArtSrc)
     } else {
@@ -443,7 +457,7 @@ if (-not $want) {
     $gameDir = $env:SC4_GAME_DIR
     if (-not $gameDir) { $gameDir = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe" }
     $fontLive = Join-Path $gameDir "Plugins\FontStyle.ini"
-    $orig = Join-Path $plug "FontStyle.ini.user-original"
+    $orig = Join-Path $our "FontStyle.ini.user-original"
     try {
         if (Test-Path $orig) {
             Copy-Item $orig $fontLive -Force -ErrorAction Stop
@@ -459,7 +473,7 @@ if (-not $want) {
     # while the game is running on its own table. That is the same class of
     # wrong-in-the-safe-direction report this file already warns about above:
     # it would read "FontStyle.ini matches: 15x" during a 1x baseline.
-    $docFont = Join-Path $plug "FontStyle.ini"
+    $docFont = Join-Path $our "FontStyle.ini"
     if (Test-Path $orig) { Copy-Item $orig $docFont -Force }
     elseif (Test-Path $docFont) { Remove-Item $docFont -Force }
     Show-State
@@ -469,7 +483,7 @@ if (-not $want) {
     Write-Output "(they all gate on factor > 1.01). This is the control to compare 3x against."
     exit 0
 }
-$src = Join-Path $plug ("FontStyle-{0}.ini" -f $want)
+$src = Join-Path $our ("FontStyle-{0}.ini" -f $want)
 $gameDir = $env:SC4_GAME_DIR
 if (-not $gameDir) { $gameDir = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe" }
 $fontLive = Join-Path $gameDir "Plugins\FontStyle.ini"
@@ -486,7 +500,7 @@ if (-not (Test-Path $src)) {
             "Program Files is ACL-protected and the game reads the font from THERE." -f $fontLive, $_.Exception.Message)
     }
     # Keep the Documents copy in step too, so -Status reports the truth.
-    Copy-Item $src (Join-Path $plug "FontStyle.ini") -Force
+    Copy-Item $src (Join-Path $our "FontStyle.ini") -Force
 }
 
 Show-State

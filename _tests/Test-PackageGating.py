@@ -117,7 +117,7 @@ def main():
             # tier - was INVISIBLE to this gate: a package that ships a
             # script into the game and no gate could see it. Law 42, a gate
             # is only as honest as its scope. Accept any tag expression.
-            r'SyncDat\(\s*docPlugins\s*,\s*L"([^"]+)"\s*,\s*([^,]+?)\s*,\s*([^;]+?)\);',
+            r'SyncDat\(\s*(?:docPlugins|pluginsRoot)\s*,\s*L"([^"]+)"\s*,\s*([^,]+?)\s*,\s*([^;]+?)\);',
             src, re.S):
         calls[norm(m.group(1))] = " ".join(m.group(3).split())
 
@@ -147,7 +147,7 @@ def main():
     # (not pkg.tag/match like SyncDat), so it cannot be found by the regex
     # above - this checks its own call site exists, once.
     stable_call = re.search(
-        r'SyncDatStable\(\s*docPlugins\s*,\s*L"z_SC4UIScale_SelectiveArt"\s*,'
+        r'SyncDatStable\(\s*(?:docPlugins|pluginsRoot)\s*,\s*L"z_SC4UIScale_SelectiveArt"\s*,'
         r'\s*activeTag\s*\)', src)
     if not stable_call:
         failures.append(

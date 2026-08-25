@@ -78,7 +78,7 @@ crash.
 
 ## Package contents
 
-### Tier-paired packages (root of `Plugins\`)
+### Tier-paired packages (`010-SC4UIScale\` - v4.2.0 subfolder move; pre-4.2.0 these sat at the `Plugins\` root)
 
 | Package | Entries | What it is |
 |---|---|---|
@@ -137,9 +137,13 @@ the same change.** Reproduce the load order with
 
 ### Load-order law
 
-Files in the `Plugins` **root load before subfolders**, so a root `z_*.dat`
-can never override a dat inside a subfolder. Overriding another mod requires
-a folder that sorts after it (`zzz-SC4UIScale\` beats `150-mods\`). A plugin
+Files in the `Plugins` **root load before subfolders**; subfolders load
+alphabetically, later wins. Overriding another mod requires a folder that
+sorts after it (`zzz-SC4UIScale\` beats `150-mods\`); deliberately LOSING
+to a mod requires sorting before it - which is why the main packages live
+in `010-SC4UIScale\` (v4.2.0): `010-` < `050-load-first\` < `150-mods\`,
+so CAM, the 36-style mod and their kin keep beating our stock-derived
+copies exactly as they did when we sat at the root. A plugin
 may replace a stock **script**, its **art**, or both — check for both, and
 build the override from **the mod's** files, never the stock ones.
 Recognition rule: if a panel's live window count or root size does not match
@@ -151,11 +155,11 @@ the stock script you are reading, a plugin has replaced it.
 
 | File | Source in this project | Destination |
 |---|---|---|
-| `SC4UIScale.dll` | `build\Release\` | `Documents\SimCity 4\Plugins\` |
+| `SC4UIScale.dll` | `build\Release\` | `Documents\SimCity 4\Plugins-SC4UIScale\` |
 | `SC4UIScale.ini` | `_packaging\SC4UIScale.ini` | beside the DLL |
-| `z_SC4UIScale_SelectiveArt-<tier>.dat` | `tools\selective-safe\` / `tools\packages\<tag>\` | `Plugins\` |
-| `z_SC4UIScale_DialogStatic-<tier>.dat` | `tools\dialog-static\` / `tools\packages\<tag>\` | `Plugins\` |
-| `z_SC4UIScale_ItemIcons-<tier>.dat` | `tools\itemicons\` | `Plugins\` |
+| `z_SC4UIScale_SelectiveArt-<tier>.dat` | `tools\selective-safe\` / `tools\packages\<tag>\` | `Plugins-SC4UIScale\` |
+| `z_SC4UIScale_DialogStatic-<tier>.dat` | `tools\dialog-static\` / `tools\packages\<tag>\` | `Plugins-SC4UIScale\` |
+| `z_SC4UIScale_ItemIcons-<tier>.dat` | `tools\itemicons\` | `Plugins-SC4UIScale\` |
 | `ItemIconsSub`, `MenuFix`, `ThirdPartyUI`, `WarriorUI`, `SaveWarningUI`, `CamUI`, `NamIcons`, `CamGraphLabels`, `CsiIcons`, `UncoveredIcons`, `SelectorUI` | their builders under `tools\` | `Plugins\zzz-SC4UIScale\` — **the subfolder is required** (load-order law) |
 | `FontStyle-<tier>.ini` | `tools\fonts\` / `tools\packages\<tag>\` | beside the DLL; `ScaleTier` copies the active tier to the probed `FontStyle.ini` |
 

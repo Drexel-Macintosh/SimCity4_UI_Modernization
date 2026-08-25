@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.1.1"
+#define UISCALE_VERSION_STR "4.2.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -101,6 +101,26 @@ namespace
 		{
 			wchar_t path[MAX_PATH] = {};
 			GetDllSiblingPath(fileName, path, MAX_PATH);
+			reader.emplace(std::filesystem::path(path));
+		}
+		catch (const std::exception&)
+		{
+			reader.reset();
+		}
+		return reader;
+	}
+
+	// v4.2.0 (subfolder move): for files that belong to OTHER plugins -
+	// SC4GraphicsOptions.ini foremost - "beside our DLL" is no longer the
+	// Plugins root, so those reads resolve against the real root.
+	std::optional<IniReader> TryParsePluginsRootIni(const wchar_t* fileName)
+	{
+		std::optional<IniReader> reader;
+		try
+		{
+			wchar_t path[MAX_PATH] = {};
+			ScaleTier::GetPluginsRootW(path, MAX_PATH);
+			wcscat_s(path, MAX_PATH, fileName);
 			reader.emplace(std::filesystem::path(path));
 		}
 		catch (const std::exception&)
@@ -228,7 +248,7 @@ public:
 		// resolution (not the requested one), enable/stash the static data
 		// layers to match - BEFORE the game loads dats or probes FontStyle.ini.
 		{
-			const std::optional<IniReader> gfxIni = TryParseSiblingIni(L"SC4GraphicsOptions.ini");
+			const std::optional<IniReader> gfxIni = TryParsePluginsRootIni(L"SC4GraphicsOptions.ini");
 			const std::optional<IniSection> gfxOpts =
 				gfxIni ? gfxIni->get_section_optional("GraphicsOptions") : std::nullopt;
 			const int reqW = gfxOpts ? gfxOpts->get_converted_value<int>("WindowWidth", 0) : 0;
@@ -593,7 +613,7 @@ public:
 				if (internalW <= 0 || internalH <= 0)
 				{
 					const std::optional<IniReader> gfxIni =
-						TryParseSiblingIni(L"SC4GraphicsOptions.ini");
+						TryParsePluginsRootIni(L"SC4GraphicsOptions.ini");
 					const std::optional<IniSection> gfxOpts =
 						gfxIni ? gfxIni->get_section_optional("GraphicsOptions") : std::nullopt;
 					internalW = gfxOpts ? gfxOpts->get_converted_value<int>("WindowWidth", 0) : 0;

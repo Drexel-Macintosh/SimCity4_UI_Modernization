@@ -9,7 +9,7 @@
 $ErrorActionPreference = "Stop"
 $plugins = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins')
 $gfx = "$plugins\SC4GraphicsOptions.ini"
-$log = "$plugins\SC4UIScale.log"
+$log = "$plugins-SC4UIScale\SC4UIScale.log"
 $exe = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe"
 
 # resolution -> expected tier + active package tag with the CURRENTLY
@@ -66,7 +66,7 @@ foreach ($m in $MATRIX) {
     $panels = (($c -split "`r?`n") | Where-Object { $_ -match "region panel 0x" }).Count
     if ($panels -ne 9) { $failures += "$label - $panels/9 region panels" }
     foreach ($t in $ALL_TAGS) {
-      $live = Test-Path "$plugins\z_SC4UIScale_SelectiveArt$t.dat"
+      $live = Test-Path "$plugins-SC4UIScale\z_SC4UIScale_SelectiveArt$t.dat"
       if ($t -eq $m.tag -and -not $live) { $failures += "$label - $t art dat should be LIVE" }
       if ($t -ne $m.tag -and $live) { $failures += "$label - $t art dat should be GATED" }
     }
@@ -81,7 +81,7 @@ foreach ($m in $MATRIX) {
       $failures += "$label - stock-inert line missing"
     }
     foreach ($t in $ALL_TAGS) {
-      if (Test-Path "$plugins\z_SC4UIScale_SelectiveArt$t.dat") { $failures += "$label - $t art dat NOT gated at stock" }
+      if (Test-Path "$plugins-SC4UIScale\z_SC4UIScale_SelectiveArt$t.dat") { $failures += "$label - $t art dat NOT gated at stock" }
     }
     if (Test-Path "$plugins\FontStyle.ini") { $failures += "$label - FontStyle.ini NOT removed at stock" }
   }
