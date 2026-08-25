@@ -1,6 +1,16 @@
 2026-08-24  v4.2.0    THE SUBFOLDER MOVE (breaking layout change)
 
-  The mod now installs as exactly TWO folders - Plugins\010-SC4UIScale\
+  ⚠ CORRECTED ON THE MAIDEN BOOT: the game's DLL LOADER IS TOP-LEVEL ONLY
+  (region screen came up stock, no log, no director from the subfolder -
+  the dat scan is recursive, the DLL scan is not; the 30-DLLs-all-at-root
+  ecosystem convention and the submenus author's "not in a subfolder"
+  README were the tell the research lane over-read past). Final layout:
+  Plugins\010-SC4UIScale\ (every package + fonts + state) + the unchanged
+  zzz-SC4UIScale\ overrides folder + SC4UIScale.dll/.ini/(.log) at the
+  root, where the beside-the-DLL paths keep them. Still ~23 root files
+  down to 3. Original (wrong) shape for the record:
+
+  The mod now installs as TWO folders - Plugins\010-SC4UIScale\
   (DLL + ini + log + fonts + every main package; formerly ~23 loose files
   at the Plugins root) and the unchanged zzz-SC4UIScale\ overrides folder.
   User request: "way more files showing at the root level ... hard for

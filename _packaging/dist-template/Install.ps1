@@ -99,8 +99,10 @@ if ($Uninstall) {
 # DLL especially, which would otherwise load as a SECOND copy of this mod.
 $legacyMoved = 0
 $ourDir = Join-Path $plug "010-SC4UIScale"
-foreach ($keep in @("SC4UIScale.ini", "FontStyle.ini.user-original",
-                    "SC4UIScale-104.csv")) {
+# (v4.2.0 final layout: the DLL-anchored set - dll/ini/log - lives at the
+# Plugins ROOT because the game only loads DLLs from the top level; only
+# packages, fonts and the font snapshot live in 010-SC4UIScale.)
+foreach ($keep in @("FontStyle.ini.user-original")) {
     # user state from the old layout: carry it into the new home
     $old = Join-Path $plug $keep
     if (Test-Path $old) {
@@ -114,8 +116,7 @@ foreach ($keep in @("SC4UIScale.ini", "FontStyle.ini.user-original",
         $legacyMoved++
     }
 }
-foreach ($stale in @("SC4UIScale.dll", "SC4UIScale.log", "SC4UIScale.gcap",
-                     "FontStyle.ini", "FontStyle.ini.x1-disabled",
+foreach ($stale in @("FontStyle.ini", "FontStyle.ini.x1-disabled",
                      "FontStyle-2x.ini", "FontStyle-15x.ini", "FontStyle-3x.ini",
                      "z_SC4UIScale_FontStyle.ini")) {
     $old = Join-Path $plug $stale

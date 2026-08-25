@@ -18,7 +18,7 @@
 #       Counting a disarmed launch as clean is exactly the bias that made the
 #       bisect wrong.
 param(
-    [string]$Csv = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins-SC4UIScale\SC4UIScale-104.csv')
+    [string]$Csv = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins\SC4UIScale-104.csv')
 )
 $ErrorActionPreference = "Stop"
 

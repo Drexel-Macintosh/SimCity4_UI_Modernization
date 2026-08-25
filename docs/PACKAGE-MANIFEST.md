@@ -155,7 +155,7 @@ the stock script you are reading, a plugin has replaced it.
 
 | File | Source in this project | Destination |
 |---|---|---|
-| `SC4UIScale.dll` | `build\Release\` | `Documents\SimCity 4\Plugins-SC4UIScale\` |
+| `SC4UIScale.dll` | `build\Release\` | `Documents\SimCity 4\Plugins\` - the ROOT: the game only loads DLLs from the top level (measured, v4.2.0 maiden boot); the ini/log sit beside it |
 | `SC4UIScale.ini` | `_packaging\SC4UIScale.ini` | beside the DLL |
 | `z_SC4UIScale_SelectiveArt-<tier>.dat` | `tools\selective-safe\` / `tools\packages\<tag>\` | `Plugins-SC4UIScale\` |
 | `z_SC4UIScale_DialogStatic-<tier>.dat` | `tools\dialog-static\` / `tools\packages\<tag>\` | `Plugins-SC4UIScale\` |

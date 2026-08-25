@@ -136,7 +136,7 @@ if ($copied -lt 40) {
 }
 
 # the shipping user ini - the packaging copy, not the developer one
-Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $ourOut "SC4UIScale.ini") -Force
+Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $plugOut "SC4UIScale.ini") -Force
 $copied++
 
 # --- an EMPTY z_SC4UIScale_FontStyle.ini placeholder, so a package manager --
@@ -259,7 +259,7 @@ $header = @(
 )
 Set-Content -Path $manifest -Value ($header + $rows) -Encoding utf8
 
-$dllHash = (Get-FileHash (Join-Path $ourOut "SC4UIScale.dll") -Algorithm SHA256).Hash
+$dllHash = (Get-FileHash (Join-Path $plugOut "SC4UIScale.dll") -Algorithm SHA256).Hash
 $total = (Get-ChildItem $plugOut -Recurse -File | Measure-Object -Property Length -Sum).Sum
 
 Write-Output ""

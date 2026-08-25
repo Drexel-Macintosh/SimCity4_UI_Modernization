@@ -336,8 +336,8 @@ foreach ($f in $FONT_SOURCES) {
 }
 
 # SC4UIScale.dll must be present.
-if (-not (Test-Path "$our\SC4UIScale.dll")) {
-  $failures += "missing $our\SC4UIScale.dll"
+if (-not (Test-Path "$plugins\SC4UIScale.dll")) {
+  $failures += "missing $plugins\SC4UIScale.dll"
 }
 # MENUFIX: REPORTED, NOT GATED (2026-08-18).
 # Deploy-OnGameClose deliberately does not copy it - it rewrites CAM's GAMEPLAY
@@ -368,12 +368,12 @@ if ($others.Count) {
     "folder (" + (($others | ForEach-Object { $_.Name }) -join ", ") + "). Any of " +
     "them can affect a UI-scaling result; rule them out before blaming this mod.")
 }
-# v4.2.0 MIGRATION GATE: after the subfolder move, NO SC4UIScale-owned file
-# may remain at the Plugins root. A root leftover is not cosmetic - a root
-# SC4UIScale.dll would load as a SECOND director beside the real one, and a
-# root dat confuses every ownership audit. RED, not a note.
+# v4.2.0 MIGRATION GATE. The DLL-anchored set (dll/ini/log/gcap/csv) is
+# ALLOWED at the root - the game only loads DLLs from the top level
+# (measured on the move's maiden boot: subfolder DLL = no log, no director).
+# Everything ELSE of ours at the root is a legacy leftover: RED, not a note.
 $legacyRoot = @(Get-ChildItem $plugins -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -like "z_SC4UIScale_*" -or $_.Name -like "SC4UIScale.*" -or $_.Name -like "SC4UIScale-*" -or
+  Where-Object { $_.Name -like "z_SC4UIScale_*" -or
                  $_.Name -like "FontStyle-*.ini" -or $_.Name -eq "FontStyle.ini.user-original" -or
                  $_.Name -eq ".sc4uiscale-tier1-restore.txt" -or
                  $_.Name -eq "SC4UIScale.compare-state.txt" })
@@ -391,7 +391,7 @@ foreach ($lf in $legacyRoot) {
 # canonical build output is asserted here; add a row whenever a new package
 # is added to the deploy script.
 $BUILT_PAIRS = @(
-  @{ b = "build\Release\SC4UIScale.dll";                              d = "010-SC4UIScale\SC4UIScale.dll" }
+  @{ b = "build\Release\SC4UIScale.dll";                              d = "SC4UIScale.dll" }
   @{ b = "tools\selective-safe\z_SC4UIScale_SelectiveArt.dat";        d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-2x.dat" }
   @{ b = "tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat";      d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-15x.dat" }
   @{ b = "tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat";        d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-3x.dat" }

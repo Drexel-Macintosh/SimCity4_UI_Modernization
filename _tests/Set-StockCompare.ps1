@@ -55,7 +55,7 @@ $TouchedDirs = @(
 # Only files WITHOUT an existing gating suffix (.x1-disabled) are touched.
 function Get-OurLiveFiles {
     $files = @()
-    $files += Get-ChildItem -Path $OurDir -Filter "SC4UIScale.dll" -ErrorAction SilentlyContinue
+    $files += Get-ChildItem -Path $DocPlugins -Filter "SC4UIScale.dll" -ErrorAction SilentlyContinue
     $files += Get-ChildItem -Path $OurDir -Filter "z_SC4UIScale_*.dat" -ErrorAction SilentlyContinue
     # legacy root copies (pre-4.2.0 layout) still come off if present:
     $files += Get-ChildItem -Path $DocPlugins -Filter "z_SC4UIScale_*.dat" -ErrorAction SilentlyContinue

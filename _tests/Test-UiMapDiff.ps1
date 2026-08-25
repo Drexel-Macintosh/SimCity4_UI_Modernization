@@ -68,7 +68,7 @@ if ($failures.Count -gt 0) {
 # The log lives under the user's Documents, which is OneDrive-REDIRECTED on
 # this machine (C:\Users\<u>\Documents does not exist). Resolve it.
 $docs = [Environment]::GetFolderPath('MyDocuments')
-$log = Join-Path $docs "SimCity 4\Plugins-SC4UIScale\SC4UIScale.log"
+$log = Join-Path $docs "SimCity 4\Plugins\SC4UIScale.log"
 if (-not (Test-Path $log)) {
   Write-Output "SKIP: no SC4UIScale.log at $log - play a session first."
   exit 0

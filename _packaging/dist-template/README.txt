@@ -23,13 +23,16 @@ development builds that were never published.
 
        Documents\SimCity 4\Plugins\
 
-   Keep the folder structure. The mod is exactly TWO subfolders:
+   Keep the folder structure. The mod is TWO subfolders plus two loose
+   files:
 
-       Plugins\010-SC4UIScale\    (the mod itself)
+       Plugins\SC4UIScale.dll     (the game only loads DLLs from the
+       Plugins\SC4UIScale.ini      top level - these two cannot move)
+       Plugins\010-SC4UIScale\    (all the mod's packages and fonts)
        Plugins\zzz-SC4UIScale\    (overrides that must load after other mods)
 
-   Both names are load-bearing - SimCity 4 loads plugin folders in name
-   order, and each folder's position is chosen so the right files win (and
+   Both folder names are load-bearing - SimCity 4 loads plugin folders in
+   name order, and each position is chosen so the right files win (and
    deliberately LOSE) against other mods. Do not rename them, and do not
    move their contents to the Plugins root.
 
@@ -69,15 +72,16 @@ a failure; the log says so explicitly.
   UNINSTALL
 -------------------------------------------------------------------------------
 
-Delete these TWO FOLDERS from  Documents\SimCity 4\Plugins\ :
+Delete these from  Documents\SimCity 4\Plugins\ :
 
     010-SC4UIScale\               (the whole folder - see the FontStyle
                                   note below before deleting)
     zzz-SC4UIScale\               (the whole folder)
+    every loose file named SC4UIScale.*  (the DLL, ini and log at the root)
 
-(If you upgraded from a release before v4.2.0 and ever see loose files named
-SC4UIScale.* or z_SC4UIScale_* at the Plugins root, they are leftovers from
-the old layout - delete those too.)
+(If you upgraded from a release before v4.2.0 and see loose z_SC4UIScale_*
+or FontStyle-*.ini files at the Plugins root, they are old-layout leftovers -
+delete those too.)
 
 AND ONE FILE IN THE GAME'S OWN FOLDER. The game only reads a loose font file
 from its install directory, so the mod copies the matching font there on every

@@ -108,6 +108,18 @@ namespace
 		}
 	}
 
+	// v4.2.0: where OUR packages and fonts live. MEASURED on the move's
+	// maiden boot: SimCity 4's DAT scan is recursive but its DLL LOADER IS
+	// TOP-LEVEL ONLY - a DLL in a subfolder produces no log, no director,
+	// nothing. So the DLL (and its beside-the-DLL ini/log) stays at the
+	// Plugins ROOT, while every package and font source lives in
+	// Plugins\010-SC4UIScale\ - which this resolver names.
+	void OurPackagesDir(wchar_t* out, size_t outLen)
+	{
+		PluginsRoot(out, outLen);
+		wcscat_s(out, outLen, L"010-SC4UIScale\\");
+	}
+
 	bool FileExists(const wchar_t* p)
 	{
 		const DWORD a = GetFileAttributesW(p);
@@ -216,7 +228,7 @@ namespace
 	bool PackageInstalled(const Package& pkg)
 	{
 		wchar_t dir[MAX_PATH];
-		DllDir(dir, MAX_PATH);
+		OurPackagesDir(dir, MAX_PATH);
 		wchar_t p[MAX_PATH];
 		swprintf_s(p, L"%sz_SC4UIScale_SelectiveArt%s.dat", dir, pkg.tag);
 		if (FileExists(p))
@@ -2543,7 +2555,8 @@ namespace ScaleTier
 		// active font is mirrored there each boot. That write stays inside
 		// a Plugins folder and is DLL-managed - no manual install steps.
 		wchar_t docPlugins[MAX_PATH];
-		DllDir(docPlugins, MAX_PATH);
+		// v4.2.0: packages+fonts live in 010-SC4UIScale\, the DLL at root.
+		OurPackagesDir(docPlugins, MAX_PATH);
 		wchar_t instPlugins[MAX_PATH];
 		InstallPluginsDir(instPlugins, MAX_PATH);
 		// v4.2.0: our own packages live beside the DLL (docPlugins =
@@ -2852,7 +2865,8 @@ namespace ScaleTier
 	void RevertFontOnShutdown()
 	{
 		wchar_t docPlugins[MAX_PATH];
-		DllDir(docPlugins, MAX_PATH);
+		// v4.2.0: packages+fonts live in 010-SC4UIScale\, the DLL at root.
+		OurPackagesDir(docPlugins, MAX_PATH);
 		wchar_t instPlugins[MAX_PATH];
 		InstallPluginsDir(instPlugins, MAX_PATH);
 		SyncFont(docPlugins, instPlugins, nullptr);

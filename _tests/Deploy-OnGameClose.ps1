@@ -51,19 +51,33 @@ if ($waited -ge 60) {
 #   DELETE - build products the deploy/DLL recreate in the new home. The root
 #           DLL is the critical one: left behind, BOTH copies would load as
 #           two directors. Runs only when legacy files exist; logs each file.
-$MIGRATE_MOVE = @("SC4UIScale.ini", "SC4UIScale-104.csv", "SC4UIScale.gcap",
-    "SC4UIScale.compare-state.txt", ".sc4uiscale-tier1-restore.txt",
+# MEASURED on the maiden boot: the game's DLL LOADER IS TOP-LEVEL ONLY
+# (recursive for dats, NOT for DLLs - no log, no director from a subfolder).
+# So the DLL-anchored set (dll/ini/log/gcap/csv - all beside-the-DLL paths)
+# LIVES AT THE ROOT; only packages/fonts/state migrate into 010-SC4UIScale.
+$MIGRATE_MOVE = @("SC4UIScale.compare-state.txt", ".sc4uiscale-tier1-restore.txt",
     "FontStyle.ini.user-original")
-$MIGRATE_DELETE = @("SC4UIScale.dll", "SC4UIScale.log", "FontStyle.ini",
+$MIGRATE_DELETE = @("FontStyle.ini",
     "FontStyle.ini.x1-disabled", "FontStyle-2x.ini", "FontStyle-15x.ini",
     "FontStyle-3x.ini")
-# Catch-all for SC4UIScale-namespace strays the two lists miss (an .ini.bak2
-# was the first, caught by Test-DatIntegrity's root red check on the
-# migration's maiden run): anything left matching our name that is in
-# NEITHER list gets MOVED, preserving it.
-Get-ChildItem $plug -Filter "SC4UIScale*" -File -ErrorAction SilentlyContinue |
-    Where-Object { $MIGRATE_DELETE -notcontains $_.Name -and $MIGRATE_MOVE -notcontains $_.Name } |
-    ForEach-Object { $MIGRATE_MOVE += $_.Name }
+# Reverse-migrate anything of the DLL-anchored set that an earlier 4.2.0 run
+# moved INTO the subfolder (one dev machine hit this state).
+foreach ($name in @("SC4UIScale.ini", "SC4UIScale.ini.bak2", "SC4UIScale-104.csv",
+                    "SC4UIScale.gcap", "SC4UIScale.dll", "SC4UIScale.log")) {
+    $misplaced = Join-Path $our $name
+    if (Test-Path $misplaced) {
+        $home2 = Join-Path $plug $name
+        if ($name -eq "SC4UIScale.dll" -or $name -eq "SC4UIScale.log") {
+            Remove-Item $misplaced -Force   # rebuilt/regenerated at root
+            Write-Output ("  REVERSE-MIGRATED (removed from subfolder): " + $name)
+        } elseif (-not (Test-Path $home2)) {
+            Move-Item $misplaced $home2 -Force
+            Write-Output ("  REVERSE-MIGRATED subfolder -> root: " + $name)
+        }
+    }
+}
+# (The SC4UIScale* root catch-all that briefly lived here is GONE: the
+# DLL-anchored set legitimately lives at the root now.)
 foreach ($name in $MIGRATE_MOVE) {
     $old = Join-Path $plug $name
     if (Test-Path $old) {
@@ -144,7 +158,7 @@ $TIER_FAMILIES = @(
 # The newest log wins; this script preserves the previous log before every
 # deploy, so there is always at least one to read.
 $TIER_FROM_LOG = $null
-$logs = @(Get-ChildItem $our -Filter "SC4UIScale*.log" -File -ErrorAction SilentlyContinue |
+$logs = @(Get-ChildItem $plug -Filter "SC4UIScale*.log" -File -ErrorAction SilentlyContinue |
           Sort-Object LastWriteTime -Descending)
 foreach ($lg in $logs) {
     $m = [regex]::Matches((Get-Content $lg.FullName -Raw -ErrorAction SilentlyContinue),
@@ -199,7 +213,7 @@ $selectiveArtArmedBefore = Test-Path (Join-Path $our "z_SC4UIScale_SelectiveArt.
 # deploy is immediately followed by a launch, so this is the last safe moment.
 # Named by the log's OWN mtime, not "now", so the file keeps the timestamp of
 # the run it came from.
-$srcLog = "$our\SC4UIScale.log"
+$srcLog = "$plug\SC4UIScale.log"
 if (Test-Path $srcLog) {
     $capDir = "$proj\_tests\captures"
     if (-not (Test-Path $capDir)) { New-Item -ItemType Directory $capDir | Out-Null }
@@ -210,7 +224,7 @@ if (Test-Path $srcLog) {
         Write-Output ("preserved previous run log -> {0}" -f (Split-Path $dest -Leaf))
     }
 }
-Copy-Item "$proj\build\Release\SC4UIScale.dll" "$our\SC4UIScale.dll" -Force
+Copy-Item "$proj\build\Release\SC4UIScale.dll" "$plug\SC4UIScale.dll" -Force
 # SelectiveArt (v4.0.3, STABLE-FILENAME PILOT): all three tier sources ship
 # PERMANENTLY suffixed - none of them is "the active one" by filename any
 # more. The DLL's SyncDatStable copies the right tier's bytes onto the one
@@ -628,9 +642,23 @@ if (-not $selectiveArtArmedBefore -and -not $anyArmedBefore) {
     Move-Item $selArtStash $selArtStable -Force
     Write-Output "  re-armed z_SC4UIScale_SelectiveArt.dat (was armed before deploy)"
 }
+# CONTENT must match the armed tier too (v4.2.0): the copies above always
+# ship the stable file as 2x CONTENT, which on a 1.5x/3x machine leaves the
+# gate's window red until the next launch re-syncs. Swap the armed tier's
+# source bytes in now - same split of authority: bytes current, decision
+# untouched.
+$armedTierNow = ($ARMED_BEFORE.GetEnumerator() | ForEach-Object { $_.Value } |
+                 Sort-Object -Unique | Select-Object -First 1)
+if ($armedTierNow -and $armedTierNow -ne "2x" -and (Test-Path $selArtStable)) {
+    $tierSrc = Join-Path $our ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $armedTierNow)
+    if (Test-Path $tierSrc) {
+        Copy-Item $tierSrc $selArtStable -Force
+        Write-Output ("  SelectiveArt stable content-swapped to the armed tier ({0})" -f $armedTierNow)
+    }
+}
 
 $a = (Get-Item "$proj\build\Release\SC4UIScale.dll").Length
-$b = (Get-Item "$our\SC4UIScale.dll").Length
+$b = (Get-Item "$plug\SC4UIScale.dll").Length
 if ($a -ne $b) { Write-Output "DEPLOY SIZE MISMATCH src=$a dst=$b"; exit 1 }
 # The old line here named only SelectiveArt + DialogStatic and was how the
 # ItemIcons omission stayed invisible - it read as a complete manifest.

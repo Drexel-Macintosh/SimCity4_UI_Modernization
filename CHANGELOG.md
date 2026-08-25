@@ -1,19 +1,24 @@
 # Changelog
 
-## 4.2.0 (2026-08-24) — BREAKING LAYOUT CHANGE: the mod now lives in two folders
+## 4.2.0 (2026-08-24) — BREAKING LAYOUT CHANGE: two folders + the root DLL pair
 
-- **The install is now exactly two folders**: `Plugins\010-SC4UIScale\` (the
-  DLL, ini, log, fonts, and all main packages — everything that used to
-  clutter the Plugins root, ~23 loose files) and the unchanged
-  `Plugins\zzz-SC4UIScale\` overrides folder. Uninstall = delete two folders.
-  The `010-` prefix is load-bearing: it keeps the main packages loading
-  BEFORE `050-load-first\` and `150-mods\`, so CAM, the 36-style mod,
-  save-warning and their kin keep beating our stock-derived copies exactly
-  as they did at the root (that losing is the compatibility mechanism).
+- **The install shrinks from ~23 loose root files to two folders plus the
+  root DLL pair**: `Plugins\010-SC4UIScale\` (all packages and fonts), the
+  unchanged `Plugins\zzz-SC4UIScale\` overrides folder, and
+  `SC4UIScale.dll` + `SC4UIScale.ini` (+ the generated log) at the top
+  level — **measured on the move's maiden boot: SimCity 4's dat scan is
+  recursive but its DLL loader is top-level only**, so the DLL and its
+  beside-the-DLL files cannot move. Uninstall = delete two folders + any
+  file named `SC4UIScale.*`. The `010-` prefix is load-bearing: it keeps
+  the main packages loading BEFORE `050-load-first\` and `150-mods\`, so
+  CAM, the 36-style mod, save-warning and their kin keep beating our
+  stock-derived copies exactly as they did at the root (that losing is the
+  compatibility mechanism).
 - Both the dev deploy and the release `Install.ps1` auto-migrate old
-  root-layout installs: user state (ini, history, font snapshot) moves into
-  the new folder; stale root copies — the old root DLL above all — are
-  removed. `Test-DatIntegrity` now goes red on any root leftover.
+  root-layout installs: the font snapshot and state files move into the new
+  folder, stale root packages are removed, and the user's ini is preserved
+  on upgrade (new). `Test-DatIntegrity` goes red on any root leftover
+  outside the DLL-anchored set.
 - New `PluginsRoot()` resolution in the DLL: every subsystem that hunts
   OTHER mods' files (the six third-party dependency gates, the
   uncovered-icon scan, web-button detection, and the `SC4GraphicsOptions.ini`

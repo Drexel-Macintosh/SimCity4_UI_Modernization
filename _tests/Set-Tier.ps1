@@ -80,7 +80,7 @@ try {
 } catch {
     Write-Warning "could not read src\ScaleTier.cpp to derive the dependency-gated package list - falling back to the old 'no active tier = gated' heuristic for every family, which is known to misfire after a deploy leaves everything at the 1x baseline."
 }
-$ini = Join-Path $our "SC4UIScale.ini"
+$ini = Join-Path $plug "SC4UIScale.ini"
 # Tier "1" has NO package tag on purpose: a 1x baseline means EVERY
 # tier package is disabled and the game runs on its own stock art. It is
 # the honest control for a before/after comparison - and the reason this
