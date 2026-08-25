@@ -1826,6 +1826,166 @@ def _dock_sat(px, stride, x, y):
     return max(r, g, b) - min(r, g, b)
 
 
+# #162 - THE TOOLBAR RAIL (2026-08-24). {46a006b0,14015546} is the god/mayor
+# toolbar's glassy rail: tall bar, bottom curve, mayor medallion. Fractional
+# NN tears its anti-aliased outline into alternating 1/2px stitches, which on
+# screen reads as a detached hairline of "lights" beside the medallion -
+# 1.5x ONLY (integer factors copy each edge row uniformly; 2x user-confirmed
+# clean). A marker-art probe pinned the stray pixels to THIS sheet on screen
+# (the user's "dark purple part" = this sheet's semi-alpha edge blended over
+# the near-magenta-marked dock plate; _tests/PROBES-NEEDED.md 9.13).
+TOOLBAR_RAIL_SHEET = (0x46A006B0, 0x14015546)
+
+
+def smooth_toolbar_rail():
+    """Re-derive the staged toolbar-rail copy from the 1x extract with
+    alpha-premultiplied BILINEAR at the identical output dims. Geometry is
+    untouched (same WxH); only the edge fuses. The sheet is pure alpha
+    (0 key px, measured) so nothing can smear into a colour key - and this
+    pass re-verifies that before writing."""
+    if abs(FACTOR - round(FACTOR)) < 1e-9:
+        print("Toolbar rail: SKIPPED at integer factor %g - NN edges are "
+              "uniform, the stitching cannot occur" % FACTOR)
+        return
+    try:
+        from PIL import Image
+    except ImportError:
+        sys.exit("FATAL: the #162 toolbar-rail pass needs Pillow at "
+                 "fractional factors - without it the hairline ships back")
+    gid, iid = TOOLBAR_RAIL_SHEET
+    name = tgi_png_name(gid, iid)
+    dst = os.path.join(STAGE, name)
+    if not os.path.isfile(dst):
+        sys.exit("FATAL: toolbar rail %08x/%08x is not staged - the #162 fix "
+                 "would ship silently unapplied" % (gid, iid))
+    src1x = os.path.join(TOOLS, "dbpf", "extracted", "SimCity_1",
+                         "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid))
+    if not os.path.isfile(src1x):
+        sys.exit("FATAL: 1x extract missing for the toolbar rail: %s" % src1x)
+    one = Image.open(src1x).convert("RGBA")
+    tw, th = Image.open(dst).size
+    if (tw, th) != (scale_len(one.width), scale_len(one.height)):
+        sys.exit("FATAL: staged rail %dx%d != scale_len of 1x %dx%d - dims "
+                 "drifted, re-measure before smoothing"
+                 % (tw, th, one.width, one.height))
+    sp = one.load()
+    key = sum(1 for y in range(one.height) for x in range(one.width)
+              if sp[x, y][3] > 0 and sp[x, y][0] > 250 and sp[x, y][1] < 5
+              and sp[x, y][2] > 250)
+    if key:
+        sys.exit("FATAL: toolbar rail now holds %d key-magenta px - bilinear "
+                 "would smear the key; pass withdrawn, re-measure" % key)
+    # Premultiply -> bilinear -> unpremultiply, so fully-transparent black
+    # cannot bleed dark halos into the fused edge.
+    pre = Image.new("RGBA", one.size)
+    pp = pre.load()
+    for y in range(one.height):
+        for x in range(one.width):
+            r, g, b, a = sp[x, y]
+            pp[x, y] = (r * a // 255, g * a // 255, b * a // 255, a)
+    out = pre.resize((tw, th), Image.BILINEAR)
+    op = out.load()
+    for y in range(th):
+        for x in range(tw):
+            r, g, b, a = op[x, y]
+            op[x, y] = ((min(255, r * 255 // a), min(255, g * 255 // a),
+                         min(255, b * 255 // a), a) if a else (0, 0, 0, 0))
+    out.save(dst)
+    print("Toolbar rail: #162 fix applied - %08x/%08x re-derived 1x %dx%d -> "
+          "%dx%d alpha-premultiplied BILINEAR (edge fused, geometry "
+          "identical)" % (gid, iid, one.width, one.height, tw, th))
+
+
+# #162 part 2 (2026-08-24, verification round): with the rail fused, the
+# remaining "sharp blue line + disconnect" at the medallion's bottom-right is
+# the MODE BUTTON strips' own NN-stitched edges meeting the smoothed rail
+# with a 1px step. Same mechanism, next sheet over. These cells hold crisp
+# iconography, so full bilinear would blur the icons - the treatment is
+# EDGE-BAND-ONLY: bilinear where the NN copy is anti-aliased or borders a
+# transparency transition, NN-crisp everywhere else.
+MODE_BUTTON_SHEETS = (
+    (0x46A006B0, 0x14015555),   # Mayor Mode (hat)
+    (0x46A006B0, 0x13F15230),   # My Sim Mode
+    (0x46A006B0, 0x14415860),   # God Mode (recorded carrying the identical
+                                # doubled feature, clean only via clipping)
+    (0x46A006B0, 0x13E14FB3),   # Options
+)
+
+
+def _premul_bilinear(img, tw, th):
+    from PIL import Image
+    sp = img.load()
+    pre = Image.new("RGBA", img.size)
+    pp = pre.load()
+    for y in range(img.height):
+        for x in range(img.width):
+            r, g, b, a = sp[x, y]
+            pp[x, y] = (r * a // 255, g * a // 255, b * a // 255, a)
+    out = pre.resize((tw, th), Image.BILINEAR)
+    op = out.load()
+    for y in range(th):
+        for x in range(tw):
+            r, g, b, a = op[x, y]
+            op[x, y] = ((min(255, r * 255 // a), min(255, g * 255 // a),
+                         min(255, b * 255 // a), a) if a else (0, 0, 0, 0))
+    return out
+
+
+def fuse_mode_button_edges():
+    """Edge-band-only fuse for the four mode-button strips at fractional
+    factors. A pixel joins the band when the staged NN copy is semi-alpha
+    there, or any 4-neighbour crosses an opaque/transparent boundary."""
+    if abs(FACTOR - round(FACTOR)) < 1e-9:
+        print("Mode-button edges: SKIPPED at integer factor %g" % FACTOR)
+        return
+    try:
+        from PIL import Image
+    except ImportError:
+        sys.exit("FATAL: the #162 mode-button pass needs Pillow at "
+                 "fractional factors")
+    for gid, iid in MODE_BUTTON_SHEETS:
+        name = tgi_png_name(gid, iid)
+        dst = os.path.join(STAGE, name)
+        if not os.path.isfile(dst):
+            sys.exit("FATAL: mode-button sheet %08x/%08x not staged - the "
+                     "#162 fix would ship partially applied" % (gid, iid))
+        src1x = os.path.join(TOOLS, "dbpf", "extracted", "SimCity_1",
+                             "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid))
+        if not os.path.isfile(src1x):
+            sys.exit("FATAL: 1x extract missing: %s" % src1x)
+        one = Image.open(src1x).convert("RGBA")
+        nn = Image.open(dst).convert("RGBA")
+        tw, th = nn.size
+        if (tw, th) != (scale_len(one.width), scale_len(one.height)):
+            sys.exit("FATAL: staged %08x %dx%d != scale_len of 1x %dx%d"
+                     % (iid, tw, th, one.width, one.height))
+        smooth = _premul_bilinear(one, tw, th)
+        np_, sm = nn.load(), smooth.load()
+        fused = 0
+        for y in range(th):
+            for x in range(tw):
+                a = np_[x, y][3]
+                band = 0 < a < 255
+                if not band:
+                    me = a == 0
+                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < tw and 0 <= ny < th:
+                            if (np_[nx, ny][3] == 0) != me:
+                                band = True
+                                break
+                if band:
+                    np_[x, y] = sm[x, y]
+                    fused += 1
+        if fused == 0:
+            sys.exit("FATAL: mode-button %08x edge band came up EMPTY - the "
+                     "instrument found nothing to fuse, which contradicts "
+                     "the measured stitching; re-measure" % iid)
+        nn.save(dst)
+        print("Mode-button edges: #162 fix - %08x/%08x fused %d edge px "
+              "(icons untouched, NN-crisp interior)" % (gid, iid, fused))
+
+
 def neutralize_dock_recess():
     """Repaint the baked fake map in the STAGED dock sheet with the recess
     plate. Hard no-op (nothing read, nothing written) when the real map covers
@@ -2401,6 +2561,13 @@ def main():
     # the block comment above. NOT an integer no-op, by design: stock art
     # overhangs the window, so 2x/3x bytes change for those two sheets.
     clamp_query_pair_cells()
+
+    # #162: fuse the toolbar rail's NN-stitched outline at fractional
+    # factors - see the block comment above. Integer factors: loud no-op.
+    smooth_toolbar_rail()
+
+    # #162 part 2: edge-band-only fuse for the four mode-button strips.
+    fuse_mode_button_edges()
 
     # ---- edit the scaled-window .UI files ----
     edit_stats = []   # (fname, n_retargets, n_rect_doubles, unchanged)

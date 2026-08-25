@@ -16664,3 +16664,33 @@ Also banked: the #24 closure pattern — a two-layer cure (static dat + never-
 scale list) can be lifted reversibly for a repro via a dat RENAME SyncDat
 cannot see (`.probe-quarantine`) plus a one-id ini exclusion lever, applied
 AFTER deploy (the deploy re-copies the dat), reverted the same session.
+
+## 2026-08-24 (late) — the #16 instrumented-art arc: sheet NAMED, cure NOT established
+
+The marker-art probe (27 sheets recoloured via a zzzz-162probe override dat;
+builder `tools/research/probe162/build_162_probe.py`) delivered the arc's one
+hard fact: **the stray pixels beside the mayor medallion BELONG to sheet
+{46a006b0,14015546}** — the user's "dark purple part" is that sheet's
+semi-alpha edge blended over the near-magenta-marked dock plate. Also
+measured en route: the plate 13d14ca0 is COLOUR-KEYED (opaque magenta key
+regions, zero alpha holes), the visible mayor "bust" in some mode states is
+14015546's baked medallion (not the button strip), and the UI never reaches
+the GPU as elements (CPU-composited buffers drawn as one quad — census
+proof), nor through the slot-29 buffer class (heartbeat: 1 blit/session).
+
+**Three cures shipped and NONE moved the visible symptom** (user-verified,
+three launches): rail full-bilinear re-derive (`smooth_toolbar_rail`),
+mode-button edge-band fuse (`fuse_mode_button_edges`), and the Y-only
+dock/composite interlock weld (ApplyPanelDocks; ghost-contract offset
+(134,25), 25 odd = the offset-parity broken axis; floor-biased tuck;
+identity at integer tiers). All three are KEPT — cosmetically harmless or
+identity — but none is the cure, so **the row's verdict stays NOT
+ESTABLISHED**: the mechanism is cornered to the dock/composite interlock
+region and the 14015546 edge, and the next hunt starts THERE, not at the
+button strips (their art and geometry are measured clean).
+
+Instrument laws banked: a colour-keyed sheet defeats alpha-hole scans (scan
+for THE KEY, not just a==0); a marker probe must mark EVERY sheet the family
+can draw (round 1's ten .ui-declared sheets missed the code-fetched ones);
+and the engine's gdType is a SMALL-INTEGER enum (push 3 = 16-bit at
+0x7D4B15) — GL-shaped constants in a census are a silent null.

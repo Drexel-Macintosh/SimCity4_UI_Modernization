@@ -11235,6 +11235,56 @@ void UiSpike::ApplyPanelDocks(cIGZWin* pRoot, float f, bool fromShow)
 				d.what);
 		}
 	}
+
+	// #162 (2026-08-24): THE DOCK-COMPOSITE INTERLOCK WELD, Y ONLY.
+	// The designers encoded the two panels' relative placement as a ghost
+	// child (I-2bc90671: id 0x0000AAAA, caption "0xc988bc79", at (-37,12)):
+	// composite = dock origin + (134,25). 134 is EVEN - X survives every
+	// factor (201 exact at 1.5x; #101 also co-anchors X, so X is never
+	// touched here). 25 is ODD - the offset-parity law's broken axis: the
+	// design offset is 37.5px at f=1.5 and NO integer placement can align
+	// the two background sheets. Rounding UP (38 - the measured state that
+	// showed the defect) leaves the composite half a pixel LOW, which
+	// UNCOVERS the panel notch's edge from under the dock hump: the user's
+	// "sharp blue line + disconnect" beside the mayor medallion, 1.5x only.
+	// Rounding DOWN tucks the notch the half pixel FURTHER UNDER the
+	// covering hump, where the error is invisible - coverage is one-sided.
+	// floor(25*f) is exact at 2x/3x, so the weld is an identity compare at
+	// integer tiers by construction. Idempotent like the dock table above.
+	// LAW: AN INTERLOCK CHILD ROUNDS TOWARD THE TUCK.
+	__try
+	{
+		cIGZWin* pDockW = pRoot->GetChildWindowFromIDRecursive(0x0987B48F);
+		cIGZWin* pComp = pRoot->GetChildWindowFromIDRecursive(0xE9889775);
+		if (pDockW && pComp
+			&& pDockW->GetW() > 0 && pDockW->GetH() > 0
+			&& pComp->GetW() > 0 && pComp->GetH() > 0)
+		{
+			const int32_t ty = pDockW->GetT()
+				+ static_cast<int32_t>(25.0f * f);   // trunc == floor: f > 0
+			const int32_t cy = pComp->GetT();
+			if (cy != ty)
+			{
+				pComp->GZWinMoveTo(0, ty - cy);
+				static int s_weldLogs = 0;
+				if (s_weldLogs < 4)
+				{
+					s_weldLogs++;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: INTERLOCK WELD composite 0xE9889775 y %d -> "
+						"%d (dock top %d + floor(25*%.2f)=%d, tuck-biased; the "
+						"ghost contract from I-2bc90671).",
+						cy, ty, pDockW->GetT(), f,
+						static_cast<int32_t>(25.0f * f));
+				}
+			}
+		}
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER)
+	{
+		Logger::Get().WriteLine(LogLevel::Error,
+			"UiSpike: INTERLOCK WELD FAULTED - composite left as placed.");
+	}
 }
 
 void UiSpike::TryRecreateMinimapSurface(cIGZWin* pDock)

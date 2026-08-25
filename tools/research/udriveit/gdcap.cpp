@@ -292,9 +292,14 @@ void __fastcall DrawElementsDetour(void* self, void* edx,
         // reads past an 8-bit buffer and lets a garbage `hi` drive Emit into
         // vertices the game never touched (review 2026-08-24, finding 10b).
         // Unknown width => record the call with no vertex scan.
-        const bool wide   = (type == 0x1405u);
-        const bool narrow = (type == 0x1401u);
-        const bool known  = wide || narrow || (type == 0x1403u);
+        // The engine's gdType is a SMALL-INTEGER enum, not GL constants:
+        // byte-read from the UI submitter (0x7D4B15: push 3 before the
+        // DrawElements call), type 3 = 16-bit - which is why the v2 census's
+        // UI records all fell into the unknown-type null path. GL-shaped
+        // values kept as a belt for other builds.
+        const bool wide   = (type == 0x1405u || type == 5u);
+        const bool narrow = (type == 0x1401u || type == 1u);
+        const bool known  = wide || narrow || (type == 0x1403u || type == 3u);
         for (int i = 0; known && i < n; ++i)
         {
             int ix = wide   ? (int)reinterpret_cast<const uint32_t*>(indices)[i]
