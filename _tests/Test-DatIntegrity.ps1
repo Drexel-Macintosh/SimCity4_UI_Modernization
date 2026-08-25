@@ -360,7 +360,18 @@ $EXPECTED = @(
 $FONT_SOURCES = @("010-SC4UIScale\FontStyle-2x.ini", "010-SC4UIScale\FontStyle-15x.ini", "010-SC4UIScale\FontStyle-3x.ini")
 
 $failures = @()
+# ZCarbon* ARE ABSENT BY DESIGN ON A NORMAL INSTALL (2026-08-25). They are
+# built from another author's skin on the player's own machine, so the
+# release bundle ships none (Build-Dist asserts that) and a cold clone has
+# none either. Gating on the built artifact - not on the deployed one -
+# keeps "you never built them" separate from "they are deployed and wrong":
+# once they exist in the repo, every row below is enforced exactly as before.
+$carbonBuilt = Test-Path (Join-Path $proj "tools\selective-safe\z_SC4UIScale_ZCarbonArt.dat")
+if (-not $carbonBuilt) {
+  Write-Host "  note: no carbon packages built on this machine - ZCarbon rows skipped (they are local-only by design; see CARBON-COMPAT.md)."
+}
 foreach ($e in $EXPECTED) {
+  if (-not $carbonBuilt -and $e.name -match 'ZCarbon') { continue }
   $p = Join-Path $plugins $e.name
   if (-not (Test-Path $p)) { $p = "$p.x1-disabled" }
   if (-not (Test-Path $p)) { $failures += ($e.name + ": NOT FOUND (live or gated)"); continue }
@@ -520,6 +531,11 @@ $BUILT_PAIRS = @(
 )
 $nHash = 0
 foreach ($pair in $BUILT_PAIRS) {
+  # Same carbon presence gate as $EXPECTED above: unbuilt carbon packages are
+  # the normal state, and their build outputs are gitignored, so a cold clone
+  # would otherwise fail on 24 "built artifact missing" rows before anyone had
+  # done a single thing wrong.
+  if (-not $carbonBuilt -and $pair.b -match 'ZCarbon') { continue }
   $bp = Join-Path $proj $pair.b
   $dp = Join-Path $plugins $pair.d
   if (-not (Test-Path $dp)) { $dp = "$dp.x1-disabled" }

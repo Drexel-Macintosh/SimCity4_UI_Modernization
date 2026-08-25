@@ -68,7 +68,12 @@ if ($Uninstall) {
     foreach ($base in @($ourDir, $plug)) {
         foreach ($extra in @("SC4UIScale.dll", "SC4UIScale.ini", "SC4UIScale.log",
                              "SC4UIScale.gcap", "SC4UIScale-104.csv", "FontStyle.ini",
-                             "FontStyle-2x.ini", "FontStyle-15x.ini", "FontStyle-3x.ini")) {
+                             # -4x is a real tier in ScaleTier.cpp's kPackages
+                             # table; omitting its font source left one file
+                             # behind and so defeated the empty-folder removal
+                             # below (found 2026-08-25 by the uninstall audit).
+                             "FontStyle-2x.ini", "FontStyle-15x.ini", "FontStyle-3x.ini",
+                             "FontStyle-4x.ini")) {
             $t = Join-Path $base $extra
             if (Test-Path $t) {
                 if ($PSCmdlet.ShouldProcess($t, "remove")) { Remove-Item $t -Force }

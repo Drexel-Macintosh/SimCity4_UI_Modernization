@@ -101,7 +101,18 @@ foreach ($d in $deps) {
         Write-Output ("  {0}: live at tier {1}" -f $d.Package, ($liveAt -join ","))
     }
     if (-not $anyPresent) {
-        $failures += ("{0}: no tier of this package is present at all - package missing entirely." -f $d.Package)
+        # ZCarbon* IS ABSENT BY DESIGN ON A NORMAL INSTALL (2026-08-25). Those
+        # packages are built from another author's skin, so the release bundle
+        # deliberately ships none of them (Build-Dist throws if one gets in) -
+        # a player, and a cold clone, legitimately has zero of these files.
+        # Failing here made the SHIPPED state red, which is how a suite teaches
+        # people to ignore it. Same presence-gate shape as Test-Builders.ps1
+        # and the deploy's own ZCarbon block.
+        if ($d.Package -match 'z_SC4UIScale_ZCarbon') {
+            Write-Output ("  {0}: not built on this machine - skipped (carbon packages are local-only by design)." -f $d.Package)
+        } else {
+            $failures += ("{0}: no tier of this package is present at all - package missing entirely." -f $d.Package)
+        }
     } elseif ($liveAt.Count -gt 1) {
         # Two tiers of one package loading together is a real defect: they both
         # supply the same TGIs and the winner is filename order, not intent.

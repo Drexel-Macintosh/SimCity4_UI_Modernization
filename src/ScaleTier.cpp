@@ -2762,6 +2762,14 @@ namespace ScaleTier
 			DWORD sz = 0;
 			bool present = findCached(dep.modFile, dep.prefixMatch, hit, &sz);
 			bool sizeOk = (dep.modSize == 0) || (sz == dep.modSize);
+			// WHICH file failed, and what WE expected of THAT file. Both must
+			// travel together: the old code swapped in file 2's byte count but
+			// went on printing file 1's NAME and file 1's EXPECTED size, so a
+			// second-file mismatch logged a nonsense comparison against the
+			// wrong filename (every ZCarbon row pins a second file, so this
+			// fired precisely in the re-install-a-different-build case).
+			const wchar_t* failName = dep.modFile;
+			DWORD failExpect = dep.modSize;
 			if (present && sizeOk && dep.modFile2 != nullptr)
 			{
 				wchar_t hit2[MAX_PATH] = {};
@@ -2777,6 +2785,8 @@ namespace ScaleTier
 					present = p2;
 					sizeOk = s2;
 					sz = sz2;
+					failName = dep.modFile2;
+					failExpect = dep.modSize2;
 					swprintf_s(hit, L"%s", dep.modFile2);
 				}
 			}
@@ -2794,7 +2804,30 @@ namespace ScaleTier
 				Logger::Get().WriteLine(
 					LogLevel::Info,
 					"ScaleTier: %ls dep ABSENT (%ls) -> disabled; the stock "
-					"package takes over.", dep.package, dep.modFile);
+					"package takes over.", dep.package, failName);
+				// PARTIAL uninstall: the OTHER pinned file of this row may
+				// still be installed, in which case that mod keeps winning
+				// and the stock package takes over NOTHING. Measured: losing
+				// only scoty_Carbon_Files.dat costs 336 TGIs across all eight
+				// carbon packages while eleven skin dats keep loading.
+				if (skinStillLoads && dep.modFile2 != nullptr)
+				{
+					wchar_t other[MAX_PATH] = {};
+					DWORD otherSz = 0;
+					const wchar_t* otherName =
+						(failName == dep.modFile) ? dep.modFile2 : dep.modFile;
+					if (findCached(otherName, dep.prefixMatch, other, &otherSz))
+					{
+						Logger::Get().WriteLine(
+							LogLevel::Info,
+							"ScaleTier:   ^ PARTIAL: %ls is still installed, so "
+							"the skin keeps winning those TGIs and draws its own "
+							"1x art inside scaled cells. Restore %ls, or remove "
+							"the skin entirely - a half-removed skin is the one "
+							"state nothing of ours can cover.",
+							otherName, failName);
+					}
+				}
 			}
 			else if (!sizeOk)
 			{
@@ -2805,7 +2838,7 @@ namespace ScaleTier
 					LogLevel::Info,
 					"ScaleTier: %ls dep CHANGED (%ls is %u bytes, built from "
 					"%u) -> disabled; re-extract and rebuild.",
-					dep.package, dep.modFile, sz, dep.modSize);
+					dep.package, failName, sz, failExpect);
 				if (skinStillLoads)
 				{
 					Logger::Get().WriteLine(
@@ -2832,13 +2865,70 @@ namespace ScaleTier
 		// green, because the packages simply do not exist to be checked.
 		// Nothing else in the product would ever tell them. This does.
 		bool carbonSkinPresent = false;
+		wchar_t carbonSkinPath[MAX_PATH] = {};
 		for (int c = 0; c < cacheN; c++)
 		{
 			if (cache[c].present
 				&& _wcsicmp(cache[c].name, L"scoty_Carbon_Files.dat") == 0)
 			{
 				carbonSkinPresent = true;
+				wcscpy_s(carbonSkinPath, MAX_PATH, cache[c].hit);
 				break;
+			}
+		}
+		if (carbonSkinPresent)
+		{
+			// THE COMPARATOR-AMBIGUOUS FOLDER, checked at runtime (2026-08-25).
+			// Our overrides only win because zzz-SC4UIScale sorts last. '_'
+			// (0x5F) sits BETWEEN the upper-case letters and the lower-case
+			// ones, so a folder like the skin author's own `z____scoty_mods`
+			// sorts BEFORE us when the comparator upcases and AFTER us when it
+			// lowercases - and in the second case every package we just armed
+			// is inert. The installer renames it; a player who unzips the mod
+			// by hand gets the ambiguous name back, and nothing else would
+			// ever tell them.
+			const size_t rootLen = wcslen(pluginsRoot);
+			if (_wcsnicmp(carbonSkinPath, pluginsRoot, rootLen) == 0)
+			{
+				wchar_t folder[MAX_PATH] = {};
+				wcscpy_s(folder, MAX_PATH, carbonSkinPath + rootLen);
+				if (wchar_t* slash = wcschr(folder, L'\\'))
+				{
+					*slash = L'\0';
+				}
+				auto foldCmp = [](const wchar_t* a, const wchar_t* b,
+				                  bool upper) -> int {
+					for (;; ++a, ++b)
+					{
+						wchar_t ca = *a, cb = *b;
+						if (upper)
+						{
+							if (ca >= L'a' && ca <= L'z') { ca = ca - 32; }
+							if (cb >= L'a' && cb <= L'z') { cb = cb - 32; }
+						}
+						else
+						{
+							if (ca >= L'A' && ca <= L'Z') { ca = ca + 32; }
+							if (cb >= L'A' && cb <= L'Z') { cb = cb + 32; }
+						}
+						if (ca != cb) { return (ca < cb) ? -1 : 1; }
+						if (ca == 0) { return 0; }
+					}
+				};
+				const int cUp = foldCmp(folder, L"zzz-SC4UIScale", true);
+				const int cLo = foldCmp(folder, L"zzz-SC4UIScale", false);
+				if (cUp >= 0 || cLo >= 0)
+				{
+					Logger::Get().WriteLine(
+						LogLevel::Info,
+						"ScaleTier: WARNING - the skin folder '%ls' can sort "
+						"AT/AFTER zzz-SC4UIScale (upcased cmp %d, lowercased "
+						"cmp %d). Under that ordering the skin loads after our "
+						"overrides and every carbon package is armed but never "
+						"rendered. Rename the folder so it sorts earlier under "
+						"both foldings (the supported name is zz-scoty-mods).",
+						folder, cUp, cLo);
+				}
 			}
 		}
 		if (carbonSkinPresent)
