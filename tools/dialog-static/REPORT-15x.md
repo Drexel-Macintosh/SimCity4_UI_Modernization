@@ -2813,7 +2813,7 @@ without `--carbon` - carbon only ADDS these dats.
 - `I-0a55161d` Quit confirm (save-warning override) (carbon): root GZWinGen id=0xaa921f4f, 1x 270x162 -> 1.5x 405x243
 - `I-6a553aa4` Exit to Region confirm (save-warning override) (carbon): root GZWinGen id=0xaa921f4f, 1x 270x162 -> 1.5x 405x243
 
-### ZCarbonUI (`z_SC4UIScale_ZCarbonUI-15x.dat`, 197 entries, 1314565 bytes)
+### ZCarbonUI (`z_SC4UIScale_ZCarbonUI-15x.dat`, 197 entries, 1542171 bytes)
 
 109 carbon script(s):
 

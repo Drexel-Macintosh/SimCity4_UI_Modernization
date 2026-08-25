@@ -2596,24 +2596,69 @@ def build_mission_bubble_fixed96(src_dir=None, dir_tag=""):
 _CARBON_LADDER_TGIS = {(0x46A006B0, 0x14015549), (0x1ABE787D, 0x14015549)}
 
 
-def _carbon_upscale(tgis, work_name, corpus_flags):
-    """Copy the carbon 1x payloads for `tgis` into a work dir and run the
-    canonical upscaler at FACTOR.
+# ---------------------------------------------------------------------------
+# CARBON FLAG ROUTING IS PER SHEET, NOT PER PACKAGE (2026-08-25)
+#
+# THE CLASS: every Upscale2x derived list (cell-strips, nine-slice, no-snap,
+# no-smooth, height-exact x2) and every treatment flag is keyed on STOCK TGIs.
+# A normal third-party mod sits at ITS OWN TGIs, so a shorter flag set matches
+# nothing and is a provable no-op - which is why the ThirdPartyUI/WarriorUI
+# pass can omit flags safely. CARBON IS THE INVERSE: it REDECLARES stock TGIs,
+# so every list matches, and any flag omitted silently un-ships the treatment
+# that TGI is entitled to - at exit 0, with every other gate green, and
+# INVISIBLE at 2x/3x because the snap and the smoothing both no-op at integer
+# factors. A sister lane shipped 5 mis-framed sheets exactly this way.
+#
+# So the flag set is decided PER SHEET by TGI membership in the stock 1x
+# corpus, never per package by provenance: a sheet the stock corpus knows gets
+# the FULL Rebuild-Corpus.ps1 set, whatever package it lands in. Sheets carbon
+# invents (no stock TGI) keep the caller's set - no list can name them anyway.
+#
+# _CARBON_FLAG_CONTROL is the NEGATIVE-CONTROL switch for the parity gate
+# below, and exists only so the gate can be proven non-null on demand. It
+# cannot ship a regression: the parity gate FATALs before anything is packed.
+#   (unset)  - correct behaviour
+#   legacy   - the pre-fix per-PACKAGE routing
+#   nolists  - legacy AND the six derived lists dropped from the non-corpus
+#              lane: the genuinely-shorter flag set, i.e. the sister lane's
+#              defect reproduced here as a POSITIVE control for the gate.
+_CARBON_FLAG_CONTROL = (os.environ.get("SC4_CARBON_FLAG_CONTROL") or "").lower()
+_carbon_parity_caught = []      # control runs only: (package, mismatch row)
+_CARBON_DERIVED_LISTS = (
+    ("--cell-strips", "cell-strips.txt"),
+    ("--nine-slice", "nine-slice.txt"),
+    ("--no-snap", "no-snap.txt"),
+    ("--no-smooth", "no-smooth.txt"),
+    ("--height-exact-strips", "height-exact-strips.txt"),
+    ("--height-exact-strips", "height-exact-slabs.txt"),
+)
 
-    corpus_flags=True  -> the FULL Rebuild-Corpus.ps1 flag set (all six
-                          derived lists + --smooth-unkeyed --supersample):
-                          the carbon twin of the preview corpus product.
-    corpus_flags=False -> the six derived lists only: the carbon twin of the
-                          third-party art pass (which deliberately omits the
-                          smoothing flags).
+
+def _carbon_upscale(tgis, work_name, corpus_flags):
+    """Copy the carbon 1x payloads for `tgis` into work dirs and run the
+    canonical upscaler at FACTOR, ROUTING EACH SHEET BY ITS TGI.
+
+    A sheet whose TGI is in the stock 1x corpus always takes the FULL
+    Rebuild-Corpus.ps1 set (all six derived lists + --smooth-unkeyed
+    --supersample) - see the block comment above. `corpus_flags` now only
+    decides what happens to sheets the stock corpus has NEVER heard of:
+      True  -> full set anyway (the selective packages' historic choice)
+      False -> the six derived lists only (the third-party art pass's set)
+
     NEVER writes into tools\\upscale\\preview-* (that would confound the stock
-    ground truth) - everything lands under OUT_DIR. Returns the output dir.
-    """
+    ground truth) - everything lands under OUT_DIR. Returns ONE merged output
+    dir, so callers are unchanged."""
     sfx = ("-%s" % TAG) if TAG else ""
-    src_tmp = os.path.join(OUT_DIR, work_name + "-src" + sfx)
     out_dir = os.path.join(OUT_DIR, work_name + sfx)
-    fresh_dir(src_tmp)
     fresh_dir(out_dir)
+    up = os.path.join(TOOLS, "upscale")
+    exe = os.path.join(up, "Upscale2x.exe")
+    if not os.path.isfile(exe):
+        sys.exit("FATAL carbon: %s missing - build it first "
+                 "(upscale\\Build.ps1)" % exe)
+
+    legacy = _CARBON_FLAG_CONTROL in ("legacy", "nolists", "1")
+    lanes = {True: [], False: []}
     for (g, i) in sorted(set(tgis)):
         p = os.path.join(CARBON_SRC_ART,
                          "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, g, i))
@@ -2621,33 +2666,110 @@ def _carbon_upscale(tgis, work_name, corpus_flags):
             sys.exit("FATAL carbon: 1x payload missing for %08x/%08x (%s) - "
                      "enrollment and builder-inputs disagree; re-run the "
                      "carbon staging arc before building" % (g, i, p))
-        shutil.copy2(p, os.path.join(src_tmp, os.path.basename(p)))
-    up = os.path.join(TOOLS, "upscale")
-    exe = os.path.join(up, "Upscale2x.exe")
-    if not os.path.isfile(exe):
-        sys.exit("FATAL carbon: %s missing - build it first "
-                 "(upscale\\Build.ps1)" % exe)
-    argvv = [exe, src_tmp, out_dir, "--factor", str(FACTOR),
-             "--normalize-names"]
-    for flag, name in (("--cell-strips", "cell-strips.txt"),
-                       ("--nine-slice", "nine-slice.txt"),
-                       ("--no-snap", "no-snap.txt"),
-                       ("--no-smooth", "no-smooth.txt"),
-                       ("--height-exact-strips", "height-exact-strips.txt"),
-                       ("--height-exact-strips", "height-exact-slabs.txt")):
-        lp = os.path.join(up, name)
-        if not os.path.isfile(lp):
-            sys.exit("FATAL carbon: derived list %s missing - regenerate it "
-                     "(find_cell_strips.py and friends); building without it "
-                     "un-ships a confirmed fix." % lp)
-        argvv += [flag, lp]
-    if corpus_flags:
-        argvv += ["--smooth-unkeyed", "--supersample"]
-    r = subprocess.run(argvv, capture_output=True, text=True)
-    if r.returncode != 0:
-        sys.exit("FATAL carbon: art upscale failed for %s (exit %d):\n%s%s"
-                 % (work_name, r.returncode, r.stderr, r.stdout))
+        in_stock = _src1x_path(g, i) is not None
+        lanes[bool(corpus_flags) or (in_stock and not legacy)].append((g, i, p))
+    if lanes[True] and lanes[False]:
+        print("   [carbon] %s flag routing: %d sheet(s) FULL corpus set, "
+              "%d sheet(s) third-party set (per-TGI, stock-corpus membership)"
+              % (work_name, len(lanes[True]), len(lanes[False])))
+
+    for use_corpus in (True, False):
+        lane = lanes[use_corpus]
+        if not lane:
+            continue
+        lane_base = work_name + ("-corpus" if use_corpus else "-tp")
+        src_tmp = os.path.join(OUT_DIR, lane_base + "-src" + sfx)
+        lane_out = os.path.join(OUT_DIR, lane_base + "-out" + sfx)
+        fresh_dir(src_tmp)
+        fresh_dir(lane_out)
+        for (_g, _i, p) in lane:
+            shutil.copy2(p, os.path.join(src_tmp, os.path.basename(p)))
+        argvv = [exe, src_tmp, lane_out, "--factor", str(FACTOR),
+                 "--normalize-names"]
+        drop_lists = (not use_corpus) and _CARBON_FLAG_CONTROL == "nolists"
+        if not drop_lists:
+            for flag, name in _CARBON_DERIVED_LISTS:
+                lp = os.path.join(up, name)
+                if not os.path.isfile(lp):
+                    sys.exit("FATAL carbon: derived list %s missing - "
+                             "regenerate it (find_cell_strips.py and "
+                             "friends); building without it un-ships a "
+                             "confirmed fix." % lp)
+                argvv += [flag, lp]
+        if use_corpus:
+            argvv += ["--smooth-unkeyed", "--supersample"]
+        r = subprocess.run(argvv, capture_output=True, text=True)
+        if r.returncode != 0:
+            sys.exit("FATAL carbon: art upscale failed for %s (exit %d):"
+                     "\n%s%s" % (lane_base, r.returncode, r.stderr, r.stdout))
+        for fn in os.listdir(lane_out):
+            shutil.copy2(os.path.join(lane_out, fn),
+                         os.path.join(out_dir, fn))
     return out_dir
+
+
+def _carbon_dim_parity_gate(stage_dir, label):
+    """SAME 1x INPUT + SAME TREATMENT => SAME SCALED FRAME.
+
+    For every carbon sheet sitting at a STOCK TGI whose carbon 1x is
+    DIMENSIONALLY IDENTICAL to the stock 1x, the carbon scaled dims must equal
+    the stock scaled dims this same run produced. A mismatch means the sheet
+    was upscaled under a different flag set than its stock twin - the silent
+    class the routing above exists to close, and one that hides completely at
+    integer factors.
+
+    Sheets carbon deliberately RESIZED are exempt BY CONSTRUCTION: different
+    input, no claim. That exemption is a measured 1x dims comparison, never a
+    hand-maintained list, so a carbon re-resize can never quietly widen it.
+
+    Clone copies are resolved back through CLONE_XOR - the bytes are the
+    original TGI's, so the original's stock twin is the right comparand."""
+    rows = []
+    for fn in sorted(os.listdir(stage_dir)):
+        if not fn.lower().endswith(".png"):
+            continue
+        m = re.match(r"T-0x([0-9a-fA-F]{8})_G-0x([0-9a-fA-F]{8})_"
+                     r"I-0x([0-9a-fA-F]{8})\.png", fn)
+        if not m:
+            continue
+        g, i = int(m.group(2), 16), int(m.group(3), 16)
+        base = None
+        for cand in ((g, i), (g, i ^ CLONE_XOR)):
+            if _src1x_path(*cand) is not None:
+                base = cand
+                break
+        if base is None:
+            continue                       # carbon-invented TGI: no comparand
+        c1x = png_wh(_carbon_src_png(*base))
+        s1x = src1x_wh(*base)
+        if c1x is None or s1x is None or c1x != s1x:
+            continue                       # resized by carbon -> exempt
+        stock_up = png_wh(os.path.join(UPSCALE_DIR, tgi_png_name(*base)))
+        carb_up = png_wh(os.path.join(stage_dir, fn))
+        if stock_up is None or carb_up is None:
+            continue
+        if stock_up != carb_up:
+            rows.append((base, c1x, carb_up, stock_up))
+    if rows:
+        lines = ["   {%08x,%08x}: 1x %dx%d (identical to stock) -> carbon "
+                 "%dx%d but stock %dx%d"
+                 % (b[0], b[1], w1[0], w1[1], cu[0], cu[1], su[0], su[1])
+                 for (b, w1, cu, su) in rows]
+        if _CARBON_FLAG_CONTROL:
+            # Control run: COLLECT so the tally covers every package instead
+            # of stopping at the first. The run still fails, at the end.
+            _carbon_parity_caught.extend((label, r) for r in rows)
+            print("   [carbon] dim-parity gate %s: %d MISMATCH(ES) "
+                  "[control run - collecting, not exiting]\n%s"
+                  % (label, len(rows), "\n".join(lines)))
+            return
+        sys.exit("FATAL carbon DIM PARITY on %s: %d sheet(s) whose carbon 1x "
+                 "is byte-for-byte the stock 1x SIZE came out framed "
+                 "differently than the stock upscale - they were treated with "
+                 "a different flag set (a derived list that names their stock "
+                 "TGI did not reach them). NOT packing.\n%s"
+                 % (label, len(rows), "\n".join(lines)))
+    print("   [carbon] dim-parity gate %s: PASS (0 mismatches)" % label)
 
 
 def _carbon_src_png(gid, iid):
@@ -3041,6 +3163,12 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
     Runs AFTER the normal pack, so every stock stage it measures against is
     the one that shipped this run."""
     print("\n=== CARBON (--carbon): Scoty Carbon Skin override packages ===")
+    if _CARBON_FLAG_CONTROL:
+        print("!! SC4_CARBON_FLAG_CONTROL=%s - NEGATIVE-CONTROL RUN. The "
+              "upscaler flag routing is deliberately WRONG so the dim-parity "
+              "gate can be proven non-null. The gate is expected to FATAL; "
+              "any package this run produced must be discarded."
+              % _CARBON_FLAG_CONTROL)
     if not os.path.isfile(CARBON_ENROLLMENT):
         sys.exit("FATAL carbon: enrollment missing: %s" % CARBON_ENROLLMENT)
     with open(CARBON_ENROLLMENT, "r", encoding="utf-8") as f:
@@ -3161,6 +3289,14 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
                       "instrument (it re-lays from the stock 1x extract) and "
                       "must not repaint carbon art; the #181 gate checks the "
                       "ladder invariants on the NN copy instead" % t)
+
+        # DIM PARITY, measured on the UPSCALER'S OWN PRODUCT - before the
+        # #186 pin (a different producer) and before the art-repair passes
+        # (content-measured, so carbon's redrawn pixels legitimately move
+        # their output). This is exactly the stage at which the flag set is
+        # the ONLY thing that can differ from the stock corpus build.
+        _carbon_dim_parity_gate(cstage, pkg_name)
+
         if plan_f96:
             # #186: carbon owns a pinned family member - regenerate the
             # carbon fixed-96 twin from CARBON's 1x via the same canonical
@@ -3169,9 +3305,12 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
             # family member's 1x source; carbon owning only SOME of them
             # would otherwise sys.exit deep inside with a misleading
             # "pristine 1x source missing" - refuse loudly here instead.
+            # _carbon_src_png, NOT tgi_png_name: builder-inputs uses raw-hex
+            # names and tgi_png_name is the 0x-prefixed STAGE spelling, so the
+            # old join could never resolve - this guard would have reported the
+            # WHOLE family missing the first time carbon enrolled a member.
             _f96_missing = [t for t in MISSION_BUBBLE_FIXED96
-                            if not os.path.isfile(
-                                os.path.join(CARBON_SRC_ART, tgi_png_name(*t)))]
+                            if not os.path.isfile(_carbon_src_png(*t))]
             if _f96_missing:
                 sys.exit("FATAL [carbon] #186: carbon redeclares %d pinned "
                          "family member(s) but not the whole family - the "
@@ -3316,6 +3455,9 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
                 n_sty_clone += 1
             print("   [carbon] %s ART upscaled x%g and staged: %d in place + "
                   "%d clone(s)" % (tp_name, FACTOR, n_sty_art, n_sty_clone))
+        # Same placement rationale as the selective packages: the upscaler's
+        # own product, before anything else can move a frame.
+        _carbon_dim_parity_gate(sstage, tp_name)
         sty_dirs = [sstage] + ([art_stage_path] if art_stage_path else []) \
             + [STAGE]
         sty_stats = []
@@ -3357,6 +3499,15 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
     else:
         print("carbon art-repair passes: no premise skips - every applicable "
               "pass ran on the carbon copies")
+    if _CARBON_FLAG_CONTROL:
+        print("\n=== DIM-PARITY NEGATIVE CONTROL (SC4_CARBON_FLAG_CONTROL=%s) "
+              "===\ngate caught %d sheet(s):"
+              % (_CARBON_FLAG_CONTROL, len(_carbon_parity_caught)))
+        for (pkg, (b, w1, cu, su)) in _carbon_parity_caught:
+            print("   %-14s {%08x,%08x}: 1x %dx%d -> carbon %dx%d, stock %dx%d"
+                  % (pkg, b[0], b[1], w1[0], w1[1], cu[0], cu[1], su[0], su[1]))
+        sys.exit("CONTROL RUN - the packages this run wrote are NOT shippable. "
+                 "Rebuild without SC4_CARBON_FLAG_CONTROL.")
 
 
 def main():

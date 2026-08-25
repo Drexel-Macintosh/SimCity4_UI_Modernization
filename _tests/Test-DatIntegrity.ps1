@@ -341,14 +341,17 @@ $EXPECTED = @(
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-2x.dat";  entries = 2 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-15x.dat"; entries = 2 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-3x.dat";  entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-2x.dat";  entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-15x.dat"; entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-3x.dat";  entries = 2 },
+  # Styles = 1 script + 1 art + 2 carbon-styled CLONE sheets (the clone pass
+  # was a false zero until 2026-08-25; see REGRESSION.md).
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-2x.dat";  entries = 4 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-15x.dat"; entries = 4 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-3x.dat";  entries = 4 },
   # ZCarbonArt / ZCarbonGodMod entry counts land with the final build
   # (rows added in the same session - see the deploy manifest).
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-2x.dat";  entries = 269 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-15x.dat"; entries = 269 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-3x.dat";  entries = 269 },
+  # Art = 23 scripts + 246 art + 11 carbon-styled CLONE sheets.
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-2x.dat";  entries = 280 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-15x.dat"; entries = 280 },
+  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-3x.dat";  entries = 280 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-2x.dat";  entries = 4 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-15x.dat"; entries = 4 },
   @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-3x.dat";  entries = 4 }
