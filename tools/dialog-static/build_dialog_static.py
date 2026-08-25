@@ -2063,25 +2063,49 @@ def main():
                 os.remove(os.path.join(carbon_up_dir, fn2))
         else:
             os.makedirs(carbon_up_dir)
-        # The SAME invocation as the third-party art pass below - one rule,
-        # every consumer wired to it (#157: nine-slice CellUnit, no-snap,
-        # no-smooth, height-exact strips AND slabs). Runs BEFORE the edit
-        # pass because the #157 crop snap must measure THESE outputs.
-        r = subprocess.run([os.path.join(TOOLS, "upscale", "Upscale2x.exe"),
+        # THE CORPUS COMMAND, NOT THE THIRD-PARTY ONE. This pass first copied
+        # the thirdparty-art invocation below, and that SHIPPED A DEFECT:
+        # {46a006b0,13f15255} (a 180x38 FOUR-STATE strip carbon redeclares at
+        # stock dimensions) came out 276x57 instead of the stock 272x57,
+        # because the TP invocation carries no `--cell-strips`. Without it a
+        # 4-state sheet is resampled as ONE image and ScaleDim's generic LCM
+        # snap rounds 270 up to 276 - so each state is 69px inside a 68px
+        # button and a sliver of the next state bleeds in on hover/press.
+        #
+        # WHY THE TP PASS NEVER SHOWED IT, and why copying it was the wrong
+        # model: cell-strips.txt (and every other derived list) names STOCK
+        # TGIs. A mod's own bitmaps sit at their own TGIs, so the lists match
+        # nothing there and their absence is a provable no-op. CARBON IS THE
+        # OPPOSITE CASE - it REDECLARES stock TGIs, so every list matches and
+        # every missing list silently un-ships the fix it encodes.
+        #
+        # The authority is tools\upscale\Rebuild-Corpus.ps1, the command that
+        # builds the stock preview trees these outputs must agree with. This
+        # mirrors it exactly: all five derived lists (cell-strips, nine-slice,
+        # no-snap, no-smooth, height-exact strips AND the hand-authored slab
+        # table on a second occurrence - the parser appends), plus the same
+        # resampler pair. --smooth-unkeyed / --supersample refuse themselves
+        # at integer factors and on keyed sheets, exactly as they do there;
+        # --smooth-keyed stays OFF on both paths.
+        # Runs BEFORE the edit pass because the #157 crop snap measures THESE
+        # outputs.
+        _up = os.path.join(TOOLS, "upscale")
+        r = subprocess.run([os.path.join(_up, "Upscale2x.exe"),
                             CARBON_ART_DIR, carbon_up_dir,
-                            "--factor", str(FACTOR),
-                            "--normalize-names", "--nine-slice",
-                            os.path.join(TOOLS, "upscale", "nine-slice.txt"),
+                            "--factor", str(FACTOR), "--normalize-names",
+                            "--cell-strips",
+                            os.path.join(_up, "cell-strips.txt"),
+                            "--nine-slice",
+                            os.path.join(_up, "nine-slice.txt"),
                             "--no-snap",
-                            os.path.join(TOOLS, "upscale", "no-snap.txt"),
+                            os.path.join(_up, "no-snap.txt"),
                             "--no-smooth",
-                            os.path.join(TOOLS, "upscale", "no-smooth.txt"),
+                            os.path.join(_up, "no-smooth.txt"),
                             "--height-exact-strips",
-                            os.path.join(TOOLS, "upscale",
-                                         "height-exact-strips.txt"),
+                            os.path.join(_up, "height-exact-strips.txt"),
                             "--height-exact-strips",
-                            os.path.join(TOOLS, "upscale",
-                                         "height-exact-slabs.txt")],
+                            os.path.join(_up, "height-exact-slabs.txt"),
+                            "--smooth-unkeyed", "--supersample"],
                            capture_output=True, text=True)
         if r.returncode != 0:
             sys.exit("CARBON ART UPSCALE FAILED:\n" + r.stderr + r.stdout)
@@ -2093,6 +2117,56 @@ def main():
                     os.path.join(carbon_up_dir, fn2)
         print("Carbon art upscaled x%g: %d sheet(s) -> %s"
               % (FACTOR, len(carbon_up), os.path.basename(carbon_up_dir)))
+
+        # ---- SAME INPUT DIMS + SAME TREATMENT = SAME FRAME (2026-08-25) ---
+        # THE GATE THIS CLASS NEEDED. The 13f15255 defect was ONE sheet in
+        # 359 and no existing check could see it: every carbon gate measured
+        # the carbon tree against ITSELF, so a missing derived list is
+        # invisible - the same shape as Rebuild-Corpus.ps1's own "an empty
+        # list exits 0" warning, one consumer further down.
+        #
+        # The invariant is independent of WHICH lists exist: carbon
+        # redeclares stock TGIs, so wherever carbon's 1x sheet has the SAME
+        # dimensions as the stock 1x sheet, the two upscalers are handed
+        # identical input and must be handed identical treatment - therefore
+        # identical output dimensions. A carbon sheet DELIBERATELY resized at
+        # 1x is exempt by construction (different input, so no claim), which
+        # is why the exemption cannot be used to hide a treatment gap.
+        # Compares the WHOLE upscaled set, not the staged subset: a sheet
+        # that ships only in a later tier must be caught in the tier that
+        # builds it.
+        _dim_bad = []
+        _dim_checked = 0
+        for (g, i), up_path in sorted(carbon_up.items()):
+            s1 = art_1x_dims(g, i)
+            if s1 is None:
+                continue                     # carbon-only sheet, no claim
+            c1 = png_dims(os.path.join(
+                CARBON_ART_DIR,
+                "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, g, i)))
+            if c1 is None or c1 != s1:
+                continue                     # deliberately resized at 1x
+            s_up = png_dims(os.path.join(UPSCALE_DIR, tgi_png_name(g, i)))
+            if s_up is None:
+                continue                     # stock ships no scaled sheet
+            c_up = png_dims(up_path)
+            _dim_checked += 1
+            if c_up != s_up:
+                _dim_bad.append((g, i, s1, s_up, c_up))
+        if _dim_bad:
+            sys.exit(
+                "FATAL --carbon: %d sheet(s) upscaled to DIFFERENT dimensions "
+                "than the stock corpus does from identical 1x input - a "
+                "derived list (cell-strips / nine-slice / no-snap / "
+                "height-exact) is not reaching the carbon pass:\n%s\n"
+                "  The authority is tools\\upscale\\Rebuild-Corpus.ps1; this "
+                "pass must mirror its flags exactly."
+                % (len(_dim_bad), "\n".join(
+                    "  {%08x,%08x} 1x %dx%d: stock %dx%d, carbon %dx%d"
+                    % ((g, i) + s1 + s_up + c_up)
+                    for (g, i, s1, s_up, c_up) in _dim_bad)))
+        print("   carbon/stock frame parity: %d sheet(s) checked, all agree"
+              % _dim_checked)
 
     def carbon_art_dims(gid, iid):
         """#157 for CARBON entries: (1x dims, scaled dims) measured off

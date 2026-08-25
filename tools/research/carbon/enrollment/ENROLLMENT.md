@@ -9,7 +9,7 @@
 - **ZCarbonUI**: 109 scripts + 87 art
 
 total: 145 scripts + 338 art (+18 in built ZCarbonIcons; 11 skipped)
-clone TGIs needing carbon pixels: 0
+clone TGIs needing carbon pixels: 11
 
 ## Ownership moves (TGIs the existing gated packages claim)
 - 00000000/96a006b0/0a55161d -> ZCarbonSaveWarning (ours: 010-SC4UIScale\z_SC4UIScale_DialogStatic-15x.dat;010-SC4UIScale\z_SC4UIScale_DialogStatic-2x.dat.x1-disabled;010-SC4UIScale\z_SC4UIScale_DialogStatic-3x.dat.x1-disabled;zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-15x.dat;zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-2x.dat.x1-disabled;zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-3x.dat.x1-disabled)

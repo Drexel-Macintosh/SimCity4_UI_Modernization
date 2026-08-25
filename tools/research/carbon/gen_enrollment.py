@@ -160,35 +160,76 @@ def main():
     # clone analysis: which clone TGIs do root scripts reference whose SOURCE
     # art carbon owns? Those clone TGIs need carbon-scaled pixels in the same
     # package as the script that references them.
-    carbon_art_iids = {(r["g"], r["i"]) for r in rows if r["t"] == 0x856DDBAC}
+    # ⛔ THIS PASS WAS A FALSE NULL AND SHIPPED ONE (2026-08-25 adversarial
+    # sweep). The old matcher tested `"gid" in k` / `"iid" in k` against the
+    # REAL header `TypeID,GroupID,InstanceID,...` - "gid" is NOT a substring
+    # of "groupid" and "iid" is NOT a substring of "instanceid", so every row
+    # fell out at `if not gid or not iid: continue` and the report printed
+    # "clone TGIs needing carbon pixels: 0" forever. Eleven stock-styled
+    # clone sheets shipped inside carbon dialogs behind that zero.
+    # NULL IS NOT EVIDENCE: this pass now asserts its own positive control -
+    # it must SEE clone rows at all, or it refuses rather than reporting none.
+    # "Carbon owns this art" = CARBON SHIPS THE PAYLOAD, which is a superset
+    # of "it collides with our packages". Keying the clone pass on the
+    # collision set missed e2b66db8 - carbon restyles it, but it was not in
+    # the intersection, so its clone kept stock pixels inside a carbon
+    # dialog. The file on disk is the authority (same test the dialog-static
+    # lane uses).
+    carbon_art_iids = set()
+    for fn in os.listdir(ART):
+        if fn.lower().startswith("t-856ddbac_g-") and fn.lower().endswith(".png"):
+            try:
+                parts = fn[:-4].split("_")
+                carbon_art_iids.add((int(parts[1].split("-")[1], 16),
+                                     int(parts[2].split("-")[1], 16)))
+            except (IndexError, ValueError):
+                continue
+    if not carbon_art_iids:
+        print("FATAL: zero carbon art payloads found in %s - the clone pass "
+              "would report a false zero" % ART)
+        sys.exit(1)
     clones = []
     if os.path.isfile(REFMAP):
-        for line in open(REFMAP, encoding="utf-8", errors="replace"):
-            # refmap columns include gid,iid and clone target; detect XOR pairs
-            for m in re.finditer(r"([0-9a-fA-F]{8})", line):
-                pass  # format parsed below by the strict reader
         import csv
+        n_clone_rows = 0
         with open(REFMAP, newline="", encoding="utf-8", errors="replace") as f:
             rd = csv.DictReader(f)
-            cols = rd.fieldnames or []
+            need = {"GroupID", "InstanceID", "action", "clone_InstanceID"}
+            missing = need - set(rd.fieldnames or [])
+            if missing:
+                print("FATAL: refmap header changed - missing columns %s; the "
+                      "clone pass cannot measure and must not report zero"
+                      % sorted(missing))
+                sys.exit(1)
             for rec in rd:
-                low = {k.lower(): (v or "") for k, v in rec.items()}
-                gid = iid = None
-                for k, v in low.items():
-                    if "gid" in k or k == "group":
-                        gid = v
-                    if ("iid" in k or k == "instance") and "clone" not in k:
-                        iid = v
-                if not gid or not iid:
+                act = (rec.get("action") or "").strip()
+                if not act.startswith("clone"):
                     continue
+                n_clone_rows += 1
                 try:
-                    g = int(gid, 16); i = int(iid, 16)
-                except ValueError:
+                    g = int(rec["GroupID"], 16)
+                    i = int(rec["InstanceID"], 16)
+                    ci = int(rec["clone_InstanceID"], 16)
+                except (ValueError, TypeError):
                     continue
-                if (g, i) in carbon_art_iids and "clone" in ",".join(
-                        v.lower() for v in low.values()):
+                # INT keys both sides - carbon_art_iids is built from the
+                # parsed intersection rows, which hold ints. (The first
+                # repair of this pass compared hex strings to ints and
+                # produced a SECOND false zero; the positive control above
+                # is what exposed it.)
+                if (g, i) in carbon_art_iids:
                     clones.append({"g": "%08x" % g, "src_i": "%08x" % i,
-                                   "clone_i": "%08x" % (i ^ CLONE_XOR)})
+                                   "clone_i": "%08x" % ci})
+        # POSITIVE CONTROL: the refmap is known to carry clone+retarget rows
+        # (12 at every tier as of 2026-08-25). Zero rows SEEN means the
+        # instrument is blind again, not that there are no clones.
+        if n_clone_rows == 0:
+            print("FATAL: clone pass saw ZERO clone rows in %s - the action "
+                  "vocabulary changed and this pass is blind (it reported a "
+                  "false zero once already)" % REFMAP)
+            sys.exit(1)
+        print("clone pass: %d clone rows read, %d carbon-owned"
+              % (n_clone_rows, len(clones)))
     else:
         print("note: refmap-15x.csv absent; clone pass deferred to the builder")
 

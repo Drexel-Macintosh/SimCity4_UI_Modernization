@@ -16815,3 +16815,47 @@ deploy's ZCarbon copies are presence-gated (an unguarded miss under
 EAP=Stop aborted everything after it, including the armed-tier restore);
 dep resolution memoizes per (name,prefix) — 16 walks became 7 on a
 skinned tree, 6 on a plain one.
+
+## 2026-08-25 (adversarial sweep) — A FALSE ZERO SHIPPED, TWICE OVER
+
+The enrollment generator's clone pass reported "clone TGIs needing carbon
+pixels: 0" and that zero was written into the design doc as a measured
+residual boundary. It was an instrument failure: the matcher tested
+`"gid" in key` / `"iid" in key` against the real header
+`TypeID,GroupID,InstanceID,…` — "gid" is not a substring of "groupid" — so
+every row fell out of the loop and the count could only ever be zero.
+Behind it, ELEVEN stock-styled clone sheets shipped inside carbon-styled
+dialogs (measured: clone 470261e3 mean RGB (90,91,91) stock-gray next to
+its carbon base (147,188,203) in the same window, across ~9 dialogs).
+
+Then the REPAIR produced a SECOND false zero — the fixed parser compared
+hex-string keys against an int-keyed set, matched nothing, and printed 0
+again. What caught it both times was the positive control added in the same
+edit ("12 clone rows read"), not the result. And the count only became
+correct (10 → 11) when the ownership test changed from "is it in the
+collision set" to "does carbon ship this payload" — the file on disk, not a
+derived list.
+
+LAWS (all three are re-statements the project keeps re-learning):
+1. NULL IS NOT EVIDENCE, and a zero from a parser is the cheapest null
+   there is. Every counting pass ships a POSITIVE CONTROL that fails loudly
+   when the instrument sees nothing at all — this pass now exits non-zero
+   if it reads no clone rows, and refuses if the header lacks its columns.
+2. A ZERO YOU WROTE INTO A DOC BECOMES A FACT. "Known residuals" was scoped
+   from this false zero, so the doc actively argued the defect away.
+   Re-derive a residual list from the instrument, never from prose.
+3. ASK WHAT "OWNS" MEANS. Keying on the collision set answered a narrower
+   question than the one asked (carbon RESTYLES more art than it COLLIDES
+   with us on); the authority is the payload file.
+
+Same sweep: the disarm log lied by inheritance. "dep CHANGED -> disabled;
+the stock package takes over" is true for a mod we merely PATCH and false
+for a RESKIN, which keeps winning the load order after we disarm — the
+stock layer takes over nothing, it loses. A skin update therefore lands the
+player in the exact broken state the packages exist to prevent, with every
+gate green. The message now names that case and tells the player to rebuild;
+duplicate copies of a pinned dat are detected and logged (the gate
+fingerprints the first copy found, the game renders the last one); and the
+DLL warns when a reskin is installed with no carbon packages present at all
+— the public-bundle case, which no gate could ever have caught because the
+packages simply do not exist to be checked.

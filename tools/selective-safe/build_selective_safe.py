@@ -2650,6 +2650,57 @@ def _carbon_upscale(tgis, work_name, corpus_flags):
     return out_dir
 
 
+def _carbon_src_png(gid, iid):
+    """Path of CARBON's 1x payload for a TGI.
+
+    builder-inputs uses the RAW-hex extractor naming (T-856ddbac_G-..._I-...);
+    tgi_png_name() is the 0x-PREFIXED *stage* convention and does NOT resolve
+    here. Every carbon-payload existence test must go through this helper."""
+    return os.path.join(CARBON_SRC_ART,
+                        "T-%08x_G-%08x_I-%08x.png" % (PNG_TYPE, gid, iid))
+
+
+def _carbon_script_image_refs(path):
+    """Every {gid,iid} image ref in one carbon .UI payload, scaled or not."""
+    with open(path, "r", encoding="latin-1", newline="") as f:
+        text = f.read()
+    out = set()
+    for nd in walk(parse_ui(text)):
+        for (gid, iid, _vs, _ve) in nd.images:
+            out.add((gid, iid))
+    return out
+
+
+def _carbon_clone_art_for_scripts(script_paths, clones):
+    """The clone+retarget art these carbon scripts RETARGET TO, restricted to
+    the TGIs CARBON itself supplies 1x pixels for.
+
+    WHY (defect found 2026-08-25, confirmed against shipped bytes): a carbon
+    script whose ref {g,i} is rewritten to {g, i^CLONE_XOR} needs CARBON pixels
+    AT THE CLONE NAME inside the same package. The enrolled-art loop only ever
+    walked the art the enrollment listed FOR THAT PACKAGE, so a clone a carbon
+    script reaches but nothing enrolls kept whatever the STOCK root package
+    staged: measured, clone {856ddbac,46a006b0,470261e3} drew stock gray
+    (90,91,91) next to carbon blue (147,188,203) in the SAME window, across 9
+    shipped scripts (8 in ZCarbonArt, 1 in ZCarbonStyles).
+
+    The PAYLOAD FILE is the authority, deliberately NOT enrollment membership -
+    46a006b0/e2b66db8 is carbon-owned art that no package enrolls and is one of
+    the broken refs. A ref carbon has no 1x for is left alone: the stock clone
+    is then the only honest pixels there are.
+
+    The clone id always comes from the run's OWN `clones` map at the call site,
+    never a recomputed XOR."""
+    need = set()
+    for p in script_paths:
+        if not os.path.isfile(p):
+            continue      # the transform below FATALs on a missing payload
+        for key in _carbon_script_image_refs(p):
+            if key in clones and os.path.isfile(_carbon_src_png(*key)):
+                need.add(key)
+    return need
+
+
 def carbon_transform_script(iid, cstage, art_dirs, seat_dirs, refs, avail,
                             clones, cb_inplace, store_tgis, warned):
     """The IDENTICAL selective transform main() applies to the stock copy of
@@ -3062,6 +3113,24 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
             print("   [carbon] art %08x/%08x NOT staged: %s"
                   % (t[0], t[1], why))
 
+        # ---- clone art this package's SCRIPTS reach but nothing enrolls ----
+        # The scripts are already assigned to this package by the enrollment;
+        # the clones they retarget to ride along with them. Same name the
+        # transform itself opens, so the scan can never address a different
+        # payload than the one that ships.
+        carbon_script_paths = [
+            os.path.join(CARBON_SRC_UI, "T-00000000_G-96a006b0_I-%s.ui" % si)
+            for si in script_iids]
+        plan_clone_extra = sorted(
+            _carbon_clone_art_for_scripts(carbon_script_paths, clones)
+            - set(plan_clone))
+        for t in plan_clone_extra:
+            cg, ci = clones[t]
+            print("   [carbon] clone art %08x/%08x -> %08x/%08x from carbon's "
+                  "own 1x (script-reached; not in this package's enrolled art)"
+                  % (t[0], t[1], cg, ci))
+        plan_clone = plan_clone + plan_clone_extra
+
         to_up = plan_inplace + plan_clone + plan_cb
         n_in = n_cl = n_cb = n_f96 = 0
         if to_up:
@@ -3198,12 +3267,35 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
         print("\n[carbon] %s: %d script(s) + %d art (third-party "
               "legacy-root flow, carbon-sourced)"
               % (tp_name, len(p["scripts"]), len(art_tgis)))
-        n_sty_art = 0
-        if art_tgis:
+        # Clone art this package's scripts retarget to (the TP transform
+        # rewrites EVERY {g,i} that is in `clones`, scaled-gate or not), for
+        # the TGIs carbon supplies 1x pixels for. Same defect, same cure as
+        # the selective packages above.
+        tp_script_paths = [
+            os.path.join(CARBON_SRC_UI,
+                         "T-00000000_G-%s_I-%s.ui" % (s["g"], s["i"]))
+            for s in p["scripts"]]
+        tp_clone = sorted(_carbon_clone_art_for_scripts(tp_script_paths,
+                                                        clones))
+        art_set = set(art_tgis)
+        for t in tp_clone:
+            cg, ci = clones[t]
+            if t in art_set:
+                # Does not occur today (every TP-enrolled art is EXCLUSIVE);
+                # if it ever does, the in-place copy below is the pre-existing
+                # TP behaviour and the clone is the new, script-reached name.
+                print("   [carbon] NOTE %s: %08x/%08x is BOTH enrolled art and "
+                      "clone+retarget - staged in place AND at %08x/%08x"
+                      % (tp_name, t[0], t[1], cg, ci))
+            print("   [carbon] clone art %08x/%08x -> %08x/%08x from carbon's "
+                  "own 1x (script-reached)" % (t[0], t[1], cg, ci))
+        tp_up = list(art_tgis) + [t for t in tp_clone if t not in art_set]
+        n_sty_art = n_sty_clone = 0
+        if tp_up:
             # #95 order: art BEFORE scripts, so the imagerect clamp measures
             # the art that ships. TP flag set (no smoothing flags) - same as
             # the ThirdPartyUI/WarriorUI pass this mirrors.
-            up_dir = _carbon_upscale(art_tgis, tp_up_base,
+            up_dir = _carbon_upscale(tp_up, tp_up_base,
                                      corpus_flags=False)
             for t in art_tgis:
                 src = os.path.join(up_dir, tgi_png_name(*t))
@@ -3212,8 +3304,18 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
                              "%08x/%08x" % t)
                 shutil.copy2(src, os.path.join(sstage, tgi_png_name(*t)))
                 n_sty_art += 1
-            print("   [carbon] %s ART upscaled x%g and staged: %d file(s)"
-                  % (tp_name, FACTOR, n_sty_art))
+            for t in tp_clone:
+                src = os.path.join(up_dir, tgi_png_name(*t))
+                if not os.path.isfile(src):
+                    sys.exit("FATAL carbon: upscaler produced no output for "
+                             "%08x/%08x" % t)
+                cg, ci = clones[t]
+                # UNSCALED windows keep drawing carbon's own 1x original: the
+                # carbon-up copy lands at the CLONE TGI ONLY.
+                shutil.copy2(src, os.path.join(sstage, tgi_png_name(cg, ci)))
+                n_sty_clone += 1
+            print("   [carbon] %s ART upscaled x%g and staged: %d in place + "
+                  "%d clone(s)" % (tp_name, FACTOR, n_sty_art, n_sty_clone))
         sty_dirs = [sstage] + ([art_stage_path] if art_stage_path else []) \
             + [STAGE]
         sty_stats = []
@@ -3229,8 +3331,8 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
                 cb_inplace))
         _carbon_gate(sstage, FACTOR, tp_name)
         out, n_entries = _pack_carbon(sstage, tp_name)
-        summary.append((tp_name, len(sty_stats), n_sty_art, 0, 0, 0, 0,
-                        out, n_entries))
+        summary.append((tp_name, len(sty_stats), n_sty_art, n_sty_clone,
+                        0, 0, 0, out, n_entries))
 
     # ---- carbon summary ----
     carbon_clamps = _rect_clamped[n_clamp_before:]

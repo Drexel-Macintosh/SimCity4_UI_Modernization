@@ -220,14 +220,23 @@ broken at any fractional tier.
 6. Mission-bubble carbon path guards against a partial pinned family.
 7. Comment counts (seven→eight) + installer header fixed.
 
-## Known residuals (phase-2 candidates, cosmetic only)
+## Known residuals
 
-- CAM startup splash `ea7f0eae`: carbon's reskin classified untouched
-  (UNSCALED-only refs) — the splash keeps our CAM-styled scaled art.
-- refmap `clone+retarget` TGIs whose sources carbon owns: root-script
-  windows draw stock-styled clone pixels (carbon-script windows are
-  correct — dialog-static ships its carbon clone b1f56dba).
+⛔ The previous version of this section was scoped from a FALSE ZERO (the
+enrollment clone pass could not match the refmap's column names, so it
+reported "0 clone TGIs needing carbon pixels" and this doc argued the
+defect away — see REGRESSION.md 2026-08-25 "A FALSE ZERO SHIPPED, TWICE
+OVER"). The real count was **11**, and they were shipping stock-gray
+inside carbon-styled dialogs. Fixed: the pass now has a positive control,
+refuses on a header change, and keys ownership on the payload file.
+
+- **Clone art — FIXED** (was: "root-script windows only", measured false;
+  nine *carbon* scripts were affected).
+- CAM startup splash `ea7f0eae`: carbon's reskin is classified
+  UNSCALED-only, so the splash keeps our CAM-styled scaled art.
 - WebText caption: carbon's wins by design.
+- Carbon-only TGIs (~180): 58 are dead NAM redeclarations; the rest are
+  styling-only. No provable runtime-coverage gap found.
 
 ## Open items for the live session (cannot be resolved offline)
 

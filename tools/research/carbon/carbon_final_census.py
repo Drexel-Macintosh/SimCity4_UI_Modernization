@@ -39,7 +39,7 @@ SKIP_CARBON_OK = {(0x2026960B, 0x6A231EAA, 0x0A5128F3)}   # WebText caption
 # The IsDbpfName law (ScaleTier.cpp #49): .SC4Lot/.SC4Desc/.SC4Model are
 # DBPF archives too and any of them can supply a TGI. Globbing *.dat is
 # what once made a sweep report "no art anywhere".
-DBPF_EXTS = (".dat", ".sc4lot", ".sc4desc", ".sc4model")
+DBPF_EXTS = (".dat", ".sc4lot", ".sc4desc", ".sc4model", ".sc4")
 
 
 def load_order_dats(root, fold):

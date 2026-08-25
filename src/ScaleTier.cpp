@@ -424,6 +424,13 @@ namespace
 	// a hard-coded relative path would break the moment a mod we do not
 	// control is updated. Our own subfolder is skipped so a package can never
 	// satisfy its own dependency.
+	// outMatches (optional, 2026-08-25): when non-null the walk does NOT stop
+	// at the first hit - it counts EVERY copy of the name in the tree. A
+	// second copy is a real defect class: the gate size-checks the copy it
+	// found first (enumeration order), while the GAME loads both and renders
+	// the later-sorting one, so a stale duplicate can satisfy a fingerprint
+	// for art the player never sees. The out params still describe the FIRST
+	// match (unchanged decisions); the count only makes the shadow loud.
 	bool FindPluginFile(
 		const wchar_t* dir,
 		const wchar_t* name,
@@ -431,7 +438,8 @@ namespace
 		int depth,
 		wchar_t* outPath,
 		size_t outLen,
-		DWORD* outSize)
+		DWORD* outSize,
+		int* outMatches = nullptr)
 	{
 		if (depth <= 0)
 		{
@@ -464,22 +472,45 @@ namespace
 				}
 				wchar_t sub[MAX_PATH];
 				swprintf_s(sub, L"%s%s\\", dir, fd.cFileName);
-				found = FindPluginFile(sub, name, prefixMatch, depth - 1,
-					outPath, outLen, outSize);
+				wchar_t scratchPath[MAX_PATH] = {};
+				DWORD scratchSize = 0;
+				int subMatches = 0;
+				const bool hit = FindPluginFile(sub, name, prefixMatch,
+					depth - 1,
+					found ? scratchPath : outPath,
+					found ? MAX_PATH : outLen,
+					found ? &scratchSize : outSize,
+					outMatches ? &subMatches : nullptr);
+				if (outMatches)
+				{
+					*outMatches += subMatches;
+				}
+				if (hit)
+				{
+					found = true;
+				}
 			}
 			else
 			{
 				const size_t n = wcslen(name);
-				found = prefixMatch
+				const bool hit = prefixMatch
 					? (_wcsnicmp(fd.cFileName, name, n) == 0)
 					: (_wcsicmp(fd.cFileName, name) == 0);
-				if (found)
+				if (hit)
 				{
-					swprintf_s(outPath, outLen, L"%s%s", dir, fd.cFileName);
-					*outSize = fd.nFileSizeLow;
+					if (outMatches)
+					{
+						(*outMatches)++;
+					}
+					if (!found)
+					{
+						swprintf_s(outPath, outLen, L"%s%s", dir, fd.cFileName);
+						*outSize = fd.nFileSizeLow;
+					}
+					found = true;
 				}
 			}
-		} while (!found && FindNextFileW(h, &fd));
+		} while ((outMatches != nullptr || !found) && FindNextFileW(h, &fd));
 		FindClose(h);
 		return found;
 	}
@@ -2697,8 +2728,20 @@ namespace ScaleTier
 			}
 			wchar_t h[MAX_PATH] = {};
 			DWORD s = 0;
+			int matches = 0;
 			const bool p = FindPluginFile(
-				pluginsRoot, name, prefix, 4, h, MAX_PATH, &s);
+				pluginsRoot, name, prefix, 4, h, MAX_PATH, &s, &matches);
+			if (matches > 1)
+			{
+				// The gate fingerprints the copy found FIRST; the game loads
+				// every copy and renders the later-sorting one. Never silent.
+				Logger::Get().WriteLine(
+					LogLevel::Info,
+					"ScaleTier: DUPLICATE dep source - %d copies of %ls in the "
+					"Plugins tree; the gate checked %ls but the game may render "
+					"a different copy. Remove the stale one.",
+					matches, name, h);
+			}
 			if (cacheN < static_cast<int>(sizeof(cache) / sizeof(cache[0])))
 			{
 				cache[cacheN].name = name;
@@ -2738,6 +2781,14 @@ namespace ScaleTier
 				}
 			}
 			depOk[d] = present && sizeOk;
+			// "The stock package takes over" is TRUE only when the mod is
+			// GONE. A RESKIN that is still installed keeps winning the load
+			// order after we disarm, so our stock-derived layer does NOT take
+			// over - it loses to the mod's own 1x data. Measured 2026-08-25:
+			// with the ZCarbon set off and the skin present, carbon beats our
+			// 010 layer on 473 TGIs. Say which case this is.
+			const bool skinStillLoads =
+				(wcsstr(dep.package, L"ZCarbon") != nullptr);
 			if (!present)
 			{
 				Logger::Get().WriteLine(
@@ -2755,12 +2806,62 @@ namespace ScaleTier
 					"ScaleTier: %ls dep CHANGED (%ls is %u bytes, built from "
 					"%u) -> disabled; re-extract and rebuild.",
 					dep.package, dep.modFile, sz, dep.modSize);
+				if (skinStillLoads)
+				{
+					Logger::Get().WriteLine(
+						LogLevel::Info,
+						"ScaleTier:   ^ THE SKIN IS STILL INSTALLED, so nothing "
+						"of ours takes over - it keeps winning those TGIs and "
+						"will draw its own 1x art inside scaled cells. Rebuild "
+						"the carbon packages (tools\\research\\carbon, see "
+						"CARBON-COMPAT.md) to restore scaled carbon styling.");
+				}
 			}
 			else
 			{
 				Logger::Get().WriteLine(
 					LogLevel::Info, "ScaleTier: %ls dep ok (%ls).",
 					dep.package, hit);
+			}
+		}
+
+		// PUBLIC-INSTALL NET (2026-08-25). The released bundle deliberately
+		// ships NO carbon-derived dats (they are another author's pixels), so
+		// a player who installs the skin and our release gets the skin
+		// winning ~473 TGIs at 1x inside a scaled UI - and every gate stays
+		// green, because the packages simply do not exist to be checked.
+		// Nothing else in the product would ever tell them. This does.
+		bool carbonSkinPresent = false;
+		for (int c = 0; c < cacheN; c++)
+		{
+			if (cache[c].present
+				&& _wcsicmp(cache[c].name, L"scoty_Carbon_Files.dat") == 0)
+			{
+				carbonSkinPresent = true;
+				break;
+			}
+		}
+		if (carbonSkinPresent)
+		{
+			wchar_t pat[MAX_PATH];
+			swprintf_s(pat, L"%szzz-SC4UIScale\\z_SC4UIScale_ZCarbon*",
+				pluginsRoot);
+			WIN32_FIND_DATAW cfd = {};
+			HANDLE ch = FindFirstFileW(pat, &cfd);
+			if (ch == INVALID_HANDLE_VALUE)
+			{
+				Logger::Get().WriteLine(
+					LogLevel::Info,
+					"ScaleTier: Scoty Carbon Skin is installed but NO carbon "
+					"packages are present. The skin wins the load order on "
+					"~473 UI resources, so at any scale factor its 1x art and "
+					"1x dialog layouts draw inside scaled cells. Build them "
+					"from your own copy of the skin - see CARBON-COMPAT.md in "
+					"tools\\research\\carbon of the source repo.");
+			}
+			else
+			{
+				FindClose(ch);
 			}
 		}
 

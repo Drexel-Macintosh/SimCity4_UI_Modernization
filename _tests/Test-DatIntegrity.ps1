@@ -621,6 +621,46 @@ if (-not $psBlock.Success) {
   }
 }
 
+# COMPARATOR-AMBIGUOUS FOLDER BOUNDARY (2026-08-25, adversarial sweep).
+#
+# "Subfolders load alphabetically, last wins" is COMPARATOR-SPECIFIC, and the
+# project never noticed because every folder pair it had ever measured sorts
+# the same way under all of them. '_' (0x5F) sits BETWEEN the upper-case
+# letters (0x41-0x5A) and the lower-case ones (0x61-0x7A), so `z____name`
+# vs `zzz-SC4UIScale` INVERTS depending on whether the comparator upcases or
+# lowercases - and under the inverted order our override folder loses and
+# every package in it is silently inert. That shipped once (the Carbon skin's
+# own `z____scoty_mods`, caught in review, renamed to `zz-scoty-mods`).
+#
+# The invariant: NO folder carrying DBPF archives may sort at-or-after
+# zzz-SC4UIScale under ANY candidate comparator. Checked against the LIVE
+# folder set so a mod installed next week is checked too, and scoped to
+# folders that actually carry loadable archives - a docs folder sorting late
+# (e.g. ~Documents, tilde 0x7E) cannot take a TGI and is only noted.
+$OUR_LAST = "zzz-SC4UIScale"
+$DBPF_GLOB = @("*.dat", "*.sc4lot", "*.sc4desc", "*.sc4model", "*.sc4")
+foreach ($d in @(Get-ChildItem $plugins -Directory -ErrorAction SilentlyContinue)) {
+  if ($d.Name -eq $OUR_LAST) { continue }
+  $cmps = @{
+    "ordinal"   = [string]::CompareOrdinal($d.Name, $OUR_LAST)
+    "upcased"   = [string]::CompareOrdinal($d.Name.ToUpperInvariant(), $OUR_LAST.ToUpperInvariant())
+    "lowercased" = [string]::CompareOrdinal($d.Name.ToLowerInvariant(), $OUR_LAST.ToLowerInvariant())
+  }
+  $late = @($cmps.Keys | Where-Object { $cmps[$_] -ge 0 })
+  if (-not $late.Count) { continue }
+  $hasDbpf = @(Get-ChildItem $d.FullName -Recurse -File -Include $DBPF_GLOB -ErrorAction SilentlyContinue | Select-Object -First 1).Count -gt 0
+  $how = ($late | Sort-Object) -join ","
+  if ($hasDbpf) {
+    $failures += ("comparator boundary: folder '" + $d.Name + "' carries DBPF archives and sorts AT/AFTER " +
+                  $OUR_LAST + " under comparator(s): " + $how + " - under that ordering every package in " +
+                  $OUR_LAST + " is silently OUT-SORTED (armed but never rendered). Rename the folder so it " +
+                  "sorts earlier under ALL comparators (a leading hyphen or digit is unambiguous).")
+  } else {
+    Write-Host ("  note: folder '" + $d.Name + "' sorts at/after " + $OUR_LAST + " under " + $how +
+      " but carries no DBPF archive, so it cannot win a TGI.")
+  }
+}
+
 # ARMED-TIER AGREEMENT (added 2026-08-19 after CsiIcons shipped 1.5x art to a
 # 2x install for a day).
 #

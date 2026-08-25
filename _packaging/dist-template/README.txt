@@ -137,6 +137,20 @@ version instead of fighting it.
 
 Another UI-SCALING mod will conflict - only one thing can own the layout.
 
+  ! FULL UI RESKINS (Scoty Carbon Skin and the like) NEED ONE EXTRA STEP.
+    A reskin replaces the UI's art and dialog layouts wholesale - around 490
+    of the same resources this mod scales - and it is designed to load after
+    everything else, so its 1x versions win. The result is 1x art and
+    1x-positioned dialogs inside a scaled UI: it looks broken, and it is not
+    something this mod can fix by itself, because shipping a scaled copy of
+    someone else's skin would mean redistributing their work.
+    The build tools in the source repo rebuild the skin's OWN art and
+    layouts at your scale factor, on your machine, from your copy of the
+    skin (tools\research\carbon - start at CARBON-COMPAT.md). Scoty Carbon
+    Skin 1.5 is supported end to end today.
+    If you run a reskin without doing this, SC4UIScale.log says so in one
+    line at startup - that line is the symptom, not a crash.
+
 If the game looks stretched or zoomed from the very first frame, that is
 Windows DPI virtualisation, not this mod. It looks similar, this mod does not
 cause it, and removing this mod will not fix it - check the compatibility
