@@ -3096,6 +3096,21 @@ def build_carbon_packages(refs, avail, clones, exclusive, cb_staged,
             # #186: carbon owns a pinned family member - regenerate the
             # carbon fixed-96 twin from CARBON's 1x via the same canonical
             # invocation, and stage it at the same name.
+            # SUBSET GUARD (review finding 6): the generator requires EVERY
+            # family member's 1x source; carbon owning only SOME of them
+            # would otherwise sys.exit deep inside with a misleading
+            # "pristine 1x source missing" - refuse loudly here instead.
+            _f96_missing = [t for t in MISSION_BUBBLE_FIXED96
+                            if not os.path.isfile(
+                                os.path.join(CARBON_SRC_ART, tgi_png_name(*t)))]
+            if _f96_missing:
+                sys.exit("FATAL [carbon] #186: carbon redeclares %d pinned "
+                         "family member(s) but not the whole family - the "
+                         "fixed-96 twin needs every member's carbon 1x. "
+                         "Missing: %s. Either carbon ships the full family "
+                         "or its members stay stock (drop them from the "
+                         "enrollment)." % (len(_f96_missing), ", ".join(
+                             "%08x/%08x" % t for t in _f96_missing)))
             f96 = build_mission_bubble_fixed96(src_dir=CARBON_SRC_ART,
                                                dir_tag="-carbon")
             for t in plan_f96:

@@ -1680,10 +1680,17 @@ def main():
                 continue
             if iid in tp_handled:
                 handled += 1
-            elif iid_s in carbon_enrolled:
+            elif (iid_s in carbon_enrolled
+                  and "z__scoty_carbon_skin" in tp[iid].lower()):
                 # Carbon-held target whose scaled carbon copy ships in the
                 # ZCarbon* twin packages - handled ownership, accounted
-                # loudly below, never silently.
+                # loudly below, never silently. THE SUPPLIER IS CHECKED
+                # (review finding 2): enrollment covers the iid only for
+                # CARBON's takeover of it. If a DIFFERENT mod later out-sorts
+                # carbon for the same iid, the enrollment no longer describes
+                # the winner and the FATAL below must fire exactly as it did
+                # before carbon existed - our ZCarbon copy would be built
+                # from the WRONG source.
                 carbon_accept[carbon_enrolled[iid_s]].append(iid_s)
             elif iid not in KNOWN_THIRD_PARTY_TARGETS:
                 bad.append((iid_s, name, tp[iid]))

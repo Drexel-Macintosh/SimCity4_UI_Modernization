@@ -199,8 +199,38 @@ broken at any fractional tier.
   carbon users build locally from the shipped generators. All packages
   ship 1.5×/2×/3×.
 
+## 2026-08-25 adversarial review outcomes (all fixed same session)
+
+1. **THE COMPARATOR-AMBIGUOUS BOUNDARY** (critical): `z____scoty_mods` vs
+   `zzz-SC4UIScale` was the first folder pair in this tree where upcasing
+   and lowercasing comparators disagree — under upcase-ordinal (NTFS
+   enumeration; implied by the skin author's own z+underscore convention)
+   the skin loads AFTER our overrides and every ZCarbon dat is inert.
+   Cure: the skin now installs as **`zz-scoty-mods`** (unambiguous under
+   every comparator; installer migrates the author-named folder), and
+   `carbon_final_census.py` computes winners under BOTH foldings, going
+   RED on any comparator-dependent winner. Full law: REGRESSION.md.
+2. Winner assert now checks the SUPPLIER (a non-carbon mod out-sorting
+   carbon on an enrolled iid FATALs again, as pre-carbon).
+3. Deploy's ZCarbon copies presence-gated (unguarded miss under EAP=Stop
+   aborted the tail of the deploy incl. the armed-tier restore).
+4. Dep resolution memoized per (name,prefix): 16 walks → 7 (6 skinless).
+5. Census counts all DBPF extensions (.dat/.SC4Lot/.SC4Desc/.SC4Model —
+   the IsDbpfName law), not `*.dat` only.
+6. Mission-bubble carbon path guards against a partial pinned family.
+7. Comment counts (seven→eight) + installer header fixed.
+
+## Known residuals (phase-2 candidates, cosmetic only)
+
+- CAM startup splash `ea7f0eae`: carbon's reskin classified untouched
+  (UNSCALED-only refs) — the splash keeps our CAM-styled scaled art.
+- refmap `clone+retarget` TGIs whose sources carbon owns: root-script
+  windows draw stock-styled clone pixels (carbon-script windows are
+  correct — dialog-static ships its carbon clone b1f56dba).
+- WebText caption: carbon's wins by design.
+
 ## Open items for the live session (cannot be resolved offline)
 
-1. The 179 carbon-only TGIs under runtime scaling — eyes-on pass.
+1. The ~179 carbon-only TGIs under runtime scaling — eyes-on pass.
 2. Boot verification of gates + winners after the ZCarbon deploy.
 3. Region-census DLL window under region-screen runtime scaling — eyes-on.

@@ -349,7 +349,7 @@ namespace
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_WebButtonUI",
 		  L"z_Full Screen - Web Button Improvement Mod", true, 0, nullptr, 0 },
 		// ---- Scoty Carbon Skin 1.5 (v4.3.0) ----------------------------------
-		// Seven carbon-sourced override packages, every one built FROM the
+		// Eight carbon-sourced override packages, every one built FROM the
 		// skin's own dats, so every row pins EXACT filename + EXACT byte size
 		// (the SaveWarningUI reasoning: our copies hard-code Carbon's layout,
 		// so a skin update MUST disable us - stale carbon geometry/art would
@@ -2672,20 +2672,59 @@ namespace ScaleTier
 		// or was updated out from under the copy we built - must be gated OFF
 		// no matter which tier is active.
 		bool depOk[kThirdPartyDepCount] = {};
+		// MEMOIZED lookups (2026-08-25, review finding 4): the eight ZCarbon
+		// rows share two filenames (scoty_Carbon_Files.dat x8,
+		// scoty_carbon_PNG.dat x3), and a FindPluginFile walk has no early
+		// exit on failure - it enumerates the whole tree to depth 4. Without
+		// this cache a no-skin machine pays 8 extra full-tree walks at DLL
+		// load, and this project's own law says a ~3s cost on a watched
+		// moment is a freeze. One walk per DISTINCT (name, prefix) pair.
+		struct DepLookup { const wchar_t* name; bool prefix; bool present;
+		                   DWORD size; wchar_t hit[MAX_PATH]; };
+		DepLookup cache[2 * 32] = {};
+		int cacheN = 0;
+		auto findCached = [&](const wchar_t* name, bool prefix,
+		                      wchar_t* outHit, DWORD* outSz) -> bool {
+			for (int c = 0; c < cacheN; c++)
+			{
+				if (cache[c].prefix == prefix
+					&& _wcsicmp(cache[c].name, name) == 0)
+				{
+					wcscpy_s(outHit, MAX_PATH, cache[c].hit);
+					*outSz = cache[c].size;
+					return cache[c].present;
+				}
+			}
+			wchar_t h[MAX_PATH] = {};
+			DWORD s = 0;
+			const bool p = FindPluginFile(
+				pluginsRoot, name, prefix, 4, h, MAX_PATH, &s);
+			if (cacheN < static_cast<int>(sizeof(cache) / sizeof(cache[0])))
+			{
+				cache[cacheN].name = name;
+				cache[cacheN].prefix = prefix;
+				cache[cacheN].present = p;
+				cache[cacheN].size = s;
+				wcscpy_s(cache[cacheN].hit, MAX_PATH, h);
+				cacheN++;
+			}
+			wcscpy_s(outHit, MAX_PATH, h);
+			*outSz = s;
+			return p;
+		};
 		for (int d = 0; d < kThirdPartyDepCount; d++)
 		{
 			const ThirdPartyDep& dep = kThirdPartyDeps[d];
 			wchar_t hit[MAX_PATH] = {};
 			DWORD sz = 0;
-			bool present = FindPluginFile(
-				pluginsRoot, dep.modFile, dep.prefixMatch, 4, hit, MAX_PATH, &sz);
+			bool present = findCached(dep.modFile, dep.prefixMatch, hit, &sz);
 			bool sizeOk = (dep.modSize == 0) || (sz == dep.modSize);
 			if (present && sizeOk && dep.modFile2 != nullptr)
 			{
 				wchar_t hit2[MAX_PATH] = {};
 				DWORD sz2 = 0;
-				const bool p2 = FindPluginFile(pluginsRoot, dep.modFile2,
-					dep.prefixMatch, 4, hit2, MAX_PATH, &sz2);
+				const bool p2 = findCached(dep.modFile2,
+					dep.prefixMatch, hit2, &sz2);
 				const bool s2 = (dep.modSize2 == 0) || (sz2 == dep.modSize2);
 				if (!p2 || !s2)
 				{
@@ -2864,7 +2903,7 @@ namespace ScaleTier
 			// ---- Scoty Carbon Skin packages (v4.3.0) -----------------------
 			// One call per kThirdPartyDeps Carbon row - a dep row without its
 			// SyncDat call is silently inert (#119, WarriorUI, recorded just
-			// above). All seven arm only with the skin present and unchanged;
+			// above). All eight arm only with the skin present and unchanged;
 			// with it gone or updated they turn off and our stock-derived
 			// packages take over.
 			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonUI",

@@ -16777,3 +16777,41 @@ because deploy COPIES the built file — any rebuild between deploys goes
 red on timestamps alone, which is indistinguishable from real drift until
 content-hashed. The 2026-08-25 morning "DEPLOYED != BUILT x5" scare was
 exactly this: rebuilt dats, identical content, new header stamps.
+
+## 2026-08-25 (adversarial review) — THE COMPARATOR-AMBIGUOUS BOUNDARY
+
+The review caught the arc resting on an unmeasured comparator. "Subfolders
+load alphabetically" has been true under every measurement this project ever
+took — because every folder pair it was measured on (010- vs 050-, 150- vs
+zzz-, …) sorts IDENTICALLY under raw-ordinal, upcase-ordinal, lowercase and
+culture-aware comparison. `z____scoty_mods` vs `zzz-SC4UIScale` was the
+FIRST pair where they disagree ('Z' 0x5A < '_' 0x5F upcased; '_' 0x5F < 'z'
+0x7A lowercased; NTFS enumeration is upcase-ordinal), and it was the
+load-bearing one: under an upcasing comparator the skin loads AFTER our
+overrides and all eight ZCarbon packages are silently inert. Worse, both
+instruments that "verified" the order (the census's sorted(key=str.lower),
+the installer's constant Sort-Object compare) ASSUMED the comparator they
+claimed to measure. The skin author's own convention (z + underscores to
+load after z+letters mods) only works under upcasing — evidence the
+community's effective order upcases, i.e. the exact case that broke us.
+
+LAWS:
+1. A LOAD-ORDER CLAIM IS COMPARATOR-SPECIFIC. Any boundary where candidate
+   comparators disagree is UNMEASURED territory no matter how many green
+   censuses crossed it — enumerate raw/upcase/lowercase orders and require
+   agreement, or rename until they agree.
+2. Cure shape: the skin installs as `zz-scoty-mods` (hyphen 0x2D < any
+   letter under every folding — unambiguous on all four comparators), the
+   installer migrates the author-named folder, and carbon_final_census now
+   computes winners under BOTH foldings and goes RED on any TGI whose
+   winner depends on the choice.
+3. An instrument that compares two constants it just wrote is a
+   constant-fold, not a measurement (the installer's old order check could
+   never fail).
+
+Same review: the winner assert now checks the SUPPLIER, not just the iid
+(a non-carbon mod taking over an enrolled target must FATAL again); the
+deploy's ZCarbon copies are presence-gated (an unguarded miss under
+EAP=Stop aborted everything after it, including the armed-tier restore);
+dep resolution memoizes per (name,prefix) — 16 walks became 7 on a
+skinned tree, 6 on a plain one.

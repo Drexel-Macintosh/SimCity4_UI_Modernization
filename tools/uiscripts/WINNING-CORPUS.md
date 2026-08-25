@@ -8,14 +8,14 @@ The builders read `extracted\` (game archives only). This resolves the real load
 |---|---|
 | `.UI` TGIs seen | 1092 |
 | won by the game archives | 73 |
-| won by OUR packages | 121 |
-| **won by a THIRD PARTY** | **898** |
+| won by OUR packages | 256 |
+| **won by a THIRD PARTY** | **763** |
 
 ## Third-party winners
 
 | TGI | winner |
 |---|---|
-| `{4a87bfe8,2a87bffc}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
+| `{4a87bfe8,2a87bffc}` | zz-scoty-mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,0004419d}` | BSC Essentials v2026a.dat |
 | `{96a006b0,000441b4}` | BSC Essentials v2026a.dat |
 | `{96a006b0,000441d4}` | BSC Essentials v2026a.dat |
@@ -91,20 +91,6 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,035098aa}` | BSC\BSCProps\SG Models Utilities v2.dat |
 | `{96a006b0,0350db12}` | BSC\BSCProps\SG Models IM2 v3.dat |
 | `{96a006b0,087e0681}` | BSC\BSCProps\SG Models Department Stores v3.dat |
-| `{96a006b0,09923283}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,0a243d80}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a2dd355}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a4d0c43}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a562a05}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a5cf71d}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a7df315}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a8b819e}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a8b98fe}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a8b9a67}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a8b9c43}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a8b9c6a}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0a8cd184}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,0bbc06b6}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,0d19e8ac}` | BSC Essentials v2026a.dat |
 | `{96a006b0,0d1a6551}` | BSC Essentials v2026a.dat |
 | `{96a006b0,0df154ec}` | BSC Essentials v2026a.dat |
@@ -129,7 +115,7 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,105afa4e}` | BSC Essentials v2026a.dat |
 | `{96a006b0,109cb0a7}` | BSC\BSCProps\SG Models Utilities v2.dat |
 | `{96a006b0,10a432aa}` | BSC\BSCProps\SG Models Civic Rewards v2.dat |
-| `{96a006b0,110598e2}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,110598e2}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 | `{96a006b0,11c241b4}` | BSC\BSCProps\SG Models Adult v3.dat |
 | `{96a006b0,122f85bc}` | BSC\BSCProps\SG Models IM1 v3.dat |
 | `{96a006b0,12353a37}` | BSC\BSCProps\SG Models IM2 v3.dat |
@@ -201,24 +187,7 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,227ca101}` | BSC Essentials v2026a.dat |
 | `{96a006b0,24ae3200}` | BSC Essentials v2026a.dat |
 | `{96a006b0,2994f194}` | BSC Essentials v2026a.dat |
-| `{96a006b0,2a2aed99}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,2a41436b}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a41436c}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a5621ee}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a564884}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a56675c}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a567dc1}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a5e7490}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a8b7e1c}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a8b97c1}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a8b99d0}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2a8b9df2}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,2ae3acdb}` | BSC Essentials v2026a.dat |
-| `{96a006b0,2bb16d50}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2bc9060f}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,2bc90671}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,2c02ba84}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,2c096de6}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,2c5ec56a}` | BSC Essentials v2026a.dat |
 | `{96a006b0,2c5ec56b}` | BSC Essentials v2026a.dat |
 | `{96a006b0,2c5ec56c}` | BSC Essentials v2026a.dat |
@@ -227,7 +196,7 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,2d7f5dfe}` | BSC Essentials v2026a.dat |
 | `{96a006b0,2d925b16}` | BSC Essentials v2026a.dat |
 | `{96a006b0,2e519a0e}` | BSC Essentials v2026a.dat |
-| `{96a006b0,2eb41ab5}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,2eb41ab5}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 | `{96a006b0,2eba5661}` | BSC Essentials v2026a.dat |
 | `{96a006b0,2ee42769}` | BSC Essentials v2026a.dat |
 | `{96a006b0,2ef11bd6}` | BSC Essentials v2026a.dat |
@@ -260,31 +229,7 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,41fa26ab}` | BSC Essentials v2026a.dat |
 | `{96a006b0,4775d55a}` | BSC\BSCProps\SG Models Restaurants v3.dat |
 | `{96a006b0,497b8ee5}` | BSC\BSCProps\BSC BATProps Mattb325 Vol01.dat |
-| `{96a006b0,49889894}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,4992f764}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,4a551b4c}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a562da5}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a565d13}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a5665eb}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a566c14}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a566d6e}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a5672bf}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a5a89d4}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a5a89d5}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a5e7ed3}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a89b3f2}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a8b7fe7}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a8b9396}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a8b9936}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a8b9c92}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a8b9dab}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4a8cc5ea}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,4a995171}` | BSC\BSCProps\BSC BATProps Mattb325 Vol01.dat |
-| `{96a006b0,4bbc080f}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4bc906b5}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,4bf325e8}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4c0969e2}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,4c47800e}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,4d7c601b}` | BSC Essentials v2026a.dat |
 | `{96a006b0,4d8033e3}` | BSC Essentials v2026a.dat |
 | `{96a006b0,4d9ac69f}` | BSC Essentials v2026a.dat |
@@ -351,19 +296,6 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,642ac7f3}` | BSC Essentials v2026a.dat |
 | `{96a006b0,6561d8dc}` | BSC Essentials v2026a.dat |
 | `{96a006b0,68c75c39}` | BSC\BSCProps\SG Models Adult v3.dat |
-| `{96a006b0,69e3d347}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,6a51506f}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6a555a84}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6a561b3a}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6a562f56}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6a566151}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6a5e73c0}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6a8b9875}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6a8b9acc}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6a8b9af3}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6b704690}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,6bb27447}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,6bc9065a}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,6d1a67ed}` | BSC Essentials v2026a.dat |
 | `{96a006b0,6d6c7eaa}` | BSC Essentials v2026a.dat |
 | `{96a006b0,6df8bb10}` | BSC Essentials v2026a.dat |
@@ -408,23 +340,7 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,7ddbe353}` | BSC\BSCProps\BSC MEGA Props - JMyers Agriculture 01 v2.dat |
 | `{96a006b0,7e7ddbe3}` | BSC Essentials v2026a.dat |
 | `{96a006b0,7f4d4bc1}` | BSC Essentials v2026a.dat |
-| `{96a006b0,899302fc}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,8a048173}` | BSC Essentials v2026a.dat |
-| `{96a006b0,8a4d0a17}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a554483}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a5ab1cb}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a5ab1cc}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a5ab1cd}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a5ab1ce}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a5ab1cf}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a5ab1d0}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a5e7bd2}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a7e052f}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a8b95b0}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a8b9811}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a8b98a7}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a8b9d12}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,8a948d49}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,8d7746b5}` | BSC Essentials v2026a.dat |
 | `{96a006b0,8d88ab9b}` | BSC Essentials v2026a.dat |
 | `{96a006b0,8db79abc}` | BSC Essentials v2026a.dat |
@@ -469,37 +385,16 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,91b66602}` | BSC\BSCProps\SG Models Adult v3.dat |
 | `{96a006b0,91b66603}` | BSC\BSCProps\SG Models Adult v3.dat |
 | `{96a006b0,92c73950}` | BSC Essentials v2026a.dat |
-| `{96a006b0,92e1ed0e}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,92e1ed0e}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 | `{96a006b0,941c7a88}` | BSC Essentials v2026a.dat |
 | `{96a006b0,9b094260}` | BSC Essentials v2026a.dat |
 | `{96a006b0,a3848008}` | BSC\BSCProps\SG Models Motels v3.dat |
 | `{96a006b0,a5a10010}` | BSC Essentials v2026a.dat |
-| `{96a006b0,aa1f1f57}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,aa356502}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,aa53e3ea}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,aa554aea}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa555346}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa561f93}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa565036}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa565f5b}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa5661eb}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa5bef41}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa5e14cc}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa5e60d1}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa8b9755}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa8b9971}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,aa920991}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,aaa44448}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,aab98621}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ab154ee5}` | BSC Essentials v2026a.dat |
-| `{96a006b0,abb0120f}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,abc0ed33}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,abfaef15}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ac096ac7}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ac3b72f6}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,ad4a92b3}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ad6dc33e}` | BSC Essentials v2026a.dat |
-| `{96a006b0,ad9444e6}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,ad9444e6}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 | `{96a006b0,adc3b66b}` | BSC Essentials v2026a.dat |
 | `{96a006b0,adebb25c}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ae4b2e00}` | BSC Essentials v2026a.dat |
@@ -523,51 +418,51 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,b20221ca}` | BSC\BSCProps\SG Models Small Shops v4.dat |
 | `{96a006b0,b29b3bfa}` | BSC Essentials v2026a.dat |
 | `{96a006b0,b5173999}` | BSC\BSCProps\SG Models Civic Rewards v2.dat |
-| `{96a006b0,b5c6f035}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f030}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f031}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f032}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f033}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f034}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f035}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f036}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f037}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f038}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f039}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f03a}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f03b}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f03c}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f03d}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f041}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f042}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f043}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f044}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f045}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f046}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f04a}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f04b}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f050}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f051}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f052}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f058}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f059}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f05a}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f060}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f061}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f062}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f063}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f06e}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f06f}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f070}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f071}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f072}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f073}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f074}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f075}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f076}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f077}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f078}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,b5c7f079}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c6f035}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f030}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f031}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f032}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f033}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f034}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f035}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f036}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f037}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f038}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f039}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f03a}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f03b}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f03c}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f03d}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f041}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f042}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f043}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f044}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f045}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f046}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f04a}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f04b}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f050}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f051}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f052}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f058}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f059}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f05a}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f060}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f061}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f062}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f063}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f06e}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f06f}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f070}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f071}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f072}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f073}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f074}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f075}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f076}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f077}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f078}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,b5c7f079}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 | `{96a006b0,b665f7ad}` | BSC\BSCProps\SG Models Agriculture v3.dat |
 | `{96a006b0,b9547fb7}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ba372637}` | BSC\BSCProps\SG Models Civic Services v2.dat |
@@ -629,7 +524,7 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,c35cabb1}` | BSC\BSCProps\SG Models IM1 v3.dat |
 | `{96a006b0,c35cb700}` | BSC Essentials v2026a.dat |
 | `{96a006b0,c35cb701}` | BSC Essentials v2026a.dat |
-| `{96a006b0,c35cb702}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,c35cb702}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 | `{96a006b0,c35cb703}` | BSC Essentials v2026a.dat |
 | `{96a006b0,c35cb704}` | BSC Essentials v2026a.dat |
 | `{96a006b0,c35cc100}` | BSC Essentials v2026a.dat |
@@ -643,7 +538,7 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,c35cde02}` | BSC\BSCProps\SG Models Adult v3.dat |
 | `{96a006b0,c35cde03}` | BSC\BSCProps\SG Models Adult v3.dat |
 | `{96a006b0,c35cff02}` | BSC\BSCProps\SG Models Restaurants v3.dat |
-| `{96a006b0,c35db702}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,c35db702}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 | `{96a006b0,c5f19c7d}` | BSC Essentials v2026a.dat |
 | `{96a006b0,c5f19c7e}` | BSC Essentials v2026a.dat |
 | `{96a006b0,c5f19c7f}` | BSC Essentials v2026a.dat |
@@ -653,8 +548,6 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,c5f19c83}` | BSC Essentials v2026a.dat |
 | `{96a006b0,c5f19c84}` | BSC Essentials v2026a.dat |
 | `{96a006b0,c5f19c85}` | BSC Essentials v2026a.dat |
-| `{96a006b0,c973b411}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,c9930681}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,ca000001}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ca000002}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ca000003}` | BSC Essentials v2026a.dat |
@@ -695,7 +588,6 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,ca200036}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ca200037}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ca200038}` | BSC Essentials v2026a.dat |
-| `{96a006b0,ca4d0b22}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,ca530001}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ca530002}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ca530003}` | BSC Essentials v2026a.dat |
@@ -722,26 +614,10 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,ca530035}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ca530036}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ca530037}` | BSC Essentials v2026a.dat |
-| `{96a006b0,ca539340}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca53f06e}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca551016}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca566f94}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca56783a}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca8b8408}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca8b96c2}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca8b9845}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca8b9aa2}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca8b9ce7}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ca8b9d40}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,cb40cfdc}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
+| `{96a006b0,cb40cfdc}` | zz-scoty-mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,cb4ccca8}` | BSC Essentials v2026a.dat |
-| `{96a006b0,cb95403e}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,cba343a5}` | BSC Essentials v2026a.dat |
-| `{96a006b0,cbc3c2b9}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,cbc905cd}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,cbd5251d}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,cc097fc0}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,cc313f17}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
+| `{96a006b0,cbd5251d}` | zz-scoty-mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,cdcbb7ca}` | BSC Essentials v2026a.dat |
 | `{96a006b0,cdebac28}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ce38fa80}` | BSC Essentials v2026a.dat |
@@ -779,23 +655,12 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,e3923bd2}` | BSC\BSCProps\BSC BATProps Mattb325 Vol01.dat |
 | `{96a006b0,e46f145e}` | BSC Essentials v2026a.dat |
 | `{96a006b0,e7428014}` | BSC Essentials v2026a.dat |
-| `{96a006b0,e9923283}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,e99237ff}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,e9949936}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
-| `{96a006b0,ea5655e4}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ea566a49}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ea89b6c3}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ea8b82db}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ea8cc3c6}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,eaaeec1b}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ebd0d36c}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
-| `{96a006b0,ebd5251b}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
+| `{96a006b0,ebd5251b}` | zz-scoty-mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat |
 | `{96a006b0,ebdcc997}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ebdcd003}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ebdcd004}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ebdcd005}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ebdcd006}` | BSC Essentials v2026a.dat |
-| `{96a006b0,ec096e72}` | z____scoty_mods\z__Scoty_Carbon_Skin\scoty_Carbon_Files.dat  ⚠ **IN TARGETS** |
 | `{96a006b0,ec296b73}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ecead020}` | BSC Essentials v2026a.dat |
 | `{96a006b0,ed6e354a}` | BSC Essentials v2026a.dat |
@@ -903,130 +768,20 @@ The builders read `extracted\` (game archives only). This resolves the real load
 | `{96a006b0,f3e6ac46}` | BSC Essentials v2026a.dat |
 | `{96a006b0,f493f7a4}` | BSC Essentials v2026a.dat |
 | `{96a006b0,f85431db}` | BSC Essentials v2026a.dat |
-| `{96a006b0,f8d80000}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,f8d80001}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,f8d80000}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,f8d80001}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 | `{96a006b0,fabcfe29}` | BSC Essentials v2026a.dat |
 | `{96a006b0,fb5ec7d3}` | BSC\BSCProps\SG Models Residentials Vol03 v4.dat |
 | `{96a006b0,fbe33643}` | BSC Essentials v2026a.dat |
 | `{96a006b0,fedcab00}` | BSC Essentials v2026a.dat |
-| `{96a006b0,ff5f0050}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,ff5f0051}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,ff5f0052}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
-| `{96a006b0,ff5f0053}` | z____scoty_mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,ff5f0050}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,ff5f0051}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,ff5f0052}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
+| `{96a006b0,ff5f0053}` | zz-scoty-mods\z__Scoty_Carbon_Skin\y_scoty_Carbon_NAM.dat |
 
 ## TARGETS we build from the WRONG SOURCE
 
-| TGI | stock `area=` (what we double) | winner `area=` | stock w×h | winner w×h |
-|---|---|---|---|---|
-| `{96a006b0,0a243d80}` | `(200, 100, 634, 481)` | `(200, 100, 634, 481)` | 434x381 | **434x381** |
-| `{96a006b0,0a2dd355}` | `(334, 6, 807, 314)` | `(334, 6, 807, 314)` | 473x308 | **473x308** |
-| `{96a006b0,0a4d0c43}` | `(131, 62, 488, 214)` | `(131, 62, 488, 214)` | 357x152 | **357x152** |
-| `{96a006b0,0a562a05}` | `(246, 202, 538, 322)` | `(246, 202, 538, 322)` | 292x120 | **292x120** |
-| `{96a006b0,0a5cf71d}` | `(45, 49, 400, 267)` | `(45, 49, 400, 267)` | 355x218 | **355x218** |
-| `{96a006b0,0a7df315}` | `(0, 0, 699, 523)` | `(0, 0, 699, 523)` | 699x523 | **699x523** |
-| `{96a006b0,0a8b819e}` | `(246, 202, 538, 405)` | `(246, 202, 538, 405)` | 292x203 | **292x203** |
-| `{96a006b0,0a8b98fe}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,0a8b9a67}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,0a8b9c43}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,0a8b9c6a}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,0a8cd184}` | `(146, 71, 362, 236)` | `(146, 71, 362, 236)` | 216x165 | **216x165** |
-| `{96a006b0,0bbc06b6}` | `(395, 377, 845, 623)` | `(395, 377, 845, 623)` | 450x246 | **450x246** |
-| `{96a006b0,2a41436b}` | `(75, 47, 509, 281)` | `(75, 47, 509, 281)` | 434x234 | **434x234** |
-| `{96a006b0,2a41436c}` | `(100, 68, 439, 268)` | `(100, 68, 439, 268)` | 339x200 | **339x200** |
-| `{96a006b0,2a5621ee}` | `(246, 202, 538, 383)` | `(246, 202, 538, 383)` | 292x181 | **292x181** |
-| `{96a006b0,2a564884}` | `(246, 202, 538, 427)` | `(246, 202, 538, 427)` | 292x225 | **292x225** |
-| `{96a006b0,2a56675c}` | `(246, 202, 538, 340)` | `(246, 202, 538, 340)` | 292x138 | **292x138** |
-| `{96a006b0,2a567dc1}` | `(246, 202, 538, 538)` | `(246, 202, 538, 532)` | 292x336 | **292x330** |
-| `{96a006b0,2a5e7490}` | `(246, 202, 748, 415)` | `(246, 202, 748, 415)` | 502x213 | **502x213** |
-| `{96a006b0,2a8b7e1c}` | `(246, 202, 538, 444)` | `(246, 202, 538, 444)` | 292x242 | **292x242** |
-| `{96a006b0,2a8b97c1}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,2a8b99d0}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,2a8b9df2}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,2bb16d50}` | `(395, 377, 845, 623)` | `(395, 377, 845, 623)` | 450x246 | **450x246** |
-| `{96a006b0,2c02ba84}` | `(187, 53, 403, 189)` | `(187, 53, 403, 189)` | 216x136 | **216x136** |
-| `{96a006b0,2c096de6}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,4a551b4c}` | `(332, 170, 662, 279)` | `(332, 170, 662, 279)` | 330x109 | **330x109** |
-| `{96a006b0,4a562da5}` | `(246, 202, 538, 407)` | `(246, 202, 538, 407)` | 292x205 | **292x205** |
-| `{96a006b0,4a565d13}` | `(246, 202, 538, 413)` | `(246, 202, 538, 413)` | 292x211 | **292x211** |
-| `{96a006b0,4a5665eb}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,4a566c14}` | `(246, 202, 538, 407)` | `(246, 202, 538, 407)` | 292x205 | **292x205** |
-| `{96a006b0,4a566d6e}` | `(246, 202, 538, 412)` | `(246, 202, 538, 412)` | 292x210 | **292x210** |
-| `{96a006b0,4a5672bf}` | `(257, 74, 549, 517)` | `(257, 74, 549, 517)` | 292x443 | **292x443** |
-| `{96a006b0,4a5a89d4}` | `(395, 377, 845, 623)` | `(395, 377, 845, 623)` | 450x246 | **450x246** |
-| `{96a006b0,4a5a89d5}` | `(395, 377, 845, 623)` | `(0, 0, 528, 450)` | 450x246 | **528x450** |
-| `{96a006b0,4a5e7ed3}` | `(246, 202, 748, 374)` | `(246, 202, 748, 374)` | 502x172 | **502x172** |
-| `{96a006b0,4a89b3f2}` | `(251, 180, 551, 308)` | `(251, 180, 551, 308)` | 300x128 | **300x128** |
-| `{96a006b0,4a8b7fe7}` | `(246, 202, 538, 444)` | `(246, 202, 538, 444)` | 292x242 | **292x242** |
-| `{96a006b0,4a8b9396}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,4a8b9936}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,4a8b9c92}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,4a8b9dab}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,4a8cc5ea}` | `(251, 179, 934, 761)` | `(251, 179, 934, 761)` | 683x582 | **683x582** |
-| `{96a006b0,4bbc080f}` | `(403, 385, 853, 631)` | `(403, 385, 853, 631)` | 450x246 | **450x246** |
-| `{96a006b0,4bf325e8}` | `(205, 54, 639, 501)` | `(205, 54, 639, 501)` | 434x447 | **434x447** |
-| `{96a006b0,4c0969e2}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,4c47800e}` | `(246, 202, 538, 423)` | `(246, 202, 538, 423)` | 292x221 | **292x221** |
-| `{96a006b0,6a51506f}` | `(246, 202, 538, 412)` | `(246, 202, 538, 412)` | 292x210 | **292x210** |
-| `{96a006b0,6a555a84}` | `(246, 202, 538, 423)` | `(246, 202, 538, 423)` | 292x221 | **292x221** |
-| `{96a006b0,6a561b3a}` | `(246, 202, 538, 425)` | `(246, 202, 538, 425)` | 292x223 | **292x223** |
-| `{96a006b0,6a562f56}` | `(246, 202, 538, 485)` | `(246, 202, 538, 485)` | 292x283 | **292x283** |
-| `{96a006b0,6a566151}` | `(246, 202, 538, 423)` | `(246, 202, 538, 423)` | 292x221 | **292x221** |
-| `{96a006b0,6a5e73c0}` | `(300, 255, 630, 368)` | `(300, 255, 630, 368)` | 330x113 | **330x113** |
-| `{96a006b0,6a8b9875}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,6a8b9acc}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,6a8b9af3}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,6b704690}` | `(250, 180, 659, 322)` | `(250, 180, 659, 322)` | 409x142 | **409x142** |
-| `{96a006b0,8a4d0a17}` | `(131, 62, 488, 244)` | `(131, 62, 488, 244)` | 357x182 | **357x182** |
-| `{96a006b0,8a554483}` | `(570, 200, 862, 474)` | `(570, 200, 862, 474)` | 292x274 | **292x274** |
-| `{96a006b0,8a5ab1cb}` | `(251, 180, 581, 348)` | `(251, 180, 581, 348)` | 330x168 | **330x168** |
-| `{96a006b0,8a5ab1cc}` | `(171, 103, 501, 291)` | `(171, 103, 501, 291)` | 330x188 | **330x188** |
-| `{96a006b0,8a5ab1cd}` | `(251, 180, 581, 368)` | `(251, 180, 581, 368)` | 330x188 | **330x188** |
-| `{96a006b0,8a5ab1ce}` | `(251, 180, 551, 338)` | `(251, 180, 551, 338)` | 300x158 | **300x158** |
-| `{96a006b0,8a5ab1cf}` | `(251, 180, 564, 308)` | `(251, 180, 564, 308)` | 313x128 | **313x128** |
-| `{96a006b0,8a5ab1d0}` | `(251, 180, 553, 308)` | `(251, 180, 553, 308)` | 302x128 | **302x128** |
-| `{96a006b0,8a5e7bd2}` | `(246, 202, 748, 415)` | `(246, 202, 748, 415)` | 502x213 | **502x213** |
-| `{96a006b0,8a7e052f}` | `(3, 0, 725, 558)` | `(3, 0, 725, 558)` | 722x558 | **722x558** |
-| `{96a006b0,8a8b95b0}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,8a8b9811}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,8a8b98a7}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,8a8b9d12}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,8a948d49}` | `(246, 202, 538, 346)` | `(246, 202, 538, 346)` | 292x144 | **292x144** |
-| `{96a006b0,aa554aea}` | `(246, 202, 538, 431)` | `(246, 202, 538, 431)` | 292x229 | **292x229** |
-| `{96a006b0,aa555346}` | `(246, 202, 538, 384)` | `(246, 202, 538, 384)` | 292x182 | **292x182** |
-| `{96a006b0,aa561f93}` | `(246, 202, 538, 362)` | `(246, 202, 538, 362)` | 292x160 | **292x160** |
-| `{96a006b0,aa565036}` | `(246, 202, 538, 412)` | `(246, 202, 538, 412)` | 292x210 | **292x210** |
-| `{96a006b0,aa565f5b}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,aa5661eb}` | `(246, 202, 538, 413)` | `(246, 202, 538, 413)` | 292x211 | **292x211** |
-| `{96a006b0,aa5bef41}` | `(246, 202, 538, 367)` | `(246, 202, 538, 367)` | 292x165 | **292x165** |
-| `{96a006b0,aa5e14cc}` | `(246, 202, 748, 416)` | `(246, 202, 748, 416)` | 502x214 | **502x214** |
-| `{96a006b0,aa5e60d1}` | `(30, 32, 122, 62)` | `(30, 32, 122, 62)` | 92x30 | **92x30** |
-| `{96a006b0,aa8b9755}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,aa8b9971}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,abfaef15}` | `(206, 52, 640, 351)` | `(206, 52, 640, 351)` | 434x299 | **434x299** |
-| `{96a006b0,ac096ac7}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,ac3b72f6}` | `(246, 202, 538, 423)` | `(246, 202, 538, 423)` | 292x221 | **292x221** |
-| `{96a006b0,ca4d0b22}` | `(131, 62, 488, 219)` | `(131, 62, 488, 219)` | 357x157 | **357x157** |
-| `{96a006b0,ca539340}` | `(146, 71, 404, 321)` | `(146, 71, 404, 321)` | 258x250 | **258x250** |
-| `{96a006b0,ca53f06e}` | `(44, 20, 374, 491)` | `(44, 20, 374, 491)` | 330x471 | **330x471** |
-| `{96a006b0,ca551016}` | `(121, 45, 646, 329)` | `(121, 45, 646, 329)` | 525x284 | **525x284** |
-| `{96a006b0,ca566f94}` | `(246, 202, 538, 432)` | `(246, 202, 538, 432)` | 292x230 | **292x230** |
-| `{96a006b0,ca56783a}` | `(246, 202, 538, 536)` | `(246, 202, 538, 536)` | 292x334 | **292x334** |
-| `{96a006b0,ca8b8408}` | `(246, 202, 538, 454)` | `(246, 202, 538, 454)` | 292x252 | **292x252** |
-| `{96a006b0,ca8b96c2}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,ca8b9845}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,ca8b9aa2}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,ca8b9ce7}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,ca8b9d40}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,cc097fc0}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
-| `{96a006b0,cc313f17}` | `(246, 202, 538, 395)` | `(246, 202, 538, 395)` | 292x193 | **292x193** |
-| `{96a006b0,ea5655e4}` | `(246, 202, 538, 485)` | `(246, 202, 538, 485)` | 292x283 | **292x283** |
-| `{96a006b0,ea566a49}` | `(246, 202, 538, 374)` | `(246, 202, 538, 374)` | 292x172 | **292x172** |
-| `{96a006b0,ea89b6c3}` | `(45, 49, 400, 287)` | `(45, 49, 400, 287)` | 355x238 | **355x238** |
-| `{96a006b0,ea8b82db}` | `(246, 202, 538, 457)` | `(246, 202, 538, 457)` | 292x255 | **292x255** |
-| `{96a006b0,ea8cc3c6}` | `(251, 180, 615, 372)` | `(251, 180, 615, 372)` | 364x192 | **364x192** |
-| `{96a006b0,eaaeec1b}` | `(332, 232, 662, 389)` | `(332, 232, 662, 389)` | 330x157 | **330x157** |
-| `{96a006b0,ebd0d36c}` | `(594, 17, 1005, 388)` | `(594, 17, 1005, 390)` | 411x371 | **411x373** |
-| `{96a006b0,ec096e72}` | `(246, 202, 538, 336)` | `(246, 202, 538, 336)` | 292x134 | **292x134** |
+*(none, or shapes unreadable)*
 
 ## What to do
 

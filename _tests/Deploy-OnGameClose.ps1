@@ -458,6 +458,13 @@ Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat" "$zzz\z_SC
 # modder's art). Build-Dist carries a hard assert that no ZCarbon file lands
 # in a bundle; if you rewrite these lines into the bare positional form the
 # parser WILL bundle them and that assert is the only net.
+# PRESENCE-GATED like Test-Builders' --carbon (review finding 3): on a
+# machine without the carbon builds (fresh clone, no skin) these sources do
+# not exist, and under $ErrorActionPreference=Stop an unguarded Copy-Item
+# would ABORT the deploy mid-way - skipping the FontStyle sources, the
+# gate-honour block, the stale-twin cleanup and the armed-tier restore.
+$zcarbonBuilt = Test-Path "$proj\tools\selective-safe\z_SC4UIScale_ZCarbonArt.dat"
+if ($zcarbonBuilt) {
 Copy-Item -Path "$proj\tools\dialog-static\z_SC4UIScale_ZCarbonUI.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonUI-2x.dat" -Force
 Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonUI-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonUI-15x.dat.x1-disabled" -Force
 Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonUI-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonUI-3x.dat.x1-disabled" -Force
@@ -482,6 +489,9 @@ Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonGodMod-3x.dat" -Des
 Copy-Item -Path "$proj\tools\research\carbon\z_SC4UIScale_ZCarbonIcons.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonIcons-2x.dat" -Force
 Copy-Item -Path "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonIcons-15x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonIcons-15x.dat.x1-disabled" -Force
 Copy-Item -Path "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonIcons-3x.dat" -Destination "$zzz\z_SC4UIScale_ZCarbonIcons-3x.dat.x1-disabled" -Force
+} else {
+    Write-Output "  ZCarbon packages NOT built on this machine (no carbon inputs) - skipped; gates leave any deployed copies disarmed"
+}
 # FONT TIER SOURCES (#57 phase 4, 2026-08-02). These were NEVER in this
 # script - the three FontStyle-*.ini files in Plugins were placed BY HAND, and
 # they rotted exactly as task #58's dats did. MEASURED: the deployed

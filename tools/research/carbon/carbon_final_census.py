@@ -36,16 +36,24 @@ PLUG = os.path.join(os.environ["USERPROFILE"], "OneDrive", "Documents",
 SKIP_CARBON_OK = {(0x2026960B, 0x6A231EAA, 0x0A5128F3)}   # WebText caption
 
 
-def load_order_dats(root):
-    """Every .dat under root in game load order (last = winner)."""
+# The IsDbpfName law (ScaleTier.cpp #49): .SC4Lot/.SC4Desc/.SC4Model are
+# DBPF archives too and any of them can supply a TGI. Globbing *.dat is
+# what once made a sweep report "no art anywhere".
+DBPF_EXTS = (".dat", ".sc4lot", ".sc4desc", ".sc4model")
+
+
+def load_order_dats(root, fold):
+    """Every DBPF archive under root in game load order (last = winner),
+    under the given case-fold comparator."""
     out = []
 
     def walk(d):
         try:
-            entries = sorted(os.listdir(d), key=str.lower)
+            entries = sorted(os.listdir(d), key=fold)
         except OSError:
             return
-        files = [e for e in entries if e.lower().endswith(".dat")
+        files = [e for e in entries
+                 if e.lower().endswith(DBPF_EXTS)
                  and os.path.isfile(os.path.join(d, e))]
         dirs = [e for e in entries if os.path.isdir(os.path.join(d, e))]
         for f in files:
@@ -63,18 +71,49 @@ ROW = re.compile(r"^0x([0-9A-Fa-f]{8}) 0x([0-9A-Fa-f]{8}) 0x([0-9A-Fa-f]{8})")
 
 
 def main():
-    dats = load_order_dats(PLUG)
-    print("live tree: %d dats in load order" % len(dats))
+    # COMPARATOR-INDEPENDENT (2026-08-25, review finding 1): the engine's
+    # sort comparator has never been discriminated by measurement - upcasing
+    # vs lowercasing orders '_' vs letters OPPOSITELY. Compute winners under
+    # BOTH foldings and require agreement per TGI; a divergent winner means
+    # the tree contains a comparator-ambiguous boundary and the layout must
+    # be renamed until it does not (the zz-scoty-mods rename exists for
+    # exactly this).
+    lists = {}
+    contents = {}
+    for name, fold in (("lower", str.lower), ("upper", str.upper)):
+        lists[name] = load_order_dats(PLUG, fold)
+    print("live tree: %d DBPF archives in load order" % len(lists["lower"]))
 
-    winner = {}
-    for p in dats:
+    for p in set(lists["lower"]):
         r = subprocess.run([DBPF, "--list", p], capture_output=True,
                            text=True, errors="replace")
+        rows = []
         for line in r.stdout.splitlines():
             m = ROW.match(line.strip())
             if m:
-                winner[(int(m.group(1), 16), int(m.group(2), 16),
-                        int(m.group(3), 16))] = p
+                rows.append((int(m.group(1), 16), int(m.group(2), 16),
+                             int(m.group(3), 16)))
+        contents[p] = rows
+
+    winners = {}
+    for name in lists:
+        w = {}
+        for p in lists[name]:
+            for tgi in contents.get(p, ()):
+                w[tgi] = p
+        winners[name] = w
+    ambiguous = [t for t in winners["lower"]
+                 if winners["lower"][t] != winners["upper"].get(t)]
+    if ambiguous:
+        print("COMPARATOR-AMBIGUOUS winners: %d - the layout has an "
+              "order-dependent boundary; RED regardless of either answer"
+              % len(ambiguous))
+        for t in ambiguous[:20]:
+            print("  AMBIG %08x/%08x/%08x  lower->%s  upper->%s" % (
+                t + (os.path.basename(winners["lower"][t]),
+                     os.path.basename(winners["upper"].get(t, "(none)")))))
+        sys.exit(1)
+    winner = winners["lower"]
 
     # ---- 1. colliding TGIs must end OURS ----
     bad = []

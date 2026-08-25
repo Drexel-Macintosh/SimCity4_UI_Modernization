@@ -3020,6 +3020,7 @@ without `--carbon` - carbon only ADDS these dats.
 
 Enrollment rows skipped (not this builder's):
 
-- package ZCarbonArt (25 script + 249 art row(s)) - owned by the selective-safe/itemicons lanes, not this builder
+- package ZCarbonArt (23 script + 247 art row(s)) - owned by the selective-safe/itemicons lanes, not this builder
+- package ZCarbonGodMod (2 script + 2 art row(s)) - owned by the selective-safe/itemicons lanes, not this builder
 - package ZCarbonNam (1 script + 1 art row(s)) - owned by the selective-safe/itemicons lanes, not this builder
 - package ZCarbonStyles (1 script + 1 art row(s)) - owned by the selective-safe/itemicons lanes, not this builder
