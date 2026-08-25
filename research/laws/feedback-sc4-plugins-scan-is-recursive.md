@@ -1,9 +1,18 @@
-# SC4 Scans the Plugins Tree Recursively
+# SC4 Scans the Plugins Tree Recursively — FOR DATA, NOT FOR DLLS
 
-SimCity 4 loads `Plugins\` recursively — every subfolder, at any depth. A
-"stash" or "disabled" folder created *inside* `Plugins\` disables nothing; its
-contents keep loading exactly as before, including `.dat` archives, DLL plugins,
-and SC4Lot/SC4Model/SC4Desc content.
+SimCity 4 loads `Plugins\` **data** recursively — every subfolder, at any
+depth. A "stash" or "disabled" folder created *inside* `Plugins\` disables
+nothing for `.dat` archives and SC4Lot/SC4Model/SC4Desc content.
+
+⚠ **CORRECTED 2026-08-24 (v4.2.0 maiden boot, measured): DLL PLUGINS ARE THE
+EXCEPTION — the DLL loader is TOP-LEVEL ONLY.** `SC4UIScale.dll` in
+`Plugins\010-SC4UIScale\` produced no log, no director, nothing; moved back
+to the root it loads normally. This file previously claimed DLLs load from
+subfolders too, and that claim cost a launch: the 30 third-party DLLs all
+sitting at the root, and the submenus-DLL README's "copy the DLLs into the
+top-level directory … not in a subfolder", were the ecosystem's way of
+saying so. A stashed DLL inside Plugins IS inert — but for the opposite
+reason a stashed dat is not.
 
 There are only two ways to take a plugin out of play:
 

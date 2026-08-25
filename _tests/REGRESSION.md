@@ -16726,3 +16726,19 @@ assert); CsiIcons was the second — absent from EVERY bundle since
 Rescued the same way + a bundle-size floor. Law: every rescue block gets an
 assert, and the TOTAL gets a floor, because the next blind spot is already
 being written.
+
+## 2026-08-24 (night, addendum) — the DLL-loader correction
+
+The subfolder move's maiden boot REFUTED half of the recursive-scan law:
+**SC4's DLL loader is TOP-LEVEL ONLY** (dat scan recursive, DLL scan not) —
+the subfolder DLL produced no log and no director while the game ran clean
+stock. The law file over-claimed ("including DLL plugins") from dat-side
+evidence, and the research lane repeated it; the ecosystem's contrary
+evidence (30 DLLs all at root; the submenus README's explicit "not in a
+subfolder") was in hand and discounted. LAW: WHEN A CLAIM GENERALIZES
+ACROSS LOADER CHANNELS, DEMAND A PER-CHANNEL MEASUREMENT — "the scan is
+recursive" was true for the channel it was measured on and false for the
+one it was applied to (the instrument-scoped-to-the-wrong-channel shape,
+again). Cost: one launch; the boot-verification gate caught it before
+release. Final layout: DLL/ini/log at root, packages in 010-SC4UIScale\,
+census re-verified (1,496 TGIs, zero winner changes).
