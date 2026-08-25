@@ -958,3 +958,90 @@ SIGNPOST-applied. User-confirmed. Probes disarmed in the live ini
 (`DispatchQuad=0`, `ViewListRepeat=0`, `CsiCountPlate=0`); all three levers
 remain in the DLL for future sessions. The five silent-null launches and the
 two flooded captures along the way are written into REGRESSION.md as laws.
+
+## 9.10 RESULTS — the #22/#23 COLOUR capture (2026-08-24 evening, v4.1.1)
+
+**⛔ READING 2 PROVEN — the in-world data-view tint is NOT a view object.**
+The pre-registered discriminator from §9.8 ran clean: baseline plain view =
+13 objects, no overlay; the first data-view switch created `0x00ABB614`
+(13 → 14); and across **13 enumerations spanning a full top-to-bottom cycle
+of every data view (16:49:13 → 16:52:49), `COLOR+2C` never changed** —
+`0x80C000C0` in every dump, `+1C/+20` frozen at 16.0f and `+24/+28` at
+0.0625f (its constructor constants). A re-parameterised-per-view overlay
+would have shown per-view colours; it showed none, and its half-alpha
+magenta matches no tint that was on screen. Positive controls all present
+(`repeat ARMED every 300 frames`, non-zero GRAND TOTAL on every dump).
+
+⇒ `0x00ABB614` is a lazily-created ONE-SHOT (first data-view use), unrelated
+to per-view tinting. **The tint hunt moves to the terrain/material path**;
+the register row closes as posed — no view object owns the tint, so there is
+no per-view drawable to attribute. Do not spend another capture on the view
+lists for this question.
+
+## 9.11 RESULTS — #24 (purple GZWinText) and #4 (draw-call census), 2026-08-24 evening
+
+**#24 CLOSED — the purple state DOES NOT REPRODUCE on v4.1.1, and the
+prediction was wrong twice over.** The repro recreated the exact runtime-only
+condition (dev lever `[Probe] ForceRuntimeScaleId=0x6A414973` excluding
+Establish City from kNeverScaleIds + `z_SC4UIScale_DialogStatic-2x.dat`
+renamed to `.probe-quarantine`, invisible to SyncDat): the sweep scaled the
+dialog live (`434x234 -> 868x468`, FLASHSET ON SCREEN) and the user's
+screenshot shows EVERY text normal — no purple anywhere. The FONTGUID hook
+(SetFontStyleByGUID 0x9C16FD, iface vt 0xAE0118+0x4C, prologue-gated) logged
+500 assignments across the session: **the fallback 0x68963C4C was stored
+ZERO times**; the dialog's own 19 text nodes were bound at dialog-open
+(17:28:44) to real style GUIDs (0x4A809916/17/18 etc.), all via the
+deserializer (caller 0x94E5FB); `prev=0` on fresh objects also refutes the
+"creation helper binds Default first" claim for this path. The July-2026
+purple was real but something shipped since has cured it. The engine-law
+line in SC4-UI-ENGINE.md ("runtime geometry scaling does not carry the
+text path") is REFUTED for the current build. kNeverScaleIds keeps the
+entry — the double-scale hazard (dat + sweep both live) is still real.
+FONTGUID stays in the DLL, off, as the instrument if purple ever returns.
+
+**#4 CLOSED — the live census ran and VALIDATED ITSELF AGAINST GROUND
+TRUTH.** Four instrument defects were burned out along the way, each now a
+logged, self-diagnosing outcome instead of a silent null:
+1. skip=300 assumed Clear ~ frame rate; a settled city redraws rarely (two
+   lost runs). Cut to 30 + the exit line prints the measured count.
+2. `caller` (immediate DrawArrays caller) lands inside the driver's own
+   submit wrappers (0x7D29xx/0x7D4Bxx) — names the PLUMBING. v2 records
+   `outer` = the SubmitPrimitive 0x7D2990 caller = the SYSTEM (GCAP v2,
+   72-byte records; decoder reads both versions).
+3. Clear fires freely at boot but goes near-silent in-city, while Flush
+   (vt+0xAC 0x884BA0) runs every frame (measured: Clear x636 / Flush x5322
+   in one session). First-fire marker selection latched the wrong one; the
+   marker now re-selects AFTER the city latch.
+4. CityExit zeroed the boundary counter before the log line read it — every
+   exit reported "0 boundaries" (a reporting artifact shaped exactly like a
+   dead hook). Begin() owns the reset now.
+The successful capture (`_tests/captures/2026-08-24-drawcall-census-v2.gcap`,
+4134 records / 2 Flush frames / CallsSeen 5.45M): TRUE DRAWERS include the
+KNOWN pin sites 0x5F2904/0x5F2970 (pin quad) + 0x5F2992 (digit) and the
+KNOWN dispatch-view sites 0x46EEA9/0x46EED7 — the census independently
+re-found drawers the pin arc had proven, which is the positive control that
+its attributions are real. New names: 0x7FED32 (dominant in-world TRI_FAN
+drawer, 1540/4134) and the 0x5CCxxx QUADS batch family (verts 4/16/80).
+2566 records bypass SubmitPrimitive entirely (UI path via 0x7D4B1C +
+0x993242, the 256x256 minimap-corner quads). Repeatable any session:
+`[Probe] GpuCap=N` + an ACTIVE camera (SC4 redraws only on change — a
+still city produces no boundaries; that is a measured property, not a bug).
+Stale notes corrected by this run: the register's "resolve SetTexture arity
+at 0x7AA075 first" blocker does not apply to this instrument (it reads the
+stage array at drv+0x11C, never hooks SetTexture), and §9.0 row G's "spec
+being produced by the running lane" cell is obsolete — the spec is
+gdcap.cpp itself; the wf journal pointer is dead (session-local).
+
+## 9.12 RESULTS — PROBE C, the #162 hairlines external capture (2026-08-24 evening)
+
+**CAPTURE DELIVERED — and the observable has SHRUNK.** At tier 1.5x
+(Set-Tier, admin shell): exactly **ONE thin line remains, bottom-right of
+the mayor's-hat button**. The **advisor portraits are CLEAN** (user checked
+by phone) — half of the original 2026-08-15 report is gone, so an
+intervening release partially cured the defect without anyone noticing.
+Control: absent at 2x (user statement + weeks of 2x play + tonight's 2x
+sessions). §D.1's mechanism question stays open, scope-narrowed to the hat
+button; the next step is instrumented art on that button's sheet, which gets
+its own plan. With this, every §9.0 probe row (A-G) has a filed result:
+A ✅, B ✅, C ✅ (this entry), D ✅ + §9.10 colour verdict, E ✅ §9.11
+(does not reproduce), F retired with #5's reframe, G ✅ §9.11 (census).

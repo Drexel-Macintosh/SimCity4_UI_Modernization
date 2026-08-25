@@ -24,8 +24,10 @@ import argparse
 import struct
 import collections
 
-REC = struct.Struct("<IIIHHIIII" + "6f" + "3f")   # 64 bytes
-assert REC.size == 64, REC.size
+REC_V1 = struct.Struct("<IIIHHIIII" + "6f" + "3f")        # 68 bytes
+REC_V2 = struct.Struct("<IIIIHHIIII" + "6f" + "3f")       # 72 bytes (+ outer)
+assert REC_V1.size == 68, REC_V1.size
+assert REC_V2.size == 72, REC_V2.size
 
 PRIM = {0: "TRIANGLES", 1: "TRI_STRIP", 2: "TRI_FAN", 3: "POINTS",
         4: "LINES", 5: "LINE_STRIP", 6: "QUADS", 7: "QUAD_STRIP"}
@@ -36,15 +38,22 @@ def load(path):
     magic, ver, n, calls = struct.unpack_from("<IIII", d, 0)
     if magic != 0x50414347:
         raise SystemExit("not a gdcap capture (bad magic %#x)" % magic)
+    rec = REC_V2 if ver >= 2 else REC_V1
     recs = []
     off = 16
     for _ in range(n):
-        f = REC.unpack_from(d, off)
-        off += REC.size
-        recs.append(dict(
-            frame=f[0], seq=f[1], caller=f[2], prim=f[3], verts=f[4],
-            fmt=f[5], stride=f[6], tex0=f[7], tex1=f[8],
-            bb=f[9:15], v0=f[15:18]))
+        f = rec.unpack_from(d, off)
+        off += rec.size
+        if ver >= 2:
+            recs.append(dict(
+                frame=f[0], seq=f[1], caller=f[2], outer=f[3], prim=f[4],
+                verts=f[5], fmt=f[6], stride=f[7], tex0=f[8], tex1=f[9],
+                bb=f[10:16], v0=f[16:19]))
+        else:
+            recs.append(dict(
+                frame=f[0], seq=f[1], caller=f[2], outer=0, prim=f[3],
+                verts=f[4], fmt=f[5], stride=f[6], tex0=f[7], tex1=f[8],
+                bb=f[9:15], v0=f[15:18]))
     return recs, ver, calls
 
 
@@ -100,10 +109,30 @@ def main():
                  b[3] - b[0], b[4] - b[1], b[5] - b[2]))
 
     # Everything else, by drawer, so a batched balloon still names its batcher.
-    print("\nALL DRAWERS (any primitive):")
+    print("\nALL DRAWERS (immediate caller of DrawArrays/DrawElements):")
     allg = collections.Counter(r["caller"] for r in recs)
     for caller, n in allg.most_common(a.top):
         print("   %#010x  x%d" % (caller, n))
+
+    # THE ANSWER (v2+): the caller of SubmitPrimitive 0x7D2990. The immediate
+    # caller above is nearly always inside the driver's own wrappers, which
+    # names the plumbing; this names the SYSTEM that decided to draw.
+    if ver >= 2:
+        outers = collections.Counter(r["outer"] for r in recs if r["outer"])
+        missing = sum(1 for r in recs if not r["outer"])
+        print("\nTRUE DRAWERS (caller of SubmitPrimitive 0x007D2990) - "
+              "%d distinct; %d record(s) did NOT come through it:"
+              % (len(outers), missing))
+        for outer, n in outers.most_common(a.top):
+            ex = next(r for r in recs if r["outer"] == outer)
+            print("   %#010x  x%-6d e.g. prim=%s verts=%d tex0=%#010x"
+                  % (outer, n, PRIM.get(ex["prim"], ex["prim"]),
+                     ex["verts"], ex["tex0"]))
+        qo = collections.Counter(r["outer"] for r in quads if r["outer"])
+        if qo:
+            print("\n   ...of which SINGLE-QUAD drawers (billboard shape):")
+            for outer, n in qo.most_common(a.top):
+                print("   %#010x  x%d" % (outer, n))
 
 
 if __name__ == "__main__":

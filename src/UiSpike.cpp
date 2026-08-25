@@ -6160,8 +6160,39 @@ namespace
 		}
 		return false;
 	}
+	// [Probe] ForceRuntimeScaleId - Build 1 (2026-08-24) dev repro lever for
+	// register row #24. A nonzero id is EXCLUDED from kNeverScaleIds at every
+	// consult site, putting that dialog back on the runtime-only scaling path
+	// (the purple-GZWinText state). Side effect while set: the DLGLISTS
+	// overlap census also stops listing that id - expected, dev-only.
+	// Dev-ini-only, never shipped. PRIMED from SetTierMirror (the tier tail,
+	// outside every hook) so the one-time ini read + log can never fire
+	// inside a detour (review finding 5); the guard below is belt-and-braces
+	// for any consult that could theoretically precede the mirror.
+	inline uint32_t ForceRuntimeScaleId()
+	{
+		static bool s_read = false;
+		static uint32_t s_id = 0;
+		if (!s_read)
+		{
+			s_read = true;
+			char buf[32] = {};
+			GetPrivateProfileStringA("Probe", "ForceRuntimeScaleId", "0",
+				buf, sizeof(buf), LiveTuneIniPath());
+			s_id = static_cast<uint32_t>(strtoul(buf, nullptr, 16));
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: ForceRuntimeScaleId resolved to 0x%08X (read from "
+				"[Probe]; nonzero EXCLUDES that id from kNeverScaleIds at "
+				"ALL consult sites - dev repro lever for #24. With the "
+				"DialogStatic dat still ACTIVE this DOUBLE-SCALES the dialog "
+				"to ~4x; quarantine the dat first.)", s_id);
+		}
+		return s_id;
+	}
+
 	inline bool IsNeverScaleId(uint32_t id)
 	{
+		if (id != 0 && id == ForceRuntimeScaleId()) { return false; }
 		for (uint32_t known : kNeverScaleIds)
 		{
 			if (id == known) { return true; }
@@ -16256,6 +16287,12 @@ void UiSpike::SetRequestedResIgnored(bool ignored)
 void UiSpike::SetTierMirror(float f)
 {
 	gTierF = f;
+	// Build 1 (review 2026-08-24, finding 5): prime the ForceRuntimeScaleId
+	// lazy read HERE - the tier tail, director constructor, outside every
+	// hook - so the one-time ini read + resolved-value log can never fire
+	// inside the SetFlag/paint detours that consult IsNeverScaleId. After
+	// this call the helper is a pure static read forever.
+	(void)ForceRuntimeScaleId();
 }
 
 void UiSpike::PurgeSubtreeRecords(cIGZWin* win, int depth)

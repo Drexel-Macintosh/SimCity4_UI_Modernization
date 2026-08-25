@@ -1,4 +1,5 @@
 #include "CodePatches.h"
+#include "GdCap.h"
 #include "Logger.h"
 #include "MinHook.h"
 
@@ -7285,6 +7286,305 @@ namespace CodePatches
 		if (gDqOn != 0) { InstallDispatchQuadProbe(); }
 	}
 
+	// ---- Build 1 (2026-08-24): register rows #4 (GPUCAP) and #24 (FONTGUID)
+
+	namespace
+	{
+		// GPUCAP: how many Clear boundaries to skip once the city latch
+		// fires, so the recorded frames are the settled live city view and
+		// not the loading screen (~5-10 s at typical frame rates).
+		// PostCityInit already means "city loaded", and the first frames
+		// after it are the reveal - a short settle is all that is needed.
+		// 300 was a guess that cost two launches: SC4 issues Clear only when
+		// it REDRAWS, so a settled city view can take minutes to accumulate
+		// 300 boundaries and the capture never armed (measured 2026-08-24,
+		// two runs). 30 settles the reveal without outliving a normal sit.
+		const uint32_t kGpuCapCitySkip = 30;
+		int gGpuCapN = 0;
+
+		// FONTGUID (#24): log every SetFontStyleByGUID assignment. The impl
+		// 0x9C16FD is __thiscall(this=iface, uint32_t guid) ret 4; its own
+		// prologue (dumped 2026-08-24) byte-proves the layout the probe
+		// depends on: `lea ecx,[esi-0xD8]` = objBase, `mov [esi+0x08],eax` =
+		// the GUID slot (obj+0xE0). `prev` is read BEFORE the original runs,
+		// so the Default(0x68963C4C)->real transition is visible per control.
+		int gFgMax = 0;
+		volatile LONG gFgCalls = 0;
+		typedef void(__fastcall* FontGuidFn)(void*, void*, uint32_t);
+		FontGuidFn gFontGuidOrig = nullptr;
+		const uintptr_t kSetFontStyleByGuid = 0x9C16FD;
+		const uintptr_t kWinTextIfaceVt = 0xAE0118;
+
+		void __fastcall FontGuidDetour(void* self, void* edx, uint32_t guid)
+		{
+			const LONG n = InterlockedIncrement(&gFgCalls);
+			if (n <= gFgMax)
+			{
+				const uintptr_t base =
+					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				const uint32_t ret = static_cast<uint32_t>(
+					reinterpret_cast<uintptr_t>(_ReturnAddress())
+					- base + kImageBase);
+				const uintptr_t vtVa =
+					reinterpret_cast<uintptr_t>(*reinterpret_cast<void**>(self))
+					- base + kImageBase;
+				if (vtVa == kWinTextIfaceVt)
+				{
+					void* obj = reinterpret_cast<char*>(self) - 0xD8;
+					const uint32_t prev = *reinterpret_cast<uint32_t*>(
+						reinterpret_cast<char*>(self) + 0x08);
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: FONTGUID #%ld this=%p obj=%p "
+						"guid=0x%08X prev=0x%08X caller=0x%08X.",
+						static_cast<long>(n), self, obj, guid, prev, ret);
+				}
+				else
+				{
+					// Same impl reached through a vtable we did not pin:
+					// log it, but NEVER do the -0xD8 arithmetic on it.
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: FONTGUID #%ld this=%p FOREIGN "
+						"vt=0x%08X guid=0x%08X caller=0x%08X - obj "
+						"arithmetic skipped.",
+						static_cast<long>(n), self,
+						static_cast<unsigned>(vtVa), guid, ret);
+				}
+				if (n == gFgMax)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: FONTGUID cap %d reached - further "
+						"calls suppressed (raise [Probe] FontGuid to see "
+						"more).", gFgMax);
+				}
+			}
+			gFontGuidOrig(self, edx, guid);
+		}
+	}
+
+	// [Probe] GpuCap=N - the register-row-#4 DX7 draw-call census. Armed from
+	// the tier-decision tail like DispatchQuad (any factor); the capture
+	// itself waits for the PostCityInit latch so the frames it records are
+	// the live city view. gdcap.cpp stays logger-free - every log line about
+	// it lives here.
+	void ArmGpuCapProbe()
+	{
+		wchar_t ini[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
+			ini, MAX_PATH);
+		wchar_t* s = wcsrchr(ini, L'\\');
+		if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+		gGpuCapN = static_cast<int>(GetPrivateProfileIntW(
+			L"Probe", L"GpuCap", 0, ini));
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: GpuCap resolved to %d (read from [Probe]; armed "
+			"from the tier-decision tail, any factor; N = Clear boundaries "
+			"to record once the city latch fires).", gGpuCapN);
+		if (gGpuCapN <= 0) { return; }
+
+		wchar_t out[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
+			out, MAX_PATH);
+		wchar_t* o = wcsrchr(out, L'\\');
+		// The size passed to wcscpy_s must be the space actually REMAINING,
+		// not a flat literal: ".gcap" is one wchar longer than ".dll", so a
+		// maximal plugin path would overflow by 2 bytes with the usual
+		// `32` idiom (review 2026-08-24, finding 4).
+		if (o)
+		{
+			const rsize_t remain =
+				static_cast<rsize_t>(MAX_PATH - ((o + 1) - out));
+			if (remain < 16)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: GPUCAP REFUSED (plugin path too long for "
+					"SC4UIScale.gcap) - nothing armed.");
+				return;
+			}
+			wcscpy_s(o + 1, remain, L"SC4UIScale.gcap");
+		}
+		const char* refuse = GdCap::Install(
+			static_cast<uint32_t>(gGpuCapN), 200000u, out);
+		if (refuse)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: GPUCAP REFUSED (%s) - nothing armed, no hook "
+				"placed.", refuse);
+			return;
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: GPUCAP hooks armed - DrawArrays/DrawElements/Clear "
+			"byte-gated, %d-boundary capture, 200000-record buffer, "
+			"out=%ls. Capture BEGINS at PostCityInit + %u Clear skips; the "
+			"file is written at PreAppShutdown, never inside a hook.",
+			gGpuCapN, out, kGpuCapCitySkip);
+	}
+
+	// PostCityInit latch (see ArmGpuCapProbe). Safe to call unconditionally
+	// on every city entry - only the first call after an armed install
+	// latches, and an un-armed session logs nothing.
+	void BeginGpuCapAtCity()
+	{
+		if (!GdCap::Installed()) { return; }
+		if (GdCap::Begin(kGpuCapCitySkip))
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: GPUCAP capture latched at PostCityInit - "
+				"skipping %u Clear boundaries, then recording %d.",
+				kGpuCapCitySkip, gGpuCapN);
+		}
+	}
+
+	// PostCityInit's mirror: keep the capture honest when the player leaves
+	// the city early (review 2026-08-24, finding 3). No-ops (and logs
+	// nothing) unless the probe installed AND had latched.
+	void NotifyGpuCapCityExit()
+	{
+		if (!GdCap::Installed()) { return; }
+		const int r = GdCap::CityExit();
+		if (r == 1)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: GPUCAP city exited while still SKIPPING after "
+				"%u boundaries (needed %u; marker=%s, census Clear x%u / "
+				"Flush x%u) - un-latched; the next city entry re-latches "
+				"fresh.",
+				GdCap::ClearsSinceBegin(), kGpuCapCitySkip,
+				GdCap::MarkerUsed() == 1 ? "Clear"
+					: GdCap::MarkerUsed() == 2 ? "Flush" : "NONE FIRED",
+				GdCap::ClearsTotal(), GdCap::FlushesTotal());
+		}
+		else if (r == 2)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: GPUCAP city exited MID-RECORDING - finalized "
+				"with %u records (%u frames); every recorded frame is a "
+				"city frame.", GdCap::RecordsUsed(), GdCap::FramesCaptured());
+		}
+	}
+
+	// PreAppShutdown closeout. Three adjudicated cases (review 2026-08-24,
+	// finding 9): written; nothing recorded; open FAILED with records LOST.
+	// The positive-control line: CallsSeen()==0 means the probe never saw
+	// the driver and any null capture is VOID.
+	void WriteGpuCapCloseout()
+	{
+		if (!GdCap::Installed()) { return; }
+		const bool wrote = GdCap::WriteCloseout();
+		if (wrote)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: GPUCAP closed - wrote %u records (%u frames "
+				"captured, marker=%s; census Clear x%u / Flush x%u) to "
+				"SC4UIScale.gcap; CallsSeen TOTAL %u driver calls. "
+				"CallsSeen=0 means the probe never saw the driver and any "
+				"null capture is VOID.",
+				GdCap::RecordsUsed(), GdCap::FramesCaptured(),
+				GdCap::MarkerUsed() == 1 ? "Clear"
+					: GdCap::MarkerUsed() == 2 ? "Flush" : "NONE",
+				GdCap::ClearsTotal(), GdCap::FlushesTotal(),
+				GdCap::CallsSeen());
+		}
+		else if (GdCap::RecordsUsed() == 0)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: GPUCAP closed - nothing recorded; no file "
+				"written. Marker=%s, %u boundaries since the latch (skip "
+				"needs %u). Marker census: Clear x%u, Flush x%u. CallsSeen "
+				"TOTAL %u driver calls. BOTH marker counts 0 with a high "
+				"CallsSeen = the marker hooks are DEAD (an arming outcome, "
+				"NOT a null about drawers); a nonzero count that never "
+				"reached the skip = the game genuinely redrew that little.",
+				GdCap::MarkerUsed() == 1 ? "Clear"
+					: GdCap::MarkerUsed() == 2 ? "Flush" : "NONE FIRED",
+				GdCap::ClearsSinceBegin(), kGpuCapCitySkip,
+				GdCap::ClearsTotal(), GdCap::FlushesTotal(),
+				GdCap::CallsSeen());
+		}
+		else
+		{
+			Logger::Get().WriteLine(LogLevel::Error,
+				"CodePatches: GPUCAP FILE OPEN FAILED - %u captured records "
+				"LOST (not an empty capture; check write permission on the "
+				"Plugins folder). CallsSeen TOTAL %u driver calls.",
+				GdCap::RecordsUsed(), GdCap::CallsSeen());
+		}
+	}
+
+	// [Probe] FontGuid=N - the register-row-#24 purple-GZWinText probe.
+	// Armed from the tier-decision tail (any factor - the black 1x/2x
+	// controls matter as much as the purple case).
+	void ArmFontGuidProbe()
+	{
+		wchar_t ini[MAX_PATH] = {};
+		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
+			ini, MAX_PATH);
+		wchar_t* s = wcsrchr(ini, L'\\');
+		if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
+		gFgMax = static_cast<int>(GetPrivateProfileIntW(
+			L"Probe", L"FontGuid", 0, ini));
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: FontGuid resolved to %d (read from [Probe]; armed "
+			"from the tier-decision tail, any factor; N = max FONTGUID "
+			"lines).", gFgMax);
+		if (gFgMax <= 0) { return; }
+
+		const uintptr_t base =
+			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		if (base != kImageBase)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: FONTGUID REFUSED (module base relocated) - "
+				"nothing armed.");
+			return;
+		}
+		// Gate 1: the iface vtable slot +0x4C must still point at the impl.
+		const uint32_t slot = *reinterpret_cast<const uint32_t*>(
+			kWinTextIfaceVt + 0x4C);
+		if (slot != kSetFontStyleByGuid)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: FONTGUID REFUSED (vt 0xAE0118+0x4C = 0x%08X, "
+				"expected 0x009C16FD) - nothing armed.", slot);
+			return;
+		}
+		// Gate 2: the measured prologue (mov eax,[esp+4]; push esi;
+		// mov esi,ecx - dumped from the exe 2026-08-24).
+		static const uint8_t kProlog[7] =
+			{ 0x8B, 0x44, 0x24, 0x04, 0x56, 0x8B, 0xF1 };
+		if (memcmp(reinterpret_cast<const void*>(kSetFontStyleByGuid),
+				kProlog, sizeof(kProlog)) != 0)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: FONTGUID REFUSED (prologue mismatch at "
+				"0x009C16FD) - nothing armed.");
+			return;
+		}
+		const MH_STATUS init = MH_Initialize();
+		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: FONTGUID REFUSED (MinHook init %d) - nothing "
+				"armed.", static_cast<int>(init));
+			return;
+		}
+		if (MH_CreateHook(reinterpret_cast<void*>(kSetFontStyleByGuid),
+				reinterpret_cast<void*>(&FontGuidDetour),
+				reinterpret_cast<void**>(&gFontGuidOrig)) != MH_OK
+			|| MH_EnableHook(
+				reinterpret_cast<void*>(kSetFontStyleByGuid)) != MH_OK)
+		{
+			Logger::Get().WriteLine(LogLevel::Error,
+				"CodePatches: FONTGUID failed to hook 0x009C16FD.");
+			return;
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: FONTGUID armed on SetFontStyleByGUID 0x009C16FD "
+			"(vt slot + prologue byte-gated); cap %d lines. Boot UI "
+			"construction MUST produce hits - the armed line with ZERO "
+			"FONTGUID lines means the hook is suspect, not the theory.",
+			gFgMax);
+	}
+
 	void InstallMissionBubbleScale(float factor, int mode, float overrideScale)
 	{
 		if (mode <= 0) { return; }
@@ -7758,13 +8058,21 @@ namespace CodePatches
 			if (s) { wcscpy_s(s + 1, 32, L"SC4UIScale.ini"); }
 			gViewSuppress = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"BalloonViewSuppress", 0, ini));
-			gViewListRepeat = static_cast<int>(GetPrivateProfileIntW(
+			const int vlrRaw = static_cast<int>(GetPrivateProfileIntW(
 				L"Probe", L"ViewListRepeat", 0, ini));
+			gViewListRepeat = vlrRaw;
 			if (gViewListRepeat > 0 && gViewListRepeat < 30)
 			{
 				// Below ~1 s the log floods and the diff becomes unreadable.
 				gViewListRepeat = 30;
 			}
+			// House law (Build 1): every lever ALWAYS logs its resolved
+			// value - this read used to be silent, the exact shape that
+			// produced the CsiCountPlate wrong-section null.
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: ViewListRepeat resolved to %d (raw %d; read "
+				"from [Probe]; 0 = one-shot at frame 400, 1-29 clamps to 30 "
+				"to keep the diff readable).", gViewListRepeat, vlrRaw);
 			wchar_t kb[32] = {};
 			GetPrivateProfileStringW(L"UiSpike", L"BalloonViewKill", L"0",
 				kb, 32, ini);
@@ -7773,7 +8081,17 @@ namespace CodePatches
 		const uintptr_t base =
 			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 		void* svc = *reinterpret_cast<void**>(base - kImageBase + 0xB43DD0);
-		if (!svc) { return; }
+		if (!svc)
+		{
+			// Build 1: this early-out used to be SILENT - a capture with the
+			// key set and no VIEWLIST output had nothing saying why.
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: VIEWOBJ/VIEWLIST render singleton [0xB43DD0] "
+				"is NULL - NOT installed this city (retries next "
+				"PostCityInit). A capture with this line and no VIEWLIST "
+				"output is an arming failure, not evidence.");
+			return;
+		}
 		void** vt = *reinterpret_cast<void***>(svc);
 		void* target = vt[0x80 / 4];
 		const uintptr_t tva =

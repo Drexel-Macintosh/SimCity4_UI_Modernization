@@ -1,5 +1,28 @@
 # Changelog
 
+## 4.1.1 (2026-08-24, local instrumented build — not a public release)
+
+- No gameplay or scaling changes. Research instrumentation that closed three
+  of the register's four open items in one evening (all log-only, ini-gated,
+  default off, fully inert without their keys):
+  - `[Probe] GpuCap` — the DX7 draw-call census (`gdcap.cpp` wired into the
+    DLL): GCAP v2 records with two-level caller attribution (immediate
+    DrawArrays caller + the SubmitPrimitive 0x7D2990 caller, which names the
+    drawing SYSTEM), city-view latch with early-exit safety, dual frame
+    markers (Clear/Flush) self-selecting in-city, file written at shutdown
+    only. Closed register #4; ground-truth-validated against the v4.1.0 pin
+    draw sites.
+  - `[Probe] FontGuid` — logs every `SetFontStyleByGUID` assignment
+    (obj/guid/prev/caller). Closed register #24: the purple-GZWinText state
+    does not reproduce on current builds; fallback GUID stored 0 times.
+  - `[Probe] ForceRuntimeScaleId` — dev repro lever excluding one window id
+    from kNeverScaleIds (used with a dat quarantine to recreate the
+    runtime-only state; documented double-scale hazard in its log line).
+  - `[Probe] ViewListRepeat` hygiene: always logs its resolved value; the
+    null-render-singleton early-out now says so instead of silent-nulling.
+    Its colour dump closed register #22/#23 (the data-view tint is NOT a
+    view object).
+
 ## 4.1.0 (2026-08-24)
 
 - **Fixed: the deployment-count digit on emergency/dispatch pins** (fire-station

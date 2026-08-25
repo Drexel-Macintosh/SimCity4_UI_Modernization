@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.1.0"
+#define UISCALE_VERSION_STR "4.1.1"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -472,6 +472,15 @@ public:
 			// WITHOUT the key remains fully inert per the doctrine above; a
 			// baseline WITH the key is a measurement session by definition.
 			CodePatches::ArmDispatchQuadProbe();
+
+			// Build 1 (2026-08-24): the register-row-#4 draw-call census and
+			// the register-row-#24 font-GUID probe live on the same tail for
+			// the same reason - both must be armable at EVERY factor, and
+			// this is the one path that provably runs at all of them. Both
+			// are log-only and key-gated ([Probe] GpuCap / FontGuid, default
+			// 0), so a session without the keys stays fully inert.
+			CodePatches::ArmGpuCapProbe();
+			CodePatches::ArmFontGuidProbe();
 
 			// #182: the sync runs for MANUAL tiers too. This gate used to be
 			// AutoScale-only, and that is the SECOND instance of the exact
@@ -960,6 +969,8 @@ public:
 		//     outcome, because it exonerates the whole cleanup path in one
 		//     observation.
 		//   "SHUTDOWN 1/3" is last  -> KillTimer/RemoveWindowSubclass hung
+		//   "SHUTDOWN 1.5/3" is last -> the GPUCAP file write hung (13.6 MB
+		//     buffer to the Plugins folder; only possible in a GpuCap session)
 		//   "SHUTDOWN 2/3" is last  -> remap.Uninstall() (MinHook) hung
 		//   "SHUTDOWN 3/3" is last  -> ResetTracking hung
 		//   "SHUTDOWN done"         -> our cleanup completed; anything after
@@ -981,6 +992,12 @@ public:
 			RemoveWindowSubclass(gameWindow, SubclassProc, kSubclassId);
 			subclassed = false;
 		}
+		// GPUCAP write (Build 1): the census buffer is flushed HERE, outside
+		// every hook, per the zero-I/O-in-hook law. The stage line prints on
+		// EVERY shutdown (stage markers must, or a hang stops adjudicating);
+		// the closeout itself logs nothing unless the probe installed.
+		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 1.5/3 gpucap write");
+		CodePatches::WriteGpuCapCloseout();
 		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 2/3 remap.Uninstall");
 		remap.Uninstall();
 		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 3/3 ResetTracking");
@@ -1079,12 +1096,21 @@ public:
 			{
 				CodePatches::InstallPickProbe();
 			}
+			// GPUCAP city latch (Build 1): recording must cover the LIVE
+			// city view, not the boot/region frames the early-armed hooks
+			// would otherwise spend the budget on. No-ops unless the probe
+			// installed; only the first city entry latches.
+			CodePatches::BeginGpuCapAtCity();
 			break;
 		case kSC4MessagePreCityShutdown:
 			// Disarm stops the sweeps but the scale records SURVIVE the city
 			// transition: persistent windows must stay marked as scaled or
 			// the next ScaleAll would compound 2x -> 4x.
 			uiSpike.Disarm();
+			// GPUCAP city exit (Build 1, review finding 3): without this the
+			// skip countdown would keep burning Clear boundaries on the
+			// region screen and could arm the "city view" capture there.
+			CodePatches::NotifyGpuCapCityExit();
 			break;
 		}
 

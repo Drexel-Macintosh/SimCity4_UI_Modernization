@@ -230,10 +230,19 @@ Consequences, and this is the whole decision tree for a new panel:
   **LESSON: an auto-discovery rule can enrol windows whose PARENTAGE its author
   never checked.** Verify parentage per script before adopting a family.
 
-The purple-text asymmetry is itself an engine fact worth keeping: **runtime
+~~The purple-text asymmetry is itself an engine fact worth keeping: **runtime
 geometry scaling does not carry the text/art resolution path that a doubled
 `.UI` does** — `GZWinText` nodes mis-resolve, `GZWinTextEdit` and button
-captions do not (`UiSpike.cpp` kNeverScaleIds).
+captions do not (`UiSpike.cpp` kNeverScaleIds).~~
+**⛔ REFUTED FOR CURRENT BUILDS 2026-08-24 (register #24 closure):** the exact
+runtime-only state was recreated on v4.1.1 (DialogStatic dat quarantined +
+`ForceRuntimeScaleId` lever, sweep scaled Establish City 434x234 → 868x468
+live) and **every text rendered its normal colour**; the FONTGUID probe
+logged 500 `SetFontStyleByGUID` assignments with the fallback `0x68963C4C`
+stored ZERO times. The 2026-07 purple was a real observation and something
+shipped since has cured it. The **double-scale hazard is unchanged** (dat +
+sweep both live still gives ~4x) — kNeverScaleIds keeps its entries for that
+reason alone. Full account: `_tests/PROBES-NEEDED.md` §9.11.
 
 ### 1.3 Child enumeration order is REVERSE of add order
 

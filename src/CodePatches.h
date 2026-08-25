@@ -334,6 +334,24 @@ namespace CodePatches
 	// always logs the resolved value.
 	void ArmDispatchQuadProbe();
 
+	// GPUCAP (register row #4): the DX7 draw-call census (gdcap.cpp wired
+	// into the DLL). Armed from the tier-decision tail (any factor); gated
+	// by [Probe] GpuCap (N = Clear boundaries); always logs the resolved
+	// value. Recording waits for BeginGpuCapAtCity (PostCityInit) so the
+	// captured frames are the live city view; the GCAP file is written by
+	// WriteGpuCapCloseout at PreAppShutdown, never inside a hook.
+	void ArmGpuCapProbe();
+	void BeginGpuCapAtCity();
+	void NotifyGpuCapCityExit();
+	void WriteGpuCapCloseout();
+
+	// FONTGUID (register row #24): logs every SetFontStyleByGUID assignment
+	// (this/obj/guid/prev/caller) to adjudicate the purple-GZWinText
+	// prediction (purple = fallback 0x68963C4C). Armed from the tier-
+	// decision tail (any factor); gated by [Probe] FontGuid (N = max
+	// lines); always logs the resolved value.
+	void ArmFontGuidProbe();
+
 	// True when [Probe] ViewListRepeat is set, so the caller can install the
 	// view-object probe even if MissionBubbleFx has not been raised. Reads the
 	// ini directly: it is called from the message handler BEFORE

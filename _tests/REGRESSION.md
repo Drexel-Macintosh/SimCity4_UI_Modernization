@@ -16625,3 +16625,42 @@ deliberately untouched (font-measured, already rides the tier).
 - **The white-ring dispatch indicators (cSC4DispatchVehicleView) are HEALTHY
   at both tiers** — pin and digit quads dead-centred on each other to 0.1px,
   measured at 1x and 2x. Do not touch them again for this symptom.
+
+## 2026-08-24 (evening) — the four-open-items close-out: instrument laws from the census hunt
+
+Register #4/#22/#23/#24 closed, #16 captured (see UNKNOWNS-AND-NEXT-TARGETS
+rows + PROBES-NEEDED §9.10-9.12). The census took four builds to fire; every
+miss was an INSTRUMENT defect with a general law:
+
+1. **A FRAME MARKER CHOSEN AT FIRST-EVER FIRE LATCHES THE BOOT REGIME.**
+   Clear fires freely during boot/menus and goes near-silent inside the city
+   view, while Flush runs every frame (measured: Clear x636 / Flush x5322 in
+   one session). Picking "whichever marker fires first" anywhere in the
+   session therefore selected the one that STOPS firing exactly when the
+   capture begins. Choose the marker AFTER the latch, in the regime you are
+   measuring — and count BOTH unconditionally so each is the other's
+   positive control.
+
+2. **AN EXIT HANDLER MUST NOT ZERO THE COUNTER ITS OWN EXIT LOG READS.**
+   CityExit reset the boundary counter before the wrapper logged it, so
+   every exit printed "0 boundaries" — a reporting artifact shaped exactly
+   like a dead hook, which sent the diagnosis to the wrong layer for one
+   full launch. The state RESETTER is the next Begin(), never the exit path
+   that reporting still needs.
+
+3. **RETURN-ADDRESS ATTRIBUTION NAMES THE LAYER YOU HOOKED, NOT THE SYSTEM.**
+   The first census's callers all landed inside the driver's own submit
+   wrappers (0x7D29xx/0x7D4Bxx) — plumbing, not drawers. When a wrapper
+   exists (SubmitPrimitive 0x7D2990: 47 bytes, one call = one DrawArrays),
+   hook it too and record ITS return address; ship both levels in the record
+   so the file adjudicates rather than the prompt.
+
+4. **SC4 REDRAWS ON CHANGE, NOT ON A CLOCK.** A settled, paused city issues
+   almost no frame boundaries; any capture gated on "N frames" needs the
+   camera MOVING, and its null-report must print the measured boundary count
+   so "static view" and "dead hook" are distinguishable in one line.
+
+Also banked: the #24 closure pattern — a two-layer cure (static dat + never-
+scale list) can be lifted reversibly for a repro via a dat RENAME SyncDat
+cannot see (`.probe-quarantine`) plus a one-id ini exclusion lever, applied
+AFTER deploy (the deploy re-copies the dat), reverted the same session.
