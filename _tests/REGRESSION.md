@@ -16742,3 +16742,25 @@ one it was applied to (the instrument-scoped-to-the-wrong-channel shape,
 again). Cost: one launch; the boot-verification gate caught it before
 release. Final layout: DLL/ini/log at root, packages in 010-SC4UIScale\,
 census re-verified (1,496 TGIs, zero winner changes).
+
+## 2026-08-25 (overnight) — Carbon Skin offline analysis: two load-order laws
+
+Scoty Carbon Skin 1.5 census (tools\research\carbon\CARBON-COMPAT.md; 494 of
+its 673 TGIs collide with our packages). No code shipped; two laws found
+offline, recorded before they can bite:
+
+**THE zzz-INTERNAL SORT TRAP.** zzz-SC4UIScale wins as a FOLDER, but inside
+it the dats sort alphabetically and last wins — a new package named between
+existing ones silently loses their shared TGIs (CarbonUI would lose to
+CsiIcons/SaveWarningUI/ThirdPartyUI). Law: any zzz package that must beat a
+SIBLING takes a Z-late base name (z_SC4UIScale_ZCarbon*), and the name is
+part of the load-order contract, like 010-/zzz- themselves.
+
+**A RAW EXTRACTOR ON QFS PAYLOADS LOOKS LIKE GARBAGE DATA.** DbpfPack
+--extract is raw-by-design and its header banner reported "compression
+directory absent (all uncompressed)" on a dat whose DIR entry and QFS
+streams are real (scoty_Carbon_Files.dat: 147/147 entries compressed).
+DbpfExtract.exe is the decompressing extractor; the banner is not evidence
+about payload encoding. Third-party dats also self-override (intra-folder
+alphabetical last-wins), so per-TGI source extraction must winner-resolve
+INSIDE the mod before any payload is used.
