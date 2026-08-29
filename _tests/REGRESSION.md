@@ -17183,3 +17183,57 @@ postdates this section and supersedes it.
 Left standing rather than edited away: a ledger that quietly rewrites its own
 wrong calls teaches nothing, and "the probe said yes" is the part worth
 remembering.
+
+## ⛔ THE HEADLINE JUSTIFICATION FOR v4.5.0 WAS WRONG (2026-08-29, measured)
+
+**Claimed all day, in commits, laws and release notes:** "sc4pac uninstalls BY
+MANIFEST NAME, so our runtime rename orphans 53 of 68 installed files."
+
+**MEASURED against sc4pac 0.10.0 by actually installing and uninstalling:
+FALSE.** sc4pac removes a package by deleting its whole
+`<group>.<name>.<version>.sc4pac` FOLDER RECURSIVELY - not by walking a
+recorded file list. Control: an installed file was renamed to
+`.dat.x1-disabled` and a stray `z_SC4UIScale_ARMED_BY_DLL.dat` was planted
+inside the package folder; `sc4pac remove` + `update` removed BOTH, leaving
+zero files. Positive control: the same enumeration printed 106 files minutes
+earlier, so it was not blind.
+
+Our packages live inside what becomes the package folder, so **the rename
+would have survived an sc4pac uninstall.** The number was real - 53 of 68
+files did sit under renamed names - but the consequence attached to it was
+not.
+
+### What was actually blocking sc4pac, and still was
+
+1. **80 hard-coded folder names.** sc4pac names package folders itself, with
+   the version in them. This one was genuinely fatal: the mod would not have
+   worked AT ALL, never mind uninstalled badly. MEASURED today: the two
+   packages even flatten DIFFERENTLY - the 050 package keeps its
+   `010-SC4UIScale\` subfolder, the 900 package has `zzz-SC4UIScale\` stripped
+   entirely, because sc4pac removes the longest common directory prefix and
+   every file in that package shared it. Anything looking for a folder NAMED
+   `zzz-SC4UIScale` finds nothing.
+2. **Subfolder ordering.** Real, and solved by the `a-drexel` group id.
+   PROVEN with CAM actually installed: ours sorts before all three `cam.*`
+   folders; the negative control `drexel.*` sorts AFTER and inverts the gate.
+3. **The ini in the package folder.** An UPDATE deletes the versioned folder
+   wholesale, so the tier choice would be lost on every version bump. Measured
+   and real - and the root ini survived a v4.5.0 -> v4.5.1 update untouched.
+
+### What the content swap is still worth
+
+Not nothing, but less than advertised: root-level cleanliness, an update path
+that self-heals from a fingerprint, and inert tier sources instead of loaded
+files that get renamed. It was not the difference between working and not.
+
+⭐ **LAW: MEASURE THE CONSEQUENCE, NOT JUST THE CONDITION.** "53 of 68 files
+sit under a renamed name" was true and was checked. "Therefore they are
+orphaned" was the part that mattered and was never checked until the end - it
+came from a plausible model of how the tool works, repeated until it sounded
+like a finding. A number in front of an unmeasured consequence makes the whole
+claim feel measured.
+
+⭐ **AND: the correction cost nothing to obtain.** The install/uninstall test
+that produced it took one agent and no launch, and could have been run on the
+FIRST day. When a whole workstream rests on one claim about an external tool,
+exercise the tool before building on it.
