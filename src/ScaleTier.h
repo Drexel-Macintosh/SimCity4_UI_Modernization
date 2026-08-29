@@ -43,6 +43,13 @@ namespace ScaleTier
 	int MigrateRootLooseFiles();
 	const char* MigratedRootFileNames();
 
+	// #201 PROBE (log-only, [Probe] SegmentCensus, default 0). Walks the
+	// registered DBPF segments and prints a path each. Exists to answer ONE
+	// question: whether a loaded dat can be dropped at runtime, which would
+	// let this mod stop renaming its own files to arm a tier. It never
+	// unregisters anything.
+	void SegmentCensus();
+
 
 	// The fit predicate ALONE, without the "is it installed" and
 	// "largest first" parts of Decide. Published so the in-game scale

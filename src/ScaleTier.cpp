@@ -7,6 +7,10 @@
 #include "cIGZPersistResource.h"
 #include "cIGZPersistResourceManager.h"
 #include "cIGZPersistResourceFactory.h"
+// #201 SEGMENT CENSUS probe: the registered-DBPF walk that would let a tier
+// be excluded at LOAD time instead of renamed on disk.
+#include "cIGZPersistDBSegment.h"
+#include "cRZBaseString.h"
 #include "cIGZBuffer.h"
 #include "cIGZGraphicSystem.h"
 #include "GZServPtrs.h"
@@ -2284,6 +2288,87 @@ namespace ScaleTier
 	const char* MigratedRootFileNames()
 	{
 		return s_migratedNames;
+	}
+
+	// ============ #201 SEGMENT CENSUS - A PROBE, NOT A FIX ================
+	// THE QUESTION IT EXISTS TO ANSWER: can a loaded .dat be dropped from the
+	// resource manager at runtime? If yes, this mod can stop RENAMING its own
+	// files to arm a tier - every tier stays on disk under the name a package
+	// manifest would carry, and sc4pac (which uninstalls BY NAME) stops
+	// orphaning 78% of what it installed.
+	//
+	// The SDK says it is possible: GetSegmentCount / GetSegmentByIndex /
+	// GetPath / UnregisterDBSegment are all declared. An API existing is a
+	// HYPOTHESIS. This walk turns it into a measurement - and it ONLY
+	// measures: it never unregisters anything.
+	//
+	// POSITIVE CONTROL IS THE POINT. A census that finds none of our dats is
+	// evidence of nothing until it proves it could have seen them, so this
+	// logs the TOTAL segment count and the OTHER paths it found even when our
+	// own count is zero. A bare "0 of ours" line would be exactly the false
+	// zero this project has already shipped twice.
+	//
+	// Default OFF ([Probe] SegmentCensus = 0). Log-only, one pass, at
+	// PostAppInit - where #149 already established the dats are indexed.
+	void SegmentCensus()
+	{
+		Logger& logger = Logger::Get();
+		cIGZPersistResourceManagerPtr rm;
+		if (!rm)
+		{
+			logger.WriteLine(LogLevel::Info,
+				"SEGCENSUS ABORTED - no resource manager. A zero count here "
+				"would be an INSTRUMENT FAILURE, not a clean bill of health.");
+			return;
+		}
+
+		const uint32_t total = rm->GetSegmentCount();
+		logger.WriteLine(LogLevel::Info,
+			"SEGCENSUS: %u registered DB segment(s). Walking them for a path "
+			"each - this is the list a load-time tier exclusion would filter.",
+			total);
+		if (total == 0)
+		{
+			logger.WriteLine(LogLevel::Info,
+				"SEGCENSUS: ZERO segments. Either this runs before the plugin "
+				"scan or GetSegmentCount is not the accessor - EITHER WAY the "
+				"question is unanswered, not answered 'no'.");
+			return;
+		}
+
+		uint32_t ours = 0, named = 0, unnamed = 0;
+		for (uint32_t i = 0; i < total; i++)
+		{
+			cIGZPersistDBSegment* seg = rm->GetSegmentByIndex(i);
+			if (!seg) { unnamed++; continue; }
+			cRZBaseString path;
+			seg->GetPath(path);
+			const char* p = path.ToChar();
+			if (!p || !*p) { unnamed++; continue; }
+			named++;
+			const bool mine = (strstr(p, "SC4UIScale") != nullptr);
+			if (mine) { ours++; }
+			// Every path, ours or not: the non-ours ones ARE the positive
+			// control. Trimmed to the last two path components so the line
+			// stays readable without hiding which folder it came from.
+			const char* tail = p;
+			int seps = 0;
+			for (const char* q = p + strlen(p); q > p; q--)
+			{
+				if (*(q - 1) == '\\' || *(q - 1) == '/')
+				{
+					if (++seps == 2) { tail = q; break; }
+				}
+			}
+			logger.WriteLine(LogLevel::Info,
+				"SEGCENSUS  [%3u] %s%s", i, tail, mine ? "   <- OURS" : "");
+		}
+		logger.WriteLine(LogLevel::Info,
+			"SEGCENSUS TOTAL: %u segment(s), %u with a readable path, %u "
+			"without, %u ours. If 'ours' is 0 while 'with a readable path' is "
+			"large, the walk works and our dats are simply not segments - a "
+			"real answer. If BOTH are 0 the instrument failed and nothing was "
+			"measured.", total, named, unnamed, ours);
 	}
 
 

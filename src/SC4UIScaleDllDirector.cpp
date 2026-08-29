@@ -697,6 +697,21 @@ public:
 	{
 		Logger& logger = Logger::Get();
 
+		// #201 SEGMENT CENSUS - log-only probe, default OFF. Asks whether
+		// a loaded dat can be dropped from the resource manager at
+		// runtime; if it can, this mod can stop RENAMING its own files to
+		// arm a tier, which is the one thing that makes it impossible for
+		// sc4pac to uninstall cleanly. Here because #149 below already
+		// establishes that the dats are indexed by this point.
+		{
+			wchar_t probeIni[MAX_PATH] = {};
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", probeIni, MAX_PATH);
+			if (GetPrivateProfileIntW(L"Probe", L"SegmentCensus", 0, probeIni) > 0)
+			{
+				ScaleTier::SegmentCensus();
+			}
+		}
+
 		// #149. FIRST thing in PostAppInit, deliberately: the dats are indexed
 		// by now but no menu strip has been built, so registering enlarged art
 		// for the icons no package of ours covers means every consumer that
