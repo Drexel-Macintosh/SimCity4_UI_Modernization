@@ -19,38 +19,145 @@ them, so measure the file before quoting one. (`DbpfPack` output is
 non-deterministic: to prove a package unchanged, compare per-entry payloads,
 never the file hash — a DBPF header carries a build timestamp.)
 
+**Which tier is armed, and why a package is off, are NOT in this file and NOT
+in a directory listing** — since v4.5.0 they live only in
+`z_SC4UIScale_STATE.txt`. `_tests\Verify-Arming.ps1` is the after-a-boot check
+for the arming layout itself.
+
 ---
 
 ## The tier system
 
-`ScaleTier::Decide` picks the factor from the **render** resolution and
-enables the matching package set: the active tier's dats live under their
-`-<tag>` names, the others are renamed `.x1-disabled` at boot.
+`ScaleTier::Decide` picks the factor from the **render** resolution and arms
+the matching package set.
 
 - **Render resolution is not the requested resolution.** DirectX +
   Fullscreen/Borderless renders at the monitor's native mode (the wrapper
   ignores the request); DirectX + Windowed and Software use the requested
   size.
-- **Tier 1 = true stock**: every scaling subsystem off, all dats gated,
-  FontStyle moved aside — the DLL is indistinguishable from a no-DLL install
-  (isolation-tested).
+- **Tier 1 = true stock**: every scaling subsystem off, every package holding
+  its inert `.off` content, FontStyle moved aside — the DLL is
+  indistinguishable from a no-DLL install (isolation-tested).
 - **All tiers carry identical entry counts and TGIs**; only pixel dimensions
   and layout coordinates differ.
 
-### Filename tag convention (the DLL relies on this)
+---
 
-The factor tag goes in the base name, immediately before the extension:
+## The arming layout (v4.5.0) — a content swap at a stable filename
 
-| Factor | Tag | Example |
+Through v4.4.0 arming was a **rename**: the winning tier kept
+`z_SC4UIScale_<Pkg>-<tag>.dat` and the losing tiers were pushed aside as
+`…​.dat.x1-disabled`. That is the single reason a package manager cannot
+uninstall this mod — sc4pac removes files **by manifest name**, and 53 of 68
+installed files sat under a renamed name. From v4.5.0 nothing of ours is ever
+renamed. Three file classes, and only the first is ever loaded:
+
+| Class | Name | What it is |
 |---|---|---|
-| 1.5× | `15x` | `z_SC4UIScale_SelectiveArt-15x.dat`, `FontStyle-15x.ini` |
-| 2× | *(untagged)* | `z_SC4UIScale_SelectiveArt.dat` — the default generator output |
-| 3× | `3x` | `z_SC4UIScale_SelectiveArt-3x.dat`, `FontStyle-3x.ini` |
+| **LIVE** | `z_SC4UIScale_<Pkg>.dat` | The only thing SC4 loads. Exactly one per package. Its **content** changes; the **name never does** — not at any tier, not under any gate verdict, ever. |
+| **PAYLOAD** | `z_SC4UIScale_<Pkg>.<tag>.uipay` | Inert. Never renamed, never loaded, never written by the DLL. `<tag>` is `15x` / `2x` / `3x` (tiers), `1x` / `on` (inverse-gated), or `off`. |
+| **STATE** | `z_SC4UIScale_STATE.txt` | One per folder of ours, rewritten every boot. The only place the armed tier and the gate verdict now exist — see below. |
 
-`ScaleTier::SyncDat` builds every name as `base + tag + ".dat"`, so the
-convention governs all tier-paired bases: `SelectiveArt`, `DialogStatic`,
-`ItemIcons`, `ItemIconsSub`, `ThirdPartyUI`, `WarriorUI`, `SaveWarningUI`,
-`CamUI`, `NamIcons`, `CsiIcons`, `UncoveredIcons`.
+`ScaleTier::ArmOne` copies the chosen payload over the live name (staged to
+`.dat.tmp`, then `MoveFileEx`, so it is atomic and **fails inert** rather than
+mixed). `ScaleTier::CommitArming` runs the whole set in one pass at DLL load,
+during the plugin scan — the same moment the rename used to run.
+`ScaleTier::MigrateRenamesToPayloads` upgrades a pre-4.5.0 install in place, so
+an existing player needs no download.
+
+**Why `.uipay` is safe — measured, not assumed.** Probe #202 copied a real DBPF
+to `.uipay`, booted, and it did **not** appear in the registered-segment census
+while **13 of our live `.dat` files did, in the same census**. That second half
+is the positive control: the census demonstrably could have seen it. The plugin
+scan is extension-gated. (`.dat.x1-disabled` being skipped only ever proved
+that *one* string is skipped; this proves it for the string the layout now
+rests on.)
+
+**The `.off` package.** A package that is gated off — wrong tier, or a
+dependency gate refused it — is not an absent file. It is the same live `.dat`
+holding the `.off` payload: a **one-entry DBPF that contests nothing**, whose
+single TGI is verified absent from the installed-archive census before it is
+built (`tools\payload\build_payloads.py`). It declares no contested TGI, so the
+runner-up is promoted by the engine's own scan-order logic at index-build time —
+which is what the rename bought by keeping the file off disk, and what closing
+a segment afterwards could never produce.
+
+### `z_SC4UIScale_STATE.txt` — the diagnosis a constant filename destroys
+
+⛔ **A directory listing no longer carries the armed tier or the gate verdict.**
+Every live filename is a constant and `off` looks exactly like `2x`. Written by
+`ScaleTier::WriteArmState` into **each** of our folders on **every** boot; the
+game never reads it and nothing gates on it. Two `#` header lines, then TSV:
+
+```
+# SC4UIScale arming state. Rewritten every boot; the game never reads it.
+# base	tag	reason	paySize	payTime	liveSize	liveTime
+z_SC4UIScale_SelectiveArt	3x	armed	73400320	133...	73400320	133...
+z_SC4UIScale_NamIcons	off	dep ABSENT (NetworkAddonMod_Controller.dat)	4096	133...	4096	133...
+```
+
+| Column | Meaning |
+|---|---|
+| `base` | The package's **leaf** name — `SyncDat` strips the folder before recording it |
+| `tag` | The armed payload tag, or `off` |
+| `reason` | The gate verdict in the DLL's own words (`armed`, `dep ABSENT (x.dat)`, `dep CHANGED`, `PARTIAL`, …) |
+| `paySize` / `payTime` | Stamp of the payload that was copied |
+| `liveSize` / `liveTime` | Stamp of the live file **after** the copy |
+
+The live stamp is what makes the steady state free (four file stats, zero I/O
+when it matches) **and** self-healing: an installer or an sc4pac package update
+that restores a shipped file changes its mtime, the stamp misses, and the next
+boot re-arms. It is also a usable positive control from outside the DLL — a row
+whose `liveSize`/`liveTime` disagree with the file it names is **stale**, and
+any tier read from it is a statement about a different boot.
+
+**Every script that needs the armed tier or a gate verdict reads this file**
+(`_tests\Verify-Arming.ps1`, `Test-ThirdPartyGates.ps1`,
+`Toggle-SaveWarningUI.ps1`, `Toggle-BuildingStylesUI.ps1`,
+`Set-StockCompare.ps1`). A check that infers "live" from a `.dat` existing is
+measuring nothing — it is true for every package at every tier.
+
+### Payload sets per package shape
+
+`tools\payload\build_payloads.py` derives the shape from the source names **and
+from the DLL's own `SyncDat` call sites**, never from a hand-written list:
+
+| Shape | Payloads emitted | Packages |
+|---|---|---|
+| **Full tier set** | `15x`, `2x`, `3x`, `off` | `SelectiveArt`, `DialogStatic`, `ItemIcons`, `ItemIconsSub`, `ThirdPartyUI`, `WarriorUI`, `SaveWarningUI`, `CamUI`, `NamIcons`, `CsiIcons`, `UncoveredIcons`, the `ZCarbon*` family |
+| **Inverse-gated** | `1x`/`on`, `off` | `SelectorUI` (armed by the **absence** of a tier), `WebText` (gated on the Web Button mod) |
+| **Plain** | *none* — never armed | `MenuFix`, `CamGraphLabels` |
+
+⚠ The inverse row is derived from `ScaleTier.cpp`, not from the filename,
+because the filesystem cannot tell "never armed" from "armed by on/off": both
+look like a bare untagged `.dat`. Getting it wrong is silent and total —
+`WebText` was classified tier-independent, nothing built it a payload, and
+`ArmOne` logged *"NO PAYLOAD AT ALL … leaving it exactly as found"* while its
+inverse gate never fired (found 2026-08-29, alongside the same failure in
+`SelectorUI` — two instances of one class, which is why it is derived now).
+
+### Pre-4.5.0 filename tag convention (still in the sources and the builders)
+
+The tier tag goes in the base name, immediately before the extension. The
+**generators still emit these names**, and `Convert-ToPayloadLayout.ps1` turns
+them into payloads — so the convention is not dead, it just no longer reaches
+an installed tree:
+
+| Factor | Tag | Generator output | Becomes |
+|---|---|---|---|
+| 1.5× | `-15x` | `z_SC4UIScale_SelectiveArt-15x.dat`, `FontStyle-15x.ini` | `z_SC4UIScale_SelectiveArt.15x.uipay` |
+| 2× | `-2x` | `z_SC4UIScale_SelectiveArt-2x.dat` | `z_SC4UIScale_SelectiveArt.2x.uipay` |
+| 3× | `-3x` | `z_SC4UIScale_SelectiveArt-3x.dat`, `FontStyle-3x.ini` | `z_SC4UIScale_SelectiveArt.3x.uipay` |
+
+It governs all tier-paired bases: `SelectiveArt`, `DialogStatic`, `ItemIcons`,
+`ItemIconsSub`, `ThirdPartyUI`, `WarriorUI`, `SaveWarningUI`, `CamUI`,
+`NamIcons`, `CsiIcons`, `UncoveredIcons`.
+
+⚠ **`FontStyle.ini` is still managed by copy, not by payload.** It is not a
+DBPF and the game probes it by path, so `ScaleTier::SyncFont` still copies
+`FontStyle-<tag>.ini` over the probed `FontStyle.ini` and still moves it aside
+at the stock tier. Fonts are the one part of the static layer the `.uipay`
+story does not cover.
 
 ### Fonts
 
@@ -77,6 +184,12 @@ crash.
 ---
 
 ## Package contents
+
+> **Reading the names below.** They are written `z_SC4UIScale_<Pkg>-<tier>.dat`
+> because that is what the **builders** produce and what the entry counts are
+> asserted against. **On an installed v4.5.0 tree that file does not exist**:
+> it is `z_SC4UIScale_<Pkg>.<tier>.uipay` beside a single live
+> `z_SC4UIScale_<Pkg>.dat`. See [the arming layout](#the-arming-layout-v450--a-content-swap-at-a-stable-filename).
 
 ### Tier-paired packages (`010-SC4UIScale\` - v4.2.0 subfolder move; pre-4.2.0 these sat at the `Plugins\` root)
 
@@ -108,8 +221,17 @@ crash.
 | `zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels.dat` | 1 | The one LTEXT (`0xFF5D2E9F`) CAM's Power/Water charts ask for and no installed archive provides. Inert without CAM by construction — nothing except CAM binds the instance |
 | `zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat` | 1 | The scale selector's own dialog at the stock tier — the Graphic Options script and nothing else. One entry by design: the stock tier must never ship scaled art |
 
-A string has no geometry, so `CamGraphLabels` and `WebText` carry no tier
-triple and no `.x1-disabled` variant.
+A string has no geometry, so none of these carry a tier triple. They divide
+two ways, and the difference is invisible on disk — both are a bare untagged
+`.dat`:
+
+- `MenuFix` and `CamGraphLabels` are **never armed**. No payload is built for
+  them; their `.dat` is already a stable name sc4pac can remove.
+- `WebText` and `SelectorUI` are **inverse-gated** — armed with `on`/`off`
+  rather than a tier — so they *do* get payloads and *do* appear in
+  `z_SC4UIScale_STATE.txt`. Which group a package is in is derived from
+  `ScaleTier.cpp`'s `SyncDat` call sites, never from its filename; see the
+  warning under [payload sets per package shape](#payload-sets-per-package-shape).
 
 ---
 
@@ -130,6 +252,16 @@ Without these gates, uninstalling a mod would not uninstall the scaled copy of
 its data: that copy sits in `zzz-` and outranks everything, so the mod's UI
 would stay on screen. "NOT FOUND (live or gated)" from the integrity test
 while the mod is absent is correct behaviour, not a regression.
+
+⛔ **Since v4.5.0 a closed gate is not an absent file.** The gated package is
+its normal live `z_SC4UIScale_<Pkg>.dat`, holding the `.off` payload's bytes:
+byte-different and TGI-empty, but **name-identical** to an armed one. So
+`Test-Path` cannot answer "did the gate fire?" for any package, and the verdict
+is read from the `reason` column of `z_SC4UIScale_STATE.txt` — where the DLL
+writes it in its own words (`dep ABSENT (CAM_Intro.dat)`, `dep CHANGED`, …).
+`_tests\Test-ThirdPartyGates.ps1` does exactly that, and **refuses** rather
+than reporting a verdict when the state file is missing or its stamps do not
+match the files they name.
 
 **Any new package built from another mod's data needs its dependency row in
 the same change.** Reproduce the load order with
@@ -153,19 +285,56 @@ the stock script you are reading, a plugin has replaced it.
 
 ## Deployment map
 
-| File | Source in this project | Destination |
+⛔ **The `-<tier>` names below are what the BUILDERS emit and what the deploy
+copies. They are not what an installed tree contains.** Both
+`_tests\Deploy-OnGameClose.ps1` and `_packaging\Build-Dist.ps1` still write the
+tier-tagged layout they always did, and both then call
+`_tests\Convert-ToPayloadLayout.ps1`, which turns whatever it finds into
+payloads plus one seeded live file per package. (One conversion, two callers,
+nothing to drift: Build-Dist derives most of its file list by regex-parsing
+Deploy's `Copy-Item` lines, but ~30 are invisible to that regex and are
+compensated by hardcoded blocks — converting the copy lines instead would have
+shipped payloads *and* tier-tagged live dats side by side, i.e. two live
+providers for every TGI, with an identical file count and nothing going red.)
+
+| File (as built / deployed) | Source in this project | Destination |
 |---|---|---|
-| `SC4UIScale.dll` | `build\Release\` | `Documents\SimCity 4\Plugins\` - the ROOT: the game only loads DLLs from the top level (measured, v4.2.0 maiden boot); the ini/log sit beside it |
-| `SC4UIScale.ini` | `_packaging\SC4UIScale.ini` | beside the DLL |
+| `SC4UIScale.dll` | `build\Release\` | `Documents\SimCity 4\Plugins\` - the ROOT: the game only loads DLLs from the top level (measured, v4.2.0 maiden boot). **The DLL is the only thing this mod leaves at the root** (v4.4.0); the ini, log and gcap live in `010-SC4UIScale\` |
+| `SC4UIScale.ini` | `_packaging\SC4UIScale.ini` | `Plugins\010-SC4UIScale\` |
 | `z_SC4UIScale_SelectiveArt-<tier>.dat` | `tools\selective-safe\` / `tools\packages\<tag>\` | `Plugins\010-SC4UIScale\` |
 | `z_SC4UIScale_DialogStatic-<tier>.dat` | `tools\dialog-static\` / `tools\packages\<tag>\` | `Plugins\010-SC4UIScale\` |
 | `z_SC4UIScale_ItemIcons-<tier>.dat` | `tools\itemicons\` | `Plugins\010-SC4UIScale\` |
 | `ItemIconsSub`, `MenuFix`, `ThirdPartyUI`, `WarriorUI`, `SaveWarningUI`, `CamUI`, `NamIcons`, `CamGraphLabels`, `CsiIcons`, `UncoveredIcons`, `SelectorUI` | their builders under `tools\` | `Plugins\zzz-SC4UIScale\` — **the subfolder is required** (load-order law) |
-| `FontStyle-<tier>.ini` | `tools\fonts\` / `tools\packages\<tag>\` | beside the DLL; `ScaleTier` copies the active tier to the probed `FontStyle.ini` |
+| `FontStyle-<tier>.ini` | `tools\fonts\` / `tools\packages\<tag>\` | `Plugins\010-SC4UIScale\`; `ScaleTier::SyncFont` copies the active tier to the probed `FontStyle.ini` |
 
-`ScaleTier` manages the tier gating itself at startup — it renames the
-non-active tiers to `.x1-disabled` and copies the right font into place, so
-deploying means dropping all tiers in and letting the DLL choose.
+**What the same tree looks like after conversion**, per folder:
+
+```
+Plugins\
+  SC4UIScale.dll                                  <- the only root file
+  010-SC4UIScale\
+    SC4UIScale.ini  SC4UIScale.log  SC4UIScale.gcap
+    FontStyle-15x.ini  FontStyle-2x.ini  FontStyle-3x.ini    <- copied, not payloads
+    z_SC4UIScale_SelectiveArt.dat                 <- LIVE, name never changes
+    z_SC4UIScale_SelectiveArt.15x.uipay
+    z_SC4UIScale_SelectiveArt.2x.uipay
+    z_SC4UIScale_SelectiveArt.3x.uipay
+    z_SC4UIScale_SelectiveArt.off.uipay
+    …DialogStatic, ItemIcons, WebText the same way…
+    z_SC4UIScale_STATE.txt                        <- armed tag + gate reason
+  zzz-SC4UIScale\
+    z_SC4UIScale_ThirdPartyUI.dat  + its .uipay set
+    …ItemIconsSub, WarriorUI, SaveWarningUI, CamUI, NamIcons, CsiIcons,
+      UncoveredIcons, SelectorUI, CamGraphLabels, ZCarbon*…
+    z_SC4UIScale_STATE.txt
+```
+
+Deploying still means dropping **all** tiers in and letting the DLL choose:
+`ScaleTier` arms the right one at startup by copying that tier's payload over
+the live name, and copies the right font into place. **Nothing is renamed, at
+any point, by anyone** — that is the whole property sc4pac needs, and the
+reason `z_SC4UIScale_STATE.txt` exists to carry the diagnosis a listing used
+to give away for free.
 
 **Deploy while the game is CLOSED.** It holds the DLL and dats open, and it
 runs **elevated** — a normal shell cannot kill it, and it must never be

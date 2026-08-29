@@ -63,6 +63,31 @@ if (-not $Tier) {
     Write-Output "  no ScaleFactor found - seeding live files at 2x (the DLL re-arms on boot)"
 }
 
+# ---- resolve stale twins BEFORE generating -----------------------------------
+# The generator REFUSES when a base+tag has both `X-3x.dat` and
+# `X-3x.dat.x1-disabled` - it will not guess which one's bytes ship, and that
+# refusal is right. But the deploy legitimately produces that pair: it writes
+# the armed tier as `X-3x.dat` and leaves an older run's `X-3x.dat.x1-disabled`
+# sitting beside it.
+#
+# Only ONE reading is defensible. The bare `.dat` is what the deploy just
+# wrote, this run, from `build\Release`; the suffixed twin is by definition the
+# older copy of the SAME tier. So the twin goes. Scoped deliberately to an
+# exact base+tag collision - a `.x1-disabled` with no bare counterpart is a
+# normal stashed tier and is left completely alone.
+$twins = 0
+foreach ($live in (Get-ChildItem $Tree -Recurse -File -Filter 'z_SC4UIScale_*.dat')) {
+    if ($live.BaseName -notmatch '-(15x|2x|3x|4x|1x)$') { continue }
+    $stash = "$($live.FullName).x1-disabled"
+    if (Test-Path $stash) {
+        Remove-Item $stash -Force
+        $twins++
+    }
+}
+if ($twins) {
+    Write-Output "  resolved $twins stale twin(s): kept the freshly deployed .dat, dropped the older .x1-disabled"
+}
+
 # ---- build the payloads ------------------------------------------------------
 $stage = Join-Path $env:TEMP ("uipay-stage-" + [System.IO.Path]::GetRandomFileName())
 New-Item -ItemType Directory $stage -Force | Out-Null
