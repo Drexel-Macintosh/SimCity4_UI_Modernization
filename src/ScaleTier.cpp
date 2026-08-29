@@ -10,6 +10,7 @@
 // #201 SEGMENT CENSUS probe: the registered-DBPF walk that would let a tier
 // be excluded at LOAD time instead of renamed on disk.
 #include "cIGZPersistDBSegment.h"
+#include "cIGZPersistDBSegmentMultiPackedFiles.h"
 #include "cRZBaseString.h"
 #include "cIGZBuffer.h"
 #include "cIGZGraphicSystem.h"
@@ -2290,6 +2291,152 @@ namespace ScaleTier
 		return s_migratedNames;
 	}
 
+	// ============ #201 FALL-THROUGH TEST - THE DECIDING MEASUREMENT ========
+	// Round 2 proved the individual dats ARE addressable: the Documents
+	// Plugins tree is ONE multi-packed segment with 272 children, each with a
+	// path, 12 of them ours. So a tier COULD be excluded without renaming it
+	// on disk - IF taking a child out of service makes the lookup fall
+	// through to whoever owned the key before us.
+	//
+	// That is the whole question, and it has exactly two useful answers:
+	//   FALL-THROUGH  - the key resolves to a STOCK archive after we close
+	//                   our child. Renaming can go; sc4pac is unblocked.
+	//   NO FALL-THROUGH - the key resolves to nothing, or still to us. Then
+	//                   closing a child TRADES a wrong-size icon for a
+	//                   MISSING one, which is worse than what we do today,
+	//                   and the answer is SyncDatStable instead.
+	//
+	// THE KEY IS MEASURED, NOT GUESSED: read out of the deployed
+	// z_SC4UIScale_ItemIcons-2x.dat index on 2026-08-29 (entry 0 of 356).
+	// ItemIcons replaces STOCK icons in place, so the same key exists in the
+	// game archives - which is precisely what makes fall-through observable.
+	//
+	// RESTORES WHAT IT TOUCHES. The child is reopened before this returns,
+	// on every path out. A probe that leaves the session degraded would
+	// contaminate the very thing the user is about to look at.
+	// Default OFF ([Probe] SegmentClose = 0).
+	void SegmentFallThroughTest()
+	{
+		Logger& logger = Logger::Get();
+		cIGZPersistResourceManagerPtr rm;
+		if (!rm)
+		{
+			logger.WriteLine(LogLevel::Info,
+				"SEGCLOSE ABORTED - no resource manager. Nothing measured.");
+			return;
+		}
+
+		const cGZPersistResourceKey key(0x856DDBAC, 0x6A386D26, 0x00000001);
+
+		auto segPath = [](cIGZPersistDBSegment* s, char* out, size_t n)
+		{
+			out[0] = 0;
+			if (!s) { return; }
+			cRZBaseString p;
+			s->GetPath(p);
+			const char* c = p.ToChar();
+			if (!c) { return; }
+			const char* tail = c;
+			int seps = 0;
+			for (const char* q = c + strlen(c); q > c; q--)
+			{
+				if (*(q - 1) == '\\' || *(q - 1) == '/')
+				{
+					if (++seps == 2) { tail = q; break; }
+				}
+			}
+			strncpy_s(out, n, tail, _TRUNCATE);
+		};
+
+		char buf[MAX_PATH] = {};
+
+		// BEFORE. Who answers for this key right now?
+		cIGZPersistDBSegment* before = nullptr;
+		const bool okBefore = rm->FindDBSegment(key, &before);
+		segPath(before, buf, sizeof(buf));
+		logger.WriteLine(LogLevel::Info,
+			"SEGCLOSE before: found=%d segment=%s  (expected: the Plugins "
+			"tree, because our ItemIcons dat overrides this stock icon)",
+			okBefore ? 1 : 0, buf[0] ? buf : "(none)");
+
+		// Locate OUR child inside the Plugins multi-packed segment.
+		cIGZPersistDBSegment* ourChild = nullptr;
+		const uint32_t total = rm->GetSegmentCount();
+		for (uint32_t i = 0; i < total && !ourChild; i++)
+		{
+			cIGZPersistDBSegment* top = rm->GetSegmentByIndex(i);
+			if (!top) { continue; }
+			cIGZPersistDBSegmentMultiPackedFiles* multi = nullptr;
+			if (!top->QueryInterface(GZIID_cIGZPersistDBSegmentMultiPackedFiles,
+					reinterpret_cast<void**>(&multi)) || !multi)
+			{
+				continue;
+			}
+			const uint32_t kids = multi->GetSegmentCount();
+			for (uint32_t k = 0; k < kids; k++)
+			{
+				cIGZPersistDBSegment* kid = multi->GetSegmentByIndex(k);
+				if (!kid) { continue; }
+				cRZBaseString kp;
+				kid->GetPath(kp);
+				const char* kpc = kp.ToChar();
+				if (kpc && strstr(kpc, "z_SC4UIScale_ItemIcons-2x.dat"))
+				{
+					ourChild = kid;
+					break;
+				}
+			}
+			multi->Release();
+		}
+		if (!ourChild)
+		{
+			logger.WriteLine(LogLevel::Info,
+				"SEGCLOSE ABORTED - could not locate our ItemIcons-2x child "
+				"segment. NOTHING WAS CLOSED and nothing was measured; this "
+				"is an instrument failure, not a result. (Is the 2x tier the "
+				"armed one on this boot?)");
+			return;
+		}
+
+		// POSITIVE CONTROL: the child must be open and populated first.
+		const uint32_t recs = ourChild->GetRecordCount(nullptr);
+		logger.WriteLine(LogLevel::Info,
+			"SEGCLOSE control: our child is open=%d with %u record(s). A zero "
+			"here voids everything below.",
+			ourChild->IsOpen() ? 1 : 0, recs);
+
+		// CLOSE, ask again, then RESTORE no matter what the answer was.
+		const bool closed = ourChild->Close();
+		cIGZPersistDBSegment* after = nullptr;
+		const bool okAfter = rm->FindDBSegment(key, &after);
+		char buf2[MAX_PATH] = {};
+		segPath(after, buf2, sizeof(buf2));
+		const bool reopened = ourChild->Open(true, false);
+
+		logger.WriteLine(LogLevel::Info,
+			"SEGCLOSE after: closed=%d found=%d segment=%s reopened=%d",
+			closed ? 1 : 0, okAfter ? 1 : 0, buf2[0] ? buf2 : "(none)",
+			reopened ? 1 : 0);
+		logger.WriteLine(LogLevel::Info,
+			"SEGCLOSE VERDICT: %s",
+			(!closed)
+				? "INCONCLUSIVE - Close() refused, so nothing was taken out "
+				  "of service."
+				: (okAfter && buf2[0] && strstr(buf2, "SimCity") != nullptr)
+					? "FALL-THROUGH WORKS - the key resolved to a stock "
+					  "archive with our child shut. Load-time exclusion can "
+					  "replace renaming."
+					: (okAfter && buf2[0] && strstr(buf2, "Plugins") != nullptr)
+						? "NO CHANGE - still the Plugins tree. Either the "
+						  "parent caches the key map or another child owns "
+						  "it; closing a child is NOT a tier switch."
+						: "NO FALL-THROUGH - the key resolves to nothing "
+						  "with our child shut. Closing would trade a "
+						  "wrong-size icon for a MISSING one. Use "
+						  "SyncDatStable instead.");
+	}
+
+
 	// ============ #201 SEGMENT CENSUS - A PROBE, NOT A FIX ================
 	// THE QUESTION IT EXISTS TO ANSWER: can a loaded .dat be dropped from the
 	// resource manager at runtime? If yes, this mod can stop RENAMING its own
@@ -2362,6 +2509,58 @@ namespace ScaleTier
 			}
 			logger.WriteLine(LogLevel::Info,
 				"SEGCENSUS  [%3u] %s%s", i, tail, mine ? "   <- OURS" : "");
+
+			// ROUND 2 (2026-08-29). Round 1 measured 12 segments, 12 paths,
+			// ZERO ours - and named the reason: both Plugins trees register
+			// as ONE segment each, so the individual .dat files are not
+			// segments at this level. Unregistering one would drop EVERY mod
+			// in that folder, which is not a tier switch.
+			//
+			// But cIGZPersistDBSegmentMultiPackedFiles declares its OWN
+			// GetSegmentCount/GetSegmentByIndex - child packed files. If the
+			// Plugins segment is one of those, the individual dats ARE
+			// reachable one level down, and the question reopens there.
+			// Ask by QueryInterface; a refusal is itself the answer.
+			cIGZPersistDBSegmentMultiPackedFiles* multi = nullptr;
+			if (!seg->QueryInterface(GZIID_cIGZPersistDBSegmentMultiPackedFiles,
+					reinterpret_cast<void**>(&multi)) || !multi)
+			{
+				continue;
+			}
+			const uint32_t kids = multi->GetSegmentCount();
+			uint32_t kidsOurs = 0, kidsNamed = 0;
+			for (uint32_t k = 0; k < kids; k++)
+			{
+				cIGZPersistDBSegment* kid = multi->GetSegmentByIndex(k);
+				if (!kid) { continue; }
+				cRZBaseString kp;
+				kid->GetPath(kp);
+				const char* kpc = kp.ToChar();
+				if (!kpc || !*kpc) { continue; }
+				kidsNamed++;
+				if (strstr(kpc, "SC4UIScale") != nullptr)
+				{
+					kidsOurs++;
+					const char* kt = kpc;
+					int ks = 0;
+					for (const char* q = kpc + strlen(kpc); q > kpc; q--)
+					{
+						if (*(q - 1) == '\\' || *(q - 1) == '/')
+						{
+							if (++ks == 2) { kt = q; break; }
+						}
+					}
+					logger.WriteLine(LogLevel::Info,
+						"SEGCENSUS    child[%3u] %s   <- OURS", k, kt);
+				}
+			}
+			logger.WriteLine(LogLevel::Info,
+				"SEGCENSUS  [%3u] is a MULTI-PACKED segment: %u child(ren), "
+				"%u with a path, %u ours. If ours > 0 the individual dats ARE "
+				"addressable one level down. If children exist but none are "
+				"ours, the walk works and our dats live elsewhere - a real "
+				"answer either way.", i, kids, kidsNamed, kidsOurs);
+			multi->Release();
 		}
 		logger.WriteLine(LogLevel::Info,
 			"SEGCENSUS TOTAL: %u segment(s), %u with a readable path, %u "

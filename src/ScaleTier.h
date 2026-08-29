@@ -50,6 +50,12 @@ namespace ScaleTier
 	// unregisters anything.
 	void SegmentCensus();
 
+	// #201 THE DECIDING PROBE ([Probe] SegmentClose, default 0). Closes ONE
+	// of our child dat segments, asks who answers for a key it owns, and
+	// REOPENS it on every path out. Answers whether load-time exclusion can
+	// replace renaming files on disk.
+	void SegmentFallThroughTest();
+
 
 	// The fit predicate ALONE, without the "is it installed" and
 	// "largest first" parts of Decide. Published so the in-game scale

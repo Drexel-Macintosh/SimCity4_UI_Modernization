@@ -53,7 +53,7 @@ $ALLOW = @(
     @{ dir = "_packaging";           ext = @(".ps1", ".md", ".ini", ".txt") }
     @{ dir = "_vanilla-reference";   ext = @(".md") }
 )
-$ROOT_FILES = @("README.md", "VERSION-HISTORY.txt", "LICENSE", "NOTICE",
+$ROOT_FILES = @("README.md", "VERSION-HISTORY.txt", "LICENSE",
                 "THIRD-PARTY-NOTICES.md", ".gitignore")
 # ⛔ DROPPED 2026-08-06, user direction:
 #   HANDOFF-TO-QWEN.md  - a stale internal hand-off to a delegation lane.

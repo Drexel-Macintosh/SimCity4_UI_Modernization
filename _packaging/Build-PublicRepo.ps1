@@ -92,7 +92,7 @@ $TOOLS = @(
 $ROOT = @("README.md", "LICENSE", "THIRD-PARTY-NOTICES.md", "CHANGELOG.md")
 # ⛔ .gitignore is DELIBERATELY NOT in this list. It used to be, and every
 # export overwrote the public repo's own minimal .gitignore with THIS repo's
-# dev-tree allowlist - which references CONTINUITY.md, START-HERE.md and
+# dev-tree allowlist - which references START-HERE.md and
 # HANDOFF-*.md, none of which the public export ships. The public repo owns
 # its own .gitignore; this script's job is the curated file manifest, not the
 # destination's own configuration.

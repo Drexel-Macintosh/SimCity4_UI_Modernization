@@ -710,6 +710,13 @@ public:
 			{
 				ScaleTier::SegmentCensus();
 			}
+			// The deciding one: closes a child segment, asks who answers,
+			// and reopens it. Separate key so the census can run without
+			// anything being taken out of service.
+			if (GetPrivateProfileIntW(L"Probe", L"SegmentClose", 0, probeIni) > 0)
+			{
+				ScaleTier::SegmentFallThroughTest();
+			}
 		}
 
 		// #149. FIRST thing in PostAppInit, deliberately: the dats are indexed

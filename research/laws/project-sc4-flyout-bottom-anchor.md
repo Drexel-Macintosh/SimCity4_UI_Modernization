@@ -186,8 +186,9 @@ is why it changes nothing for the already-approved Build Park/Green
 Spaces case (verified bit-exact: dy=-453, bottom=1150, `_tests/Test-SubFlyoutPlacement.py`).
 
 **Two independent derivations agree.** The predicted Sports Grounds fix
-(top 470→570, bottom 1150) matches an estimate written down in
-`HANDOFF-2026-08-23.md` HOURS before this measurement existed, from a
+(top 470→570, bottom 1150) matches an estimate written down HOURS before
+this measurement existed (in the 2026-08-23 session handoff, since folded
+into this file and deleted), from a
 completely different (and, per Attempt 3 above, ultimately WRONG for the
 general case) per-button reasoning chain. Two different methods landing on
 the same number for the one case both could check is strong evidence the

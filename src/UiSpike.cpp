@@ -1406,7 +1406,8 @@ namespace
 	// shared bottom instead of the container's own (shorter, higher)
 	// native clamp - predicted Sports Grounds result (top=570,
 	// bottom=1150) matches the independent estimate already on record
-	// in HANDOFF-2026-08-23.md, derived before this measurement existed.
+	// in research/laws/project-sc4-flyout-bottom-anchor.md, derived before
+	// this measurement existed.
 	// SubBarClampsAt8Rows: does THIS first-level flyout bar's own raw `cy`
 	// put an 8-row-equivalent container's NATIVE top past the game's own
 	// bottom margin `mB`? Used by SubSharedBottom below to choose which
@@ -7026,7 +7027,8 @@ namespace
 		// Place() parameters, never logged before. mT/mB are the game's
 		// OWN bottom-margin clamp inputs - candidate source for the
 		// shared sub-flyout bottom line the user's bottom-anchor law
-		// requires (see HANDOFF-2026-08-23.md law L1). Logged before any
+		// requires (see research/laws/project-sc4-flyout-bottom-anchor.md,
+		// which is law L1 promoted). Logged before any
 		// of our own math touches cy, so this is the pristine value.
 		{
 			// 2026-08-23: raised 40 -> 2000 mid-verification. A

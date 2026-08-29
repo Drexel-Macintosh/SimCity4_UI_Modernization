@@ -17,7 +17,7 @@ macro is the one that is running.
 **This file's own content stops at 2026-08-19.** For anything after that —
 including a Graphics Options selector rewrite, a v3.14 flyout state-machine
 rewrite, and an open sub-flyout arm-alignment defect (short-count strips like
-Sports Grounds and Plazas) — read `..\CONTINUITY.md` first, then the
+Sports Grounds and Plazas) — read `UNKNOWNS-AND-NEXT-TARGETS.md` §D.1 first, then the
 newest-dated `..\HANDOFF-*.md` in the repo root. Both postdate this file and
 are not summarized here.
 
@@ -290,7 +290,7 @@ order:
 |---|---|
 | What version is actually running? | `src\SC4UIScaleDllDirector.cpp`'s `UISCALE_VERSION_STR`, cross-checked against the running DLL's own log header — never a number written in prose here |
 | What changed and when? | `VERSION-HISTORY.txt:1` (newest entry first) |
-| What is open right now, and what was just tried? | `..\CONTINUITY.md`, then the newest-dated `..\HANDOFF-*.md` in the repo root |
+| What is open right now, and what was just tried? | `UNKNOWNS-AND-NEXT-TARGETS.md` (the open register), then `git log` — the repo root carries no session-state files by design |
 | What tier / mode is the live install in? | `_tests\Set-Tier.ps1 -Status` and `_tests\Set-StockCompare.ps1 -Status` — not `Test-DatIntegrity.ps1`, which checks built artifacts, not the active tier |
 | What is a known open defect? | `UNKNOWNS-AND-NEXT-TARGETS.md` §D (open defects, known mechanism) and §B (ranked unknowns) |
 | What was tried and refuted? | `_tests\REGRESSION.md` — search it, do not read it front to back |
