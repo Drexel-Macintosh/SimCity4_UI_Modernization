@@ -17166,3 +17166,20 @@ and is scheduled for removal. Every tier stays on disk under the name a
 manifest carries; the DLL drops the ones it does not want at PostAppInit. The
 `SyncDatStable` content-swap remains the fallback if exclusion misbehaves at
 scale, but it is no longer the plan.
+
+⛔ **EVERYTHING IN THIS SECTION AFTER "CONSEQUENCE" WAS WRONG WITHIN THE
+HOUR. Corrected 2026-08-29, same day.** Load-time exclusion was implemented,
+switched on at 3x, and BROKE THE UI: stock 1x art and stock 1x `.UI` scripts
+inside a 3x runtime - FF00FF bleed, garbled strips, black bars, user-confirmed
+by screenshot. The cause was that the exclusion switch overrode the DEPENDENCY
+verdict as well as the tier verdict, so ~30 files whose mod is absent went live,
+won ~516 TGIs by sort order, and `Close()` vacated those wins without promoting
+the runner-up.
+
+The mechanism is DELETED. The content swap is not a fallback, it is the design.
+See `research/laws/feedback-arming-must-be-additive-and-pre-scan.md`, which
+postdates this section and supersedes it.
+
+Left standing rather than edited away: a ledger that quietly rewrites its own
+wrong calls teaches nothing, and "the probe said yes" is the part worth
+remembering.

@@ -324,6 +324,36 @@ $total = (Get-ChildItem $plugOut -Recurse -File | Measure-Object -Property Lengt
 
 Write-Output ""
 Write-Output "  copied      : $copied file(s)"
+# ---- LAYOUT MIXTURE TRIPWIRE (v4.5.0) ---------------------------------------
+# The bundle must carry ONE arming layout, never both. This is a no-op under
+# the rename scheme and under the payload scheme; it fires only on a MIXTURE,
+# which is the one state that ships silently broken.
+#
+# WHY IT EXISTS. This script derives most of its contents by REGEX-PARSING
+# _tests\Deploy-OnGameClose.ps1, but 30 of Deploy's Copy-Item lines are invisible
+# to that regex (named-parameter form, expression-built paths, Join-Path) and are
+# compensated by HARDCODED blocks in this file. Convert Deploy alone and the
+# parsed lines emit payloads while the hardcoded blocks still emit tier-tagged
+# live dats - so the zip would carry a stable z_SC4UIScale_ZCarbonUI.dat AND a
+# live z_SC4UIScale_ZCarbonUI-2x.dat: two live providers of all 197 TGIs. The
+# existing $copied floor cannot see it, because the count is identical either
+# way.
+$bundleFiles = @(Get-ChildItem $plugOut -Recurse -File)
+$oldLayout = @($bundleFiles | Where-Object {
+    $_.Name -like '*.x1-disabled' -or
+    ($_.Extension -eq '.dat' -and $_.BaseName -match '-(15x|2x|3x|4x|1x)$') })
+$newLayout = @($bundleFiles | Where-Object { $_.Extension -eq '.uipay' })
+if ($oldLayout.Count -and $newLayout.Count) {
+    throw ("LAYOUT MIXTURE: the bundle carries {0} rename-layout file(s) AND " +
+           "{1} payload file(s). Every package present under both names has TWO " +
+           "live providers for every TGI it owns. First of each: {2} / {3}. " +
+           "Convert Deploy-OnGameClose.ps1 and this file's hardcoded blocks " +
+           "TOGETHER - they cannot be split." -f $oldLayout.Count, $newLayout.Count,
+           $oldLayout[0].Name, $newLayout[0].Name)
+}
+Write-Output ("  layout      : {0} (mixture tripwire clear)" -f 
+    $(if ($newLayout.Count) { 'payload' } else { 'rename' }))
+
 Write-Output ("  bundle size : {0:N1} MB" -f ($total / 1MB))
 Write-Output "  DLL sha256  : $dllHash"
 foreach ($n in $notes) { Write-Output "  note        : $n" }

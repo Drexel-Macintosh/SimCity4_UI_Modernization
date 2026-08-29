@@ -110,7 +110,14 @@ def _load_probe():
                          "deliberately has no copy of its own." % PROBE)
     spec = importlib.util.spec_from_file_location("_probe_scanpredicate", PROBE)
     mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)   # module body is __main__-guarded
+    # Bytecode caching OFF across this import: loading the probe must not drop
+    # a __pycache__ entry into _tests/. This tool writes nowhere but --out.
+    prev = sys.dont_write_bytecode
+    sys.dont_write_bytecode = True
+    try:
+        spec.loader.exec_module(mod)   # module body is __main__-guarded
+    finally:
+        sys.dont_write_bytecode = prev
     return mod
 
 

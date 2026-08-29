@@ -1,0 +1,134 @@
+# Verify the v4.5.0 content-swap arming after a boot.
+#
+# WHAT IT IS CHECKING. Through v4.4.0 a tier was armed by RENAMING dats
+# (`.dat` <-> `.dat.x1-disabled`), which is the single reason sc4pac cannot
+# uninstall this mod - it removes files by manifest name. From v4.5.0 every
+# live filename is CONSTANT and the DLL swaps the file's CONTENT from an inert
+# `.<tag>.uipay` payload the game never loads (measured: the plugin scan is
+# extension-gated, probe #202).
+#
+# EVERY CHECK REFUSES RATHER THAN WARNS where a pass could be vacuous. This
+# suite exists because a green gate has twice this week been read as a working
+# feature - once when a probe measured a case that could not fail, and once
+# when the mechanism under test never ran at all.
+#
+#   .\_tests\Verify-Arming.ps1
+#   .\_tests\Verify-Arming.ps1 -Restore     # put the pre-4.5.0 layout back
+[CmdletBinding()]
+param(
+    [string]$Plugins = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins'),
+    [string]$RestorePoint = (Join-Path $PSScriptRoot 'restore-point-pre-armone'),
+    [switch]$Restore
+)
+
+$ErrorActionPreference = 'Stop'
+
+if ($Restore) {
+    if (-not (Test-Path $RestorePoint)) { throw "no restore point at $RestorePoint" }
+    foreach ($d in '010-SC4UIScale','zzz-SC4UIScale') {
+        $t = Join-Path $Plugins $d
+        if (Test-Path $t) { Remove-Item -LiteralPath $t -Recurse -Force }
+        Copy-Item (Join-Path $RestorePoint $d) $t -Recurse -Force
+    }
+    Copy-Item (Join-Path $RestorePoint 'SC4UIScale.dll') (Join-Path $Plugins 'SC4UIScale.dll') -Force
+    Write-Output "restored the pre-4.5.0 layout from $RestorePoint"
+    exit 0
+}
+
+$fail = @()
+$note = @()
+
+$log = Join-Path $Plugins '010-SC4UIScale\SC4UIScale.log'
+if (-not (Test-Path $log)) { throw "no log at $log - has the game been launched?" }
+$logText = Get-Content $log -Raw
+
+# ---- CONTROL FIRST -----------------------------------------------------------
+# Without evidence the arming pass actually ran, every count below is a
+# statement about a boot that never happened.
+if ($logText -notmatch 'CommitArming:') {
+    Write-Output 'CONTROL FAILED: the log has no CommitArming line.'
+    Write-Output 'The arming pass did not run this boot, so nothing below would'
+    Write-Output 'be evidence about it. Check the DLL actually deployed.'
+    exit 1
+}
+$commit = ([regex]'CommitArming: .*').Match($logText).Value
+Write-Output "CONTROL PASSED - the arming pass ran:"
+Write-Output "  $commit"
+Write-Output ''
+
+if ($commit -match '(\d+) FAILED') {
+    if ([int]$matches[1] -gt 0) { $fail += "ArmOne reported $($matches[1]) failure(s) - a package is holding bytes we did not choose" }
+}
+
+# ---- the layout the design promises -----------------------------------------
+$tagged   = @(Get-ChildItem $Plugins -Recurse -File -Filter 'z_SC4UIScale_*.dat' |
+              Where-Object { $_.BaseName -match '-(15x|2x|3x|1x)$' })
+$disabled = @(Get-ChildItem $Plugins -Recurse -File -Filter '*.x1-disabled')
+$payloads = @(Get-ChildItem $Plugins -Recurse -File -Filter 'z_SC4UIScale_*.uipay')
+$stable   = @(Get-ChildItem $Plugins -Recurse -File -Filter 'z_SC4UIScale_*.dat' |
+              Where-Object { $_.BaseName -notmatch '-(15x|2x|3x|1x)$' })
+$tmp      = @(Get-ChildItem $Plugins -Recurse -File -Filter '*.dat.tmp')
+
+Write-Output "live stable .dat   : $($stable.Count)"
+Write-Output "payloads (.uipay)  : $($payloads.Count)"
+Write-Output "tier-tagged .dat   : $($tagged.Count)   (must be 0 - the rename layout is gone)"
+Write-Output ".x1-disabled       : $($disabled.Count)   (must be 0)"
+Write-Output "stray .dat.tmp     : $($tmp.Count)   (must be 0 - a staged copy was orphaned)"
+Write-Output ''
+
+if ($tagged.Count   -ne 0) { $fail += "$($tagged.Count) tier-tagged .dat file(s) remain - migration did not complete" }
+if ($disabled.Count -ne 0) { $fail += "$($disabled.Count) .x1-disabled file(s) remain - the rename layout survives" }
+if ($tmp.Count      -ne 0) { $fail += "$($tmp.Count) orphaned .dat.tmp - ArmOne staged a copy it never committed" }
+if ($payloads.Count -lt 40) { $fail += "only $($payloads.Count) payloads - expected ~70; migration looks partial" }
+if ($stable.Count   -lt 10) { $fail += "only $($stable.Count) live packages - expected ~20" }
+
+# ---- the state file, which is the diagnosis a constant filename destroys -----
+$armed = @(); $off = @()
+foreach ($d in '010-SC4UIScale','zzz-SC4UIScale') {
+    $s = Join-Path $Plugins "$d\z_SC4UIScale_STATE.txt"
+    if (-not (Test-Path $s)) { $fail += "no z_SC4UIScale_STATE.txt in $d"; continue }
+    foreach ($line in (Get-Content $s | Where-Object { $_ -notmatch '^#' -and $_.Trim() })) {
+        $c = $line -split "`t"
+        if ($c.Count -lt 3) { continue }
+        if ($c[1] -eq 'off') { $off += $c[0] } else { $armed += "$($c[0])=$($c[1])" }
+    }
+}
+Write-Output "STATE.txt: $($armed.Count) armed, $($off.Count) inert"
+if ($armed.Count) { Write-Output ('  armed : ' + (($armed | Select-Object -First 8) -join ', ')) }
+if ($off.Count)   { Write-Output ('  inert : ' + (($off   | Select-Object -First 8) -join ', ')) }
+Write-Output ''
+
+# Every armed package must agree on ONE tier. A split here is the exact defect
+# that put stock 1x art into a 3x runtime this morning.
+$tiers = @($armed | ForEach-Object { ($_ -split '=')[1] } | Sort-Object -Unique)
+if ($tiers.Count -gt 1) {
+    $fail += "armed packages disagree on the tier: $($tiers -join ', ')"
+} elseif ($tiers.Count -eq 1) {
+    Write-Output "all armed packages agree on tier '$($tiers[0])'"
+}
+
+# ---- every live file must still be a parseable DBPF -------------------------
+$bad = @()
+foreach ($f in $stable) {
+    $fs = [System.IO.File]::OpenRead($f.FullName)
+    try {
+        $b = New-Object byte[] 4
+        $null = $fs.Read($b, 0, 4)
+        if ([System.Text.Encoding]::ASCII.GetString($b) -ne 'DBPF') { $bad += $f.Name }
+    } finally { $fs.Dispose() }
+}
+if ($bad.Count) { $fail += "not a DBPF after the swap: $($bad -join ', ')" }
+else { Write-Output "all $($stable.Count) live file(s) still begin DBPF" }
+
+Write-Output ''
+if ($fail.Count) {
+    Write-Output 'RED:'
+    $fail | ForEach-Object { Write-Output "  - $_" }
+    Write-Output ''
+    Write-Output 'Undo with:  .\_tests\Verify-Arming.ps1 -Restore'
+    exit 1
+}
+Write-Output 'ALL PASS - the content swap armed cleanly and the rename layout is gone.'
+Write-Output 'This is a FILE-LEVEL result only. It says nothing about how the UI'
+Write-Output 'looks; that still needs eyes on the game.'
+exit 0

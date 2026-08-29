@@ -446,28 +446,51 @@ namespace
 		WritePrivateProfileStringW(L"UiSpike", L"ScaleFactor", val, iniPath);
 	}
 
+	// Is this tier's art actually on disk? Decide() asks this to refuse a
+	// factor the install cannot carry.
+	//
+	// ⚠ v4.5.0: THIS HAD TO CHANGE WITH THE ARMING SCHEME, and getting it
+	// wrong is silent. It used to probe `SelectiveArt<tag>.dat` and its
+	// `.x1-disabled` twin - BOTH of which MigrateRenamesToPayloads renames
+	// out of existence. Left alone, every tier row would have failed except
+	// 2x, whose fallback checks the BARE name - and the bare name is the live
+	// stable file, which now always exists. The result would have been every
+	// machine silently pinned to 2x, with no error anywhere.
+	//
+	// So: payloads are the evidence now. The legacy names are still accepted,
+	// because this runs on the boot BEFORE migration too, and on that boot
+	// they are all that exists.
 	bool PackageInstalled(const Package& pkg)
 	{
 		wchar_t dir[MAX_PATH];
 		OurPackagesDir(dir, MAX_PATH);
 		wchar_t p[MAX_PATH];
+
+		// The payload for this tier: the post-migration answer.
+		const wchar_t* t = (pkg.tag && pkg.tag[0] == L'-') ? pkg.tag + 1 : pkg.tag;
+		swprintf_s(p, L"%sz_SC4UIScale_SelectiveArt.%s.uipay", dir, t);
+		if (FileExists(p)) { return true; }
+
+		// Pre-migration names.
 		swprintf_s(p, L"%sz_SC4UIScale_SelectiveArt%s.dat", dir, pkg.tag);
-		if (FileExists(p))
-		{
-			return true;
-		}
+		if (FileExists(p)) { return true; }
 		swprintf_s(p, L"%sz_SC4UIScale_SelectiveArt%s.dat%s", dir, pkg.tag, kDisabledSuffix);
-		if (FileExists(p))
-		{
-			return true;
-		}
+		if (FileExists(p)) { return true; }
+
+		// The historical 2x special case: before tier tags existed, 2x WAS
+		// the bare name. It is only evidence when no payload set exists at
+		// all - after migration the bare name is the live target of every
+		// tier, so treating it as proof of 2x would pin the whole install.
 		if (pkg.factor >= 1.99f && pkg.factor <= 2.01f)
 		{
+			wchar_t any[MAX_PATH];
+			swprintf_s(any, L"%sz_SC4UIScale_SelectiveArt.*.uipay", dir);
+			WIN32_FIND_DATAW fd = {};
+			HANDLE h = FindFirstFileW(any, &fd);
+			if (h != INVALID_HANDLE_VALUE) { FindClose(h); return false; }
+
 			swprintf_s(p, L"%sz_SC4UIScale_SelectiveArt.dat", dir);
-			if (FileExists(p))
-			{
-				return true;
-			}
+			if (FileExists(p)) { return true; }
 			swprintf_s(p, L"%sz_SC4UIScale_SelectiveArt.dat%s", dir, kDisabledSuffix);
 			return FileExists(p);
 		}
@@ -998,7 +1021,10 @@ namespace
 	{
 		wchar_t  base[96];
 		wchar_t  tag[16];
-		char     reason[64];
+		// 160, not 64: this column is what REPLACES the diagnosis a constant
+		// filename destroys, and the real verdicts ("dep ABSENT (x.dat)",
+		// "dep CHANGED", "PARTIAL") do not fit in 64.
+		char     reason[160];
 		ArmStamp stamp;
 	};
 	ArmRow gArmRows[64] = {};
@@ -1015,10 +1041,10 @@ namespace
 		char line[512];
 		while (fgets(line, sizeof(line), f))
 		{
-			char b[96] = {}, t[16] = {}, r[64] = {};
+			char b[96] = {}, t[16] = {}, r[160] = {};
 			ArmStamp s = {};
 			const int got = sscanf_s(line,
-				"%95[^\t]\t%15[^\t]\t%63[^\t]\t%llu\t%llu\t%llu\t%llu",
+				"%95[^\t]\t%15[^\t]\t%159[^\t]\t%llu\t%llu\t%llu\t%llu",
 				b, static_cast<unsigned>(sizeof(b)),
 				t, static_cast<unsigned>(sizeof(t)),
 				r, static_cast<unsigned>(sizeof(r)),
@@ -1217,8 +1243,25 @@ namespace
 			wchar_t dst[MAX_PATH], from[MAX_PATH];
 			swprintf_s(dst, L"%s%s.%s.uipay", dir, base, hit + 1);
 			swprintf_s(from, L"%s%s", dir, fd.cFileName);
-			if (FileExists(dst)) { DeleteFileW(from); moved++; continue; }
-			if (MoveFileExW(from, dst, 0)) { moved++; }
+			// Was this the ARMED copy? An .x1-disabled suffix means no.
+			// It matters: moving the armed file into a payload leaves the
+			// package with NOTHING live until ArmOne runs, and if ArmOne
+			// then fails on I/O the player boots with that package simply
+			// missing. So the armed one is seeded straight across to the
+			// stable name here, closing the window entirely rather than
+			// relying on the next call succeeding.
+			const bool wasArmed =
+				_wcsicmp(fd.cFileName + wcslen(fd.cFileName) - wcslen(kDisabledSuffix),
+					kDisabledSuffix) != 0;
+			if (FileExists(dst)) { DeleteFileW(from); moved++; }
+			else if (MoveFileExW(from, dst, 0)) { moved++; }
+			else { continue; }
+			if (wasArmed)
+			{
+				wchar_t stable[MAX_PATH];
+				swprintf_s(stable, L"%s%s.dat", dir, base);
+				if (!FileExists(stable)) { CopyFileW(dst, stable, TRUE); }
+			}
 		} while (FindNextFileW(h, &fd));
 		FindClose(h);
 
