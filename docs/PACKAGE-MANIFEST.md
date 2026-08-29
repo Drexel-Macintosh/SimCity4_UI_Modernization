@@ -47,7 +47,7 @@ the matching package set.
 
 Through v4.4.0 arming was a **rename**: the winning tier kept
 `z_SC4UIScale_<Pkg>-<tag>.dat` and the losing tiers were pushed aside as
-`…​.dat.x1-disabled`. That is the single reason a package manager cannot
+`….dat.x1-disabled`. That is the single reason a package manager cannot
 uninstall this mod — sc4pac removes files **by manifest name**, and 53 of 68
 installed files sat under a renamed name. From v4.5.0 nothing of ours is ever
 renamed. Three file classes, and only the first is ever loaded:
@@ -212,14 +212,14 @@ crash.
 | `z_SC4UIScale_CsiIcons-<tier>.dat` | 16 | U-Drive-It offer-balloon icons (City Situation Indicators) |
 | `z_SC4UIScale_UncoveredIcons-<tier>.dat` | *varies* | Icons a custom lot ships that no other package in this set covers. The count is however many the install has — the integrity test deliberately asserts no number for it, and the package is simply absent when nothing is uncovered |
 
-### Untagged packages (tier-independent, always on)
+### Untagged packages (no tier triple — but not all of them are "always on")
 
 | Package | Entries | What it is |
 |---|---|---|
 | `z_SC4UIScale_MenuFix.dat` | 6 | Exemplar patches fixing CAM 4.0.1's broken submenu parents. Reported by the integrity test, not entry-asserted |
-| `z_SC4UIScale_WebText.dat` | 3 | LTEXT overrides that name Simtropolis, matching the DLL's redirect of the dead `simcity.ea.com` link (active at every tier) |
-| `zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels.dat` | 1 | The one LTEXT (`0xFF5D2E9F`) CAM's Power/Water charts ask for and no installed archive provides. Inert without CAM by construction — nothing except CAM binds the instance |
-| `zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat` | 1 | The scale selector's own dialog at the stock tier — the Graphic Options script and nothing else. One entry by design: the stock tier must never ship scaled art |
+| `z_SC4UIScale_WebText.dat` | 3 | LTEXT overrides that name Simtropolis, matching the DLL's redirect of the dead `simcity.ea.com` link. Active at every *tier*, but **inverse-gated** on the Web Button mod — ships `.on.uipay` + `.off.uipay` |
+| `zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels.dat` | 1 | The one LTEXT (`0xFF5D2E9F`) CAM's Power/Water charts ask for and no installed archive provides. Inert without CAM by construction — nothing except CAM binds the instance. Never armed, no payloads |
+| `zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat` *(built)* → `…SelectorUI.dat` + `.1x`/`.off` payloads *(installed)* | 1 | The scale selector's own dialog at the stock tier — the Graphic Options script and nothing else. One entry by design: the stock tier must never ship scaled art. The ONE package armed by the **absence** of a tier, which is why it is the only thing keeping 1x from being a one-way door — and why a payload sweep written against `{15x,2x,3x}` would have silently dropped it |
 
 A string has no geometry, so none of these carry a tier triple. They divide
 two ways, and the difference is invisible on disk — both are a bare untagged

@@ -28,6 +28,7 @@ launch worthless.
 |---|---|---|---|
 | **P0** | **The DLL is OLDER THAN ITS SOURCE right now.** `build\Release\SC4UIScale.dll` = **20:37**, `src\UiSpike.cpp` = **21:01**. | Anything edited into `UiSpike.cpp` after 20:37 — including possibly the `ThinBlt` self-arming block — **is not in the running binary**. This is the `installed ≠ executed` failure (#47, standing rule 7) one level lower down: *not even compiled*. | `msbuild src\SC4UIScale.vcxproj -p:Configuration=Release -p:Platform=Win32`, then `_tests\Deploy-OnGameClose.ps1`. If you choose not to rebuild, **strike L-A2 (ThinBlt) from the run** — you cannot tell its null apart from a missing feature. |
 | **P1** | The install is actually **ours**, not stock-compare. | `START-HERE.md §6` warns the tree was left mid-experiment. Right now `Documents\SimCity 4\Plugins` carries **both** `…-15x.dat` **and** `…-15x.dat.x1-disabled` for SelectiveArt / DialogStatic / ItemIcons — the live `.dat` wins and the mod IS on, but the state is ambiguous. | `_tests\Set-StockCompare.ps1 -Mode Ours` then `_tests\Test-DatIntegrity.ps1`. |
+| **P1b** | **v4.5.0: which ARMING LAYOUT is on disk, and what is actually armed.** | The check above reads a filename, and from v4.5.0 the filename is a constant: every package is `z_SC4UIScale_<Pkg>.dat` at every tier and under every gate verdict, with the tiers inert beside it as `.<tag>.uipay`. Presence proves installation and nothing more. A tree carrying BOTH layouts is the one thing a listing still catches, and it is serious — two live providers for every TGI that package owns, winner decided by filename order. | Read `z_SC4UIScale_STATE.txt` in `010-SC4UIScale\` and `zzz-SC4UIScale\` (`base`, `tag`, `reason`, then the payload and live stamps). **Check a row's `liveSize`/`liveTime` against the file it names before quoting its tag** — a mismatch means the state is stale and describes a different boot. `_tests\Verify-Arming.ps1` does all of this and refuses rather than passing vacuously. |
 | **P2** | `[Logging] LogLevel` is **2 or 3**. | `DPROBE` and `EBLT` print at **Debug**. At LogLevel 1 they are silently dropped and the log looks like a clean null. | Live ini line 234 currently reads `LogLevel=3`. Leave it. |
 | **P3** | **Copy the previous `SC4UIScale.log` out before launching.** | The log is **recreated every launch**. The run-14 spin capture was lost to exactly this. (`SC4UIScale-104.csv` beside it is append-only and safe.) | `copy "…\Plugins\SC4UIScale.log" _tests\captures\<date>-pre.log` |
 | **P4** | Keys go in the **existing** `[Probe]` / `[Disaster]` / `[Flyout]` sections of `Documents\SimCity 4\Plugins\SC4UIScale.ini`. | `GetPrivateProfileString` reads the **FIRST** matching section only. A second `[Probe]` block appended at the bottom **orphans every key above it** — the ini already carries this warning in-line and it has bitten before. | Edit in place at lines 373 (`[Probe]`), 470 (`[Disaster]`), 236 (`[Flyout]`). No BOM, ever. |
@@ -984,7 +985,12 @@ lists for this question.
 prediction was wrong twice over.** The repro recreated the exact runtime-only
 condition (dev lever `[Probe] ForceRuntimeScaleId=0x6A414973` excluding
 Establish City from kNeverScaleIds + `z_SC4UIScale_DialogStatic-2x.dat`
-renamed to `.probe-quarantine`, invisible to SyncDat): the sweep scaled the
+renamed to `.probe-quarantine`, invisible to SyncDat — ⛔ **that quarantine
+technique no longer works as written: from v4.5.0 `ArmOne` finds the live
+`z_SC4UIScale_DialogStatic.dat` missing and recreates it from the payload, so
+the rename does not survive the boot it is meant to affect. Quarantine a
+package now by making the DLL choose `.off` for it, or by moving its payloads
+out of the tree as well**): the sweep scaled the
 dialog live (`434x234 -> 868x468`, FLASHSET ON SCREEN) and the user's
 screenshot shows EVERY text normal — no purple anywhere. The FONTGUID hook
 (SetFontStyleByGUID 0x9C16FD, iface vt 0xAE0118+0x4C, prologue-gated) logged

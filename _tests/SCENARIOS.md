@@ -56,6 +56,14 @@ Two instrument failures rode along, both worth testing for directly:
   while all nine were loading** (#144). A duplicated `.dat` / `.dat.x1-disabled`
   slot overwrote the active entry. **Check that your tier instrument agrees with
   `Get-ChildItem` before trusting a tier claim.**
+  **v4.5.0 UPDATE, and it inverts the advice:** arming is now a content swap at
+  a stable filename, so `Get-ChildItem` is no longer a second opinion about
+  anything — every live package is `z_SC4UIScale_<Pkg>.dat` at every tier and
+  under every gate verdict. Cross-check a tier claim against
+  `z_SC4UIScale_STATE.txt` (armed tag + gate reason, rewritten every boot) and
+  the `ArmOne:` / `CommitArming:` lines in the log. A listing can still catch
+  one thing, and it is worth catching: a package present under BOTH a stable
+  name and a tier-tagged one, which is two live providers for every TGI it owns.
 - A `--hq` revert was written as a *comment* and the statement was left in
   place; the tool kept printing `Mode : high-quality` and rebuilt the whole tier
   wrong a second time. **The printed mode line is the test, not the source
@@ -71,12 +79,23 @@ package size moving the wrong way is a free regression detector.
 ## AXIS 1 â€” Scale tier (1x / 1.5x / 2x / 3x)
 
 The tier is chosen from the RENDER resolution by `ScaleTier::Decide`, and it
-gates which package set is live (`-2x` active, others `.x1-disabled`).
+gates which package set is live.
+
+**How "live" is arranged, and where to read it (v4.5.0).** Through v4.4.0 the
+armed tier kept `<pkg>-<tag>.dat` and the losers wore `.dat.x1-disabled`, so
+the tier was legible from a directory listing. It no longer is: every package
+has ONE live file, `z_SC4UIScale_<Pkg>.dat`, whose name never changes at any
+tier or under any gate verdict, and the DLL swaps its CONTENT in from an inert
+`z_SC4UIScale_<Pkg>.<tag>.uipay` payload. **The armed tier and every gate
+verdict now exist in exactly one place: `z_SC4UIScale_STATE.txt`**, written
+into each of our folders every boot (`base<TAB>tag<TAB>reason<TAB>paySize<TAB>payTime<TAB>liveSize<TAB>liveTime`;
+`tag` is the armed tag or `off`). Any test that asks "is package X live?" by
+`Test-Path` is asking a question that now has the same answer at every tier.
 
 | Tier | How to force | Must be true |
 |---|---|---|
 | 2x (primary) | native 2400x1600 | everything in REGRESSION.md |
-| 1x = STOCK | `[UiSpike] AutoScale=1` at a small res, or `AutoScale=0` + `ScaleFactor=1.0` | **DLL fully INERT**: no sweep, no patches, all dats renamed `.x1-disabled`, FontStyle moved aside. The game must be indistinguishable from a no-DLL install |
+| 1x = STOCK | `[UiSpike] AutoScale=1` at a small res, or `AutoScale=0` + `ScaleFactor=1.0` | **DLL fully INERT**: no sweep, no patches, every package holding its `.off` content (v4.5.0; pre-4.5.0 this was "all dats renamed `.x1-disabled`"), FontStyle moved aside. The game must be indistinguishable from a no-DLL install. ⛔ **The live `.dat` files are all still there and that is CORRECT** — verify this tier from `z_SC4UIScale_STATE.txt` (every row `off` except `SelectorUI`, which is armed by the absence of a tier) and from the screen, never from a listing |
 | 1.5x / 3x | change resolution so `Decide` picks the tier | packages exist at the right entry counts (the suite checks all three tiers), and `scale_len` = `floor(v*N+0.5)` â€” **1.5x is where rounding bugs hide, 2x hides them (exact doubling)** |
 
 ### THERE IS NO TEXT AXIS, AND THAT IS A DECISION
@@ -116,7 +135,10 @@ replication of 64px art: right size, missing sharpness (#100).
 - The three tiers are BUILT from the same generators â€” always rebuild all three
   (`--factor 2`, `--factor 1.5`, `--factor 3`) or the suite fails on entry counts.
 - `Test-DatIntegrity.ps1` accepts a package live **or** gated, so a tier flip
-  does not fail it. It will NOT catch a package renamed with a
+  does not fail it. **v4.5.0: "live or gated" is no longer a filename question
+  at all** — a gated package is the same live `.dat` holding `.off` content, so
+  presence proves installation and nothing else. It will NOT catch a package
+  renamed with a
   non-`.x1-disabled` suffix (e.g. the `.uiscale-testoff` the toggle script
   uses) â€” that reads as NOT FOUND, which is deliberate.
 

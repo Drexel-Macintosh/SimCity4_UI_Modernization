@@ -616,6 +616,31 @@ hash once reported *"2x CHANGED"* on a correct fix (#145).
 were loading, because `.dat` enumerates before `.dat.x1-disabled` and a plain
 hashtable assignment let the disabled twin overwrite the active one (#144).
 
+**v4.5.0 — THE SAME CLASS, WITH THE FILENAME EVIDENCE REMOVED ENTIRELY.**
+Arming is now a CONTENT SWAP at a stable filename: every package is
+`z_SC4UIScale_<Pkg>.dat` at every tier and under every gate verdict, with the
+tiers sitting inert beside it as `z_SC4UIScale_<Pkg>.<tag>.uipay`, and "gated
+off" means that live file holds a one-entry `.off` package instead. So:
+
+- **`Test-Path` on a package is not a tier check, a gate check, or evidence of
+  anything but installation.** It is true for all packages, always. Five test
+  scripts inferred state from those filenames and every one of them failed in
+  the safe-looking direction once the layout changed — the exact defect #144
+  is about, re-created by a data change rather than a code bug.
+- **Read `z_SC4UIScale_STATE.txt` instead** (one per folder of ours, rewritten
+  every boot): `base<TAB>tag<TAB>reason<TAB>paySize<TAB>payTime<TAB>liveSize<TAB>liveTime`.
+  `tag` is the armed payload tag or `off`; `reason` is the DLL's own gate
+  verdict. It carries the live file's size and mtime, so a row can be checked
+  against the file it claims to describe — **a row whose stamp disagrees is
+  STALE, and the tier in it belongs to a different boot.** That check is the
+  positive control; run it before quoting a tag.
+- **Renaming one of our dats aside no longer disables it across a boot.**
+  `ArmOne` sees the live file missing and recreates it from a payload. The
+  package usually ends up inert anyway (the gate says `off`), but the file
+  comes back — so a listing taken after the launch is not evidence about what
+  the test arranged before it. Quarantine techniques that relied on a rename
+  being invisible to the DLL need re-checking against this.
+
 ---
 
 ## 3. CURES THAT ARE FORBIDDEN, AND WHY

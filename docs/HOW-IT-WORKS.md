@@ -46,8 +46,27 @@ downstream inherits the new size — including hit-test masks.
 
 Three scale factors — 1.5×, 2×, 3× — chosen automatically from the screen
 resolution, with a slack check so a resolution that cannot fit the scaled UI
-falls to the tier below. Each tier has its own art packages; only one is active
-at a time, the others sit on disk renamed `.x1-disabled`.
+falls to the tier below. Each tier has its own art packages, and exactly one is
+active at a time.
+
+**How a tier is armed (v4.5.0).** Every package has one live file whose name
+*never changes* — `z_SC4UIScale_<Pkg>.dat` — and a set of inert payloads beside
+it, `z_SC4UIScale_<Pkg>.<tag>.uipay`. Arming copies the chosen payload's bytes
+over the live file, atomically, during the plugin scan. The payloads are never
+loaded: the scan is gated on the file extension, measured by putting a real
+package at `.uipay` and confirming it was absent from the game's own
+registered-segment census while thirteen live `.dat` files appeared in the same
+census.
+
+This replaced a rename (`.dat` ↔ `.dat.x1-disabled`), which worked but meant a
+package manager could not uninstall the mod: it removes files by the name it
+installed, and most of ours were living under a different one.
+
+The cost of a constant filename is that a directory listing no longer tells you
+anything — which tier is armed, and why a package is switched off, look
+identical on disk. So the DLL writes `z_SC4UIScale_STATE.txt` into each of its
+folders on every boot, naming the armed tag and the reason per package. That
+file, and the log, are where the answer lives now.
 
 Nothing here is 2×-only arithmetic. Every constant is a function of the factor,
 and 1.5× exists specifically to keep that honest — a value that only works at
@@ -56,9 +75,11 @@ even multiples fails visibly there.
 ## Third-party gating
 
 Packages that patch another mod's UI are keyed to that mod's presence, checked
-by filename at load. If the mod isn't installed the package is deactivated, so
+by filename at load. If the mod isn't installed the package is switched off, so
 this layer can never inject a frozen copy of someone else's interface into a
-game that doesn't have it.
+game that doesn't have it. "Off" means its live file holds a one-entry package
+that claims nothing, so the game's own load order promotes whatever would have
+won anyway.
 
 ## Safety
 
@@ -66,6 +87,8 @@ game that doesn't have it.
   disables itself otherwise.
 - Every code patch checks the bytes it expects to find before writing.
 - Everything it does is in-memory and per-session. **No game file is modified.**
+  The mod does rewrite *its own* package files to arm a tier — never anything
+  the game shipped, and never anything another mod installed.
 - It writes `SC4UIScale.log` into `Plugins\010-SC4UIScale\` (v4.4.0; it used
   to sit beside the DLL) — the first thing to attach to a bug
   report.
