@@ -59,7 +59,9 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import io
 import os
+import re
 import shutil
 import struct
 import subprocess
@@ -213,7 +215,7 @@ def scan(src, out_abs):
     return groups
 
 
-def categorise(groups):
+def categorise(groups, armed_tags=None):
     """Split the scan into the four shapes this layout actually has.
 
     full     - all three tiers present; the normal case.
@@ -237,10 +239,82 @@ def categorise(groups):
         if tiers:
             (full if len(tiers) == 3 else partial)[key] = (tiers, files)
         elif INVERSE_TAG in files:
-            inverse[key] = files[INVERSE_TAG]
+            # tag carried per package: SelectorUI's call site passes L"-1x"
+            # (-> "1x"), WebText's passes L"" (-> "on"). One hardcoded tag
+            # for both is how WebText got a .1x payload the DLL never opens.
+            inverse[key] = (files[INVERSE_TAG],
+                            (armed_tags or {}).get(
+                                key[1] if isinstance(key, tuple)
+                                else str(key).replace(chr(92), '/').split('/')[-1],
+                                INVERSE_TAG.lstrip('-')))
         else:
             plain[key] = files.get("")
+
+    # A base with no tier tags is AMBIGUOUS ON DISK: genuinely never armed
+    # (CamGraphLabels, MenuFix), or an INVERSE-GATED package the DLL arms with
+    # on/off (WebText, gated on the Web Button mod). The filesystem cannot tell
+    # those apart - only the DLL's call site can, so ask it.
+    #
+    # Getting this wrong is silent and total. WebText was classified
+    # tier-independent, so nothing built it a payload, so ArmOne logged
+    # "NO PAYLOAD AT ALL ... Leaving %ls.dat exactly as found" and its inverse
+    # gate never fired. Found 2026-08-29 by Test-DatIntegrity's payload
+    # coverage check, alongside the same failure in SelectorUI - two instances
+    # of one class, which is why this is derived now instead of listed.
+    if armed_tags:
+        promoted = []
+        for key in list(plain):
+            base = key[1] if isinstance(key, tuple) else str(key).replace(
+                "\\", "/").split("/")[-1]
+            tag = armed_tags.get(base)
+            if tag and plain.get(key):
+                inverse[key] = (plain.pop(key), tag)
+                promoted.append("%s (.%s)" % (base, tag))
+        if promoted:
+            print("  inverse-gated BY CALL SITE, not by filename: %s"
+                  % ", ".join(sorted(promoted)))
     return full, inverse, plain, partial
+
+
+# ---------------------------------------------------------------------------
+# Which packages does the DLL actually ARM? Derived from its call sites.
+# ---------------------------------------------------------------------------
+
+SYNCDAT_RE = re.compile(
+    r'SyncDat\s*\(\s*[A-Za-z_]\w*\s*,\s*L"([^"]+)"\s*,\s*([^,]+),')
+
+
+def syncdat_call_sites(scale_tier_cpp):
+    """base name -> payload tag the DLL will ask ArmOne for.
+
+    WHY THIS IS PARSED AND NOT LISTED. A package with no tier tags on disk is
+    ambiguous: it may be genuinely tier-independent and never armed
+    (CamGraphLabels, MenuFix), or it may be an INVERSE-GATED package the DLL
+    arms with `on`/`off` (WebText, gated on the Web Button mod). The filesystem
+    cannot tell those apart - only the call site can.
+
+    Getting it wrong is silent and total. WebText was classified
+    tier-independent, so nothing built it a payload, so ArmOne logged
+    "NO PAYLOAD AT ALL ... Leaving %ls.dat exactly as found" and its inverse
+    gate never fired at all. Found 2026-08-29 by Test-DatIntegrity's payload
+    coverage check, alongside the same failure in SelectorUI.
+
+    The mapping mirrors PayloadTagOf() in ScaleTier.cpp: strip a leading
+    hyphen; an empty tag means `on`.
+    """
+    out = {}
+    with io.open(scale_tier_cpp, encoding="utf-8", errors="replace") as fh:
+        src = fh.read()
+    for m in SYNCDAT_RE.finditer(src):
+        rel, tag_expr = m.group(1), m.group(2).strip()
+        base = rel.split("\\")[-1]
+        if tag_expr == 'L""':
+            out[base] = "on"                 # inverse gate, not a tier
+        elif tag_expr.startswith('L"'):
+            out[base] = tag_expr[2:-1].lstrip("-")
+        else:
+            out[base] = None                 # pkg.tag - a real tier package
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -362,7 +436,24 @@ def build(args):
             "no %s*.dat sources under %s. NOT a result: point --src at a "
             "Plugins-style directory (e.g. dist\\SC4UIScale-vX.Y.Z\\Plugins)."
             % (PREFIX, src))
-    full, inverse, plain, partial = categorise(groups)
+    # Ask the DLL which packages it actually arms. A repo-relative path is
+    # used so this works from any cwd; if the source is missing we say so
+    # and continue with filename-only classification rather than guessing.
+    _repo = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    _cpp = os.path.join(_repo, 'src', 'ScaleTier.cpp')
+    armed_tags = {}
+    if os.path.isfile(_cpp):
+        armed_tags = syncdat_call_sites(_cpp)
+        print('  DLL call sites parsed: %d SyncDat target(s)' % len(armed_tags))
+        if not armed_tags:
+            raise SystemExit('REFUSING: parsed src/ScaleTier.cpp and found ZERO '
+                             'SyncDat call sites. The regex has rotted, and every '
+                             'inverse-gated package would be silently classified '
+                             'tier-independent and shipped with no payload.')
+    else:
+        print('  WARNING: %s not found - inverse gates cannot be detected '
+              'by call site' % _cpp)
+    full, inverse, plain, partial = categorise(groups, armed_tags)
 
     remembered = {}
     mpath = os.path.join(out, MANIFEST)
@@ -405,8 +496,23 @@ def build(args):
 
     for key, (tiers, _files) in sorted(full.items()):
         emit(key, tiers)
-    for key, path in sorted(inverse.items()):
-        emit(key, {"on": path})
+    for key, (path, itag) in sorted(inverse.items()):
+        # ⚠ THE TAG MUST BE "1x", NOT "on". The DLL decides the payload
+        # name from the tag its call site passes: SyncSelectorPackage passes
+        # L"-1x", PayloadTagOf strips the hyphen, and ArmOne then opens
+        # z_SC4UIScale_SelectorUI.1x.uipay. MigrateRenamesToPayloads writes
+        # exactly that name too.
+        #
+        # Emitting "on" here shipped a bundle the DLL could not read: on a
+        # FRESH install ArmOne missed, fell back to .off, and the stock-tier
+        # selector - the one thing keeping 1x from being a one-way door - was
+        # inert. It worked only on UPGRADED installs, where migration had
+        # produced the right name. Two spellings of one tag, and only the
+        # upgrade path exercised the correct one.
+        #
+        # "on"/"off" stays correct for a TRUE inverse gate (WebText), whose
+        # call site passes L"" and whose payload tag really is "on".
+        emit(key, {itag: path})
 
     manifest = {
         "tool": "tools/payload/build_payloads.py",
@@ -506,7 +612,8 @@ def verify(args):
         got = set(members)
 
         # (a) complete set: a tier package or the inverse-gated one, nothing else
-        if got not in (set(REQUIRED_TIERS) | {"off"}, {"on", "off"}):
+        if got not in (set(REQUIRED_TIERS) | {"off"},
+                       {INVERSE_TAG.lstrip("-"), "off"}, {"on", "off"}):
             fails.append("(a) incomplete set  %s has {%s}; expected "
                          "{15x,2x,3x,off} or {on,off}"
                          % (label, ",".join(sorted(got))))

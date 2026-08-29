@@ -20,6 +20,26 @@
     .\Set-StockCompare.ps1 -Mode Stock -Width 1280 -Height 1024
     .\Set-StockCompare.ps1 -Mode Ours               # back to 2400x1600 fullscreen, 2x UI
     .\Set-StockCompare.ps1 -Status                  # show what is currently active
+
+  v4.5.0 - PRESENCE OF A .dat IS NO LONGER EVIDENCE OF SCALING.
+  Through v4.4.0 the armed tier lived in the FILENAME (`<pkg>-2x.dat` live, the
+  other tiers `.dat.x1-disabled`), so "a z_SC4UIScale_*.dat exists" really did
+  mean some tier was armed, and -Status said "OURS (2x scaling active)". From
+  v4.5.0 arming is a CONTENT SWAP at a stable filename (src\ScaleTier.cpp:
+  ArmOne): `z_SC4UIScale_<Pkg>.dat` exists at EVERY tier, including tier 1, and
+  including for a package the dependency gate has switched off - "off" is that
+  same file holding the inert `.off` payload's bytes. So the old -Status line
+  was doubly wrong under the new layout: "2x" was hard-coded, and "active" was
+  inferred from a file that is now always there. The armed tier is read from
+  `z_SC4UIScale_STATE.txt` instead, and when that file is absent -Status says
+  UNKNOWN rather than guessing.
+
+  THE STOCK CLAIM STILL HOLDS, and it holds for a reason worth writing down:
+  this script renames SC4UIScale.dll aside too. If it did not, the DLL would
+  boot, find every live .dat missing, and RECREATE all of them from their
+  payloads - a "stock" run with the whole scaling layer restored underneath it.
+  Assert-StockClean already refuses when the DLL is live; that check is now
+  load-bearing for the dats as well, not just for the DLL's own patches.
 #>
 [CmdletBinding()]
 param(
@@ -53,6 +73,15 @@ $TouchedDirs = @(
 
 # Our scaling layer. NOTE: SC4TouchControls.dll is deliberately NOT here.
 # Only files WITHOUT an existing gating suffix (.x1-disabled) are touched.
+#
+# v4.5.0: `.uipay` PAYLOADS ARE DELIBERATELY NOT TOUCHED, and that is not an
+# oversight to tidy up later. A payload is inert BY EXTENSION - measured, not
+# assumed: probe #202 copied a real DBPF to `.uipay`, booted, and it did not
+# appear in the registered-segment census while 13 of our live `.dat` files
+# did, so the census could have seen it and did not. Renaming them would make
+# the -Mode Ours restore harder for no gain. The `*.dat` filters below already
+# skip them, and Get-OurLiveArtifacts (the positive control) skips them for the
+# same measured reason.
 function Get-OurLiveFiles {
     $files = @()
     $files += Get-ChildItem -Path $DocPlugins -Filter "SC4UIScale.dll" -ErrorAction SilentlyContinue
@@ -162,6 +191,14 @@ function Assert-StockClean {
     if ($live.Count -eq 0) {
         Write-Host "STOCK VERIFIED: recursive scan of both Plugins trees + the two"
         Write-Host "  loose-font probe sites found 0 live SC4UIScale artifacts."
+        # Named so nobody reads the leftover payloads as a hole in the claim,
+        # and nobody 'fixes' it by renaming them (which -Mode Ours would then
+        # have to undo). Inert by EXTENSION, measured by probe #202.
+        $pay = @(Get-ChildItem -Path $DocPlugins -Recurse -File -Filter 'z_SC4UIScale_*.uipay' -ErrorAction SilentlyContinue)
+        if ($pay.Count) {
+            Write-Host ("  ({0} .uipay payload(s) left in place on purpose - inert by extension," -f $pay.Count)
+            Write-Host "   measured by probe #202, and the DLL that would arm them is disabled.)"
+        }
         return
     }
     Write-Host ""
@@ -172,6 +209,63 @@ function Assert-StockClean {
            "would load and any comparison taken now would be a Franken-capture. " +
            "Disable them (rename the extension or move them OUT of the Plugins " +
            "tree - a subfolder disables nothing) and re-run.")
+}
+
+# ---- WHAT IS ACTUALLY ARMED --------------------------------------------------
+# The one question a directory listing can no longer answer. Reads the DLL's own
+# per-folder record (ScaleTier.cpp: WriteArmState), whose format is two `#`
+# header lines then TSV:
+#   base <TAB> tag <TAB> reason <TAB> paySize <TAB> payTime <TAB> liveSize <TAB> liveTime
+# `tag` is the armed payload tag (15x/2x/3x/1x/on) or `off`.
+function Read-ArmState {
+    $rows = @()
+    foreach ($d in @($DocPlugins, $OurDir, (Join-Path $DocPlugins "zzz-SC4UIScale"))) {
+        $s = Join-Path $d 'z_SC4UIScale_STATE.txt'
+        if (-not (Test-Path -LiteralPath $s)) { continue }
+        foreach ($line in (Get-Content -LiteralPath $s)) {
+            if (-not $line -or $line -match '^\s*#') { continue }
+            $c = $line -split "`t"
+            if ($c.Count -lt 3) { continue }
+            $rows += [pscustomobject]@{ Base = $c[0]; Tag = $c[1]; Reason = $c[2]; Dir = $d }
+        }
+    }
+    return $rows
+}
+
+# ⛔ NEVER PRINT A TIER THIS FUNCTION DID NOT READ SOMEWHERE. The line it
+# replaces said "OURS (2x scaling active)" from the mere presence of a .dat -
+# hard-coded at 2x (wrong for anyone on 1.5x or 3x) and, since v4.5.0, wrong
+# about "active" too: the live file exists at tier 1 and for every gated-off
+# package as well. Both errors point the same way, towards "looks fine".
+function Get-ArmedSummary {
+    $rows = @(Read-ArmState)
+    if ($rows.Count) {
+        $armed = @($rows | Where-Object { $_.Tag -ne 'off' })
+        $tags  = @($armed | ForEach-Object { $_.Tag } | Sort-Object -Unique)
+        if (-not $armed.Count) {
+            return ("installed but INERT - all {0} package(s) hold .off content (stock tier, or every gate closed). Read from z_SC4UIScale_STATE.txt." -f $rows.Count)
+        }
+        if ($tags.Count -eq 1) {
+            return ("scaling ACTIVE at tier '{0}' - {1} of {2} package(s) armed. Read from z_SC4UIScale_STATE.txt." -f $tags[0], $armed.Count, $rows.Count)
+        }
+        return ("INCOHERENT - armed packages disagree on the tier ({0}). Two tiers cannot both be right; check z_SC4UIScale_STATE.txt." -f ($tags -join ', '))
+    }
+    # Pre-4.5.0 tree: the filename still carries the tier, so read it there and
+    # SAY that is where it came from.
+    $legacy = @()
+    foreach ($d in @($DocPlugins, $OurDir, (Join-Path $DocPlugins "zzz-SC4UIScale"))) {
+        if (-not (Test-Path $d)) { continue }
+        $legacy += @(Get-ChildItem -Path $d -File -Filter "z_SC4UIScale_*.dat" -ErrorAction SilentlyContinue |
+                     Where-Object { $_.BaseName -match '-(15x|2x|3x|4x|1x)$' })
+    }
+    if ($legacy.Count) {
+        $t = @($legacy | ForEach-Object { ($_.BaseName -replace '^.*-(15x|2x|3x|4x|1x)$', '$1') } | Sort-Object -Unique)
+        return ("scaling active at tier(s) {0} - read from the PRE-4.5.0 tier-tagged filenames ({1} file(s)); this tree has not been converted to the payload layout." -f ($t -join ', '), $legacy.Count)
+    }
+    return ("ARMED TIER UNKNOWN - no z_SC4UIScale_STATE.txt and no tier-tagged filenames. " +
+            "Under the v4.5.0 content swap the live filename is a CONSTANT, so the files " +
+            "below prove INSTALLATION and nothing about what is armed. Launch the game " +
+            "once (the DLL rewrites that file every boot) and re-run -Status.")
 }
 
 function Show-Status {
@@ -185,7 +279,7 @@ function Show-Status {
     $live = @(Get-OurLiveArtifacts)
     $mode = if ($live.Count -eq 0) { "STOCK (verified: 0 live artifacts)" }
             elseif ($off.Count -gt 0) { "MIXED - $($live.Count) still live, see below" }
-            else { "OURS (2x scaling active)" }
+            else { "OURS - " + (Get-ArmedSummary) }
     Write-Host "Mode      : $mode"
     if ($live.Count -gt 0 -and $off.Count -gt 0) {
         $live | ForEach-Object { Write-Host "    STILL LIVE: $($_.FullName)" }

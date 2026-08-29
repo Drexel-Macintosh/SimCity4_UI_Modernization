@@ -34,7 +34,28 @@
       launching rather than launching stock. It is a wrapper, not a mod.
 
   Log/backup files (*.log, *.bak*, *.csv, *.bin, *-backup, *.x1-disabled,
-  *.compare-off) are left alone - the game does not load them.
+  *.compare-off, *.uipay) are left alone - the game does not load them.
+
+  ⛔ WHY EACH OF THOSE SUFFIXES IS INERT, because the list used to be a habit
+  rather than a claim with evidence behind it:
+    *.x1-disabled  the PRE-4.5.0 gating suffix. Still inert, but from v4.5.0 it
+                   should not exist at all - arming stopped renaming anything
+                   (src\ScaleTier.cpp: ArmOne). Finding one in a converted tree
+                   means the tree is half-migrated, which this script reports.
+    *.uipay        the v4.5.0 PAYLOAD suffix. Inert by EXTENSION, measured not
+                   assumed: probe #202 copied a real DBPF to `.uipay`, booted,
+                   and it did not appear in the registered-segment census while
+                   13 of our live `.dat` files did - so the census could have
+                   seen it and did not.
+    *.compare-off  Set-StockCompare.ps1's own suffix.
+
+  ⛔ AND WHY A BARE `z_SC4UIScale_<Pkg>.dat` IS STASHED REGARDLESS OF WHAT IT
+  HOLDS. From v4.5.0 a package that the tier decision or a dependency gate has
+  switched OFF is not a renamed file - it is the SAME `.dat` name holding the
+  inert `.off` payload's bytes. The filename is a constant and carries no
+  verdict, so this script must not try to read one: everything matching a
+  loadable extension goes, and the "is it armed" question is left to
+  `z_SC4UIScale_STATE.txt` and the scripts that read it.
 #>
 [CmdletBinding()]
 param(
@@ -107,13 +128,55 @@ function Get-IniValue([string]$path, [string]$key) {
 }
 
 # ---- STATUS ---------------------------------------------------------------
+# MEASURED, NOT INFERRED FROM THE MANIFEST. The manifest says what this script
+# MOVED; it cannot see a plugin it never knew about, and since v4.5.0 it cannot
+# see one the DLL wrote back either. A recursive scan is the only answer that
+# could have been wrong - SC4 loads Plugins recursively at any depth, which is
+# the exact hole that let 132 "stashed" dats keep loading through a whole stock
+# investigation (2026-08-05).
+function Get-LiveLoadables {
+    $hits = @()
+    foreach ($dir in @($DocPlugins, $InstPlugins)) {
+        if (-not (Test-Path $dir)) { continue }
+        $hits += @(Get-ChildItem -Path $dir -Recurse -File -ErrorAction SilentlyContinue |
+            Where-Object {
+                ($_.Extension -eq '.dat' -or $_.Extension -eq '.dll' -or $_.Name -eq 'FontStyle.ini') -and
+                ($KeepNames -notcontains $_.Name)
+            })
+    }
+    return $hits
+}
+
 if ($Status) {
+    $liveNow = @(Get-LiveLoadables)
+    $oursNow = @($liveNow | Where-Object { $_.Name -like 'z_SC4UIScale_*' -or $_.Name -eq 'SC4UIScale.dll' })
     if (Test-Path $Manifest) {
         $n = (Get-Content $Manifest | Where-Object { $_ -and $_ -notmatch '^#' }).Count
-        Write-Output "STOCK-PLUGINS MODE ACTIVE - $n item(s) stashed."
+        if ($liveNow.Count -eq 0) {
+            Write-Output "STOCK-PLUGINS MODE ACTIVE - $n item(s) stashed, and a recursive scan"
+            Write-Output "  of both Plugins trees confirms 0 loadable plugin files remain."
+        } else {
+            # ⛔ REFUSE THE CLAIM. A manifest with live files beside it is the
+            # "looks fine" shape: everything the script did succeeded, and the
+            # game still is not stock. Under v4.5.0 this matters more, not
+            # less - a surviving z_SC4UIScale_*.dat no longer says in its NAME
+            # whether it is armed, so its mere presence is the only warning
+            # anyone gets.
+            Write-Output "!! NOT STOCK, despite a manifest claiming $n item(s) stashed."
+            Write-Output ("   {0} loadable plugin file(s) are STILL LIVE in the Plugins tree(s):" -f $liveNow.Count)
+            $liveNow | Select-Object -First 12 | ForEach-Object { Write-Output ("     " + $_.FullName) }
+            if ($liveNow.Count -gt 12) { Write-Output ("     ... and {0} more" -f ($liveNow.Count - 12)) }
+            if ($oursNow.Count) {
+                Write-Output ("   {0} of them are OURS. Since v4.5.0 a live z_SC4UIScale_*.dat" -f $oursNow.Count)
+                Write-Output "   carries no tier tag and no gate verdict in its name, so nothing"
+                Write-Output "   about it can be read as 'inert' - treat it as loading."
+            }
+            Write-Output "   A subfolder disables nothing (the scan is recursive). Move them OUT"
+            Write-Output "   of the tree or rename the extension, then re-run -Status."
+        }
         Write-Output "Stash: $Stash"
     } else {
-        Write-Output "Not stashed (no manifest) - plugins are live."
+        Write-Output ("Not stashed (no manifest) - {0} loadable plugin file(s) are live." -f $liveNow.Count)
     }
     Write-Output ("Resolution: {0}x{1} {2} / {3}" -f (Get-IniValue $GfxIni 'WindowWidth'),
         (Get-IniValue $GfxIni 'WindowHeight'), (Get-IniValue $GfxIni 'WindowMode'),
@@ -182,8 +245,12 @@ Get-ChildItem $DocPlugins -File -ErrorAction SilentlyContinue | ForEach-Object {
     # quarantined names are ALWAYS stashed, never kept
     $isLoadable = ($n -like "*.dll") -or ($n -like "*.dat") -or ($n -eq "FontStyle.ini")
     if (-not $isLoadable) { return }
-    # already-gated copies are inert; leave them where they are
-    if ($n -like "*.x1-disabled" -or $n -like "*.compare-off") { return }
+    # Inert by SUFFIX; leave them where they are. `.uipay` is listed
+    # explicitly even though $isLoadable already excludes it, so that the
+    # exemption survives someone widening $isLoadable later - and because a
+    # suffix claimed inert without evidence is how the 132-dat stash failure
+    # happened. The evidence for each one is in the header block.
+    if ($n -like "*.x1-disabled" -or $n -like "*.compare-off" -or $n -like "*.uipay") { return }
     $rows += ,@("DOC\$n", $_.FullName, (Join-Path $Stash "DOC\$n"))
 }
 

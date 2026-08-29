@@ -4,6 +4,53 @@
 # the built artifacts still exist. Update EXPECTED when packages change
 # (that's a deliberate act - see REGRESSION.md).
 # PASS = exit 0, "ALL PASS".
+#
+# ===========================================================================
+# v4.5.0 REWRITE - THE LAYOUT UNDER THIS SUITE CHANGED (2026-08-29)
+#
+# Through v4.4.0 a scale tier was ARMED BY RENAMING dats: the active tier sat
+# as `z_SC4UIScale_<Pkg>-<tag>.dat` and its siblings as
+# `...-<tag>.dat.x1-disabled`. From v4.5.0 (src\ScaleTier.cpp: ArmOne /
+# CommitArming / WriteArmState) arming is a CONTENT SWAP at a stable filename:
+#
+#   LIVE     z_SC4UIScale_<Pkg>.dat            the only thing SC4 loads. Its
+#                                              CONTENT changes; the name never
+#                                              does, at any tier, under any
+#                                              gate verdict, ever.
+#   PAYLOAD  z_SC4UIScale_<Pkg>.<tag>.uipay    inert, never renamed, never
+#                                              loaded. tag is one of
+#                                              15x / 2x / 3x / 1x / on / off.
+#                                              (Measured, not assumed: probe
+#                                              #202 proved the plugin scan is
+#                                              EXTENSION-gated, with 13 live
+#                                              .dat files as the positive
+#                                              control.)
+#   STATE    z_SC4UIScale_STATE.txt            written by the DLL every boot,
+#                                              per folder. TSV, two '#' header
+#                                              lines, then
+#                                              base<TAB>tag<TAB>reason<TAB>
+#                                              paySize<TAB>payTime<TAB>
+#                                              liveSize<TAB>liveTime.
+#
+# EVERY ASSERTION HERE THAT USED TO NAME A TIER-TAGGED FILE IS THEREFORE DEAD
+# BY CONSTRUCTION - it would look for a name that no longer exists and fail
+# for its own reason, which is worse than no gate (law 50b). So every path is
+# resolved through Resolve-PkgFile, which knows BOTH layouts and SAYS WHICH IT
+# FOUND. That is not politeness: this repo's own deploy script is still on the
+# rename layout today, so a run against a live install legitimately reports the
+# OLD layout, and a suite that crashed or went red on that would be untrusted
+# exactly when it is needed.
+#
+# TWO THINGS THE FILENAME USED TO TELL US AND NO LONGER CAN, both now sourced
+# from evidence instead:
+#   "which tier is armed"       -> STATE.txt's tag column, CROSS-CHECKED against
+#                                  the live file's content hash. Two independent
+#                                  instruments; disagreement is red.
+#   "is this package gated off" -> STATE.txt's reason/tag columns. A gated-off
+#                                  package is a LIVE .dat holding `.off` content,
+#                                  indistinguishable on a directory listing from
+#                                  an armed one.
+# ===========================================================================
 $ErrorActionPreference = "Stop"
 $proj = Split-Path $PSScriptRoot -Parent
 $packer = Join-Path $proj "tools\dbpf\DbpfPack.exe"
@@ -11,8 +58,122 @@ $plugins = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\P
 # v4.2.0 (subfolder move): our files live in the 010-SC4UIScale subfolder;
 # zzz-SC4UIScale stays top-level. Row names below carry their folder.
 $our = Join-Path $plugins '010-SC4UIScale'
+$zzz = Join-Path $plugins 'zzz-SC4UIScale'
+$OUR_DIRS = @($our, $zzz)
 
-# name pattern (live or gated), expected entry count
+$failures = @()
+
+# The packer is the instrument every entry-count assertion below is measured
+# with. NULL IS NOT EVIDENCE: without it, every count check would either throw
+# or silently score zero, and "no counts were wrong" would mean "no counts were
+# taken". Refuse up front and say so.
+if (-not (Test-Path $packer)) {
+  Write-Output ("FAIL: no DbpfPack.exe at " + $packer + " - every entry-count " +
+    "assertion in this suite is measured with it, so none of them could run. " +
+    "This is a REFUSAL, not a pass (build tools\dbpf).")
+  exit 1
+}
+
+# ---------------------------------------------------------------------------
+# LAYOUT CENSUS - RUN FIRST, AND IT MAY REFUSE.
+#
+# Everything below resolves paths through one of two naming schemes. Which one
+# is on disk is a FACT to be measured, not a version number to be assumed: an
+# install part-way through migration carries both, and the DLL's own
+# MigrateRenamesToPayloads converts a folder at a time. Counting first means
+# the report can NAME the layout instead of emitting 60 "NOT FOUND" lines that
+# all have the same single cause.
+#
+# GOES RED WHEN: zero of our package files are found at all (wrong Plugins
+# path, or the mod is not deployed - either way nothing below would be
+# evidence about anything).
+# ---------------------------------------------------------------------------
+$censusPayload  = @()
+$censusTagged   = @()   # bare tier-tagged .dat (RENAME layout, armed)
+$censusDisabled = @()   # .x1-disabled          (RENAME layout, stashed)
+$censusStable   = @()   # untagged .dat         (both layouts: the live file)
+foreach ($d in $OUR_DIRS) {
+  if (-not (Test-Path $d)) { continue }
+  foreach ($f in @(Get-ChildItem $d -File -ErrorAction SilentlyContinue |
+                   Where-Object { $_.Name -like 'z_SC4UIScale_*' })) {
+    if ($f.Name -like '*.uipay')       { $censusPayload  += $f; continue }
+    if ($f.Name -like '*.x1-disabled') { $censusDisabled += $f; continue }
+    if ($f.Extension -ne '.dat')       { continue }
+    if ($f.BaseName -match '-(15x|2x|3x|4x|1x)$') { $censusTagged += $f }
+    else                                          { $censusStable += $f }
+  }
+}
+$nOurFiles = $censusPayload.Count + $censusTagged.Count + $censusDisabled.Count + $censusStable.Count
+if ($nOurFiles -eq 0) {
+  Write-Output ("FAIL: ZERO z_SC4UIScale_* files under " + $plugins +
+    " (looked in 010-SC4UIScale and zzz-SC4UIScale). Nothing was examined, so " +
+    "nothing below could have gone red. REFUSAL, not a pass - check the " +
+    "Documents redirect and that the mod is deployed.")
+  exit 1
+}
+$layout = 'unknown'
+if ($censusPayload.Count -gt 0 -and ($censusTagged.Count + $censusDisabled.Count) -gt 0) { $layout = 'MIXED' }
+elseif ($censusPayload.Count -gt 0) { $layout = 'PAYLOAD' }
+elseif (($censusTagged.Count + $censusDisabled.Count) -gt 0) { $layout = 'RENAME' }
+Write-Host ("  layout on disk: " + $layout + "  (" + $censusPayload.Count +
+  " .uipay payload(s), " + $censusTagged.Count + " tier-tagged .dat, " +
+  $censusDisabled.Count + " .x1-disabled, " + $censusStable.Count +
+  " stable .dat)")
+if ($layout -eq 'RENAME') {
+  Write-Host ("  note: this install is on the PRE-4.5.0 RENAME layout. That is " +
+    "the expected state until _tests\Convert-ToPayloadLayout.ps1 has run over " +
+    "it (or the DLL has booted once and migrated it). Checks that only exist " +
+    "in the payload layout say so individually rather than passing silently.")
+}
+if ($layout -eq 'MIXED') {
+  # Not automatically fatal here - the per-package BOTH-LAYOUTS gate further
+  # down decides that, because a folder mid-migration is only dangerous when
+  # ONE PACKAGE has live files under both schemes.
+  Write-Host ("  note: BOTH layouts are present in this tree. Per-package " +
+    "overlap is gated below; a clean split (one folder migrated, one not) is " +
+    "survivable, a per-package overlap is not.")
+}
+
+# ---------------------------------------------------------------------------
+# THE RESOLVER. One place that knows both naming schemes, so no assertion below
+# has to.
+#
+#   Rel = "<folder>\z_SC4UIScale_<Pkg>"   (no tag, no extension)
+#   Tag = "15x" | "2x" | "3x" | "1x" | "on" | "off"
+#
+# Returns @{ Path; Layout; Live } or $null. `Live` means "SC4 loads this file
+# as it stands" - true only for a bare tier-tagged .dat in the rename layout.
+# Payloads are never live by construction; that is the whole point of .uipay.
+# ---------------------------------------------------------------------------
+function Resolve-PkgFile {
+  param([string]$Rel, [string]$Tag)
+  $stem = Join-Path $plugins $Rel
+  # PAYLOAD layout first: it is the target state, and where both exist the
+  # payload is the authority (the tier-tagged file is migration leftover).
+  $pay = "$stem.$Tag.uipay"
+  if (Test-Path $pay) { return @{ Path = $pay; Layout = 'payload'; Live = $false } }
+  # RENAME layout. "on" was the untagged always-on form; tiers carried -<tag>.
+  if ($Tag -eq 'on') { $cand = "$stem.dat" } else { $cand = "$stem-$Tag.dat" }
+  if (Test-Path $cand)               { return @{ Path = $cand; Layout = 'rename'; Live = $true } }
+  if (Test-Path "$cand.x1-disabled") { return @{ Path = "$cand.x1-disabled"; Layout = 'rename'; Live = $false } }
+  return $null
+}
+# The one file SC4 actually loads for a package. Same name in both layouts - in
+# the rename layout it only exists for the v4.0.3 stable-name pilot
+# (SelectiveArt) and for the untagged always-on packages.
+function Resolve-LiveFile {
+  param([string]$Rel)
+  $p = (Join-Path $plugins $Rel) + ".dat"
+  if (Test-Path $p) { return $p }
+  return $null
+}
+
+# ---------------------------------------------------------------------------
+# rel = folder + package base (NO tier tag, NO extension - the tag is its own
+# column now, because it is no longer part of any filename in the target
+# layout). tag: 15x/2x/3x/1x/on, or "plain" for a package the arming pass
+# never touches. entries = expected DBPF entry count.
+# ---------------------------------------------------------------------------
 $EXPECTED = @(
   # SelectiveArt: 696 at EVERY tier (1.5x / 2x / 3x).
 # 2026-08-19: 693 -> 696. The DEFAULT/PLACEHOLDER sim faces {EA32F100,
@@ -131,7 +292,10 @@ $EXPECTED = @(
   # ALSO 2026-07-28: the stray UNTAGGED z_SC4UIScale_SelectiveArt.dat that had
   # been loading alongside -2x all along is retired to
   # tools\selective-safe\replaced\ - exactly the shadowing hazard that the
-  # untagged DialogStatic.dat had.
+  # untagged DialogStatic.dat had. (v4.5.0 FOOTNOTE: that hazard is now a
+  # FIRST-CLASS GATE - see BOTH LAYOUTS below. An untagged .dat beside a live
+  # tagged one is the same two-live-providers shape, and it is what a
+  # half-run migration can now reintroduce wholesale.)
   # 240 SelectiveArt = 215 + god-mode toolbar cluster art (0xC991EDA8 twins
   # + terrain-fx/day-night flyouts) 2026-07-24 - the ghost-sun fix.
   # 195 = 51 (region + 3 validation queries) + the auto-discovered rest of
@@ -162,13 +326,14 @@ $EXPECTED = @(
   # 476 = 461 + 15 My Sims family arts (v2.22.0: roots 0x698894D3 /
   # 0xCA1F1D9C / 0xAA1F1EC5, script I-aa1f1f57 - the panel came OFF the
   # kNeverScaleIds deferral; see REGRESSION.md "MY SIMS").
-  @{ name = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-2x.dat";  entries = 696 },
-  # STABLE FILE (v4.0.3 pilot): the one name SC4 loads and sc4pac tracks.
-  # 696 holds regardless of WHICH tier's bytes are currently copied in -
-  # every tier source carries the same count by construction (see the note
-  # at the top of this table) - so this stays a valid, tier-independent
-  # check rather than a snapshot of one specific tier's content.
-  @{ name = "010-SC4UIScale\z_SC4UIScale_SelectiveArt.dat";     entries = 696 },
+  #
+  # WHY EVERY TIER STILL GETS ITS OWN ROW even though the count is the same at
+  # all three: the row asserts THAT TIER'S FILE EXISTS AND PARSES. Under the
+  # payload layout that file is `.15x.uipay` / `.2x.uipay` / `.3x.uipay`, and a
+  # package missing one of them goes INERT the moment the player switches to
+  # that tier (ArmOne: "MISSING PAYLOAD ... falling back to .off. This is a
+  # packaging defect"). One shared count, three separate existence facts.
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt";  tag = "2x";  entries = 696 },
   # DialogStatic 255 -> 259 (2026-07-29, Batch A, task #54): the last three
   # bucket-D text-bearing roots joined TARGETS in build_dialog_static.py -
   # I-6b704690 Label Tool (root 0x8A8DFCF5, shared with the generic message
@@ -177,8 +342,8 @@ $EXPECTED = @(
   # sibling button (0x000A0000). All three roots are ALSO in kNeverScaleIds.
   # +4 not +3: the three scripts plus one art asset that became referenced.
   # Same 259 at every tier by construction (one builder, --factor only).
-  @{ name = "010-SC4UIScale\z_SC4UIScale_DialogStatic-2x.dat";  entries = 265 },  # 262 -> 261 2026-08-16: #178 CAM splash {ea7f0eae} now ships ONLY in gated CamUI, ALL tiers consistent. USER DECISION STILL OWED on 262 (ship ungated); flip back if decided
-  @{ name = "010-SC4UIScale\z_SC4UIScale_ItemIcons-2x.dat";     entries = 356 },
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic";  tag = "2x";  entries = 265 },  # 262 -> 261 2026-08-16: #178 CAM splash {ea7f0eae} now ships ONLY in gated CamUI, ALL tiers consistent. USER DECISION STILL OWED on 262 (ship ungated); flip back if decided
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_ItemIcons";     tag = "2x";  entries = 356 },
   # 124 = 55 submenus-mod + 69 other-plugin icons (2026-07-29 landmarks
   # pass): CAM System Integration Module (73: submenu-extended + DLC/Maxis
   # landmark buildings; NOTE ~half its exemplars are TEXT format - the
@@ -201,7 +366,7 @@ $EXPECTED = @(
   # "duplicated icon"). See REGRESSION.md "DUPLICATED MENU ICON /
   # MISSING-THUMB FALLBACK". ANY future item-icon sweep MUST scan
   # .SC4Lot/.SC4Desc/.SC4Model, not just .dat.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-2x.dat"; entries = 130 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub"; tag = "2x"; entries = 130 },
   # THIRD-PARTY DATA PATCH (see tools\research\UPSTREAM-CAM-REPORT.md +
   # memory project-sc4-thirdparty-patches): 6 exemplar-patch cohorts fixing
   # CAM 4.0.1's ten broken submenu parents (police/fire/jail/prison/
@@ -213,10 +378,14 @@ $EXPECTED = @(
   # 0xFF5D2E98 and 0xFF5D2E9E found as positive controls). The row rendered with
   # a checkbox, a cyan swatch and NO CAPTION. We SUPPLY the missing resource -
   # one 20-byte LTEXT, "Exported" - and never touch CAM's file.
-  # TIER-INDEPENDENT: a string has no geometry, so there is no -15x/-3x pair.
+  # TIER-INDEPENDENT: a string has no geometry, so there is no 15x/3x pair.
   # Built by tools\itemicons\build_cam_graph_labels.py.
   # DELETE when CAM fixes the id upstream (reported: UPSTREAM-CAM-REPORT.md #4).
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels.dat"; entries = 1 },
+  # tag "plain": build_payloads.py categorises this as TIER-INDEPENDENT and
+  # invents NO payload for it, and ScaleTier.cpp never SyncDats it. So its
+  # `.dat` is a plain always-live file in BOTH layouts, and it must NOT be
+  # dragged into any armed-tier or payload-completeness reasoning below.
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CamGraphLabels"; tag = "plain"; entries = 1 },
   # THIRD-PARTY .UI OVERRIDE (task #44, 2026-07-29): CoriBoom's 36 Slot
   # Building Styles UI (inside the allow-more-building-styles-dll sc4pac)
   # REPLACES the stock Building Style Control script {0,96A006B0,6BC61F19}
@@ -229,39 +398,42 @@ $EXPECTED = @(
   # slots) and which therefore shadowed our root 2x copy as well - the drawn
   # background covered only a 516x654 corner of the correctly-doubled
   # 1038x1308 window. Upscaled from the MOD's bitmap via Upscale2x.exe.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-2x.dat"; entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI"; tag = "2x"; entries = 2 },
   # WarriorUI (task #94): 2 scripts (mayor LANDSCAPE flyout 09923283 + SIGNS &
   # LABELS column cb95403e, both replaced from 150-mods\ by warrior's
   # god-terraforming-in-mayor-mode) + 2 art (the MOD's own 14215E27/EB7C4D3B,
   # upscaled from ITS bitmaps). Gated on both mod dats by exact name+size.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-2x.dat"; entries = 4 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-15x.dat"; entries = 4 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-3x.dat"; entries = 4 },
-  @{ name = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-15x.dat"; entries = 696 },
-  @{ name = "010-SC4UIScale\z_SC4UIScale_DialogStatic-15x.dat"; entries = 265 }, # #178: see the -2x row note (2026-08-16)
-  @{ name = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-3x.dat";  entries = 696 },   # #136: was 651; #190: was 655
-  @{ name = "010-SC4UIScale\z_SC4UIScale_DialogStatic-3x.dat";  entries = 265 }, # #178: see the -2x row note (2026-08-16)
-  # SelectorUI-1x (2026-08-19): the scale selector at the STOCK tier. ONE
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "2x";  entries = 4 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "15x"; entries = 4 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "3x";  entries = 4 },
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "15x"; entries = 696 },
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "15x"; entries = 265 }, # #178: see the 2x row note (2026-08-16)
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "3x";  entries = 696 },   # #136: was 651; #190: was 655
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "3x";  entries = 265 }, # #178: see the 2x row note (2026-08-16)
+  # SelectorUI (2026-08-19): the scale selector at the STOCK tier. ONE
   # entry by design - Graphic Options and nothing else. If this count ever
   # moves, the stock tier has started shipping scaled art, which is the
   # one thing this package must never do.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat"; entries = 1 },
+  # THE TAG IS THE INTERESTING PART. This is the ONE package armed by the
+  # ABSENCE of a tier, and the two halves of the project disagree about what
+  # its payload is called - see the PAYLOAD TAG COVERAGE gate below, which is
+  # where that disagreement is measured rather than assumed. The row here
+  # resolves through both candidate names so this existence check cannot fail
+  # for the naming reason instead of the missing-file reason.
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_SelectorUI"; tag = "1x"; tagAlt = "on"; entries = 1 },
   # TIER MATH PASS (2026-07-29, v2.24.0): ItemIcons + ItemIconsSub now exist at
-  # every tier (audit finding A1 - they were -2x only, so ALL ~266+130 menu
+  # every tier (audit finding A1 - they were 2x only, so ALL ~266+130 menu
   # icons silently reverted to 1x in scaled cells at 1.5x/3x). Built by
   # tools\itemicons\stage_icons.py --factor / build_itemicons_sub.py --factor;
   # the Sub builder verifies its name set against the shipped 2x pack-sub, so
   # counts are 266/130 at every tier by construction. ScaleTier.cpp already
   # synced these bases for all four package tags - the packages were the gap.
-  @{ name = "010-SC4UIScale\z_SC4UIScale_ItemIcons-15x.dat";    entries = 356 },
-  @{ name = "010-SC4UIScale\z_SC4UIScale_ItemIcons-3x.dat";     entries = 356 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-15x.dat"; entries = 130 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-3x.dat";  entries = 130 },
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_ItemIcons";    tag = "15x"; entries = 356 },
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_ItemIcons";    tag = "3x";  entries = 356 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub"; tag = "15x"; entries = 130 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub"; tag = "3x";  entries = 130 },
   # UNCOVERED THIRD-PARTY ITEM ICONS (#149, 2026-08-15). Icons a custom LOT
-  # ships that no package of ours covered. The count is NOT a constant of the
-  # project - it is however many uncovered icons this install has - so it is
-  # asserted at the value the current build produced and must be updated when
-  # build_uncovered_icons.py reports a different UNCOVERED number.
+  # ships that no package of ours covered.
   # NO FIXED ENTRY COUNT FOR UncoveredIcons - IT IS NOT A CONSTANT.
   # This package holds however many uncovered icons THIS install has, so the
   # count changes the moment the player adds a lot. Asserting "2" would turn
@@ -281,12 +453,14 @@ $EXPECTED = @(
   # already 2x in place in the root DialogStatic package and the mod does not
   # override them.
   # ScaleTier GATES this package on the mod still being installed and
-  # unchanged (2408 bytes), so a "NOT FOUND (live or gated)" here after the mod
-  # is removed is CORRECT behaviour, not a regression - the check below accepts
-  # either the live or the .x1-disabled name.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-2x.dat";  entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-15x.dat"; entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-3x.dat";  entries = 2 },
+  # unchanged (2408 bytes). v4.5.0: A GATE VERDICT IS NO LONGER VISIBLE IN THE
+  # FILENAME - a gated-off package is a live `.dat` holding `.off` content,
+  # under the same name as an armed one. So a "NOT FOUND" here now means the
+  # PAYLOAD is missing (a packaging defect), and the gate verdict is read from
+  # STATE.txt in the DEPENDENCY-GATE VERDICT section instead.
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "2x";  entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "15x"; entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "3x";  entries = 2 },
   # THIRD-PARTY .UI OVERRIDE #3 (v2.38.3): CAM replaces NINE stock .UI scripts,
   # and SIX of them are dialog-static TARGETS - so we were shipping doubled
   # copies of scripts the game never loads. Found by
@@ -302,8 +476,7 @@ $EXPECTED = @(
   # Every image= ref across the six scripts was then audited against the stock
   # PNG store in one pass, which found all four at once. Gated by ScaleTier
   # on BOTH CAM_Extended_Essentials.dat and CAM_Intro.dat (the six come from
-  # two of CAM's dats; a half-present set would be half stale), so
-  # "NOT FOUND (live or gated)" after removing CAM is CORRECT behaviour.
+  # two of CAM's dats; a half-present set would be half stale).
   # 10 -> 22 in v2.97.0 (#154): the THREE CAM-ONLY dialogs joined the set -
   # the city info screen {96a006b0,9b868f68} (the Village Hall / Town Hall
   # query) plus the civic and school query panels 12121201 / 12121205 - and
@@ -312,54 +485,59 @@ $EXPECTED = @(
   # stock twin to fall back to, and that is exactly why they hid: every check
   # in the builder asked "has a mod taken over one of OUR targets?", never
   # "is a mod's OWN dialog scaled?"
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_CamUI-2x.dat";  entries = 22 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_CamUI-15x.dat"; entries = 22 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_CamUI-3x.dat";  entries = 22 },
-  # ALWAYS-ON (untagged, never gated): LTEXT overrides matching WebRedirect
-  @{ name = "010-SC4UIScale\z_SC4UIScale_WebText.dat";          entries = 3 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "2x";  entries = 22 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "15x"; entries = 22 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "3x";  entries = 22 },
+  # ALWAYS-ON (untagged): LTEXT overrides matching WebRedirect. ScaleTier.cpp
+  # DOES SyncDat this one (inverse gate on the Web Button Improvement Mod),
+  # with tag L"" -> payload tag "on"; build_payloads.py classifies it
+  # TIER-INDEPENDENT and invents no payload. That disagreement is measured by
+  # the PAYLOAD TAG COVERAGE gate, not assumed here - the row itself only
+  # asserts the file exists and holds 3 entries.
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_WebText"; tag = "on"; entries = 3 },
   # ---- ZCarbon* (v4.3.0, 2026-08-25): Scoty Carbon Skin adaptations ----
-  # Carbon-sourced scaled twins, gated on the skin's dats at exact sizes;
-  # "NOT FOUND (live or gated)" with the skin removed is correct behaviour.
+  # Carbon-sourced scaled twins, gated on the skin's dats at exact sizes.
   # Z-late names are load-bearing (REGRESSION.md "zzz-INTERNAL SORT TRAP").
   # ZCarbonUI: 109 carbon scripts + 87 enrolled art + 1 carbon-styled clone.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-2x.dat";  entries = 197 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-15x.dat"; entries = 197 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-3x.dat";  entries = 197 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "2x";  entries = 197 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "15x"; entries = 197 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "3x";  entries = 197 },
   # ZCarbonCamUI: carbon's 7 CAM-dialog redeclarations + 3 CAM sheets.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-2x.dat";  entries = 10 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-15x.dat"; entries = 10 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-3x.dat";  entries = 10 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "2x";  entries = 10 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "15x"; entries = 10 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "3x";  entries = 10 },
   # ZCarbonSaveWarning: carbon's two confirm-dialog scripts (art rides ZCarbonUI).
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-2x.dat";  entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-15x.dat"; entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-3x.dat";  entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "2x";  entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "15x"; entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "3x";  entries = 2 },
   # ZCarbonIcons: 8 CSI balloons x BOTH twin groups + 2 item strips.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-2x.dat";  entries = 18 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-15x.dat"; entries = 18 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-3x.dat";  entries = 18 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "2x";  entries = 18 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "15x"; entries = 18 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "3x";  entries = 18 },
   # ZCarbonNam / ZCarbonStyles: 1 script + 1 art each.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-2x.dat";  entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-15x.dat"; entries = 2 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-3x.dat";  entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "2x";  entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "15x"; entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "3x";  entries = 2 },
   # Styles = 1 script + 1 art + 2 carbon-styled CLONE sheets (the clone pass
   # was a false zero until 2026-08-25; see REGRESSION.md).
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-2x.dat";  entries = 4 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-15x.dat"; entries = 4 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-3x.dat";  entries = 4 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "2x";  entries = 4 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "15x"; entries = 4 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "3x";  entries = 4 },
   # ZCarbonArt / ZCarbonGodMod entry counts land with the final build
   # (rows added in the same session - see the deploy manifest).
   # Art = 23 scripts + 246 art + 11 carbon-styled CLONE sheets.
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-2x.dat";  entries = 280 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-15x.dat"; entries = 280 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-3x.dat";  entries = 280 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-2x.dat";  entries = 4 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-15x.dat"; entries = 4 },
-  @{ name = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-3x.dat";  entries = 4 }
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "2x";  entries = 280 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "15x"; entries = 280 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "3x";  entries = 280 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "2x";  entries = 4 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "15x"; entries = 4 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "3x";  entries = 4 }
 )
-# Font package sources must exist beside the DLL
+# Font package sources must exist beside the DLL. NOT renamed by anything -
+# SyncFont copies a tier's table ONTO the live FontStyle.ini, so these three
+# are ordinary files under both layouts.
 $FONT_SOURCES = @("010-SC4UIScale\FontStyle-2x.ini", "010-SC4UIScale\FontStyle-15x.ini", "010-SC4UIScale\FontStyle-3x.ini")
 
-$failures = @()
 # ZCarbon* ARE ABSENT BY DESIGN ON A NORMAL INSTALL (2026-08-25). They are
 # built from another author's skin on the player's own machine, so the
 # release bundle ships none (Build-Dist asserts that) and a cold clone has
@@ -370,14 +548,46 @@ $carbonBuilt = Test-Path (Join-Path $proj "tools\selective-safe\z_SC4UIScale_ZCa
 if (-not $carbonBuilt) {
   Write-Host "  note: no carbon packages built on this machine - ZCarbon rows skipped (they are local-only by design; see CARBON-COMPAT.md)."
 }
+
+# Base -> expected entry count, harvested from the rows above. Used by the LIVE
+# FILE check further down: the count is the same at every tier by construction
+# for every package here, so one number per base is enough to assert that the
+# stable `.dat` the game actually opens holds a whole package rather than a
+# truncated or half-copied one.
+$EXPECTED_BY_BASE = @{}
+
+$nExamined = 0
 foreach ($e in $EXPECTED) {
-  if (-not $carbonBuilt -and $e.name -match 'ZCarbon') { continue }
-  $p = Join-Path $plugins $e.name
-  if (-not (Test-Path $p)) { $p = "$p.x1-disabled" }
-  if (-not (Test-Path $p)) { $failures += ($e.name + ": NOT FOUND (live or gated)"); continue }
-  $list = & $packer --list $p 2>$null
+  if (-not $carbonBuilt -and $e.rel -match 'ZCarbon') { continue }
+  $leaf = Split-Path $e.rel -Leaf
+  if (-not $EXPECTED_BY_BASE.ContainsKey($leaf)) { $EXPECTED_BY_BASE[$leaf] = $e.entries }
+  if ($e.tag -eq 'plain') {
+    # Never armed, never a payload: one plain file, same in both layouts.
+    $hit = $null
+    $pp = Resolve-LiveFile $e.rel
+    if ($pp) { $hit = @{ Path = $pp; Layout = 'plain'; Live = $true } }
+  } else {
+    $hit = Resolve-PkgFile $e.rel $e.tag
+    if (-not $hit -and $e.tagAlt) { $hit = Resolve-PkgFile $e.rel $e.tagAlt }
+  }
+  if (-not $hit) {
+    $failures += ($e.rel + " [" + $e.tag + "]: NOT FOUND under EITHER layout (looked for " +
+      "<base>." + $e.tag + ".uipay, <base>-" + $e.tag + ".dat and its .x1-disabled twin)")
+    continue
+  }
+  $list = & $packer --list $hit.Path 2>$null
   $n = ($list | Where-Object { $_ -match "^0x[0-9A-Fa-f]{8} 0x[0-9A-Fa-f]{8} 0x[0-9A-Fa-f]{8} " }).Count
-  if ($n -ne $e.entries) { $failures += ($e.name + ": $n entries, expected $($e.entries)") }
+  $nExamined++
+  if ($n -ne $e.entries) {
+    $failures += ($e.rel + " [" + $e.tag + "] (" + (Split-Path $hit.Path -Leaf) + "): $n entries, expected $($e.entries)")
+  }
+}
+# NULL IS NOT EVIDENCE. If the resolver matched nothing, every count above was
+# skipped and "no count was wrong" would be a statement about zero measurements.
+if ($nExamined -eq 0) {
+  $failures += ("entry-count pass examined ZERO packages - every row failed to " +
+    "resolve under either layout. That is a refusal, not a pass: the naming " +
+    "scheme changed under this suite, or the Plugins path is wrong.")
 }
 
 foreach ($f in $FONT_SOURCES) {
@@ -417,31 +627,156 @@ if ($others.Count) {
     "folder (" + (($others | ForEach-Object { $_.Name }) -join ", ") + "). Any of " +
     "them can affect a UI-scaling result; rule them out before blaming this mod.")
 }
-# v4.4.0 ROOT GATE. SC4UIScale.dll is the ONLY file this mod may leave at
-# the Plugins root, and only because the game loads DLLs from the top level
-# and nowhere else (measured on the v4.2.0 maiden boot: a DLL in a subfolder
-# produces no log and no director). That matches every one of the 30 sc4pac
-# DLL packages in a typical tree - .dll at the root, everything else in the
-# package folder - and it is what makes our folder removable in one gesture.
+# ---------------------------------------------------------------------------
+# ROOT GATE (v4.4.0; amended v4.5.0 for the ini move).
 #
-# ANY other file of ours at the root is RED, not a note. Through 4.3.1 the
-# ini, log, gcap and #104 csv were resolved beside the DLL and piled up
-# here; this gate is what stops that coming back by accident, because a
-# stray root file is exactly the kind of thing that passes unnoticed for
-# months. Matched by PREFIX, not by a written-down list: an inventory of
-# names is wrong the first time a new one appears.
+# EXACTLY TWO FILES OF OURS MAY SIT AT THE PLUGINS ROOT:
+#
+#   SC4UIScale.dll  - the game loads DLLs from the top level and nowhere else
+#                     (measured on the v4.2.0 maiden boot: a DLL in a subfolder
+#                     produces no log and no director). That matches every one
+#                     of the 30 sc4pac DLL packages in a typical tree.
+#   SC4UIScale.ini  - MOVED HERE v4.5.0, measured against sc4pac 0.10.0 with a
+#                     throwaway channel, not inferred:
+#                       * inside the package folder it is DESTROYED by every
+#                         package UPDATE - sc4pac deletes
+#                         <group>.<name>.<oldver>.sc4pac wholesale and creates a
+#                         new versioned folder, so the player's tier choice
+#                         would not survive one version bump;
+#                       * shipping it with isIni:true is worse - it lands at the
+#                         root RENAMED to <stem>_sc4pacnew.ini, is never
+#                         activated, and is deleted on uninstall even after the
+#                         user has edited it;
+#                       * a ROOT ini came through a measured v1->v2 update
+#                         BYTE-IDENTICAL while the versioned folder was wiped.
+#                     So the bundle ships NO ini at all: the DLL creates it at
+#                     the root on first run, and reverse-migrates a v4.4.0 ini
+#                     out of the folder carrying the user's settings. It is
+#                     therefore a RUNTIME PRODUCT, which is also why it has no
+#                     $EXPECTED or $BUILT_PAIRS row - _packaging\SC4UIScale.ini
+#                     is now a DEFAULTS REFERENCE only, never a shipped file.
+#
+# ANY OTHER file of ours at the root is RED, not a note. Through 4.3.1 the log,
+# gcap and #104 csv were resolved beside the DLL and piled up here; this gate is
+# what stops that coming back by accident, because a stray root file is exactly
+# the kind of thing that passes unnoticed for months. Matched by PREFIX, not by
+# a written-down list: an inventory of names is wrong the first time a new one
+# appears. The exception is on the EXACT name `SC4UIScale.ini`, so
+# SC4UIScale.log, SC4UIScale.gcap and any future SC4UIScaleAnything.ini all stay
+# red.
+#
+# v4.5.0 NOTE, DELIBERATELY EXPLICIT (this gate now has a new way to fire).
+# WriteArmState writes `z_SC4UIScale_STATE.txt` into each folder it armed
+# packages in, and CommitArming derives those folders from the SyncDat call
+# sites - today `OurPackagesDir()` (010-SC4UIScale\) and `PluginsRoot()` +
+# "zzz-SC4UIScale\", both of which are subfolders. So no state file lands at the
+# root and this gate is quiet. BUT the `zzz-SC4UIScale\...` bases are resolved
+# via `ResolveOurRelative`, and IF that ever falls back to the bare PluginsRoot
+# for a package - or a new SyncDat call site passes pluginsRoot with an
+# unprefixed base - then WriteArmState WILL drop z_SC4UIScale_STATE.txt AT THE
+# ROOT and this gate will go red naming it. THAT IS THE CORRECT OUTCOME, not a
+# false positive: a state file at the root means a PACKAGE is being armed at the
+# root, and a package at the root can never override a subfolder dat (the LOAD
+# ORDER LAW). Fix the resolution; do not exempt the filename.
+# ---------------------------------------------------------------------------
+$ROOT_ALLOWED = @("SC4UIScale.dll", "SC4UIScale.ini")
 $legacyRoot = @(Get-ChildItem $plugins -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -ne "SC4UIScale.dll" -and (
+  Where-Object { $ROOT_ALLOWED -notcontains $_.Name -and (
                  $_.Name -like "SC4UIScale*" -or
                  $_.Name -like "z_SC4UIScale_*" -or
                  $_.Name -like "FontStyle-*.ini" -or
                  $_.Name -eq "FontStyle.ini.user-original" -or
                  $_.Name -eq ".sc4uiscale-tier1-restore.txt") })
 foreach ($lf in $legacyRoot) {
+  $extra = ""
+  if ($lf.Name -eq "z_SC4UIScale_STATE.txt") {
+    $extra = " THIS ONE IS SPECIFIC: WriteArmState only writes into folders " +
+             "CommitArming armed packages in, so a STATE file here means a " +
+             "PACKAGE is being armed at the Plugins root - where it can never " +
+             "beat a subfolder dat. Fix ResolveOurRelative / the SyncDat dir; " +
+             "do not delete the file."
+  }
   $failures += ("OUR FILE AT THE PLUGINS ROOT: " + $lf.Name +
-    " - only SC4UIScale.dll belongs there (run _tests\Deploy-OnGameClose.ps1;
-    its root-cleanup block moves or removes these)")
+    " - only SC4UIScale.dll and SC4UIScale.ini belong there (run " +
+    "_tests\Deploy-OnGameClose.ps1; its root-cleanup block moves or removes " +
+    "these)." + $extra)
 }
+
+# ===========================================================================
+# NEW RED GATE (v4.5.0): NO PACKAGE MAY EXIST UNDER BOTH LAYOUTS.
+#
+# THE DAMAGE. `z_SC4UIScale_X.dat` and `z_SC4UIScale_X-2x.dat` in the same
+# folder are TWO LIVE PROVIDERS of every TGI that package owns. Both enter the
+# plugin scan, both register segments, and the winner is decided by scan order
+# inside one directory - which nothing in this project controls or measures.
+# The result renders SILENTLY WRONG: no crash, no log line, identical file
+# counts either way. Convert-ToPayloadLayout.ps1 names this exact shape as the
+# reason it exists as ONE converter called by both Deploy and Build-Dist rather
+# than as edited copy lines in each.
+#
+# WHY IT BELONGS *HERE* AND NOWHERE ELSE. That converter refuses to leave a
+# mixture behind in the tree IT converted, which covers a bundle it built. It
+# cannot cover a REAL INSTALL, where the mixture arrives by a different road:
+# an old deploy writing tier-tagged files into a folder the DLL already
+# migrated, an sc4pac update restoring shipped names beside migrated ones, or a
+# user unzipping a 4.4.0 bundle over a 4.5.0 install. This suite is the only
+# thing that runs against that tree.
+#
+# GOES RED WHEN: any package base has BOTH a live untagged `<base>.dat` AND a
+# live bare `<base>-<tag>.dat`; or a `.uipay` payload sits beside a live
+# tier-tagged twin. `.x1-disabled` files are NOT live and do not count - that
+# stash beside a stable file is the v4.0.3 pilot's normal state, and flagging it
+# would be the gate crying wolf on a correct install.
+# ===========================================================================
+$nOverlapChecked = 0
+foreach ($d in $OUR_DIRS) {
+  if (-not (Test-Path $d)) { continue }
+  $liveDats = @(Get-ChildItem $d -File -Filter 'z_SC4UIScale_*.dat' -ErrorAction SilentlyContinue)
+  $stableNames = @{}
+  foreach ($f in $liveDats) {
+    if ($f.BaseName -notmatch '-(15x|2x|3x|4x|1x)$') { $stableNames[$f.BaseName] = $f.Name }
+  }
+  foreach ($f in $liveDats) {
+    if ($f.BaseName -match '^(?<b>.+)-(?<t>15x|2x|3x|4x|1x)$') {
+      $nOverlapChecked++
+      $b = $matches['b']
+      if ($stableNames.ContainsKey($b)) {
+        $failures += ("BOTH LAYOUTS LIVE for " + $b + " in " + (Split-Path $d -Leaf) +
+          ": " + $stableNames[$b] + " AND " + $f.Name + " are both loadable .dat " +
+          "files. That is TWO LIVE PROVIDERS for every TGI this package owns; the " +
+          "winner is scan order and the screen is silently wrong with no log line " +
+          "and no count change. Delete the tier-tagged one (the stable name is the " +
+          "v4.5.0 target) or finish the migration with " +
+          "_tests\Convert-ToPayloadLayout.ps1.")
+      }
+    }
+  }
+  # The other half of the same hazard, and the one the payload layout can
+  # create: a payload whose tier-tagged source was never removed. `.uipay` is
+  # inert by extension (probe #202), so the tagged .dat is the live one and the
+  # DLL is arming from a file the game is ALSO loading directly.
+  foreach ($p in @(Get-ChildItem $d -File -Filter 'z_SC4UIScale_*.uipay' -ErrorAction SilentlyContinue)) {
+    $nOverlapChecked++
+    if ($p.BaseName -match '^(?<b>.+)\.(?<t>15x|2x|3x|4x|1x|on|off)$') {
+      $twin = Join-Path $d ($matches['b'] + "-" + $matches['t'] + ".dat")
+      if (Test-Path $twin) {
+        $failures += ("BOTH LAYOUTS for " + $matches['b'] + " in " + (Split-Path $d -Leaf) +
+          ": payload " + $p.Name + " coexists with the live tier-tagged " +
+          (Split-Path $twin -Leaf) + ". The migration half-ran - the tier file is " +
+          "still being loaded by the game while the DLL arms the stable name from " +
+          "the payload, so that package has two live providers.")
+      }
+    }
+  }
+}
+if ($nOverlapChecked -eq 0 -and $nOurFiles -gt 0) {
+  # Cannot happen with files present unless the naming assumptions are wrong,
+  # and a scan that examined nothing must never read as a clean scan.
+  $failures += ("BOTH-LAYOUTS gate examined ZERO candidate files while " +
+    $nOurFiles + " of our files exist - the name patterns it matches on no " +
+    "longer describe what is on disk, so it proved nothing.")
+}
+
 # DEPLOYED == BUILT (task #58 root cause, 2026-08-02). The ThirdPartyUI
 # package was absent from Deploy-OnGameClose.ps1, so its deployed copy froze
 # at the 2026-07-29 build epoch; when the art classification later changed,
@@ -451,40 +786,62 @@ foreach ($lf in $legacyRoot) {
 # strings), so only a content hash catches this class. Every package with a
 # canonical build output is asserted here; add a row whenever a new package
 # is added to the deploy script.
+#
+# v4.5.0: THE DEPLOYED SIDE NOW POINTS AT THE PAYLOAD, NOT THE LIVE .dat -
+# AND THAT IS AN IMPROVEMENT, not a translation.
+# The live `z_SC4UIScale_<Pkg>.dat` is REWRITTEN BY THE DLL at every boot
+# (ArmOne copies a payload onto it). Hashing it against a build output would be
+# racing the arming pass: equal only while the armed tier happens to be the tier
+# the row names, and unequal - loudly, wrongly - the moment the player is on any
+# other tier, or the package is gated off and the live file holds `.off`
+# content. The PAYLOAD is never written by the DLL, ever, at any tier, under any
+# gate verdict. So `deployed == built` becomes an EXACT, tier-independent,
+# gate-independent identity instead of a conditional one, and #58's actual
+# question - "is this package frozen at a stale build epoch?" - is answered for
+# ALL THREE TIERS AT ONCE rather than only for whichever one is armed.
+# Under the rename layout the resolver falls back to the tier-tagged file, which
+# is the same bytes, so one row shape works on both.
+#   rel/tag = a package payload;  file = a literal deployed path (DLL, fonts).
 $BUILT_PAIRS = @(
-  @{ b = "build\Release\SC4UIScale.dll";                              d = "SC4UIScale.dll" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_SelectiveArt.dat";        d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat";      d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat";        d = "010-SC4UIScale\z_SC4UIScale_SelectiveArt-3x.dat" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_DialogStatic.dat";         d = "010-SC4UIScale\z_SC4UIScale_DialogStatic-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat";      d = "010-SC4UIScale\z_SC4UIScale_DialogStatic-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat";        d = "010-SC4UIScale\z_SC4UIScale_DialogStatic-3x.dat" }
-  @{ b = "tools\packages\1x\z_SC4UIScale_SelectorUI-1x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_SelectorUI-1x.dat" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_SaveWarningUI.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_SaveWarningUI-15x.dat";     d = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_SaveWarningUI-3x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI-3x.dat" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_CamUI.dat";                d = "zzz-SC4UIScale\z_SC4UIScale_CamUI-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_CamUI-15x.dat";             d = "zzz-SC4UIScale\z_SC4UIScale_CamUI-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_CamUI-3x.dat";               d = "zzz-SC4UIScale\z_SC4UIScale_CamUI-3x.dat" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ThirdPartyUI.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ThirdPartyUI-15x.dat";      d = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ThirdPartyUI-3x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-3x.dat" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_WarriorUI.dat";           d = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_WarriorUI-15x.dat";         d = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_WarriorUI-3x.dat";           d = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI-3x.dat" }
+  @{ b = "build\Release\SC4UIScale.dll";                              file = "SC4UIScale.dll" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_SelectiveArt.dat";        rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat";      rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat";        rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "3x" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_DialogStatic.dat";         rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat";      rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat";        rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "3x" }
+  # SelectorUI: the inverse-gated package. Its payload tag is the one place the
+  # two halves of the project disagree (ScaleTier.cpp asks ArmOne for `1x`,
+  # build_payloads.py emits `on`), so the row carries BOTH candidate names and
+  # the disagreement itself is gated separately below. Resolving either here
+  # keeps THIS row measuring what it is for - stale bytes - instead of failing
+  # for the naming reason.
+  @{ b = "tools\packages\1x\z_SC4UIScale_SelectorUI-1x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_SelectorUI"; tag = "1x"; tagAlt = "on" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_SaveWarningUI.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_SaveWarningUI-15x.dat";     rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_SaveWarningUI-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "3x" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_CamUI.dat";                rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_CamUI-15x.dat";             rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_CamUI-3x.dat";               rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "3x" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ThirdPartyUI.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ThirdPartyUI-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ThirdPartyUI-3x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI"; tag = "3x" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_WarriorUI.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_WarriorUI-15x.dat";         rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_WarriorUI-3x.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "3x" }
   # NamIcons (task #139, 2026-08-05). Hand-placed on the day they were built
   # and therefore absent from BOTH manifests until Build-Dist noticed the
   # bundle was missing them - the #58 / #116 shape a third time. All three
   # tiers come out of tools\itemicons\out\.
-  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-2x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-2x.dat" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-15x.dat";         d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-15x.dat" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-3x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_NamIcons-3x.dat" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-2x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_NamIcons"; tag = "2x" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-15x.dat";         rel = "zzz-SC4UIScale\z_SC4UIScale_NamIcons"; tag = "15x" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-3x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_NamIcons"; tag = "3x" }
   # WebButtonUI (2026-08-21): cyclone-boom Web Button Improvement Mod's web
   # button bitmap, gated on the mod's presence. All three tiers from
   # tools\itemicons\out\ (generator rebuild_webbutton.py).
-  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-2x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI-2x.dat" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-15x.dat";      d = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI-15x.dat" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI-3x.dat" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-2x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "2x" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "15x" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "3x" }
   # UncoveredIcons ROWS DELIBERATELY ABSENT FROM THIS LIST.
   # Unlike every other package here, this one only EXISTS when the player has
   # third-party icons we do not cover. On a clean install there is nothing to
@@ -494,9 +851,14 @@ $BUILT_PAIRS = @(
   # refuses to pack unless every strip measures zero drift and carries the
   # hover border, and tools\uimap\emu\sim_itemicon_states.py sweeps whatever
   # IS deployed across tier x icon x state.
-  @{ b = "tools\itemicons\z_SC4UIScale_ItemIcons.dat";                d = "010-SC4UIScale\z_SC4UIScale_ItemIcons-2x.dat" }
-  @{ b = "tools\itemicons\_work\z_SC4UIScale_ItemIconsSub-2x.dat";    d = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-2x.dat" }
-  @{ b = "tools\webtext\z_SC4UIScale_WebText.dat";                    d = "010-SC4UIScale\z_SC4UIScale_WebText.dat" }
+  @{ b = "tools\itemicons\z_SC4UIScale_ItemIcons.dat";                rel = "010-SC4UIScale\z_SC4UIScale_ItemIcons"; tag = "2x" }
+  @{ b = "tools\itemicons\_work\z_SC4UIScale_ItemIconsSub-2x.dat";    rel = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub"; tag = "2x" }
+  # WebText is TIER-INDEPENDENT: build_payloads.py invents no payload for it, so
+  # the resolver falls through to the plain `.dat` under both layouts. That file
+  # IS however a SyncDat target in ScaleTier.cpp (inverse gate on the web button
+  # mod), which is the disagreement the PAYLOAD TAG COVERAGE gate reports - not
+  # this row's business.
+  @{ b = "tools\webtext\z_SC4UIScale_WebText.dat";                    rel = "010-SC4UIScale\z_SC4UIScale_WebText"; tag = "on" }
   # FONTS (#57 phase 4, 2026-08-02). Fonts were the ONE asset family with no
   # deployed-vs-built assertion - existence-checked only, a few lines above -
   # and that is precisely why they drifted unnoticed: the deployed 1.5x/3x
@@ -506,111 +868,212 @@ $BUILT_PAIRS = @(
   # 2x builds from tools\fonts\FontStyle.candidate.ini - there is no
   # tools\packages\2x\. Do NOT add a row for the live FontStyle.ini: the DLL
   # writes that at boot from the active tier's file (ScaleTier::SyncFont), so
-  # it is a runtime product, not a deployed artifact.
-  @{ b = "tools\fonts\FontStyle.candidate.ini";                       d = "010-SC4UIScale\FontStyle-2x.ini" }
-  @{ b = "tools\packages\15x\FontStyle-15x.ini";                      d = "010-SC4UIScale\FontStyle-15x.ini" }
-  @{ b = "tools\packages\3x\FontStyle-3x.ini";                        d = "010-SC4UIScale\FontStyle-3x.ini" }
+  # it is a runtime product, not a deployed artifact - the same reason the live
+  # `.dat` files and SC4UIScale.ini are not rows here.
+  @{ b = "tools\fonts\FontStyle.candidate.ini";                       file = "010-SC4UIScale\FontStyle-2x.ini" }
+  @{ b = "tools\packages\15x\FontStyle-15x.ini";                      file = "010-SC4UIScale\FontStyle-15x.ini" }
+  @{ b = "tools\packages\3x\FontStyle-3x.ini";                        file = "010-SC4UIScale\FontStyle-3x.ini" }
   # ---- ZCarbon* (v4.3.0): carbon-sourced, gated, local-only (never in the
   # public bundle - Build-Dist asserts that). 2x untagged from the emitting
   # builder's dir, 15x/3x from tools\packages\<tag>\, same as their siblings.
   # NOTE the DbpfPack timestamp law (REGRESSION.md 2026-08-25): these hashes
   # match only because deploy COPIES the built file; any rebuild must be
   # redeployed before this suite runs.
-  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonUI.dat";            d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonUI-15x.dat";         d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonUI-3x.dat";           d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI-3x.dat" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonCamUI.dat";         d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonCamUI-15x.dat";      d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonCamUI-3x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI-3x.dat" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonSaveWarning.dat";   d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonSaveWarning-15x.dat"; d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonSaveWarning-3x.dat";  d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning-3x.dat" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonArt.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonArt-15x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonArt-3x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt-3x.dat" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonNam.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonNam-15x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonNam-3x.dat";          d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam-3x.dat" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonStyles.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonStyles-15x.dat";     d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonStyles-3x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles-3x.dat" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonGodMod.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonGodMod-15x.dat";     d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonGodMod-3x.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod-3x.dat" }
-  @{ b = "tools\research\carbon\z_SC4UIScale_ZCarbonIcons.dat";       d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-2x.dat" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonIcons-15x.dat";      d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-15x.dat" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonIcons-3x.dat";        d = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons-3x.dat" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonUI.dat";            rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonUI-15x.dat";         rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonUI-3x.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "3x" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonCamUI.dat";         rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonCamUI-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonCamUI-3x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "3x" }
+  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonSaveWarning.dat";   rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonSaveWarning-15x.dat"; rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonSaveWarning-3x.dat";  rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "3x" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonArt.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonArt-15x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonArt-3x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "3x" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonNam.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonNam-15x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonNam-3x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "3x" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonStyles.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonStyles-15x.dat";     rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonStyles-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "3x" }
+  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonGodMod.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonGodMod-15x.dat";     rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonGodMod-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "3x" }
+  @{ b = "tools\research\carbon\z_SC4UIScale_ZCarbonIcons.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonIcons-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonIcons-3x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "3x" }
 )
 $nHash = 0
+$nHashRows = 0
 foreach ($pair in $BUILT_PAIRS) {
   # Same carbon presence gate as $EXPECTED above: unbuilt carbon packages are
   # the normal state, and their build outputs are gitignored, so a cold clone
   # would otherwise fail on 24 "built artifact missing" rows before anyone had
   # done a single thing wrong.
   if (-not $carbonBuilt -and $pair.b -match 'ZCarbon') { continue }
+  $nHashRows++
   $bp = Join-Path $proj $pair.b
-  $dp = Join-Path $plugins $pair.d
-  if (-not (Test-Path $dp)) { $dp = "$dp.x1-disabled" }
+  if ($pair.file) {
+    $dp = Join-Path $plugins $pair.file
+    $label = $pair.file
+  } else {
+    $hit = Resolve-PkgFile $pair.rel $pair.tag
+    if (-not $hit -and $pair.tagAlt) { $hit = Resolve-PkgFile $pair.rel $pair.tagAlt }
+    if ($hit) { $dp = $hit.Path } else { $dp = $null }
+    $label = $pair.rel + " [" + $pair.tag + "]"
+  }
   if (-not (Test-Path $bp)) { $failures += ("built artifact missing: " + $pair.b); continue }
-  if (-not (Test-Path $dp)) { $failures += ("deployed artifact missing (live or gated): " + $pair.d); continue }
+  if (-not $dp -or -not (Test-Path $dp)) {
+    $failures += ("deployed artifact missing under either layout: " + $label)
+    continue
+  }
   if ((Get-FileHash $bp -Algorithm SHA256).Hash -ne (Get-FileHash $dp -Algorithm SHA256).Hash) {
-    $failures += ("DEPLOYED != BUILT: " + $pair.d + " does not match " + $pair.b + " - a rebuild was never deployed (run Deploy-OnGameClose.ps1), or the deployed file was edited in place")
+    $failures += ("DEPLOYED != BUILT: " + $label + " (" + (Split-Path $dp -Leaf) +
+      ") does not match " + $pair.b + " - a rebuild was never deployed (run " +
+      "Deploy-OnGameClose.ps1), or the deployed file was edited in place")
   } else { $nHash++ }
 }
+# NULL IS NOT EVIDENCE: rows that all skipped would print "0 hashes" and pass.
+if ($nHashRows -gt 0 -and $nHash -eq 0) {
+  $failures += ("deployed==built pass compared ZERO pairs out of " + $nHashRows +
+    " eligible rows - every one failed to resolve. Refusal, not a pass.")
+}
 
-# ---------------------------------------------------------------------------
-# #100 - THE 4x BUBBLE ASSERTION. A PAYLOAD CHECK, NOT A FILE CHECK.
-#
-# THE HAZARD. The U-Drive-It mission bubble {856DDBAC,46A006B0,094AC89A} is
-# 32x32 at 1x. #100 established that flipping its art flag alone would ship it
-# at 4x and, at the 2x tier, produce the exact 8x shape that #98 had already
-# cost a launch to diagnose. The investigation ended in "DO NOT SHIP" - a
-# SENTENCE IN A DOC, which is the weakest possible guard (law 52: a gate must
-# be a live expression, never a sentence in a comment).
-#
-# So this asserts the pixels, per tier, out of the SHIPPED package: the entry
-# must decode as a PNG whose width and height are both exactly 32 * factor.
-# the 2026-08-16 measurement
-# below read 15x 48x48 / 2x 64x64 / 3x 96x96, i.e. 32*factor. The 2026-08-17
-# USER DECISION replaced that with the flat 96 pin the assertion now uses.
-# A stale comment that contradicts the assertion under it is how a correct
-# gate gets 'fixed' back into a wrong one.
-#
-# It reads the DBPF INDEX and hashes nothing: a dat FILE hash is useless here
-# because two builds of identical content differ in 2 bytes at offsets 25/29
-# (the header timestamp, #170). Payload or nothing.
-# PARSE THESE UNSIGNED. PowerShell reads a hex literal above 0x7FFFFFFF as a
-# NEGATIVE Int32 (0x856DDBAC -> -2056159316), so comparing it against a UInt32
-# read out of the index matches NOTHING and the gate fails claiming the TGI is
-# absent - which is what it did on its first run here. A gate that fails for
-# its own reason is worse than no gate; it must be able to PASS before it is
-# allowed to fail (law 50b).
-# #197 (2026-08-18) replaces #186's PIN - AND IT replaces A USER
-# DECISION, so it is spelled out rather than quietly swapped.
-#   #186, 2026-08-17, USER: "grow at all tiers for clickability" -> art pinned
-#     at 96px (3x design) in EVERY tier package.
-#   #197, 2026-08-18, USER: "we overdid it with scaling on our UDriveIt
-#     buttons ... 1.5X should truly just be 1.5X, 2X=2X etc."
-# The later rule wins. The pin was not wrong about clickability - it was wrong
-# about ARITHMETIC: the window is BORN at the art's pixel size and the sweep
-# then multiplies by f, so on-screen = 32 * a * f. With a pinned at 3 the
-# marker was a flat 3x oversize at EVERY tier, which is what the user saw.
-#
-# Art is now staged at RoundHalfUp(32*f) - 48 / 64 / 96 - and 0x48E945B4 is in
-# kNeverScaleIds so the sweep cannot apply f a second time. The draw clamp
-# then self-cancels (source == window => m = 1), giving 32*f exactly, crisp.
-# The #100 hazard is still caught: a 4x flag would stage 128 at f=2 and fail
-# the 64 expected here.
-#
-# IF CLICKABILITY IS NOW TOO SMALL AT 1.5x, that is a HIT-BOX question, not
-# a size question - grow the hit box, do not re-pin the art, or the arithmetic
-# breaks again and #100 comes back.
-$BUBBLE = @{ T = [Convert]::ToUInt32("856DDBAC", 16)
-             G = [Convert]::ToUInt32("46A006B0", 16)
-             I = [Convert]::ToUInt32("094AC89A", 16)
-             Design = 32 }
-$BUBBLE_TIERS = @{ "15x" = 1.5; "2x" = 2.0; "3x" = 3.0 }
 # ===========================================================================
+# PAYLOAD TAG COVERAGE - DERIVED FROM ScaleTier.cpp, MEASURED ON DISK.
+#
+# WHAT BREAKS WITHOUT IT. ArmOne asks the filesystem for
+# `<base>.<tag>.uipay`, where <tag> comes from PayloadTagOf(). If that exact
+# file is absent it logs "MISSING PAYLOAD ... falling back to .off. This is a
+# packaging defect; the package will be inert." - and then the package IS inert
+# with a live, valid, parseable `.dat` sitting there. Nothing in a directory
+# listing, an entry count, or a hash comparison can see that. The only visible
+# consequence is on screen, at one tier, for one package.
+#
+# TWO INDEPENDENT INSTRUMENTS, which is the whole point (two blind instruments
+# agreeing is one instrument):
+#   what the DLL will ASK for  <- parsed out of src\ScaleTier.cpp's SyncDat call
+#                                 sites plus the PayloadTagOf rule
+#   what is ON DISK            <- the filesystem
+# Neither is a hand-kept list, so neither can rot into agreement with the other.
+#
+# GOES RED WHEN: (a) the SyncDat parse yields zero call sites - the source shape
+# changed and this gate proved nothing; (b) PayloadTagOf's rule text is no
+# longer in ScaleTier.cpp, so the mapping this mirrors is not the mapping in
+# force; (c) a package's `.off.uipay` is missing - reachable at the stock tier
+# and whenever a dependency gate turns the package off, i.e. always; (d) a
+# package's tier payload is missing under the exact name the DLL asks for.
+# ===========================================================================
+$scaleTierSrc = Get-Content (Join-Path $proj "src\ScaleTier.cpp") -Raw
+$deploySrc    = Get-Content (Join-Path $proj "_tests\Deploy-OnGameClose.ps1") -Raw
+
+# Mirrors ScaleTier.cpp's PayloadTagOf(): "-15x" -> "15x", "-1x" -> "1x",
+# "" -> "on". Three lines of rule, hand-mirrored, so its SOURCE TEXT is
+# asserted below rather than trusted.
+function ConvertTo-PayloadTag {
+  param([string]$CppTag)
+  if ([string]::IsNullOrEmpty($CppTag)) { return "on" }
+  if ($CppTag.StartsWith('-')) { return $CppTag.Substring(1) }
+  return $CppTag
+}
+$payloadRuleOk = ($scaleTierSrc -match 'void\s+PayloadTagOf') -and
+                 ($scaleTierSrc -match 'wcscpy_s\(out,\s*outLen,\s*L"on"\)') -and
+                 ($scaleTierSrc -match "tag\[0\] == L'-' \? tag \+ 1 : tag")
+if (-not $payloadRuleOk) {
+  $failures += ("PayloadTagOf's rule text is no longer in ScaleTier.cpp in the " +
+    "shape this suite mirrors (empty -> 'on', leading hyphen stripped). Every " +
+    "payload-name assertion below would be checking the WRONG names, so they " +
+    "are refused rather than run.")
+}
+
+# tools\payload\build_payloads.py owns which tiers a complete payload set must
+# carry. Read it rather than restating it - a second copy of that tuple is a
+# second authority (law 94).
+$reqSrc = Get-Content (Join-Path $proj "tools\payload\build_payloads.py") -Raw
+$reqMatch = [regex]::Match($reqSrc, 'REQUIRED_TIERS\s*=\s*\(([^)]*)\)')
+$REQUIRED_TIERS = @()
+if ($reqMatch.Success) {
+  $REQUIRED_TIERS = @([regex]::Matches($reqMatch.Groups[1].Value, '"([^"]+)"') |
+                      ForEach-Object { $_.Groups[1].Value })
+}
+if ($REQUIRED_TIERS.Count -eq 0) {
+  $failures += ("could not read REQUIRED_TIERS out of tools\payload\build_payloads.py " +
+    "- the payload-completeness gate has no tier list and was not run (refusal).")
+}
+
+# Parse the SyncDat call sites: (base, literal-tag-or-pkg.tag).
+$syncSites = [regex]::Matches($scaleTierSrc,
+  '(?s)SyncDat\(\s*\w+\s*,\s*L"([^"]*)"\s*,\s*(pkg\.tag|L"[^"]*")')
+if ($syncSites.Count -eq 0) {
+  $failures += ("parsed ZERO SyncDat call sites out of ScaleTier.cpp - the " +
+    "payload-coverage gate could not see the package list it is built on, so " +
+    "it proved nothing (NULL IS NOT EVIDENCE).")
+}
+$wantTags = @{}   # rel -> the payload tags the DLL can ask ArmOne for
+foreach ($m in $syncSites) {
+  $cppBase = $m.Groups[1].Value -replace '\\\\', '\'
+  if ($cppBase -like '*\*') { $rel = $cppBase } else { $rel = "010-SC4UIScale\$cppBase" }
+  $tagExpr = $m.Groups[2].Value
+  $tags = @('off')   # ALWAYS reachable: the stock tier, or any dependency gate
+  if ($tagExpr -eq 'pkg.tag') {
+    $tags += $REQUIRED_TIERS
+  } else {
+    $tags += (ConvertTo-PayloadTag (($tagExpr -replace '^L"', '') -replace '"$', ''))
+  }
+  if ($wantTags.ContainsKey($rel)) { $wantTags[$rel] = @(($wantTags[$rel] + $tags) | Sort-Object -Unique) }
+  else                             { $wantTags[$rel] = @($tags | Sort-Object -Unique) }
+}
+$nPayloadChecked = 0
+if ($layout -eq 'RENAME') {
+  Write-Host ("  note: payload tag coverage NOT CHECKED - this tree is on the " +
+    "rename layout, where no .uipay exists to be complete or incomplete. It " +
+    "becomes a live gate the moment the tree is converted. " +
+    $wantTags.Count + " SyncDat-managed package(s) were identified in ScaleTier.cpp.")
+} elseif ($payloadRuleOk -and $REQUIRED_TIERS.Count -gt 0) {
+  foreach ($rel in ($wantTags.Keys | Sort-Object)) {
+    if (-not $carbonBuilt -and $rel -match 'ZCarbon') { continue }
+    $stem = Join-Path $plugins $rel
+    $stemDir = Split-Path $stem -Parent
+    if (-not (Test-Path $stemDir)) { continue }
+    # Only judge packages this install actually carries. NOT INSTALLED means
+    # no payloads AND no live file - UncoveredIcons on a clean machine, which
+    # has nothing to build and nothing to deploy; inventing a red for it
+    # teaches people to ignore reds.
+    #
+    # A LIVE .dat WITH NO PAYLOADS IS NOT THAT CASE, and skipping it on the
+    # payload count alone was a silent pass: it is ArmOne's "NO PAYLOAD AT ALL
+    # for %ls (not even .off). Leaving %ls.dat exactly as found" branch, where
+    # the package permanently holds whatever bytes it was shipped with and
+    # follows neither the tier nor its gate. Measured on the v4.5.0-dev bundle:
+    # z_SC4UIScale_WebText is exactly this - SyncDat'd in ScaleTier.cpp with
+    # tag L"" (payload tag "on") while build_payloads.py classifies it
+    # TIER-INDEPENDENT and invents no payload for it.
+    $anyPayload = @(Get-ChildItem $stemDir -File -Filter ((Split-Path $stem -Leaf) + '.*.uipay') -ErrorAction SilentlyContinue)
+    if ($anyPayload.Count -eq 0 -and -not (Resolve-LiveFile $rel)) { continue }
+    $nPayloadChecked++
+    foreach ($t in $wantTags[$rel]) {
+      if (-not (Test-Path "$stem.$t.uipay")) {
+        $failures += ("MISSING PAYLOAD: " + $rel + "." + $t + ".uipay - ScaleTier.cpp " +
+          "can ask ArmOne for tag '" + $t + "' on this package, and ArmOne's own log " +
+          "line for that case reads 'MISSING PAYLOAD ... falling back to .off. This " +
+          "is a packaging defect; the package will be inert.' The live file stays " +
+          "valid and parseable while holding the wrong content, so nothing else in " +
+          "this suite can see it.")
+      }
+    }
+  }
+  if ($nPayloadChecked -eq 0 -and $censusPayload.Count -gt 0) {
+    $failures += ("payload tag coverage examined ZERO packages while " +
+      $censusPayload.Count + " .uipay files exist on disk - the SyncDat parse and " +
+      "the filesystem do not agree on where packages live, so this gate proved " +
+      "nothing.")
+  } elseif ($nPayloadChecked -gt 0) {
+    Write-Host ("  payload tag coverage: " + $nPayloadChecked + " package(s) checked " +
+      "against the tags ScaleTier.cpp can ask for.")
+  }
+}
+
 # ===========================================================================
 # DEPENDENCY-GATE LIST DRIFT (added 2026-08-19, same defect as below).
 #
@@ -625,20 +1088,59 @@ $BUBBLE_TIERS = @{ "15x" = 1.5; "2x" = 2.0; "3x" = 3.0 }
 #   in the deploy but not C++ -> deploy REFUSES to arm a package that should be
 #                                live, at every tier, with no output. Silent.
 #                                That is exactly how CsiIcons shipped disarmed.
-$scaleTierSrc = Get-Content (Join-Path $proj "src\ScaleTier.cpp") -Raw
-$deploySrc    = Get-Content (Join-Path $proj "_tests\Deploy-OnGameClose.ps1") -Raw
+#
+# THE EXTRACTION IS NO LONGER LAZY (fixed 2026-08-29). It used to be
+# '(?s)\$DEPENDENCY_GATED\s*=\s*@\((.*?)\)' - lazy, so it stopped at the FIRST
+# ')' inside the array. Deploy-OnGameClose.ps1 documents in its own comment that
+# SEVEN entries once sat below a comment containing a paren and were therefore
+# INVISIBLE to this check: a drift gate silently examining half its list, which
+# is the same class of defect it exists to catch. Making the regex GREEDY would
+# be worse - it would swallow to the last ')' in the file - so the array is now
+# extracted by MATCHING PARENS, skipping '#' comments and quoted strings. That
+# is the only form that stays right regardless of what anyone writes inside the
+# list. The "keep every entry above this comment" instruction over in the deploy
+# script is now obsolete; it does no harm.
+# ===========================================================================
+function Get-PsArrayBody {
+  param([string]$Text, [string]$VarName)
+  $m = [regex]::Match($Text, ('\$' + [regex]::Escape($VarName) + '\s*=\s*@\('))
+  if (-not $m.Success) { return $null }
+  $i = $m.Index + $m.Length
+  $start = $i
+  $depth = 1
+  $inComment = $false
+  $quote = $null
+  while ($i -lt $Text.Length) {
+    $c = $Text[$i]
+    if ($inComment) {
+      if ($c -eq "`n") { $inComment = $false }
+    } elseif ($null -ne $quote) {
+      if ($c -eq $quote) { $quote = $null }
+    } else {
+      if     ($c -eq '#')                { $inComment = $true }
+      elseif ($c -eq '"' -or $c -eq "'") { $quote = $c }
+      elseif ($c -eq '(')                { $depth++ }
+      elseif ($c -eq ')')                { $depth--; if ($depth -eq 0) { return $Text.Substring($start, $i - $start) } }
+    }
+    $i++
+  }
+  return $null   # unterminated: refused by the caller, never silently trimmed
+}
 
-$cppGated = [regex]::Matches($scaleTierSrc, 'DepOkByName[^)]*?(z_SC4UIScale_[A-Za-z0-9]+)') |
-            ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
-$psBlock  = [regex]::Match($deploySrc, '(?s)\$DEPENDENCY_GATED\s*=\s*@\((.*?)\)')
-if (-not $psBlock.Success) {
-  $failures += "Deploy-OnGameClose.ps1: no `$DEPENDENCY_GATED list found - the dependency gate reverted to a filename pattern, which disarms tier-gated-only packages"
+$cppGated = @([regex]::Matches($scaleTierSrc, 'DepOkByName[^)]*?(z_SC4UIScale_[A-Za-z0-9]+)') |
+              ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+$psBody   = Get-PsArrayBody $deploySrc 'DEPENDENCY_GATED'
+if ($null -eq $psBody) {
+  $failures += "Deploy-OnGameClose.ps1: no `$DEPENDENCY_GATED list found (or its @( ... ) never closes) - the dependency gate reverted to a filename pattern, which disarms tier-gated-only packages"
 } elseif ($cppGated.Count -eq 0) {
   # A parse that finds nothing is a REFUSAL, not a pass (NULL IS NOT EVIDENCE).
   $failures += "dependency-gate drift check: parsed ZERO DepOkByName call sites out of ScaleTier.cpp - the regex no longer matches the source, so this gate proved nothing"
 } else {
-  $psGated = [regex]::Matches($psBlock.Groups[1].Value, '"(z_SC4UIScale_[A-Za-z0-9]+)"') |
-             ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique
+  $psGated = @([regex]::Matches($psBody, '"(z_SC4UIScale_[A-Za-z0-9]+)"') |
+               ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+  if ($psGated.Count -eq 0) {
+    $failures += "dependency-gate drift check: the `$DEPENDENCY_GATED body parsed to ZERO package names - the extraction found the array but not its contents, so this gate proved nothing"
+  }
   $missing = @($cppGated | Where-Object { $psGated -notcontains $_ })
   $extra   = @($psGated  | Where-Object { $cppGated -notcontains $_ })
   foreach ($m in $missing) {
@@ -648,7 +1150,9 @@ if (-not $psBlock.Success) {
     $failures += ("dependency-gate drift: " + $e + " is in `$DEPENDENCY_GATED but has NO DepOkByName gate in ScaleTier.cpp - the deploy will silently refuse to arm it at every tier")
   }
   if ($missing.Count -eq 0 -and $extra.Count -eq 0) {
-    Write-Output ("  dependency-gate list matches ScaleTier.cpp (" + $cppGated.Count + " gated packages).")
+    Write-Output ("  dependency-gate list matches ScaleTier.cpp (" + $cppGated.Count +
+      " gated packages; " + $psGated.Count + " read from the deploy list by " +
+      "paren-matched extraction, not the old lazy regex).")
   }
 }
 
@@ -692,111 +1196,374 @@ foreach ($d in @(Get-ChildItem $plugins -Directory -ErrorAction SilentlyContinue
   }
 }
 
+# ===========================================================================
 # ARMED-TIER AGREEMENT (added 2026-08-19 after CsiIcons shipped 1.5x art to a
-# 2x install for a day).
+# 2x install for a day; REBUILT 2026-08-29 for the content-swap layout).
 #
-# PRESENCE IS NOT ARMING. Every existing assertion here asks whether a
-# package EXISTS. CsiIcons existed at all three tiers, correct sizes, and was
-# still wrong - because the deploy armed the 15x file (plain .dat name) while
-# every other family armed 2x. No "is it present" test can see that, and the
-# runtime SyncDat repairs the disk at launch, so the log cannot see it either.
+# PRESENCE IS NOT ARMING. Every assertion above asks whether a package EXISTS.
+# CsiIcons existed at all three tiers, correct sizes, and was still wrong -
+# because the deploy armed the 15x file while every other family armed 2x. No
+# "is it present" test can see that.
 #
-# The question this asks instead: across every tier-managed family, is the SAME
-# tier the armed one? A family that disagrees with the majority is the defect,
-# and it does not matter which tier the machine is set to - only that they
-# agree. That makes the gate independent of ScaleFactor/AutoScale, which is the
-# point: a gate keyed on the tier would have to be right about the tier too.
-# SelectiveArt EXCLUDED from this generic, filename-based loop (v4.0.3
-# pilot): it has no bare tier-tagged name any more to detect ("-2x.dat"
-# never exists live - see Deploy-OnGameClose.ps1's STABLE-FILENAME PILOT
-# note). Its own armed-tier detection follows the loop, by CONTENT hash
-# against its three permanently-suffixed sources instead of by filename,
-# and folds into the same $armed table so it still takes part in the
-# majority-agreement check below - this gate is exactly the kind PRESENCE
-# IS NOT ARMING exists to keep honest, so it does not get to sit out.
-$tierFamilies = @(
-  @{ Dir = $our;                              Base = "z_SC4UIScale_DialogStatic" },
-  @{ Dir = $our;                              Base = "z_SC4UIScale_ItemIcons"    },
-  @{ Dir = "$plugins\zzz-SC4UIScale";         Base = "z_SC4UIScale_ItemIconsSub" },
-  @{ Dir = "$plugins\zzz-SC4UIScale";         Base = "z_SC4UIScale_CsiIcons"     }
-)
-$armed = @{}
-foreach ($fam in $tierFamilies) {
-  if (-not (Test-Path $fam.Dir)) { continue }
-  $plainTiers = @()
-  foreach ($tier in @("15x","2x","3x")) {
-    if (Test-Path (Join-Path $fam.Dir ($fam.Base + "-" + $tier + ".dat"))) {
-      $plainTiers += $tier
-    }
+# THE OLD IMPLEMENTATION IS OBSOLETE BY CONSTRUCTION, not merely stale: it read
+# bare `<base>-<tier>.dat` names, and in the target layout NO SUCH NAME EXISTS
+# for any package. It would have found zero armed families, fallen through the
+# `$armed.Count -gt 1` guard, and passed silently forever - the worst possible
+# failure for a gate whose entire job is to notice a silent split.
+#
+# WHAT REPLACES IT. The v4.0.3 pilot already answered "which tier is this?" for
+# SelectiveArt BY CONTENT HASH, because its stable filename could not answer it.
+# That is now the general case, so the method is generalised to every package -
+# and a SECOND, INDEPENDENT source is added:
+#
+#   (A) z_SC4UIScale_STATE.txt - written by WriteArmState every boot, per
+#       folder. Says what the DLL BELIEVES it armed.
+#   (B) the content hash of the live `<base>.dat` against every payload / tier
+#       source. Says what the bytes on disk ACTUALLY are.
+#
+# They are independent: (A) is the DLL's own bookkeeping, (B) is the filesystem.
+# TWO BLIND INSTRUMENTS AGREEING IS ONE INSTRUMENT - so this does not merely
+# union them, it CROSS-CHECKS them and reds on disagreement. A STATE.txt saying
+# 3x over a live file whose bytes are the 15x payload is precisely the shape
+# that put stock 1x art into a 3x runtime.
+#
+# GOES RED WHEN: two packages report different tiers; STATE.txt and the bytes
+# disagree for one package; the live bytes match NO known source; the live bytes
+# match more than one (converged sources hide a real mismatch); the stock
+# selector is armed at the same time as a scaled tier; or nothing at all could
+# be determined while packages are present (a refusal, not a pass).
+# ===========================================================================
+$state = @{}          # base -> @{ tag; reason; dir }
+$stateFilesFound = 0
+foreach ($d in $OUR_DIRS) {
+  $sp = Join-Path $d 'z_SC4UIScale_STATE.txt'
+  if (-not (Test-Path $sp)) { continue }
+  $stateFilesFound++
+  $rows = 0
+  foreach ($line in (Get-Content $sp)) {
+    if ($line -match '^\s*#' -or -not $line.Trim()) { continue }
+    $c = $line -split "`t"
+    # WriteArmState emits SEVEN columns; anything else is a format change and
+    # must not be half-read into a verdict.
+    if ($c.Count -lt 7) { continue }
+    $rows++
+    $state[$c[0]] = @{ tag = $c[1]; reason = $c[2]; dir = $d }
   }
-  if ($plainTiers.Count -eq 0) { continue }   # family not installed: fine
-  if ($plainTiers.Count -gt 1) {
-    $failures += ($fam.Base + ": MORE THAN ONE armed tier (" +
-      ($plainTiers -join ", ") + ") - two copies of the same TGIs race on " +
-      "load order and the winner is whichever sorts last")
+  if ($rows -eq 0) {
+    $failures += ("z_SC4UIScale_STATE.txt in " + (Split-Path $d -Leaf) +
+      " exists but yielded ZERO parseable rows (expected 7 tab-separated columns " +
+      "after two '#' header lines, per WriteArmState). The file format moved and " +
+      "every verdict sourced from it below is blind.")
   }
-  $armed[$fam.Base] = $plainTiers[0]
+}
+if ($stateFilesFound -eq 0) {
+  Write-Host ("  note: no z_SC4UIScale_STATE.txt in either folder. The DLL writes " +
+    "one per folder on EVERY boot (WriteArmState), so this means the game has not " +
+    "launched since this layout was placed. The armed-tier verdict below therefore " +
+    "rests on content hashing alone - one instrument, not two - and the " +
+    "dependency-gate verdict cannot be sourced at all.")
 }
 
-# SelectiveArt's own armed-tier detection (v4.0.3 pilot): by CONTENT, not
-# filename - the stable file's name never changes, so "which tier is this"
-# can only be answered by asking which of the three (always-suffixed)
-# sources it currently matches byte-for-byte.
-$selArtStablePath = Join-Path $our "z_SC4UIScale_SelectiveArt.dat"
-if (-not (Test-Path $selArtStablePath)) {
-  $selArtStablePath = "$selArtStablePath.x1-disabled"
-}
-if (Test-Path $selArtStablePath) {
-  $stableHash = (Get-FileHash $selArtStablePath -Algorithm SHA256).Hash
-  $selArtMatches = @()
-  foreach ($tier in @("15x", "2x", "3x")) {
-    $srcPath = Join-Path $our ("z_SC4UIScale_SelectiveArt-{0}.dat.x1-disabled" -f $tier)
-    if (-not (Test-Path $srcPath)) { continue }
-    if ((Get-FileHash $srcPath -Algorithm SHA256).Hash -eq $stableHash) {
-      $selArtMatches += $tier
+$armed   = @{}        # base -> tag, from whichever instrument spoke
+$armedBy = @{}        # base -> "state" / "content" / "state+content"
+$TIER_TAGS = @('15x', '2x', '3x')
+$ALL_TAGS  = @('15x', '2x', '3x', '1x', 'on', 'off')
+$nArmDetected = 0
+foreach ($rel in ($wantTags.Keys | Sort-Object)) {
+  if (-not $carbonBuilt -and $rel -match 'ZCarbon') { continue }
+  $base = Split-Path $rel -Leaf
+  $contentTag = $null
+  $live = Resolve-LiveFile $rel
+  if ($live) {
+    # (B) the bytes. Compare the live file against every candidate source.
+    $lh = (Get-FileHash $live -Algorithm SHA256).Hash
+    $matchTags = @()
+    $availTags = @()
+    foreach ($t in $ALL_TAGS) {
+      $src = Resolve-PkgFile $rel $t
+      if (-not $src) { continue }
+      if ($src.Path -eq $live) { continue }   # never compare a file to itself
+      $availTags += $t
+      if ((Get-FileHash $src.Path -Algorithm SHA256).Hash -eq $lh) { $matchTags += $t }
     }
-  }
-  if ($selArtMatches.Count -eq 0) {
-    $failures += ("z_SC4UIScale_SelectiveArt: the stable .dat's content matches " +
-      "NONE of its three sources - it was not written by SyncDatStable, or a " +
-      "source has drifted since the deploy that wrote it")
-  } elseif ($selArtMatches.Count -gt 1) {
-    $failures += ("z_SC4UIScale_SelectiveArt: the stable .dat is byte-identical " +
-      "to more than one tier source (" + ($selArtMatches -join ", ") +
-      ") - the sources themselves have converged, which hides a real tier " +
-      "mismatch from this check")
+    if ($matchTags.Count -eq 1) { $contentTag = $matchTags[0] }
+    elseif ($matchTags.Count -gt 1) {
+      $failures += ($base + ": the live .dat is byte-identical to MORE THAN ONE " +
+        "source (" + ($matchTags -join ", ") + ") - the sources have converged, " +
+        "which hides a real tier mismatch from this check. Rebuild the tiers.")
+    }
+    elseif ($availTags.Count -gt 0) {
+      $failures += ($base + ": the live .dat matches NONE of its " + $availTags.Count +
+        " available source(s) (" + ($availTags -join ", ") + ") - it was not written " +
+        "by ArmOne, or a source has drifted since the boot that wrote it. The game " +
+        "is loading bytes nothing in this tree can account for.")
+    }
   } else {
-    $armed["z_SC4UIScale_SelectiveArt"] = $selArtMatches[0]
+    # No stable live file: the rename layout's normal state for a tier package.
+    # Armed tier = the tier whose bare `<base>-<tag>.dat` exists.
+    $plainTiers = @()
+    foreach ($t in @('15x','2x','3x','1x')) {
+      if (Test-Path ((Join-Path $plugins $rel) + "-$t.dat")) { $plainTiers += $t }
+    }
+    if ($plainTiers.Count -gt 1) {
+      $failures += ($base + ": MORE THAN ONE armed tier (" + ($plainTiers -join ", ") +
+        ") - two copies of the same TGIs race on load order and the winner is " +
+        "whichever sorts last")
+    } elseif ($plainTiers.Count -eq 1) { $contentTag = $plainTiers[0] }
+  }
+
+  $stateTag = $null
+  if ($state.ContainsKey($base)) { $stateTag = $state[$base].tag }
+
+  # THE CROSS-CHECK. Both instruments present and disagreeing is the defect.
+  if ($stateTag -and $contentTag -and $stateTag -ne $contentTag) {
+    $failures += ($base + ": STATE.txt says tag '" + $stateTag + "' but the live " +
+      ".dat's bytes are the '" + $contentTag + "' source. The DLL believes it armed " +
+      "one tier and the game is loading another - the exact shape that put stock 1x " +
+      "art into a 3x runtime. The bytes win; do not trust STATE.txt here.")
+  }
+  $pick = $null
+  if ($contentTag)     { $pick = $contentTag }
+  elseif ($stateTag)   { $pick = $stateTag }
+  if ($pick) {
+    $nArmDetected++
+    $armed[$base] = $pick
+    if ($stateTag -and $contentTag) { $armedBy[$base] = 'state+content' }
+    elseif ($contentTag)            { $armedBy[$base] = 'content' }
+    else                            { $armedBy[$base] = 'state' }
   }
 }
 
-if ($armed.Count -gt 1) {
-  $distinct = @($armed.Values | Sort-Object -Unique)
+# One tier, across every package that reports one.
+$tierArmed = @{}
+foreach ($k in $armed.Keys) { if ($TIER_TAGS -contains $armed[$k]) { $tierArmed[$k] = $armed[$k] } }
+if ($tierArmed.Count -gt 1) {
+  $distinct = @($tierArmed.Values | Sort-Object -Unique)
   if ($distinct.Count -gt 1) {
-    $majority = ($armed.Values | Group-Object | Sort-Object Count -Descending |
+    $majority = ($tierArmed.Values | Group-Object | Sort-Object Count -Descending |
                  Select-Object -First 1).Name
-    foreach ($k in @($armed.Keys)) {
-      if ($armed[$k] -ne $majority) {
-        $failures += ($k + ": armed at " + $armed[$k] +
+    foreach ($k in @($tierArmed.Keys)) {
+      if ($tierArmed[$k] -ne $majority) {
+        $failures += ($k + ": armed at " + $tierArmed[$k] +
           " while the rest of the install is armed at " + $majority +
-          " - this family ships the wrong tier's art")
+          " - this family ships the wrong tier's art (detected by " + $armedBy[$k] + ")")
       }
     }
   } else {
-    Write-Output ("  armed-tier agreement: all " + $armed.Count +
-      " tier-managed families armed at " + $distinct[0] + ".")
+    Write-Output ("  armed-tier agreement: all " + $tierArmed.Count +
+      " tier-managed package(s) armed at " + $distinct[0] + ".")
+  }
+}
+# THE INVERSE PACKAGE. SelectorUI is armed by the ABSENCE of a tier - it is what
+# keeps 1x from being a one-way door. Armed at the same time as a scaled tier is
+# a contradiction: stock-geometry selector art loading beside scaled art.
+$selBase = 'z_SC4UIScale_SelectorUI'
+if ($armed.ContainsKey($selBase)) {
+  $selTag = $armed[$selBase]
+  if (($selTag -eq '1x' -or $selTag -eq 'on') -and $tierArmed.Count -gt 0) {
+    $failures += ($selBase + " is ARMED (" + $selTag + ") while " + $tierArmed.Count +
+      " package(s) are armed at a scale tier. That package exists only for the " +
+      "STOCK tier; both live at once means stock-geometry selector art inside a " +
+      "scaled UI.")
+  }
+  if ($selTag -eq 'off' -and $tierArmed.Count -eq 0 -and $nArmDetected -gt 1) {
+    $failures += ($selBase + " is OFF and NO package is armed at any tier - the " +
+      "install is at stock with no way back up except editing the ini by hand. " +
+      "That is the 1x one-way door this package exists to prevent.")
+  }
+}
+# NULL IS NOT EVIDENCE. Zero determinations must never read as agreement.
+if ($nArmDetected -eq 0) {
+  $failures += ("armed-tier agreement determined NOTHING for any of the " +
+    $wantTags.Count + " SyncDat-managed package(s): no STATE.txt row and no " +
+    "content match. The gate whose entire job is to notice a tier split saw " +
+    "nothing at all - a refusal, not a pass.")
+} else {
+  Write-Host ("  armed-tier sources: " + $nArmDetected + " package(s) determined (" +
+    ((@($armedBy.Values | Group-Object | ForEach-Object { "$($_.Count) by $($_.Name)" })) -join ", ") + ").")
+}
+
+# ===========================================================================
+# DEPENDENCY-GATE VERDICT - NO LONGER READABLE FROM A FILENAME.
+#
+# Through v4.4.0 "this package is gated off" was visible on a directory
+# listing: every tier sat as `.x1-disabled` and nothing was live. From v4.5.0 a
+# gated-off package is a LIVE `.dat` holding `.off` content, indistinguishable
+# in a listing from an armed one. So the verdict is sourced from STATE.txt: the
+# tag column ('off') plus the reason column, which CommitArming writes as
+# "armed" or "gated off or no tier match".
+#
+# THE REASON STRING CANNOT DISTINGUISH THOSE TWO CASES ON ITS OWN - both reach
+# ArmOne through the same `w.wanted == false` branch - so the distinction is
+# MADE HERE, from the one extra fact the reason column lacks: whether any OTHER
+# package is armed at a tier. If a tier is armed install-wide then "no tier
+# match" is not available as an explanation for a tier-managed package, and
+# 'off' can only mean a gate turned it off.
+#
+#   in $DEPENDENCY_GATED and off  -> its mod is absent or changed. NOTE. That is
+#                                    correct behaviour; Test-ThirdPartyGates.ps1
+#                                    owns the deeper verdict.
+#   NOT gated and off, tier armed -> RED. A tier-gated-only package must be
+#                                    armed whenever a tier is armed. This is the
+#                                    #196 CsiIcons shape exactly: present,
+#                                    correct, and never following the tier.
+#   SelectorUI / WebText          -> inverse gates, excluded and noted.
+# ===========================================================================
+$INVERSE_BASES = @('z_SC4UIScale_SelectorUI', 'z_SC4UIScale_WebText')
+$anyTierArmed = ($tierArmed.Count -gt 0)
+$nGateVerdicts = 0
+if ($stateFilesFound -eq 0) {
+  Write-Host ("  note: dependency-gate verdicts NOT CHECKED - they can only be " +
+    "sourced from z_SC4UIScale_STATE.txt (a gated-off package is a live .dat " +
+    "under the same name as an armed one) and no state file exists yet. This is " +
+    "the one verdict the v4.5.0 layout made unreadable from disk alone.")
+} else {
+  foreach ($base in ($state.Keys | Sort-Object)) {
+    if (-not $carbonBuilt -and $base -match 'ZCarbon') { continue }
+    $nGateVerdicts++
+    if ($state[$base].tag -ne 'off') { continue }
+    if ($INVERSE_BASES -contains $base) {
+      Write-Host ("  note: " + $base + " is inert (tag off, reason '" +
+        $state[$base].reason + "'). That package is armed by the ABSENCE of its " +
+        "condition, so inert here is the normal scaled-tier / mod-present state.")
+      continue
+    }
+    if ($cppGated -contains $base) {
+      Write-Host ("  note: " + $base + " is DEPENDENCY-GATED OFF (STATE.txt reason: '" +
+        $state[$base].reason + "'). Its third-party mod is absent or has changed " +
+        "size; the live .dat holds the inert .off payload. Correct behaviour - " +
+        "Test-ThirdPartyGates.ps1 owns the deeper verdict.")
+      continue
+    }
+    if ($anyTierArmed) {
+      $failures += ($base + ": INERT (STATE.txt tag 'off') while the install is " +
+        "armed at a scale tier. This package has NO DepOkByName gate in " +
+        "ScaleTier.cpp, so 'no tier match' cannot explain it - it is simply not " +
+        "following the tier. That is #196 (CsiIcons) exactly: present at every " +
+        "tier, correct sizes, and silently stuck.")
+    }
+  }
+  if ($nGateVerdicts -eq 0) {
+    $failures += ("dependency-gate verdict pass read ZERO rows out of the " +
+      $stateFilesFound + " STATE.txt file(s) found - a refusal, not a pass.")
   }
 }
 
+# ===========================================================================
+# THE LIVE FILE IS A WHOLE PACKAGE.
+#
+# Every count assertion at the top of this suite measures a SOURCE (a payload,
+# or a tier-tagged dat). None of them measures the file SC4 actually opens.
+# Under the rename layout those were the same file; under the content swap they
+# are not, and ArmOne rewrites the live one with CopyFileW + MoveFileEx every
+# boot. A half-written live file is a real, reachable state (disk full, an
+# antivirus holding the handle, OneDrive rehydrating): the commit fails INERT
+# only if MoveFileEx is refused - a copy that half-succeeds leaves a truncated
+# DBPF under the name the game opens.
+#
+# GOES RED WHEN: the live .dat's entry count is neither the package's expected
+# count (armed) nor 1 (the one-entry `.off` payload, which build_payloads.py
+# verifies is a valid single-TGI DBPF contesting nothing).
+# ===========================================================================
+$nLiveChecked = 0
+foreach ($rel in ($wantTags.Keys | Sort-Object)) {
+  if (-not $carbonBuilt -and $rel -match 'ZCarbon') { continue }
+  $base = Split-Path $rel -Leaf
+  if (-not $EXPECTED_BY_BASE.ContainsKey($base)) { continue }
+  $live = Resolve-LiveFile $rel
+  if (-not $live) { continue }
+  $nLiveChecked++
+  $list = & $packer --list $live 2>$null
+  $n = ($list | Where-Object { $_ -match "^0x[0-9A-Fa-f]{8} 0x[0-9A-Fa-f]{8} 0x[0-9A-Fa-f]{8} " }).Count
+  $want = $EXPECTED_BY_BASE[$base]
+  if ($n -ne $want -and $n -ne 1) {
+    $failures += ("LIVE FILE WRONG SIZE: " + $rel + ".dat holds $n entries; expected " +
+      "$want (armed - the same at every tier by construction) or 1 (the inert .off " +
+      "payload). The file the game opens is neither a whole package nor an inert one.")
+  }
+}
+if ($nLiveChecked -eq 0) {
+  if ($layout -eq 'RENAME') {
+    Write-Host ("  note: live-file entry counts NOT CHECKED - on the rename layout " +
+      "only the stable-name pilot packages have a live untagged .dat, and their " +
+      "tier files were already counted above. This becomes a live gate on " +
+      "conversion.")
+  } else {
+    $failures += ("live-file check examined ZERO packages in the " + $layout +
+      " layout, where EVERY package must have a live untagged .dat. Refusal, not " +
+      "a pass.")
+  }
+}
+
+# ---------------------------------------------------------------------------
+# #100 - THE 4x BUBBLE ASSERTION. A PAYLOAD CHECK, NOT A FILE CHECK.
+#
+# THE HAZARD. The U-Drive-It mission bubble {856DDBAC,46A006B0,094AC89A} is
+# 32x32 at 1x. #100 established that flipping its art flag alone would ship it
+# at 4x and, at the 2x tier, produce the exact 8x shape that #98 had already
+# cost a launch to diagnose. The investigation ended in "DO NOT SHIP" - a
+# SENTENCE IN A DOC, which is the weakest possible guard (law 52: a gate must
+# be a live expression, never a sentence in a comment).
+#
+# So this asserts the pixels, per tier, out of the SHIPPED package: the entry
+# must decode as a PNG whose width and height are both exactly 32 * factor.
+# the 2026-08-16 measurement
+# below read 15x 48x48 / 2x 64x64 / 3x 96x96, i.e. 32*factor. The 2026-08-17
+# USER DECISION replaced that with the flat 96 pin the assertion now uses.
+# A stale comment that contradicts the assertion under it is how a correct
+# gate gets 'fixed' back into a wrong one.
+#
+# It reads the DBPF INDEX and hashes nothing: a dat FILE hash is useless here
+# because two builds of identical content differ in 2 bytes at offsets 25/29
+# (the header timestamp, #170). Payload or nothing.
+# PARSE THESE UNSIGNED. PowerShell reads a hex literal above 0x7FFFFFFF as a
+# NEGATIVE Int32 (0x856DDBAC -> -2056159316), so comparing it against a UInt32
+# read out of the index matches NOTHING and the gate fails claiming the TGI is
+# absent - which is what it did on its first run here. A gate that fails for
+# its own reason is worse than no gate; it must be able to PASS before it is
+# allowed to fail (law 50b).
+#
+# v4.5.0: the tier is now reached through Resolve-PkgFile, so this measures the
+# `.15x/.2x/.3x.uipay` PAYLOAD under the new layout and the tier-tagged dat
+# under the old one. IT MUST NEVER MEASURE THE LIVE `<base>.dat`: that file
+# holds exactly ONE tier's bytes, so two of the three assertions would then be
+# made against the wrong tier's art and fail for their own reason.
+#
+# #197 (2026-08-18) replaces #186's PIN - AND IT replaces A USER
+# DECISION, so it is spelled out rather than quietly swapped.
+#   #186, 2026-08-17, USER: "grow at all tiers for clickability" -> art pinned
+#     at 96px (3x design) in EVERY tier package.
+#   #197, 2026-08-18, USER: "we overdid it with scaling on our UDriveIt
+#     buttons ... 1.5X should truly just be 1.5X, 2X=2X etc."
+# The later rule wins. The pin was not wrong about clickability - it was wrong
+# about ARITHMETIC: the window is BORN at the art's pixel size and the sweep
+# then multiplies by f, so on-screen = 32 * a * f. With a pinned at 3 the
+# marker was a flat 3x oversize at EVERY tier, which is what the user saw.
+#
+# Art is now staged at RoundHalfUp(32*f) - 48 / 64 / 96 - and 0x48E945B4 is in
+# kNeverScaleIds so the sweep cannot apply f a second time. The draw clamp
+# then self-cancels (source == window => m = 1), giving 32*f exactly, crisp.
+# The #100 hazard is still caught: a 4x flag would stage 128 at f=2 and fail
+# the 64 expected here.
+#
+# IF CLICKABILITY IS NOW TOO SMALL AT 1.5x, that is a HIT-BOX question, not
+# a size question - grow the hit box, do not re-pin the art, or the arithmetic
+# breaks again and #100 comes back.
+# ---------------------------------------------------------------------------
+$BUBBLE = @{ T = [Convert]::ToUInt32("856DDBAC", 16)
+             G = [Convert]::ToUInt32("46A006B0", 16)
+             I = [Convert]::ToUInt32("094AC89A", 16)
+             Design = 32 }
+$BUBBLE_TIERS = @{ "15x" = 1.5; "2x" = 2.0; "3x" = 3.0 }
 $nBubble = 0
 foreach ($tag in $BUBBLE_TIERS.Keys) {
   # #197: expected size is now the FACTOR times design, not a constant, and
   # it is computed with the project's one rounding convention (law 89,
   # RoundHalfUp) so the gate and the builder cannot drift apart.
   $want = [int][Math]::Floor($BUBBLE.Design * $BUBBLE_TIERS[$tag] + 0.5)
-  $p = Join-Path $our ("z_SC4UIScale_SelectiveArt-{0}.dat" -f $tag)
-  if (-not (Test-Path $p)) { $p = "$p.x1-disabled" }
-  if (-not (Test-Path $p)) { $failures += ("#100 bubble: no SelectiveArt-$tag package deployed"); continue }
+  $srcHit = Resolve-PkgFile "010-SC4UIScale\z_SC4UIScale_SelectiveArt" $tag
+  if (-not $srcHit) { $failures += ("#100 bubble: no SelectiveArt $tag source deployed (payload or tier-tagged)"); continue }
+  $p = $srcHit.Path
   try {
     $b = [System.IO.File]::ReadAllBytes($p)
     if ([System.Text.Encoding]::ASCII.GetString($b, 0, 4) -ne "DBPF") { throw "not a DBPF" }
@@ -811,20 +1578,33 @@ foreach ($tag in $BUBBLE_TIERS.Keys) {
         break
       }
     }
-    if (-not $hit) { $failures += ("#100 bubble: TGI absent from SelectiveArt-$tag"); continue }
+    if (-not $hit) { $failures += ("#100 bubble: TGI absent from SelectiveArt $tag (" + (Split-Path $p -Leaf) + ")"); continue }
     # PNG IHDR: 8-byte signature, 4-byte length, "IHDR", then big-endian w,h.
     $o = [int]$hit.o
-    if ($b[$o] -ne 0x89 -or $b[$o + 1] -ne 0x50) { $failures += ("#100 bubble: entry in SelectiveArt-$tag is not a PNG"); continue }
+    if ($b[$o] -ne 0x89 -or $b[$o + 1] -ne 0x50) { $failures += ("#100 bubble: entry in SelectiveArt $tag is not a PNG"); continue }
     $w = ($b[$o + 16] -shl 24) -bor ($b[$o + 17] -shl 16) -bor ($b[$o + 18] -shl 8) -bor $b[$o + 19]
     $h = ($b[$o + 20] -shl 24) -bor ($b[$o + 21] -shl 16) -bor ($b[$o + 22] -shl 8) -bor $b[$o + 23]
     if ($w -ne $want -or $h -ne $want) {
-      $failures += ("#100 BUBBLE WRONG SIZE in SelectiveArt-{0}: {1}x{2}, expected {3}x{3}. This is the DO-NOT-SHIP art from #100 - at the 2x tier it reproduces #98's 8x shape." -f $tag, $w, $h, $want)
+      $failures += ("#100 BUBBLE WRONG SIZE in SelectiveArt {0}: {1}x{2}, expected {3}x{3}. This is the DO-NOT-SHIP art from #100 - at the 2x tier it reproduces #98's 8x shape." -f $tag, $w, $h, $want)
     } else { $nBubble++ }
   } catch {
-    $failures += ("#100 bubble: could not read SelectiveArt-$tag - " + $_.Exception.Message)
+    $failures += ("#100 bubble: could not read SelectiveArt $tag - " + $_.Exception.Message)
   }
 }
+# The bubble gate must MEASURE three tiers or say it did not. Zero passes with
+# zero failures would mean the loop never ran at all.
+if ($nBubble -eq 0 -and $failures.Count -eq 0) {
+  $failures += ("#100 bubble: ZERO tiers measured and no failure recorded - the " +
+    "loop did not run. Refusal, not a pass.")
+}
 
-if ($failures.Count -eq 0) { Write-Output "ALL PASS ($($EXPECTED.Count) dats + $($FONT_SOURCES.Count) font sources + DLL presence/quarantine + $nHash deployed==built hashes + $nBubble/3 bubble payload sizes)"; exit 0 }
+if ($failures.Count -eq 0) {
+  Write-Output ("ALL PASS (layout $layout; $nExamined tier sources counted + " +
+    "$($FONT_SOURCES.Count) font sources + DLL presence/root quarantine + " +
+    "$nOverlapChecked both-layout candidates + $nHash deployed==built hashes + " +
+    "$nPayloadChecked payload sets + $nArmDetected armed-tier determinations + " +
+    "$nLiveChecked live files + $nBubble/3 bubble payload sizes)")
+  exit 0
+}
 $failures | ForEach-Object { Write-Output ("FAIL: " + $_) }
 exit 1

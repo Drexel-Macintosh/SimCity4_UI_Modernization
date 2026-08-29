@@ -6,9 +6,42 @@
 // dat, and FontStyle.ini are files the game loads blindly - at stock
 // resolutions they would wreck the UI (2x fonts in 1x frames, dialogs
 // larger than the screen). The DLL therefore decides the tier BEFORE the
-// game loads data and enables exactly one factor's package (stashing all
-// others), so ANY resolution - including ones never directly tested -
-// gets a provably fitting factor from the same geometry math.
+// game loads data and arms exactly one factor's package set, so ANY
+// resolution - including ones never directly tested - gets a provably
+// fitting factor from the same geometry math.
+//
+// HOW "ARM" WORKS, v4.5.0 - A CONTENT SWAP AT A STABLE FILENAME.
+// Through v4.4.0 arming was a RENAME: the winning tier's dat kept its
+// `<base><tag>.dat` name and the losers were pushed aside as
+// `<base><tag>.dat.x1-disabled`. That is the single reason a package manager
+// cannot uninstall this mod - sc4pac removes files BY MANIFEST NAME, and 53
+// of 68 installed files sat under a renamed name. From v4.5.0:
+//
+//   LIVE     z_SC4UIScale_<Pkg>.dat          the only thing SC4 loads. Its
+//                                            CONTENT changes; the NAME never
+//                                            does - not at any tier, not
+//                                            under any gate verdict, ever.
+//   PAYLOAD  z_SC4UIScale_<Pkg>.<tag>.uipay  inert. Never renamed, never
+//                                            loaded. tag = 15x/2x/3x/1x/on/off.
+//                                            Inert by EXTENSION, measured:
+//                                            probe #202 put a real DBPF at
+//                                            `.uipay` and it was absent from
+//                                            the registered-segment census
+//                                            while 13 of our live .dat files
+//                                            were present in the same census.
+//   STATE    z_SC4UIScale_STATE.txt          written into each of our folders
+//                                            every boot by WriteArmState. TSV
+//                                            after two `#` lines: base, tag,
+//                                            reason, paySize, payTime,
+//                                            liveSize, liveTime.
+//
+// ⛔ A DIRECTORY LISTING NO LONGER CARRIES THE ARMED TIER OR THE GATE VERDICT.
+// Every live filename is a constant, and a gated-off package is that same
+// file holding the `.off` payload's bytes. STATE.txt is the ONLY place either
+// answer now exists - every script and every human diagnosis reads it, and a
+// check that infers "live" from a `.dat` existing is measuring nothing.
+// See ScaleTier.cpp: ArmOne / CommitArming / WriteArmState, and
+// MigrateRenamesToPayloads for the in-place upgrade from the rename layout.
 namespace ScaleTier
 {
 	// The largest INSTALLED package factor N satisfying the fit function:
@@ -50,10 +83,18 @@ namespace ScaleTier
 	void LogOurDirs();
 
 	// #201 PROBE (log-only, [Probe] SegmentCensus, default 0). Walks the
-	// registered DBPF segments and prints a path each. Exists to answer ONE
-	// question: whether a loaded dat can be dropped at runtime, which would
-	// let this mod stop renaming its own files to arm a tier. It never
-	// unregisters anything.
+	// registered DBPF segments and prints a path each. It never unregisters
+	// anything.
+	//
+	// It was built to ask whether a LOADED dat can be dropped at runtime -
+	// which would have let this mod stop renaming its own files to arm a tier.
+	// That is not the route that worked. #202 reused this same census the
+	// other way round, as the instrument for a PRE-scan question: a real DBPF
+	// copied to `.uipay` never appeared here, while 13 of our live `.dat`
+	// files did in the same run - the positive control proving the census
+	// could have seen it. That measurement is what the v4.5.0 payload layout
+	// rests on, so this probe stays: it is how the `.uipay` claim gets
+	// re-checked against a future patch.
 	void SegmentCensus();
 
 
@@ -105,22 +146,28 @@ namespace ScaleTier
 	// false = REPAIRED; autoScale/factor now hold what will actually run.
 	bool ValidateBootState(BootState& st, const wchar_t* iniPath);
 
-	// Enable the package matching `factor` and stash every other installed
-	// package (suffix ".x1-disabled"). PLUGINS-ONLY: all managed files -
-	// both dats and FontStyle.ini - live beside the DLL in the Documents
-	// SimCity 4 Plugins folder; nothing in the game install directory
-	// (portable, no Program Files writes). Idempotent; a failed rename
-	// self-heals on the next boot.
+	// Record which package each tier wants (SyncDat), for CommitArming to
+	// apply in one pass. v4.5.0: this no longer renames anything - it swaps
+	// the CONTENT of each package's stable `.dat` name in from the matching
+	// `.<tag>.uipay` payload, and a package with no tier match commits `.off`.
+	// PLUGINS-ONLY: all managed files - both dats and FontStyle.ini - live in
+	// this mod's own Plugins subfolders; nothing in the game install directory
+	// (portable, no Program Files writes). Idempotent, and free in the steady
+	// state (four file stats, no I/O, when the stamp still matches); a failed
+	// swap fails INERT and self-heals on the next boot.
 	void SyncStaticLayers(float factor);
 
-	// Arm or stash z_SC4UIScale_SelectorUI-1x - the stock-tier scale selector,
-	// the ONE package gated on the ABSENCE of a tier.
+	// Arm or silence z_SC4UIScale_SelectorUI - the stock-tier scale selector,
+	// the ONE package gated on the ABSENCE of a tier. Its payload tags are
+	// `on` / `off` rather than tier tags, for that reason.
 	//
 	// CALL THIS UNCONDITIONALLY. It must NOT be folded into
 	// SyncStaticLayers: that function is not called at the stock tier, which
 	// is the only state this package is for, so folding it in makes it
-	// unreachable exactly when it is needed (measured 2026-08-19 - the dat sat
-	// .x1-disabled on a 1x machine while the DLL reported the selector live).
+	// unreachable exactly when it is needed (measured 2026-08-19 - under the
+	// pre-4.5.0 rename layout the dat sat .x1-disabled on a 1x machine while
+	// the DLL reported the selector live; the v4.5.0 shape of that same fault
+	// is a live `.dat` holding `.off` bytes, which a listing cannot show).
 	void SyncSelectorPackage(bool stockTier);
 
 	// #149 stage 2. SyncStaticLayers runs before the game opens a single dat,
