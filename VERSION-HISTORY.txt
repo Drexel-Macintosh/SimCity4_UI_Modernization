@@ -1,3 +1,40 @@
+2026-08-29  v4.3.0    FULL UI-RESKIN SUPPORT + 1.5x SHARPNESS + GOD MODE
+
+  SCOTY CARBON SKIN 1.5 SUPPORTED END TO END. Eight dependency-gated
+  ZCarbon* packages (1.5x/2x/3x each) rebuild the skin's OWN art and
+  geometry at the player's factor; 494 contested resources. Gated on the
+  skin's files by exact name+size, so a skin update disarms cleanly. FULL
+  UNINSTALL PROVEN: with the skin filtered out, all 494 revert to our
+  packages, zero orphans, and the 1,496-resource baseline matches (controls:
+  696 winners change between states; the same comparison against the
+  with-skin state yields 516 diffs). Carbon-absent is the DEFAULT and costs
+  nothing. The public bundle ships NO skin-derived files - Build-Dist
+  hard-asserts it; skin users build locally from the shipped generators.
+
+  1.5x NOW AS SHARP AS 2x/3x. Integer factors copy pixels exactly (0
+  invented pixels in 562M). At 1.5x an averaging pass had become the DEFAULT
+  for 78% of artwork to buy tick evenness only ~4% of sheets have. Now
+  opt-in, scoped to a DERIVED list (the obvious list to reuse covered only
+  20 of 89 tick sheets - reusing it would have traded one defect for the
+  other). Shipped bytes: invented px 8.97% -> 1.30%, full-strength edges
+  59% -> 86%, soft edges 34% -> 8.9%; 2x/3x unchanged. Five builders that
+  bypassed the resampler entirely were smoothing at EVERY tier -> nearest.
+  USER-CONFIRMED on screen at 1.5x and 2x.
+
+  GOD MODE x3. Day/night (48px) and terraform (135px) docks were stale
+  stock-derived constants; they ARE the alignment-marker rule precomputed on
+  stock, so the dock now derives from the LIVE marker - identity on an
+  unmodded install, asserted by Test-GodDockRule.py (3/3). Disaster flyout
+  buttons broke on scroll: the thunk neutralising a DUAL-USE field was never
+  installed because its site sat behind an unscaled screen-Y band, so the
+  game read scroll-arrow art 27px into the wrong atlas column; band replaced
+  by positive identification (deleting it would have hit a mayor window of
+  the same class). Second latent instance (3x strip gate) fixed with it.
+  All three USER-CONFIRMED on screen.
+
+  New log warnings: reskin installed without its packages; duplicate copies
+  of a gated mod file; a skin folder name that could out-sort our overrides.
+
 2026-08-25  v4.3.0-dev  SCOTY CARBON SKIN SUPPORT (local, pending boot verification)
 
   Full Carbon Skin 1.5 compatibility: eight dependency-gated ZCarbon*

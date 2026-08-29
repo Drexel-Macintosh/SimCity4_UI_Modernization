@@ -1,41 +1,44 @@
 # Changelog
 
-## 4.3.0-dev (2026-08-25, local — pending boot verification) — Scoty Carbon Skin support
+## 4.3.0 (2026-08-29) - Full UI-reskin support, sharper 1.5x, and three god-mode fixes
 
-- **Full Scoty Carbon Skin 1.5 compatibility** via eight new dependency-gated
-  override packages (`z_SC4UIScale_ZCarbon*`, 1.5×/2×/3× each), built FROM
-  the skin's own payloads by the existing builders' new `--carbon` modes:
-  ZCarbonUI (197 entries: carbon's 109 dialog scripts + 87 art + 1
-  carbon-styled clone), ZCarbonArt (269: 23 selective scripts + 246 art),
-  ZCarbonCamUI (10), ZCarbonSaveWarning (2), ZCarbonIcons (18: the CSI
-  balloons duplicated into BOTH twin groups — carbon ships no `1ABE787D`
-  twins, so its own balloon reskins never drew — plus 2 item strips),
-  ZCarbonStyles (2), ZCarbonNam (2), ZCarbonGodMod (4: carbon's restyle of
-  warrior's god-terraforming mod, exactly WarriorUI's four TGIs).
-- **The Z-late names are load-bearing** (`ZCarbon*` sorts after every zzz
-  sibling — the zzz-INTERNAL SORT TRAP law): armed, they win the shared
-  TGIs; gate-dark (skin absent/updated — every gate pins exact filename +
-  byte size), everything falls back to the stock-look layer untouched.
-  Most users don't have the skin; absent is the default state and costs
-  nothing.
-- **Never redistributed**: the ZCarbon dats deploy locally only. The
-  bundle builder carries a hard assert that no carbon-derived file can
-  enter the public dist (the deploy lines are deliberately invisible to
-  its parser, and the assert is the net under that). Skin users build
-  locally from the shipped generators (`tools\research\carbon\`).
-- New handled mods this session (user-installed): warrior's
-  god-terraforming-in-mayor-mode (existing WarriorUI package arms — files
-  match its pins exactly) and null-45's region-view-census-ui (carbon's
-  add-on for it is a private-group `.UI`, zero overlap — no package
-  needed).
-- Verification: per-TGI final winner census GREEN (494/494 colliding TGIs
-  owned by our packages, zero collateral drift, 12 intended takeovers
-  itemized); Test-DatIntegrity ALL PASS (50 dats, 56 deployed==built
-  hashes, 14 gates drift-checked); Test-ThirdPartyGates ALL PASS (14
-  gates, real fingerprints). New law recorded: DbpfPack stamps pack time
-  into DBPF header bytes 24–31 — dat equality proofs must zero them.
-- Upstream note for the skin's author: `tools\research\UPSTREAM-CARBON-REPORT.md`
-  (includes one real defect report — the CSI twin-group gap).
+- **SCOTY CARBON SKIN 1.5 IS SUPPORTED END TO END.** A full reskin replaces
+  the UI's art and dialog layouts wholesale - 494 of the same resources this
+  mod scales - and is designed to load last, so its 1x versions win and the
+  result is 1x art and 1x-positioned dialogs inside a scaled UI. Eight new
+  dependency-gated packages (`z_SC4UIScale_ZCarbon*`, 1.5x/2x/3x each) rebuild
+  the skin's OWN art and geometry at your scale factor. They arm only while
+  the skin's files are present and unchanged, and disarm cleanly to the
+  stock-look layer when it is removed - proven, not assumed: with the skin
+  filtered out, all 494 contested resources revert to our own packages with
+  zero orphans, and the full 1,496-resource baseline matches.
+  **Most players have no reskin installed; that is the default state and costs
+  nothing.** The release bundle deliberately contains no skin-derived files -
+  players with the skin build them locally from the shipped generators.
+- **1.5x IS NOW AS SHARP AS 2x AND 3x.** At integer factors the upscaler
+  copies pixels exactly (measured: zero invented pixels across 562 million).
+  At 1.5x an averaging pass had become the default for 78% of all artwork, to
+  buy a tick-evenness property only ~4% of sheets structurally have - the rest
+  paid softness for nothing. The averaging is now opt-in, scoped to a derived
+  list of sheets that actually contain tick ladders. Measured on the shipped
+  files: invented pixels 8.97% -> 1.30%, hard edges at full strength 59% ->
+  86%, softened edges 34% -> 8.9%; 2x/3x unchanged.
+  Five builders that bypassed the resampler entirely (U-Drive-It balloons,
+  uncovered icons, NAM icons, web button, carbon icons) were smoothing at
+  EVERY tier and now use nearest.
+- **GOD MODE: three fixes.** The day/night and terraform flyouts docked 48px
+  and 135px off with a reskin installed - the dock constants were the
+  alignment-marker rule precomputed on stock art, and the skin moves that
+  marker. The dock now derives from the live marker, which is an identity on
+  an unmodded install. And the disaster flyout's buttons broke when scrolled:
+  a hook that neutralises a dual-use field was never installed because its
+  install site sat behind a hard-coded screen-position band, so the game read
+  scroll-arrow art from the wrong column of the sprite sheet. That band is
+  replaced by a positive identification; a second latent instance that would
+  have failed at 3x is fixed with it.
+- Also: the mod now warns in its log when a reskin is installed without the
+  matching packages, when two copies of a gated mod file exist, and when a
+  skin folder name could sort ahead of our overrides.
 
 ## 4.2.0 (2026-08-24) — BREAKING LAYOUT CHANGE: two folders + the root DLL pair
 

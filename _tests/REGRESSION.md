@@ -16971,7 +16971,7 @@ the 1x base like every other gate. LAW: WHEN YOU FIX A STALE GATE, AUDIT
 EVERY OTHER GATE ON THE SAME PATH - they were written in the same era against
 the same vanished baseline.
 
-## 2026-08-29 (#200) — 1.5x WAS SOFT BECAUSE THE CURE FOR EVENNESS WAS THE DEFAULT
+## 2026-08-29 (#200) — 1.5x WAS SOFT BECAUSE THE CURE FOR EVENNESS WAS THE DEFAULT  [CLOSED — CONFIRMED ON SCREEN 2026-08-29: user confirms 1.5x AND 2x are fine. The 2x query resolved as NOT a regression: the live 2x art measured 0 softened edges of 1,732,216 and is byte-identical to the pre-change build.]
 
 USER: "1.5x still looks far less sharp than 2x and 3x... soft edges."
 
