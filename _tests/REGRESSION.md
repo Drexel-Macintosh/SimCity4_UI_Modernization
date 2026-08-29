@@ -17119,3 +17119,50 @@ The cure is already in this codebase, applied to exactly one package:
 it (static per-tier sources under a non-loading extension + one stable `.dat`
 the DLL writes) keeps runtime tier switching AND makes every name on disk
 manifest-stable. Open at the close of 4.4.0.
+
+
+## #201 MEASURED: FALL-THROUGH WORKS - renaming can go (2026-08-29)
+
+The blocker: sc4pac uninstalls BY MANIFEST NAME, and we rename our own payload
+at runtime to arm a tier - 53 of 68 installed files sat as `.x1-disabled`.
+
+THREE ROUNDS, each one answering the previous round's real question.
+
+**Round 1 - are our dats registered segments?** 12 segments, 12 with readable
+paths, ZERO ours. NOT a false zero: the 12 were the nine game archives,
+`Sku_Data\` and BOTH `Plugins\` trees, so the walk demonstrably worked. Answer:
+the whole Plugins tree registers as ONE segment. Unregistering it would drop
+EVERY mod in the folder.
+
+**Round 2 - is there a level below that?** `QueryInterface` for
+`cIGZPersistDBSegmentMultiPackedFiles` succeeds on the Plugins segment, which
+has its OWN `GetSegmentCount`/`GetSegmentByIndex`: **272 children, 272 with a
+path, 12 ours.** The individual dats ARE addressable.
+
+**Round 3 - does a lookup fall through when a child stops answering?** Key
+`856DDBAC / 6A386D26 / 00000001`, read out of the deployed ItemIcons-2x index
+rather than guessed. Control first: child open=1, 356 records. Then:
+
+```
+before: segment = Plugins\
+after : closed=1  segment = SimCity 4 Deluxe\SimCity_1.dat  reopened=1
+```
+
+**The key resolved to the STOCK ARCHIVE with our child shut, and the child
+reopened cleanly.** Load-time exclusion can replace renaming files on disk.
+
+LAW: ASK THE QUESTION AT THE LEVEL THE ENGINE ANSWERS IT. Round 1's zero looked
+like a refusal and was really a granularity mismatch - the API was right, the
+level was wrong. A null that names WHAT it did see (12 paths, none ours) tells
+you which level to try next; a bare "0 found" would have closed the file on a
+design that turned out to work.
+
+LAW: A PROBE THAT MUTATES MUST RESTORE ON EVERY PATH OUT. Round 3 closes a live
+segment mid-session. It reopens before returning, and logs `reopened=`, so the
+user's next click is not the thing that discovers the probe was destructive.
+
+CONSEQUENCE: the `.dat` <-> `.dat.x1-disabled` rename is no longer load-bearing
+and is scheduled for removal. Every tier stays on disk under the name a
+manifest carries; the DLL drops the ones it does not want at PostAppInit. The
+`SyncDatStable` content-swap remains the fallback if exclusion misbehaves at
+scale, but it is no longer the plan.
