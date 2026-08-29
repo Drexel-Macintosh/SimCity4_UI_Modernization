@@ -1,5 +1,23 @@
 # Changelog
 
+## 4.3.1 (2026-08-29) - the Carbon Skin packages now SHIP
+
+- **v4.3.0 shipped the reskin support but not the packages.** That was an
+  inconsistency, not a policy: this mod has always shipped `CamUI`,
+  `NamIcons`, `WarriorUI`, `ThirdPartyUI`, `SaveWarningUI` and `WebButtonUI`,
+  every one of them built from another mod's own artwork and gated on that mod
+  being installed. The eight `ZCarbon*` packages are the same kind of thing and
+  are now bundled the same way (24 files, all three tiers).
+- **So if you have Scoty Carbon Skin 1.5, it now just works.** Install this
+  mod, keep the skin where it is, and the skin's own art and dialog layouts are
+  rendered at your scale factor. No local build, no extra step.
+- The packages are inert for everyone else: each is gated on the skin's own
+  files by exact name and byte size, so with no skin installed they never arm,
+  and if the skin is updated or removed they disarm themselves.
+- Attribution is in `THIRD-PARTY-NOTICES.md`: the artwork is **Scoty's**,
+  enlarged - never Maxis art substituted for his. If Scoty would rather these
+  not be distributed, that is his call and they come out on request.
+
 ## 4.3.0 (2026-08-29) - Full UI-reskin support, sharper 1.5x, and three god-mode fixes
 
 - **SCOTY CARBON SKIN 1.5 IS SUPPORTED END TO END.** A full reskin replaces

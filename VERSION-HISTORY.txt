@@ -1,3 +1,16 @@
+2026-08-29  v4.3.1    THE CARBON SKIN PACKAGES NOW SHIP
+
+  v4.3.0 shipped reskin SUPPORT but withheld the packages - an inconsistency,
+  not a policy: CamUI/NamIcons/WarriorUI/ThirdPartyUI/SaveWarningUI/
+  WebButtonUI have always shipped, all built from another mod's own artwork
+  and gated on that mod. The eight ZCarbon* packages are the same kind of
+  thing and now bundle the same way (24 files, three tiers, +12.5MB).
+  RESULT: with Scoty Carbon Skin 1.5 installed it now WORKS OUT OF THE BOX -
+  no local build. Inert for everyone else (exact name+size gates).
+  Attribution added to THIRD-PARTY-NOTICES.md; removable on the author's
+  request. Build-Dist's exclusion assert became an inclusion step with a
+  count assert, so a silent drop goes red.
+
 2026-08-29  v4.3.0    FULL UI-RESKIN SUPPORT + 1.5x SHARPNESS + GOD MODE
 
   SCOTY CARBON SKIN 1.5 SUPPORTED END TO END. Eight dependency-gated

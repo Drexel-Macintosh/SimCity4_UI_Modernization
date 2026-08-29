@@ -252,7 +252,28 @@ is:**
 `NamIcons`, `ThirdPartyUI`, `SaveWarningUI` and `WarriorUI` — are gated at load
 time on the owning mod's file being present, and deactivate themselves
 otherwise. The gate table is `kThirdPartyDeps` in `src\ScaleTier.cpp`; those
-five rows are its complete contents. **Two packages that carry third-party
+rows are its complete contents — they now also include `WebButtonUI` and the
+eight `ZCarbon*` packages added in v4.3.0.
+
+**The `ZCarbon*` packages (v4.3.0) — Scoty Carbon Skin 1.5.** These are the
+same kind of thing as `CamUI` and `NamIcons`, and are treated identically: they
+carry **Scoty's own artwork and his own UI layouts, enlarged** to the player's
+scale factor — never Maxis art substituted for his. A full reskin replaces
+~494 of the resources this mod scales, so without them the skin's 1x art and
+1x-positioned dialogs render inside a scaled UI. Each package is gated on the
+skin's own files by exact name and byte size, so it is inert for anyone who
+does not have the skin and disarms itself if the skin is updated or removed —
+verified: with the skin absent, every one of those 494 resources reverts to
+this project's stock-derived packages.
+
+*Credit:* Scoty Carbon Skin 1.5 is by **Scoty**, published on Simtropolis. If
+Scoty would prefer these packages not be distributed, that is his call and we
+will remove them on request — the generators are in the repo, so players can
+build them locally instead. An upstream note describing exactly what is
+overridden, plus one genuine defect found in the skin, is in
+`tools\research\UPSTREAM-CARBON-REPORT.md`.
+
+ **Two packages that carry third-party
 artwork are NOT gated**, and are named here rather than covered by a general
 claim:
 

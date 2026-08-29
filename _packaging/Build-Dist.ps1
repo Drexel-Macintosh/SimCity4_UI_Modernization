@@ -33,7 +33,7 @@ if (-not (Test-Path $deployScript)) { throw "deploy manifest not found: $deployS
 # --- version comes from the code, never from a doc ---------------------------
 $verSrc = Get-Content (Join-Path $proj "src\SC4UIScaleDllDirector.cpp") -Raw
 # Suffixed dev versions ("4.3.0-dev") are legal here - a dev bundle is how
-# the ZCarbon exclusion assert gets exercised before a release exists.
+# the ZCarbon inclusion step gets exercised before a release exists.
 if ($verSrc -notmatch '#define\s+UISCALE_VERSION_STR\s+"([0-9.]+(?:-[A-Za-z0-9]+)?)"') {
     throw "could not read UISCALE_VERSION_STR from SC4UIScaleDllDirector.cpp"
 }
@@ -129,24 +129,60 @@ foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
 }
 Write-Output "  + z_SC4UIScale_CsiIcons tiers (rescued from the parser blind spot - see comment)"
 
-# --- ZCarbon EXCLUSION ASSERT (v4.3.0, 2026-08-25) --------------------------
-# The z_SC4UIScale_ZCarbon* packages are built FROM Scoty Carbon Skin's own
-# pixels and geometry. They deploy locally (Deploy-OnGameClose uses the
-# named-parameter Copy-Item form there, DELIBERATELY invisible to the parser
-# above) but MUST NEVER ship in the public bundle - that would redistribute
-# another modder's art (.gitignore policy (c): "nothing from other modders").
-# Players with the skin build them locally; the generators ARE in the repo.
-# This assert is the net under the deliberate blind spot: if anyone rewrites
-# the deploy lines into the positional form, the parser bundles them and this
-# goes red instead of shipping scoty's work.
-$leaked = Get-ChildItem $bundle -Recurse -File | Where-Object { $_.Name -match 'ZCarbon' }
-if ($leaked) {
-    $leaked | ForEach-Object { Write-Output ("    LEAKED: " + $_.FullName) }
-    throw ("$($leaked.Count) ZCarbon file(s) entered the bundle - these are " +
-           "carbon-skin-derived and must never be distributed. Remove them from " +
-           "the parse path; they deploy locally only.")
+# --- ZCarbon INCLUSION (v4.3.1) ---------------------------------------------
+# These ship, exactly like CamUI / NamIcons / WarriorUI / ThirdPartyUI /
+# SaveWarningUI / WebButtonUI already do. They are the SAME KIND OF THING: a
+# mod's own artwork and layouts, enlarged to the player's factor, gated on that
+# mod being installed. Excluding only these was an inconsistency, not a policy.
+# Attribution is in THIRD-PARTY-NOTICES.md; the packages are inert without the
+# Scoty Carbon Skin because every one carries a kThirdPartyDeps row.
+#
+# Copied explicitly, not via the manifest parser: the deploy uses the
+# named-parameter Copy-Item form for these (a parser blind spot), so this block
+# is the SelectorUI/CsiIcons rescue pattern - explicit copies plus a hard
+# assert, so a silent drop goes red instead of shipping a bundle that leaves
+# reskin users broken.
+$zcarbonSrc = @(
+    @{ b = "tools/dialog-static/z_SC4UIScale_ZCarbonUI.dat";            n = "z_SC4UIScale_ZCarbonUI-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonUI-15x.dat";         n = "z_SC4UIScale_ZCarbonUI-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonUI-3x.dat";           n = "z_SC4UIScale_ZCarbonUI-3x.dat.x1-disabled" },
+    @{ b = "tools/dialog-static/z_SC4UIScale_ZCarbonCamUI.dat";         n = "z_SC4UIScale_ZCarbonCamUI-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonCamUI-15x.dat";      n = "z_SC4UIScale_ZCarbonCamUI-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonCamUI-3x.dat";        n = "z_SC4UIScale_ZCarbonCamUI-3x.dat.x1-disabled" },
+    @{ b = "tools/dialog-static/z_SC4UIScale_ZCarbonSaveWarning.dat";   n = "z_SC4UIScale_ZCarbonSaveWarning-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonSaveWarning-15x.dat"; n = "z_SC4UIScale_ZCarbonSaveWarning-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonSaveWarning-3x.dat";   n = "z_SC4UIScale_ZCarbonSaveWarning-3x.dat.x1-disabled" },
+    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonArt.dat";          n = "z_SC4UIScale_ZCarbonArt-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonArt-15x.dat";        n = "z_SC4UIScale_ZCarbonArt-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonArt-3x.dat";          n = "z_SC4UIScale_ZCarbonArt-3x.dat.x1-disabled" },
+    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonNam.dat";          n = "z_SC4UIScale_ZCarbonNam-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonNam-15x.dat";        n = "z_SC4UIScale_ZCarbonNam-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonNam-3x.dat";          n = "z_SC4UIScale_ZCarbonNam-3x.dat.x1-disabled" },
+    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonStyles.dat";       n = "z_SC4UIScale_ZCarbonStyles-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonStyles-15x.dat";     n = "z_SC4UIScale_ZCarbonStyles-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonStyles-3x.dat";       n = "z_SC4UIScale_ZCarbonStyles-3x.dat.x1-disabled" },
+    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonGodMod.dat";       n = "z_SC4UIScale_ZCarbonGodMod-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonGodMod-15x.dat";     n = "z_SC4UIScale_ZCarbonGodMod-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonGodMod-3x.dat";       n = "z_SC4UIScale_ZCarbonGodMod-3x.dat.x1-disabled" },
+    @{ b = "tools/research/carbon/z_SC4UIScale_ZCarbonIcons.dat";      n = "z_SC4UIScale_ZCarbonIcons-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonIcons-15x.dat";      n = "z_SC4UIScale_ZCarbonIcons-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonIcons-3x.dat";        n = "z_SC4UIScale_ZCarbonIcons-3x.dat.x1-disabled" }
+)
+foreach ($zc in $zcarbonSrc) {
+    $zsrc = Join-Path $proj $zc.b
+    if (-not (Test-Path $zsrc)) {
+        throw ("ZCarbon source missing: " + $zc.b + " - reskin users would install a " +
+               "bundle that leaves them with 1x art in a scaled UI. Build all three " +
+               "tiers (_tests\Test-Builders.ps1 -Factor 1.5 / 2 / 3) before packaging.")
+    }
+    Copy-Item $zsrc (Join-Path $zzzOut $zc.n) -Force
+    $copied++
 }
-Write-Output "  ZCarbon exclusion assert: clean (carbon-derived dats stay local-only)"
+$zcShipped = @(Get-ChildItem $zzzOut -File | Where-Object { $_.Name -match 'ZCarbon' })
+if ($zcShipped.Count -ne $zcarbonSrc.Count) {
+    throw ("expected $($zcarbonSrc.Count) ZCarbon files in the bundle, found $($zcShipped.Count)")
+}
+Write-Output ("  + " + $zcShipped.Count + " ZCarbon file(s) (Scoty Carbon Skin support; gated, inert without the skin - see THIRD-PARTY-NOTICES.md)")
 
 # PARSED-COUNT GATE: the next expression-built Copy-Item drops a package
 # invisibly; keep a floor under the total so the drop goes red not silent.
