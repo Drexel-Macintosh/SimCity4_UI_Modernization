@@ -41,8 +41,22 @@ no-mod install.
 
 ## Install
 
-1. Copy `SC4UIScale.dll`, `SC4UIScale.ini` and the `z_SC4UIScale_*` packages
-   into `Documents\SimCity 4\Plugins`.
+1. Download a bundle from [Releases](../../releases), unzip it, and run
+   `.\Install.ps1`. Or copy its `Plugins\` tree into
+   `Documents\SimCity 4\Plugins` by hand - it is two folders and one file:
+
+   ```
+   Documents\SimCity 4\Plugins\
+     010-SC4UIScale\      packages, fonts, settings, log
+     zzz-SC4UIScale\      overrides that must beat other mods
+     SC4UIScale.dll       the only loose file at the root
+   ```
+
+   The DLL has to sit at the root: SimCity 4's dat scan is recursive but its
+   **DLL loader is top-level only**. Everything else lives in the folders, so
+   uninstalling is deleting those three things (or `.\Install.ps1 -Uninstall`).
+   Upgrading from before v4.4.0 moves your old root files - settings included
+   - into `010-SC4UIScale\` on the first launch.
 2. Launch the game. AutoScale picks the tier the current resolution can
    carry. To change it, open **Options → Graphic Options**; that panel also
    sets resolution and window mode, and changes apply on restart.
