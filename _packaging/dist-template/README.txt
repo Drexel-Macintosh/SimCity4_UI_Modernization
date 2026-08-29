@@ -52,7 +52,7 @@ The UI will be visibly larger the moment you reach the main menu.
 
 If nothing changed, open:
 
-    Documents\SimCity 4\Plugins-SC4UIScale\SC4UIScale.log
+    Documents\SimCity 4\Plugins\010-SC4UIScale\SC4UIScale.log
 
 The first few lines report the resolution it detected and the tier it chose.
 The log is rewritten on every launch, so read it after the run you care about.
@@ -202,6 +202,6 @@ unaffiliated modification and contains no EA code.
 
 SHA256SUMS.txt lists a hash for every file under Plugins\. To check them:
 
-    Get-FileHash .\Plugins-SC4UIScale\SC4UIScale.dll -Algorithm SHA256
+    Get-FileHash .\Plugins\SC4UIScale.dll -Algorithm SHA256
 
 and compare against the matching line.

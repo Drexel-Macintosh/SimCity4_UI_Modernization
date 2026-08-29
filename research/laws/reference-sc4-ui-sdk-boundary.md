@@ -59,8 +59,23 @@ half curable.
 In that case the larger art genuinely loads (an art-fetch probe confirms the
 fetch), and the renderer then draws it at a size it computes itself, resampling
 it back down. The result on screen is pixel-identical to stock, which reads as a
-staging failure and is not one. The confirmed instance is the "move in a sim"
-marker over the city view: its portrait art is reachable, its geometry is not.
+staging failure and is not one.
+
+⛔ **THIS CATEGORY HAS ZERO CONFIRMED MEMBERS. Corrected 2026-08-29.** This
+paragraph named the "move in a sim" marker as its one confirmed instance. That
+was closed on 2026-08-19 - user-confirmed - as an ordinary `GZWinBMP` window
+pair (`0x27DF05BE` green / `0x27DF05BF` red), and the cure is live: both ids
+sit in `kBmpxCityRoots` (`src\UiSpike.cpp:5471`) and the world-anchored
+`GZWinMoveTo` skip handles them (`:12812`). The law kept naming it for ten
+more days, which is exactly the "static defect = hypothesis" failure this
+project has a standing law against - a reader following this section would
+conclude a window we already scale is renderer-only and stop looking.
+
+The category is still worth DEFINING: it is a real shape an element can have,
+and the reasoning below is how you would recognise one. But it is a shape with
+no known occupant, so do not reach for it as an explanation before running the
+triage - three elements have been filed here and all three turned out to be
+ordinary windows.
 
 Before staging bigger art for anything drawn over the 3D view, establish which
 half of the pair is actually reachable. The only cure for this category is a

@@ -13,7 +13,9 @@ msbuild src\SC4UIScale.vcxproj -p:Configuration=Release -p:Platform=Win32
 ```
 
 Output: `build\Release\SC4UIScale.dll`. Copy it into
-`Documents\SimCity 4\Plugins\` beside `SC4UIScale.ini`.
+`Documents\SimCity 4\Plugins\` - the DLL goes at the ROOT of that folder and
+nowhere else (the game's DLL loader is top-level only). Its ini and log live
+in `Plugins\010-SC4UIScale\`; the DLL puts them there itself.
 
 `vendor\` carries gzcom-dll, MinHook and sc4-dll-utilities as **git
 submodules**; all are compiled in. Clone with `--recursive`, or run
@@ -63,7 +65,7 @@ python tools\fonts\make_fontstyle.py                   # font tables
 ```
 
 Each builder takes a scale factor and writes a `z_SC4UIScale_*.dat`. Deploy
-those to `Documents\SimCity 4\Plugins-SC4UIScale\` (v4.2.0 layout),
+those to `Documents\SimCity 4\Plugins\010-SC4UIScale\` (v4.4.0 layout),
 with the third-party overrides in the top-level `zzz-SC4UIScale\` subfolder.
 
 ### Three rules that are not optional

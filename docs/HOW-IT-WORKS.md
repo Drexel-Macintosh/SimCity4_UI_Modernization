@@ -66,5 +66,6 @@ game that doesn't have it.
   disables itself otherwise.
 - Every code patch checks the bytes it expects to find before writing.
 - Everything it does is in-memory and per-session. **No game file is modified.**
-- It writes `SC4UIScale.log` beside itself — the first thing to attach to a bug
+- It writes `SC4UIScale.log` into `Plugins\010-SC4UIScale\` (v4.4.0; it used
+  to sit beside the DLL) — the first thing to attach to a bug
   report.
