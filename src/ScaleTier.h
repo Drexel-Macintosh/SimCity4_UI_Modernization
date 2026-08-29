@@ -43,6 +43,21 @@ namespace ScaleTier
 	int MigrateRootLooseFiles();
 	const char* MigratedRootFileNames();
 
+	// v4.5.0: prints which folders this mod actually resolved to, and
+	// whether either half fell back to the hard-coded v4.2.0 name. Call once
+	// AFTER Logger::Init - discovery itself is silent because the ini and
+	// log paths resolve through it before the logger exists.
+	void LogOurDirs();
+
+	// v4.5.0 ([ScaleTier] LoadTimeExclusion, default 0). Takes the tiers we
+	// do NOT want, and any dependency-gated package whose mod is absent, out
+	// of service by CLOSING their DBPF segment - instead of renaming the
+	// files on disk. Renaming is the one thing that makes this mod
+	// impossible for a package manager to uninstall. Call at PostAppInit,
+	// after the tier decision. Returns how many were closed, or -1 if it
+	// could not run at all.
+	int ExcludeInactive();
+
 	// #201 PROBE (log-only, [Probe] SegmentCensus, default 0). Walks the
 	// registered DBPF segments and prints a path each. Exists to answer ONE
 	// question: whether a loaded dat can be dropped at runtime, which would

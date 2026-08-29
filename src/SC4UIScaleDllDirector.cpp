@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.4.0"
+#define UISCALE_VERSION_STR "4.5.0-dev"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -159,6 +159,9 @@ public:
 			logger.WriteLine(LogLevel::Info,
 				"Settings + log resolved to %s", shown);
 		}
+		// v4.5.0: and WHICH folders those resolved from - discovered by
+		// content, or fallen back to the v4.2.0 names.
+		ScaleTier::LogOurDirs();
 		if (migrated)
 		{
 			logger.WriteLine(LogLevel::Info,
@@ -716,6 +719,15 @@ public:
 			if (GetPrivateProfileIntW(L"Probe", L"SegmentClose", 0, probeIni) > 0)
 			{
 				ScaleTier::SegmentFallThroughTest();
+			}
+			// v4.5.0 THE sc4pac CURE. Default OFF: with every tier present as
+			// a live .dat, the last-sorting one wins until this runs, and that
+			// window has not been proven empty. It has to be seen on screen
+			// before it replaces the rename.
+			if (GetPrivateProfileIntW(L"ScaleTier", L"LoadTimeExclusion", 0,
+					probeIni) > 0)
+			{
+				ScaleTier::ExcludeInactive();
 			}
 		}
 

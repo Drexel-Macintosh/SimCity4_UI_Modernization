@@ -1,0 +1,124 @@
+# sc4pac channel metadata for SC4UIScale.
+#
+# NOT YET PUBLISHABLE. Two things must land first; both are named at the
+# bottom of this file with what has to change. Written now because the
+# schema questions it answers were blocking the design, and because the
+# include/exclude lists ARE the specification for how the bundle must be
+# laid out.
+#
+# Schema source: memo33/sc4pac docs/metadata.md, read 2026-08-29.
+# Behaviour confirmed against a live install rather than assumed:
+#   * A `.dll` listed under `withChecksum` is installed to the PLUGINS ROOT,
+#     not into the package folder. Verified: null-45's query-tool package
+#     folder holds only SC4QueryUIHooks.dat, while SC4QueryUIHooks.dll sits
+#     at the root. That matches what SimCity 4 requires of us - its dat scan
+#     is recursive, its DLL loader is top-level only.
+#   * `isIni: true` does the same for an ini. We deliberately DO NOT set it:
+#     since v4.4.0 our ini belongs in our own package folder, and omitting
+#     the flag leaves it there.
+
+group: "drexel"
+name: "sc4-ui-scale"
+version: "4.5.0"
+subfolder: "050-load-first"
+dependencies:
+- "config:sc4-edition-windows-digital"
+assets:
+- assetId: "drexel-sc4-ui-scale"
+  # The DLL, and only the DLL, goes to the Plugins root.
+  withChecksum:
+  - include: "/Plugins/SC4UIScale.dll"
+    sha256: "0000000000000000000000000000000000000000000000000000000000000000"
+  include:
+  # Stock-derived art and scripts. These are DESIGNED TO LOSE to a real mod's
+  # own files - that is the compatibility gate, not an accident - which is
+  # why this package sits in the earliest subfolder available.
+  - "/Plugins/010-SC4UIScale/"
+info:
+  summary: "Scales the SimCity 4 interface to 1.5x, 2x or 3x for high-resolution displays"
+  conflicts: "Requires game version 1.1.641. Refuses to patch any other build."
+  description: |2
+
+    Enlarges the game's own UI - toolbars, dialogs, menus, icons and fonts -
+    so the interface stays usable at modern resolutions, instead of scaling
+    the whole frame and blurring the city.
+
+    The scale factor is chosen automatically from the resolution the game
+    actually renders at, and can be changed in-game under
+    Options -> Graphic Options. Below 1320x900 the mod stays completely
+    inert and the game is exactly stock.
+  author: "Drexel-Macintosh"
+  website: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization"
+
+---
+
+group: "drexel"
+name: "sc4-ui-scale-mod-overrides"
+version: "4.5.0"
+subfolder: "900-overrides"
+dependencies:
+- "drexel:sc4-ui-scale"
+assets:
+- assetId: "drexel-sc4-ui-scale"
+  include:
+  # Built FROM other mods' own artwork, so these must WIN - hence the last
+  # subfolder. Each one is gated AT RUNTIME on its mod's files being present
+  # by exact name and size, so they stay inert for anyone who does not have
+  # that mod. That gating is deliberately NOT expressed as sc4pac
+  # dependencies: it has to work for hand-installed copies of those mods
+  # too, and the DLL already does it in one place.
+  - "/Plugins/zzz-SC4UIScale/"
+info:
+  summary: "Scaled UI artwork for CAM, NAM and other mods, for SC4UIScale"
+  description: |2
+
+    Enlarged copies of other mods' own interface artwork, so a scaled UI
+    stays consistent when those mods are installed. Inert without them.
+
+    Covers CAM, the Network Addon Mod, Save Warning, 36 Slot Building
+    Styles, God Terraforming in Mayor Mode, and Scoty's Carbon Skin.
+    Artwork belongs to those authors - see THIRD-PARTY-NOTICES.md.
+  author: "Drexel-Macintosh"
+  website: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization"
+
+---
+
+assetId: "drexel-sc4-ui-scale"
+version: "4.5.0"
+lastModified: "2026-08-29T00:00:00Z"
+url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.5.0/SC4UIScale-v4.5.0.zip"
+
+# ===========================================================================
+# BLOCKED ON, and neither is a metadata problem:
+#
+# 1. THE RUNTIME RENAME. The DLL still renames its own dats
+#    (`.dat` <-> `.dat.x1-disabled`) to arm a tier. sc4pac uninstalls BY
+#    MANIFEST NAME, so every renamed file is orphaned - measured at 53 of 68
+#    installed files. Until load-time exclusion replaces it, the `include`
+#    lists above install files that will not be there under those names when
+#    the user uninstalls. Load-time exclusion is MEASURED as workable (three
+#    probe rounds, 2026-08-29: closing a child DBPF segment made the key
+#    resolve to the stock archive); it is not yet implemented.
+#
+# 2. THE SUBFOLDER ORDERING, and this one may need memo33. The canonical
+#    subfolder list BEGINS at `050-load-first`; there is nothing below it.
+#    Our core package must load BEFORE CAM, which lives in that same folder,
+#    because losing to CAM per-TGI is how compatibility is expressed. Inside
+#    one subfolder, order is alphabetical by `<group>.<name>.<version>`, and
+#    `cam.*` sorts before `drexel.*` - so as written above WE would win,
+#    which is backwards.
+#    Three ways out, in order of preference:
+#      a) Ask upstream for a subfolder below 050 (e.g. `040-ui-framework`).
+#      b) Verify the inversion is actually harmless: the override package in
+#         900- loads last and re-corrects every CAM-specific script anyway.
+#         This is TESTABLE, not arguable - run `tools/uimap/who_owns_tgi.py`
+#         over both layouts and diff the per-TGI winner table. Any changed
+#         winner is a red stop. Do not publish on the strength of the
+#         argument alone.
+#      c) Express the gate at runtime instead of by folder order, now that
+#         load-time exclusion exists.
+#
+# Also outstanding: the `sha256` above is a placeholder and must be the hash
+# of the extracted DLL (not the zip), and `lastModified` must be the real
+# release timestamp.
+# ===========================================================================

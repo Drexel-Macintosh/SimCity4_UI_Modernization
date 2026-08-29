@@ -57,6 +57,16 @@ namespace
 
 	const wchar_t kDisabledSuffix[] = L".x1-disabled";
 
+	// v4.5.0: the tier decision and the dependency verdicts happen at DLL
+	// load; load-time exclusion needs both again at PostAppInit. Stashed
+	// rather than recomputed, so the two mechanisms cannot disagree about
+	// which packages are legitimate - two copies of a rule are two rules.
+	wchar_t gArmedTag[8] = {};
+	bool    gArmedTagValid = false;
+	bool    gArmedDepOk[32] = {};
+	bool    gArmedDepOkValid = false;
+
+
 	void DllDir(wchar_t* out, size_t outLen)
 	{
 		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), out, static_cast<DWORD>(outLen));
@@ -132,13 +142,19 @@ namespace
 	// used to drop beside the DLL now goes through here; the DLL alone
 	// stays at the Plugins root, because the game's DLL loader is
 	// top-level only - measured, see OurPackagesDir below.
+	// Defined below with the discovery block; declared here because
+	// OurFilePath is the earliest caller (the ini and log resolve through
+	// it before Logger::Init).
+	void ResolveOurDirs();
+	const wchar_t* EarlyDirPtr();
+
 	void OurFilePath(const wchar_t* name, wchar_t* out, size_t outLen)
 	{
 		if (!out || outLen == 0) { return; }
 		out[0] = L'\0';
-		wchar_t root[MAX_PATH] = {};
-		PluginsRootQuiet(root, MAX_PATH);
-		const wchar_t* sub = L"010-SC4UIScale\\";
+		// v4.5.0: the folder is DISCOVERED, not named.
+		const wchar_t* sub = L"";
+		const wchar_t* root = EarlyDirPtr();
 		// LENGTH-CHECKED, not wcscat_s-and-hope: the secure-CRT concat
 		// ABORTS THE PROCESS on truncation, and this path is now one
 		// folder deeper than the beside-the-DLL one it replaces. On an
@@ -157,10 +173,171 @@ namespace
 	// nothing. So the DLL (and its beside-the-DLL ini/log) stays at the
 	// Plugins ROOT, while every package and font source lives in
 	// Plugins\010-SC4UIScale\ - which this resolver names.
+	// ============ v4.5.0 FOLDER DISCOVERY - NOT FOLDER NAMES ==============
+	// Through v4.4.0 this mod hard-coded "010-SC4UIScale" and
+	// "zzz-SC4UIScale" in 82 places. sc4pac names package folders ITSELF,
+	// with the version baked in (`<group>.<name>.<version>.sc4pac` inside a
+	// numbered subfolder), so every one of those literals resolves to
+	// nothing under a package-manager install - which is why sc4pac could
+	// not install this mod at all, not merely uninstall it badly.
+	//
+	// FOUND BY CONTENT, NEVER BY NAME. A folder is ours if it holds files we
+	// ship. Which of the two it is, is decided by WHICH packages it holds:
+	//   EARLY    - holds SelectiveArt. Must LOSE to CAM/NAM: it carries
+	//              stock-derived copies that a real mod is entitled to beat.
+	//   OVERRIDE - holds CamUI / ItemIconsSub / UncoveredIcons. Must WIN:
+	//              these are built FROM those mods' own art.
+	// One folder holding both is legal and both handles point at it (a
+	// single-package install); a folder holding neither marker is not ours.
+	//
+	// Scans two levels: our own top-level layout, and `<subfolder>/<pkg>` as
+	// sc4pac lays it out. Falls back to the v4.2.0 names and SAYS SO - a
+	// silently wrong folder here disarms every package we own.
+	struct OurDirs
+	{
+		bool     resolved;
+		bool     earlyFound;
+		bool     overrideFound;
+		wchar_t  early[MAX_PATH];
+		wchar_t  override_[MAX_PATH];
+		wchar_t  earlyLeaf[64];
+		wchar_t  overrideLeaf[64];
+	};
+	OurDirs gOurDirs = {};
+
+	// Which marker does this directory carry? bit0 = early, bit1 = override.
+	int ClassifyDir(const wchar_t* dir)
+	{
+		struct Marker { const wchar_t* pat; int bit; };
+		const Marker markers[] = {
+			{ L"z_SC4UIScale_SelectiveArt*",    1 },
+			{ L"z_SC4UIScale_DialogStatic*",    1 },
+			{ L"z_SC4UIScale_ItemIcons-*",      1 },
+			{ L"z_SC4UIScale_CamUI*",           2 },
+			{ L"z_SC4UIScale_ItemIconsSub*",    2 },
+			{ L"z_SC4UIScale_UncoveredIcons*",  2 },
+		};
+		int bits = 0;
+		for (const Marker& m : markers)
+		{
+			wchar_t pat[MAX_PATH];
+			swprintf_s(pat, L"%s%s", dir, m.pat);
+			WIN32_FIND_DATAW fd = {};
+			HANDLE h = FindFirstFileW(pat, &fd);
+			if (h != INVALID_HANDLE_VALUE) { bits |= m.bit; FindClose(h); }
+		}
+		return bits;
+	}
+
+	void ScanForOurDirs(const wchar_t* dir, int depth, int& earlyBits, int& ovrBits)
+	{
+		if (depth > 2) { return; }
+		wchar_t pat[MAX_PATH];
+		swprintf_s(pat, L"%s*", dir);
+		WIN32_FIND_DATAW fd = {};
+		HANDLE h = FindFirstFileW(pat, &fd);
+		if (h == INVALID_HANDLE_VALUE) { return; }
+		do
+		{
+			if (fd.cFileName[0] == L'.') { continue; }
+			if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) { continue; }
+			wchar_t sub[MAX_PATH];
+			swprintf_s(sub, L"%s%s\\", dir, fd.cFileName);
+			const int bits = ClassifyDir(sub);
+			if ((bits & 1) && !earlyBits)
+			{
+				earlyBits = 1;
+				wcscpy_s(gOurDirs.early, MAX_PATH, sub);
+				wcscpy_s(gOurDirs.earlyLeaf, 64, fd.cFileName);
+			}
+			if ((bits & 2) && !ovrBits)
+			{
+				ovrBits = 1;
+				wcscpy_s(gOurDirs.override_, MAX_PATH, sub);
+				wcscpy_s(gOurDirs.overrideLeaf, 64, fd.cFileName);
+			}
+			if (!bits) { ScanForOurDirs(sub, depth + 1, earlyBits, ovrBits); }
+		} while (FindNextFileW(h, &fd) && !(earlyBits && ovrBits));
+		FindClose(h);
+	}
+
+	void ResolveOurDirs()
+	{
+		if (gOurDirs.resolved) { return; }
+		gOurDirs.resolved = true;
+		wchar_t root[MAX_PATH] = {};
+		PluginsRootQuiet(root, MAX_PATH);
+		int e = 0, o = 0;
+		ScanForOurDirs(root, 1, e, o);
+		if (!e)
+		{
+			swprintf_s(gOurDirs.early, L"%s010-SC4UIScale\\", root);
+			wcscpy_s(gOurDirs.earlyLeaf, 64, L"010-SC4UIScale");
+		}
+		if (!o)
+		{
+			swprintf_s(gOurDirs.override_, L"%szzz-SC4UIScale\\", root);
+			wcscpy_s(gOurDirs.overrideLeaf, 64, L"zzz-SC4UIScale");
+		}
+		gOurDirs.earlyFound = (e != 0);
+		gOurDirs.overrideFound = (o != 0);
+		// NO LOGGING HERE. The ini and log paths resolve through this and are
+		// needed before Logger::Init exists - the same trap PluginsRootQuiet
+		// was split to avoid. The director calls LogOurDirs() once the logger
+		// is up.
+	}
+
+	void LogOurDirsImpl()
+	{
+		ResolveOurDirs();
+		char a[MAX_PATH] = {}, b[MAX_PATH] = {};
+		WideCharToMultiByte(CP_UTF8, 0, gOurDirs.early, -1, a, sizeof(a), nullptr, nullptr);
+		WideCharToMultiByte(CP_UTF8, 0, gOurDirs.override_, -1, b, sizeof(b), nullptr, nullptr);
+		// Every resolver states its resolved value, and says which half it had
+		// to guess - a fallback that logged nothing would look exactly like a
+		// successful discovery.
+		Logger::Get().WriteLine(LogLevel::Info,
+			"ScaleTier: our folders resolved BY CONTENT - early=%s (%s), "
+			"override=%s (%s).", a,
+			gOurDirs.earlyFound ? "discovered" : "FALLBACK to the v4.2.0 name",
+			b,
+			gOurDirs.overrideFound ? "discovered" : "FALLBACK to the v4.2.0 name");
+	}
+
+	const wchar_t* EarlyDirPtr()
+	{
+		ResolveOurDirs();
+		return gOurDirs.early;
+	}
+
 	void OurPackagesDir(wchar_t* out, size_t outLen)
 	{
-		PluginsRoot(out, outLen);
-		wcscat_s(out, outLen, L"010-SC4UIScale\\");
+		wcscpy_s(out, outLen, EarlyDirPtr());
+	}
+
+	void OurOverrideDir(wchar_t* out, size_t outLen)
+	{
+		ResolveOurDirs();
+		wcscpy_s(out, outLen, gOurDirs.override_);
+	}
+
+	// Maps a table entry written with its v4.2.0 folder prefix onto whatever
+	// folder that package ACTUALLY lives in now. The table strings stay as
+	// stable identifiers - 49 of them - and only this one function knows
+	// where the bytes are, so a new layout is one edit rather than 49.
+	void ResolveOurRelative(const wchar_t* rel, wchar_t* out, size_t outLen)
+	{
+		ResolveOurDirs();
+		const wchar_t* slash = wcschr(rel, L'\\');
+		if (!slash)
+		{
+			swprintf_s(out, outLen, L"%s%s", gOurDirs.early, rel);
+			return;
+		}
+		const size_t n = static_cast<size_t>(slash - rel);
+		const bool isOverride = (n == 14 && _wcsnicmp(rel, L"zzz-SC4UIScale", 14) == 0);
+		swprintf_s(out, outLen, L"%s%s",
+			isOverride ? gOurDirs.override_ : gOurDirs.early, slash + 1);
 	}
 
 	bool FileExists(const wchar_t* p)
@@ -505,10 +682,12 @@ namespace
 			}
 			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
-				// v4.2.0: 010-SC4UIScale joins the skip list - a dependency
-				// must never be satisfied by our own packages.
-				if (_wcsicmp(fd.cFileName, L"zzz-SC4UIScale") == 0
-					|| _wcsicmp(fd.cFileName, L"010-SC4UIScale") == 0
+				// A dependency must never be satisfied by our OWN packages.
+				// v4.5.0: matched against the DISCOVERED folder names, so this
+				// still holds when a package manager picked those names.
+				ResolveOurDirs();
+				if (_wcsicmp(fd.cFileName, gOurDirs.overrideLeaf) == 0
+					|| _wcsicmp(fd.cFileName, gOurDirs.earlyLeaf) == 0
 					|| _wcsicmp(fd.cFileName, L"_dllstash") == 0)
 				{
 					continue;
@@ -564,10 +743,24 @@ namespace
 	//   inactive: base<tag>.dat -> base<tag>.dat.x1-disabled
 	void SyncDat(const wchar_t* dir, const wchar_t* base, const wchar_t* tag, bool active)
 	{
+		// v4.5.0: `base` may still carry its v4.2.0 folder prefix. WHERE a
+		// package lives is now discovered, so resolve the prefix instead of
+		// concatenating `dir` onto it - under a package-manager install the
+		// old folder name does not exist and every gate here would silently
+		// no-op, which looks exactly like "nothing needed doing".
+		wchar_t stem[MAX_PATH];
+		if (wcschr(base, L'\\'))
+		{
+			ResolveOurRelative(base, stem, MAX_PATH);
+		}
+		else
+		{
+			swprintf_s(stem, L"%s%s", dir, base);
+		}
 		wchar_t live[MAX_PATH];
 		wchar_t stash[MAX_PATH];
-		swprintf_s(live, L"%s%s%s.dat", dir, base, tag);
-		swprintf_s(stash, L"%s%s%s.dat%s", dir, base, tag, kDisabledSuffix);
+		swprintf_s(live, L"%s%s.dat", stem, tag);
+		swprintf_s(stash, L"%s%s.dat%s", stem, tag, kDisabledSuffix);
 
 		const wchar_t* from = active ? stash : live;
 		const wchar_t* to = active ? live : stash;
@@ -2291,6 +2484,173 @@ namespace ScaleTier
 		return s_migratedNames;
 	}
 
+	void LogOurDirs()
+	{
+		LogOurDirsImpl();
+	}
+
+	int ExcludeInactiveSegments(const wchar_t* activeTag, const bool* depOk);
+
+	int ExcludeInactive()
+	{
+		if (!gArmedTagValid || !gArmedDepOkValid)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"EXCLUDE SKIPPED - the tier decision never ran this boot "
+				"(tag=%d deps=%d). Nothing was excluded and nothing is proven.",
+				gArmedTagValid ? 1 : 0, gArmedDepOkValid ? 1 : 0);
+			return -1;
+		}
+		return ExcludeInactiveSegments(gArmedTag, gArmedDepOk);
+	}
+	// ============ v4.5.0 LOAD-TIME EXCLUSION - the sc4pac cure ============
+	// WHAT IT REPLACES: arming a tier by RENAMING our own dats
+	// (`.dat` <-> `.dat.x1-disabled`). Measured on a live install, 53 of 68
+	// files sat under a renamed name - and sc4pac uninstalls BY MANIFEST
+	// NAME, so every one of them would be orphaned forever. Renaming is the
+	// single reason this mod could not be packaged.
+	//
+	// WHY THIS WORKS, measured 2026-08-29 in three probe rounds:
+	//   1. Our dats are NOT top-level segments - both Plugins trees register
+	//      as one segment each, so unregistering at that level would drop
+	//      every mod in the folder.
+	//   2. That segment IS a cIGZPersistDBSegmentMultiPackedFiles, whose own
+	//      GetSegmentCount/GetSegmentByIndex expose 272 children with paths,
+	//      12 of them ours. The individual dats ARE addressable.
+	//   3. Closing one of our children made a key it owns resolve to
+	//      `SimCity 4 Deluxe\SimCity_1.dat` - the stock archive - and the
+	//      child reopened cleanly afterwards. The lookup FALLS THROUGH.
+	// So a tier can be taken out of service without touching the filesystem.
+	//
+	// ⚠ WHAT IS NOT YET PROVEN, and why this is a switch and not the default:
+	// with every tier present as a live `.dat`, the LAST-sorting one wins
+	// every lookup until this runs. `-3x` sorts after `-2x`. If any consumer
+	// reads UI art before PostAppInit it gets the wrong tier's art, and this
+	// arrives too late to help. #149 establishes only that the dats are
+	// indexed and no menu strip is built by that point - which is not the
+	// same claim. It has to be seen on screen before it becomes the default.
+	int ExcludeInactiveSegments(const wchar_t* activeTag, const bool* depOk)
+	{
+		Logger& logger = Logger::Get();
+		cIGZPersistResourceManagerPtr rm;
+		if (!rm)
+		{
+			logger.WriteLine(LogLevel::Info,
+				"EXCLUDE ABORTED - no resource manager. A zero count here is "
+				"an INSTRUMENT FAILURE, not a clean bill of health.");
+			return -1;
+		}
+
+		int seen = 0, closed = 0, kept = 0, failed = 0;
+		const uint32_t total = rm->GetSegmentCount();
+		for (uint32_t i = 0; i < total; i++)
+		{
+			cIGZPersistDBSegment* top = rm->GetSegmentByIndex(i);
+			if (!top) { continue; }
+			cIGZPersistDBSegmentMultiPackedFiles* multi = nullptr;
+			if (!top->QueryInterface(GZIID_cIGZPersistDBSegmentMultiPackedFiles,
+					reinterpret_cast<void**>(&multi)) || !multi)
+			{
+				continue;
+			}
+			const uint32_t kids = multi->GetSegmentCount();
+			for (uint32_t k = 0; k < kids; k++)
+			{
+				cIGZPersistDBSegment* kid = multi->GetSegmentByIndex(k);
+				if (!kid) { continue; }
+				cRZBaseString kp;
+				kid->GetPath(kp);
+				const char* path = kp.ToChar();
+				if (!path || !*path) { continue; }
+				const char* leaf = strrchr(path, '\\');
+				leaf = leaf ? leaf + 1 : path;
+				if (strncmp(leaf, "z_SC4UIScale_", 13) != 0) { continue; }
+				seen++;
+
+				// Two independent reasons to take a file out of service, and
+				// they are asked in this order so the log says WHICH one
+				// fired - "it is off" without "because" is the kind of line
+				// that costs a day.
+				const char* why = nullptr;
+
+				// (a) belongs to a tier that is not the active one. The tag
+				// is the trailing `-15x` / `-2x` / `-3x` before ".dat"; a
+				// package with NO tag is tier-independent and always stays.
+				char tag[8] = {};
+				const char* dot = strrchr(leaf, '.');
+				if (dot)
+				{
+					for (int t = 0; t < kPackageCount; t++)
+					{
+						char want[8] = {};
+						WideCharToMultiByte(CP_ACP, 0, kPackages[t].tag, -1,
+							want, sizeof(want), nullptr, nullptr);
+						const size_t wl = strlen(want);
+						if (static_cast<size_t>(dot - leaf) > wl
+							&& strncmp(dot - wl, want, wl) == 0)
+						{
+							strcpy_s(tag, want);
+							break;
+						}
+					}
+				}
+				if (tag[0])
+				{
+					char active[8] = {};
+					if (activeTag)
+					{
+						WideCharToMultiByte(CP_ACP, 0, activeTag, -1, active,
+							sizeof(active), nullptr, nullptr);
+					}
+					if (strcmp(tag, active) != 0) { why = "wrong tier"; }
+				}
+
+				// (b) its third-party dependency is absent. Same table the
+				// rename path consults, so the two mechanisms cannot drift
+				// into disagreeing about which packages are legitimate.
+				if (!why && depOk)
+				{
+					for (int d = 0; d < kThirdPartyDepCount; d++)
+					{
+						char pkg[MAX_PATH] = {};
+						WideCharToMultiByte(CP_ACP, 0, kThirdPartyDeps[d].package,
+							-1, pkg, sizeof(pkg), nullptr, nullptr);
+						const char* pleaf = strrchr(pkg, '\\');
+						pleaf = pleaf ? pleaf + 1 : pkg;
+						const size_t pl = strlen(pleaf);
+						if (pl && strncmp(leaf, pleaf, pl) == 0 && !depOk[d])
+						{
+							why = "dependency absent";
+							break;
+						}
+					}
+				}
+
+				if (!why) { kept++; continue; }
+				if (kid->Close())
+				{
+					closed++;
+					logger.WriteLine(LogLevel::Info,
+						"EXCLUDE closed %s (%s)", leaf, why);
+				}
+				else
+				{
+					failed++;
+					logger.WriteLine(LogLevel::Info,
+						"EXCLUDE could NOT close %s (%s) - it is still live "
+						"and will win lookups it should not.", leaf, why);
+				}
+			}
+			multi->Release();
+		}
+		logger.WriteLine(LogLevel::Info,
+			"EXCLUDE: %d of our dat(s) loaded, %d kept, %d closed, %d refused. "
+			"A `seen` of 0 means the walk found none of ours - instrument "
+			"failure, not a clean run.", seen, kept, closed, failed);
+		return closed;
+	}
+
+
 	// ============ #201 FALL-THROUGH TEST - THE DECIDING MEASUREMENT ========
 	// Round 2 proved the individual dats ARE addressable: the Documents
 	// Plugins tree is ONE multi-packed segment with 272 children, each with a
@@ -3371,6 +3731,14 @@ namespace ScaleTier
 			}
 		}
 
+		// sizeof(gArmedDepOk) would over-READ depOk, which has exactly
+		// kThirdPartyDepCount entries. Copy the real count and let the
+		// compiler prove the buffer is big enough.
+		static_assert(kThirdPartyDepCount <= 32,
+			"gArmedDepOk is too small for the dependency table");
+		memcpy(gArmedDepOk, depOk, sizeof(bool) * kThirdPartyDepCount);
+		gArmedDepOkValid = true;
+
 		const wchar_t* activeTag = nullptr;
 		for (int i = 0; i < kPackageCount; i++)
 		{
@@ -3380,6 +3748,8 @@ namespace ScaleTier
 			if (match)
 			{
 				activeTag = pkg.tag;
+				wcscpy_s(gArmedTag, 8, pkg.tag);   // v4.5.0, for exclusion
+				gArmedTagValid = true;
 			}
 			// SelectiveArt moved OUT of this per-tier loop (v4.0.3, PILOT):
 			// see SyncDatStable above the migration helper. It is called
