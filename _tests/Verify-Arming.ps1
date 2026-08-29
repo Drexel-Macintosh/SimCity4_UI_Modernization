@@ -63,7 +63,12 @@ if ($commit -match '(\d+) FAILED') {
 # ---- the layout the design promises -----------------------------------------
 $tagged   = @(Get-ChildItem $Plugins -Recurse -File -Filter 'z_SC4UIScale_*.dat' |
               Where-Object { $_.BaseName -match '-(15x|2x|3x|1x)$' })
-$disabled = @(Get-ChildItem $Plugins -Recurse -File -Filter '*.x1-disabled')
+# FontStyle is a DIFFERENT mechanism and still legitimately renames: SyncFont
+# stashes the user's own FontStyle.ini as FontStyle.ini.x1-disabled and copies a
+# tier source over the live name. That is not the dat-arming rename layout this
+# check exists to catch, and counting it made a healthy install read RED.
+$disabled = @(Get-ChildItem $Plugins -Recurse -File -Filter '*.x1-disabled' |
+              Where-Object { $_.Name -notlike 'FontStyle*' })
 $payloads = @(Get-ChildItem $Plugins -Recurse -File -Filter 'z_SC4UIScale_*.uipay')
 $stable   = @(Get-ChildItem $Plugins -Recurse -File -Filter 'z_SC4UIScale_*.dat' |
               Where-Object { $_.BaseName -notmatch '-(15x|2x|3x|1x)$' })
@@ -100,7 +105,15 @@ Write-Output ''
 
 # Every armed package must agree on ONE tier. A split here is the exact defect
 # that put stock 1x art into a 3x runtime this morning.
-$tiers = @($armed | ForEach-Object { ($_ -split '=')[1] } | Sort-Object -Unique)
+# INVERSE-GATED packages are not tiers and must not vote. SelectorUI's call
+# site passes L"-1x" and WebText's passes L"" (-> "on"); both are armed by the
+# ABSENCE or PRESENCE of something other than a scale factor. Counting "on" as
+# a tier reported a disagreement on a perfectly healthy install.
+$INVERSE_TAGS = @('on', '1x')
+$tiers = @($armed |
+           ForEach-Object { ($_ -split '=')[1] } |
+           Where-Object { $INVERSE_TAGS -notcontains $_ } |
+           Sort-Object -Unique)
 if ($tiers.Count -gt 1) {
     $fail += "armed packages disagree on the tier: $($tiers -join ', ')"
 } elseif ($tiers.Count -eq 1) {
