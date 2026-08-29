@@ -173,3 +173,12 @@ __pycache__/
 # at its real paths (tools/research, _tests) now that the working tree IS
 # the repo - mirroring it under research/ would be two copies drifting.
 !/research/
+
+# ---- #200 sharpness investigation scratch (2026-08-29) --------------------
+# The 1.5x sharpness lanes left ~9,900 throwaway measurement scripts AND
+# EXTRACTED GAME ART (.bin payloads pulled from shipped dats) under
+# tools/research/sharp15/. Policy (b): nothing derived from the game install
+# ever enters this repo. Keep ONLY the derivation tool whose output ships -
+# the measurements are reproducible from it, the art is not ours to carry.
+/tools/research/sharp15/*
+!/tools/research/sharp15/make_even_strips.py

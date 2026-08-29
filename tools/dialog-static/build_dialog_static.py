@@ -2105,7 +2105,9 @@ def main():
                             os.path.join(_up, "height-exact-strips.txt"),
                             "--height-exact-strips",
                             os.path.join(_up, "height-exact-slabs.txt"),
-                            "--smooth-unkeyed", "--supersample"],
+                            "--smooth-unkeyed", "--supersample"]
+                           + (["--even-strips", os.path.join(TOOLS, "upscale", "even-strips.txt")]
+                              if os.path.isfile(os.path.join(TOOLS, "upscale", "even-strips.txt")) else []),
                            capture_output=True, text=True)
         if r.returncode != 0:
             sys.exit("CARBON ART UPSCALE FAILED:\n" + r.stderr + r.stdout)

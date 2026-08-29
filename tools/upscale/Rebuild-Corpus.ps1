@@ -192,6 +192,22 @@ foreach ($f in $Factor) {
     # passes is not something to do as a side effect of a sharpness fix.
     $argv += '--supersample'
 
+    # #200 (2026-08-29): the even reduce is now OPT-IN. MEASURED - the
+    # x3-then-area-average softens one hard edge in three at f=1.5 (edge
+    # retention 0.7981 on averaged sheets) while the sheets already taking
+    # nearest at the SAME factor measure 0.9979, i.e. as crisp as 2x/3x,
+    # which carry ZERO invented pixels across 562M. It was bought for tick
+    # EVENNESS, which genuinely conflicts with sharpness at a fractional
+    # factor - so it is kept, but only for the sheets that have ticks.
+    # even-strips.txt is DERIVED (make_even_strips.py): the 89 measured tick
+    # ladders UNION cell-strips.txt. Only 20 of those 89 were in
+    # cell-strips.txt, which is why this is its own list and not a reuse.
+    # No-op at integer factors: the whole dispatch already refuses itself
+    # there, and 2x/3x outputs must stay byte-identical.
+    $evenList = Join-Path $PSScriptRoot 'even-strips.txt'
+    if (Test-Path $evenList) { $argv += @('--even-strips', $evenList) }
+    else { throw "even-strips.txt missing - run tools/research/sharp15/make_even_strips.py" }
+
     # Computed before the DryRun exit so the dry run can print the post-steps
     # with the real path (F13).
     $ladderDir = Join-Path $PSScriptRoot (Join-Path $outFor[$f] 'SimCity_1')

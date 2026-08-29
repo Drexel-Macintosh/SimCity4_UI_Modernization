@@ -16970,3 +16970,54 @@ have failed silently on its own box - the fix half-applied. Now derived from
 the 1x base like every other gate. LAW: WHEN YOU FIX A STALE GATE, AUDIT
 EVERY OTHER GATE ON THE SAME PATH - they were written in the same era against
 the same vanished baseline.
+
+## 2026-08-29 (#200) — 1.5x WAS SOFT BECAUSE THE CURE FOR EVENNESS WAS THE DEFAULT
+
+USER: "1.5x still looks far less sharp than 2x and 3x... soft edges."
+
+MEASURED, and the control is what makes it a fact rather than a feeling:
+2x and 3x contain ZERO invented pixels across 562M (a nearest resample can
+only emit colours the artist drew), edge retention 1.0000, 100% of hard edges
+at full strength. 1.5x measured 8.97% invented pixels, retention 0.8304, one
+hard edge in three softened.
+
+⭐ THE DECISIVE EXPERIMENT WAS INSIDE THE TIER, NOT BETWEEN TIERS. Splitting
+1.5x by which resampler each sheet took holds factor, resolution, art source
+and engine constant and varies only the resampler:
+    1.5x sheets on the AVERAGE path : retention 0.7981, 40.4% of edges soft
+    1.5x sheets on the NEAREST path : retention 0.9979,  0.3% of edges soft
+The crisp path already existed AT THIS FACTOR and already worked. The defect
+was never "1.5 cannot be sharp" - it was that the average was pointed at 78%
+of the corpus (1714/2206 sheets).
+
+WHY IT WAS THE DEFAULT, AND WHY THAT WAS WRONG: --supersample (GH5) buys TICK
+EVENNESS - at 1.5 a 3px tick wants 4.5px and nearest renders 4 or 5 by parity,
+which is the "red half renders bolder" defect. That is real, and sharpness and
+evenness genuinely CONFLICT at a fractional factor: any rule emitting only
+source colours must round the tick. But only ~4% of sheets have tick structure.
+The other ~95% paid the softness for a property they had no structure to
+receive.
+
+CURE (#200): the average becomes OPT-IN (--even-strips), scoped to a DERIVED
+list; everything else takes nearest at fractional factors. No arithmetic
+changed; no new constant; no-op at integer factors by construction (the
+dispatch already refuses itself there).
+
+⛔ THE LIST HAD TO BE DERIVED, AND THAT CHECK EARNED ITS KEEP: the obvious
+move was to reuse cell-strips.txt (210 entries, already about repeated cells).
+MEASURED: only 20 of the 89 real tick sheets are in it. Reusing it would have
+silently stripped evenness from 69 sheets - trading the reported defect for
+the one --supersample was bought to fix. make_even_strips.py derives the tick
+set and unions it with cell-strips.
+
+RESULT (shipped bytes, not the build tree):
+    invented px 8.97% -> 1.30% | sheets affected 1714 -> 217
+    edge retention 0.8304 -> 0.9455 | full-strength edges 59% -> 86%
+    soft edges 34% -> 8.9% | 2x/3x unchanged at 1.0000 / zero
+    ramps per strong edge, SelectiveArt-15x 0.4903 -> 0.1526
+    ramps per strong edge, ZCarbonArt-15x   0.3519 -> 0.1378 (3x control 0.0000)
+The residual is the tick sheets deliberately kept even - a considered trade,
+not a leftover. LAW: A GLOBAL DEFAULT BOUGHT FOR A MINORITY'S PROBLEM IS A
+DEFECT FOR THE MAJORITY. When a cure has a cost, scope it to the population
+that has the disease - and DERIVE that population, because the list that
+looks like it already names them probably does not.

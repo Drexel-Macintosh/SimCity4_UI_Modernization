@@ -35,6 +35,15 @@ internal static class Upscale2x
     // #156: TGI -> state count, from find_cell_strips.py. Empty unless
     // --cell-strips is passed, so the default build is unchanged.
     private static readonly Dictionary<ulong, int> sCellStrips = new Dictionary<ulong, int>();
+    // #200: sheets that NEED the even (area-average) reduce at a fractional
+    // factor. When --even-strips is passed the average becomes OPT-IN: only
+    // these sheets take it and everything else takes plain nearest, which
+    // measures as crisp as 2x/3x (edge retention 0.9979 vs 0.7981). Not
+    // passing the flag leaves the old behaviour untouched.
+    private static readonly HashSet<ulong> sEvenStrips = new HashSet<ulong>();
+    private static bool sEvenStripsActive = false;
+    private static bool sEvenThis = false;
+    private static int sSmoothSkippedUnstructured = 0;
 
     // #157: TGIs PROVEN to be 9-slice frames and never state strips, from
     // find_nine_slice.py. Empty unless --nine-slice is passed, so the default
@@ -147,6 +156,52 @@ internal static class Upscale2x
                 }
                 Console.Error.WriteLine("height-exact-strips: " + sHeightExactStrips.Count
                     + " sheet(s) will take an EXACT height (no vertical cell snap)");
+                ai++;
+            }
+            else if (string.Equals(a, "--even-strips", StringComparison.OrdinalIgnoreCase))
+            {
+                // #200 THE AVERAGE BECOMES OPT-IN. MEASURED: at f=1.5 the
+                // x3-then-area-average reduce invents pixels on 1714 of 2206
+                // sheets and softens one hard edge in three (retention 0.8304
+                // overall; 0.7981 on the averaged sheets) while the 492 sheets
+                // already taking nearest at the SAME factor measure 0.9979 -
+                // indistinguishable from 2x/3x, which carry 0 invented pixels
+                // in 562M. The average was bought for TICK EVENNESS, and
+                // sharpness and evenness genuinely conflict at a fractional
+                // factor (a 3px tick wants 4.5px; any rule that emits only
+                // source colours must pick 4 or 5). So keep the average - but
+                // only where the structure that needs it exists.
+                // DERIVED, never hand-listed: tools/research/sharp15/
+                // make_even_strips.py finds every sheet with a row of >=4
+                // identical-width ink runs and unions it with cell-strips.txt.
+                // That gap is why this is its own list: only 20 of the 89 tick
+                // sheets were in cell-strips.txt.
+                if (ai + 1 >= args.Length || !File.Exists(args[ai + 1]))
+                {
+                    Console.Error.WriteLine("--even-strips requires a readable file "
+                        + "(tools/upscale/even-strips.txt)");
+                    return Usage();
+                }
+                foreach (string ln in File.ReadAllLines(args[ai + 1]))
+                {
+                    string s3 = ln.Trim();
+                    if (s3.Length == 0 || s3.StartsWith("#")) { continue; }
+                    string[] pp3 = s3.Split(new[] { ' ', '	' },
+                        StringSplitOptions.RemoveEmptyEntries);
+                    uint g3, i3;
+                    if (pp3.Length >= 2
+                        && uint.TryParse(pp3[0].Replace("0x", ""), NumberStyles.HexNumber,
+                                         CultureInfo.InvariantCulture, out g3)
+                        && uint.TryParse(pp3[1].Replace("0x", ""), NumberStyles.HexNumber,
+                                         CultureInfo.InvariantCulture, out i3))
+                    {
+                        sEvenStrips.Add(((ulong)g3 << 32) | i3);
+                    }
+                }
+                sEvenStripsActive = true;
+                Console.Error.WriteLine("even-strips: " + sEvenStrips.Count
+                    + " sheet(s) keep the even reduce; every other sheet takes "
+                    + "nearest at a fractional factor (#200)");
                 ai++;
             }
             else if (string.Equals(a, "--cell-strips", StringComparison.OrdinalIgnoreCase))
@@ -424,6 +479,18 @@ internal static class Upscale2x
                     if (sCellStrips.TryGetValue(key, out n)) sStripStates = n;
                 }
             }
+            // #200 per-file, same reset discipline as every flag around it.
+            sEvenThis = false;
+            if (sEvenStripsActive)
+            {
+                Match em = TgiNameRe.Match(Path.GetFileName(rel));
+                if (em.Success)
+                {
+                    ulong ekey = ((ulong)Convert.ToUInt32(em.Groups[2].Value, 16) << 32)
+                                 | Convert.ToUInt32(em.Groups[3].Value, 16);
+                    sEvenThis = sEvenStrips.Contains(ekey);
+                }
+            }
             // Same per-file reset discipline as sNoHeightSnap below: one
             // matching file must never leak its mode onto the next.
             // #160, same per-file reset discipline as the flags around it.
@@ -581,6 +648,12 @@ internal static class Upscale2x
                             else if (sSmoothKeyed) { sSmoothSkippedFineKey++; }
                             else { sSmoothSkippedKeyed++; }
                         }
+                        else if (sEvenStripsActive && !sEvenThis)
+                        {
+                            // #200: unstructured sheet - nothing here needs the
+                            // even reduce, so do not pay its softness for it.
+                            sSmoothSkippedUnstructured++;
+                        }
                         else { smoothThis = true; sSmoothed++; }
                     }
                     if (smoothThis && sSupersample) { sSupersampled++; }
@@ -621,6 +694,10 @@ internal static class Upscale2x
                 + sSmoothSkippedKeyed + " refused (contain the FF00FF colour key); "
                 + sSmoothSkippedMeasured + " refused (edges measured downstream); "
                 + sSmoothSkippedInteger + " refused (integer factor - nearest is already exact)");
+            Console.WriteLine("even-strips   : " + sSmoothSkippedUnstructured
+                + " sheet(s) took NEAREST because they carry no tick/cell "
+                + "structure that needs the even reduce (#200)"
+                + (sEvenStripsActive ? "" : "  [--even-strips not passed]"));
             Console.WriteLine("supersample   : " + sSupersampled
                 + " sheet(s) took the x3-then-area path"
                 + (sSupersample ? "" : "  [--supersample not passed]"));

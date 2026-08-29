@@ -2697,7 +2697,15 @@ def _carbon_upscale(tgis, work_name, corpus_flags):
                              "confirmed fix." % lp)
                 argvv += [flag, lp]
         if use_corpus:
+            # #200: the even reduce is OPT-IN. Carbon redeclares STOCK
+            # TGIs, so the same derived list applies to its art; without
+            # this the carbon sheets keep the old area-average softness
+            # (measured 0.3519 ramps/edge on ZCarbonArt-15x) while the
+            # stock corpus beside them is crisp.
             argvv += ["--smooth-unkeyed", "--supersample"]
+            _even = os.path.join(TOOLS, "upscale", "even-strips.txt")
+            if os.path.isfile(_even):
+                argvv += ["--even-strips", _even]
         r = subprocess.run(argvv, capture_output=True, text=True)
         if r.returncode != 0:
             sys.exit("FATAL carbon: art upscale failed for %s (exit %d):"
