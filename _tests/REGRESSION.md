@@ -16920,3 +16920,53 @@ all three locked constants from the corpus (3/3 PASS) so the identity-on-stock
 property is tested, not asserted. LAW: WHEN A CURE IS A DELTA AGAINST ONE
 STALE CONSTANT, CHECK EVERY OTHER CONSTANT ON THAT PATH FOR THE SAME
 STALENESS - they were all derived from the same vanished baseline.
+
+## 2026-08-29 (#199) — THE DISASTER FLYOUT: a gate that rejected the one window it existed to find
+
+USER: "Scrolling the disaster flyout breaks the buttons." Correct at open,
+wrong from the first repaint - and the scroll is simply the first repaint.
+
+MECHANISM (measured from the user's own session log, not inferred): the
+container's `[0xE0]` field is promoted 53 -> 80 by the DCLAIM loop, but the
+thunk that neutralises that promotion during DRAWING (slots 87..97) was never
+installed on that container, because its install site sat behind an UNSCALED
+ABSOLUTE-SCREEN-Y band `ay > 380 && ay < 1250` and the docked container
+measures ay=1339. `[0xE0]` is DUAL-USE - hit-claim width AND the Plot bar
+width and end-cap atlas cell step - so the game repainted the bar 80px at
+x=131 instead of 53px at x=158, and read scroll-arrow cap cells at
+94+flag*80 = 174 instead of 94+flag*53 = 147: twenty-seven pixels into the
+WRONG atlas column. The cap cell index IS the scroll-arrow enable flag, which
+is why scrolling is the trigger. SC4-UI-ENGINE.md already stated the
+invariant verbatim: "promote the field before installing the thunk and the
+game paints a SECOND bar (v2.11.24)". We did exactly that, in two loops that
+could not see each other.
+
+⭐ WHY IT PASSED ACCEPTANCE AND CAME BACK: the container is BOTTOM-ANCHORED,
+so its Y rides both the factor and the SCREEN HEIGHT - T ~= screenH -
+rhu(542*f). The band holds while screenH < 1250 + 542f. At the 2400x1600
+where v4.0.40 was approved, 1.5x landed inside it and the flyout really was
+perfect. At 3840x2160 it does not. A SCREEN-SPACE LITERAL IS A LATENT
+RESOLUTION DEPENDENCY: it does not fail when you write it, it fails when the
+user changes their display. Any gate compared against an absolute screen
+coordinate must be derived from the same quantities that place the window.
+On this machine the defect is 1.5x-ONLY (at f=2 and f=3 the container lands
+back inside the band), so AN A/B AT 2x WOULD HAVE FALSELY CLEARED IT.
+
+CURE (#199): the band is REPLACED, not re-tuned - thresholds come from
+controls, and a gate that rejects its own target is the wrong gate. The
+substitute is the positive identification the DCLAIM loop has always used
+safely: a DIRECT child of the god flyout parent 0x9A47B417. That is
+load-bearing, not cosmetic: the MAYOR sub-flyout container is the SAME class
+0x00AB6AA8 and at 194x655 passes the size and class gates too, so simply
+DELETING the band - the obvious "minimal" fix - would have handed it gVtCopy
+and set gDisasterDrawTuning=1 on a mayor window: the "right class, wrong
+window" trap this file already records from the Earned Cars crash.
+
+SECOND, LATENT INSTANCE FOUND IN THE SAME PASS: the strip hook's own size box
+was unscaled 2x literals (60..120 x 400..700, comment "88x578"). The strip is
+66x433 at 1.5x (passes by luck) and 132x866 at 3x (fails). With the container
+gate fixed, that hook becomes reachable at 3x for the first time and would
+have failed silently on its own box - the fix half-applied. Now derived from
+the 1x base like every other gate. LAW: WHEN YOU FIX A STALE GATE, AUDIT
+EVERY OTHER GATE ON THE SAME PATH - they were written in the same era against
+the same vanished baseline.

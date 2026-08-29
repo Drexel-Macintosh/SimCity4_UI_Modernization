@@ -14470,8 +14470,36 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				// interface like cIGZWinGen would instead offer a cheap,
 				// supported way in. This decides the hook point instead of
 				// guessing at it.
+				// #199 (2026-08-29): WAS an absolute-screen-Y band
+				//     ax > -150 && ax < 500 && ay > 380 && ay < 1250
+				// - unscaled 1x/2x-era screen literals. The disaster container is
+				// bottom-anchored, so its Y rides BOTH the factor and the screen
+				// height: T ~= screenH - rhu(542*f). At the 2400x1600 where v4.0.40
+				// was approved it landed inside the band; at 3840x2160 x1.5 it
+				// measures ay=1339 and the band REJECTED THE ONE WINDOW IT EXISTS
+				// TO FIND - so slots 87..97 were never installed on it, while the
+				// DCLAIM promotion in the other loop fired unopposed. [0xE0] is
+				// DUAL-USE (hit-claim width AND the Plot bar width / end-cap atlas
+				// cell step), so the game then painted the bar 80px at x=131 and
+				// read cap cells at 94+flag*80=174 - 27px into the WRONG atlas
+				// column. SC4-UI-ENGINE.md states the invariant verbatim: "promote
+				// the field before installing the thunk and the game paints a
+				// SECOND bar (v2.11.24)". THAT is why scrolling broke the buttons:
+				// the cap cell index is the scroll-arrow enable flag.
+				//
+				// THRESHOLDS COME FROM CONTROLS: a gate that rejects the known-good
+				// target is the wrong gate, so it is REPLACED, not re-tuned. The
+				// substitute is the SAME positive identification the DCLAIM loop
+				// uses and has always been safe with - a DIRECT child of the god
+				// flyout parent 0x9A47B417. That is what keeps this away from the
+				// MAYOR sub-flyout container, which is the same class 0x00AB6AA8
+				// and (measured 194x655) passes the size and class gates too:
+				// handing it gVtCopy would set gDisasterDrawTuning=1 on a mayor
+				// window - the "right class, wrong window" trap this file already
+				// records from the Earned Cars crash. Deleting the band outright
+				// would have done exactly that.
 				if (id == 0 && now.vis == 1 && now.h > 400 && now.w > 80
-					&& ax > -150 && ax < 500 && ay > 380 && ay < 1250)
+					&& fr.parentId == 0x9A47B417)
 				{
 					static std::map<void*, int> probedOnce;
 					// #92 law: same epoch clear - otherwise the next city's
@@ -14623,7 +14651,16 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					// Different vtable (0x00AB6D88) so it gets its own copy.
 					// v2.22.3 (audit fix): positive class match required - see
 					// the note on the container hook above.
-					if (now.w >= 60 && now.w <= 120 && now.h >= 400 && now.h <= 700
+					// #199: these were UNSCALED 2x literals (the comment above says
+					// "88x578" - a 2x measurement). The strip measures 66x433 at 1.5x
+					// (passes by luck) and 132x866 at 3x (FAILS). With the container
+					// band fixed above, this hook becomes reachable at 3x for the
+					// first time and would have failed silently on its own box - the
+					// fix half-applied. Derived from the same 1x base the container
+					// gate uses (44x289 at 1x, DISBORN), with the same generous
+					// bracket, so f=2 still admits 88x578 exactly as before.
+					if (now.w >= RoundHalfUp(30 * gTierF) && now.w <= RoundHalfUp(60 * gTierF)
+						&& now.h >= RoundHalfUp(200 * gTierF) && now.h <= RoundHalfUp(350 * gTierF)
 						&& *reinterpret_cast<void***>(w)
 							== reinterpret_cast<void**>(0x00AB6D88))
 					{
