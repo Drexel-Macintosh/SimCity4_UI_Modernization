@@ -1,38 +1,101 @@
 # sc4pac channel metadata for SC4UIScale.
 #
-# NOT YET PUBLISHABLE. Two things must land first; both are named at the
-# bottom of this file with what has to change. Written now because the
-# schema questions it answers were blocking the design, and because the
-# include/exclude lists ARE the specification for how the bundle must be
-# laid out.
+# STATUS: shape settled, blocked on ONE engine fact (probe #202, below).
+# Everything sc4pac-side in this file was MEASURED against sc4pac 0.10.0 on
+# 2026-08-29 by installing a throwaway local channel into a scratch plugins
+# root - not read out of the docs and not inferred. Where a measurement
+# contradicted the documentation, the measurement is what is encoded here.
 #
-# Schema source: memo33/sc4pac docs/metadata.md, read 2026-08-29.
-# Behaviour confirmed against a live install rather than assumed:
-#   * A `.dll` listed under `withChecksum` is installed to the PLUGINS ROOT,
-#     not into the package folder. Verified: null-45's query-tool package
-#     folder holds only SC4QueryUIHooks.dat, while SC4QueryUIHooks.dll sits
-#     at the root. That matches what SimCity 4 requires of us - its dat scan
-#     is recursive, its DLL loader is top-level only.
-#   * `isIni: true` does the same for an ini. We deliberately DO NOT set it:
-#     since v4.4.0 our ini belongs in our own package folder, and omitting
-#     the flag leaves it there.
+# ============ WHAT WAS MEASURED, AND WHAT IT CHANGED ========================
+#
+# 1. ROOT PLACEMENT IS BY EXTENSION, NOT BY `withChecksum`.
+#    sc4pac's own constant: (?:\.dat|\.sc4model|\.sc4lot|\.sc4desc|\.sc4|\.dll)$
+#    A `.dll` lands at the Plugins ROOT with or without `isIni`. Everything
+#    else stays in the package folder. That is exactly what SC4 requires of us
+#    (dat scan recursive, DLL loader top-level only), so the DLL needs no
+#    special handling - but it DOES need a `withChecksum` entry, because a file
+#    listed only under `include:` was NOT INSTALLED AT ALL.
+#
+# 2. `isIni: true` IS A TRAP FOR US. It puts the ini at the root, but renamed
+#    to `<stem>_sc4pacnew.ini`, and sc4pac never activates it - the user has to
+#    rename it by hand. Worse, an uninstall deletes `*_sc4pacnew.ini` even
+#    after the user edited it. So THIS PACKAGE SHIPS NO INI AT ALL; the DLL
+#    creates SC4UIScale.ini at the Plugins root on first run. See the ini note
+#    at the bottom - it reverses part of v4.4.0 and needs a decision.
+#
+# 3. A NON-CANONICAL EXTENSION INSTALLS ONLY VIA `withChecksum`. A `.uipay`
+#    listed under `include:` was silently dropped; listed under `withChecksum`
+#    it installed into the package folder. Every payload therefore needs its
+#    own checksummed entry - there is no wildcard shortcut.
+#
+# 4. sc4pac PARSES EVERY SHIPPED `.dat` AS DBPF and aborts the install on a
+#    bad one ("seems to contain a corrupted DBPF file"). Our `.off` payloads
+#    must be real one-entry archives, which they are by construction.
+#
+# 5. AN UPDATE WIPES THE VERSIONED FOLDER. v1.0.0 -> v2.0.0 deletes
+#    `<group>.<name>.1.0.0.sc4pac` wholesale and creates a 2.0.0 folder. Two
+#    consequences, both already handled:
+#      - The DLL's write target MOVES on every package update, because the
+#        version is in the folder name. Our folder discovery finds our folders
+#        BY CONTENT rather than by name (v4.5.0), so this costs nothing.
+#      - Anything the DLL wrote into that folder is discarded. The arming pass
+#        re-runs at every boot off a fingerprint, so it self-heals on the next
+#        launch. This is WHY arming must be idempotent and fingerprint-driven.
+#
+# 6. NOTHING IN sc4pac VERIFIES INSTALLED BYTES. `update` says "Everything is
+#    up-to-date" and `repair` says "Looking good" after the installed files
+#    have been rewritten, and after an extra file is added to the package
+#    folder. This is the fact the whole content-swap design rested on.
+#    POSITIVE CONTROLS, because a silent tool proves nothing on its own:
+#    `repair` DOES report a deleted package folder as [missing] and a stray
+#    folder as [orphan], and checksum enforcement IS live - corrupting a file
+#    inside the source archive aborts the install. Verification happens in the
+#    staging directory, before the move into Plugins. So the null is real:
+#    sc4pac looks, and deliberately does not look at content.
+#
+# 7. `group: a-drexel` PASSES LINT. The rule is
+#    `[a-z0-9]+(?:-[a-z0-9]+)*`; the control (`A_Drexel`) fails it, exit 1.
+#    ⚠ A DLL package additionally requires a group->GitHub-owner mapping
+#    contributed to `lint-config.yaml` upstream, or lint refuses:
+#    "GitHub account ... is not known to belong to group a-drexel".
+#
+# ============ WHY THE GROUP ID IS `a-drexel`, AND DO NOT "TIDY" IT ==========
+#
+# LOAD-BEARING. sc4pac sorts by `<group>.<name>` inside a subfolder, and the
+# lowest canonical subfolder is `050-load-first`, where CAM lives. Our early
+# package must load BEFORE CAM so it LOSES to CAM per-TGI - losing is the
+# compatibility gate, not an accident. `a-drexel` sorts before `cam.*`;
+# `drexel` does not, and renaming it inverts CAM precedence with no error
+# anywhere. VERIFIED by per-TGI winner diff, not by argument:
+# `python tools/uimap/winner_table.py --diff <live> <proposed> --ignore-moves`
+# 1888 keys examined, 3/3 controls fired, and ZERO CAM keys changed hands.
+#
+# ============ THE ONE REMAINING BLOCKER ====================================
+#
+# PROBE #202, staged, needs one game launch:
+#   `python _tests/Probe-ScanPredicate.py --stage | --read`
+# Is SC4's plugin scan gated on EXTENSION or on DBPF MAGIC? If magic, `.uipay`
+# payloads are live plugins - three tiers of every package permanently in the
+# index - and this file's payload lists are void. `.dat.x1-disabled` being
+# skipped proves one string is skipped; it is not proof about a different one.
+# Do not publish this channel entry until #202 comes back extension-gated.
 
-group: "drexel"
+group: "a-drexel"
 name: "sc4-ui-scale"
 version: "4.5.0"
 subfolder: "050-load-first"
 dependencies:
 - "config:sc4-edition-windows-digital"
 assets:
-- assetId: "drexel-sc4-ui-scale"
-  # The DLL, and only the DLL, goes to the Plugins root.
+- assetId: "a-drexel-sc4-ui-scale"
   withChecksum:
+  # Lands at the Plugins ROOT because it is a .dll. Required by SC4: the dat
+  # scan is recursive, the DLL loader is top-level only.
   - include: "/Plugins/SC4UIScale.dll"
     sha256: "0000000000000000000000000000000000000000000000000000000000000000"
   include:
-  # Stock-derived art and scripts. These are DESIGNED TO LOSE to a real mod's
-  # own files - that is the compatibility gate, not an accident - which is
-  # why this package sits in the earliest subfolder available.
+  # Stock-derived art and scripts - DESIGNED TO LOSE to a real mod's own
+  # files. See the group-id note above for how that survives sc4pac.
   - "/Plugins/010-SC4UIScale/"
 info:
   summary: "Scales the SimCity 4 interface to 1.5x, 2x or 3x for high-resolution displays"
@@ -52,21 +115,21 @@ info:
 
 ---
 
-group: "drexel"
+group: "a-drexel"
 name: "sc4-ui-scale-mod-overrides"
 version: "4.5.0"
 subfolder: "900-overrides"
 dependencies:
-- "drexel:sc4-ui-scale"
+- "a-drexel:sc4-ui-scale"
 assets:
-- assetId: "drexel-sc4-ui-scale"
+- assetId: "a-drexel-sc4-ui-scale"
   include:
   # Built FROM other mods' own artwork, so these must WIN - hence the last
-  # subfolder. Each one is gated AT RUNTIME on its mod's files being present
-  # by exact name and size, so they stay inert for anyone who does not have
-  # that mod. That gating is deliberately NOT expressed as sc4pac
-  # dependencies: it has to work for hand-installed copies of those mods
-  # too, and the DLL already does it in one place.
+  # canonical subfolder. Gated AT RUNTIME on each mod's files by exact name
+  # and byte size, deliberately NOT as sc4pac dependencies: the gates must
+  # also work for hand-installed copies of those mods, a mod UPDATE must
+  # disable us (our copies hard-code its exact rects), and a hard dependency
+  # would mean uninstalling CAM drags this package with it.
   - "/Plugins/zzz-SC4UIScale/"
 info:
   summary: "Scaled UI artwork for CAM, NAM and other mods, for SC4UIScale"
@@ -83,42 +146,39 @@ info:
 
 ---
 
-assetId: "drexel-sc4-ui-scale"
+assetId: "a-drexel-sc4-ui-scale"
 version: "4.5.0"
 lastModified: "2026-08-29T00:00:00Z"
 url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.5.0/SC4UIScale-v4.5.0.zip"
 
 # ===========================================================================
-# BLOCKED ON, and neither is a metadata problem:
+# THE 900-overrides QUESTION, MEASURED AND CLOSED
 #
-# 1. THE RUNTIME RENAME. The DLL still renames its own dats
-#    (`.dat` <-> `.dat.x1-disabled`) to arm a tier. sc4pac uninstalls BY
-#    MANIFEST NAME, so every renamed file is orphaned - measured at 53 of 68
-#    installed files. Until load-time exclusion replaces it, the `include`
-#    lists above install files that will not be there under those names when
-#    the user uninstalls. Load-time exclusion is MEASURED as workable (three
-#    probe rounds, 2026-08-29: closing a child DBPF segment made the key
-#    resolve to the stock archive); it is not yet implemented.
+# `900-overrides` is the last canonical subfolder, and sc4pac's own CLI README
+# tells users to move their `zzz-` folders into `895-my-overrides` - i.e.
+# BELOW it. So on a canonically migrated install our override package wins
+# everything, exactly as `zzz-SC4UIScale\` does today.
 #
-# 2. THE SUBFOLDER ORDERING, and this one may need memo33. The canonical
-#    subfolder list BEGINS at `050-load-first`; there is nothing below it.
-#    Our core package must load BEFORE CAM, which lives in that same folder,
-#    because losing to CAM per-TGI is how compatibility is expressed. Inside
-#    one subfolder, order is alphabetical by `<group>.<name>.<version>`, and
-#    `cam.*` sorts before `drexel.*` - so as written above WE would win,
-#    which is backwards.
-#    Three ways out, in order of preference:
-#      a) Ask upstream for a subfolder below 050 (e.g. `040-ui-framework`).
-#      b) Verify the inversion is actually harmless: the override package in
-#         900- loads last and re-corrects every CAM-specific script anyway.
-#         This is TESTABLE, not arguable - run `tools/uimap/who_owns_tgi.py`
-#         over both layouts and diff the per-TGI winner table. Any changed
-#         winner is a red stop. Do not publish on the strength of the
-#         argument alone.
-#      c) Express the gate at runtime instead of by folder order, now that
-#         load-time exclusion exists.
+# The residual exposure is a HYBRID install: digits sort before letters, so an
+# un-migrated letter-named top-level folder out-sorts `900-overrides`.
+# MEASURED on this machine, which has three of them (BSC, CSX, ~Documents):
+#   proposed layout, tree as-is      : 9 keys lost, ALL UncoveredIcons, to
+#                                      BSC prop packs
+#   proposed layout, tree migrated   : 0 keys changed, 3/3 controls fired
+# So the regression belongs to an incomplete sc4pac migration, not to this
+# design, and the cure is documentation plus a boot-time census that names the
+# offending folder instead of rendering wrong art silently.
 #
-# Also outstanding: the `sha256` above is a placeholder and must be the hash
-# of the extracted DLL (not the zip), and `lastModified` must be the real
-# release timestamp.
+# STILL OUTSTANDING
+#   - probe #202 (above) - the only hard blocker.
+#   - The real sha256 of the extracted DLL, and a real `lastModified`.
+#   - A `group-to-github` mapping for `a-drexel` contributed upstream, which a
+#     DLL package cannot pass lint without.
+#   - THE INI DECISION. Shipping it in the package folder loses the user's
+#     tier choice on every update (the folder is wiped); shipping it with
+#     `isIni: true` lands it inert as `_sc4pacnew.ini` and deletes it on
+#     uninstall even if edited. The measured-correct answer is that the DLL
+#     creates SC4UIScale.ini at the Plugins ROOT and we ship no ini - which
+#     partly reverses v4.4.0's "the root holds only the DLL", and is the one
+#     thing here that is a judgement call rather than a measurement.
 # ===========================================================================
