@@ -183,3 +183,7 @@ __pycache__/
 # the measurements are reproducible from it, the art is not ours to carry.
 /tools/research/sharp15/*
 !/tools/research/sharp15/make_even_strips.py
+
+# Working restore points taken before a risky layout change. Real installs,
+# not repo content - they carry game-derived art and per-machine settings.
+/_tests/restore-point-*/
