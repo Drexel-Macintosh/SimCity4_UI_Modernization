@@ -738,12 +738,62 @@ namespace
 		return found;
 	}
 
-	// Gate one tagged dat by its EXTENSION (SC4 loads any *.dat in Plugins,
-	// so an inactive factor's dat must NOT end in .dat).
-	//   active:   base<tag>.dat.x1-disabled -> base<tag>.dat
-	//   inactive: base<tag>.dat -> base<tag>.dat.x1-disabled
+	// Defined with the ArmOne block below; declared here because the
+	// record-then-commit pair sits above it in the file.
+	bool ArmOne(const wchar_t* dir, const wchar_t* base, const wchar_t* tag,
+		const char* reason);
+	void LoadArmState(const wchar_t* dir);
+	void WriteArmState(const wchar_t* dir);
+	int  MigrateRenamesToPayloads(const wchar_t* dir);
+
+	// ============ v4.5.0: SyncDat NO LONGER RENAMES - IT RECORDS ==========
+	// Every call site and every gate expression is unchanged. What changed is
+	// what a call MEANS: it used to perform a rename, it now records "this
+	// package wants this tag", and CommitArming() below does the one thing
+	// that actually touches disk.
+	//
+	// WHY RECORD-THEN-COMMIT RATHER THAN ARM IN PLACE. The tier loop calls
+	// this FOUR times per package - once per tier - and exactly one of those
+	// calls has active=true. A gated-off package gets active=false on all
+	// four. Arming in place cannot tell those two cases apart: "not this
+	// tier" and "not at all" both look like a single false. Under the rename
+	// scheme that was fine, because false meant "push this file aside" and
+	// three pushes plus one pull landed correctly. Under a STABLE filename
+	// there is nothing to push aside - the name is constant - so the
+	// distinction has to survive to the end of the loop. Recording preserves
+	// it: a base that never receives an active call is the gated-off case and
+	// commits `.off`.
+	//
+	// This is also why there is exactly ONE mechanism now. The previous
+	// attempt (load-time exclusion) ran a SECOND rule set beside this one and
+	// the two drifted within a day - `-1x` was absent from kPackages, so
+	// SelectorUI was classified "tier-independent, always stays" and sat live
+	// at 3x in the winning folder. Two mechanisms for one decision is the
+	// defect; see research/laws/feedback-arming-must-be-additive-and-pre-scan.md
+	struct WantRow
+	{
+		wchar_t dir[MAX_PATH];
+		wchar_t base[96];
+		wchar_t tag[16];
+		bool    wanted;
+	};
+	WantRow gWant[64] = {};
+	int     gWantCount = 0;
+
+	// "-15x" -> "15x", "-1x" -> "1x", "" -> "on". The payload suffix never
+	// carries the hyphen, because it is not a tier TAG there - it is a file
+	// extension component.
+	void PayloadTagOf(const wchar_t* tag, wchar_t* out, size_t outLen)
+	{
+		if (!tag || !*tag) { wcscpy_s(out, outLen, L"on"); return; }
+		wcscpy_s(out, outLen, tag[0] == L'-' ? tag + 1 : tag);
+	}
+
 	void SyncDat(const wchar_t* dir, const wchar_t* base, const wchar_t* tag, bool active)
 	{
+		// `base` may still carry its v4.2.0 folder prefix; WHERE a package
+		// lives is discovered, so resolve the prefix rather than
+		// concatenating `dir` onto it.
 		wchar_t stem[MAX_PATH];
 		if (wcschr(base, L'\\'))
 		{
@@ -753,29 +803,96 @@ namespace
 		{
 			swprintf_s(stem, L"%s%s", dir, base);
 		}
-		wchar_t live[MAX_PATH];
-		wchar_t stash[MAX_PATH];
-		swprintf_s(live, L"%s%s.dat", stem, tag);
-		swprintf_s(stash, L"%s%s.dat%s", stem, tag, kDisabledSuffix);
+		// split the resolved stem back into folder + leaf
+		wchar_t folder[MAX_PATH];
+		wcscpy_s(folder, MAX_PATH, stem);
+		wchar_t* slash = wcsrchr(folder, L'\\');
+		const wchar_t* leaf = stem;
+		if (slash)
+		{
+			leaf = stem + (slash - folder) + 1;
+			*(slash + 1) = 0;
+		}
 
-		const wchar_t* from = active ? stash : live;
-		const wchar_t* to = active ? live : stash;
-		if (!FileExists(from))
+		WantRow* row = nullptr;
+		for (int i = 0; i < gWantCount; i++)
 		{
-			return; // already in the desired state (or package absent)
+			if (_wcsicmp(gWant[i].base, leaf) == 0
+				&& _wcsicmp(gWant[i].dir, folder) == 0)
+			{
+				row = &gWant[i];
+				break;
+			}
 		}
-		if (MoveFileExW(from, to, MOVEFILE_REPLACE_EXISTING))
+		if (!row)
 		{
-			Logger::Get().WriteLine(
-				LogLevel::Info, "ScaleTier: %ls%ls.dat -> %s.", base, tag,
-				active ? "ACTIVE" : "disabled");
+			if (gWantCount >= 64)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"SyncDat: package table full at %d - %ls NOT ARMED. This "
+					"is a build defect, not a user state.", gWantCount, leaf);
+				return;
+			}
+			row = &gWant[gWantCount++];
+			wcscpy_s(row->dir, MAX_PATH, folder);
+			wcscpy_s(row->base, 96, leaf);
+			wcscpy_s(row->tag, 16, L"off");
+			row->wanted = false;
 		}
-		else
+		if (active)
 		{
-			Logger::Get().WriteLine(
-				LogLevel::Info, "ScaleTier: could not gate %ls%ls.dat (err %u).",
-				base, tag, GetLastError());
+			PayloadTagOf(tag, row->tag, 16);
+			row->wanted = true;
 		}
+	}
+
+	// The single pass that touches disk. Runs once, after every SyncDat call
+	// for this boot has been made.
+	void CommitArming()
+	{
+		if (gWantCount == 0) { return; }
+
+		// Distinct folders, so migration and the state file run once each.
+		wchar_t dirs[4][MAX_PATH] = {};
+		int nDirs = 0;
+		for (int i = 0; i < gWantCount; i++)
+		{
+			bool seen = false;
+			for (int d = 0; d < nDirs; d++)
+			{
+				if (_wcsicmp(dirs[d], gWant[i].dir) == 0) { seen = true; break; }
+			}
+			if (!seen && nDirs < 4) { wcscpy_s(dirs[nDirs++], MAX_PATH, gWant[i].dir); }
+		}
+
+		int migrated = 0;
+		for (int d = 0; d < nDirs; d++)
+		{
+			migrated += MigrateRenamesToPayloads(dirs[d]);
+			LoadArmState(dirs[d]);
+		}
+
+		int armed = 0, off = 0, failed = 0;
+		for (int i = 0; i < gWantCount; i++)
+		{
+			WantRow& w = gWant[i];
+			const bool ok = ArmOne(w.dir, w.base,
+				w.wanted ? w.tag : L"off",
+				w.wanted ? "armed" : "gated off or no tier match");
+			if (!ok) { failed++; }
+			else if (w.wanted) { armed++; }
+			else { off++; }
+		}
+
+		for (int d = 0; d < nDirs; d++) { WriteArmState(dirs[d]); }
+
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CommitArming: %d package(s) across %d folder(s) - %d armed, %d "
+			"inert, %d FAILED%s. A failure count above zero means a package "
+			"is holding bytes we did not choose; read the ArmOne lines above.",
+			gWantCount, nDirs, armed, off, failed,
+			migrated ? " (after a one-time migration from the rename layout)"
+			         : "");
 	}
 
 	// ============ STABLE-FILENAME PACKAGES (v4.0.3, PILOT: SelectiveArt) ===
@@ -815,97 +932,303 @@ namespace
 	// and if found, re-suffix it (source-only invariant restored) before
 	// anything else runs. Idempotent: once migrated, this check costs one
 	// FileExists per tag per call.
-	void SyncDatStable(const wchar_t* dir, const wchar_t* base,
-		const wchar_t* activeTag)
+	// ============ v4.5.0 ArmOne - CONTENT SWAP AT A STABLE FILENAME =======
+	// Replaces SyncDat's rename dance, which is the single reason a package
+	// manager cannot uninstall this mod: sc4pac removes files BY MANIFEST
+	// NAME, and 53 of 68 installed files sat under a renamed name.
+	//
+	// THE SHAPE. Per package, two file classes:
+	//   LIVE     z_SC4UIScale_<Pkg>.dat           the only thing SC4 loads.
+	//                                             Its CONTENT changes; the
+	//                                             name never does, at any
+	//                                             tier, under any gate
+	//                                             verdict, ever.
+	//   PAYLOAD  z_SC4UIScale_<Pkg>.<tag>.uipay   inert. Never renamed, never
+	//                                             live, never written by us.
+	//
+	// WHY .uipay IS SAFE, measured rather than assumed: probe #202 copied a
+	// real DBPF to `.uipay`, booted, and it did NOT appear in the registered
+	// segment census while 13 of our live .dat files did. The scan is
+	// EXTENSION-gated. `.dat.x1-disabled` being skipped only ever proved that
+	// ONE string is skipped; this proves it for the string we now rely on.
+	//
+	// WHY IT SATISFIES THE LAW. "Arming must be additive and pre-scan" - a
+	// file that must not be armed must never ENTER the plugin scan, because
+	// entering IS the damage: the win is latched into the merged index before
+	// any code of ours runs. A gated-off package here is a live file holding
+	// `.off` content, which declares no contested TGI, so the runner-up is
+	// promoted by the engine's own scan-order logic at index-build time. That
+	// is what the rename bought by keeping the file off disk, and what
+	// closing a segment afterwards could never produce.
+	//
+	// Runs in the director constructor, DURING the plugin scan - the same
+	// moment the rename ran, which is why both work and why a PostAppInit
+	// pass could not.
+
+	// The stamp that makes the steady state free. Deliberately NOT
+	// FilesIdentical(): that short-circuits only on a SIZE mismatch and then
+	// reads both files to EOF in 8 KB chunks. In steady state the sizes match
+	// by construction, so it would read everything, every boot - ~88 MB at
+	// 3x, over OneDrive cloud placeholders.
+	//
+	// The LIVE file's stats are in the stamp as well as the payload's, and
+	// that is what makes this self-healing: an installer - or an sc4pac
+	// package UPDATE, which wipes the versioned folder wholesale - that
+	// restores a shipped file changes its mtime, the stamp misses, and the
+	// next boot re-copies. A payload-only fingerprint would call that steady.
+	struct ArmStamp
 	{
-		static const wchar_t* const kTags[] = { L"-15x", L"-2x", L"-3x" };
+		uint64_t paySize, payTime, liveSize, liveTime;
+	};
 
-		// ---- migrate any pre-v4.0.3 bare tier file back to source-only ----
-		for (int i = 0; i < 3; i++)
+	bool StatFile(const wchar_t* p, uint64_t* size, uint64_t* mtime)
+	{
+		WIN32_FILE_ATTRIBUTE_DATA a = {};
+		if (!GetFileAttributesExW(p, GetFileExInfoStandard, &a)) { return false; }
+		*size = (static_cast<uint64_t>(a.nFileSizeHigh) << 32) | a.nFileSizeLow;
+		*mtime = (static_cast<uint64_t>(a.ftLastWriteTime.dwHighDateTime) << 32)
+			| a.ftLastWriteTime.dwLowDateTime;
+		return true;
+	}
+
+	// One row per package, persisted per folder. Doubles as the diagnostic a
+	// constant filename would otherwise destroy: with every name fixed, a
+	// directory listing no longer tells you the armed tier or a gate verdict.
+	struct ArmRow
+	{
+		wchar_t  base[96];
+		wchar_t  tag[16];
+		char     reason[64];
+		ArmStamp stamp;
+	};
+	ArmRow gArmRows[64] = {};
+	int    gArmRowCount = 0;
+
+	const wchar_t kStateFile[] = L"z_SC4UIScale_STATE.txt";
+
+	void LoadArmState(const wchar_t* dir)
+	{
+		wchar_t p[MAX_PATH];
+		swprintf_s(p, L"%s%s", dir, kStateFile);
+		FILE* f = nullptr;
+		if (_wfopen_s(&f, p, L"r") != 0 || !f) { return; }
+		char line[512];
+		while (fgets(line, sizeof(line), f))
 		{
-			wchar_t bareLegacy[MAX_PATH];
-			swprintf_s(bareLegacy, L"%s%s%s.dat", dir, base, kTags[i]);
-			if (!FileExists(bareLegacy)) { continue; }
-			wchar_t suffixed[MAX_PATH];
-			swprintf_s(suffixed, L"%s%s%s.dat%s", dir, base, kTags[i],
-				kDisabledSuffix);
-			if (FileExists(suffixed))
+			char b[96] = {}, t[16] = {}, r[64] = {};
+			ArmStamp s = {};
+			const int got = sscanf_s(line,
+				"%95[^\t]\t%15[^\t]\t%63[^\t]\t%llu\t%llu\t%llu\t%llu",
+				b, static_cast<unsigned>(sizeof(b)),
+				t, static_cast<unsigned>(sizeof(t)),
+				r, static_cast<unsigned>(sizeof(r)),
+				&s.paySize, &s.payTime, &s.liveSize, &s.liveTime);
+			if (got == 7 && gArmRowCount < 64)
 			{
-				// Both exist (a mid-migration state, or a stale leftover):
-				// the suffixed copy is the one every OTHER package trusts
-				// as the source, so the bare one is surplus - drop it
-				// rather than leave two candidates for the same tag.
-				DeleteFileW(bareLegacy);
-				continue;
-			}
-			if (MoveFileExW(bareLegacy, suffixed, 0))
-			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"ScaleTier: STABLE-MIGRATE %ls%ls.dat -> source-only "
-					"(pre-4.0.3 layout). This tier's content is preserved; "
-					"the stable %ls.dat file below carries whichever tier "
-					"is actually active.", base, kTags[i], base);
+				ArmRow& row = gArmRows[gArmRowCount++];
+				MultiByteToWideChar(CP_UTF8, 0, b, -1, row.base, 96);
+				MultiByteToWideChar(CP_UTF8, 0, t, -1, row.tag, 16);
+				strcpy_s(row.reason, r);
+				row.stamp = s;
 			}
 		}
+		fclose(f);
+	}
 
-		wchar_t stable[MAX_PATH];
-		swprintf_s(stable, L"%s%s.dat", dir, base);
-		wchar_t stableOff[MAX_PATH];
-		swprintf_s(stableOff, L"%s%s.dat%s", dir, base, kDisabledSuffix);
-
-		if (activeTag == nullptr)
+	ArmRow* FindArmRow(const wchar_t* base)
+	{
+		for (int i = 0; i < gArmRowCount; i++)
 		{
-			// STOCK: turn the one stable file off. Same trick SyncDat has
-			// always used, now scoped to a single filename instead of
-			// three, which is what keeps it from being the sc4pac trap -
-			// there is only ever one name to look for either way.
-			if (FileExists(stable))
-			{
-				MoveFileExW(stable, stableOff, MOVEFILE_REPLACE_EXISTING);
-				Logger::Get().WriteLine(LogLevel::Info,
-					"ScaleTier: %ls.dat -> disabled (stock).", base);
-			}
-			return;
+			if (_wcsicmp(gArmRows[i].base, base) == 0) { return &gArmRows[i]; }
 		}
+		return nullptr;
+	}
 
-		// Coming back from stock: restore before comparing content, so a
-		// stale .x1-disabled from a previous stock visit does not leave
-		// TWO candidates or get silently orphaned.
-		if (!FileExists(stable) && FileExists(stableOff))
-		{
-			MoveFileExW(stableOff, stable, 0);
-		}
+	// THE PRIMITIVE. tag is "15x" / "2x" / "3x" / "1x" / "on" / "off".
+	// True when the live file ends the call holding that payload's bytes.
+	bool ArmOne(const wchar_t* dir, const wchar_t* base, const wchar_t* tag,
+		const char* reason)
+	{
+		wchar_t live[MAX_PATH], src[MAX_PATH];
+		swprintf_s(live, L"%s%s.dat", dir, base);
+		swprintf_s(src, L"%s%s.%s.uipay", dir, base, tag);
 
-		wchar_t src[MAX_PATH];
-		swprintf_s(src, L"%s%s%s.dat%s", dir, base, activeTag,
-			kDisabledSuffix);
+		const wchar_t* usedTag = tag;
 		if (!FileExists(src))
 		{
+			// A missing payload is a SHIP DEFECT, not a state to absorb
+			// quietly. Fall back to `.off` - inert is the only safe wrong
+			// answer - and name the file out loud.
 			Logger::Get().WriteLine(LogLevel::Info,
-				"ScaleTier: %ls%ls source missing - stable %ls.dat left "
-				"as-is.", base, activeTag, base);
-			return;
+				"ArmOne: MISSING PAYLOAD %ls.%ls.uipay - falling back to "
+				".off. This is a packaging defect; the package will be inert.",
+				base, tag);
+			swprintf_s(src, L"%s%s.off.uipay", dir, base);
+			usedTag = L"off";
+			if (!FileExists(src))
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"ArmOne: NO PAYLOAD AT ALL for %ls (not even .off). "
+					"Leaving %ls.dat exactly as found - never destroy a live "
+					"file we cannot replace.", base, base);
+				return false;
+			}
 		}
 
-		// Byte-compare before copying: on most boots the right tier is
-		// already in place, and a multi-megabyte copy every launch is
-		// exactly the kind of per-launch tax #141 already warns against.
-		if (FileExists(stable) && FilesIdentical(stable, src))
+		ArmStamp now = {};
+		if (!StatFile(src, &now.paySize, &now.payTime)) { return false; }
+		const bool haveLive = StatFile(live, &now.liveSize, &now.liveTime);
+
+		ArmRow* row = FindArmRow(base);
+		if (haveLive && row && _wcsicmp(row->tag, usedTag) == 0
+			&& row->stamp.paySize == now.paySize
+			&& row->stamp.payTime == now.payTime
+			&& row->stamp.liveSize == now.liveSize
+			&& row->stamp.liveTime == now.liveTime)
 		{
-			return;
+			return true;   // steady state: four stats, zero I/O
 		}
-		if (CopyFileW(src, stable, FALSE))
+
+		// ATOMIC, AND FAIL-INERT. A bare CopyFileW is neither: it fails
+		// MIXED, leaving the previous tier's bytes under this tier's
+		// geometry - precisely the screen this redesign exists to eliminate.
+		// The rename it replaces failed inert; so must this.
+		wchar_t tmp[MAX_PATH];
+		swprintf_s(tmp, L"%s%s.dat.tmp", dir, base);
+		if (!CopyFileW(src, tmp, FALSE))
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
-				"ScaleTier: %ls%ls -> %ls.dat (stable name, content swap).",
-				base, activeTag, base);
+				"ArmOne: could not stage %ls.%ls.uipay (err %u) - %ls.dat "
+				"left untouched.", base, usedTag, GetLastError(), base);
+			return false;
 		}
-		else
+		if (!MoveFileExW(tmp, live, MOVEFILE_REPLACE_EXISTING))
+		{
+			const DWORD e = GetLastError();
+			DeleteFileW(tmp);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ArmOne: could not commit %ls.dat (err %u) - staged copy "
+				"discarded, previous content intact.", base, e);
+			return false;
+		}
+		StatFile(live, &now.liveSize, &now.liveTime);
+
+		if (!row)
+		{
+			if (gArmRowCount >= 64) { return true; }
+			row = &gArmRows[gArmRowCount++];
+			wcscpy_s(row->base, 96, base);
+		}
+		wcscpy_s(row->tag, 16, usedTag);
+		strcpy_s(row->reason, reason ? reason : "");
+		row->stamp = now;
+
+		Logger::Get().WriteLine(LogLevel::Info,
+			"ArmOne: %ls.dat <- .%ls.uipay (%s)", base, usedTag,
+			reason ? reason : "");
+		return true;
+	}
+
+	void WriteArmState(const wchar_t* dir)
+	{
+		// Restores the signal a constant filename destroys. NOT a marker
+		// file - nothing gates on it. It exists so a directory listing, and
+		// the test harness, can still answer "which tier is armed, and why is
+		// this one off".
+		wchar_t p[MAX_PATH];
+		swprintf_s(p, L"%s%s", dir, kStateFile);
+		FILE* f = nullptr;
+		if (_wfopen_s(&f, p, L"w") != 0 || !f) { return; }
+		fputs("# SC4UIScale arming state. Rewritten every boot; the game never"
+			" reads it.\n# base\ttag\treason\tpaySize\tpayTime\tliveSize"
+			"\tliveTime\n", f);
+		for (int i = 0; i < gArmRowCount; i++)
+		{
+			const ArmRow& r = gArmRows[i];
+			char b[128] = {}, t[32] = {};
+			WideCharToMultiByte(CP_UTF8, 0, r.base, -1, b, sizeof(b),
+				nullptr, nullptr);
+			WideCharToMultiByte(CP_UTF8, 0, r.tag, -1, t, sizeof(t),
+				nullptr, nullptr);
+			fprintf(f, "%s\t%s\t%s\t%llu\t%llu\t%llu\t%llu\n", b, t, r.reason,
+				r.stamp.paySize, r.stamp.payTime,
+				r.stamp.liveSize, r.stamp.liveTime);
+		}
+		fclose(f);
+	}
+
+	// ONE-TIME UPGRADE FROM THE RENAME LAYOUT. A v4.4.0 install has
+	// <base>-<tag>.dat and <base>-<tag>.dat.x1-disabled and no payloads. Turn
+	// those into payloads in place, so an upgrading user needs no download.
+	//
+	// The tag set is DERIVED from kPackages plus -1x, never a hand-written
+	// literal: a sweep written against {15x,2x,3x} would miss
+	// z_SC4UIScale_SelectorUI-1x, the one package armed by the ABSENCE of a
+	// tier and the only thing keeping 1x from being a one-way door.
+	int MigrateRenamesToPayloads(const wchar_t* dir)
+	{
+		wchar_t pat[MAX_PATH];
+		swprintf_s(pat, L"%sz_SC4UIScale_*", dir);
+		WIN32_FIND_DATAW fd = {};
+		HANDLE h = FindFirstFileW(pat, &fd);
+		if (h == INVALID_HANDLE_VALUE) { return 0; }
+
+		int moved = 0;
+		do
+		{
+			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) { continue; }
+			wchar_t name[MAX_PATH];
+			wcscpy_s(name, MAX_PATH, fd.cFileName);
+
+			const size_t dl = wcslen(kDisabledSuffix);
+			size_t nl = wcslen(name);
+			if (nl > dl && _wcsicmp(name + nl - dl, kDisabledSuffix) == 0)
+			{
+				name[nl - dl] = 0;
+				nl -= dl;
+			}
+			if (nl < 5 || _wcsicmp(name + nl - 4, L".dat") != 0) { continue; }
+			name[nl - 4] = 0;
+
+			const wchar_t* hit = nullptr;
+			for (int i = 0; i < kPackageCount && !hit; i++)
+			{
+				const size_t tl = wcslen(kPackages[i].tag);
+				const size_t bl = wcslen(name);
+				if (bl > tl && _wcsicmp(name + bl - tl, kPackages[i].tag) == 0)
+				{
+					hit = kPackages[i].tag;
+				}
+			}
+			if (!hit)
+			{
+				const size_t bl = wcslen(name);
+				if (bl > 3 && _wcsicmp(name + bl - 3, L"-1x") == 0)
+				{
+					hit = L"-1x";
+				}
+			}
+			if (!hit) { continue; }   // untagged: already a stable name
+
+			wchar_t base[MAX_PATH];
+			wcscpy_s(base, MAX_PATH, name);
+			base[wcslen(base) - wcslen(hit)] = 0;
+
+			wchar_t dst[MAX_PATH], from[MAX_PATH];
+			swprintf_s(dst, L"%s%s.%s.uipay", dir, base, hit + 1);
+			swprintf_s(from, L"%s%s", dir, fd.cFileName);
+			if (FileExists(dst)) { DeleteFileW(from); moved++; continue; }
+			if (MoveFileExW(from, dst, 0)) { moved++; }
+		} while (FindNextFileW(h, &fd));
+		FindClose(h);
+
+		if (moved)
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
-				"ScaleTier: could not copy %ls%ls onto the stable %ls.dat "
-				"(err %u).", base, activeTag, base, GetLastError());
+				"ArmOne: migrated %d pre-4.5.0 tier file(s) in this folder "
+				"into .uipay payloads - no download needed.", moved);
 		}
+		return moved;
 	}
 
 	// One-time migration of a legacy (pre-multi-package) install: the
@@ -3441,10 +3764,13 @@ namespace ScaleTier
 				wcscpy_s(gArmedTag, 8, pkg.tag);   // v4.5.0, for exclusion
 				gArmedTagValid = true;
 			}
-			// SelectiveArt moved OUT of this per-tier loop (v4.0.3, PILOT):
-			// see SyncDatStable above the migration helper. It is called
-			// once, after the loop, with the resolved activeTag - same
-			// shape as SyncFont two lines below.
+			// SelectiveArt is an ORDINARY package again (v4.5.0). It was
+			// lifted out of this loop in v4.0.3 to pilot the stable-filename
+			// content swap that every package now uses, so the special case
+			// it existed for no longer exists - and leaving it would be a
+			// second arming mechanism, which is the defect that broke the 3x
+			// UI this morning.
+			SyncDat(docPlugins, L"z_SC4UIScale_SelectiveArt", pkg.tag, match);
 			SyncDat(docPlugins, L"z_SC4UIScale_DialogStatic", pkg.tag, match);
 			SyncDat(docPlugins, L"z_SC4UIScale_ItemIcons", pkg.tag, match);
 			// SUBFOLDER package (v2.17.1): overrides for icons that live in
@@ -3599,13 +3925,16 @@ namespace ScaleTier
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonGodMod", depOk));
 		}
-		// SelectiveArt: ONE stable filename, content-swapped - see
-		// SyncDatStable's own comment for why (the sc4pac uninstall trap).
-		SyncDatStable(docPlugins, L"z_SC4UIScale_SelectiveArt", activeTag);
 		// Install root FIRST (the copy the game reads); Documents mirror
 		// second (kept for inspectability + package consistency).
 		SyncFont(docPlugins, instPlugins, activeTag);
 		SyncFont(docPlugins, docPlugins, activeTag);
+
+		// Everything above only RECORDED what it wants. This is the one
+		// pass that touches disk, and it runs after the last SyncDat of
+		// the boot so a package that never received an active call can be
+		// told apart from one whose tier simply came up later in the loop.
+		CommitArming();
 	}
 
 	// ============ FONTSTYLE.INI SHUTDOWN REVERT (v4.0.4) ===================
