@@ -53,31 +53,44 @@ if ($waited -ge 60) {
 #           two directors. Runs only when legacy files exist; logs each file.
 # MEASURED on the maiden boot: the game's DLL LOADER IS TOP-LEVEL ONLY
 # (recursive for dats, NOT for DLLs - no log, no director from a subfolder).
-# So the DLL-anchored set (dll/ini/log/gcap/csv - all beside-the-DLL paths)
-# LIVES AT THE ROOT; only packages/fonts/state migrate into 010-SC4UIScale.
+# So the DLL - and ONLY the DLL - lives at the root.
+#
+# v4.4.0 ROOT CLEANUP reversed the rest of that set. Through 4.3.1 the ini,
+# log, gcap and #104 csv resolved 'beside the DLL' and so piled up at the
+# Plugins root, where every other DLL mod leaves two or three files and we
+# left five. They now resolve through ScaleTier::GetOurFilePath into
+# 010-SC4UIScale\, so the folder carries everything a user (or sc4pac)
+# would want to remove. The DLL itself has no choice and stays.
 $MIGRATE_MOVE = @("SC4UIScale.compare-state.txt", ".sc4uiscale-tier1-restore.txt",
     "FontStyle.ini.user-original")
 $MIGRATE_DELETE = @("FontStyle.ini",
     "FontStyle.ini.x1-disabled", "FontStyle-2x.ini", "FontStyle-15x.ini",
     "FontStyle-3x.ini")
-# Reverse-migrate anything of the DLL-anchored set that an earlier 4.2.0 run
-# moved INTO the subfolder (one dev machine hit this state).
-foreach ($name in @("SC4UIScale.ini", "SC4UIScale.ini.bak2", "SC4UIScale-104.csv",
-                    "SC4UIScale.gcap", "SC4UIScale.dll", "SC4UIScale.log")) {
-    $misplaced = Join-Path $our $name
-    if (Test-Path $misplaced) {
-        $home2 = Join-Path $plug $name
-        if ($name -eq "SC4UIScale.dll" -or $name -eq "SC4UIScale.log") {
-            Remove-Item $misplaced -Force   # rebuilt/regenerated at root
-            Write-Output ("  REVERSE-MIGRATED (removed from subfolder): " + $name)
-        } elseif (-not (Test-Path $home2)) {
-            Move-Item $misplaced $home2 -Force
-            Write-Output ("  REVERSE-MIGRATED subfolder -> root: " + $name)
+# v4.4.0: move the loose files OFF the root into 010-SC4UIScale\. The DLL
+# does this itself at boot too (ScaleTier::MigrateRootLooseFiles); doing it
+# here as well means a deploy leaves a clean root even when the game is
+# never launched afterwards, so the root-is-clean check can run at once.
+foreach ($name in @("SC4UIScale.ini", "SC4UIScale-104.csv", "SC4UIScale.gcap")) {
+    $old = Join-Path $plug $name
+    if (Test-Path $old) {
+        $new = Join-Path $our $name
+        if (Test-Path $new) {
+            Remove-Item $old -Force
+            Write-Output ("  ROOT CLEANUP (subfolder copy wins): " + $name)
+        } else {
+            Move-Item $old $new -Force
+            Write-Output ("  ROOT CLEANUP root -> 010-SC4UIScale: " + $name)
         }
     }
 }
-# (The SC4UIScale* root catch-all that briefly lived here is GONE: the
-# DLL-anchored set legitimately lives at the root now.)
+# Build/dev leftovers and the regenerated log: delete, never carry forward.
+foreach ($name in @("SC4UIScale.ini.bak2", "SC4UIScale.log")) {
+    $old = Join-Path $plug $name
+    if (Test-Path $old) {
+        Remove-Item $old -Force
+        Write-Output ("  ROOT CLEANUP (removed stale root copy): " + $name)
+    }
+}
 foreach ($name in $MIGRATE_MOVE) {
     $old = Join-Path $plug $name
     if (Test-Path $old) {
@@ -213,7 +226,7 @@ $selectiveArtArmedBefore = Test-Path (Join-Path $our "z_SC4UIScale_SelectiveArt.
 # deploy is immediately followed by a launch, so this is the last safe moment.
 # Named by the log's OWN mtime, not "now", so the file keeps the timestamp of
 # the run it came from.
-$srcLog = "$plug\SC4UIScale.log"
+$srcLog = "$our\SC4UIScale.log"   # v4.4.0: the log lives in 010-SC4UIScale
 if (Test-Path $srcLog) {
     $capDir = "$proj\_tests\captures"
     if (-not (Test-Path $capDir)) { New-Item -ItemType Directory $capDir | Out-Null }

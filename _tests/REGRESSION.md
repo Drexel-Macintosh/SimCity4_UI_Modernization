@@ -17047,3 +17047,75 @@ corpus builder had the discipline; five side-doors did not, and they were
 invisible to every measurement aimed at the corpus. When fixing a resampler,
 grep for every OTHER resample call in the tree - the ones that never used the
 shared path are exactly the ones no gate is watching.
+
+
+## v4.4.0 - THE PLUGINS ROOT IS NOT OUR SCRATCH SPACE (2026-08-29)
+
+Reported by the user as "this feels haphazard when I compare to other mods".
+It was. MEASURED on a live 38-package tree rather than recalled:
+
+* Every SC4 DLL mod resolves its ini and log "beside the DLL", and the DLL
+  must sit at the Plugins ROOT (the dat scan is recursive, the DLL loader is
+  NOT - v4.2.0 maiden boot). So the idiom is universal, and so is the mess.
+  Most mods leave 2-3 loose files there. WE LEFT FIVE - dll, ini, log, gcap,
+  and the #104 csv.
+* 30 sc4pac-installed DLL packages on that machine all use the SAME shape we
+  were not using: the `.dll` at the root, EVERYTHING ELSE in the package's own
+  folder (`150-mods\<publisher>.<package>.<version>.sc4pac\`). The convention
+  already existed; we simply had not followed it.
+
+FIXED: one resolver, `ScaleTier::GetOurFilePath`, names every loose file
+inside `010-SC4UIScale\`. The DLL is the only thing left at the root because
+the loader gives it no choice.
+
+LAW: A PATH IDIOM COPIED FROM EVERY NEIGHBOUR IS STILL WORTH COUNTING. "It is
+what all the other mods do" was true and was NOT the same claim as "we are as
+tidy as the other mods". The first is about the idiom; the second is about the
+FILE COUNT, and only counting settles it.
+
+### Three ordering traps this cure had to clear
+
+1. **The migration must beat the first read.** Settings::Load, Logger::Init
+   and eight probe readers all resolve the ini. A migration that ran after any
+   one of them would hand that consumer a missing file and it would silently
+   take its defaults - a partial-settings state with no error anywhere. The
+   move therefore runs as the FIRST statement of the director's constructor,
+   and cannot log, because the log does not exist yet. It returns a count and
+   the director prints it once the logger is up.
+2. **A resolver that logs cannot be called before the logger exists.**
+   `PluginsRoot` warns once on fallback via a `static bool s_warned`. Called
+   pre-Init it would have written to a closed file AND latched the flag,
+   permanently swallowing the one warning a real fallback is entitled to.
+   Split into `PluginsRootQuiet` (the resolver) + `PluginsRoot` (the warning
+   wrapper); early callers take the quiet one.
+3. **`wcscat_s` ABORTS THE PROCESS on truncation.** The new path is one folder
+   DEEPER than the beside-the-DLL path it replaces, so the old "concat and
+   hope" idiom turned a long-path user into a crash. `OurFilePath`
+   length-checks first and returns an EMPTY string on overflow; every consumer
+   degrades to its default on a path it cannot open. A setting lost, not a
+   game killed.
+
+### What this does NOT fix, and the number that says so
+
+sc4pac uninstalls BY MANIFEST NAME. We rename our own files at runtime
+(`.dat` <-> `.dat.x1-disabled`) to arm a tier and to open/close dependency
+gates. MEASURED on the live install: **53 of our 68 installed files sit under
+a name no manifest would ever contain** - 78%. Not one of the other 38
+packages in that tree renames anything.
+
+Our own `Install.ps1 -Uninstall` survives this only because it sweeps
+`z_SC4UIScale_*` by WILDCARD; proven this session by renaming three armed dats
+behind the installer's back and watching the round-trip still leave zero
+orphans. sc4pac has no such wildcard, so the same three files would be
+orphaned forever.
+
+LAW: A MUTABLE FILE SET AND A PACKAGE MANAGER CANNOT BOTH BE RIGHT. Every
+manager assumes the installed names are the manifest names. Any design that
+renames its own payload at runtime has opted out of every one of them - and
+that is an ARCHITECTURE decision, not a packaging detail to fix later.
+
+The cure is already in this codebase, applied to exactly one package:
+`SyncDatStable` keeps ONE stable filename and swaps its CONTENT. Generalising
+it (static per-tier sources under a non-loading extension + one stable `.dat`
+the DLL writes) keeps runtime tier switching AND makes every name on disk
+manifest-stable. Open at the close of 4.4.0.

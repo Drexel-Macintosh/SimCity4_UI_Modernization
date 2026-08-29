@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.3.1"
+#define UISCALE_VERSION_STR "4.4.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -76,31 +76,21 @@ namespace
 	// the city load tail, so there is no line to jump. Every message-queue
 	// lever dies on that one fact. See _tests\REGRESSION.md task #89.
 
-	void GetDllSiblingPath(const wchar_t* fileName, wchar_t* out, size_t outLen)
-	{
-		wchar_t path[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
-
-		wchar_t* lastSlash = wcsrchr(path, L'\\');
-		if (lastSlash)
-		{
-			*(lastSlash + 1) = L'\0';
-		}
-
-		swprintf_s(out, outLen, L"%s%s", path, fileName);
-	}
-
-	// Parses an ini beside the DLL with the vendored ecosystem parser. A
+	// Parses one of OUR OWN ini files with the vendored ecosystem parser. A
 	// missing file constructs an empty reader; a malformed line aborts the
 	// whole parse and yields nullopt. Both fall back to the caller's
 	// defaults, exactly as when the file is absent.
-	std::optional<IniReader> TryParseSiblingIni(const wchar_t* fileName)
+	//
+	// v4.4.0: resolves inside 010-SC4UIScale/, NOT beside the DLL - our ini
+	// no longer sits at the Plugins root. For ANOTHER mod's ini, use
+	// TryParsePluginsRootIni below; the two are not interchangeable.
+	std::optional<IniReader> TryParseOurIni(const wchar_t* fileName)
 	{
 		std::optional<IniReader> reader;
 		try
 		{
 			wchar_t path[MAX_PATH] = {};
-			GetDllSiblingPath(fileName, path, MAX_PATH);
+			ScaleTier::GetOurFilePathW(fileName, path, MAX_PATH);
 			reader.emplace(std::filesystem::path(path));
 		}
 		catch (const std::exception&)
@@ -142,16 +132,41 @@ public:
 		, tierActive(false)
 		, gameVersion(0)
 	{
+		// v4.4.0 ROOT CLEANUP: move any pre-4.4.0 loose files out of the
+		// Plugins root FIRST - before the ini is read, before the log
+		// exists. See ScaleTier::MigrateRootLooseFiles for why that order
+		// is not negotiable (a read that beats the migration silently
+		// falls back to defaults).
+		const int migrated = ScaleTier::MigrateRootLooseFiles();
+
 		wchar_t iniPath[MAX_PATH] = {};
 		wchar_t logPath[MAX_PATH] = {};
-		GetDllSiblingPath(L"SC4UIScale.ini", iniPath, MAX_PATH);
-		GetDllSiblingPath(L"SC4UIScale.log", logPath, MAX_PATH);
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", iniPath, MAX_PATH);
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.log", logPath, MAX_PATH);
 
 		settings.Load(iniPath);
 
 		Logger& logger = Logger::Get();
 		logger.Init(logPath, static_cast<LogLevel>(settings.logLevel));
 		logger.WriteHeader(UISCALE_NAME_STR " v" UISCALE_VERSION_STR);
+		// Every resolver states its resolved value (house law). This one
+		// MOVED in 4.4.0, so a log that does not name its own folder is the
+		// first thing a confused user would have to ask about.
+		{
+			char shown[MAX_PATH] = {};
+			WideCharToMultiByte(CP_UTF8, 0, iniPath, -1, shown,
+				static_cast<int>(sizeof(shown)), nullptr, nullptr);
+			logger.WriteLine(LogLevel::Info,
+				"Settings + log resolved to %s", shown);
+		}
+		if (migrated)
+		{
+			logger.WriteLine(LogLevel::Info,
+				"v4.4.0 root cleanup: migrated %d pre-4.4.0 loose file(s) "
+				"[%s] out of the Plugins root - the DLL is now the only file "
+				"this mod leaves there.",
+				migrated, ScaleTier::MigratedRootFileNames());
+		}
 		// VERSION GATE - BEFORE ANY VERSION-SPECIFIC WORK. Everything below this
 		// line (DPI, the tier decision, the static-layer sync, the byte patches,
 		// ScaleRemap) targets the 641 layout and must not run on an older build.
@@ -389,7 +404,7 @@ public:
 			// manual branch: that was one of these conditions, and two
 			// rescues in two branches would be two rules.
 			wchar_t bootIni[MAX_PATH] = {};
-			GetDllSiblingPath(L"SC4UIScale.ini", bootIni, MAX_PATH);
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", bootIni, MAX_PATH);
 			ScaleTier::BootState bs = {
 				settings.spikeAutoScale, settings.spikeScaleFactor,
 				settings.spikeScaleAll, gfxW, gfxH

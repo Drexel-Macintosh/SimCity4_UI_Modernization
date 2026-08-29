@@ -417,18 +417,30 @@ if ($others.Count) {
     "folder (" + (($others | ForEach-Object { $_.Name }) -join ", ") + "). Any of " +
     "them can affect a UI-scaling result; rule them out before blaming this mod.")
 }
-# v4.2.0 MIGRATION GATE. The DLL-anchored set (dll/ini/log/gcap/csv) is
-# ALLOWED at the root - the game only loads DLLs from the top level
-# (measured on the move's maiden boot: subfolder DLL = no log, no director).
-# Everything ELSE of ours at the root is a legacy leftover: RED, not a note.
+# v4.4.0 ROOT GATE. SC4UIScale.dll is the ONLY file this mod may leave at
+# the Plugins root, and only because the game loads DLLs from the top level
+# and nowhere else (measured on the v4.2.0 maiden boot: a DLL in a subfolder
+# produces no log and no director). That matches every one of the 30 sc4pac
+# DLL packages in a typical tree - .dll at the root, everything else in the
+# package folder - and it is what makes our folder removable in one gesture.
+#
+# ANY other file of ours at the root is RED, not a note. Through 4.3.1 the
+# ini, log, gcap and #104 csv were resolved beside the DLL and piled up
+# here; this gate is what stops that coming back by accident, because a
+# stray root file is exactly the kind of thing that passes unnoticed for
+# months. Matched by PREFIX, not by a written-down list: an inventory of
+# names is wrong the first time a new one appears.
 $legacyRoot = @(Get-ChildItem $plugins -File -ErrorAction SilentlyContinue |
-  Where-Object { $_.Name -like "z_SC4UIScale_*" -or
-                 $_.Name -like "FontStyle-*.ini" -or $_.Name -eq "FontStyle.ini.user-original" -or
-                 $_.Name -eq ".sc4uiscale-tier1-restore.txt" -or
-                 $_.Name -eq "SC4UIScale.compare-state.txt" })
+  Where-Object { $_.Name -ne "SC4UIScale.dll" -and (
+                 $_.Name -like "SC4UIScale*" -or
+                 $_.Name -like "z_SC4UIScale_*" -or
+                 $_.Name -like "FontStyle-*.ini" -or
+                 $_.Name -eq "FontStyle.ini.user-original" -or
+                 $_.Name -eq ".sc4uiscale-tier1-restore.txt") })
 foreach ($lf in $legacyRoot) {
-  $failures += ("LEGACY-LAYOUT leftover at the Plugins ROOT: " + $lf.Name +
-    " (run _tests\Deploy-OnGameClose.ps1 - its migration block moves/removes these)")
+  $failures += ("OUR FILE AT THE PLUGINS ROOT: " + $lf.Name +
+    " - only SC4UIScale.dll belongs there (run _tests\Deploy-OnGameClose.ps1;
+    its root-cleanup block moves or removes these)")
 }
 # DEPLOYED == BUILT (task #58 root cause, 2026-08-02). The ThirdPartyUI
 # package was absent from Deploy-OnGameClose.ps1, so its deployed copy froze

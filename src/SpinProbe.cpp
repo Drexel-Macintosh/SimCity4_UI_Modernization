@@ -1,5 +1,6 @@
 #include "SpinProbe.h"
 #include "Logger.h"
+#include "ScaleTier.h"   // v4.4.0: the csv lives in 010-SC4UIScale/, not beside the DLL
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -137,32 +138,17 @@ namespace
 		            // kDataScaledSubtreeIds NOTE)
 	};
 
-	// The CSV lives beside OUR DLL, resolved from our own module - not from
-	// the game's directory and not from a hardcoded path.
+	// The CSV lives in OUR OWN plugin folder, resolved from our module -
+	// not from the game's directory and not from a hardcoded path.
 	bool ResolveCsvPath()
 	{
 		if (gCsvPath[0] != L'\0') { return true; }
-		HMODULE self = nullptr;
-		if (!GetModuleHandleExW(
-				GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-				GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-				reinterpret_cast<LPCWSTR>(&ResolveCsvPath), &self) || self == nullptr)
-		{
-			return false;
-		}
-		wchar_t path[MAX_PATH] = {};
-		if (GetModuleFileNameW(self, path, MAX_PATH) == 0) { return false; }
-		wchar_t* lastSlash = nullptr;
-		for (wchar_t* p = path; *p; p++)
-		{
-			if (*p == L'\\' || *p == L'/') { lastSlash = p; }
-		}
-		if (lastSlash == nullptr) { return false; }
-		*(lastSlash + 1) = L'\0';
-		if (wcslen(path) + wcslen(L"SC4UIScale-104.csv") >= MAX_PATH) { return false; }
-		wcscpy_s(gCsvPath, MAX_PATH, path);
-		wcscat_s(gCsvPath, MAX_PATH, L"SC4UIScale-104.csv");
-		return true;
+		// v4.4.0: beside the DLL is the Plugins ROOT, and the root is now
+		// reserved for the DLL alone - the csv joins the ini and log in
+		// 010-SC4UIScale/. An over-long path yields an empty string,
+		// which is the same refusal the old length check produced.
+		ScaleTier::GetOurFilePathW(L"SC4UIScale-104.csv", gCsvPath, MAX_PATH);
+		return gCsvPath[0] != 0;
 	}
 
 	// APPEND ONLY. This file is the one artefact that must survive across

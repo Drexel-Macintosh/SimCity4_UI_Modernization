@@ -93,7 +93,7 @@ function Assert-GameClosed {
 # destroyed because the ad-hoc flip scripts lacked this step while the deploy
 # script had it. Named by the log's OWN mtime, so it keeps its run's identity.
 function Preserve-Log {
-    $srcLog = Join-Path $DocPlugins "SC4UIScale.log"
+    $srcLog = Join-Path $DocPlugins "010-SC4UIScale\SC4UIScale.log"   # v4.4.0
     if (-not (Test-Path $srcLog)) { return }
     $capDir = Join-Path (Split-Path -Parent $PSScriptRoot) "_tests\captures"
     if (-not (Test-Path $capDir)) { New-Item -ItemType Directory $capDir | Out-Null }

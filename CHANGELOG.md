@@ -1,5 +1,30 @@
 # Changelog
 
+## 4.4.0 (2026-08-29) - the Plugins root is now just the DLL
+
+- **This mod used to leave five loose files at your `Plugins` root** - the
+  DLL, the ini, the log, plus a `.gcap` census and a `#104` csv when those
+  probes were on. Every other DLL mod in a typical tree leaves two or three,
+  so we were the untidiest thing in the folder.
+- **From v4.4.0 the root gets `SC4UIScale.dll` and nothing else.** The
+  settings, log and everything else moved into `010-SC4UIScale\`, so the
+  folder now carries everything a user - or a package manager - would want to
+  remove. The DLL has to stay: SimCity 4's dat scan is recursive but its DLL
+  loader is top-level only, measured.
+- That is the shape every sc4pac-installed DLL mod already uses: the `.dll` at
+  the root, its data in the package's own folder. We now match it.
+- **Upgrading keeps your settings.** On the first launch the DLL moves any
+  pre-4.4.0 root files into `010-SC4UIScale\` before it reads anything, and
+  says so in the log. The regenerated log and dev leftovers are dropped rather
+  than carried.
+- Uninstall is now genuinely two folders plus one file - and the manual
+  `FontStyle.ini` step the old README asked for is gone from the instructions,
+  because the DLL has reverted that file on every clean shutdown since v4.0.4.
+  The README said otherwise; the README was wrong.
+- `Test-DatIntegrity` gained a red gate: any file of ours at the Plugins root
+  other than `SC4UIScale.dll` now fails the suite, matched by prefix rather
+  than a written-down list.
+
 ## 4.3.1 (2026-08-29) - the Carbon Skin packages now SHIP
 
 - **v4.3.0 shipped the reskin support but not the packages.** That was an

@@ -1,6 +1,7 @@
 #include "CodePatches.h"
 #include "GdCap.h"
 #include "Logger.h"
+#include "ScaleTier.h"   // v4.4.0: our ini lives in 010-SC4UIScale/, not beside the DLL
 #include "MinHook.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -4406,10 +4407,7 @@ namespace CodePatches
 		void InstallCsiDrawProbe()
 		{
 			wchar_t ini[MAX_PATH] = {};
-			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
-				MAX_PATH);
-			wchar_t* sl = wcsrchr(ini, 92);   // L'\' written as its code unit
-			if (sl) { wcscpy_s(sl + 1, MAX_PATH - ((sl + 1) - ini), L"SC4UIScale.ini"); }
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 			gCsiKill = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"CsiKill", 0, ini));
 			const uintptr_t base =
@@ -4784,10 +4782,7 @@ namespace CodePatches
 		void ApplyCsiAimList(float factor)
 		{
 			wchar_t ini[MAX_PATH] = {};
-			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
-				MAX_PATH);
-			wchar_t* sl = wcsrchr(ini, 92);   // L'\' as its code unit
-			if (sl) { wcscpy_s(sl + 1, MAX_PATH - ((sl + 1) - ini), L"SC4UIScale.ini"); }
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 			wchar_t spec[512] = {};
 			GetPrivateProfileStringW(L"UiSpike", L"CsiAim", L"", spec, 512, ini);
 			if (spec[0] == 0) { return; }
@@ -7273,10 +7268,7 @@ namespace CodePatches
 	void ArmDispatchQuadProbe()
 	{
 		wchar_t dqIni[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
-			dqIni, MAX_PATH);
-		wchar_t* s = wcsrchr(dqIni, L'\\');
-		if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - dqIni), L"SC4UIScale.ini"); }
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", dqIni, MAX_PATH);
 		gDqOn = static_cast<int>(GetPrivateProfileIntW(
 			L"Probe", L"DispatchQuad", 0, dqIni));
 		Logger::Get().WriteLine(LogLevel::Info,
@@ -7369,10 +7361,7 @@ namespace CodePatches
 	void ArmGpuCapProbe()
 	{
 		wchar_t ini[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
-			ini, MAX_PATH);
-		wchar_t* s = wcsrchr(ini, L'\\');
-		if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - ini), L"SC4UIScale.ini"); }
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 		gGpuCapN = static_cast<int>(GetPrivateProfileIntW(
 			L"Probe", L"GpuCap", 0, ini));
 		Logger::Get().WriteLine(LogLevel::Info,
@@ -7381,26 +7370,19 @@ namespace CodePatches
 			"to record once the city latch fires).", gGpuCapN);
 		if (gGpuCapN <= 0) { return; }
 
+		// v4.4.0: the census file lives in 010-SC4UIScale/ with the rest
+		// of our loose files. The over-long-path refusal stays - that
+		// path is now one folder DEEPER than the beside-the-DLL one it
+		// replaces (review 2026-08-24, finding 4), and the resolver
+		// signals refusal by handing back an empty string.
 		wchar_t out[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
-			out, MAX_PATH);
-		wchar_t* o = wcsrchr(out, L'\\');
-		// The size passed to wcscpy_s must be the space actually REMAINING,
-		// not a flat literal: ".gcap" is one wchar longer than ".dll", so a
-		// maximal plugin path would overflow by 2 bytes with the usual
-		// `32` idiom (review 2026-08-24, finding 4).
-		if (o)
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.gcap", out, MAX_PATH);
+		if (out[0] == 0)
 		{
-			const rsize_t remain =
-				static_cast<rsize_t>(MAX_PATH - ((o + 1) - out));
-			if (remain < 16)
-			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: GPUCAP REFUSED (plugin path too long for "
-					"SC4UIScale.gcap) - nothing armed.");
-				return;
-			}
-			wcscpy_s(o + 1, remain, L"SC4UIScale.gcap");
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: GPUCAP REFUSED (plugin path too long for "
+				"SC4UIScale.gcap) - nothing armed.");
+			return;
 		}
 		const char* refuse = GdCap::Install(
 			static_cast<uint32_t>(gGpuCapN), 200000u, out);
@@ -7516,10 +7498,7 @@ namespace CodePatches
 	void ArmFontGuidProbe()
 	{
 		wchar_t ini[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
-			ini, MAX_PATH);
-		wchar_t* s = wcsrchr(ini, L'\\');
-		if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - ini), L"SC4UIScale.ini"); }
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 		gFgMax = static_cast<int>(GetPrivateProfileIntW(
 			L"Probe", L"FontGuid", 0, ini));
 		Logger::Get().WriteLine(LogLevel::Info,
@@ -7645,10 +7624,7 @@ namespace CodePatches
 		// InstallSignpostProbe below, which installs the hook that reads them.
 		{
 			wchar_t iniPath[MAX_PATH] = {};
-			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase),
-				iniPath, MAX_PATH);
-			wchar_t* slash = wcsrchr(iniPath, L'\\');
-			if (slash) { wcscpy_s(slash + 1, MAX_PATH - ((slash + 1) - iniPath), L"SC4UIScale.ini"); }
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", iniPath, MAX_PATH);
 			gSpriteOffset = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"BalloonSpriteOffset", 0, iniPath));
 			gSpriteKind = static_cast<int>(GetPrivateProfileIntW(
@@ -8052,10 +8028,7 @@ namespace CodePatches
 		if (gAddViewInstalled) { return; }
 		{
 			wchar_t ini[MAX_PATH] = {};
-			GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
-				MAX_PATH);
-			wchar_t* s = wcsrchr(ini, L'\\');
-			if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - ini), L"SC4UIScale.ini"); }
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 			gViewSuppress = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"BalloonViewSuppress", 0, ini));
 			const int vlrRaw = static_cast<int>(GetPrivateProfileIntW(
@@ -8152,10 +8125,7 @@ namespace CodePatches
 	bool ViewListRepeatRequested()
 	{
 		wchar_t ini[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), ini,
-			MAX_PATH);
-		wchar_t* s = wcsrchr(ini, L'\\');
-		if (s) { wcscpy_s(s + 1, MAX_PATH - ((s + 1) - ini), L"SC4UIScale.ini"); }
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 		return GetPrivateProfileIntW(L"Probe", L"ViewListRepeat", 0, ini) > 0;
 	}
 

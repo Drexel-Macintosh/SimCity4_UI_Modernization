@@ -7,16 +7,24 @@
 #   .\Install.ps1              install
 #   .\Install.ps1 -WhatIf      show what would be copied, change nothing
 #   .\Install.ps1 -Uninstall   remove everything this bundle installed
+#   .\Install.ps1 -PluginsPath <dir>   install into a folder you name
+#
+# -PluginsPath exists for two reasons: a Documents folder this script cannot
+# find (unusual redirection, a second install), and testing an install and
+# uninstall round-trip against a scratch tree without touching your real one.
 
 [CmdletBinding(SupportsShouldProcess = $true)]
-param([switch]$Uninstall)
+param([switch]$Uninstall, [string]$PluginsPath)
 
 $ErrorActionPreference = "Stop"
 $src = Join-Path $PSScriptRoot "Plugins"
 
 # --- find the game's Plugins folder ------------------------------------------
 $docs = [Environment]::GetFolderPath("MyDocuments")
-$plug = Join-Path $docs "SimCity 4\Plugins"
+$plug = if ($PluginsPath) { $PluginsPath } else { Join-Path $docs "SimCity 4\Plugins" }
+if ($PluginsPath -and -not (Test-Path $plug)) {
+    New-Item -ItemType Directory $plug -Force | Out-Null
+}
 if (-not (Test-Path $plug)) {
     # OneDrive-redirected Documents is common and GetFolderPath usually follows
     # it, but check the obvious fallback before giving up.
@@ -104,10 +112,13 @@ if ($Uninstall) {
 # DLL especially, which would otherwise load as a SECOND copy of this mod.
 $legacyMoved = 0
 $ourDir = Join-Path $plug "010-SC4UIScale"
-# (v4.2.0 final layout: the DLL-anchored set - dll/ini/log - lives at the
-# Plugins ROOT because the game only loads DLLs from the top level; only
-# packages, fonts and the font snapshot live in 010-SC4UIScale.)
-foreach ($keep in @("FontStyle.ini.user-original")) {
+# v4.4.0 ROOT CLEANUP: only the DLL stays at the Plugins root now - the
+# game loads DLLs from the top level only, so it has no choice. The ini,
+# log, gcap and #104 csv moved into 010-SC4UIScale/ so the folder carries
+# everything a user (or a package manager) would remove. Matches what the
+# 30 sc4pac DLL packages already do: .dll at the root, data in a folder.
+foreach ($keep in @("FontStyle.ini.user-original", "SC4UIScale.ini",
+                    "SC4UIScale.gcap", "SC4UIScale-104.csv")) {
     # user state from the old layout: carry it into the new home
     $old = Join-Path $plug $keep
     if (Test-Path $old) {
@@ -121,9 +132,11 @@ foreach ($keep in @("FontStyle.ini.user-original")) {
         $legacyMoved++
     }
 }
+# Regenerated or dev-only: never carried forward.
 foreach ($stale in @("FontStyle.ini", "FontStyle.ini.x1-disabled",
                      "FontStyle-2x.ini", "FontStyle-15x.ini", "FontStyle-3x.ini",
-                     "z_SC4UIScale_FontStyle.ini")) {
+                     "z_SC4UIScale_FontStyle.ini", "SC4UIScale.log",
+                     "SC4UIScale.ini.bak2")) {
     $old = Join-Path $plug $stale
     if (Test-Path $old) {
         if ($PSCmdlet.ShouldProcess($old, "remove legacy root file")) { Remove-Item $old -Force }

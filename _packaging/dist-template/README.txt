@@ -72,23 +72,31 @@ a failure; the log says so explicitly.
   UNINSTALL
 -------------------------------------------------------------------------------
 
-Delete these from  Documents\SimCity 4\Plugins\ :
+Run  .\Install.ps1 -Uninstall  , or delete three things by hand from
+Documents\SimCity 4\Plugins\ :
 
-    010-SC4UIScale\               (the whole folder - see the FontStyle
-                                  note below before deleting)
+    010-SC4UIScale\               (the whole folder)
     zzz-SC4UIScale\               (the whole folder)
-    every loose file named SC4UIScale.*  (the DLL, ini and log at the root)
+    SC4UIScale.dll                (the one loose file at the root)
 
-(If you upgraded from a release before v4.2.0 and see loose z_SC4UIScale_*
-or FontStyle-*.ini files at the Plugins root, they are old-layout leftovers -
-delete those too.)
+That is everything. From v4.4.0 the DLL is the only file this mod leaves at
+the Plugins root - the game loads DLLs from the top level and nowhere else,
+so it has no choice; the settings, log and everything else live inside
+010-SC4UIScale\ and go with the folder. (This is the same shape every
+sc4pac-installed DLL mod uses: the .dll at the root, its data in a folder.)
 
-AND ONE FILE IN THE GAME'S OWN FOLDER. The game only reads a loose font file
-from its install directory, so the mod copies the matching font there on every
-launch. Delete it too, or the game keeps using the enlarged font after you
-remove everything above:
+(Upgrading from before v4.4.0? The mod moves your old root files into
+010-SC4UIScale\ by itself on the first launch, settings included. If you
+never launch it again and see loose SC4UIScale.ini / .log / .gcap files at
+the root, they are pre-4.4.0 leftovers - delete those too.)
 
-    <SimCity 4 install>\Plugins\FontStyle.ini
+THE FONT IN THE GAME'S OWN FOLDER CLEANS ITSELF UP. The game only reads a
+loose font file from its install directory, so the mod copies the matching
+one to <SimCity 4 install>\Plugins\FontStyle.ini while it runs - and moves it
+back out again when the game shuts down normally. So after a clean exit there
+is nothing there to delete. If the game crashed on its last run, check that
+path and delete a leftover FontStyle.ini by hand, or the game keeps using the
+enlarged font after everything above is gone.
 
 If you had your OWN FontStyle.ini before installing, the mod saved it once as
 FontStyle.ini.user-original and never touched it again. Look for that file in

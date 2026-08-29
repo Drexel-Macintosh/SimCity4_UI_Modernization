@@ -86,11 +86,7 @@ namespace
 		static char s_path[MAX_PATH] = {};
 		if (!s_path[0])
 		{
-			char dir[MAX_PATH] = {};
-			GetModuleFileNameA(reinterpret_cast<HMODULE>(&__ImageBase), dir, MAX_PATH);
-			char* lastSlash = strrchr(dir, '\\');
-			if (lastSlash) { *(lastSlash + 1) = '\0'; }
-			sprintf_s(s_path, "%sSC4UIScale.ini", dir);
+			ScaleTier::GetOurFilePathA("SC4UIScale.ini", s_path, MAX_PATH);
 		}
 		return s_path;
 	}
@@ -20253,11 +20249,7 @@ namespace
 	// one is file-static to the director.
 	void SelIniPath(wchar_t* out, size_t outLen)
 	{
-		wchar_t path[MAX_PATH] = {};
-		GetModuleFileNameW(reinterpret_cast<HMODULE>(&__ImageBase), path, MAX_PATH);
-		wchar_t* lastSlash = wcsrchr(path, L'\\');
-		if (lastSlash) { *(lastSlash + 1) = L'\0'; }
-		swprintf_s(out, outLen, L"%sSC4UIScale.ini", path);
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", out, outLen);
 	}
 
 	// dgVoodoo.conf sits BESIDE THE EXE (Apps\), not beside the DLL.

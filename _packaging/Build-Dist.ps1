@@ -192,8 +192,11 @@ if ($copied -lt 40) {
            "parse before shipping.")
 }
 
-# the shipping user ini - the packaging copy, not the developer one
-Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $plugOut "SC4UIScale.ini") -Force
+# the shipping user ini - the packaging copy, not the developer one.
+# v4.4.0 ROOT CLEANUP: it goes in 010-SC4UIScale/ with the rest of our
+# loose files. The DLL resolves it there and migrates any pre-4.4.0 root
+# copy on first boot, so an upgrading user keeps their settings.
+Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $ourOut "SC4UIScale.ini") -Force
 $copied++
 
 # --- an EMPTY z_SC4UIScale_FontStyle.ini placeholder, so a package manager --

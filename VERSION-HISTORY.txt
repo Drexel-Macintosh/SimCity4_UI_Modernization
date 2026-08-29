@@ -1,3 +1,21 @@
+2026-08-29  v4.4.0    THE PLUGINS ROOT IS NOW JUST THE DLL
+
+  Through 4.3.1 this mod left FIVE loose files at the Plugins root (dll, ini,
+  log, gcap, #104 csv) because they all resolved "beside the DLL". Every
+  other DLL mod leaves two or three, so ours was the untidiest thing in the
+  folder - and 30 sc4pac DLL packages on a typical machine all use the same
+  shape we were not using: .dll at the root, everything else in the package's
+  own folder.
+  NOW: SC4UIScale.dll at the root and nothing else; ini/log/gcap/csv resolve
+  through ScaleTier::GetOurFilePath into 010-SC4UIScale\. The DLL migrates
+  pre-4.4.0 root files on first launch BEFORE reading the ini (settings kept)
+  and logs what it moved. Uninstall = two folders + one file.
+  ALSO: the README's manual "delete FontStyle.ini from the game folder" step
+  was stale - the DLL has reverted that file on every clean shutdown since
+  v4.0.4. Corrected.
+  GATE: Test-DatIntegrity now FAILS on any file of ours at the Plugins root
+  other than the DLL, matched by prefix, not by a list.
+
 2026-08-29  v4.3.1    THE CARBON SKIN PACKAGES NOW SHIP
 
   v4.3.0 shipped reskin SUPPORT but withheld the packages - an inconsistency,

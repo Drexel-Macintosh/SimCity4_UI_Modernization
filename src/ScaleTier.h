@@ -26,6 +26,24 @@ namespace ScaleTier
 	// scans) MUST use this, never the DLL sibling path.
 	void GetPluginsRootW(wchar_t* out, size_t outLen);
 
+	// v4.4.0 ROOT CLEANUP: names a file inside Plugins/010-SC4UIScale/.
+	// The DLL is the only thing this mod leaves at the Plugins root (the
+	// game's DLL loader is top-level only, measured); the ini, log, gcap
+	// and #104 csv all resolve through here so an sc4pac uninstall that
+	// removes the folder removes them with it. Resolves WITHOUT logging -
+	// the ini and log paths are needed before Logger::Init exists.
+	void GetOurFilePathW(const wchar_t* name, wchar_t* out, size_t outLen);
+	void GetOurFilePathA(const char* name, char* out, size_t outLen);
+
+	// One-time move of the pre-v4.4.0 loose root files into that folder.
+	// MUST be called before Settings::Load and before Logger::Init - a read
+	// that beats the migration silently falls back to defaults. Returns how
+	// many files moved; MigratedRootFileNames() names them for the log line
+	// the director prints once the logger is up.
+	int MigrateRootLooseFiles();
+	const char* MigratedRootFileNames();
+
+
 	// The fit predicate ALONE, without the "is it installed" and
 	// "largest first" parts of Decide. Published so the in-game scale
 	// selector can grey out a factor this resolution cannot carry, using the

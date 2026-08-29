@@ -9,7 +9,7 @@
 $ErrorActionPreference = "Stop"
 $plugins = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins')
 $gfx = "$plugins\SC4GraphicsOptions.ini"
-$log = "$plugins\SC4UIScale.log"
+$log = "$plugins\010-SC4UIScale\SC4UIScale.log"   # v4.4.0 root cleanup
 $exe = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe"
 
 # resolution -> expected tier + active package tag with the CURRENTLY

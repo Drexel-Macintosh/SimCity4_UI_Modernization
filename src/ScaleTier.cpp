@@ -72,7 +72,14 @@ namespace
 	// level down); if no ancestor is named Plugins (a dev tree, or a user
 	// who renamed the folder chain), fall back to DllDir and SAY SO - a
 	// silent wrong root here reads as "no third-party mods installed".
-	void PluginsRoot(wchar_t* out, size_t outLen)
+	// The resolver PROPER, silent. Split out 2026-08-29 (v4.4.0 root
+	// cleanup): the ini and log paths are now resolved BEFORE Logger::Init,
+	// so the warning branch below cannot run there - it would go to a file
+	// that does not exist yet AND would latch s_warned, swallowing the one
+	// warning a real fallback is entitled to. Returns whether an ancestor
+	// named "Plugins" was actually found; on failure `out` still holds
+	// DllDir(), which is the documented fallback.
+	bool PluginsRootQuiet(wchar_t* out, size_t outLen)
 	{
 		DllDir(out, outLen);
 		wchar_t probe[MAX_PATH];
@@ -90,10 +97,16 @@ namespace
 			{
 				probe[len - 1] = L'\\';                // restore trailing sep
 				wcscpy_s(out, outLen, probe);
-				return;
+				return true;
 			}
 			*(leaf + 1) = L'\0';                       // ascend one level
 		}
+		return false;
+	}
+
+	void PluginsRoot(wchar_t* out, size_t outLen)
+	{
+		if (PluginsRootQuiet(out, outLen)) { return; }
 		// Fallback: DllDir itself. Logged once - every resolver states its
 		// resolved value, and this one failing silently would blind every
 		// third-party gate.
@@ -106,6 +119,31 @@ namespace
 				"2 levels of the DLL; falling back to the DLL's own folder. "
 				"Third-party dependency detection may be blind.");
 		}
+	}
+
+	// v4.4.0 ROOT CLEANUP: names a file inside 010-SC4UIScale\, resolved
+	// WITHOUT logging so the very first callers (the ini, and the log
+	// itself) can use it before Logger::Init. Every loose file this mod
+	// used to drop beside the DLL now goes through here; the DLL alone
+	// stays at the Plugins root, because the game's DLL loader is
+	// top-level only - measured, see OurPackagesDir below.
+	void OurFilePath(const wchar_t* name, wchar_t* out, size_t outLen)
+	{
+		if (!out || outLen == 0) { return; }
+		out[0] = L'\0';
+		wchar_t root[MAX_PATH] = {};
+		PluginsRootQuiet(root, MAX_PATH);
+		const wchar_t* sub = L"010-SC4UIScale\\";
+		// LENGTH-CHECKED, not wcscat_s-and-hope: the secure-CRT concat
+		// ABORTS THE PROCESS on truncation, and this path is now one
+		// folder deeper than the beside-the-DLL one it replaces. On an
+		// over-long path we hand back an EMPTY string - every consumer
+		// here degrades to its default on a path it cannot open, which
+		// is a setting lost, not a game killed.
+		if (wcslen(root) + wcslen(sub) + wcslen(name) + 1 > outLen) { return; }
+		wcscpy_s(out, outLen, root);
+		wcscat_s(out, outLen, sub);
+		wcscat_s(out, outLen, name);
 	}
 
 	// v4.2.0: where OUR packages and fonts live. MEASURED on the move's
@@ -2154,6 +2192,100 @@ namespace ScaleTier
 	{
 		PluginsRoot(out, outLen);
 	}
+
+	void GetOurFilePathW(const wchar_t* name, wchar_t* out, size_t outLen)
+	{
+		OurFilePath(name, out, outLen);
+	}
+
+	void GetOurFilePathA(const char* name, char* out, size_t outLen)
+	{
+		wchar_t wname[MAX_PATH] = {};
+		MultiByteToWideChar(CP_ACP, 0, name, -1, wname, MAX_PATH);
+		wchar_t wpath[MAX_PATH] = {};
+		OurFilePath(wname, wpath, MAX_PATH);
+		WideCharToMultiByte(CP_ACP, 0, wpath, -1, out,
+			static_cast<int>(outLen), nullptr, nullptr);
+	}
+
+	// ============ v4.4.0 ROOT CLEANUP: LOOSE-FILE MIGRATION ===============
+	// Through v4.3.1 this mod dropped FIVE loose files beside the DLL at the
+	// Plugins ROOT (ini, log, gcap, the #104 csv, plus whatever the user's
+	// own backups added). Every other DLL mod on a typical install leaves
+	// two or three there, so ours was the untidiest thing in the folder -
+	// and an sc4pac uninstall cannot reach loose root files it did not
+	// install by name. From v4.4.0 the DLL is the ONLY thing we put at the
+	// root (the loader is top-level only, so it has no choice); everything
+	// else lives in 010-SC4UIScale/ and disappears with the folder.
+	//
+	// RUNS BEFORE Settings::Load AND BEFORE Logger::Init - it has to, or the
+	// first read would miss a migrated ini and silently fall back to
+	// defaults, which is the exact silent-partial-state class of bug this
+	// project keeps paying for. It therefore cannot log; the director prints
+	// the outcome as soon as the logger exists.
+	//
+	// The log is DELETED rather than moved: it is recreated with mode "w" on
+	// every boot, so moving it would preserve one stale session and then
+	// immediately overwrite it. The #104 csv is MOVED because SpinProbe
+	// appends to it and it is never recreated - losing it loses the rate
+	// history the probe exists to build.
+	static int s_migrated = 0;
+	static char s_migratedNames[128] = {};
+
+	int MigrateRootLooseFiles()
+	{
+		wchar_t root[MAX_PATH] = {};
+		PluginsRootQuiet(root, MAX_PATH);
+		wchar_t dir[MAX_PATH] = {};
+		swprintf_s(dir, L"%s010-SC4UIScale", root);
+		CreateDirectoryW(dir, nullptr);   // harmless if it already exists
+
+		struct Item { const wchar_t* name; const char* tag; bool keep; };
+		const Item items[] = {
+			{ L"SC4UIScale.ini",     "ini",  true  },
+			{ L"SC4UIScale-104.csv", "csv",  true  },
+			{ L"SC4UIScale.gcap",    "gcap", true  },
+			{ L"SC4UIScale.log",     "log",  false },
+		};
+		for (const Item& it : items)
+		{
+			wchar_t src[MAX_PATH] = {};
+			swprintf_s(src, L"%s%s", root, it.name);
+			if (!FileExists(src)) { continue; }
+			wchar_t dst[MAX_PATH] = {};
+			OurFilePath(it.name, dst, MAX_PATH);
+			bool done = false;
+			if (!it.keep)
+			{
+				done = DeleteFileW(src) != 0;
+			}
+			else if (FileExists(dst))
+			{
+				// Already migrated on a previous boot and the root copy came
+				// back (a re-run of an old installer). The in-folder copy is
+				// the live one by construction - nothing has read either yet.
+				done = DeleteFileW(src) != 0;
+			}
+			else
+			{
+				done = MoveFileExW(src, dst, MOVEFILE_COPY_ALLOWED) != 0;
+			}
+			if (!done) { continue; }
+			s_migrated++;
+			if (strlen(s_migratedNames) + strlen(it.tag) + 2 < sizeof(s_migratedNames))
+			{
+				strcat_s(s_migratedNames, it.tag);
+				strcat_s(s_migratedNames, " ");
+			}
+		}
+		return s_migrated;
+	}
+
+	const char* MigratedRootFileNames()
+	{
+		return s_migratedNames;
+	}
+
 
 	// THE fit predicate. Extracted from Decide 2026-08-19 so the in-game
 	// selector can ask the same question the boot path asks, rather than
