@@ -324,6 +324,13 @@ $total = (Get-ChildItem $plugOut -Recurse -File | Measure-Object -Property Lengt
 
 Write-Output ""
 Write-Output "  copied      : $copied file(s)"
+# ---- v4.5.0: NORMALISE TO THE PAYLOAD LAYOUT ------------------------------
+# The SAME converter the deploy script calls, for the same reason: this file
+# regex-parses Deploy for most of the bundle but hand-writes three blocks it
+# cannot parse, so editing copy lines on either side alone ships a mixture.
+# Neither side edits them; both convert at the end.
+& (Join-Path $proj "_tests\Convert-ToPayloadLayout.ps1") -Tree $plugOut
+
 # ---- LAYOUT MIXTURE TRIPWIRE (v4.5.0) ---------------------------------------
 # The bundle must carry ONE arming layout, never both. This is a no-op under
 # the rename scheme and under the payload scheme; it fires only on a MIXTURE,

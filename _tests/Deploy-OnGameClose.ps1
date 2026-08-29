@@ -726,6 +726,20 @@ if ($armedTierNow -and $armedTierNow -ne "2x" -and (Test-Path $selArtStable)) {
     }
 }
 
+# ---- v4.5.0: NORMALISE TO THE PAYLOAD LAYOUT ------------------------------
+# Everything above still writes the tier-tagged rename layout, unchanged - and
+# that is deliberate. _packaging\Build-Dist.ps1 derives the bundle by REGEX-
+# PARSING the Copy-Item lines above, and 30 of them are invisible to that regex
+# (named-parameter form, expression-built paths, Join-Path), compensated by
+# hardcoded blocks inside Build-Dist. Editing the copy lines here would make
+# the parsed ones emit payloads while those hardcoded blocks still emitted
+# tier-tagged live dats - two live providers for every TGI they own, with the
+# file count identical either way so nothing would go red.
+#
+# So neither side edits its copies. BOTH call the same converter last, and it
+# converts whatever it finds. Two callers, one conversion, nothing to drift.
+& (Join-Path $PSScriptRoot "Convert-ToPayloadLayout.ps1") -Tree $plug
+
 $a = (Get-Item "$proj\build\Release\SC4UIScale.dll").Length
 $b = (Get-Item "$plug\SC4UIScale.dll").Length
 if ($a -ne $b) { Write-Output "DEPLOY SIZE MISMATCH src=$a dst=$b"; exit 1 }
