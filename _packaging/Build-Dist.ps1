@@ -334,7 +334,15 @@ Write-Output "  copied      : $copied file(s)"
 # regex-parses Deploy for most of the bundle but hand-writes three blocks it
 # cannot parse, so editing copy lines on either side alone ships a mixture.
 # Neither side edits them; both convert at the end.
-& (Join-Path $proj "_tests\Convert-ToPayloadLayout.ps1") -Tree $plugOut
+# -Tier is EXPLICIT, not left to the converter's fallback. The bundle no
+# longer ships an ini, so there is no ScaleFactor for it to read, and an
+# unstated default is the kind of thing that is discovered a release later.
+# 2x is chosen because it is the common case; it only decides which bytes
+# the live files hold BEFORE the first launch. The DLL re-arms from the
+# player's actual resolution on that launch, so a 3x user is never served
+# 2x art - they are served it for the part of boot that precedes our own
+# arming pass, which is the same window the rename layout had.
+& (Join-Path $proj "_tests\Convert-ToPayloadLayout.ps1") -Tree $plugOut -Tier "2x"
 
 # ---- LAYOUT MIXTURE TRIPWIRE (v4.5.0) ---------------------------------------
 # The bundle must carry ONE arming layout, never both. This is a no-op under
