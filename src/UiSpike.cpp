@@ -9094,7 +9094,7 @@ namespace
 	// one line per id per city via MDockShouldLog (ids XORed so a god-path
 	// entry cannot silence its mayor-path twin).
 	int gMDockAlarm = 1;
-	// #197: apply the god-path marker delta (see the correction site). Default
+	// #198: derive the god dock from the live marker (see the dock site). Default
 	// ON. It is an identity on a stock install - the kill switch exists so a
 	// user who hits a bad interaction can get the old behaviour back in one
 	// ini line rather than waiting for a build.
@@ -13863,7 +13863,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// Diagnostic ONLY; it never moves a window. Default 1.
 			GetPrivateProfileStringA("Flyout", "MarkerAlarm", "", b, sizeof(b), kIni);
 			if (b[0]) gMDockAlarm = atoi(b);
-			// #197: GodMarkerFix - correct the god dock when a mod moved the
+			// #198: GodMarkerFix - derive the god dock when a mod moved the
 			// script's 0x0000AAAA marker. Identity on stock; default 1.
 			GetPrivateProfileStringA("Flyout", "GodMarkerFix", "", b, sizeof(b), kIni);
 			if (b[0]) gGodMarkerFix = atoi(b);
@@ -15842,82 +15842,80 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			}
 			int32_t targetL = tbLiveL + ScaleRound(d.offX, f);
 			int32_t targetT = tbLiveT + ScaleRound(offY, f);
-			// #197 MARKER-DELTA CORRECTION (2026-08-25, user-reported: the god
-			// day/night ring sat low at BOTH 1.5x AND 2x).
+			// #198 DERIVE THE GOD DOCK FROM THE LIVE MARKER (2026-08-25).
+			// User-reported: the god day/night ring sat low at BOTH 1.5x AND 2x.
+			// A defect alive at an INTEGER factor cannot be offset-parity or any
+			// snap/rounding artefact - those are no-ops at 2x by construction - so
+			// what remains is a stock-derived CONSTANT scaled by f and applied to
+			// geometry that is no longer stock: error 32*f, i.e. 48 px at 1.5x, 64
+			// at 2x, 96 at 3x, invisible only at 1x where nothing of ours runs.
 			//
-			// The constants above encode where the STOCK script puts its
-			// 0x0000AAAA alignment marker. A reskin may move that marker, and
-			// then the constant no longer describes the script - which the
-			// MDRIFT alarm below has always said in words while changing
-			// nothing. MEASURED for the Scoty Carbon Skin: in the day/night
-			// script {96a006b0,aa356502} the marker moves (4,90,78,148) ->
-			// (4,122,78,180): a pure +32 design-px translation, same size. Our
-			// dock therefore seated the whole flyout 32*f too LOW - 48 px at
-			// 1.5x, 64 at 2x, 96 at 3x. That signature is why the user saw it
-			// at 1.5x AND 2x: it is proportional, not a rounding artefact, so
-			// every parity/snap explanation is excluded by construction.
+			// *** THE CONSTANTS ABOVE **ARE** THE ALIGNMENT-MARKER RULE, precomputed
+			// on stock. Reproduced 3/3 from raw bytes (god toolbar {0,96A006B0,
+			// 69E3D347}, buttons at local l=10, t=10/70/130/190/250, BYTE-IDENTICAL
+			// in stock and carbon):
+			//     terraform  (10, 10) - marker (4,90) = ( 6, -80) == table row 1
+			//     terrain-fx (10, 70) - marker (4,30) = ( 6,  40) == kTerrfxOffY
+			//     day/night  (10,250) - marker (4,90) = ( 6, 160) == kDayNightOffY
+			// So deriving the offset live is not a "false equivalence" with the
+			// mayor path (the old comment below) - it is the SAME rule, recomputed
+			// from the script that is actually loaded instead of the one loaded in
+			// 2003. That comment's arithmetic objection was a slip: the markers
+			// differ by 60 and the constants by 120, but the BUTTONS differ by 180,
+			// and 180 - 60 = 120 exactly. REGRESSION.md already recorded this rule
+			// reproducing all three locked god docks to the pixel.
 			//
-			// THE CORRECTION IS AN IDENTITY ON STOCK. It compares the LIVE
-			// marker against the stock marker scaled the same way; on an
-			// unmodded install both sides are the same number and the delta is
-			// exactly 0, so the LOCKED v2.7.25 stock docks cannot move.
+			// MEASURED under the Scoty Carbon Skin - TWO broken constants, not one:
+			//   script            stock mk.t  live mk.t  table  derived  error@1.5x
+			//   e9923283 terrafm      90          0       -80     +10    135 HIGH
+			//   aaa44448 terrfx       30         30        40      40      0 (ctrl)
+			//   aa356502 day/night    90        122       160     128     48 LOW
+			// Correcting only day/night would have left the LARGER defect standing
+			// on the same code path, from the same root cause.
 			//
-			// Terrain-fx rides the same window through a different script
-			// ({..,aaa44448}, marker (4,30) in BOTH stock and carbon), so its
-			// delta is 0 and it is deliberately left alone - the measurement
-			// says carbon did not touch it.
+			// IDENTITY ON STOCK BY CONSTRUCTION: with an unmodded script the live
+			// marker IS the stock marker, so the derived offset equals the table
+			// value exactly and the LOCKED v2.7.25 docks cannot move. The table
+			// remains the fallback whenever the marker is missing.
 			if (gGodMarkerFix)
 			{
-				int32_t stockMarkerT = -1;
-				if (d.id == 0xCA35CBED)
+				// Design-unit button positions inside the god toolbar. Same source
+				// as the derivation above; carbon does not touch that script.
+				int32_t btnL = -1, btnT = -1;
+				if (d.id == 0x49923239)      { btnL = 10; btnT = 10; }
+				else if (d.id == 0xCA35CBED) { btnL = 10; btnT = dayNightActive ? 250 : 70; }
+				cIGZWin* mk = (btnT >= 0) ? win->GetChildWindowFromID(0x0000AAAA)
+				                          : nullptr;
+				if (mk != nullptr)
 				{
-					stockMarkerT = dayNightActive ? 90 : 30;
-				}
-				// TERRAFORM (0x49923239) is REPORTED, NOT CORRECTED - on
-				// purpose. Its script {96a006b0,e9923283} also moves its
-				// marker under carbon (4,90 -> 4,0), but carbon moves that
-				// script's ROOT down by the same 90 (225 -> 315), so the two
-				// cancel in carbon's own layout - and a SECOND stock script
-				// (09923283, the mayor landscape flyout) declares the same
-				// window id with a different marker (3,27), which no offline
-				// measurement here can disambiguate at runtime. This dock is
-				// LOCKED and user-verified; it does not move on a measurement
-				// I cannot yet pin. The line below is what tells us whether it
-				// needs the same cure, from one launch.
-				if (d.id == 0x49923239)
-				{
-					cIGZWin* tmk = win->GetChildWindowFromID(0x0000AAAA);
-					if (tmk != nullptr && MDockShouldLog(d.id ^ 0x20000000u))
+					// The marker may hold DESIGN units (our subtree scale does not
+					// reach an invisible child on some flyouts) or SCREEN units.
+					// MarkerIsDesignUnits is the same normaliser the mayor path
+					// uses; getting it wrong is a factor-sized error, not a nudge.
+					const bool design = MarkerIsDesignUnits(mk, f);
+					const float inv = (f > 0.01f) ? (1.0f / f) : 1.0f;
+					const int32_t mkL = design ? mk->GetL() : ScaleRound(mk->GetL(), inv);
+					const int32_t mkT = design ? mk->GetT() : ScaleRound(mk->GetT(), inv);
+					const int32_t derivedX = btnL - mkL;
+					const int32_t derivedY = btnT - mkT;
+					const int32_t dx = derivedX - d.offX;
+					const int32_t dy = derivedY - offY;
+					if (dx != 0 || dy != 0)
 					{
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: MFIX-DIAG 0x49923239 terraform marker "
-							"live t=%d; stock e9923283=%d (x%.2f=%d), stock "
-							"09923283=%d (x%.2f=%d). NOT corrected - report "
-							"whether the terraform ring seats on its button.",
-							tmk->GetT(), 90, f, ScaleRound(90, f),
-							27, f, ScaleRound(27, f));
-					}
-				}
-				cIGZWin* mk = win->GetChildWindowFromID(0x0000AAAA);
-				if (stockMarkerT >= 0 && mk != nullptr)
-				{
-					const int32_t stockLiveT = ScaleRound(stockMarkerT, f);
-					const int32_t deltaLive = mk->GetT() - stockLiveT;
-					// >2 px: below that it is rounding, not a moved marker.
-					if (deltaLive > 2 || deltaLive < -2)
-					{
-						targetT -= deltaLive;
+						targetL = tbLiveL + ScaleRound(derivedX, f);
+						targetT = tbLiveT + ScaleRound(derivedY, f);
 						if (MDockShouldLog(d.id ^ 0x40000000u))
 						{
 							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: MFIX 0x%08X %ls marker live t=%d vs "
-								"stock t=%d (x%.2f = %d) -> dock corrected by "
-								"%+d px. A mod moved this script's alignment "
-								"marker; the toolbar constant alone would seat "
-								"the flyout that far off.",
-								d.id, dayNightActive ? L"day/night" : L"terrain-fx",
-								mk->GetT(), stockMarkerT, f, stockLiveT,
-								-deltaLive);
+								"UiSpike: MFIX 0x%08X %ls marker %ls(%d,%d) -> derived "
+								"offset (%d,%d) vs table (%d,%d); dock moved (%+d,%+d) "
+								"design px (x%.2f). A mod moved this script's alignment "
+								"marker, so the toolbar constant no longer describes it.",
+								d.id,
+								(d.id == 0x49923239) ? L"terraform"
+									: (dayNightActive ? L"day/night" : L"terrain-fx"),
+								design ? L"design" : L"screen", mkL, mkT,
+								derivedX, derivedY, d.offX, offY, dx, dy, f);
 						}
 					}
 				}
