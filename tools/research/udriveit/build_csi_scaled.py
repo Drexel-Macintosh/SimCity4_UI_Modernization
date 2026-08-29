@@ -111,7 +111,10 @@ def main():
         out = Image.new("RGBA", (nw, nh), (0, 0, 0, 0))
         for s in range(STATES):
             box = im.crop((s * cell, 0, (s + 1) * cell, h))
-            out.paste(box.resize((ncell, nh), Image.LANCZOS), (s * ncell, 0))
+            # #200: NEAREST - see the note in build_carbon_icons.py. These are
+            # hard-edged UI glyphs, and cell-first sizing already makes the
+            # divide exact, so nothing here needs an averaging filter.
+            out.paste(box.resize((ncell, nh), Image.NEAREST), (s * ncell, 0))
         name = "T-0x%08X_G-0x%08X_I-0x%08X.png" % (PNG_T, g, i)
         out.save(os.path.join(stage, name), "PNG")
         made += 1

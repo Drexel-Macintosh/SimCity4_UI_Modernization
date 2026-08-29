@@ -17021,3 +17021,29 @@ not a leftover. LAW: A GLOBAL DEFAULT BOUGHT FOR A MINORITY'S PROBLEM IS A
 DEFECT FOR THE MAJORITY. When a cure has a cost, scope it to the population
 that has the disease - and DERIVE that population, because the list that
 looks like it already names them probably does not.
+
+**#200 ADDENDUM — THE BUILDERS THAT NEVER USED THE RESAMPLER AT ALL.** The
+user asked the right question: "did you also fix all of the other art or just
+carbon?" Sweeping for art that never passes through Upscale2x found FIVE
+shipping builders resampling with PIL LANCZOS directly - build_csi_scaled.py
+(the U-Drive-It balloons), build_uncovered_icons.py, rebuild_namicons.py,
+rebuild_webbutton.py, and build_carbon_icons.py (mine, copied from the CSI
+one, so I propagated it). LANCZOS is a smoothing filter, so these were soft at
+EVERY tier - 2x and 3x included, where the entire corpus beside them is
+pixel-exact. Two of them are only gate-dark today because NAM and the web
+button mod are not installed; they would have surfaced the day either was.
+All five now use NEAREST.
+
+VERIFIED WITH ITS CONTROL, because the raw number looks bad without one: the
+rebuilt 1.5x icon packages still measure ~0.09 ramps/strong-edge, and that is
+CORRECT - the 1x SOURCE art measures 0.2413 (these balloons are anti-aliased
+by the artist) and the 3x nearest control measures 0.1673. Our 1.5x output now
+sits BELOW both, so the residual is inherited artwork softness diluted by
+scaling, not softness we introduce. A ramp count means nothing without the
+source's own count beside it.
+
+LAW: A PIPELINE-WIDE RESAMPLER POLICY IS ONLY AS GOOD AS ITS COVERAGE. The
+corpus builder had the discipline; five side-doors did not, and they were
+invisible to every measurement aimed at the corpus. When fixing a resampler,
+grep for every OTHER resample call in the tree - the ones that never used the
+shared path are exactly the ones no gate is watching.

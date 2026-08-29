@@ -9,7 +9,7 @@ Skin is installed (see CARBON-COMPAT.md):
 - 8 CSI balloon icons {856DDBAC, 46A006B0} from Carbon, duplicated into BOTH
   twin groups (46A006B0 + 1ABE787D) because the drawer resolves the 1ABE787D
   twin and Carbon ships none of them (verified 0 of 8) - the exact scoping
-  error that cost a day in #188. Cell-first LANCZOS per law 89/#171,
+  error that cost a day in #188. Cell-first NEAREST per law 89/#171 and #200,
   identical to build_csi_scaled.py.
 - ItemIcons strip {856DDBAC, 6A386D26, 00001111} and the Missing Thumb
   {856DDBAC, 6A386D26, 144161EC} from Carbon, scaled with Upscale2x.exe
@@ -93,7 +93,7 @@ def main():
     stage = tempfile.mkdtemp(prefix="zcarb_")
     made = 0
 
-    # --- CSI family: carbon blob -> both twin groups, cell-first LANCZOS ---
+    # --- CSI family: carbon blob -> both twin groups, cell-first NEAREST ---
     for inst, name in sorted(CSI_ICONS.items()):
         blob = plain(PNG_T, 0x46A006B0, inst)
         im = Image.open(_io.BytesIO(blob)).convert("RGBA")
@@ -106,7 +106,10 @@ def main():
         out = Image.new("RGBA", (nw, nh), (0, 0, 0, 0))
         for s in range(STATES):
             box = im.crop((s * cell, 0, (s + 1) * cell, h))
-            out.paste(box.resize((ncell, nh), Image.LANCZOS), (s * ncell, 0))
+            # #200: NEAREST. LANCZOS softened these at every tier while the
+            # corpus beside them is pixel-exact at 2x/3x; cell-first sizing
+            # makes the divide exact so no averaging is needed for evenness.
+            out.paste(box.resize((ncell, nh), Image.NEAREST), (s * ncell, 0))
         for g in CSI_GROUPS:
             out.save(os.path.join(
                 stage, "T-0x%08X_G-0x%08X_I-0x%08X.png" % (PNG_T, g, inst)), "PNG")

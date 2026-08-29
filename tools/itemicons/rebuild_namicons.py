@@ -53,7 +53,12 @@ def main():
             if w % 4 == 0:
                 continue
             tw = 4 * round(w / 4)
-            Image.open(p).convert("RGBA").resize((tw, h), Image.LANCZOS).save(p)
+            # #200: NEAREST, not LANCZOS. This builder bypasses Upscale2x, so it never
+            # got the resampler discipline the corpus has: LANCZOS is a smoothing
+            # filter and softens at EVERY factor, including 2x/3x where the rest of
+            # the UI is pixel-exact. Measured corpus-wide, an averaging resample
+            # costs ~1 hard edge in 3 at 1.5x; here it cost them at all tiers.
+            Image.open(p).convert("RGBA").resize((tw, h), Image.NEAREST).save(p)
             snapped += 1
 
         c = Counter()

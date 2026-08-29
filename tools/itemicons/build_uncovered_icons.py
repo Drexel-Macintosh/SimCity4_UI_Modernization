@@ -579,7 +579,8 @@ def main():
             if w % 4 == 0:
                 continue
             tw = 4 * round(w / 4)
-            Image.open(p).convert("RGBA").resize((tw, h), Image.LANCZOS).save(p)
+            # #200: NEAREST - a width snap must not soften the whole sheet.
+            Image.open(p).convert("RGBA").resize((tw, h), Image.NEAREST).save(p)
             snapped += 1
 
         # RE-REGISTER AT THIS TIER'S RESOLUTION, then assert on the result -
