@@ -16860,7 +16860,7 @@ DLL warns when a reskin is installed with no carbon packages present at all
 — the public-bundle case, which no gate could ever have caught because the
 packages simply do not exist to be checked.
 
-## 2026-08-25 (#198) — THE GOD DAY/NIGHT DOCK: a constant that described a script nobody loads any more  [CONFIRMED ON SCREEN 2026-08-25 — user: "day night is working now"]
+## 2026-08-25 (#198) — THE GOD DAY/NIGHT DOCK: a constant that described a script nobody loads any more  [CLOSED — CONFIRMED ON SCREEN 2026-08-25: day/night "working now" AND terraform "good now too" (user). BOTH docks verified by eye, not just by log.]
 
 USER-REPORTED at 1.5x AND 2x (and expected at 3x). That tier signature is the
 whole diagnosis: a defect present at an INTEGER factor cannot be

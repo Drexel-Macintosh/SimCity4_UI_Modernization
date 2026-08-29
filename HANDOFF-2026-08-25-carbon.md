@@ -17,8 +17,8 @@ resume point. Everything below is committed and pushed (`23d4daa`).
   takeovers), `verify_carbon_uninstall.py` **GREEN**.
 - DLL is `4.3.0-dev`, built and deployed with the #197 cure.
 
-## STATUS 2026-08-25 late: day/night CONFIRMED FIXED on screen (user).
-## Terraform fix (#198) is DEPLOYED but not yet eyes-on.
+## STATUS: #198 CLOSED - day/night AND terraform both CONFIRMED FIXED on
+## screen by the user. The live-marker derivation is verified end to end.
 ## NEW open defect: scrolling the god DISASTER flyout breaks its buttons
 ## (investigation wf_77ea9591-219 running/parked).
 
