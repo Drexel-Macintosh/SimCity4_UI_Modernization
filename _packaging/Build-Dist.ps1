@@ -196,8 +196,13 @@ if ($copied -lt 40) {
 # v4.4.0 ROOT CLEANUP: it goes in 010-SC4UIScale/ with the rest of our
 # loose files. The DLL resolves it there and migrates any pre-4.4.0 root
 # copy on first boot, so an upgrading user keeps their settings.
-Copy-Item (Join-Path $proj "_packaging\SC4UIScale.ini") (Join-Path $ourOut "SC4UIScale.ini") -Force
-$copied++
+# v4.5.0: WE SHIP NO INI. Measured against sc4pac 0.10.0: in the package
+# folder it is destroyed by every package UPDATE (the versioned folder is
+# deleted wholesale), and shipping it with isIni:true lands it at the root
+# RENAMED to _sc4pacnew.ini, never activated, and deleted on uninstall even
+# after the user edits it. The DLL creates SC4UIScale.ini at the Plugins
+# root on first run instead, which is the only copy that survives both.
+# _packaging/SC4UIScale.ini is kept as the DEFAULTS reference, not shipped.
 
 # --- an EMPTY z_SC4UIScale_FontStyle.ini placeholder, so a package manager --
 # --- can own something, WITHOUT ever shipping a live-named FontStyle.ini ---

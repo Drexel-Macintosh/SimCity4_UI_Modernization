@@ -149,6 +149,37 @@ namespace
 	void ResolveOurDirs();
 	const wchar_t* EarlyDirPtr();
 
+	// v4.5.0: THE INI GOES BACK TO THE PLUGINS ROOT, and only the ini.
+	//
+	// v4.4.0 moved it into our folder for tidiness. MEASURED against sc4pac
+	// 0.10.0 by installing a throwaway channel: that is wrong under a package
+	// manager, in two different ways.
+	//   * In the package folder it is DESTROYED BY EVERY UPDATE. An update
+	//     deletes <group>.<name>.<oldver>.sc4pac wholesale and creates a new
+	//     versioned folder - measured, v1.0.0 -> v2.0.0 - so the player's tier
+	//     choice would not survive a single package bump.
+	//   * Shipping it with `isIni: true` is worse, not better: it lands at the
+	//     root RENAMED to <stem>_sc4pacnew.ini, is never activated, and is
+	//     deleted on uninstall even after the user has edited it.
+	// The root copy is the only one that survives both. Measured control: an
+	// activated root ini came through a v1->v2 update byte-identical while the
+	// versioned folder was wiped.
+	//
+	// So we ship NO ini at all; the DLL creates this one on first run. It is
+	// the second file at the root after the DLL - which is still fewer than
+	// the two or three every other DLL mod leaves there.
+	void OurIniPath(wchar_t* out, size_t outLen)
+	{
+		if (!out || outLen == 0) { return; }
+		out[0] = 0;
+		wchar_t root[MAX_PATH] = {};
+		PluginsRootQuiet(root, MAX_PATH);
+		const wchar_t* name = L"SC4UIScale.ini";
+		if (wcslen(root) + wcslen(name) + 1 > outLen) { return; }
+		wcscpy_s(out, outLen, root);
+		wcscat_s(out, outLen, name);
+	}
+
 	void OurFilePath(const wchar_t* name, wchar_t* out, size_t outLen)
 	{
 		if (!out || outLen == 0) { return; }
@@ -2755,6 +2786,14 @@ namespace ScaleTier
 
 	void GetOurFilePathW(const wchar_t* name, wchar_t* out, size_t outLen)
 	{
+		// The ini is the one file that does NOT live in our folder - route it
+		// even if a caller asks for it by name, so there is exactly one answer
+		// to "where is the ini" no matter which door you come in by.
+		if (_wcsicmp(name, L"SC4UIScale.ini") == 0)
+		{
+			OurIniPath(out, outLen);
+			return;
+		}
 		OurFilePath(name, out, outLen);
 	}
 
@@ -2801,8 +2840,32 @@ namespace ScaleTier
 		CreateDirectoryW(dir, nullptr);   // harmless if it already exists
 
 		struct Item { const wchar_t* name; const char* tag; bool keep; };
+		// v4.5.0 REVERSES v4.4.0 FOR THE INI ALONE. A 4.4.0 install has it in
+		// our folder; it has to come back to the root, because a package
+		// manager deletes that folder wholesale on every update and would take
+		// the tier choice with it. Carried, not recreated - the whole reason to
+		// move it is that it holds settings somebody chose.
+		{
+			wchar_t folderIni[MAX_PATH] = {}, rootIni[MAX_PATH] = {};
+			OurFilePath(L"SC4UIScale.ini", folderIni, MAX_PATH);
+			OurIniPath(rootIni, MAX_PATH);
+			if (folderIni[0] && rootIni[0] && FileExists(folderIni))
+			{
+				// A root ini that already exists is the live one and wins; the
+				// folder copy is then a leftover, not a second opinion.
+				if (FileExists(rootIni)) { DeleteFileW(folderIni); }
+				else if (MoveFileExW(folderIni, rootIni, MOVEFILE_COPY_ALLOWED))
+				{
+					s_migrated++;
+					if (strlen(s_migratedNames) + 12 < sizeof(s_migratedNames))
+					{
+						strcat_s(s_migratedNames, "ini->root ");
+					}
+				}
+			}
+		}
+
 		const Item items[] = {
-			{ L"SC4UIScale.ini",     "ini",  true  },
 			{ L"SC4UIScale-104.csv", "csv",  true  },
 			{ L"SC4UIScale.gcap",    "gcap", true  },
 			{ L"SC4UIScale.log",     "log",  false },
