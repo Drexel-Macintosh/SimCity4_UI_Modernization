@@ -17,6 +17,11 @@ resume point. Everything below is committed and pushed (`23d4daa`).
   takeovers), `verify_carbon_uninstall.py` **GREEN**.
 - DLL is `4.3.0-dev`, built and deployed with the #197 cure.
 
+## STATUS 2026-08-25 late: day/night CONFIRMED FIXED on screen (user).
+## Terraform fix (#198) is DEPLOYED but not yet eyes-on.
+## NEW open defect: scrolling the god DISASTER flyout breaks its buttons
+## (investigation wf_77ea9591-219 running/parked).
+
 ## THE ONE THING TO DO FIRST (needs a launch)
 
 Launch at 1.5x, enter a city, open **god mode**:

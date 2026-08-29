@@ -16860,7 +16860,7 @@ DLL warns when a reskin is installed with no carbon packages present at all
 — the public-bundle case, which no gate could ever have caught because the
 packages simply do not exist to be checked.
 
-## 2026-08-25 (#197) — THE GOD DAY/NIGHT DOCK: a constant that described a script nobody loads any more
+## 2026-08-25 (#198) — THE GOD DAY/NIGHT DOCK: a constant that described a script nobody loads any more  [CONFIRMED ON SCREEN 2026-08-25 — user: "day night is working now"]
 
 USER-REPORTED at 1.5x AND 2x (and expected at 3x). That tier signature is the
 whole diagnosis: a defect present at an INTEGER factor cannot be
@@ -16906,3 +16906,17 @@ trusting a report:
    marker (3,27), which offline measurement cannot disambiguate at runtime.
    So terraform is INSTRUMENTED (MFIX-DIAG), not corrected: a locked,
    user-verified dock does not move on a number I cannot pin.
+
+**#198 FOLLOW-THROUGH (same day).** The first cut corrected only day/night by
+a live-vs-stock marker DELTA. An adversarial referee re-measured and showed
+that fixed the SMALLER of two defects: terraform was 135 px off at 1.5x
+(2.8x worse) on the same code path, from the same root cause. It also
+dissolved the reason given for hedging - the code already tells the god
+terraform script apart from the mayor Landscape script by SIZE
+(250x582 vs 250x498, UiSpike.cpp:5716-5718), and the marker element carries
+`caption="<buttonId>"` naming the button it aligns to. Final form derives
+BOTH offsets live from the marker; `_tests\Test-GodDockRule.py` re-derives
+all three locked constants from the corpus (3/3 PASS) so the identity-on-stock
+property is tested, not asserted. LAW: WHEN A CURE IS A DELTA AGAINST ONE
+STALE CONSTANT, CHECK EVERY OTHER CONSTANT ON THAT PATH FOR THE SAME
+STALENESS - they were all derived from the same vanished baseline.
