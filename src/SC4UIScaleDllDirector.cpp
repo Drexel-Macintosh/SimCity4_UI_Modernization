@@ -713,22 +713,6 @@ public:
 			{
 				ScaleTier::SegmentCensus();
 			}
-			// The deciding one: closes a child segment, asks who answers,
-			// and reopens it. Separate key so the census can run without
-			// anything being taken out of service.
-			if (GetPrivateProfileIntW(L"Probe", L"SegmentClose", 0, probeIni) > 0)
-			{
-				ScaleTier::SegmentFallThroughTest();
-			}
-			// v4.5.0 THE sc4pac CURE. Default OFF: with every tier present as
-			// a live .dat, the last-sorting one wins until this runs, and that
-			// window has not been proven empty. It has to be seen on screen
-			// before it replaces the rename.
-			if (GetPrivateProfileIntW(L"ScaleTier", L"LoadTimeExclusion", 0,
-					probeIni) > 0)
-			{
-				ScaleTier::ExcludeInactive();
-			}
 		}
 
 		// #149. FIRST thing in PostAppInit, deliberately: the dats are indexed

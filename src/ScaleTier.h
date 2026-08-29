@@ -49,27 +49,12 @@ namespace ScaleTier
 	// log paths resolve through it before the logger exists.
 	void LogOurDirs();
 
-	// v4.5.0 ([ScaleTier] LoadTimeExclusion, default 0). Takes the tiers we
-	// do NOT want, and any dependency-gated package whose mod is absent, out
-	// of service by CLOSING their DBPF segment - instead of renaming the
-	// files on disk. Renaming is the one thing that makes this mod
-	// impossible for a package manager to uninstall. Call at PostAppInit,
-	// after the tier decision. Returns how many were closed, or -1 if it
-	// could not run at all.
-	int ExcludeInactive();
-
 	// #201 PROBE (log-only, [Probe] SegmentCensus, default 0). Walks the
 	// registered DBPF segments and prints a path each. Exists to answer ONE
 	// question: whether a loaded dat can be dropped at runtime, which would
 	// let this mod stop renaming its own files to arm a tier. It never
 	// unregisters anything.
 	void SegmentCensus();
-
-	// #201 THE DECIDING PROBE ([Probe] SegmentClose, default 0). Closes ONE
-	// of our child dat segments, asks who answers for a key it owns, and
-	// REOPENS it on every path out. Answers whether load-time exclusion can
-	// replace renaming files on disk.
-	void SegmentFallThroughTest();
 
 
 	// The fit predicate ALONE, without the "is it installed" and
