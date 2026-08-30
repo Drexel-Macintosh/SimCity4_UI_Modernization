@@ -260,6 +260,18 @@ foreach ($d in $allPkgDirs) {
     $mine = if ($d.Name -like 'a-drexel.*') { 'OURS' } else { 'dependency' }
     Write-Output "    $rel  ($n files, $mine)"
 }
+
+# The override package's description points users at THIRD-PARTY-NOTICES.md
+# "installed in this package's folder" (v4.5.2 - before that, channel users
+# got an attribution pointer to a file sc4pac never installed). A description
+# that names a file is a promise; assert the file, not the mechanism.
+$mdHit = @(Get-ChildItem $plugins -Recurse -File -Filter 'THIRD-PARTY-NOTICES.md' |
+           Where-Object { $_.FullName -match '\.sc4pac' })
+if (-not $mdHit.Count) {
+    Fail 'THIRD-PARTY-NOTICES.md did not install - the override package description points at it (withChecksum entry missing or silently dropped)'
+} else {
+    Write-Output "  attribution: $($mdHit[0].FullName.Substring($plugins.Length).TrimStart('\'))"
+}
 if ($pkgDirs.Count -ne 2) { Fail "expected 2 packages of ours, found $($pkgDirs.Count) (of $($allPkgDirs.Count) total)" }
 
 # THE FLATTENING. sc4pac strips the longest common directory prefix, so our two
@@ -339,7 +351,8 @@ if ($KeepTree -or $LaunchReady) {
     } finally { Pop-Location }
 
     $left = @(Get-ChildItem $plugins -Recurse -File |
-              Where-Object { $_.Name -like 'SC4UIScale*' -or $_.Name -like 'z_SC4UIScale_*' -or $_.Extension -eq '.uipay' })
+              Where-Object { $_.Name -like 'SC4UIScale*' -or $_.Name -like 'z_SC4UIScale_*' -or $_.Extension -eq '.uipay' `
+                             -or $_.Name -eq 'THIRD-PARTY-NOTICES.md' })
     Write-Output "  files of ours left behind: $($left.Count)"
     foreach ($f in $left) { Write-Output "    $($f.FullName.Substring($plugins.Length).TrimStart('\'))" }
     if ($left.Count) { Fail "$($left.Count) file(s) survived the uninstall" }
