@@ -166,7 +166,19 @@ $zcarbonSrc = @(
     @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonGodMod-3x.dat";       n = "z_SC4UIScale_ZCarbonGodMod-3x.dat.x1-disabled" },
     @{ b = "tools/research/carbon/z_SC4UIScale_ZCarbonIcons.dat";      n = "z_SC4UIScale_ZCarbonIcons-2x.dat" },
     @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonIcons-15x.dat";      n = "z_SC4UIScale_ZCarbonIcons-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonIcons-3x.dat";        n = "z_SC4UIScale_ZCarbonIcons-3x.dat.x1-disabled" }
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonIcons-3x.dat";        n = "z_SC4UIScale_ZCarbonIcons-3x.dat.x1-disabled" },
+    # v4.5.8: Scoty's COMPOSED Carbon+Raise scripts - the layout neither
+    # RaiseUI nor ZCarbonArt can produce (his c973b411 root is 263 tall; the
+    # other three are 223 / 255 / 228). Built by selective-safe.
+    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonRaiseUI.dat";       n = "z_SC4UIScale_ZCarbonRaiseUI-2x.dat" },
+    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonRaiseUI-15x.dat";     n = "z_SC4UIScale_ZCarbonRaiseUI-15x.dat.x1-disabled" },
+    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonRaiseUI-3x.dat";       n = "z_SC4UIScale_ZCarbonRaiseUI-3x.dat.x1-disabled" },
+    # v4.5.9: the transparent sheet that stops OUR carbon gold pause border
+    # overriding the player's own remover - including Scoty's own, which ships
+    # inside the skin. Armed only when a remover is installed.
+    @{ b = "tools/itemicons/out/z_SC4UIScale_ZCarbonPauseOff-2x.dat";    n = "z_SC4UIScale_ZCarbonPauseOff-2x.dat" },
+    @{ b = "tools/itemicons/out/z_SC4UIScale_ZCarbonPauseOff-15x.dat";   n = "z_SC4UIScale_ZCarbonPauseOff-15x.dat.x1-disabled" },
+    @{ b = "tools/itemicons/out/z_SC4UIScale_ZCarbonPauseOff-3x.dat";    n = "z_SC4UIScale_ZCarbonPauseOff-3x.dat.x1-disabled" }
 )
 foreach ($zc in $zcarbonSrc) {
     $zsrc = Join-Path $proj $zc.b

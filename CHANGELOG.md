@@ -1,5 +1,23 @@
 # Changelog
 
+## 4.5.9 (2026-08-30) - two mods that only matter if you use the Carbon Skin
+
+Both changes in this release are invisible unless you have Scoty's Carbon Skin
+installed. If you do not, nothing about your game changes from 4.5.7.
+
+- **Carbon Skin + Raise the UI now work together.** Using both, the interface
+  was drawn with the wrong layout, because neither this mod's Carbon support
+  nor its Raise support describes the combination. Scoty already publishes a
+  combined file for exactly this pairing, and this mod now enlarges *that* -
+  so the combination gets the layout its author intended. Enabled
+  automatically when both are installed; nothing to configure.
+- **This mod no longer puts the yellow pause border back.** With the Carbon
+  Skin installed, this mod's enlarged copy of Scoty's gold pause border was
+  overriding any pause-remover you had chosen - including Scoty's own, which
+  ships inside the skin. The border is still enlarged for people who want it;
+  it now steps aside when you have installed something to remove it. Both
+  known removers are recognised.
+
 ## 4.5.7 (2026-08-30) - the cheat box, two new mods, and a log that was lying
 
 - **The Ctrl+X cheat box no longer clips what you type.** The box sizes itself

@@ -1,3 +1,33 @@
+2026-08-30  v4.5.9    CARBON COMBINATIONS: THE COMPOSED LAYOUT + THE PAUSE GATE
+                      (rolls up 4.5.8; both dormant without the Carbon Skin)
+
+  ZCarbonRaiseUI. RaiseUI lost both its scripts to WebButtonUI and ZCarbonArt
+  - zzz- order is ASCII, last wins. A RENAME IS IMPOSSIBLE: any name beating
+  ZCarbonArt must itself start "ZCarbon", and every other Z-name sorts after
+  ALL the ZCarbon packages. The real finding is that there are FOUR layouts,
+  not two - c973b411 root: stock 223 tall, warrior's raise 255, Carbon's own
+  228, Scoty's COMPOSED Carbon+Raise 263. No combination of our packages makes
+  the fourth. Scoty ships it as an optional z_scoty_Carbon_RaiseUI.dat which
+  this repo had been VENDORING without ever enrolling. New package built from
+  it through selective-safe; sorts after ZCarbonArt; gated on the composed file
+  alone, whose presence IS the conjunction. area= byte-identical to Scoty's
+  source; only imagerect and font changed.
+
+  ZCarbonPauseOff. ZCarbonArt's 240x240 gold pause border beat ANY remover,
+  because zzz- outranks every mod folder. MEASURED across all 25 Carbon dats:
+  {46A006B0,14315E61} is in exactly two - scoty_carbon_PNG.dat and SCOTY'S OWN
+  y_scoty_Carbon_Yellow-pause-remover.dat. We were defeating his remover with
+  his art. Cured ADDITIVELY (dropping the TGI would cost the players who want
+  the border its sharpness, and the art is correct for them): a fully
+  transparent sheet sorting after ZCarbonArt, armed on carbon present AND
+  PauseRemoverPresent(), which matches BOTH known removers by name - including
+  SMP's, whose real filename carries the author's "Puase" typo.
+
+  ⚠ The pause builder's own transparency assertion FAILED ON A CORRECT SHEET
+  in its first form: it indexed the decompressed PNG as flat RGBA and read
+  colour bytes as alpha, ignoring the per-row filter byte. A verification that
+  fails on correct input is a broken instrument, not a strict gate.
+
 2026-08-30  v4.5.7    CHEAT BOX + THREE NEW MODS + AN UNSCALED PACKAGE
                       (rolls up 4.5.4 / 4.5.5 / 4.5.6, built and deployed
                       locally but never published)
