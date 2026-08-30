@@ -858,6 +858,35 @@ namespace
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_WarriorUI",
 		  L"UI_Compact.dat", false, 8702,
 		  L"Mayor_Sign_Menu.dat", 5766 },
+		// warrior's "Raise the UI Mod" 1.0 (2026-08-30). SAME AUTHOR as the
+		// god-terraforming mod above, and a DIFFERENT failure from it.
+		//
+		// The mod ships NO ART AT ALL - just two .UI scripts, the in-city HUD
+		// {0,96A006B0,C973B411} and the region bar {0,96A006B0,AA920991} -
+		// which it rewrites to sit 32px higher (1x). By the load-order law its
+		// 150-mods\ copies beat our 010- ones, so the game runs the MOD's
+		// scripts against OUR 2x art sheets. Those scripts carry 1x
+		// `imagerect` source rects: measured, the mod asks for (0,0,235,222)
+		// out of a sheet that is actually 470x444. The game therefore reads
+		// THE TOP-LEFT QUARTER of every sheet and stretches it - which is the
+		// magenta (the colour key region) and the black (past the drawn
+		// content) the player photographed on the region screen and in the
+		// bottom-left of mayor mode.
+		//
+		// MEASURED against a clean pre-mod 2x capture: of the 27 panels it
+		// touches, 25 are a pure dy=-32 translation with size UNCHANGED (the
+		// raise itself, which our sweep doubles to -64 correctly) and exactly
+		// TWO also grow - 0x0987B48F 235x223->235x255 and 0x09EBE9EE
+		// 415x106->415x140. Those two are precisely the two the player
+		// reported broken.
+		//
+		// Our package carries THE MOD'S OWN scripts with ONLY `imagerect`
+		// scaled - selective-safe never touches `area=` for swept windows, so
+		// the raise AND the two grown panels survive byte-for-byte BY
+		// CONSTRUCTION rather than by care. EXACT NAME + SIZE: our copy
+		// hard-codes this mod's rects, so an update MUST disable us.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_RaiseUI",
+		  L"Raise the UI Mod.dat", false, 6958, nullptr, 0 },
 		// NAM ITEM ICONS (#139, 2026-08-05). The Network Addon Mod ships 381
 		// ItemIcon strips of its own at {856DDBAC,6A386D26,*} - the transport
 		// flyouts are almost entirely NAM's. With no 2x copy each strip is a
@@ -4355,6 +4384,9 @@ namespace ScaleTier
 			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_WarriorUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_WarriorUI", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_RaiseUI",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_RaiseUI", depOk));
 			// SUBFOLDER package (#139, 2026-08-05): 2x/1.5x/3x copies of NAM's
 			// OWN 381 ItemIcon strips. It MUST live in zzz-SC4UIScale\ and not
 			// the root ItemIcons dat: root Plugins FILES load before

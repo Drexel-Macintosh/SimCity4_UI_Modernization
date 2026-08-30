@@ -17646,3 +17646,95 @@ reading the old captures: the patched origin `(24,1544)` happens to equal the
 origin the buggy sweep used to move it to - the sweep had the POSITION right
 and the SIZE wrong, which is why the jump was the visible symptom and the clip
 was not.
+
+---
+
+## 2026-08-30 - "Raise the UI Mod": a mod that ships SCRIPTS ONLY, and what that does to us
+
+USER-CONFIRMED BROKEN, then USER-CONFIRMED FIXED, same afternoon. Two mods
+arrived within an hour of the v4.5.3 release; only one needed us.
+
+### What the player saw
+
+Magenta and black blocks on the region info panel, and the bottom-left
+mayor-mode cluster (minimap / date / city name) rendered as an overlapping
+mess. Screenshots on both. The raise itself worked.
+
+### The mechanism - NOT the one the symptoms suggest
+
+warrior's "Raise the UI Mod" 1.0 ships **no art at all**: two `.UI` scripts,
+the in-city HUD `{0,96A006B0,C973B411}` and the region bar
+`{0,96A006B0,AA920991}`. It sits in `150-mods\`, which sorts AFTER our
+`010-SC4UIScale\`, so **its scripts beat ours** - which is the load-order law
+working exactly as designed, not a bug.
+
+The damage is that the mod's scripts carry **1x `imagerect` source rectangles**,
+while every art sheet those scripts draw from is OURS at 2x (the mod ships none
+to override them with). Measured:
+
+```
+mod's script :  imagerect=(0,0,235,222)   (42,182,235,222)   (98,139,235,222)
+our sheet    :  470x444
+```
+
+The game therefore reads **the top-left quarter of every sheet** and stretches
+it to fill the window. Where that quarter lands on the colour key you get
+MAGENTA; where it runs past the drawn content you get BLACK. That is the
+screenshot, exactly.
+
+### How the mod actually raises the UI - worth writing down
+
+It is **not a translation**. It edits THREE nodes and moves only the BOTTOM
+edge: `+32`, `+33`, `+34` - three different, hand-authored values, with `l`,
+`t`, `r` byte-identical to stock everywhere. The containers are bottom-anchored,
+so growing the bottom edge pushes the whole contents UP. That is why the
+runtime log shows 25 panels at `dy = -32` while the script diff shows zero
+translations: **one script edit, one runtime translation, two views of the same
+thing.** Do not "simplify" those three numbers into a formula - they are
+authored, not derived.
+
+### The cure
+
+A new gated package `z_SC4UIScale_RaiseUI` carrying **the mod's own two
+scripts** with `imagerect` scaled and nothing else. It ships from
+`zzz-SC4UIScale\`, which out-sorts `150-mods\`, and is gated on
+`Raise the UI Mod.dat` at exactly 6958 bytes so a mod update disables us.
+
+**ZERO builder code changes were needed.** `build_selective_safe.py`'s
+third-party path is pure DIRECTORY DISCOVERY - a new subdirectory under
+`thirdparty-ui\<Name>\` becomes `z_SC4UIScale_<Name>.dat`, group taken from the
+filename and echoed back. The group hardcoding that would have forced code
+changes lives in `build_dialog_static.py`, the OTHER builder, which we did not
+need because these windows are runtime-SWEPT.
+
+**THE INVARIANT, and why the raise cannot be lost by accident:** selective-safe
+never touches `area=` for swept windows (the DLL scales them at runtime; the
+law is `feedback-sc4-reactive-sweep-flashes.md` - swept panels are deliberately
+born 1x). So the mod's raise and its three grown bottom edges survive BY
+CONSTRUCTION, not by care. Verified on the SHIPPED FILE, not the build: a
+token-level diff of the mod's script against ours shows exactly TWO attribute
+kinds differ - `imagerect` (doubled) and `font` (2x handles). No `area=`, no
+`id=`, no `image=`, and the mod's own NEW attributes (`winflag_enable=no`,
+`caption=""`, added to the three edited nodes) all survive.
+
+### The second mod: MEASURED NO-ACTION
+
+"SMP Yellow Pause Thingy Remover" ships one entry, the pause-border art
+`{856DDBAC,46A006B0,14315E61}`, and it is **100% transparent** - all 14,400
+pixels `RGBA(255,255,255,0)`, zero opaque, zero partial. It wins over our
+240x240 copy by the same load-order rule and the yellow border disappears,
+which is precisely what the user installed it for. Our shadowed 2x copy costs
+nothing because nothing is drawn from it. **No handling needed, and inventing
+some would have been worse than declining.** (Our 240x240 was separately
+confirmed an exact nearest-neighbour 2x of stock: 0 mismatches / 57,600.)
+
+### Law
+
+⭐ **A MOD THAT SHIPS SCRIPTS BUT NO ART INHERITS OUR ART - AT OUR SCALE.**
+`imagerect` is a source rectangle into a sheet, so a 1x script pointed at a 2x
+sheet reads the wrong QUADRANT, not a wrongly-sized copy. The symptom is
+colour-key magenta and past-the-edge black, NOT a small UI - so "it looks
+corrupt" and "it looks unscaled" are different diagnoses with different cures.
+Whenever a third-party mod overrides a `.UI` script we also ship, ask which of
+us owns the ART it references; if the answer is "us", its rects are already
+wrong.

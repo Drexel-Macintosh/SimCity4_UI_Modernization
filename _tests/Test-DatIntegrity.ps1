@@ -411,6 +411,12 @@ $EXPECTED = @(
   # built-vs-deployed row; the 2026-08-30 audit found it was the only live
   # SyncDat package with neither. 16 entries at every tier, measured off the
   # DBPF headers of tools\packages\<tier>\ (matches PACKAGE-MANIFEST.md).
+  # RaiseUI (2026-08-30): warrior's "Raise the UI Mod" ships ONLY the two HUD
+  # scripts and no art, so our copy is exactly 2 entries at every tier - the
+  # mod's own scripts with imagerect scaled and area= untouched.
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "2x";  entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "15x"; entries = 2 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "3x";  entries = 2 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "2x";  entries = 16 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "15x"; entries = 16 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "3x";  entries = 16 },
@@ -854,6 +860,9 @@ $BUILT_PAIRS = @(
   # hand-copied in Deploy, but tracked by NEITHER manifest gate until the
   # 2026-08-30 audit - for the package that shipped the wrong tier twice
   # (#196). All three tiers from tools\packages\<tier>\.
+  @{ b = "tools\selective-safe\z_SC4UIScale_RaiseUI.dat";             rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_RaiseUI-15x.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_RaiseUI-3x.dat";             rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "3x" }
   @{ b = "tools\packages\2x\z_SC4UIScale_CsiIcons-2x.dat";            rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "2x" }
   @{ b = "tools\packages\15x\z_SC4UIScale_CsiIcons-15x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "15x" }
   @{ b = "tools\packages\3x\z_SC4UIScale_CsiIcons-3x.dat";            rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "3x" }

@@ -474,6 +474,15 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ThirdPartyUI-3x.dat" "$zzz\z_SC4
 Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_WarriorUI.dat" "$zzz\z_SC4UIScale_WarriorUI-2x.dat" -Force
 Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_WarriorUI-15x.dat" "$zzz\z_SC4UIScale_WarriorUI-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_WarriorUI-3x.dat" "$zzz\z_SC4UIScale_WarriorUI-3x.dat.x1-disabled" -Force
+# RaiseUI (2026-08-30): warrior's "Raise the UI Mod" ships only SCRIPTS, no
+# art - so the game runs its 1x `imagerect` source rects against OUR 2x art
+# sheets and reads the top-left quarter of every one (the magenta and black
+# the player photographed). Our copies carry the MOD'S scripts with imagerect
+# scaled and `area=` untouched, so the raise survives. Same zzz- rule (must
+# beat 150-mods\) and same dependency gate.
+Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_RaiseUI.dat" "$zzz\z_SC4UIScale_RaiseUI-2x.dat" -Force
+Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_RaiseUI-15x.dat" "$zzz\z_SC4UIScale_RaiseUI-15x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_RaiseUI-3x.dat" "$zzz\z_SC4UIScale_RaiseUI-3x.dat.x1-disabled" -Force
 # NamIcons (task #139, 2026-08-05): 1.5x/2x/3x copies of the Network Addon
 # Mod's OWN 392 menu ItemIcons, gated in ScaleTier on the presence of
 # NetworkAddonMod_Controller.dat. Same zzz- rule as its siblings - NAM lives
@@ -625,6 +634,7 @@ foreach ($dir in @($our, "$plug\zzz-SC4UIScale")) {
 $DEPENDENCY_GATED = @(
     "z_SC4UIScale_CamUI",         # CAM
     "z_SC4UIScale_WarriorUI",     # Warrior's UI mod
+    "z_SC4UIScale_RaiseUI",       # Warrior's Raise the UI Mod
     "z_SC4UIScale_ThirdPartyUI",  # assorted third-party UI overrides
     "z_SC4UIScale_SaveWarningUI", # save-warning mod
     "z_SC4UIScale_NamIcons",      # NAM
