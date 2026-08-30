@@ -17454,3 +17454,8 @@ snapshot is EMPTY (it matches rename-era `-<tier>.dat` names), so the block
 only shuffles mid-run intermediate state that the end-of-run converter
 supersedes. Gating a dead list would be decoration; REMOVING live-tree
 machinery deserves its own measured session. Candidate for deletion.
+
+**USER-CONFIRMED (2026-08-30):** the 1x round-trip was tested on screen and
+the scale picker is present at 1x - the SelectorUI commit fix is confirmed
+visually, not just at the file level. The 2x boot's log independently showed
+the full record -> commit -> ArmOne chain servicing SelectorUI (0 FAILED).
