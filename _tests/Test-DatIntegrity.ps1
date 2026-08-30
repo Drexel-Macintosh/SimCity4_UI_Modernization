@@ -432,6 +432,11 @@ $EXPECTED = @(
   # ZCarbonRaiseUI (2026-08-30): Scoty's composed Carbon+Raise scripts. Two
   # scripts, no art, so 2 entries at every tier - same shape as RaiseUI, whose
   # scripts it beats when both mods are installed.
+  # ZCarbonPauseOff (2026-08-30): one fully transparent sheet, nothing else -
+  # 1 entry at every tier. Armed only when a pause remover is installed.
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "2x";  entries = 1 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "15x"; entries = 1 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "3x";  entries = 1 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "2x";  entries = 2 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "15x"; entries = 2 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "3x";  entries = 2 },
@@ -884,6 +889,9 @@ $BUILT_PAIRS = @(
   @{ b = "tools\dialog-static\z_SC4UIScale_RegionCensusUI.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "2x" }
   @{ b = "tools\packages\15x\z_SC4UIScale_RegionCensusUI-15x.dat";    rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "15x" }
   @{ b = "tools\packages\3x\z_SC4UIScale_RegionCensusUI-3x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "3x" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-2x.dat";   rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "2x" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-15x.dat";  rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "15x" }
+  @{ b = "tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-3x.dat";   rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "3x" }
   @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonRaiseUI.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "2x" }
   @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonRaiseUI-15x.dat";    rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "15x" }
   @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonRaiseUI-3x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "3x" }

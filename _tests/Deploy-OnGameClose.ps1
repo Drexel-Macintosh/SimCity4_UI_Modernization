@@ -491,6 +491,13 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_RaiseUI-3x.dat" "$zzz\z_SC4UISca
 Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_ZCarbonRaiseUI.dat" "$zzz\z_SC4UIScale_ZCarbonRaiseUI-2x.dat" -Force
 Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonRaiseUI-15x.dat" "$zzz\z_SC4UIScale_ZCarbonRaiseUI-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonRaiseUI-3x.dat" "$zzz\z_SC4UIScale_ZCarbonRaiseUI-3x.dat.x1-disabled" -Force
+# ZCarbonPauseOff (2026-08-30): a fully transparent sheet over the carbon gold
+# pause border, sorting after ZCarbonArt and armed ONLY when a pause remover is
+# installed. Built by tools\itemicons\build_carbonpauseoff.py, which verifies
+# the transparency before packing.
+Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-2x.dat" "$zzz\z_SC4UIScale_ZCarbonPauseOff-2x.dat" -Force
+Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-15x.dat" "$zzz\z_SC4UIScale_ZCarbonPauseOff-15x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-3x.dat" "$zzz\z_SC4UIScale_ZCarbonPauseOff-3x.dat.x1-disabled" -Force
 # RegionCensusUI (2026-08-30): null-45's mod-ONLY region census dialog, which
 # never scales itself while our 2x fonts scale its text - 5 of 40 labels
 # overflow at 2x. Built by dialog-static (static/never-swept window, so its
@@ -652,6 +659,7 @@ $DEPENDENCY_GATED = @(
     "z_SC4UIScale_RaiseUI",       # Warrior's Raise the UI Mod
     "z_SC4UIScale_RegionCensusUI",# null-45's Region View Census UI
     "z_SC4UIScale_ZCarbonRaiseUI",# Scoty's composed Carbon+Raise scripts
+    "z_SC4UIScale_ZCarbonPauseOff",# carbon pause border, off when a remover is in
     "z_SC4UIScale_ThirdPartyUI",  # assorted third-party UI overrides
     "z_SC4UIScale_SaveWarningUI", # save-warning mod
     "z_SC4UIScale_NamIcons",      # NAM

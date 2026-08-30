@@ -986,6 +986,22 @@ namespace
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonRaiseUI",
 		  L"z_scoty_Carbon_RaiseUI.dat", false, 7078,
 		  L"scoty_Carbon_Files.dat", 268639 },
+		// THE PAUSE BORDER, and the one package we ship to UNDO ourselves.
+		// z_SC4UIScale_ZCarbonArt carries a 240x240 solid-gold {46A006B0,
+		// 14315E61} - our upscale of Scoty's own re-skin, so the art is
+		// legitimate - but zzz- outranks every mod folder, so with Carbon
+		// installed it beat ANY pause remover and the border came back.
+		// MEASURED across all 25 Carbon dats: this TGI is in exactly two of
+		// them, scoty_carbon_PNG.dat AND Scoty's own
+		// y_scoty_Carbon_Yellow-pause-remover.dat. So we were defeating HIS
+		// remover with HIS art. ZCarbonPauseOff sorts after ZCarbonArt
+		// ('P' > 'A') and lays a fully transparent sheet over it - see the
+		// INVERSE condition at its SyncDat call, which is the whole point:
+		// this package is armed by the PRESENCE OF A REMOVER, so a player who
+		// wants the gold border still gets it, sharp.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonPauseOff",
+		  L"scoty_carbon_PNG.dat", false, 3460148,
+		  L"scoty_Carbon_Files.dat", 268639 },
 		// Upscaled copies of Carbon's icon strips at its own TGIs.
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonIcons",
 		  L"scoty_carbon_PNG.dat", false, 3460148,
@@ -3920,6 +3936,46 @@ namespace ScaleTier
 		return gArmedTagValid && gArmedTag[0] != 0;
 	}
 
+	// TRUE when the player has installed something whose whole purpose is to
+	// delete the yellow pause border. Two are known and BOTH are checked:
+	//   * Scoty's own  y_scoty_Carbon_Yellow-pause-remover.dat  - shipped
+	//     inside the Carbon Skin, which is precisely why this matters: our
+	//     ZCarbonArt copy of HIS gold border would otherwise defeat HIS
+	//     remover, and the player's choice between the two would be decided
+	//     by our folder sorting last.
+	//   * SMP's        zzPuase Thingy Remover.dat  - note the author's typo in
+	//     the real filename; matching the corrected spelling finds nothing.
+	// Searched BY NAME through the same depth-4 walk the dependency gates use,
+	// so a sc4pac versioned package folder is found like any other.
+	bool PauseRemoverPresent()
+	{
+		static bool s_checked = false;
+		static bool s_present = false;
+		if (s_checked) { return s_present; }
+		s_checked = true;
+		wchar_t pluginsRoot[MAX_PATH] = {};
+		PluginsRoot(pluginsRoot, MAX_PATH);
+		static const wchar_t* const kRemovers[] = {
+			L"y_scoty_Carbon_Yellow-pause-remover.dat",
+			L"zzPuase Thingy Remover.dat",
+		};
+		for (const wchar_t* name : kRemovers)
+		{
+			wchar_t hit[MAX_PATH] = {};
+			DWORD sz = 0;
+			if (FindPluginFile(pluginsRoot, name, false, 4, hit, MAX_PATH, &sz))
+			{
+				s_present = true;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"ScaleTier: pause-border remover present (%ls, %u bytes) - "
+					"our carbon gold border stands down so the player's own "
+					"choice wins.", hit, sz);
+				break;
+			}
+		}
+		return s_present;
+	}
+
 	bool WebButtonModPresent(const wchar_t* pluginsDir)
 	{
 		const wchar_t* needle = L"web button improvement mod";
@@ -4464,6 +4520,14 @@ namespace ScaleTier
 			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonRaiseUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonRaiseUI", depOk));
+			// INVERSE: armed only when the carbon skin IS present AND a pause
+			// remover IS present. Both halves are load-bearing - without the
+			// carbon half we would blank a border nobody re-skinned, and
+			// without the remover half we would blank one the player wants.
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonPauseOff",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonPauseOff", depOk)
+					&& PauseRemoverPresent());
 			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonArt",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonArt", depOk));

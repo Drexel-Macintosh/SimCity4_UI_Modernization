@@ -17963,3 +17963,70 @@ the thing being overridden. Dropping the TGI outright would cost Carbon users
 who WANT the border its 2x sharpness, so the right shape is per-TGI: split it
 into its own tiny package armed on Carbon present AND no remover present -
 the inverse-gate pattern WebText and SelectorUI already use. NOT BUILT YET.
+
+---
+
+## 2026-08-30 - the pause border: we were defeating Scoty's own remover, with Scoty's own art
+
+`z_SC4UIScale_ZCarbonArt` carries a 240x240 SOLID GOLD `{46A006B0,14315E61}` -
+our upscale of Scoty's re-skin from `scoty_carbon_PNG.dat`. `zzz-` outranks
+every mod folder, so with the Carbon Skin installed our copy beat ANY pause
+remover and the yellow border came back.
+
+### The measurement that decided the design
+
+Scanning all 25 dats in the Carbon source set, the TGI appears in exactly TWO:
+
+```
+scoty_carbon_PNG.dat                        T=856DDBAC G=46A006B0 I=14315E61
+y_scoty_Carbon_Yellow-pause-remover.dat     T=856DDBAC G=46A006B0 I=14315E61
+```
+
+**Scoty ships his own remover.** So this was never "our override versus a
+third-party mod" - it is our copy of HIS art defeating HIS remover, with the
+player's choice between the two being decided by our folder sorting last.
+
+That also rules out the blunt fix. Dropping the TGI from ZCarbonArt would cost
+the players who WANT the border its 2x sharpness, and the gold art is CORRECT
+for them - it is Scoty's own. Nothing about the art is wrong; only the fact
+that we win when the player has asked for it to be gone.
+
+### The cure: a package that undoes us, armed by the player's own choice
+
+`z_SC4UIScale_ZCarbonPauseOff` - one fully transparent sheet at that TGI,
+sorting AFTER `ZCarbonArt` ('P' > 'A'), armed on the carbon skin being present
+**AND** `PauseRemoverPresent()`. Both halves are load-bearing: without the
+carbon half we would blank a border nobody re-skinned; without the remover half
+we would blank one the player wants.
+
+`PauseRemoverPresent()` searches by NAME through the same depth-4 walk the
+dependency gates use, for BOTH known removers - Scoty's, and SMP's
+`zzPuase Thingy Remover.dat` (the author's typo is in the real filename;
+matching the corrected spelling finds nothing).
+
+ADDITIVE BY CONSTRUCTION: no existing package, enrollment or builder changed.
+The whole cure is one transparent PNG plus an arming condition, which is why it
+could be done safely at the end of a long session when re-routing the generated
+carbon enrollment could not.
+
+### The builder verifies its own output
+
+`build_carbonpauseoff.py` writes the PNG by hand (no image library, auditable
+bytes) and then READS IT BACK and asserts every pixel is alpha 0 before
+packing - because a cure that silently emitted an opaque sheet would repaint
+the border it exists to suppress: the exact defect, inverted.
+
+⚠ The first version of that assertion FAILED on a correct sheet, reporting
+alphas `{0,255}`. The check was indexing the decompressed stream as a flat RGBA
+array, which ignores the per-row filter byte and reads colour bytes as alpha.
+Fixed to walk `row*stride + 1 + px*4 + 3`, and it now also asserts every row
+filter is 0. **A verification that fails on correct input is not a strict
+gate, it is a broken instrument** - and had I trusted it, I would have "fixed"
+a PNG that was right all along.
+
+### Law
+
+⭐ **WHEN A MOD AUTHOR SHIPS BOTH A THING AND ITS REMOVER, WE SCALE THE THING
+AND STAND DOWN FOR THE REMOVER.** Our folder wins by construction, so any art
+we upscale silently overrides the player's choice between the author's own
+options. The gate belongs on the CHOICE, not on the art.
