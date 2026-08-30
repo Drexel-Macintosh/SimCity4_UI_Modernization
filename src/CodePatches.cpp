@@ -2654,6 +2654,126 @@ namespace CodePatches
 		}
 	}
 
+	// ============ RESTORE-TOOLBARS BUTTON ORIGIN (v4.5.3) =================
+	// THE BUTTON THAT BRINGS THE HUD BACK, born 10 px off the bottom of the
+	// screen at 2x. USER-CONFIRMED ON SCREEN 2026-08-30 ("yes it does jump").
+	//
+	// THE MECHANISM. The 3D-view HUD constructor sub_7EDEB0 builds this
+	// button (SetID 0x43 at 0x7EE13E) and NEVER SIZES IT - the 16 call sites
+	// in 0x7EDFF0..0x7EE180 include GetH (+0xA8) and GZWinMoveTo (+0xE0) but
+	// no SetW/SetH/SetSize/SetArea. Its rect therefore comes entirely from
+	// its four-frame art strip (cell = stripW/4 x stripH), and it is then
+	// PLACED by two raw 1x constants:
+	//
+	//   0x7EE15A  83 E8 1C   sub eax,0x1C     <- y = viewH - 28
+	//   0x7EE15D  50         push eax
+	//   0x7EE15E  6A 0C      push 0x0C        <- x = 12
+	//   0x7EE160  ff 93 ..   call [ebx+0xE0]  = GZWinMoveTo
+	//
+	// Stock arithmetic is clean: cell 21x19, and 19 - 28 = -9, so nine pixels
+	// of clearance. We ship that strip ENLARGED IN PLACE at the original TGI,
+	// so the cell grows while the 28 does not. Overflow is (cellH - 28) and
+	// THE VIEW HEIGHT CANCELS - this is resolution-independent:
+	//     1x -9   |   1.5x +1   |   2x +10   |   3x +29
+	// Measured on the live machine at 2x (capture 2026-08-19-105203): view
+	// 0x9A47B417 is 2400x1600, the button is pos(12,1572) size(42x38), so its
+	// bottom edge is 1610 against a 1600-px screen.
+	//
+	// THE SECOND-ORDER EFFECT, and the half of this the notes never had: the
+	// moment the player hides the toolbars and the button goes visible, OUR
+	// OWN SWEEP re-doubles it - (12,1572 42x38) -> (24,1544 84x76), bottom
+	// 1620, 2x art in a 4x box (capture 2026-08-04-081911: "THIS ONE FLASHED
+	// ON SCREEN"). That visible jump is what the user confirmed, and it is
+	// why UiSpike must stand down here as well; see the id-0x43 skip in
+	// ScalePanelsUnder, which is gated on RestoreToolbarsOriginPatched().
+	//
+	// THE CURE. Make the builder itself emit (round(12f), viewH - round(28f)).
+	// The output is then stock behaviour x f and the junctions are correct BY
+	// CONSTRUCTION: clearance becomes round(28f) - round(19f) = 13/18/27 px
+	// against a stock 9, and the left inset becomes 12f. No correction pass,
+	// no timing, one writer - the game's own constructor.
+	//
+	// WHY ONE 6-BYTE BLOCK AND NOT TWO IMM8 SITES. The two constants are
+	// ADJACENT (83 E8 1C 50 6A 0C) and place the same window through the same
+	// call. Patching them as one block makes a HALF-APPLIED STATE UNREACHABLE
+	// rather than merely discouraged - law 43 (both halves or neither)
+	// satisfied structurally instead of by discipline.
+	//
+	// The modrm byte is READ AND PINNED AS CONTEXT rather than assumed (the
+	// kBudgetSubImm8Sites loop is the model): sub is 83 /5, so any /5 modrm
+	// is legal here, and hard-coding 0xE8 would refuse a build that differs
+	// only in the register allocation.
+	const uintptr_t kRestoreToolbarsOriginSite = 0x7EE15A;
+	const uint8_t kStockRestoreToolbarsY = 0x1C;   // sub eax,28
+	const uint8_t kStockRestoreToolbarsX = 0x0C;   // push 12
+	int gRestoreToolbarsPatched = 0;
+
+	int RestoreToolbarsOriginPatched()
+	{
+		return gRestoreToolbarsPatched;
+	}
+
+	int ApplyRestoreToolbarsOrigin(float factor)
+	{
+		gRestoreToolbarsPatched = 0;
+		const long y = std::lround(kStockRestoreToolbarsY * factor);
+		const long x = std::lround(kStockRestoreToolbarsX * factor);
+		if (y == kStockRestoreToolbarsY && x == kStockRestoreToolbarsX)
+		{
+			return 0;   // stock factor - nothing to do
+		}
+		// REFUSE, NEVER CLAMP. Both are imm8 operands: y fits to f ~= 4.5 and
+		// x to f ~= 10, so every shipped tier encodes exactly. A clamped
+		// value would silently place the button somewhere nobody chose, which
+		// is worse than leaving the stock placement alone.
+		if (y < 1 || y > 127 || x < 1 || x > 127)
+		{
+			Logger::Get().WriteLine(
+				LogLevel::Info,
+				"CodePatches: restore-toolbars origin x%.2f wants y=%ld x=%ld - "
+				"will not fit imm8, skipped (button keeps its stock placement).",
+				factor, y, x);
+			return 0;
+		}
+		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t delta = base - kImageBase;
+		uint8_t* p = reinterpret_cast<uint8_t*>(kRestoreToolbarsOriginSite + delta);
+		const uint8_t modrm = p[1];
+		if (p[0] != 0x83 || (modrm & 0xF8) != 0xE8
+			|| p[2] != kStockRestoreToolbarsY
+			|| p[3] != 0x50
+			|| p[4] != kPushImm8
+			|| p[5] != kStockRestoreToolbarsX)
+		{
+			Logger::Get().WriteLine(
+				LogLevel::Info,
+				"CodePatches: restore-toolbars origin 0x%08X bytes "
+				"%02X %02X %02X %02X %02X %02X unexpected - skipped.",
+				static_cast<uint32_t>(kRestoreToolbarsOriginSite),
+				p[0], p[1], p[2], p[3], p[4], p[5]);
+			return 0;
+		}
+		const uint8_t expect[6] = {
+			0x83, modrm, kStockRestoreToolbarsY, 0x50, kPushImm8, kStockRestoreToolbarsX };
+		const uint8_t repl[6] = {
+			0x83, modrm, static_cast<uint8_t>(y), 0x50, kPushImm8, static_cast<uint8_t>(x) };
+		if (!VerifiedWrite("restore-toolbars origin",
+			kRestoreToolbarsOriginSite, delta, expect, repl, 6))
+		{
+			return 0;
+		}
+		gRestoreToolbarsPatched = 1;
+		Logger::Get().WriteLine(
+			LogLevel::Info,
+			"CodePatches: RESTORE-TOOLBARS x%.2f - origin (12, viewH-28) -> "
+			"(%ld, viewH-%ld). The button is sized by its own art strip and was "
+			"never sized by the game, so at x%.2f it was born %ld px below the "
+			"screen edge; it is now born correct and UiSpike stands down on it.",
+			factor, x, y, factor,
+			std::lround(19.0 * factor) - kStockRestoreToolbarsY);
+		return 1;
+	}
+
 	void ApplyBudgetButtonScale(float factor)
 	{
 		const uint32_t w = static_cast<uint32_t>(std::lround(kStockBudgetBtnW * factor));

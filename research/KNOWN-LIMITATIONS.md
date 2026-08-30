@@ -16,10 +16,19 @@ regression suite that holds them in place is in `_tests/`.
   bottom item of a flyout is outside the visible area when the flyout opens,
   and scrolling to the end leaves empty space below it. The cause is
   container-height and scroll-extent arithmetic rather than art.
-- **The Restore-Toolbars button clips at scaled tiers.** The game builds this
-  small button with no size of its own — its size comes entirely from its
-  four-frame strip — so with scaled art it is born 10 px clipped at 2x. The
-  builder, the art, the window id and the position are all decoded.
+- ~~**The Restore-Toolbars button clips at scaled tiers.**~~ **CURED in
+  v4.5.3.** The game builds this small button with no size of its own — its
+  size comes entirely from its four-frame strip, which this mod enlarges — and
+  then places it with two hardcoded 1x constants, `GZWinMoveTo(12, viewH−28)`.
+  Overflow was `cellH − 28`, and the view height cancels, so it was
+  resolution-independent: +1 / +10 / +29 px below the screen edge at
+  1.5x / 2x / 3x. A second, larger fault sat on top of it: once the button
+  became visible this mod's own panel sweep re-doubled it to 84×76 (2x art in
+  a 4x box, 20 px off-screen) — user-confirmed on screen as a visible jump.
+  Cured at the source: one 6-byte block patch makes the game's own builder
+  emit `(round(12f), viewH − round(28f))`, and the sweep stands down on the
+  window once that patch is live. Gated on the enlarged art actually being in
+  play, because with the packages stashed the stock 28 is correct.
 - **Item icons differ by 2 px between packages at 1.5x.** The item-icon group
   is 68 px tall from one package and 66 px tall from two others at 1.5x: three
   implementations of the icon-dimension rule that agree exactly at 2x and 3x

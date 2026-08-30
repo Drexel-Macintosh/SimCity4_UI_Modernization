@@ -222,6 +222,26 @@ namespace CodePatches
 	// composed at runtime from the measured text height and must never be
 	// patched - that is also what lets a two-line label keep its taller slot.
 	// Returns the number of sites that took; 8 = fully born correct.
+	// v4.5.3: the RESTORE-TOOLBARS button, born below the bottom of the
+	// screen at every scaled tier. The game builds it and never sizes it -
+	// its rect comes entirely from its four-frame art strip, which we ship
+	// enlarged in place - then places it with two raw 1x constants,
+	// GZWinMoveTo(12, viewH-28). Overflow is (cellH - 28) and the view height
+	// cancels, so it is resolution-independent: +1 / +10 / +29 px at
+	// 1.5x / 2x / 3x. Patches both constants as ONE 6-byte block so a
+	// half-applied state is structurally unreachable, and REFUSES rather than
+	// clamping if either value leaves imm8 range. Returns 1 if it took.
+	//
+	// MUST be armed only when ScaleTier::ScaledArtArmed() is true: with the
+	// packages stashed the strip is stock 84x19, the stock 28 is CORRECT, and
+	// patching it would lift a correctly-placed button by 28 px.
+	int ApplyRestoreToolbarsOrigin(float factor);
+	// 1 when that patch is live. UiSpike's panel sweep reads this to decide
+	// whether to stand down on window 0x00000043 - the sweep re-doubles the
+	// button to 84x76 the moment it becomes visible (user-confirmed as a
+	// visible jump), so the two halves must arm together.
+	int RestoreToolbarsOriginPatched();
+
 	int ApplyDataViewLegendScale(float factor);
 	// How many of those eight sites are live. UiSpike's DVPIN pass reads this
 	// to decide whether the legend belongs to the game now.

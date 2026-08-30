@@ -3840,6 +3840,11 @@ namespace ScaleTier
 	// region website button (its own text + link), so our WebText override and
 	// ShellExecute redirect must both step aside. Detected by file name,
 	// searched recursively (the dat name varies by option A/B/C and version).
+	bool ScaledArtArmed()
+	{
+		return gArmedTagValid && gArmedTag[0] != 0;
+	}
+
 	bool WebButtonModPresent(const wchar_t* pluginsDir)
 	{
 		const wchar_t* needle = L"web button improvement mod";

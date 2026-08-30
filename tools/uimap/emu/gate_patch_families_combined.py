@@ -79,6 +79,13 @@ WIDTHS = {
     # sweep can account for them.
     "kBizBoxCloseX":             (5, "push imm32"),
     "kBizBoxCloseY":             (2, "6a 0b"),
+    # v4.5.3 RESTORE-TOOLBARS ORIGIN. ONE 6-byte block covering BOTH placement
+    # constants, deliberately: `83 /5 1C 50 6A 0C` is sub eax,28 / push eax /
+    # push 12, the two arguments of the same GZWinMoveTo call. Registering it
+    # as a single span rather than two imm8 scalars is what makes a
+    # half-applied state unreachable (law 43, both halves or neither) - the
+    # encoding enforces the pairing instead of a comment asking for it.
+    "kRestoreToolbarsOriginSite": (6, "83 /5 1c 50 6a 0c (sub eax,28; push eax; push 12)"),
     "kAdviceRowMidSite":         (3, "83 /5 3d (sub r32,61)"),
     # #136: the WIDE form of the SAME patch. 0x0079388B..0x0079389D contains
     # kAdviceRowMidSite (0x0079388F) by construction - the window swallows the

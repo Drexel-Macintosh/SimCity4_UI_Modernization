@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.5.2"
+#define UISCALE_VERSION_STR "4.5.3"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -912,6 +912,19 @@ public:
 		if (settings.spikeScaleAll && settings.spikeDataViewLegendPatch > 0)
 		{
 			CodePatches::ApplyDataViewLegendScale(settings.spikeScaleFactor);
+		}
+		// v4.5.3 RESTORE-TOOLBARS ORIGIN. Gated on ScaledArtArmed(), NOT on
+		// spikeScaleAll alone: this button has no size of its own and takes
+		// it from OUR enlarged art strip, so the patch is only correct while
+		// that strip is the one in play. With the packages stashed (stock
+		// compare, a failed arm) the strip is the stock 84x19, the game's own
+		// 28 is right, and patching it would lift a correctly-placed button
+		// 28 px and open a gap - a defect manufactured by the cure. Gate on
+		// the condition you actually depend on, never on a convenient
+		// neighbour's flag.
+		if (settings.spikeRestoreToolbarsPatch > 0 && ScaleTier::ScaledArtArmed())
+		{
+			CodePatches::ApplyRestoreToolbarsOrigin(settings.spikeScaleFactor);
 		}
 		// v2.55.0 task #57: the GRAPHS legend budget is NOT armed here. It is
 		// one half of a coupled pair with EARLYCHART's plot right margin, and

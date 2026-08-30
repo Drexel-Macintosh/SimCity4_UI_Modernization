@@ -17540,3 +17540,97 @@ in the SAME commit, and assert the tracked count changed.
 filename patterns and path prefixes are all defeated by a rename. Classify by
 bytes, and carry a positive control so a broken classifier fails loudly instead
 of passing quietly.
+
+---
+
+## 2026-08-30 (later still) - RESTORE-TOOLBARS: born below the screen, then doubled on screen
+
+The last quantified uncovered defect in `tools/uimap/coverage-matrix.md`.
+Decoded, verified from three independent instruments, cured in v4.5.3, and
+**user-confirmed on screen before a single byte was written**.
+
+### The mechanism, measured not inferred
+
+The 3D-view HUD constructor `sub_7EDEB0` builds this button and **never sizes
+it** - the call sites in `0x7EDFF0..0x7EE180` include GetH and GZWinMoveTo but
+no SetW/SetH/SetSize/SetArea. Its rect comes entirely from its four-frame art
+strip (cell = stripW/4 x stripH). It is then PLACED by two raw 1x constants:
+
+```
+0x7EE15A  83 E8 1C   sub eax,0x1C   <- y = viewH - 28
+0x7EE15D  50         push eax
+0x7EE15E  6A 0C      push 0x0C      <- x = 12
+```
+
+Stock is clean: cell 21x19, `19 - 28 = -9`, nine pixels of clearance. **We ship
+that strip enlarged IN PLACE at the original TGI**, so the cell grows and the
+28 does not. Overflow is `cellH - 28` and **the view height cancels** - it is
+resolution-independent: `-9 / +1 / +10 / +29` px at `1x / 1.5x / 2x / 3x`.
+
+THREE INSTRUMENTS AGREED, and they are independent:
+1. The shipped image: bytes read straight out of `SimCity 4.exe` at file
+   offset `0x3EE15A` = `83 E8 1C 50 6A 0C`.
+2. The runtime: capture `2026-08-19-105203` has view `0x9A47B417` at
+   `2400x1600` and the button at `pos(12,1572) size(42x38)` - bottom edge 1610
+   against a 1600-px screen.
+3. `tools/uimap/crosscheck.py`, which classifies the site under
+   `owner sub_7EDEB0` with bytes `83e81c506a0cff93` - the same owner as the two
+   cost-box patches already shipped there.
+
+### The half nobody had
+
+The notes described a clip. They never recorded what happens once the button is
+VISIBLE: **our own panel sweep re-doubles it** - `(12,1572 42x38) ->
+(24,1544 84x76)`, bottom 1620, 2x art in a 4x box. Capture
+`2026-08-04-081911:1536` flags it `THIS ONE FLASHED ON SCREEN`. That jump, not
+the clip, is what the player actually notices - and it is the half a cure aimed
+only at the origin would have left behind.
+
+### The cure
+
+Output = stock behaviour x f, junctions correct by construction. One 6-byte
+block patch makes the builder emit `(round(12f), viewH - round(28f))`;
+clearance becomes `round(28f) - round(19f)` = 13/18/27 px against a stock 9.
+UiSpike then stands down on window `0x43`.
+
+**Both constants are patched as ONE 6-byte block, deliberately.** They are
+adjacent and are the two arguments of the same `GZWinMoveTo` call, so a single
+span makes a HALF-APPLIED STATE UNREACHABLE rather than merely discouraged -
+law 43 satisfied by the encoding instead of by discipline. The gate registry
+records it the same way for the same reason.
+
+**Gated on `ScaleTier::ScaledArtArmed()`, not on `spikeScaleAll`.** With the
+packages stashed the strip is the stock 84x19, the game's own 28 is CORRECT,
+and patching it would lift a correctly-placed button 28 px and open a gap - a
+defect manufactured by its own cure. The sweep's stand-down is gated on the
+patch having actually taken, so a refused write falls back to exactly today's
+behaviour rather than a new untested state.
+
+### What was verified, and what was deliberately NOT claimed
+
+* `gate_patch_families_combined.py`: Check A overlaps **0**, unregistered
+  tables **40 -> 40** (the new table is registered, so it added no failure).
+* `crosscheck.py`: misses **44 -> 45**, +1. **Choice recorded:** accepted as a
+  same-family delta rather than hand-seeding `0x7EDEB0` into
+  `builders.json:promotedBuilders`, because two cost-box entries already sit in
+  that owner as accepted misses and inventing a seed for one site would make
+  the model claim knowledge it does not have.
+* New `_tests/Test-PatchSiteBytes.py` pins the stock bytes of this site and the
+  two cost-box sites against the shipped image, with a mask so a build's modrm
+  register choice cannot false-fail, and TWO controls: a 1-bit change to a
+  pinned immediate must be rejected, and a different `/5` register must be
+  tolerated. The repo prescribed this patch site in three places and had
+  recorded its bytes in none.
+* No `.dat` changed; `Test-DatIntegrity` is untouched by design.
+* ⚠ `_tests/Test-BornCorrectCoverage.ps1` **cannot see this window** - its
+  `SCALED_WINDOW_IDS` set is derived from `.UI` scripts and this button has
+  none. A green run of it is NOT evidence about this button, and saying so is
+  the point.
+
+### Law
+
+⭐ **A WINDOW THE GAME NEVER SIZES IS SIZED BY ITS ART - SO ENLARGING THE ART
+MOVES A CONSTANT NOBODY SCALED.** Whenever a package enlarges art in place,
+ask what reads that art's dimensions. If the answer is "a hardcoded placement
+constant", the art change has silently created a geometry defect, and the cure
+belongs at the constant, gated on the art actually being ours.

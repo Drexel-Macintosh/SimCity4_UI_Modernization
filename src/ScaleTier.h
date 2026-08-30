@@ -197,6 +197,18 @@ namespace ScaleTier
 	// down while the ShellExecute redirect stayed armed.
 	bool WebButtonModPresent(const wchar_t* pluginsDir);
 
+	// TRUE when a SCALED art package was actually selected for this boot -
+	// i.e. SyncStaticLayers matched the running factor to a kPackages row and
+	// armed that tier's dats. This is the gate for any patch whose
+	// correctness depends on OUR ENLARGED ART BEING THE ART IN PLAY, and it
+	// is deliberately NOT `spikeScaleAll` or `spikeScaleFactor`: with the
+	// packages stashed (stock compare, a failed arm, ScaleAll=0) the game
+	// reads STOCK art at stock size, and a patch that assumes enlarged art
+	// would then be wrong in the opposite direction - manufacturing a defect
+	// out of a cure. Reads the same stashed decision the exclusion pass uses,
+	// so the two can never disagree about which art is live.
+	bool ScaledArtArmed();
+
 	// #149 stage 2. SyncStaticLayers runs before the game opens a single dat,
 	// so it can only NAME the icons no package of ours enlarges. This runs at
 	// PostAppInit - dats indexed, no menu built yet - and registers a

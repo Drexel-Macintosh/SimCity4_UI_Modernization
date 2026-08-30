@@ -261,6 +261,15 @@ struct Settings
 	                                  // (its law needs a ring blit at the new
 	                                  // size), which is the second settle.
 	                                  // 0 = size at birth, dock via the sweep
+	int  spikeRestoreToolbarsPatch = 1; // v4.5.3: the button that brings the
+	                                  // HUD back is sized by its own art
+	                                  // strip (which we enlarge) but placed
+	                                  // by two 1x constants, so it is born
+	                                  // below the screen edge at every scaled
+	                                  // tier - +10 px at 2x, measured. Fixes
+	                                  // the origin at the source and stands
+	                                  // the panel sweep down on it. 0 leaves
+	                                  // both halves off together.
 	int  spikeDataViewLegendPatch = 1; // v2.37.0 task #78: scale the Data
 	                                  // Views legend ORIGINS inside the
 	                                  // game's own re-lay (sub_007A04F0) so

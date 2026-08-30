@@ -156,7 +156,9 @@ Preserve `SC4UIScale.log` before relaunching; it is recreated on every launch.
 _tests\Test-DatIntegrity.ps1                 # deployed == built
 _tests\Test-ThirdPartyGates.ps1              # third-party overrides stay gated
 _tests\Test-FolderDiscovery.ps1              # the DLL's discovery code, compiled + mutation-tested
-_tests\Sync-Check.ps1                        # repo vs GitHub, user-path scan
+_tests\Test-DistInstall.ps1                  # the public zip installer, install+uninstall round-trip
+_tests\Sync-Check.ps1                        # repo vs GitHub; user paths + binary art BY CONTENT
+python _tests\Test-PatchSiteBytes.py         # byte-patch sites still hold their expected bytes
 _tests\Verify-Arming.ps1                     # after a boot: content-swap arming, STATE.txt
 python _tests\Test-PackageGating.py          # SyncDat sites vs dep rows, both directions
 python _tests\Test-ShippingIniKeys.py        # every seeded/reference ini key is READ by Settings.cpp

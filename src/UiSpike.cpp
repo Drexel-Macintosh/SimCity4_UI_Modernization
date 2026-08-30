@@ -11897,6 +11897,27 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		{
 			continue;
 		}
+		// RESTORE-TOOLBARS (v4.5.3). Window 0x43 is SIZED BY ITS OWN ART, and
+		// that art is already ours and already enlarged - so this sweep's
+		// generic double takes a correct 42x38 button to 84x76 (2x art in a
+		// 4x box, bottom edge 20 px off-screen). The capture logs record it
+		// as "THIS ONE FLASHED ON SCREEN" and the user confirmed the jump.
+		// Once CodePatches has fixed the ORIGIN at the source, the button is
+		// born correct and the only thing left for us to do is not touch it.
+		//
+		// Gated on the patch actually being live, not on the tier: if the
+		// write was refused (modded exe, unknown build) the button is still
+		// mis-placed, and standing down would leave it clipped with nothing
+		// compensating. A refused patch therefore falls back to exactly
+		// today's behaviour rather than a new untested state.
+		// Inline rather than a kNeverScaleIds entry: this is a runtime
+		// condition, and that table is a compile-time set consulted from
+		// several passes that must keep scaling this id when unpatched.
+		if (p.win->GetID() == 0x00000043
+			&& CodePatches::RestoreToolbarsOriginPatched())
+		{
+			continue;
+		}
 		// God-mode tool flyouts are handled by ScaleGodFlyouts with a
 		// SIZE-ONLY (no root move) scale - the generic root-move anchor here
 		// teleports them. Skip so terraform/terrain-fx (direct view children)
