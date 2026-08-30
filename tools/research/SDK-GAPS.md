@@ -35,7 +35,7 @@ is one too low. Several names in the band are also misattributed.
 | 59 | `0xEC` | `ScreenToWindowCoordinates` (subtracts the absolute origin) | `0x0099BD73` |
 | 60 | `0xF0` | `WindowToScreenCoordinates` (adds `[+0x14]`,`[+0x18]`) | `0x0099BD5E` |
 | 61 | `0xF4` | `WindowToWindowCoordinates` | `0x0099B8F5` |
-| 62 | `0xF8` | `IsPointInMe` — **the header has no such method; its index 62 is `GetID`** | `0x0099C97C` |
+| 62 | `0xF8` | `IsPointInWindowScreenCoordinates` — the header **does** declare it (`cIGZWin.h`, immediately before `GetID`); this project's notes call it `IsPointInMe`. Corrected 2026-08-30: the row previously said "the header has no such method", which came from counting declaration indices without the three `cIGZUnknown` slots. It is the screen-coordinate member of the trio completed by `IsPointInWindowWindowCoordinates` and `…ParentCoordinates` (slots 121/122), and `0x0099C97C` tests the ABSOLUTE rect `[this+0x14]`, which is what "screen coordinates" means here | `0x0099C97C` |
 | 63 | `0xFC` | `GetID` (`mov eax,[ecx+0x10]; ret`) | `0x0099BE66` |
 | 64 | `0x100` | `SetID` | — |
 | 67 | `0x10C` | `GetFlag` (`[ecx+0xC8] & arg`) | — |
@@ -120,7 +120,14 @@ header's names for this band and extends them with the actual logic):**
 
 **Workaround.** Index by number from the table above. The window-vtable
 population scan is: whole-`.rdata` search for `[vt+87*4] == 0x0099BE4C` with
-`[vt]` and `[vt+88*4]` inside `.text` → 115 hits, the complete population.
+`[vt]` and `[vt+88*4]` inside `.text` → **116 hits**, of which **111** also
+pass the ≥3-of-8 base-implementation census and are the window-class
+population every count in this file should use. The 5 single-marker extras
+(`0xAC54B8`, `0xACCD5C`, `0xAD47F0`, `0xAD805C`, `0xAD825C`) carry the marker
+without passing the class test. *Re-measured 2026-08-30 by re-running
+`tools\uimap\wincensus.py`; this line previously said "115 hits, the complete
+population", a third number that agreed with neither of the two the rest of
+the file was already using.*
 A vtable address outside `0x00A80000`–`0x00B20000` is a relocated DLL
 vtable — one of the mod's own shadow copies (`gVtCopy`, `gVtCopy2`,
 `gGaugeVtCopy`, `gStripVtCopy`), which move between sessions; exe vtables are
@@ -135,10 +142,37 @@ The SDK gives no hint that a window carries two different rects:
 | parent-relative | `[this+0xA8..0xB4]` | `.UI area=`, `SetArea`, `SetW/H`, `GZWinMoveTo` — every scaling write | `GetL/GetT/GetW/GetH`, layout and draw |
 | absolute cache | `[this+0x14..0x20]` | **only** slot 90 `CalcAbsoluteArea` (`0x0099DCE4`), which copies `GetArea()`, adds every ancestor's `GetL/GetT`, stores, and recurses into all children | the hit test (`cRZRect::Contains` on `[this+0x14]`), slots 59/60 |
 
-**Law: move the window, then make the engine recompute.** Until slot 90 runs
-on the window or an ancestor, it paints at its new place and hit-tests at its
-old one. This is why `InvalidateSelfAndParents()` is the only safe repaint
-primitive after a geometry change.
+**⛔ THE LAW THAT USED TO SIT HERE WAS FALSE. Corrected 2026-08-30 by
+disassembly.** It read: *"move the window, then make the engine recompute —
+until slot 90 runs on the window or an ancestor, it paints at its new place and
+hit-tests at its old one."* `SetArea` (`0x0099C837`) does the recompute itself,
+on every call:
+
+```
+0x0099C881..0x0099C893   the four stores into [+0xA8..+0xB4]
+0x0099C899  je 0x99C8AB  ; skips ONLY the private-buffer call below
+0x0099C8A5  call [eax+0x190]   slot 100 PrivateBuffer(1)  - conditional
+0x0099C8AF  call [eax+0x168]   slot  90 CalcAbsoluteArea  - UNCONDITIONAL
+0x0099C8B9  call [eax+0x188]   slot  98 SetAreaToDrawTo…  - UNCONDITIONAL
+0x0099C8C2  ret 0x10
+```
+
+Both recompute calls sit past the branch target, so no path through the
+function skips them, and `CalcAbsoluteArea` recurses into every child — the
+whole subtree is refreshed synchronously before `SetArea` returns.
+`GZWinMoveTo` (`0x0099C8C5`) tail-calls `SetArea`, so it inherits this too.
+
+**The corrected law: the absolute cache goes stale only if geometry is written
+by something OTHER than `SetArea` / `GZWinMoveTo` / `SetW` / `SetH`** — a raw
+poke at `[+0xA8..+0xB4]`, for instance. Through the normal setters the hit rect
+is never behind the paint rect, and `InvalidateSelfAndParents()` is about
+*repainting*, not about the absolute cache.
+
+*Provenance, because this one matters:* the false version came from an
+unverified draft in the incoming folder, and §3 of this same file has carried
+the correct sequence the whole time — the file contradicted itself, with the
+wrong half stated as a law and the right half buried in a walkthrough. Both
+halves were re-derived from the image before this edit.
 
 ### 1.2 Hit-testing
 
@@ -525,7 +559,9 @@ Consequence: a builder census keyed on the pushed ids lists `0x451`, `0x6D`,
 ## 5. The `.UI` script format
 
 **Gap.** The SDK gives no grammar. The loader was disassembled instead;
-`SC4-UI-ENGINE.md` §3.0a/§3.7–§3.12 carry the full reference.
+`SC4-UI-ENGINE.md` §3 carries the full reference — §3.0a and the
+attribute sections §3.2–§3.6. (This line used to cite §3.7–§3.12, which
+have never existed: that chapter ends at §3.6.)
 
 **Known.**
 
@@ -936,14 +972,21 @@ The standing warning governs: the right class is not the right window.
   occupy only a top-left sub-rect (measured: 36x41 into 64x64 at ~6 Hz per
   portrait cell; 152x38 and 91x77 into 256x256). Doubling a path-4
   `imagerect` samples past the live data into the POT padding.
-- **The BMPX draw log has a global, session-lifetime cap of 12 lines**
+- **The BMPX draw log has a global cap of 40 lines that RE-ARMS PER CITY**
   (`src\UiSpike.cpp`, grep `gBmpDrawLog`), shared by every hooked window;
   one busy window exhausts it. A missing `BMPX draw` line means, in order:
-  the budget was already spent; the window is under no hooked root; only
-  then, the class is not `GZWinBMP`.
+  the budget was already spent *for this city*; the window is under no hooked
+  root; only then, the class is not `GZWinBMP`.
+  *Corrected 2026-08-30: this bullet said "session-lifetime cap of 12 lines".
+  Both halves were wrong — the test is `gBmpDrawLog < 40` and the counter is
+  reset in `Disarm()` and again on a fresh open. Both numbers are load-bearing
+  for the triage order above, so a reader was being told to expect the wrong
+  budget and the wrong reset behaviour.*
 
-**Workaround.** The decision procedure for a wrong-art widget (`SC4-UI-ENGINE.md`
-§4.7): confirm the live script is the one loaded → anchor the grep on `image=`
+**Workaround.** The decision procedure for a wrong-art widget
+(`SC4-UI-ENGINE.md` §4.1–§4.6 — the four art-binding paths and the
+classification the builder actually uses; §4.7 is the separate flash-cure
+question): confirm the live script is the one loaded → anchor the grep on `image=`
 → does the TGI exist (and under which group) → is it staged under all its
 twin TGIs → is `imagerect` consistent with the art it got → for path 1b find
 the binder, not the art → separate paths 2/2b/4 by where the constant lives →
@@ -955,7 +998,8 @@ only then reach for a hook, with the class positively confirmed.
 
 **Gap.** The region screen is not a mode of the city screen but the
 alternative occupant of the same slot, and none of its architecture is in
-the SDK. Full reference: `REGION-SWITCH.md` §0, `REGION-SCREEN.md`.
+the SDK. Full reference: `REGION-SWITCH.md` (its opening summary, above
+§1) and `REGION-SCREEN.md`.
 
 **Known.** `WinSC4App 0x6104489A` has exactly one child: in a city
 `0x9A47B417` (`cSC4View3DWin`), on the region screen `0xEA659793`

@@ -954,7 +954,7 @@ The member map that matters (window-pointer relative; class vtable `0x00ADF6A0`)
 | offset | member | evidence |
 |---|---|---|
 | `+0xA8..0xB4` | window rect L,T,R,B on the `cIGZWin` subobject — the "area" | `DYNAMIC-CONTROLS.md` method notes; same fields `GetW/GetH` return |
-| `+0xD8` | interface/flag holder — its own vtable, `hvt[10]` is the flag test; **bit `0x10` = has-imagerect, bit 8 = edge/9-slice** (slice geometry lives in the rect) | `src\UiSpike.cpp` RELATCH helper (grep `"RELATCH"`), same access pattern as BMPRECT/BMPX |
+| `+0xD8` | interface/flag holder — its own vtable, `hvt[10]` is the flag test; **bit `0x10` = has-imagerect, bit 8 = edge/9-slice** (slice geometry lives in the rect) | `src\UiSpike.cpp` RELATCH helper (grep `RELATCH`), same access pattern as BMPRECT/BMPX |
 | `+0xDC` | the live image, a `cIGZBuffer*` | same |
 | `+0xE8..0xF4` | **the `imagerect` LATCH** — four int32, read as `(0,0,W,H)` when latch-following | `0x9BC447` write; RELATCH reads `r[0..3]` |
 
@@ -998,7 +998,7 @@ either: decoding the sheet gives a tick pitch at row 5 of `14015549` of **4px**
 (boundary-gap histogram alternates 1,3).
 
 **THE CURE — RELATCH** (`ScaleSubtree`'s resize site; `src\UiSpike.cpp`,
-grep `"RELATCH"`). When a resized window is
+grep `RELATCH`). When a resized window is
 class-`0x00ADF6A0` with flag `0x10`, not edge/9-slice (bit 8), holds a live
 image, and its crop reads EXACTLY `(0,0,oldW,oldH)` — the latch's own
 signature — rewrite it to `(0,0,min(newW,imgW),min(newH,imgH))`, mirroring
@@ -1269,7 +1269,8 @@ slots `vt+0x10C`/`vt+0x110` (§1.4, §2.2) — is:
 > `subsystems-02.md` §2.4.2 step 4). `GetFlag(0x80000 MouseTrans)` is in base
 > `IsPointInMe` (`0x0099C97C`; `subsystems-01.md` line 100/226, folded into
 > §2.2 item 2 above). `GetFlag(0x200000 IgnoreMouse)` is in the hit-test
-> router (`0x0099DFA9`, §2.2 item 1; `SDK-GAPS.md` §2 lines 102–103).
+> router (`0x0099DFA9`, §2.2 item 1; `SDK-GAPS.md` §1.2 "Hit-testing",
+> grep `WinFlag_IgnoreMouse`).
 
 **⚠ Two names are not independently confirmed in this repo:
 `winflag_sizeable` (`0x200`) and `winflag_pbuffvid` (`0x100000`).** Both come
