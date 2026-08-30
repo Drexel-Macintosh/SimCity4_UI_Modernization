@@ -212,6 +212,26 @@ TP_TARGETS = [
     # 2x in place in the root DialogStatic package.
     ("12121201", "Civic query panel (CAM-only, 292x260)", "CamUI"),
     ("12121205", "School query panel (CAM-only, 292x287)", "CamUI"),
+    # ---- null-45 "Region View Census UI" 1.0.1 (2026-08-30) -------------
+    # MOD-ONLY, and the first script this builder handles that is not in the
+    # stock UI group - see TP_GROUP. The mod's DLL builds this window from the
+    # .UI script in its own dat (its error string says so: "Failed to create
+    # the region census window, is RegionCensusUI.dat in the Plugins folder?"),
+    # so a scaled copy shipped from zzz-SC4UIScale\ - which out-sorts
+    # 150-mods\ - is what the DLL will resolve.
+    #
+    # WHY IT NEEDS US: the window is 449x482 at every tier and never scales,
+    # but our 2x FontStyle scales its text - DataInsetLegend runs 26pt against
+    # a stock 13pt. Measured: 5 of its 40 labels overflow their own boxes at
+    # 2x and 0 do at 1x, worst at 128% of the box. The frame is a 9-slice over
+    # art we ship at 2x, so its chrome bands double into a window that did not:
+    # the first data row lands inside the title band. At 3x the 9-slice
+    # degenerates outright - vertical middle span = 482 - 2*248 = -14.
+    #
+    # NOT selective-safe: this window is NOT swept (kRegionPanelIds has nine
+    # ids and 0x0B1E1F95 is not among them), and the script carries ZERO
+    # imagerect attributes, so that builder would be a near-total no-op here.
+    ("90e0199b", "Region Census (mod-only, 449x482, 43 nodes)", "RegionCensusUI"),
 ]
 
 # THE BLIND SPOT THIS CLOSES (task #154). The winner assert below only asks
@@ -230,7 +250,7 @@ TP_TARGETS = [
 # build time rather than asserted - the id must be absent from the 331-script
 # stock corpus - so it can never be used to paper over a twin that really is
 # missing.
-TP_MOD_ONLY = {"9b868f68", "12121201", "12121205"}
+TP_MOD_ONLY = {"9b868f68", "12121201", "12121205", "90e0199b"}
 TP_SRC_DIR = os.path.join(OUT_DIR, "thirdparty-src")
 TP_PACKAGES = sorted({p for (_i, _n, p) in TP_TARGETS})
 
@@ -988,12 +1008,35 @@ def fmt_id(wid):
     return "0x%08x" % wid if wid is not None else "(no id)"
 
 
+# THIRD-PARTY SCRIPTS THAT LIVE OUTSIDE THE STOCK UI GROUP (2026-08-30).
+#
+# Every script this builder had ever handled was group 96a006b0, so the group
+# was a string literal in both name builders. null-45's Region View Census UI
+# is the first that is not: its script is {0, 9CB6053F, 90E0199B}, a group the
+# stock game does not use at all.
+#
+# The group is resolved HERE, per-iid, rather than threaded as a parameter
+# through the eleven call sites of these two functions - every existing caller
+# keeps working unchanged, and there is exactly one place to look when asking
+# "which group does this script live in".
+#
+# DELIBERATELY NOT added to UI_GROUPS: that tuple drives the STOCK corpus scan,
+# and a mod-only group has no stock members. Adding it would make the
+# "target not found in corpus" check fire on a script that correctly is not
+# there.
+TP_GROUP = {
+    "90e0199b": "9cb6053f",   # null-45 Region View Census UI
+}
+STOCK_UI_GROUP = "96a006b0"
+
+
 def target_fn(iid_s):
-    return "T-00000000_G-96a006b0_I-%s.ui" % iid_s
+    return "T-00000000_G-%s_I-%s.ui" % (TP_GROUP.get(iid_s, STOCK_UI_GROUP), iid_s)
 
 
 def target_out(iid_s):
-    return "T-0x00000000_G-0x96a006b0_I-0x%s.ui" % iid_s
+    return "T-0x00000000_G-0x%s_I-0x%s.ui" % (
+        TP_GROUP.get(iid_s, STOCK_UI_GROUP), iid_s)
 
 
 # ---- Auto-discover the QUERY-PANEL FAMILY (task #36) ----

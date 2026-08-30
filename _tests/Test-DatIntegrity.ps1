@@ -342,7 +342,17 @@ $EXPECTED = @(
   # sibling button (0x000A0000). All three roots are ALSO in kNeverScaleIds.
   # +4 not +3: the three scripts plus one art asset that became referenced.
   # Same 259 at every tier by construction (one builder, --factor only).
-  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic";  tag = "2x";  entries = 265 },  # 262 -> 261 2026-08-16: #178 CAM splash {ea7f0eae} now ships ONLY in gated CamUI, ALL tiers consistent. USER DECISION STILL OWED on 262 (ship ungated); flip back if decided
+  # 265 -> 266 (2026-08-30): enrolling null-45's Region Census dialog in
+  # dialog-static made the builder stage the art that script references,
+  # {46A006B0,6BB93CB5}, into this package. MEASURED BENIGN, not assumed:
+  # the staged copy is byte-identical to the one SelectiveArt already
+  # ships (394x496, same md5), both live in 010-SC4UIScale\ and
+  # DialogStatic sorts FIRST, so SelectiveArt still wins and the pixels
+  # are the same either way. It is a redundant copy, not a behaviour
+  # change. FOLLOW-UP: the census script's art belongs in the
+  # RegionCensusUI package or nowhere - suppressing the duplicate is
+  # builder surgery that deserves its own measured session.
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic";  tag = "2x";  entries = 266 },  # 262 -> 261 2026-08-16: #178 CAM splash {ea7f0eae} now ships ONLY in gated CamUI, ALL tiers consistent. USER DECISION STILL OWED on 262 (ship ungated); flip back if decided
   @{ rel = "010-SC4UIScale\z_SC4UIScale_ItemIcons";     tag = "2x";  entries = 356 },
   # 124 = 55 submenus-mod + 69 other-plugin icons (2026-07-29 landmarks
   # pass): CAM System Integration Module (73: submenu-extended + DLC/Maxis
@@ -414,6 +424,11 @@ $EXPECTED = @(
   # RaiseUI (2026-08-30): warrior's "Raise the UI Mod" ships ONLY the two HUD
   # scripts and no art, so our copy is exactly 2 entries at every tier - the
   # mod's own scripts with imagerect scaled and area= untouched.
+  # RegionCensusUI (2026-08-30): null-45's mod-only census dialog - ONE script,
+  # no art, so exactly 1 entry at every tier.
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "2x";  entries = 1 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "15x"; entries = 1 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "3x";  entries = 1 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "2x";  entries = 2 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "15x"; entries = 2 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "3x";  entries = 2 },
@@ -421,9 +436,9 @@ $EXPECTED = @(
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "15x"; entries = 16 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "3x";  entries = 16 },
   @{ rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "15x"; entries = 696 },
-  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "15x"; entries = 265 }, # #178: see the 2x row note (2026-08-16)
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "15x"; entries = 266 }, # #178: see the 2x row note (2026-08-16)
   @{ rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "3x";  entries = 696 },   # #136: was 651; #190: was 655
-  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "3x";  entries = 265 }, # #178: see the 2x row note (2026-08-16)
+  @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "3x";  entries = 266 }, # #178: see the 2x row note (2026-08-16)
   # SelectorUI (2026-08-19): the scale selector at the STOCK tier. ONE
   # entry by design - Graphic Options and nothing else. If this count ever
   # moves, the stock tier has started shipping scaled art, which is the
@@ -860,6 +875,9 @@ $BUILT_PAIRS = @(
   # hand-copied in Deploy, but tracked by NEITHER manifest gate until the
   # 2026-08-30 audit - for the package that shipped the wrong tier twice
   # (#196). All three tiers from tools\packages\<tier>\.
+  @{ b = "tools\dialog-static\z_SC4UIScale_RegionCensusUI.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_RegionCensusUI-15x.dat";    rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_RegionCensusUI-3x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "3x" }
   @{ b = "tools\selective-safe\z_SC4UIScale_RaiseUI.dat";             rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "2x" }
   @{ b = "tools\packages\15x\z_SC4UIScale_RaiseUI-15x.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "15x" }
   @{ b = "tools\packages\3x\z_SC4UIScale_RaiseUI-3x.dat";             rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "3x" }

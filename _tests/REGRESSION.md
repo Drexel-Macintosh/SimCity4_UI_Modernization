@@ -17738,3 +17738,80 @@ corrupt" and "it looks unscaled" are different diagnoses with different cures.
 Whenever a third-party mod overrides a `.UI` script we also ship, ask which of
 us owns the ART it references; if the answer is "us", its rects are already
 wrong.
+
+---
+
+## 2026-08-30 - Region View Census UI: the FIRST script we scale outside the stock UI group
+
+null-45's "Region View Census UI" 1.0.1, the third of the week's new mods.
+Cured in v4.5.5 as `z_SC4UIScale_RegionCensusUI`.
+
+### Why it needed us, and why it is NOT the RaiseUI shape
+
+The mod's dialog is 449x482 at every tier and never scales itself, while our
+2x FontStyle scales its text (`DataInsetLegend` 26pt against a stock 13pt).
+Measured: **5 of its 40 labels overflow their own boxes at 2x and 0 do at 1x**.
+Its frame is a 9-slice over art we ship at 2x, so the chrome bands double into
+a window that did not - the first data row lands inside the title band. At 3x
+the 9-slice degenerates outright: vertical middle span = `482 - 2*248 = -14`,
+corners overlapping.
+
+**Two mods, two different cures, and the difference is the whole lesson:**
+
+| | Raise the UI (v4.5.4) | Region Census (v4.5.5) |
+|---|---|---|
+| window | runtime-SWEPT | never swept |
+| builder | `selective-safe` | `dialog-static` |
+| scales `area=` | **NO** (the DLL does it at runtime) | **YES** |
+| scales `imagerect` | yes - the entire fix | script carries none |
+
+Choosing the wrong one is not a partial fix: selective-safe on the census
+script would be a near-total no-op (`grep -c imagerect` = 0), and dialog-static
+on a swept window would DOUBLE-SCALE it. The discriminator is
+`kRegionPanelIds` - nine ids, and `0x0B1E1F95` is not among them (control:
+`0x0BB0F5E7` is).
+
+### The first non-stock UI group
+
+Every script `build_dialog_static.py` had ever handled was group `96a006b0`,
+so the group was a string literal in both name builders. This script is
+`{0, 9CB6053F, 90E0199B}`. Resolved with a per-iid `TP_GROUP` map consulted
+INSIDE `target_fn`/`target_out` rather than a parameter threaded through their
+eleven call sites - every existing caller keeps working and there is one place
+to look. Deliberately NOT added to `UI_GROUPS`: that drives the STOCK corpus
+scan, and a mod-only group has no stock members.
+
+⚠ **THE TRAP THAT WAS SITTING THERE:** a Carbon-variant copy of this same
+script already existed at `tools/research/carbon/builder-inputs/thirdparty-src/`
+with `area=(2,2,399,499)` - a DIFFERENT LAYOUT from the live mod's
+`(1,-3,450,479)`. Staging the wrong one ships someone else's dialog. Always
+re-extract from the installed mod's own dat.
+
+### What the entry-count gate caught, and the honest resolution
+
+Enrolling the script made dialog-static stage the art it references,
+`{46A006B0,6BB93CB5}`, into the DialogStatic package: **265 -> 266 entries**.
+Investigated rather than accepted: the staged copy is **byte-identical** to the
+one SelectiveArt already ships (394x496, same md5), both live in
+`010-SC4UIScale\`, and DialogStatic sorts FIRST - so SelectiveArt still wins
+and the pixels are the same either way. A redundant copy, not a behaviour
+change. Recorded at all three tier rows with that reasoning.
+**FOLLOW-UP (not done):** that art belongs in the RegionCensusUI package or
+nowhere; suppressing the duplicate is builder surgery that deserves its own
+measured session rather than being done at the end of a long one.
+
+### A regression in v4.5.4, found by the ordering census and fixed here
+
+The `#183` region-bubble align fix (population label `0xC9E41918`,
+`align=lefttop -> leftbottom`) lived ONLY in selective-safe's stock branch. The
+moment RaiseUI took ownership of `aa920991`, the shipped winner came out
+`lefttop` and the fix silently went with it - the population figure floats to
+the top of its plate at 2x, because that label's own rect IS scaled
+(112x18 -> 224x36). The rule now runs in the third-party path too, tolerating
+zero hits (a mod is not obliged to carry the node).
+
+⭐ **TWO MECHANISMS FOR ONE DECISION IS THE DEFECT, and "the stock path" plus
+"the third-party path" ARE two mechanisms.** Any correction applied to a script
+must run on whichever copy of that script we actually ship - a fix keyed to the
+branch rather than to the file is a fix that disappears the moment a mod takes
+the file over.

@@ -4344,6 +4344,35 @@ def main():
                 guid = FONT_GUIDS.get(m2.group(1))
                 return ("font=" + guid) if guid else m2.group(0)
             tp_new = FONT_NAME_RE.sub(tp_font_sub, tp_new)
+
+            # #183 REGION-BUBBLE POPULATION ALIGN - THE SAME RULE THE STOCK
+            # PATH APPLIES, because a script is a script whoever wrote it.
+            #
+            # MEASURED 2026-08-30: warrior's "Raise the UI Mod" overrides
+            # aa920991, our RaiseUI package won it, and the shipped copy came
+            # out `align=lefttop` while our stock-derived SelectiveArt copy has
+            # carried `align=leftbottom` since #183. The fix lived ONLY in the
+            # stock branch, so the moment a mod took ownership of the script
+            # the fix silently went with it - the population figure floats to
+            # the top of its plate at 2x, because the label's own rect IS
+            # scaled (112x18 -> 224x36, REGION-SWITCH.md:127), which is
+            # exactly the contingency the stock site's comment says decides
+            # whether this matters.
+            #
+            # TWO MECHANISMS FOR ONE DECISION IS THE DEFECT. The rule now runs
+            # on whatever version of the script we are shipping.
+            #
+            # Tolerates 0 hits, unlike the stock site: a third-party script is
+            # not obliged to contain this node, and a mod that already ships
+            # `leftbottom` is correct and must not be counted as a miss.
+            if tp_fn.endswith("_I-aa920991.ui"):
+                tp_new, n_bub = re.subn(
+                    r'(id=0xc9e41918\s[^<>]*?)align=lefttop',
+                    r'\g<1>align=leftbottom', tp_new)
+                if n_bub:
+                    print("   third-party UI %s: #183 population align "
+                          "lefttop -> leftbottom (%d node)" % (tp_fn, n_bub))
+
             out_name = "T-0x%s_G-0x%s_I-0x%s.ui" % (m.group(1), m.group(2), m.group(3))
             with open(os.path.join(tp_stage, out_name), "w",
                     encoding="latin-1", newline="") as f:

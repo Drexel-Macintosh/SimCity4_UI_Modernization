@@ -483,6 +483,13 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_WarriorUI-3x.dat" "$zzz\z_SC4UIS
 Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_RaiseUI.dat" "$zzz\z_SC4UIScale_RaiseUI-2x.dat" -Force
 Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_RaiseUI-15x.dat" "$zzz\z_SC4UIScale_RaiseUI-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_RaiseUI-3x.dat" "$zzz\z_SC4UIScale_RaiseUI-3x.dat.x1-disabled" -Force
+# RegionCensusUI (2026-08-30): null-45's mod-ONLY region census dialog, which
+# never scales itself while our 2x fonts scale its text - 5 of 40 labels
+# overflow at 2x. Built by dialog-static (static/never-swept window, so its
+# area= is ours to scale), unlike RaiseUI just above which is imagerect-only.
+Copy-Item "$proj\tools\dialog-static\z_SC4UIScale_RegionCensusUI.dat" "$zzz\z_SC4UIScale_RegionCensusUI-2x.dat" -Force
+Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_RegionCensusUI-15x.dat" "$zzz\z_SC4UIScale_RegionCensusUI-15x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_RegionCensusUI-3x.dat" "$zzz\z_SC4UIScale_RegionCensusUI-3x.dat.x1-disabled" -Force
 # NamIcons (task #139, 2026-08-05): 1.5x/2x/3x copies of the Network Addon
 # Mod's OWN 392 menu ItemIcons, gated in ScaleTier on the presence of
 # NetworkAddonMod_Controller.dat. Same zzz- rule as its siblings - NAM lives
@@ -635,6 +642,7 @@ $DEPENDENCY_GATED = @(
     "z_SC4UIScale_CamUI",         # CAM
     "z_SC4UIScale_WarriorUI",     # Warrior's UI mod
     "z_SC4UIScale_RaiseUI",       # Warrior's Raise the UI Mod
+    "z_SC4UIScale_RegionCensusUI",# null-45's Region View Census UI
     "z_SC4UIScale_ThirdPartyUI",  # assorted third-party UI overrides
     "z_SC4UIScale_SaveWarningUI", # save-warning mod
     "z_SC4UIScale_NamIcons",      # NAM

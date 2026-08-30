@@ -887,6 +887,24 @@ namespace
 		// hard-codes this mod's rects, so an update MUST disable us.
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_RaiseUI",
 		  L"Raise the UI Mod.dat", false, 6958, nullptr, 0 },
+		// null-45's "Region View Census UI" 1.0.1 (2026-08-30). A MOD-ONLY
+		// dialog - there is no stock twin, so with the mod gone the window
+		// simply does not exist, which is the correct end state for the gate.
+		//
+		// It ships a 449x482 window that never scales, and our 2x FontStyle
+		// scales its text: DataInsetLegend runs 26pt against a stock 13pt.
+		// MEASURED: 5 of its 40 labels overflow their own boxes at 2x and 0
+		// do at 1x. Its frame is a 9-slice over art we ship at 2x, so the
+		// chrome bands double into a window that did not - the first data row
+		// lands inside the title band. At 3x the 9-slice degenerates outright
+		// (vertical middle span = 482 - 2*248 = -14, corners overlapping).
+		//
+		// NOT the RaiseUI technique: that one scales `imagerect` and this
+		// script carries none. This window is also NOT swept (kRegionPanelIds
+		// holds nine ids and 0x0B1E1F95 is not among them), so its `area=` is
+		// ours to scale statically - which is what dialog-static does.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_RegionCensusUI",
+		  L"RegionCensusUI.dat", false, 3728, nullptr, 0 },
 		// NAM ITEM ICONS (#139, 2026-08-05). The Network Addon Mod ships 381
 		// ItemIcon strips of its own at {856DDBAC,6A386D26,*} - the transport
 		// flyouts are almost entirely NAM's. With no 2x copy each strip is a
@@ -4387,6 +4405,9 @@ namespace ScaleTier
 			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_RaiseUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_RaiseUI", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_RegionCensusUI",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_RegionCensusUI", depOk));
 			// SUBFOLDER package (#139, 2026-08-05): 2x/1.5x/3x copies of NAM's
 			// OWN 381 ItemIcon strips. It MUST live in zzz-SC4UIScale\ and not
 			// the root ItemIcons dat: root Plugins FILES load before
