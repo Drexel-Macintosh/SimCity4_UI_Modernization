@@ -1323,7 +1323,28 @@ namespace
 		const wchar_t* usedTag = tag;
 		if (!FileExists(src))
 		{
-			// A missing payload is a SHIP DEFECT, not a state to absorb
+			// NOT INSTALLED is not the same as SHIPPED BROKEN, and calling
+			// both a packaging defect cost a false alarm on a healthy install.
+			// A package with NO payloads AND no live file was simply never put
+			// here - UncoveredIcons is the standing example: it is rebuilt
+			// per-install from the player's own Plugins tree (Build-Dist keeps
+			// it out of the bundle deliberately, because a shipped copy would
+			// be someone else's icons) and it is synthesized LATER in the
+			// boot, after this pass has already run. Nothing is wrong, there
+			// is nothing to arm, and counting it as FAILED made a clean sc4pac
+			// install report "1 FAILED".
+			wchar_t offSrc[MAX_PATH];
+			swprintf_s(offSrc, L"%s%s.off.uipay", dir, base);
+			if (!FileExists(offSrc) && !FileExists(live))
+			{
+				Logger::Get().WriteLine(LogLevel::Debug,
+					"ArmOne: %ls is not installed (no payloads, no live file) "
+					"- nothing to arm.", base);
+				return true;
+			}
+
+			// Past that gate a payload really is missing from a package that
+			// IS here, which is a SHIP DEFECT and not a state to absorb
 			// quietly. Fall back to `.off` - inert is the only safe wrong
 			// answer - and name the file out loud.
 			Logger::Get().WriteLine(LogLevel::Info,
