@@ -390,9 +390,11 @@ That is the complete list. This project does **not** use
 the vcxproj are the two above.
 
 SimCity 4 and its assets belong to **Electronic Arts**; this is an unofficial,
-unaffiliated mod containing no EA code. The scaled art and font files it
+unaffiliated mod. The DLL links no EA code. The scaled art and font files it
 generates are derived from the player's own installation, are not covered by
-the CC0 dedication, and are excluded from the published source.
+the CC0 dedication, and are excluded from the published source; the text-form
+research materials the repository does carry are disclosed in
+`THIRD-PARTY-NOTICES.md` §4a.
 
 → **Full detail, pinned commits and exact obligations:
 [`THIRD-PARTY-NOTICES.md`](../THIRD-PARTY-NOTICES.md)** · dedication text:

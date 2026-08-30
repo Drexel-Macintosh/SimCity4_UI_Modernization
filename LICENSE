@@ -44,13 +44,16 @@ NOT ours to dedicate, and their terms survive regardless of the above:
       publishing the complete source satisfies it.
 
   4. Anything derived from SimCity 4's own files.
-     SimCity 4 and its assets are the property of Electronic Arts. This project
-     contains no EA code. It DOES generate scaled art packages, font
+     SimCity 4 and its assets are the property of Electronic Arts. The DLL
+     links no EA code. The project DOES generate scaled art packages, font
      configurations and a small number of locale-text overrides derived from
      the game's own resources, which are produced from a user's existing
       installation. Those derived files are not covered by the dedication above
-      and are excluded from the published source. See THIRD-PARTY-NOTICES.md,
-      section 4, for the one place where game text does travel with the source.
+      and are excluded from the published source. The repository also carries
+      text-form research materials (decoded game data and scripts, a few
+      disassembly listings) as the evidence base of its engine documentation;
+      they are likewise not covered by the dedication. See
+      THIRD-PARTY-NOTICES.md, section 4 and 4a, for the full census.
 
 Full third-party terms, versions and pinned commits: THIRD-PARTY-NOTICES.md
 Upstream licence texts as shipped: vendor\gzcom-dll\LICENSE (LGPL-2.1),

@@ -515,8 +515,10 @@ UiSpike: panel 0xABB26B0E (3,1045 157x488) -> (6,490 314x976)
   COLLAPSED BY DEFAULT (stock behavior, verified against vanilla - not a bug).
   Click the expand tab -> a 2x rail of FOUR tools; all four must open their
   tool/flyout.
-- **No founded-city vanilla reference exists.** `_vanilla-reference/FINDINGS.md`
-  is pre-founding at 1280x1024. For any new founded-city UI question, run
+- **No founded-city vanilla reference exists.** The stock-capture write-up
+  FINDINGS.md, in the local-only `_vanilla-reference/` tree (gitignored
+  evidence — deliberately not published, so there is no file here to open), is
+  pre-founding at 1280x1024. For any new founded-city UI question, run
   `Set-StockCompare.ps1 -Mode Stock` FIRST and capture the real baseline.
 
 ## NEWS BOX + NEWS TEXT = THE HTML ENGINE (v2.19.0, 2026-07-29 evening)
@@ -1765,9 +1767,12 @@ clipped 2x text = the static dat is stale (count back at 255, i.e. the deploy
 above never happened). Any of them rendering at ~4x = its root fell out of
 kNeverScaleIds and both layers are running.
 
-Eyes-on script for these is PART 1 items 1.2 and 1.13 of
-`_tests\RUN-SHEET-NEXT-SESSION.md` (that run sheet assumes the deploy above
-has been done — the Batch A dialogs will look unchanged until it is).
+Eyes-on script for these was PART 1 items 1.2 and 1.13 of the session run sheet
+RUN-SHEET-NEXT-SESSION.md — **retired 2026-08-06** alongside HANDOFF.md and
+moved into the gitignored `_archive/`, so there is no file here to open. The
+standing eyes-on procedure lives in `_tests\SCENARIOS.md` (the axes these
+dialogs must be checked under); that run sheet assumed the deploy above had
+been done — the Batch A dialogs look unchanged until it is.
 
 ---
 
@@ -4889,8 +4894,11 @@ Numbered on from law 46. Short form in `README.md` → *LAWS*, per
 
 ⚠ **Read the wording, not the digit.** The numbered laws are not one list:
 14-29 and 29-35 are the two `LAWS MINTED` blocks above, and **36-46 were
-minted inline at their incidents** and have no numbered entry here (42 in
-`HANDOFF.md`, 44 in the #93 section above, 43 stated in
+minted inline at their incidents** and have no numbered entry here (42 in the
+session diary HANDOFF.md — **retired 2026-08-06**, superseded by
+`START-HERE.md` and archived to the gitignored `_archive/`, so law 42 has no
+readable statement site left in this repo; 44 in the #93 section above, 43
+stated in
 `tools\research\SCALING-AXES.md` opening, 46 in `VERSION-HISTORY.txt`).
 `29` has **two claimants in this file** — the PRIZE/BLAST-RADIUS law (LAWS
 MINTED THIS NIGHT) and the package-deploy law (LAWS MINTED THIS DAY). The
@@ -5302,8 +5310,10 @@ panels/graphs/Data Views, quit):
 (EBLT/SBLT/RCAL/DBUF/DSTRIP/GAUGE/SUBGEO/DHOOK) are **interaction-gated, not
 level-gated** — they need the interaction, not a higher level. The preserved
 LogLevel=3 session shows the same zeros. Do not "fix" a level by chasing them.
-⚠ The L1 capture in `_tests\captures\LOGLEVEL-AUDIT-2026-08-04.md` is a
-**reconstruction from transcript** — the game wipes the log at each launch.
+⚠ The L1 capture — LOGLEVEL-AUDIT-2026-08-04.md, in the local-only
+`_tests\captures\` tree (gitignored evidence, deliberately unpublished, so
+there is no file here to open) — is a **reconstruction from transcript**: the
+game wipes the log at each launch.
 
 `DLGPOS` stays **Info by design**: its own comment records that a zero count
 must remain a real measurement, not a level artefact.
@@ -6567,7 +6577,11 @@ plan was complete and still missed something:
 
    ⚠ AND THEN THIS PARAGRAPH DID IT AGAIN. The first draft quoted the deleted
    regex verbatim, which put the token straight back into a SHIPPING file -
-   caught by `EXPORT-PUBLIC.ps1` on the very next run, one hit, nothing copied.
+   caught by the exporter in use at the time, EXPORT-PUBLIC.ps1, on the very
+   next run, one hit, nothing copied. (That script was superseded 2026-08-06
+   and has since been deleted as dead code; its leak scan lives on in
+   `_packaging\Build-PublicRepo.ps1`. Every mention of the old name in this
+   entry is history, not a file you can open.)
    **Writing up a leak is a way to re-introduce it.** Describe the pattern; do
    not paste it. This is also the cleanest proof the exporter's scan is real:
    it failed on a file that had passed twenty minutes earlier.
@@ -6580,8 +6594,9 @@ plan was complete and still missed something:
 
 3. **`/_reviews/` and ten THROWAWAY probe scripts were on neither list.**
    Found by re-running the scan on the SELECTED FILE SET rather than trusting
-   the rules that produced it. `EXPORT-PUBLIC.ps1` now does that every run and
-   REFUSES to copy on any hit.
+   the rules that produced it. EXPORT-PUBLIC.ps1 did that every run and
+   REFUSED to copy on any hit; `_packaging\Build-PublicRepo.ps1` carries that
+   behaviour today.
 
 ⚠ THE EXPORT IS AN ALLOWLIST, NOT A `.gitignore`. The working tree is ~988 MB /
 30,000 files against ~6.9 MB / 630 published - about 200:1. One gap in a
@@ -10144,6 +10159,15 @@ do not stage (`46a006b0:deadbeef`) still correctly reports absent.
 
 ## #165 OPEN, LIVE IN THE SHIPPED 1.5x PACKAGE — the 8-state strip loses 4px
 
+> ✅ **SUPERSEDED 2026-08-18 — #165 IS NOT OPEN; this header is kept as the
+> investigation's record, not as live state.** Measured out of the deployed
+> `z_SC4UIScale_SelectiveArt-15x.dat`: `{46a006b0,14416315}` ships 208x26,
+> cell 208/8 = 26.00 EXACT — cured as a side effect of the #171 cell-first
+> rule, generalised by #186/law 107 (`N * RoundHalfUp(cell, f)`). See
+> `## #165 IS NOT OPEN - MEASURED CURED IN THE SHIPPED PACKAGE (2026-08-18)`
+> at the end of this file. The ⛔ HARDENING-PROPOSALS C5 warning below still
+> STANDS.
+
 `{46a006b0,14416315}`, an 8-state `style=radiocheck` sheet:
 
     f=1.0  136x17   cell 136/8 = 17.0   INTEGER
@@ -12351,7 +12375,7 @@ whole effect-elimination branch rests on an unverified premise.
 vt0 (0xAA4900) decoded end to end (24 slots). **Slot 13 = SetSize(float,float)
 @0x5ED400**: each arg `fmul [0xA94D50]`(=10.0f) -> ftol -> `mov [this+0x5E],al`
 / `[this+0x5F],al`. **Slot 14 = GetSize @0x5ECA10**: those bytes `fild` x
-[0xA8C950](=0.1f). So size = two bytes in TENTHS of a world unit, hard-capped
+`[0xA8C950]` (= 0.1f). So size = two bytes in TENTHS of a world unit, hard-capped
 at **25.5** by the encoding.
 
 Live confirmation from `captures/...-190644.log:501-542` (12 markers, 0x68
@@ -15686,8 +15710,10 @@ tells you where it GOES, never who ARRIVES.
 
 ## RING BLIT GUARDS: THE QUEUED SCRIPT DOES NOT COMPILE, AND HALF OF IT IS DEAD (2026-08-19)
 
-`fix_ringguards.py` sat in the scratchpad all session as "written but never
-applied". It was verified by actually COMPILING the shapes (MSVC 14.44.35207,
+The queued ring-guard patch script — fix_ringguards.py, which lived only in the
+volatile scratchpad and was never committed to this repo, so there is no file
+here to open — sat there all session as "written but never applied". It was
+verified by actually COMPILING the shapes (MSVC 14.44.35207,
 /std:c++17 to match SC4UIScale.vcxproj, syntax-only, throwaway files):
 
   (a) helper inserted at the gMayorRebirthLogs declaration (line 7383) while
@@ -17442,9 +17468,10 @@ and refuses to run at all without the release's real `lastModified`.
   it ON (85 = 81 + the 4 FontStyle files): one forgotten flag away from a
   channel with unscaled text at every tier. Default flipped; the hazardous
   direction now needs the explicit flag (`--no-asset-inis`).
-* Deleted dead: `Build-ProposedLayout.ps1` (models the never-shipped
-  `zz-drexel` layout), `EXPORT-PUBLIC.ps1` (superseded 2026-08-06, still
-  carrying a rival publish allowlist).
+* Deleted dead — both are gone from the tree, so the two names here are ledger
+  entries, not links: Build-ProposedLayout.ps1 (modelled the never-shipped
+  `zz-drexel` layout) and EXPORT-PUBLIC.ps1 (superseded 2026-08-06 by
+  `_packaging\Build-PublicRepo.ps1`, still carrying a rival publish allowlist).
 
 ### DEVIATION from the audit plan, recorded honestly
 

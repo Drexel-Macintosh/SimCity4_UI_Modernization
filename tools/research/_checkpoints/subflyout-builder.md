@@ -106,4 +106,7 @@ the exe returns to `0x007E74B1`. One field names the builder.
 ## NOT TOUCHED
 
 `SUBFLYOUT-CONSTANTS.md` (sibling agent), `src\**`, `_tests\**`, `dist\**`,
-`HANDOFF.md`, `README.md`, the shared `state.json`, the exe, any game file.
+the then-current HANDOFF.md session diary (retired 2026-08-06 and superseded
+by `START-HERE.md`; its diary content was archived to the gitignored
+`_archive\`, so there is no file to open here), `README.md`, the shared
+`state.json`, the exe, any game file.

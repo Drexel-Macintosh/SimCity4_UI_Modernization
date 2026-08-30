@@ -406,7 +406,10 @@ installed. If you do not, nothing about your game changes from 4.5.7.
   column's Plazas still attach the ring arm too high with the strip's
   bottom clipped at 2x. Instrumentation (SUBBORN / SUBBORN2 / SUBGEO2 /
   SUBSHIFT / SUBCAND / BORNSHIFT log lines) is in place for the next
-  pass; see `HANDOFF-2026-08-23.md` for the full diagnosis - the key
+  pass; the full diagnosis was written up in the 2026-08-23 session handoff
+  (deleted 2026-08-29 and superseded by
+  `research/laws/project-sc4-flyout-bottom-anchor.md`, which carries it under
+  "What is still open") - the key
   finding is that placement is decided entirely by the birth hook (the
   sweep dock gate never fires), and the birth hook's ring auto offset is
   a different quantity than the sweep formula was fed.

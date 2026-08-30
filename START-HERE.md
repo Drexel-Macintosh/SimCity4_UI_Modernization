@@ -34,7 +34,7 @@ Nothing modifies a game file. Everything is in-memory, per session.
 |---|---|
 | [README.md](README.md) | The product: what it is, tiers, requirements, install |
 | [docs/](docs/) | How it works, what it scales, the package manifest, compatibility, building |
-| [research/laws/](research/laws/) | **Lessons learned** — the scaling laws, each paid for by a real defect. Start at the [index](research/laws/INDEX.md) |
+| [research/laws/](research/laws/) | **Lessons learned** — the scaling laws, each paid for by a real defect. Start at the [index](research/laws/README.md) |
 | [tools/research/](tools/research/) | **The SDK reference** — SC4's UI engine documented from measurement: `SC4-UI-ENGINE.md` first, `TRIAGE.md` for any new defect, `METHOD.md` for how work happens here |
 | [tools/uimap/](tools/uimap/) | **The offline simulator** — layout emulation, gates and compositors that adjudicate fixes without launching the game |
 | [_tests/](_tests/) | **The gates** — deploy, integrity and offline verification; the suite reference is `_tests\README.md` |
@@ -97,7 +97,7 @@ generator; do not hand-edit them, and do not treat them as sources of truth.
     game's own path and be correct at birth.
 
 The full numbered law collection lives in
-[research/laws/](research/laws/INDEX.md); the scenario matrix every fix must
+[research/laws/](research/laws/README.md); the scenario matrix every fix must
 be tested across is [_tests/SCENARIOS.md](_tests/SCENARIOS.md).
 
 ## 4. Build, test, deploy

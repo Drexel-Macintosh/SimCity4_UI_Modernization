@@ -97,25 +97,46 @@ on disk is touched except the mod's own files. Full detail:
 | Path | What it is |
 |---|---|
 | [docs/](docs/) | Product documentation: [how it works](docs/HOW-IT-WORKS.md), [what it scales](docs/WHAT-IT-SCALES.md), [compatibility](docs/COMPATIBILITY.md), [building](docs/BUILDING.md) |
-| [research/laws/](research/laws/) | The scaling laws: engineering rules, each derived from a real defect; start at the [index](research/laws/INDEX.md) |
-| [tools/research/](tools/research/) | The SDK-style reference to SC4's UI engine, written from measurement (Maxis shipped no SDK) |
-| [tools/uimap/](tools/uimap/) | The offline simulator: layout emulation, gates and compositors that run without launching the game |
-| [_tests/](_tests/) | The regression net: contract gates and deploy scripts that run without the game |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 
 Known limitations are listed in
 [research/KNOWN-LIMITATIONS.md](research/KNOWN-LIMITATIONS.md).
+
+## Engine documentation
+
+Scaling this interface meant reverse-engineering it first. Maxis shipped no UI
+SDK, so one had to be written — from measurement, against
+`SimCity 4.exe` 1.1.641.0. That reference is published here alongside the mod,
+because it outlives it: the next person to modify this game's interface should
+not have to rediscover any of it.
+
+**Start at [docs/DECOMPILATION-STATUS.md](docs/DECOMPILATION-STATUS.md)** —
+what is documented, what is partial, what is still unknown, and every hook and
+byte patch the DLL installs.
+
+| Path | What it is |
+|---|---|
+| [tools/research/](tools/research/) | The engine reference: how the UI is built, sized, painted and hit-tested, plus per-screen anatomy for the region view, mayor mode, the budget dialogs and more |
+| [research/laws/](research/laws/) | 50 engineering rules, each paid for by a defect that reached the screen — the most transferable material here |
+| [research/UNKNOWNS-AND-NEXT-TARGETS.md](research/UNKNOWNS-AND-NEXT-TARGETS.md) | The unknowns register: what is genuinely open, what was closed as impossible, and the refutation record behind both |
+| [tools/uimap/](tools/uimap/) | The offline model: a layout emulator and gate suite that answer geometry questions without launching the game |
+| [_tests/](_tests/) | The regression net: contract gates and deploy scripts, also offline |
 
 ## Repository map
 
 | Path | What it is |
 |---|---|
 | `src/` | The DLL: director, window-tree scaler (`UiSpike.cpp`), executable patches (`CodePatches.cpp`), tier/package logic (`ScaleTier.cpp`) |
-| `tools/` | Package builders — every shipped `.dat` is generated, never hand-edited |
+| `tools/` | Package builders — every shipped `.dat` is generated, never hand-edited — plus the research corpus and the offline model |
+| `docs/`, `research/` | Product documentation and the distilled research tier (laws, unknowns register) |
+| `_tests/` | Gates, deploy scripts and the regression ledger |
 | `vendor/` | The third-party libraries the DLL links — gzcom-dll, MinHook and sc4-dll-utilities, each a **git submodule** pinned to a specific upstream commit (fetch with `git submodule update --init`) |
 
 No Maxis-derived art is committed to this repository; the packages are built
-locally from an owned installation.
+locally from an owned installation. The research corpus does carry game
+content in text form as its evidence base — decoded scripts, data records and
+disassembly listings — set out in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) §4a.
 
 ## License
 
@@ -125,4 +146,7 @@ statically links two third-party libraries with their own terms
 (gzcom-dll, LGPL-2.1-or-later; MinHook, BSD-2-Clause); see
 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) before redistributing a
 build. SimCity 4 and its assets belong to Electronic Arts; this is an
-unofficial, unaffiliated mod containing no EA code.
+unofficial, unaffiliated mod. The DLL links no EA code and the repository
+carries no EA binaries or artwork; the engine documentation's text-form
+evidence (decoded scripts, disassembly listings) is disclosed in
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) §4a.

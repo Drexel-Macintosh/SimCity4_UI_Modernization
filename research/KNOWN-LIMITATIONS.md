@@ -69,7 +69,9 @@ regression suite that holds them in place is in `_tests/`.
   94.9%. Windows that are visible but unnameable are deliberately left out of
   the percentage: three creation channels — a singleton factory, computed
   window ids, and art bound by no script — are structurally invisible to any
-  offline census.
+  offline census. These are the survey's own denominators; the canonical
+  headline is 86 of 117 distinct root ids = 73.5%
+  (`tools/uimap/coverage-matrix.md`).
 - **Font line height comes from rendered captures.** The fonts are a format no
   offline tool can read, so line height is measured at 1x and 2x from captures
   of the rendered screen. The chart-legend gate checks its vertical placement

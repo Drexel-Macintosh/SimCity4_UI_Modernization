@@ -19,7 +19,8 @@ those three items:**
   never on a line number. Verified by content: `grep -c "Upscale2x.exe dbpf"`
   returns **0**.)*
 - **N5 item 2 in substance, not verbatim** — the script shipped as
-  `tools\upscale\Rebuild-Corpus.ps1`, **not** the proposed `Rebuild-Previews.ps1`.
+  `tools\upscale\Rebuild-Corpus.ps1`, **not** under the name this document
+  proposed — Rebuild-Previews.ps1 was never written and no such file exists.
   It requires all three lists (`:69-73`), rebuilds all three tiers (`:94-112`)
   and refuses a missing or empty list (`:74-88`) — but it prints per-list
   **entry counts** (`:87`), **not** the SHA-256 this item asked for.
@@ -429,7 +430,9 @@ explicitly that `llround` **was the defect**, and cites
 1.5× and 0 at 2×; with half-up, 0 and 0"*.
 
 `diff.py:125 edge_law()` builds the entire runtime size law on top of the stale
-rule, and `diff.py` is the Stage-4 harness driven by
+rule, and `tools\uimap\diff\diff.py` (a derived tree the .gitignore excludes —
+present in a working clone once Stage 4 has been run, not in the published
+file list) is the Stage-4 harness driven by
 `_tests\Test-UiMapDiff.ps1:90`, which fails the suite on a non-zero exit.
 
 **FAILURE SCENARIO.** The divergence is confined to **negative** coordinates —
@@ -892,7 +895,8 @@ fix P0 first or its output is unreadable).
 
 **DEFECT.** `Upscale2x.cs` gained `--height-exact-strips` /
 `sHeightExactStrips` tonight (#162). There is:
-* no `find_height_exact_strips.py` — `tools\upscale\` has only
+* no producer script — a find_height_exact_strips.py is what the pattern calls
+  for, but no such file was ever written; `tools\upscale\` has only
   `find_cell_strips.py`, `find_nine_slice.py`, `find_no_snap.py`,
   `find_tiled.py`;
 * no `height-exact-strips.txt` anywhere on disk;
@@ -904,7 +908,8 @@ hand-write the list (which is exactly the heuristic-vs-derived distinction rule
 22 was written to kill) or forget the flag entirely (N3's shape). Both failures
 are silent.
 
-**FIX.** Either write `find_height_exact_strips.py` deriving the set from the
+**FIX.** Either write the missing producer — proposed name
+find_height_exact_strips.py, still unwritten — deriving the set from the
 `.UI` bindings the way its three siblings do, **or delete the flag from
 `Upscale2x.cs` until #162's cure is decided**. An armed flag with no producer is
 a trap; a missing flag is honest.
@@ -962,9 +967,10 @@ the list files. `grep -riE "LastWriteTime|Get-FileHash|SHA256|IAcceptToolDrift"
 tools\upscale\` returns nothing, so *"NEVER REBUILD A TOOL BINARY AND ITS OUTPUT
 IN THE SAME CHANGE"* is still unenforced.
 
-(Also note the script shipped as `Rebuild-Corpus.ps1`, not the
-`Rebuild-Previews.ps1` named in the FIX below — it rebuilds the whole corpus,
-2x included, not just the fractional previews.)
+(Also note the script shipped as `Rebuild-Corpus.ps1`, not under the
+Rebuild-Previews.ps1 name the FIX below proposes — that name was never written
+— because it rebuilds the whole corpus, 2x included, not just the fractional
+previews.)
 **Anyone who follows the project's own documentation un-ships three
 user-confirmed fixes**, at exit 0, and every downstream gate stays green because
 each one measures the new tree against the new tree.
@@ -987,7 +993,9 @@ in this tree.
 **FIX.**
 1. Correct `PACKAGES.md` to the full four-flag command (this is a doc edit, not
    a behaviour change).
-2. Replace the hand-typed command with `tools\upscale\Rebuild-Previews.ps1`
+2. Replace the hand-typed command with a script — proposed here under the name
+   tools\upscale\Rebuild-Previews.ps1, which was never written; what shipped is
+   `tools\upscale\Rebuild-Corpus.ps1` —
    that regenerates all three trees with every derived list, in one action, and
    prints the SHA-256 of each list file it used. A command a human types feeding
    a command a script runs is the generalised shape of every staleness defect in
@@ -1347,7 +1355,7 @@ Ranked by *(likelihood) × (would a gate catch them?)*:
 
 | # | the reintroduction | would a gate catch it? |
 |---|---|---|
-| 1 | ~~**Follows `PACKAGES.md`'s upscale command** and un-ships #156/#157/#160~~ **CLOSED 2026-08-16** — step 1 is now `Rebuild-Corpus.ps1`, which wires all three derived lists into every tier's invocation and throws on a missing or empty one (`PACKAGES.md`'s `⛔ USE THE SCRIPT` block; `tools\upscale\Rebuild-Corpus.ps1:69-88,101-102`; lists present and non-empty: 193 / 30 / 121). Escape hatch: `-AllowEmptyLists` (`:48,:82`). | **NO — and that has NOT changed.** No gate holds a 1x-derived expectation for these three flags (`gate_btn_undercover.py`'s `states * R(cell1x * f)` check is REPORT-ONLY for the pre-scaled population, per its own header), so a flagless rebuild is still invisible; what closed is the *doc-obedience* path, not the gate blindness. N5.1 shipped. N5.2 shipped **as `Rebuild-Corpus.ps1`, not the `Rebuild-Previews.ps1` N5 names, and WITHOUT the SHA-256-per-list provenance line — it prints entry counts (`:87`)**. **N5 item 3 is still unbuilt: no `-IAcceptToolDrift`, no exe-vs-source or list-vs-exe mtime check (`:42-55`), and the drift is still on disk (exe 08-15 21:03, all three lists older).** |
+| 1 | ~~**Follows `PACKAGES.md`'s upscale command** and un-ships #156/#157/#160~~ **CLOSED 2026-08-16** — step 1 is now `Rebuild-Corpus.ps1`, which wires all three derived lists into every tier's invocation and throws on a missing or empty one (`PACKAGES.md`'s `⛔ USE THE SCRIPT` block; `tools\upscale\Rebuild-Corpus.ps1:69-88,101-102`; lists present and non-empty: 193 / 30 / 121). Escape hatch: `-AllowEmptyLists` (`:48,:82`). | **NO — and that has NOT changed.** No gate holds a 1x-derived expectation for these three flags (`gate_btn_undercover.py`'s `states * R(cell1x * f)` check is REPORT-ONLY for the pre-scaled population, per its own header), so a flagless rebuild is still invisible; what closed is the *doc-obedience* path, not the gate blindness. N5.1 shipped. N5.2 shipped **as `Rebuild-Corpus.ps1`, not under the Rebuild-Previews.ps1 name N5 proposes (never written), and WITHOUT the SHA-256-per-list provenance line — it prints entry counts (`:87`)**. **N5 item 3 is still unbuilt: no `-IAcceptToolDrift`, no exe-vs-source or list-vs-exe mtime check (`:42-55`), and the drift is still on disk (exe 08-15 21:03, all three lists older).** |
 | 2 | **Widens `kCellCounts` beyond {3,4}** — it reads like a tunable, and "safer to include more counts" is the obvious wrong intuition | **NO.** #149's measurement (152 vs 34 mismatches) lives in a comment, not a check. Add an assert that `kCellCounts.Length == 2`. |
 | 3 | **Rebuilds `Upscale2x.exe` and its output in one change** | **NO.** It happened tonight (21:03 / 21:26). N5 item 3 is the fix. |
 | 4 | **Adds a package and forgets `Test-DatIntegrity.ps1`** | Partly — `$BUILT_PAIRS` catches staleness but not a missing row (N8 is a live instance). |
@@ -1424,8 +1432,9 @@ anything touching #162.
 The project's instruments are excellent at asking *"is what we built still
 correct?"* and structurally unable to ask *"is the rule we built it from still
 the rule?"*. Six of the fourteen items above are the second question:
-`make_fontstyle`'s guard tests the wrong variable, `diff.py` models a rounding
-rule the DLL abandoned, `ScaleTier` claims a port is exact when it is missing
+`make_fontstyle`'s guard tests the wrong variable, `tools\uimap\diff\diff.py`
+models a rounding rule the DLL abandoned, `ScaleTier` claims a port is exact
+when it is missing
 three switches, `PACKAGES.md` documents a command that un-ships three fixes,
 two resolvers list seven of nine archives, and a dist folder named v3.0.0
 contains yesterday's art. Every one of them passes every gate.

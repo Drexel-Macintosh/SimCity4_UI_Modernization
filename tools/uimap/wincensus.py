@@ -399,7 +399,7 @@ def main():
 
     names = class_names()
     out = {
-        "exe": C.EXE, "exeSha256_16": C.exe_fingerprint()[0],
+        "exe": C.EXE_PROVENANCE, "exeSha256_16": C.exe_fingerprint()[0],
         "windowVtables": sorted(winvt),
         "windowClasses": {"0x%08X" % k: {"name": names.get(k, "?"),
                                          "factory": "0x%X" % v["factory"],

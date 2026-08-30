@@ -366,6 +366,63 @@ PERMANENT_OUT_OF_SCOPE = {
         "verified by its own gate (verify-before-write in CodePatches). "
         "FALSIFIER: none conceivable within a geometry model; this entry "
         "is the honest boundary of the model's domain."),
+    "_V459_HOOK_VA_DOC": (
+        "PERMANENT - CONTROL FLOW, not geometry (kRatingUpdateVa precedent, "
+        "2026-08-30 sweep). MinHook detour targets for the CSI/sprite/marker "
+        "probe arcs (#188/#191), the region-screen rebuild family "
+        "(#131/#132), the FONTGUID hook (#24), plus one cave-resume VA "
+        "(kCostOriginBack, #159). MinHook rewrites a prologue and a resume "
+        "VA is a jump target: neither holds a rect, size or position, so a "
+        "geometry model has nothing to represent. Each install is gated by "
+        "its own memcmp stock-prologue verify in CodePatches.cpp. "
+        "FALSIFIER: a geometry immediate appearing at any of these VAs."),
+    "_V459_RENDERER_IMM_DOC": (
+        "PERMANENT-UNTIL-DOMAIN-GROWTH - REAL GEOMETRY, WRONG SUBSYSTEM. "
+        "These ARE scaled immediates, but they live in the 3D-renderer / "
+        "dispatch-view / region-camera code (0x0046xxxx, 0x005Fxxxx, "
+        "0x007ACxxx), not in a GZWin builder. The census discovers owners "
+        "by the rect-driving cIGZWin call signature (>=2 callers, "
+        "<=0x1200 bytes, call [reg+0xD4..0xE0]); MEASURED 2026-08-30: "
+        "sub_46C8B0, sub_46D990, sub_5F20A0 and sub_7ACC90 are all absent "
+        "from builders.json discovered, so promotion is structurally "
+        "unavailable, not merely undone. Adjudicated elsewhere: the "
+        "appliers refuse all-or-none against stock float bits, "
+        "gate_patch_families_combined.py holds every width "
+        "(kCsiQuad 11x4, kVa 4, signposts 2x5, kRegionCamScaleSite 5), and "
+        "the attributions are screen-proven in "
+        "SC4-WORLD-OVERLAYS.md / CITY-SITUATION-INDICATORS.md. "
+        "FALSIFIER: the census growing a renderer domain, or any of these "
+        "owners appearing in builders.json discovered - then promote and "
+        "delete this entry."),
+    "_V459_OWNGATE_DOC": (
+        "MEASURED MODEL BOUNDARY, NOT AN AGE PROBLEM (2026-08-30 sweep). "
+        "All four owner functions were hand-seeded into "
+        "census.py EXTRA_BUILDERS (0x793810 precedent) and the model was "
+        "REGENERATED the same day - so these rows are what the regenerated "
+        "model measurably could NOT hold, each with the reason: "
+        "kCheatRectSite/kCheatClearSite - owner sub_79BDC0 seeded, emu "
+        "emitted ZERO constants for it (the dialog Init path does not drive "
+        "the recorder set; the census run prints no line for it). "
+        "kCostBoxHeightSite/kCostBoxWidthSite - owner sub_7EDEB0 seeded and "
+        "censused (4 constants incl. the restore-toolbars pair), but the "
+        "cost-readout branch emitted nothing at 0x7EEF43/0x7EEF54 (branch "
+        "not driven; the sibling sites in the same owner DID census, which "
+        "is the positive control). "
+        "kAdviceRowWinSite - owner censused long since; the 19-byte wide "
+        "window is an equal-length block re-encode outside the "
+        "single-immediate schema, the same class as kOrdinanceNameXBlocks; "
+        "it is the mutually-exclusive ALTERNATE of adjudicated "
+        "kAdviceRowMidSite (see gate_patch_families_combined.py ALTERNATES). "
+        "ADJUDICATED ELSEWHERE, NOT UNCHECKED: _tests/Test-PatchSiteBytes.py "
+        "byte-pins kCheatRectSite (32), kCheatClearSite (39) and both "
+        "cost-box sites against the shipped exe with positive and mask "
+        "controls, and gate_patch_families_combined.py registers every "
+        "width. (kIntroVidSites and kRestoreToolbarsOriginSite left this "
+        "table on the same regeneration - the model holds all four intro "
+        "sites and both restore-origin constants, so they adjudicate for "
+        "real now.) FALSIFIER: Test-PatchSiteBytes red, or a regeneration "
+        "that emits constants for a site listed here - then delete its row "
+        "and let it adjudicate."),
 }
 SKIPPED = dict(PERMANENT_OUT_OF_SCOPE)   # counting machinery reads SKIPPED
 
@@ -385,6 +442,29 @@ _V274_HOOKS = ("kRatingUpdateVa", "kDeclineStepVa")
 for _name in _V274_HOOKS:
     SKIPPED[_name] = SKIPPED["_V274_HOOK_VA_DOC"]
 del SKIPPED["_V274_HOOK_VA_DOC"]
+# 2026-08-30 sweep (v4.5.9): the three _DOC groups above, fanned out the same
+# way - one rationale per group, matched on the entry name.
+_V459_HOOKS = ("kCsiDrawVa", "kSpAttachVa", "kSpBindVa", "kSpHoverVa",
+               "kSpQuadVa", "kSpTargetVa", "kSpTexVa", "kSpriteFactoryVa",
+               "kCreateEffectVa", "kMarkerStripVa", "kArtFetchVa",
+               "kBalloonBuildVa", "kDrawVa", "kSetFontStyleByGuid",
+               "kRegionBuildFn", "kRegionItemBuildFn", "kRegionOverlayFn",
+               "kRegionPanClampFn", "kRegionInvalidateFn",
+               "kRegionCamSetScale", "kCostOriginBack")
+for _name in _V459_HOOKS:
+    SKIPPED[_name] = SKIPPED["_V459_HOOK_VA_DOC"]
+del SKIPPED["_V459_HOOK_VA_DOC"]
+_V459_RENDERER = ("kCsiQuad", "kVa", "kSignpostSizeSite",
+                  "kSignpostRaiseSite", "kRegionCamScaleSite")
+for _name in _V459_RENDERER:
+    SKIPPED[_name] = SKIPPED["_V459_RENDERER_IMM_DOC"]
+del SKIPPED["_V459_RENDERER_IMM_DOC"]
+_V459_OWNGATE = ("kCheatRectSite", "kCheatClearSite",
+                 "kCostBoxHeightSite", "kCostBoxWidthSite",
+                 "kAdviceRowWinSite")
+for _name in _V459_OWNGATE:
+    SKIPPED[_name] = SKIPPED["_V459_OWNGATE_DOC"]
+del SKIPPED["_V459_OWNGATE_DOC"]
 
 OUT_OF_SCOPE = set(SKIPPED)
 

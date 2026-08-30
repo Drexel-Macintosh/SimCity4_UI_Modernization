@@ -124,9 +124,33 @@ WIDTHS = {
     # overlap check because they are data, not instruction streams.
     "kHtmlFontSizeTable":        (28, "7 dwords in .rdata - DATA, excluded"),
     "kHtmlHeadingSizeTable":     (28, "7 dwords in .rdata - DATA, excluded"),
+    # 2026-08-30 registration sweep. This gate had been red long enough that
+    # the COMPOSITION of its redness drifted (40 unregistered symbols across
+    # five feature arcs) - the pre-excused-red failure its own header warns
+    # about. Every entry below was classified by reading the applier, not the
+    # name: a "Site" suffix does not make a site, and three of these are data.
+    # #159 COST BOX (three sites, one feature):
+    "kCostBoxHeightSite":        (2, "6a 20 push imm8 - opcode + imm8, refuses >0x7F"),
+    "kCostBoxWidthSite":         (5, "68 imm32 push (stock 128)"),
+    "kCostOriginSite":           (8, "83 c3 7c / 68 01 80 00 00 -> E9 rel32 + 3 nop (jmp to cave)"),
+    # signpost pole-balloon quad (two 68-imm32 float pushes, 16 bytes apart):
+    "kSignpostSizeSite":         (5, "68 imm32 (push 44.0f) at 0x5F20AF"),
+    "kSignpostRaiseSite":        (5, "68 imm32 (push 150.0f) at 0x5F20BF"),
+    # CSI / #191 marker family. kCsiQuad stores IMMEDIATE addresses, not
+    # opcode addresses (the applier comment at its declaration says so):
+    # width is the 4 float bytes verified and written at each of the 11 sites.
+    "kCsiQuad":                  (4, "float imm32 at the IMMEDIATE address (B8 / C7 84 24 forms), 11 .text sites"),
+    "kCsiConsts":                (4, "float32 CSI px constants - 4 in .rdata + .data twin 0xB07F80, DATA, excluded"),
+    "kVa":                       (4, "imm32 of C7 44 24 18 near 0x0046CCCA - #191 marker tex side"),
+    # zoom/pix lookup tables the applier verifies-and-writes whole:
+    "kMarkerZoomTableVa":        (20, "5 x float32 zoom multipliers in .rdata 0xAA523C - DATA, excluded"),
+    "kPixTableVa":               (40, "10 x float32 px dimensions at 0x00A88170 - DATA, excluded"),
 }
 RDATA_TABLES = {"kHtmlFontSizeTable", "kHtmlHeadingSizeTable",
-                "kRegionIsoSites", "kRegionIso2Sites"}
+                "kRegionIsoSites", "kRegionIso2Sites",
+                # 2026-08-30: verified-and-written but data, not instruction
+                # streams - must not enter CHECK A's overlap math.
+                "kCsiConsts", "kMarkerZoomTableVa", "kPixTableVa"}
 
 # #136: pairs of tables that are MUTUALLY EXCLUSIVE ENCODINGS of one patch.
 # They overlap on purpose (the wide window contains the narrow site it
@@ -159,7 +183,19 @@ NON_SITE_TABLES = {"kGraphLegendStrips", "kStockHtmlFontSizes", "kStockHtmlHeadi
                    # #131/#132: stock float patterns verified against, and the
                    # cSC4RegionScreen item bitmap FIELD OFFSETS (0x1C..0x28) -
                    # struct offsets, not addresses. Neither is a patch site.
-                   "kRegionIsoStock", "kRegionIso2Stock", "kItemBmpOff"}
+                   "kRegionIsoStock", "kRegionIso2Stock", "kItemBmpOff",
+                   # 2026-08-30 sweep: memcmp-verify prologue/stock patterns
+                   # gating MinHook installs or cave relocation - byte VALUES,
+                   # not site addresses (kX8DispatchStock precedent).
+                   "kCostOriginStock",                       # #159 cave verify + reloc source
+                   "kSpAttachStock", "kSpBindStock",         # SPPROBE sprite family (#188)
+                   "kSpHoverStock", "kSpQuadStock",
+                   "kSpTargetStock", "kSpTexStock",
+                   "kCreateEffectStock",                     # BUBBLEFX
+                   "kMarkerStripStock", "kDrawStock",        # SPSTRIP / DRAWCAP probes
+                   "kStockMarkerZoom",                       # zoom-table stock float bits
+                   "kAdd", "kSub",                           # DISPATCHQUAD prologues (0x46F240 / 0x7D2990)
+                   "kProlog"}                                # FONTGUID (#24) SetFontStyleByGUID prologue
 # Scalars that are NOT patch sites: the module base every site is expressed
 # against, and stock-value constants. Excluded by NAME so the anti-rot sweep
 # still shouts about anything genuinely new.
@@ -170,7 +206,19 @@ NON_SITE_SCALARS = {"kImageBase", "kX8DispatchSite", "kX8StubBlock",
                     # not edit an immediate, so they have no "encoding width".
                     "kRegionBuildFn", "kRegionItemBuildFn", "kRegionOverlayFn",
                     "kRegionPanClampFn", "kRegionInvalidateFn",
-                    "kRegionCamSetScale", "kTileBufVt"}
+                    "kRegionCamSetScale", "kTileBufVt",
+                    # 2026-08-30 sweep: MinHook detour targets (prologue is
+                    # rewritten by MinHook, no immediate edited - no encoding
+                    # width), one resume VA, one vtable identity.
+                    "kCostOriginBack",                        # #159 cave resume VA
+                    "kCsiDrawVa",                             # CSIKILL probe target 0x0046D990
+                    "kSpAttachVa", "kSpBindVa", "kSpHoverVa", # SPPROBE sprite family (#188)
+                    "kSpQuadVa", "kSpTargetVa", "kSpTexVa",
+                    "kSpriteFactoryVa", "kCreateEffectVa",    # BALLOONSPRITE / BUBBLEFX
+                    "kMarkerStripVa", "kArtFetchVa",          # SPSTRIP / ARTFETCH log probes
+                    "kBalloonBuildVa", "kDrawVa",             # BALLOONKIND / DRAWCAP log probes
+                    "kSetFontStyleByGuid",                    # FONTGUID (#24) detour target
+                    "kWinTextIfaceVt"}                        # GZWinText vtable identity 0xAE0118
 
 # --------------------------------------------------------------------------
 FAILURES = []

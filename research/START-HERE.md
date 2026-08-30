@@ -35,8 +35,11 @@ native resolution. Two halves that must agree:
 - **Data** — enlarged copies of the game's UI art and `.UI` layout scripts,
   shipped as DBPF packages that load after the originals and win.
 - **Runtime** — `SC4UIScale.dll`, a gzcom-dll plugin: live window geometry,
-  ~30 byte-patched layout constants inside the executable, and render surfaces
-  that must be recreated rather than resized.
+  byte-patched layout constants inside the executable (**18 feature families
+  across 36 site tables, 295 individual patch sites** — measured 2026-08-30 by
+  `tools\uimap\emu\gate_patch_families_combined.py`, which is the only thing
+  allowed to state these counts), and render surfaces that must be recreated
+  rather than resized.
 
 Nothing modifies a game file. Everything is in-memory, per session.
 
@@ -90,7 +93,7 @@ all pass, and write down that you did.
 |---|---|
 | A user reported a symptom. Where do I start? | **`tools\research\TRIAGE.md`** — symptom → cause → lever, every row paid for by a shipped fix. Read this FIRST, always. |
 | How does SC4's UI actually work? | `tools\research\SC4-UI-ENGINE.md` — the SDK-style reference. The single most valuable artefact here. |
-| An in-world visual that is NOT a window (balloons, signs, glows, route dots)? | `tools\research\SC4-WORLD-OVERLAYS.md` — the renderer-side companion of SC4-UI-ENGINE.md, with the gap census of undocumented systems |
+| An in-world visual that is NOT a window (balloons, signs, glows, route dots)? | `tools\research\SC4-WORLD-OVERLAYS.md` — the renderer-side companion of SC4-UI-ENGINE.md, with the 23-row in-world census (every owning system identified) and the two-worlds triage law |
 | How should I work on this? | `tools\research\METHOD.md` — measure, don't infer; instruments before theories. |
 | What did we already try, and what was refuted? | `_tests\REGRESSION.md` — the laws, the dead ends, and every "measured dead, do not retry". Long, but it is the project's memory. |
 | What changed and when? | `VERSION-HISTORY.txt` |

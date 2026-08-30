@@ -2,19 +2,37 @@
 
 **What this file is.** One page that answers "how much of SimCity 4's UI have
 we actually reversed, what does the shipping DLL touch today, and where do the
-notes disagree with the code." It is a **status and inventory** document. It is
-not a reference and not a backlog:
+notes disagree with the code." It is a **status and inventory** document — the
+front door to the engine documentation, not the documentation itself.
+
+## Reading order
+
+New to this corpus, read in this order:
+
+1. **[../tools/research/](../tools/research/)** — the engine reference. Its
+   index names the one file to read first and what each family document owns.
+2. **[../research/laws/](../research/laws/)** — the rules, each one derived
+   from a defect that reached the screen. Transferable past this game.
+3. **This page** — per-screen status, then §4's inventory of every hook and
+   byte patch the shipping DLL installs.
+4. **[../research/UNKNOWNS-AND-NEXT-TARGETS.md](../research/UNKNOWNS-AND-NEXT-TARGETS.md)**
+   — what is still open, ranked, with the refutation record behind each.
+
+Routed by question:
 
 | Question | Read instead |
 |---|---|
-| How does the UI engine work? | `tools\research\SC4-UI-ENGINE.md` |
-| What is still unknown, and what is it worth? | `research\UNKNOWNS-AND-NEXT-TARGETS.md` |
-| A user reported a symptom — where do I start? | `tools\research\TRIAGE.md` |
-| Which side of the SDK boundary is this element on? | `research\laws\reference-sc4-ui-sdk-boundary.md` |
+| How does the UI engine work? | [../tools/research/SC4-UI-ENGINE.md](../tools/research/SC4-UI-ENGINE.md) |
+| A user reported a symptom — where do I start? | [../tools/research/TRIAGE.md](../tools/research/TRIAGE.md) |
+| Which side of the SDK boundary is this element on? | [../research/laws/reference-sc4-ui-sdk-boundary.md](../research/laws/reference-sc4-ui-sdk-boundary.md) |
+| How was any of this established? | [../tools/research/METHOD.md](../tools/research/METHOD.md) |
+| Can I check a layout claim without the game? | [../tools/uimap/](../tools/uimap/) |
 
-**Measured 2026-08-29 against `src\` at `UISCALE_VERSION_STR "4.4.0"`
-(`src\SC4UIScaleDllDirector.cpp:55`).** Nothing was built and the game was not
-launched.
+**Version.** Prose rots, so this page pins nothing: the running version is
+`UISCALE_VERSION_STR` in `src\SC4UIScaleDllDirector.cpp`, and the newest ledger
+entry is `VERSION-HISTORY.txt:1`. Section 4's inventory was re-derived from
+`src\` on 2026-08-30; §2 and §3 were last re-derived 2026-08-29. Nothing on
+this page was built and the game was not launched for it.
 
 **Provenance marks, used throughout.**
 
@@ -23,6 +41,14 @@ launched.
   re-verified against the executable. Every VA on this page is CARRIED; the
   exe was not opened.
 - **INFERRED** — a reading of measured facts, not itself a measurement.
+
+**The grading bar this page uses, stated rather than assumed.** An element is
+**DOCUMENTED** only when a measurement matched a *prediction* — the mechanism
+was named, it predicted a behaviour, and the behaviour was then observed. A
+mechanism named from static disassembly and never seen running is **PARTIAL**,
+however confident the reasoning. This is the strict bar; a looser one ("a
+concrete anchor that predicts behaviour") would promote roughly eight of the
+in-world census rows, and those rows are deliberately left PARTIAL here.
 
 **The null rule applies here too.** Where a search came back empty, the
 positive control that proves the search could have seen a hit is stated beside
@@ -44,6 +70,7 @@ MEASURED (`ls` + heading scan, 2026-08-29). Sizes are the file's own.
 | `tools\research\CITY-SITUATION-INDICATORS.md` | 16 KB | The 7-way dispatch indicators | 2026-08-24 |
 | `research\UNKNOWNS-AND-NEXT-TARGETS.md` | 127 KB, §A–§H | The unknowns register | 2026-08-24 |
 | `tools\uimap\coverage-matrix.md` | 86 KB | The coverage census (generated) | 2026-08-23 |
+| `tools\research\FINAL-3-PERCENT.md` | 71 KB | The honest denominator (D1/D2/D3), the three unbounded creation channels, the §7 structurally-unknowable table | 2026-08-22 |
 | `tools\research\overlays\row-NN-*.md` | 10 files | Per-overlay deep dives | 2026-08-23/24 |
 
 **There was no per-screen status document before this one.** MEASURED:
@@ -87,7 +114,7 @@ sizes it.
 | **News / ticker / rich text (HTML engine)** | DOCUMENTED — sizes live in `.rdata` tables and can never be reached from `FontStyle.ini` | `SC4-UI-ENGINE.md` §8.3 (`:2934`); `reference-sc4-html-text-engine.md`; `src\CodePatches.cpp:321, 323` |
 | **Tooltips** | DOCUMENTED as a mechanism, and **structurally geometry-only**: the tip layer code-paints the whole tooltip, no child windows exist | `SC4-UI-ENGINE.md:1544-1545`; 250px wrap at `0x79880A`/`0x7988A9`, `src\CodePatches.cpp:41` |
 | **Static dialogs** | DOCUMENTED via the `.UI` corpus + the staged-art path | `tools\research\FONTS-AND-DIALOGS.md`; `tools\dialog-static\` |
-| **Graphics Options selector** | **PARTIAL** — rewritten after the register's cut-off and not folded back into any reference | register flags it as post-dating itself at `UNKNOWNS-AND-NEXT-TARGETS.md:7` (the `CONTINUITY.md` originally cited here was deleted 2026-08-29 as a stale progress recap) |
+| **Graphics Options selector** | **PARTIAL** — rewritten after the register's cut-off and not folded back into any reference | register flags it as post-dating itself at `UNKNOWNS-AND-NEXT-TARGETS.md:7` (the root CONTINUITY.md originally cited here was deleted 2026-08-29 as a stale progress recap; its durable content was promoted into that same register, so there is no file to open) |
 | **City LOADING / SAVING screen** | **CLOSED AS UNREACHABLE** — no `.UI` in the 339-file corpus and never appears in a window dump | `UNKNOWNS-AND-NEXT-TARGETS.md` §C row 1 |
 
 ### 2.2 Widget classes
@@ -104,9 +131,12 @@ base `cGZWin`, the router, `cSC4WinAlertBorder`, `cSC4WinAuraBar`).
 | **THIN / STUB** (attribute-level only, no ctor or Draw decoded) | **4** | `GZWinTextEdit`, `GZWinSpinner`, `GZWinGrid`, `GZWinFlatRect` |
 | **UNNAMED but measured** | **2** | the gauge class `0xCBCBF1E0` (`SDK-GAPS.md:740-742` has factory `0x00466220`, Plot `0x00762830`, ctor `0x007628E0`, iid `0x0BCBF1DF` — but the reference's own catalogue row `:344` still carries no factory, ctor, vtable or Plot VA and is symptom-level) — **see drift D-4**; and the clip-viewport subclass at vt `0x00ADCB38` (`SDK-GAPS.md:732-735`) |
 
-⚠ **The class population is printed two ways.** `SDK-GAPS.md:808-809` says "12 of
+⚠ **The class population is printed two ways.** `SDK-GAPS.md:808-809` said "12 of
 the **115** classes"; `SDK-GAPS.md:73-76` says "all **111** window-class
-vtables … a superset of the **29** named classes". Unreconciled — drift D-5.
+vtables … a superset of the **29** named classes". Was unreconciled — drift
+D-5, **CLOSED 2026-08-30**: `SDK-GAPS.md` now splits the counts by instrument
+(**116** slot-87 single-marker / **111** ≥3-of-8 census / 5 named extras) and
+the `:808` count re-measures to **13** of the 111 census classes.
 
 ### 2.3 Renderer-side / in-world overlays
 
@@ -271,6 +301,32 @@ named otherwise — `kGraphLegendBlocks` (3 entries, `CodePatches.cpp:1001`),
 
 > **Honest total: 36 named patch families, 274 site slots.**
 
+**RE-MEASURED 2026-08-30 at v4.5.9, and the counting is now the gate's, not a
+regex's.** The 40 symbols that were unregistered on 2026-08-29 (the six named
+above plus 34 more that had accumulated across five feature arcs) were each
+classified by reading the applier — a `Site` suffix does not make a site, and
+three of them turned out to be `.rdata` data tables rather than instruction
+streams. With every symbol registered, the gate itself now reports the
+population, so a scan and a registry can no longer disagree:
+>
+> **18 feature families, 36 site tables, 295 site spans**
+> (`python tools\uimap\emu\gate_patch_families_combined.py --verbose`).
+>
+> The three groupings are not interchangeable and were previously conflated:
+> a **family** is one ini-gated applier (what a user turns on), a **table** is
+> one `k…` array or scalar in the source, a **span** is one contiguous byte
+> range verified and written. The v4.5.9 additions since the 274 figure are
+> the cheat dialog (`kCheatRectSite` 32 bytes, `kCheatClearSite` 39) and the
+> restore-toolbars origin (`kRestoreToolbarsOriginSite`, one 6-byte block
+> holding both placement constants deliberately, so a half-applied state is
+> unreachable).
+>
+> The gate had been failing this whole time, and long enough that the
+> composition of its redness drifted unnoticed — the failure its own header
+> warns about, where a standing red makes every later red look pre-excused. It
+> is green as of 2026-08-30, verified with a mutation control (unregister one
+> table in a scratch copy → the gate fails on exactly that table).
+
 | Family | Sites | Family | Sites |
 |---|---|---|---|
 | `kDeptImm32Sites` | 62 | `kOrdinanceInsetSites` | 6 |
@@ -397,6 +453,17 @@ outer vtable `0x00AB4900`, the window vtable `0x00AB46A0` at `obj+4`, factory
 `SDK-GAPS.md:73-76` says "all **111** window-class vtables … a superset of the
 **29** named classes"; `:808-809` says "12 of the **115** classes". One file,
 two numbers, no reconciliation.
+**CLOSED 2026-08-30, re-measured.** `python tools/uimap/wincensus.py` re-run
+against the pinned exe reproduces **111** exactly
+(`tools/uimap/_work/wincensus.json` `windowVtables`, ≥3-of-8 markers); the
+slot-87 single-marker fingerprint (`0x0099BE4C` at `vt+0x15C`) matches
+**116** `.rdata` addresses — so the printed 115 reproduced under *neither*
+filter. The 5 single-marker extras are `0xAC54B8`, `0xACCD5C`, `0xAD47F0`,
+`0xAD805C`, `0xAD825C` (all fail the class test). `SDK-GAPS.md` now
+reconciles both counts by instrument at the `GetNotificationTarget` bullet,
+names the census as the population every count in that file should use, and
+the identification-procedure count re-measures to **13** of the 111 census
+classes (base `QueryInterface` at slot 0; all three region layers included).
 
 **D-6 — Two class-level vtable patches exist in a project whose stated law is
 "swap the vtable on the instance, never the class".** See §4.2. Neither

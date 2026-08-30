@@ -21,7 +21,27 @@ import os
 import struct
 import sys
 
-EXE = r"C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe"
+# Resolved, not hard-coded: $SC4_EXE, else tools/sc4paths.py's install
+# lookup, else the Steam default. See tools/uimap/common.py _resolve_exe.
+def _exe():
+    import os as _os, sys as _sys
+    env = _os.environ.get("SC4_EXE")
+    if env:
+        return env
+    try:
+        _sys.path.insert(0, _os.path.dirname(_os.path.dirname(
+            _os.path.dirname(_os.path.abspath(__file__)))))
+        from sc4paths import exe_path
+        p = exe_path()
+        if p and _os.path.isfile(p):
+            return p
+    except Exception:
+        pass
+    return (r"C:\Program Files (x86)\Steam\steamapps\common"
+            r"\SimCity 4 Deluxe\Apps\SimCity 4.exe")
+
+
+EXE = _exe()
 IMAGE_BASE = 0x400000
 
 PUSH_IMM32 = 0x68

@@ -1086,7 +1086,7 @@ return this;
 0x99AC7E, 0x99AFA8, 0x99B0EB, 0x9C7A8A, 0x9C7B29, 0x9C7D0A, 0x9C82A2, 0x9D45D8`.
 
 **This corrects an existing project note.** `tools/uimap/emu/POPUP-VERDICT.md:371` and
-`tools/research/_incoming/FINAL-3-PERCENT.md:106` describe `sub_913C72` as "the
+`tools/research/FINAL-3-PERCENT.md:106` describe `sub_913C72` as "the
 getter" for singleton `0xC2C2EB0F` with "no literal clsid at the site". The clsid
 **is** literal — it is right here at `0x007B249F` (`push 0xC2C2EB0F`), together with
 its interface id `0x22C2EB1F` at `0x007B2495`. `sub_913C72` is just one of 15 callers
@@ -1195,7 +1195,7 @@ the fourth is ignored by the callee — an allocator parameter.
    are the shared `0xC2C2EB0F` singleton getter and its RAII release. The clsid
    *is* a literal in the instruction stream at `0x007B249F` — see §7, which
    corrects `tools/uimap/emu/POPUP-VERDICT.md:371` and
-   `tools/research/_incoming/FINAL-3-PERCENT.md:106`.
+   `tools/research/FINAL-3-PERCENT.md:106`.
 
 7. **`view+0x118` is a plain dword setting** written by `sub_7B30F0`, and
    `view+0x111..+0x116` are five single-byte display flags. Ground truth listed

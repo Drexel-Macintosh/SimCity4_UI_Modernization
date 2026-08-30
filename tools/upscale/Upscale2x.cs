@@ -860,7 +860,12 @@ internal static class Upscale2x
     // THE GAME CUTS ART SHEETS INTO CELLS WITH AN INTEGER DIVIDE, AND THE
     // DIVISOR IS BAKED INTO ITS OWN CODE. Two cuts matter:
     //     NineSlice          cell = (img->Width()/3, img->Height()/3)
-    //                        (cSC4WinAlertBorder slot-88 draw, VA 0x00794100)
+    //                        (GZWinBMP slot-88 draw 0x009BC325 EDGE branch, and
+    //                         GZWinBtn 0x009B05E0; each divides its own source
+    //                         rect, then calls blitter 0x008D8800, which has no
+    //                         divide. 0x00794100 is cSC4WinAlertBorder's own
+    //                         draw, in no .UI - see
+    //                         tools/research/SC4-UI-ENGINE.md section 4.6c)
     //     four-state strip   cell = width/4   (normal/hover/pressed/disabled)
     //
     // If the SCALED dimension stops being divisible by that count, cell*count
@@ -897,7 +902,8 @@ internal static class Upscale2x
     // compiled in:
     //   2  two-state strips        (terraform flyout 0xCA35CBED,
     //                               _vanilla-reference\FINDINGS.md:43)
-    //   3  NineSlice, both axes    (cSC4WinAlertBorder draw, VA 0x00794100)
+    //   3  NineSlice, both axes    (GZWinBMP 0x009BC325 EDGE branch / GZWinBtn
+    //                               0x009B05E0 -> blitter 0x008D8800)
     //   4  four-state button strip (normal/hover/pressed/disabled - GZWinBtn)
     //   8  eight-state strip       (Audio playlist checkbox {14416244},
     //                               384x48 = 8 states of 48, REGRESSION.md:5974)
@@ -909,7 +915,8 @@ internal static class Upscale2x
     // THE SET IS {3,4}, AND IT WAS MEASURED. DO NOT WIDEN IT.
     //
     // These are the counts the game ACTUALLY cell-divides by in the paths that
-    // matter: NineSlice borders take img->Width()/3 (VA 0x00794100) and a
+    // matter: NineSlice borders take img->Width()/3 (GZWinBMP 0x009BC325 EDGE
+    // branch -> the no-divide blitter 0x008D8800) and a
     // button state strip takes width/4. /12 still falls out on its own for the
     // scrollbar (cGZWinScrollbar::SetImage, art width / 12), because a sheet
     // divisible by both 3 and 4 gets LCM = 12 from this very list.
@@ -1032,7 +1039,8 @@ internal static class Upscale2x
     //
     //     180x180 frame at 1.5   /3 -> 270   /4 -> 272   LCM 12 -> 276
     //
-    // The engine's NineSlice cell is img->Width()/3 (VA 0x00794100). At 276 it
+    // The engine's NineSlice cell is img->Width()/3 (GZWinBMP 0x009BC325 EDGE
+    // branch; blitter 0x008D8800 contains no divide). At 276 it
     // is 92 while every geometry number in the .UI was scaled for 90, so the
     // corner art overshoots and the rounded corner never reaches the window
     // corner. USER-REPORTED on the Reconcile Edges dialog: "look how the light

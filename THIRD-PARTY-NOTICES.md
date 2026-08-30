@@ -188,21 +188,60 @@ back to defaults exactly as with `GetPrivateProfile*`.
 SimCity 4 and all of its assets are the property of **Electronic Arts**. This
 project is an unofficial, unaffiliated modification.
 
-* **It contains no EA code**, and no EA artwork, sound or `.dat` data is copied
-  into this repository or into the DLL.
+* **It contains no EA binaries, artwork, sound or archives.** No executable,
+  no image, no `.dat` — a content-level gate (`_tests\Sync-Check.ps1`) refuses
+  any tracked file whose leading bytes are PNG/JPEG/GIF/BMP/DBPF/PE,
+  regardless of extension. What the repository *does* carry from the game, in
+  text form, is disclosed in §4a below rather than glossed.
 * It **reads and patches the running game's memory**, and it **derives** scaled
   art packages and font configurations from the game's own resources. Those
   derived files are produced from a user's existing installation.
 * Derived art and font files are **not** covered by the CC0 dedication and are
-  **excluded from the published source**: the published source tree contains
-  zero `.dat`, `.ui` and `.png` files.
-* **One exception to "no game text in the repository", named rather than
-  glossed:** `tools\webtext\build_webtext.py` hard-codes three of the game's
-  own locale strings — the ones that advertise the dead `SimCity.com` — with
-  the domain swapped, because the DLL redirects that link and the visible text
-  has to match. That file is published, so three short EA-authored strings do
-  travel with the source. They are quoted for interoperability; they are not
-  licensed here and are covered by the same EA carve-out as the derived art.
+  **excluded from the published source**: the tree contains zero `.dat` and
+  zero image files. The seven `.ui` scripts under
+  `tools\selective-safe\thirdparty-ui\` are **other modders' work**, staged as
+  compatibility-builder inputs, and are covered by the mod-author section of
+  the Content Notice below — they are not EA files and not ours.
+
+### 4a. Research materials — what the engine documentation carries, measured
+
+This repository documents a game engine that shipped with no SDK. The
+documentation's evidence base travels with it, and some of that evidence
+reproduces game content as text. Censused by content classification
+(2026-08-30, every tracked non-code file under `tools\` read and classified;
+the classifier was itself spot-checked adversarially):
+
+1. **Decoded game data and scripts — about 220 text files, ~7 MB.**
+   Property-by-property dumps of exemplar and effect-directory records,
+   id-to-name tables, one hex dump of two savegame records, roughly 200
+   decoded Lua scripts (the game's advice, mission and tutorial logic), and
+   the game's stock `FontStyle.ini`. These are reproductions of EA-authored
+   data, quoted as the evidence behind attributions in the engine reference.
+2. **Disassembly listings — 4 files, ~185 KB.** Mnemonic listings of
+   individual functions from `SimCity 4.exe` 1.1.641, produced offline with
+   capstone, kept because they are the proof behind documented byte patches.
+   The wider reference documents quote instructions and byte patterns inline
+   at the sites they discuss; these four files are the only whole-function
+   listings.
+3. **Modified EA content shipped for function — 6 small files.** Three locale
+   strings with the dead `SimCity.com` domain swapped (`tools\webtext\`,
+   including the three staged `.bin` payloads), and three derived
+   `FontStyle` configurations. The source of the webtext strings,
+   `tools\webtext\build_webtext.py`, hard-codes them because the DLL
+   redirects that link and the visible text has to match.
+4. **Third-party modder content that arrived through the same decode pass:**
+   about a dozen of the decoded Lua scripts are modder-authored (they carry
+   their authors' names in-file), decoded from an installation that had those
+   mods present. They are covered by the mod-author takedown offer in the
+   Content Notice, like the staged `.ui` scripts.
+
+None of this material is licensed by this file and none of it is covered by
+the CC0 dedication. It is quoted for study and interoperability — the same
+tradition as two decades of community documentation of this game. The
+takedown position in the Content Notice applies to all of it: if Electronic
+Arts (for §4a.1–3) or a mod author (for §4a.4) would prefer any of it gone,
+it comes out on request, and the documentation that cites it will carry the
+loss rather than the content.
 
 Redistributing derived game art is a separate decision from licensing the
 code, and this file does not make it. If you package a binary release that
@@ -355,5 +394,6 @@ nothing else changes.
 The Maxis-derived packages are enlarged copies of game assets, useless without
 a licensed copy of SimCity 4 Deluxe, distributed at no charge, in the same
 tradition as two decades of SC4 UI mods. If EA would prefer they not be
-distributed, the Release assets come down on request and the source repository
-— which contains no EA content of any kind — continues to stand on its own.
+distributed, the Release assets come down on request, and the same offer
+covers the §4a research materials file by file; the source code itself — which
+contains no EA binaries, artwork or archives — continues to stand on its own.

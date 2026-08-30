@@ -17,8 +17,9 @@ of scripted dialogs.
 - **Live geometry.** Walks the window tree and resizes windows the scripts
   don't own, and re-docks panels whose position is computed rather than
   declared.
-- **Code constants.** About thirty layout values are compiled into the
-  executable — column insets, row widths, grid origins. Those are patched in
+- **Code constants.** Eighteen families of layout values — 295 individual
+  patch sites in all — are compiled into the executable: column
+  insets, row widths, grid origins. Those are patched in
   memory at load, each verified against its expected opcode and stock operand
   before a single byte is written; a mismatch aborts that patch and logs it.
 - **Render surfaces.** The minimap and Data Views map own DirectDraw surfaces

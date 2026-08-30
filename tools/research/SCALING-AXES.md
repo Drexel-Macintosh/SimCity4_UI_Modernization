@@ -832,6 +832,16 @@ Ineligible UI-scale options must be **greyed with the reason inline, never hidde
 
 # 5. THE PIPELINE AND THE GATES
 
+> **§5.2–§5.4 are PROPOSED gates — specified here, never written** (re-checked
+> 2026-08-30). `Test-ScaleComboMatrix`, `Test-BubbleArtLaw` and
+> `Test-TextBoxFit` are designs on this page and nothing else: no script by
+> those names, or by any successor name, has ever existed in `_tests\`. They
+> are deliberately named **without a `.ps1` extension** throughout §5–§8 so no
+> sentence reads as a link to a file a reader could open. §5.5's extensions to
+> the gates that **do** exist — `_tests\Test-DatIntegrity.ps1`,
+> `_tests\Test-ScaleTierDecide.ps1`, `_tests\Test-PackageGating.py`,
+> `_tests\Deploy-OnGameClose.ps1` — are unaffected, and those are live files.
+
 ## 5.1 What must be built
 
 **Font side: nothing.** `[M]` Text locked 1:1 means the text factor ≡ the tier factor. The three `FontStyle-<tag>.ini` files already exist, are byte-reproducible (`make_fontstyle.py --selfcheck`), and are already hash-asserted `deployed == built` (`_tests\Test-DatIntegrity.ps1:343-345`). The bubble carries **no text at all**, so no font style is needed at any bubble factor.
@@ -840,7 +850,7 @@ Ineligible UI-scale options must be **greyed with the reason inline, never hidde
 
 **Warning — tag-map.** `_factor_tag()` exists in **three copies** (`tools\selective-safe\build_selective_safe.py:59`, `tools\dialog-static\build_dialog_static.py:109`, `tools\itemicons\stage_icons.py:37`): integer → `"%dx"`, else `"%gx"` with `.`→`_`. 4→`4x`, 6→`6x`, 2.25→`2_25x` all work — **but 1.5 is special-cased to `15x`, not `1_5x`**, so an absolute bubble factor of 1.5 would tag `-15x` and read like the UI 1.5 tier tag. Cosmetic collision only (different base name), but **the bubble builder must carry its own explicit tag map and refuse anything not in it**, rather than inherit the general rule.
 
-## 5.2 `_tests\Test-ScaleComboMatrix.ps1` — no advertised setting without a package
+## 5.2 `Test-ScaleComboMatrix` — PROPOSED, never written — no advertised setting without a package
 
 The Law-45 gate. Reads the advertised sets **from source, not from a copy**: UI factors from `ScaleTier::kPackages` (`src\ScaleTier.cpp:31-36`), bubble multipliers from a new `kBubbleMultipliers` table in `src\Settings.h`. **Hard-fails if either parses empty** (the anti-drift guard from `Test-ThirdPartyGates.ps1`).
 
@@ -853,7 +863,7 @@ FAIL: advertised combo UI=2 x bubble=3 asks absolute 6x, above the 2xUI art ceil
 FAIL: kBubbleMultipliers parsed as empty - the advertised set could not be read, so this gate proved NOTHING. Fix the parse before trusting a pass.
 ```
 
-## 5.3 `_tests\Test-BubbleArtLaw.ps1` — pin `drawn = 32·B` and the art provenance
+## 5.3 `Test-BubbleArtLaw` — PROPOSED, never written — pin `drawn = 32·B` and the art provenance
 
 The axis already exists and its law is wrong (§3.3). This gate makes the two laws unable to diverge silently again.
 
@@ -870,7 +880,7 @@ FAIL: TGI 46A006B0/094AC89A appears in BOTH z_SC4UIScale_SelectiveArt-2x.dat (64
 FAIL: 0x094AC89A now has 2 .UI references in the winning corpus. The over-scale exception was legal ONLY because it had none - an imagerect scaled at the TIER factor over art at the BUBBLE factor breaks rect<=art. Stop shipping sharp bubble art.
 ```
 
-## 5.4 `_tests\Test-TextBoxFit.ps1` — the direct descendant of the legend bug
+## 5.4 `Test-TextBoxFit` — PROPOSED, never written — the direct descendant of the legend bug
 
 **Three cases (1.5 / 2 / 3), not combinatorial, precisely because text is locked 1:1.** This gate is what makes the lock a *checked* invariant rather than a belief. It reproduces the §2.3 corpus in-gate:
 - parse `[Font Styles]` from `tools\fonts\FontStyle.default.ini` (name→1x pt, GUID→name);
@@ -926,20 +936,20 @@ Three ways it could still go wrong:
 6. **Delete or promote `BUBBLE_OVERRIDE_ENABLED`** (`tools\selective-safe\build_selective_safe.py:1044`). Armed dead plumbing with a live copy path behind one boolean is the exact Law-45 shape. If promoted, `bubble4x-15x\` **must** be replaced by the direct `--factor 3` file (§3.6).
 7. **Fix the WarriorUI gate** (§5.5).
 
-**Gate proving increment 1 done:** `Test-BubbleArtLaw.ps1` green in its STRETCH-route form (law arithmetic + exclusivity + zero-`.UI`-refs) at all three tiers; `Test-DatIntegrity.ps1` still green; **plus one eyes-on** — the predicted 1x-flash (§8 Q5) will be visible during the session this needs anyway.
+**Gate proving increment 1 done:** the proposed `Test-BubbleArtLaw` (§5.3 — never written) green in its STRETCH-route form (law arithmetic + exclusivity + zero-`.UI`-refs) at all three tiers; `Test-DatIntegrity.ps1` still green; **plus one eyes-on** — the predicted 1x-flash (§8 Q5) will be visible during the session this needs anyway.
 
 ## Increment 2 — the UI knob. Still no bubble knob.
 `spikeAutoScaleMode` + the tri-state `AutoScale`; decide and document the `Decide()`-override question (§4.5 — at 2400x1600 only 1.5 and 2 are reachable); **restart-required**, exactly like the tier, because the nine `CodePatches` are PostAppInit one-shots.
-**Gate:** `Test-ScaleComboMatrix.ps1` over `UI × {2}` (bubble fixed) + `Test-TextBoxFit.ps1` green at all three factors, **including its `--selftest` positive control**.
+**Gate:** the proposed `Test-ScaleComboMatrix` (§5.2) over `UI × {2}` (bubble fixed) + the proposed `Test-TextBoxFit` (§5.4) green at all three factors, **including its `--selftest` positive control**. Neither gate exists yet — writing them is part of this increment.
 
 ## Increment 3 — the bubble knob, STRETCH-ONLY.
 `Settings` fields per §4.4, in its **own `[UDriveIt]` section**, its own mirror, and **a repeat of the `src\UiSpike.cpp:138-144` audit**. Advertised multipliers `{1, 1.5, 2}`; every cell in `$STRETCH_ONLY`.
-**Gate:** `Test-ScaleComboMatrix.ps1` full matrix green with every cell justified as STRETCH-ONLY.
+**Gate:** the proposed `Test-ScaleComboMatrix` (§5.2 — never written) full matrix green with every cell justified as STRETCH-ONLY.
 
 ## Increment 4 (optional, quality) — sharp art.
 `tools\bubble\build_bubble.py --absolute <B>` → `z_SC4UIScale_UdiBubble-<tag>.dat`, ~1.2 KB, <1 s each.
 **Law — a coupled TRIPLE:** ship the dat, take the id off the stretch multiplier, and move the `$STRETCH_ONLY` cell — **all three or none**, or you get `32·2f·f`.
-**Gate:** `Test-BubbleArtLaw.ps1` in SHARP-route form + new `Test-DatIntegrity` rows.
+**Gate:** the proposed `Test-BubbleArtLaw` (§5.3 — never written) in SHARP-route form + new `Test-DatIntegrity` rows.
 
 ---
 
@@ -959,7 +969,7 @@ What already exists:
 2. **Blocker: the imm8 encoding ceilings in `CodePatches.cpp` are the real wall.** The advice-row X fork is gone (#136 — see R9), but the encoding wall stands: at 4x the ordinance name-column x wants 136 and clamps to 127 (`:820-839`); the budget slider widths (110→440), row text widths (120→480) and master funding sliders (90→360) all blow `push imm8` (`:244, 276, 319, 327-329`). **At 3x several already clamp (R19).** A 4x UI tier ships **visibly wrong budget and ordinance columns** unless those sites are re-encoded to imm32 first. That is the largest single work item.
 3. **Closed — there is ONE rounding stream.** `ScaleRound` (`src\UiSpike.cpp:5385`) delegates to `RoundHalfUp` (`:177`) as of #162, and **#75 was CLOSED AS REFUTED** — the 824-pair 1.5x divergence had no artifact. A new factor no longer multiplies anything here. See the corrected row in §1.1a.
 4. **Warning: `kCityDialogIds`' factor-parameterised base guard** (`src\UiSpike.cpp:11128-11205`) needs a fresh product-collision check per factor (v2.39.13/.14 scars).
-5. **Warning: the DialogStatic corpus at 4x** — no measurement exists. §2.3 shows 0 regressions at 2x and 3x, `[INF]` 4x should behave like the other even factor, but that is an inference and `Test-TextBoxFit.ps1` would settle it in one run.
+5. **Warning: the DialogStatic corpus at 4x** — no measurement exists. §2.3 shows 0 regressions at 2x and 3x, `[INF]` 4x should behave like the other even factor, but that is an inference and the proposed `Test-TextBoxFit` gate (§5.4 — never written) would settle it in one run.
 6. **Not a blocker, note it:** `Upscale2x` reports `Bad magic: 74` — 74 files named `.png` that are not PNG data, correctly skipped at every factor; the existing counter is the gate.
 
 **Note on the bubble axis and a future tier:** a per-id bubble factor is a **multiplier over whatever the tier art is**, so nothing in §3–§6 forecloses a future 4x UI tier. The tier would simply need its own package set first.
@@ -979,7 +989,7 @@ Each with **the single measurement that resolves it.**
 | **Q5** | The **predicted 1x-flash**: because the marker's window is scaled by the periodic sweep but **born art-sized**, a freshly appearing marker should draw at `32f` for up to one sweep interval before jumping to `32f²`. | `[INF]` **predicted, unobserved** — derived from the born-art-sized fact (§3.2 step 2) and the sweep cadence, not seen | One look during the eyes-on that increment 1 needs anyway. If real, it is the ordinary reactive-sweep flash family and the cure is the known one: make it born-correct. |
 | **Q6** | Does the fit clamp bite at f = 1.5? Today `m = gBmpScale` and `winW/artW` are **exactly** equal, so the draw sits on a knife edge; `ScaleRound(l+48, 1.5) - ScaleRound(l, 1.5)` can land 71 rather than 72 depending on `l`, silently clamping `m` to 1.479. | `[INF]` the arithmetic is certain; the `l` values actually in play are **not measured** | Log the modelled `winW` and `m` for the marker at f = 1.5 over a few mission spawns. **Mitigated for free** by the §4.4 requirement to compute `m` from the live window and warn on a >0.01 disagreement — do that regardless of the answer. |
 | **Q7** | Do the `kMayorFlyoutDock` offsets (`R = -marker(1x)` × f) still land if a flyout's content is sized on a different axis than its marker? | `[INF]` **moot under the 1:1 lock** — recorded only so a future reader who reopens §2 knows this was never measured at split axes | Would need a split-axis build to measure. **Do not build one to find out.** |
-| **Q8** | At 4x, does the DialogStatic box:point corpus stay clean (0 regressions, min ratio ≥ 1.000) as it does at 2x and 3x? | `[INF]` expected — 4x is an even factor like 2x, and the 1.5x regressions came from odd-point styles rounding up faster than even boxes | One `Test-TextBoxFit.ps1` run with factor 4 added. **Backlog only** (§7). |
+| **Q8** | At 4x, does the DialogStatic box:point corpus stay clean (0 regressions, min ratio ≥ 1.000) as it does at 2x and 3x? | `[INF]` expected — 4x is an even factor like 2x, and the 1.5x regressions came from odd-point styles rounding up faster than even boxes | One run of the proposed `Test-TextBoxFit` gate (§5.4 — never written) with factor 4 added. **Backlog only** (§7). |
 
 ---
 

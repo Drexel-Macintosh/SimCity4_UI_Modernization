@@ -33,7 +33,36 @@ import sys
 import time
 from bisect import bisect_right
 
-EXE = r"C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe"
+def _resolve_exe():
+    """The game binary, resolved rather than hard-coded.
+
+    $SC4_EXE wins; otherwise tools\\sc4paths.py finds the install ($SC4_GAME_DIR
+    or the usual locations); the Steam default is the last resort so an
+    existing setup keeps working. A hard-coded absolute path here was a
+    cold-clone trap: anyone whose install sits elsewhere had to edit source
+    before a single tool would run.
+    """
+    env = os.environ.get("SC4_EXE")
+    if env:
+        return env
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))))
+        from sc4paths import exe_path           # noqa: E402
+        p = exe_path()
+        if p and os.path.isfile(p):
+            return p
+    except Exception:
+        pass
+    return (r"C:\Program Files (x86)\Steam\steamapps\common"
+            r"\SimCity 4 Deluxe\Apps\SimCity 4.exe")
+
+
+EXE = _resolve_exe()
+# What the persisted JSONs record as provenance. The FINGERPRINT (sha256[:16]
+# + byte size) is the identity every gate actually checks; the full path adds
+# nothing to that and differs per machine, so only the file name travels.
+EXE_PROVENANCE = os.path.basename(EXE)
 IMAGE_BASE = 0x400000
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -178,7 +207,7 @@ class State(object):
     def __init__(self, path=STATE_PATH):
         self.path = path
         sha, size = exe_fingerprint()
-        fresh = {"version": 2, "exe": EXE, "exeSha256_16": sha,
+        fresh = {"version": 2, "exe": EXE_PROVENANCE, "exeSha256_16": sha,
                  "exeSize": size, "units": {}, "notes": {}}
         self.d = dict(fresh)
         self.stale = False
@@ -227,7 +256,7 @@ class State(object):
         self.d.setdefault("units", {})
         self.d.setdefault("notes", {})
         # Always re-stamp: from here on the file only ever describes THIS exe.
-        self.d["exe"] = EXE
+        self.d["exe"] = EXE_PROVENANCE
         self.d["exeSha256_16"] = sha
         self.d["exeSize"] = size
 

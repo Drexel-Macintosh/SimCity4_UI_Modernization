@@ -144,9 +144,20 @@ __pycache__/
 /tools/uimap/*
 !/tools/uimap/*.py
 !/tools/uimap/*.md
+# 2026-08-30 (engine-docs section): the three model databases ship so the
+# regionmap slices and the emulator are cold-clone reproducible. They are
+# MEASUREMENT (function-start VAs, builder annotations, constant sites), not
+# game content; state.json (run state) stays local. The recorded exe path in
+# builders/constants is the build machine's Steam default - provenance, no
+# PII; the fingerprint (sha256_16+size) is the identity that matters.
+!/tools/uimap/funcs.json
+!/tools/uimap/builders.json
+!/tools/uimap/constants.json
 !/tools/uimap/emu/
 /tools/uimap/emu/*
 !/tools/uimap/emu/*.py
+# the emulator's own documentation (per-file table, verdicts, method notes)
+!/tools/uimap/emu/*.md
 
 /_tests/repro166/
 /_packaging/public-repo/

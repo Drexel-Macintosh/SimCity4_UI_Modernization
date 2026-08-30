@@ -85,7 +85,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CACHE = os.path.join(HERE, "cache")
 STATE = os.path.join(HERE, "state.json")
 
-EXE = r"C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe"
+# Resolved, not hard-coded: $SC4_EXE, else tools/sc4paths.py's install
+# lookup, else the Steam default. See tools/uimap/common.py _resolve_exe.
+def _exe():
+    import os as _os, sys as _sys
+    env = _os.environ.get("SC4_EXE")
+    if env:
+        return env
+    try:
+        _sys.path.insert(0, _os.path.dirname(_os.path.dirname(
+            _os.path.dirname(_os.path.abspath(__file__)))))
+        from sc4paths import exe_path
+        p = exe_path()
+        if p and _os.path.isfile(p):
+            return p
+    except Exception:
+        pass
+    return (r"C:\Program Files (x86)\Steam\steamapps\common"
+            r"\SimCity 4 Deluxe\Apps\SimCity 4.exe")
+
+
+EXE = _exe()
 IMAGE_BASE = 0x400000
 
 
@@ -656,7 +676,7 @@ def read_imm8(va):
 def _blank_state():
     sha, size = exe_fingerprint()
     return {"version": 2, "created": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "exe": EXE, "exeSha256_16": sha, "exeSize": size,
+            "exe": os.path.basename(EXE), "exeSha256_16": sha, "exeSize": size,
             "cases": {}, "notes": []}
 
 
@@ -701,7 +721,7 @@ def save_state(st):
     # Re-stamp on every write so the file always names the exe it describes,
     # including states that were created before this field existed.
     sha, size = exe_fingerprint()
-    st["exe"], st["exeSha256_16"], st["exeSize"] = EXE, sha, size
+    st["exe"], st["exeSha256_16"], st["exeSize"] = os.path.basename(EXE), sha, size
     tmp = STATE + ".tmp"
     with open(tmp, "w") as fh:
         json.dump(st, fh, indent=1)

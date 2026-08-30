@@ -34,7 +34,11 @@ a 40px geometry mover that would have fought the scaler.)
 
 ## The collision census (the decisive numbers)
 
-`carbon_census.py` → `_tests\captures\2026-08-25-carbon\carbon-vs-ours-intersection.txt`
+`carbon_census.py` → **carbon-vs-ours-intersection.txt**, written into
+`_tests\captures\2026-08-25-carbon\`. **That capture is local-only evidence and
+is not in the repo** — `_tests\captures\` is gitignored on purpose, so there is
+nothing to click here; re-run `carbon_census.py` against the same source drop to
+regenerate it. The numbers below are transcribed from the 2026-08-25 run.
 
 - Carbon kept dats: **673 unique TGIs** (403 PNG, 206 .UI, 41 LTEXT, 22 FSH, 1 DIR).
 - Ours (live 010- + zzz-): 1,496. **Intersection: 494 TGIs = 73% of Carbon.**
@@ -101,7 +105,9 @@ carbon-STYLED scaled content:
   referenced by scripts whose art carbon overrides — survey risk 5).
   Built by the existing dialog-static + selective-safe third-party
   machinery; enrollment (TP_TARGETS/TP_ART_PACKAGE, ~472 rows) is
-  GENERATED from `carbon-vs-ours-intersection.txt`, never hand-typed.
+  GENERATED from the **carbon-vs-ours-intersection.txt** capture (see *The
+  collision census* above — local-only, gitignored, regenerate with
+  `carbon_census.py`), never hand-typed.
 - **ZCarbonIcons** (BUILT tonight as the end-to-end demonstration,
   `build_carbon_icons.py` → `proto-packages\z_SC4UIScale_ZCarbonIcons-{15x,2x}.dat`,
   18 PNGs): the 8 CSI balloons duplicated into BOTH twin groups (carbon

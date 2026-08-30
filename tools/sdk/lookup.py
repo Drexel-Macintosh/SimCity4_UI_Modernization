@@ -67,7 +67,10 @@ PLUGINS = plugins_dir(require=True)
 DOCS = [
     os.path.join(TESTS, "REGRESSION.md"),
     os.path.join(ROOT, "VERSION-HISTORY.txt"),
-    os.path.join(ROOT, "HANDOFF.md"),
+    # HANDOFF.md was retired 2026-08-06 (its diary lives in _archive/, which
+    # EXCLUDE_DIRS below refuses to quote); START-HERE.md replaced it as the
+    # entry point and is prose about process, not per-id findings, so it is
+    # deliberately not a lookup source.
     # THE BUILDERS ARE DOCS TOO. KNOWN_BUILDER_DISAGREEMENTS and the
     # CODE_BOUND_* comments carry decisions that exist nowhere else - the a6
     # scrollbar truth ("SetImage derives cellW = artW/12 and RESIZES the
@@ -366,6 +369,23 @@ def main():
     forms = _forms(raw)
     print("SDK LOOKUP: %s" % raw)
     print("matching forms: %s" % ", ".join(forms))
+    # COLD-CLONE HONESTY: four sources are regenerated from an owned game
+    # install and are gitignored, so on a fresh clone they are absent and the
+    # sections built on them would return empty. An empty section from a
+    # missing source is a REFUSAL, not a null finding - say so up front.
+    absent = [p for p in (CORPUS,
+                          os.path.join(TOOLS, "dialog-static", "stage"),
+                          os.path.join(TOOLS, "selective-safe", "stage"),
+                          os.path.join(TOOLS, "dbpf", "extracted"))
+              if not os.path.isdir(p)]
+    if absent:
+        print("  ! %d game-derived source tree(s) absent (cold clone?):"
+              % len(absent))
+        for p in absent:
+            print("      %s" % os.path.relpath(p, ROOT))
+        print("    Sections 2/3 will be empty for that reason, not because")
+        print("    nothing ships. Regenerate them from an installed game:")
+        print("    see docs/BUILDING.md (art-package regeneration).")
     report_source(forms)
     declaring = report_corpus(forms) or []
     report_staged(forms, declaring)

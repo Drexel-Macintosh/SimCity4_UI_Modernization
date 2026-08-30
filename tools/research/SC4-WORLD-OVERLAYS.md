@@ -356,9 +356,12 @@ still reaches only the marker-strip builder:
   consumer `0x46CD03` (`mov edx,[ecx*4+0xA88170]`) inside a module built
   around px→world helper `0x46C8B0` — the CSI-*adjacent* dispatch-marker
   drawer, NOT this section's builder. Already logged in
-  `CITY-SITUATION-INDICATORS.md:149` and `_tests/REGRESSION.md:13247`
-  (flagged there as a plausible fit for the still-open #188 balloon, not yet
-  proven on screen — a scaled-table test produced no visible change).
+  `CITY-SITUATION-INDICATORS.md` §4 ("Constants that are NOT the size") and
+  `_tests/REGRESSION.md` ("THE PIXEL-SIZE TABLE — 0x00A88170"). It was once
+  flagged as a plausible fit for the then-open #188 balloon; the scaled-table
+  test produced no visible change, and #188 has since CLOSED on the CSI's
+  inline `.text` immediates — `CITY-SITUATION-INDICATORS.md` §4 records this
+  table as "Not the CSI path — the CSI is pixel-fixed at every camera zoom."
 - **`0xAB4330`** = `{1.0, 2.0, 4.0, 8.0, 16.0}` (doubling ramp). Sole
   consumer `0x751CB5` (`fmul dword ptr [ecx*4+0xAB4330]`) inside function
   `0x751C80`, indexed by the **global** zoom/level var `[0xB4C70C]` (not a

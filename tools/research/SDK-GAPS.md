@@ -63,9 +63,14 @@ Two further names to read from the binary rather than from the header:
 
 - `0x0099BE4C` is **`GetNotificationTarget`** — a zero-arg getter,
   `mov eax,[ecx+0x4C]; ret`, paired with setter `0x0099BE42`. It is also the
-  vtable-diffing baseline: every one of the exe's 115 window vtables carries
-  it at slot 87, which is the fingerprint that a `.rdata` address is a window
-  vtable at all.
+  vtable-diffing baseline (re-measured 2026-08-30): **116** `.rdata`
+  addresses carry it at slot 87 — the single-marker fingerprint that an
+  address is a window vtable at all. **111** of them also pass the ≥3-of-8
+  base-implementation census (`wincensus.py` →
+  `tools/uimap/_work/wincensus.json` `windowVtables`), which is the
+  window-class population every count in this file should use; the 5
+  single-marker extras (`0xAC54B8`, `0xACCD5C`, `0xAD47F0`, `0xAD805C`,
+  `0xAD825C`) fail the class test.
 - The header names six `GZOnMouse*` handlers; the game exposes five 3-arg
   slots (134–138), reached from message ids 7, 8, 10, 11 and 13. Bind mouse
   handlers by slot number and message id, never by header name.
@@ -805,8 +810,9 @@ a window vtable: `[vt+87*4] == 0x0099BE4C`; if not, it is a secondary COM
 interface and the real window vtable is at another object offset. (3) Read
 slot 0 `QueryInterface` and collect its `cmp` immediates — the iids — and
 look them up in the two registries. (4) If `QueryInterface == 0x0099B774`
-the class overrides nothing (12 of the 115 classes, including all three
-region layers); only its Plot can identify it. (5) Diff the vtable against
+the class overrides nothing (re-measured 2026-08-30: 13 of the 111 census
+classes carry the base slot 0, including all three region layers); only its
+Plot can identify it. (5) Diff the vtable against
 its base over slots 0…150 — the differing slots ARE the class. (6) Find the
 ctor by searching `.text` for the vtable VA (two hits: ctor and deleting
 dtor); the ctor's `mov [reg+N], <vt>` must equal the factory's `add eax, N`.

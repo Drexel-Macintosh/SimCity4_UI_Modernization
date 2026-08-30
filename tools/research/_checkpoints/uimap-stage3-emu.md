@@ -2,8 +2,11 @@
 
 Written for a **cold replacement agent**. Last update 2026-07-30 evening.
 Scope of this agent: `tools\uimap\emu\` and this file. Nothing else was
-touched — `src\`, `dist\`, `tools\flyout-sim\`, `HANDOFF.md`, `README.md`,
-`_tests\REGRESSION.md`, `VERSION-HISTORY.txt` are all unmodified, and
+touched — `src\`, `dist\`, `tools\flyout-sim\`, the then-current HANDOFF.md
+session diary (retired 2026-08-06, superseded by `START-HERE.md`; its diary
+content was archived to the gitignored `_archive\`, so it is not openable
+from here), `README.md`, `_tests\REGRESSION.md`, `VERSION-HISTORY.txt` are
+all unmodified, and
 `tools\uimap\` Stages 1–2 belong to a different agent.
 
 ---

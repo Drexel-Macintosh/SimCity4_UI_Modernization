@@ -251,8 +251,11 @@ x/right-margin patches plus a POPBOX pin.)
 
 Offline only - the game was never launched or attached to. The exe was
 opened read-only and never modified. Nothing outside `tools\uimap\` and
-this checkpoint was written: `src\*.cpp`, `HANDOFF.md`, `README.md`,
-`_tests\REGRESSION.md`, `VERSION-HISTORY.txt` and `dist\` are untouched.
+this checkpoint was written: `src\*.cpp`, the then-current HANDOFF.md session
+diary (retired 2026-08-06, superseded by `START-HERE.md`; its diary content
+was archived to the gitignored `_archive\`, so no file is linkable here),
+`README.md`, `_tests\REGRESSION.md`, `VERSION-HISTORY.txt` and `dist\` are
+untouched.
 `src\CodePatches.cpp` is read by `crosscheck.py` and by nothing else -
 note that a **parallel session edited it at 18:10 on 2026-07-30** (v2.28.2)
 while this work was running.

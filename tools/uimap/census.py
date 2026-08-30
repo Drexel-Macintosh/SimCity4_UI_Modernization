@@ -242,6 +242,46 @@ EXTRA_BUILDERS = {
                  "does not have - if regeneration covers the five "
                  "immediates but not the blocks, that is a MEASUREMENT "
                  "(model needs a block-rewrite schema), not a failure."),
+    0x7EAC70: dict(
+        label="COST BOX right-align anchor owner (#159, v4.5.x)",
+        found="--discover (2 callers, 576 bytes, rect-driving) - measured in "
+              "builders.json discovered 2026-08-30; mechanical promotion.",
+        geometry="the 8-byte window at 0x7EAD4B (add ebx,0x7C; push 0x8001) "
+                 "that kCostOriginSite re-encodes to a cave jmp; censusing "
+                 "the owner lets the model hold the stock push imm32 at "
+                 "0x7EAD4E independently of CodePatches."),
+    0x7EDEB0: dict(
+        label="CITY DOCK / cost box builder - cost readout size + "
+              "restore-toolbars origin (#159 v4.5.x, v4.5.3)",
+        found="HAND-SEEDED 2026-08-30: absent from builders.json discovered "
+              "(fails a --discover criterion), said out loud per the "
+              "0x793810 precedent. Three patched sites live inside it.",
+        geometry="push imm8 32 at 0x7EEF43 (kCostBoxHeightSite), push imm32 "
+                 "128 at 0x7EEF54 (kCostBoxWidthSite), and the 6-byte "
+                 "sub/push/push block at 0x7EE15A "
+                 "(kRestoreToolbarsOriginSite - a block re-encode the "
+                 "single-immediate schema may not hold; if the two pushes "
+                 "census and the block does not, that is a MEASUREMENT, "
+                 "0x76D3D0 precedent)."),
+    0x79BDC0: dict(
+        label="CHEAT DIALOG Init - entry field rect + clearance pair "
+              "(v4.5.6/v4.5.7)",
+        found="HAND-SEEDED 2026-08-30: absent from builders.json discovered, "
+              "0x793810 precedent. The four rect immediates are ordinary "
+              "C7 44 24 imm32 stores the model's schema can hold.",
+        geometry="four mov [esp+d8],imm32 (l,t,r,b = 4,6,308,26) in the "
+                 "32-byte window at 0x79BE2D (kCheatRectSite) and two "
+                 "83 /0 08 adds inside the 39-byte window at 0x79BF63 "
+                 "(kCheatClearSite - imm8 adds, may census as imm8 sites)."),
+    0x79CFE0: dict(
+        label="INTRO VIDEO SetArea + centring (#138 backlog, v2.93.0)",
+        found="HAND-SEEDED 2026-08-30: absent from builders.json discovered. "
+              "Four single-immediate sites (68 imm32 push / 2D imm32 sub "
+              "eax) - if constants.py emits nothing for a video-init path "
+              "the emu cannot drive, that is a MEASUREMENT, not a failure.",
+        geometry="push 384/768 at 0x79D063/0x79D068 (SetArea w/h), "
+                 "sub eax imm32 at 0x79D089/0x79D0A4 (centring "
+                 "subtrahends) - kIntroVidSites."),
     0x7E8510: dict(
         label="MAYOR RATING BAR builder - bar length = rating*7px "
               "(kRatingImulSites, SKIPPED->resolved 2026-08-04)",
@@ -487,7 +527,7 @@ def main():
         for r in rows:
             per_owner[r["owner"]][prim].append(r)
 
-    out = {"exe": C.EXE, "imageBase": C.IMAGE_BASE,
+    out = {"exe": C.EXE_PROVENANCE, "imageBase": C.IMAGE_BASE,
            "primitives": {("0x%X" % k): v for k, v in PRIMITIVES.items()},
            "promotedBuilders": {("0x%X" % k): v
                                 for k, v in EXTRA_BUILDERS.items()},

@@ -230,7 +230,7 @@ def build(factor, resume):
                              "ts": time.strftime("%Y-%m-%dT%H:%M:%S")}
         save_state(st)          # persist after EACH unit
     doc = {
-        "exe": C.EXE,
+        "exe": C.EXE_PROVENANCE,
         "imageBase": C.IMAGE_BASE,
         "factorUsedForVerdict": factor,
         "encodings": ENC,

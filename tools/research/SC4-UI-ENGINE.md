@@ -337,11 +337,13 @@ shipped regression.
 | **`GZWinText`** (cGZWinText, ctor `0x9C19C8`, 0x114 bytes, main vt `0xADFEB8`, iface vt `0xAE0118`, `cIGZWinText` iid `0x212cdc1f` at `+0xD8`) | The **font style**, resolved at creation | `font=` style; no image | Doubled window + doubled FontStyle style = correct. **Law:** only if `font=` is **GUID-valued** (§5.1). Controllers bind the interface and update captions only (`0x7EE64D`/`0x7EE668`) |
 | **`GZWinBtn`** (iid `0x00008810`, descriptor `0xAD5CAC`; button class vtable `0x00ADDAF0`) | Its `area=`; the art is a **horizontal 4-state strip** (normal/hover/pressed/disabled), state selected by `imageWidth ÷ 4` — proportional, no pixel constants (875 buttons satisfy `pngW = 4×btnW`) | `image={gid,iid}` strip | **Safest case: a 2x strip still picks the right cell.** Verified in-game on the Audio playlist checkbox (8 states of 16x16, slicing is `imageWidth/8`). The generic strip `{46a006b0,144161eb}` (120x30) serves buttons 130–370px wide but is always 30 tall, so horizontal fit is proportional and the vertical dimension is the widget's own (`SDK-GAPS.md` G27) |
 | **`GZWinTextEdit`** | `area=` | `image=` (format also defines `thumbimage`/`containerimage`/`backimage` for Scrollbar2/OptGrp/TextEdit, **none in use** in the shipped corpus) | Scales like a plain window. Data point: under runtime-only scaling its captions render **correctly** where sibling `GZWinText` nodes go purple (§1.2) |
+| **`GZWinCombo`** clsid `0x0000059B`, iid `0x412CE496`, vt `0x00AE2970`, Plot `0x009CF241`, ctor `0x009CF772` (its list twin **`GZWinListBox`**: clsid `0x00000598`, iid `0x4132242B`, vt `0x00AE1780`, Plot `0x009CA19A`, ctor `0x009CA883`) | field width is a **baked disp8** — `lea edi,[edx+0x78]` (=120) in factory `sub_7798C0` cannot encode `120*f` for `f >= 1.07`, so the ONLY width lever is the runtime pin (`UiSpike.cpp`, `GetW()==120` gate — `SCALING-AXES.md` R18). The combo rect is **INCLUSIVE**: stock H=16, proven by patched disp8 23 at `0x779927` measuring H=24 | the drop-arrow "oval" is **class-painted with NO art** — `combodowncolor` RGB(63,73,103) set at `0x779B0D`; the pixel attribute `combodownarrowrect=(0,0,64,15)` sits OUTSIDE the builders' scaled set (`SDK-GAPS.md` §7); internal child id `0x53430D98` is positioned by the class | the arrow's top = rowTop+2 at EVERY tier (+1 from the row builder — `inc eax` `0x77F813`, a ONE-BYTE encoding with 12 twins, cannot hold a scaled value; +1 from the class's internal inset, unpatchable), so clearance to a `R(1·f)`-thick pill border is `2−R(f)` → **fuses at fractional tiers**; cure = seat shift `dy = RoundHalfUp(f)−floor(f)`, provably 0 at integer f (v3.0.3, `_tests/REGRESSION.md` "#185 RESIDUE"). The drop list ALWAYS paints the engine's standard list colour (222,232,227) regardless of `.UI` flags — an all-white open list is unreachable from `.UI`, so chrome-match by painting the FIELD, never by fighting the list |
+| **the generic scrollbar family `0x42B7C35x`** — four ids shared by EVERY scrollable GZWin control, stamped by framework code, never by a `.UI`: parent `0x42B7C351` SetID'd at `0x0099A9F6` inside `sub_99A96E` (`0x0099A96E`–`0x0099AC7E`; allocates a 0x11C-byte object, ctor `sub_99A67E`, vt `0x00ADC398`, stored in `[owner+0xF0]`); children `0x42B7C353/54/55` stamped inside helper `sub_99A70F` from call sites `0x0099ADBD`/`0x0099AE3D`/`0x0099AEBA` with the id passed as an ARGUMENT | framework-sized; worked instance: the Data Views Map-View page `0x00004200` bar (265x27 frame, three 24x25 buttons) | candidate `.UI` class name `GZWinScrollbar2` (`thumbimage`/`containerimage`/`arrowsimage` attribute set, **none in use** in the shipped corpus — see the `GZWinTextEdit` row above; `COMMUNITY-UI-WIKI-NOTES.md`) | **Law: a literal-`SetID` census sees only the parent** — the three child ids are invisible to static id scans by construction. Consequence: any id-keyed rule on `0x42B7C35x` hits every scrollbar in the game — GAME-WIDE, never per-panel. And scaling a scrollbar shrinks its pane's usable text width: the wrap regime re-reads the bar's `GetW` LIVE via `[this+0x1d4]` (§5.0) (`SDK-GAPS.md` §7) |
 | **`0x89e1567c`** = **cSC4WinGenTransparent** (factory `0x4661D0`, ctor `0x79C560`, vt `0xAB7358`) | `area=` | `image=`/`blttype` like a GZWinGen | Ordinary container: scale it and recurse. It is also the **query-family fingerprint**: root `0x10000005` + `clsid=0x89e1567c` is what `discover_query_family()` matches (`build_dialog_static.py`) |
 | **`0xAA7CECFD`** = **`cSC4WinText`** (`GZCLSIDDefs.h:285`; 56 uses) | The **font style** — it IS a `cGZWinText`: factory `0x007BE740` runs `cGZWinText`'s own constructor `0x9C19C8` on a 0x114-byte object and then swaps the vtable to `0x00ABA190`, which differs from `GZWinText`'s in exactly two slots: 88 (Plot → `0x007BE7A0`) and 148 (dtor) | `font=` | **Scales correctly off fonts with no help** — same object layout, same font-resolution code; only the painter differs. It is reached by GZCOM clsid instead of by the `.UI` class name, which is why it sits outside the `GZWinText` name path. Proven by co-location: in `I-aa920991` the region name (`0xEA5BD179`, this class) rendered 2x while sibling plain `GZWinText` nodes in the same file rendered 1x (`FONTS-AND-DIALOGS.md` Q1 table). Same for the city name `0x00000002` in `I-c973b411` |
 | **`cSC4WinAdviceList`** clsid **`0xCA1492AC`** (QI `0x793080`, Init `0x793190`, **item-create `0x7931F1`**, vt `0xAB58B0`; draw-self is a **no-op** `mov al,1; ret` @ `0x949ADE` — children paint) | Container from `area=`; **its items are GAME-sized**: item-create does `SetArea(0, 0, GetW(), GetH())` of the already-scaled container (vcalls `[+0xA4]`,`[+0xA8]`,`[+0xDC]` at `0x793210–0x79322E`) | none itself; items are the rich-text class below | **Law: scale the list, NEVER recurse into it.** Recursing double-scales: the news reader's item ballooned to **1648x708 inside its 824x354 list** (v2.18.6). Members: `kAdviceListScaleSelfIds` = `0x6A231531` (news reader), `0x00100100`/`0x00100101` (advisor briefings), `0xAA1F1EB5`/`0x6A1F1F4A` (My Sims stories). **STRUCTURAL WEAKNESS, noted not fixed:** the guard is keyed by ID, so any NEW `0xCA1492AC` window is unprotected by default (`UiSpike.cpp` comment) |
 | **`cSC4WinMiniMap`** clsid **`0xCA318388`**, interface iid **`0xCA318385`** | `area=`; `blitSize` at `[this+0xE4]` self-updates via the class `SetArea` override — **but the display surface at `[this+0xF0]` is ONE-SHOT**, inited once at city load | code-painted into its own surface | **Law: every scaled instance needs destroy-and-recreate of the surface** (not a resize: `vtable+0xC` is an `Init`, one-shot; calling it on a live surface corrupts it — replicate the game's own pattern `0x7A8C18–0x7A8C61`, then its recompute `0x7A7840`). **Three known instances:** dock minimap `0x0BC3B559` under `0x0987B48F` (MINIMAP block); Data-Views map child `0x00004203` (DVMAP block); U-Drive-It dashboard minimap, **same window id `0x0BC3B559`** under `0x4BCB938A` (UDMAP block, scoped). Skipping the recreate is **fatal, not cosmetic**: a 512-sized render into a surface still inited at 256 = heap overrun = silent native death, which is precisely the v2.21.0 Data Views expand crash (renderer `sub_7A2F60`, live rect read `vt+0xBC` @ `0x7A301E`, buffer create `0x7A3094` format `{9,32bpp}` clsid `0xC470D325`, 77-case painter table `0x7A4884`). **Law: the SIZE you pick selects a code path — see §2.4 for the terrain bake, the derived `zoom`, and the exact-power-of-two constraint on `blitSize`** |
-| **`0xCBCBF1E0`** (unnamed, 134 uses) — code-painted **gauge dials** | its own **cached buffer**, which keeps its 1x size while the window doubles | code-painted (its TGIs *are* staged 2x and it still draws small) | Symptom: a correct 2x black circle with a small dial face pinned top-left (`SDK-GAPS.md` G34). The My Sims portraits are the same shape, and a per-open census of hook calls found the hook installed and never called there; one leaf invalidate per open cured them (law 41). Run that instrument here before reaching for **force-recreate-buffer** (§7.3). **Law:** probe the vtable AND scope the hook to the owning root `0x4BCB938A` first — class identity alone is what crashed the game on Earned Cars (§2.1 note) |
+| **`0xCBCBF1E0`** (unnamed, 134 uses; outer vt `0x00AB4900`, window vt **`0x00AB46A0` at `obj+4`** — factory `0x00466220` returns base+4, Plot `0x00762830`, ctor `0x007628E0`, custom iid `0x0BCBF1DF`, 0x108 bytes — `SDK-GAPS.md` §8.1) — code-painted **gauge dials** | its own **cached buffer**, which keeps its 1x size while the window doubles | code-painted (its TGIs *are* staged 2x and it still draws small) | Symptom: a correct 2x black circle with a small dial face pinned top-left (`SDK-GAPS.md` G34). The My Sims portraits are the same shape, and a per-open census of hook calls found the hook installed and never called there; one leaf invalidate per open cured them (law 41). Run that instrument here before reaching for **force-recreate-buffer** (§7.3). **Law:** probe the vtable AND scope the hook to the owning root `0x4BCB938A` first — class identity alone is what crashed the game on Earned Cars (§2.1 note) |
 | **`0x00AB6AA8`** (vtable) container + **`0x00AB6D88`** (vtable) strip — the **flyout pair** | on-screen size == the **source buffer's** physical size, NOT the window rect (composite is a 1:1 clipped copy) | immediate-mode blits from an art atlas read out of the draw context | See §2.1 — the most involved widget in the game and the source of most reusable technique |
 | **`0xAA12E5F5`** — rich-text pane (`GetClassID 0x8FA317`; creation sites `0x443FC9`, `0x76A182`, `0x78CE11`, `0x7931F0`; created via `CreateInstance(clsid 0xAA12E5F5, iid 0x4A11FD4A)`) | Content-sized from the **HTML engine's** point tables — *not* FontStyle | text is HTML; page art via `sc4://` URLs | Text scales only via the `.rdata` table patch (§5.2). It appears as `id=2` in the five message-box scripts and is the item AdviceList creates |
 | **`GZWinCustom`, `id=0x0000AAAA`** — the **alignment marker** | sized like the panel's **anchor** (usually its spawn button) | none; `winflag_visible=no` | **Law: POSITIONING DATA. NEVER SCALE IT — not at runtime, not in shipped data.** See §6.1 |
@@ -900,7 +902,15 @@ failure mode: it is a crash, usually far from the hook.
   because the buffer is shared and a per-instance swap cannot reach the repaint
   paths that run outside the hooked Plot. Those are gated *inside* the thunk
   instead (`destIsContainer` / `destIsSubContainer`), so other UI on the same
-  buffer class is untouched.
+  buffer class is untouched. Both exception families live in `UiSpike.cpp`:
+  `EnsureBufferClassBltHook()` (slot 29 `Blt`) is the buffer-class case above.
+  The other permanent exception is the FLASH GUARD, `PatchFlashGuardClass()`:
+  flyout WINDOW classes get slot 88 (Plot) patched in the class vtable itself
+  (container `0x00AB6AA8` and strip `0x00AB6D88` up front, further classes on
+  discovery, capped at `kFgMax`), because the guard must already be in place
+  for a window's FIRST-ever Plot — an instance swap cannot exist before the
+  instance does. The thunk gates on the per-city sticky ready set (cleared
+  only in Disarm), so unready windows are suppressed rather than drawn stock.
 - **Law: CLASS IDENTITY IS NECESSARY, NEVER SUFFICIENT.** The disaster-derived
   surgery installed itself on U-Drive-It's *Earned Cars* strip — same class,
   different layout — and the game died. Gate on the class **and** the owning
@@ -1368,6 +1378,40 @@ because the GUID form bypasses the whole question. Note also
 that `font=4888` / `font=0x00001318` are the loader's own token for the
 keyword `default` (registration `0x00955823`); no FontStyle GUID `0x1318`
 exists, so both spellings land on the fallback `0x68963C4C` "Default".
+
+### 3.4a `align=` — the valign token system and the self-scaling CENTER seat
+
+An `align=` token combines a horizontal and a vertical seat in one value. The
+align deserializer at `0xAD584C`–`0xAD58A4` parses an **11-token
+enumeration** (incl. `lefttop`, `leftcenter`, `leftbottom` — the community
+wiki's enumeration matches, `COMMUNITY-UI-WIKI-NOTES.md`). `leftbottom` =
+**valign token 2, byte-verified in the deserializer** — zero stock corpus
+uses, and that is fine: the deserializer, not the corpus, proves it parses
+(and it is LIVE at 1.5x — RGKID capture, 112x18 → 168x27).
+
+The two seats age differently under scaling:
+
+- **`lefttop` is a FIXED pixel seat** — correct at 1x, and it visibly floats
+  once a sweep grows the box around it.
+- **CENTER is SELF-SCALING** — `seat = (GetH()−textH)>>1`, recomputed on
+  **every `SetArea`** at `0x9C20D3` (533 corpus uses prove the `leftcenter`
+  token path) — so `align=leftcenter` re-seats at any tier with no builder
+  help.
+
+**Law — practical rule: where the 1x look centres or bottoms the text, ship
+the token that SAYS so, and let the engine re-seat.** The shipped cures
+rewrite `align=lefttop → leftcenter` (#184: `I-2bc90671` HUD plates, funds
+`0x09e418fe` + population `0xc9e41918`, both groups) and `align=lefttop →
+leftbottom` (#183: `I-aa920991` region bubble). Both rewrites are scoped
+**BY SCRIPT, never by id** — the same id value `0xc9e41918` is #184's
+population label in `I-2bc90671` and also lives in `I-898897de`.
+
+Related: the `GZWinText` gutters pin in §3.0a — caption re-layout `0x9C1E6D`
+applies `gutterY` as a symmetric inset, and **Center-align ignores
+`gutterY`** — is this same CENTER seat seen from the gutters side. Full
+write-up: `_tests/REGRESSION.md` #183/#184/#185 "text-seat family" sections;
+condensed register form in `research/UNKNOWNS-AND-NEXT-TARGETS.md` §A.2
+(`align=` row).
 
 ### 3.5 `winflag_visible`, and why a hidden window still matters
 
@@ -2967,6 +3011,8 @@ then subsystems.
 | `0x798710` | tooltip layer Plot (window `0x2AAB8CC1`, class vt `0x00AB6770`) |
 | **`0x79880A`, `0x7988A9`** | tooltip `push 0xfa` = the hardcoded 250px wrap width (patched to `250*factor`) |
 | `0x41DE20` | advisor 3D-head binder (creates each head ONCE per controller slot) |
+| `0x009CF772` / **`0x009CF241`** | **GZWinCombo** ctor / **Plot** (clsid `0x0000059B`, iid `0x412CE496`, vt `0x00AE2970`); factory `sub_7798C0` — baked disp8 field width `lea edi,[edx+0x78]` (=120), `combodowncolor` write `0x779B0D`, inclusive-rect disp8 `0x779927`, row-builder `inc eax` `0x77F813`; internal child id `0x53430D98` (§2) |
+| `0x009CA883` / `0x009CA19A` | **GZWinListBox** ctor / Plot (clsid `0x00000598`, iid `0x4132242B`, vt `0x00AE1780`) |
 
 ### 8.5 Flyouts, menus, minimaps, dialogs
 

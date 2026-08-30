@@ -31,9 +31,14 @@ the dev box (Win11, .NET Framework 4, csc.exe v4.0.30319, PowerShell 5.1).
 >
 > **2. OUTPUT DIMS ARE NO LONGER ALWAYS `floor(dim*N+0.5)` AT FRACTIONAL
 > FACTORS.** The game cell-divides art sheets with an integer divide baked into
-> its own code — `cell = img->Width()/3` (NineSlice, VA `0x00794100`) and
-> `width/4` (four-state strips). At 1.5 that divisibility broke for **31%** of
-> `/3`-eligible and **43%** of `/4`-eligible dimensions, so cells drifted and
+> its own code — `cell = img->Width()/3` (NineSlice — the `.UI`-bound drawers
+> are `GZWinBMP`'s slot-88 draw `0x009BC325` (EDGE branch) and `GZWinBtn`
+> `0x009B05E0`; each divides its own source rect, then calls blitter
+> `0x008D8800`, which contains no divide. `0x00794100` is
+> `cSC4WinAlertBorder`'s own draw and appears in no `.UI` — see
+> `tools\research\SC4-UI-ENGINE.md` §4.6c; attribution corrected 2026-08-30)
+> and `width/4` (four-state strips). At 1.5 that divisibility broke for **31%**
+> of `/3`-eligible and **43%** of `/4`-eligible dimensions, so cells drifted and
 > each drew a sliver of the next state — the actual white seam. `ScaleDim` now
 > snaps a fractional factor's output to preserve the source's divisibility
 > (`CellUnit` = 12/4/3/1, ties up), and `UpscaleNearest` maps output→source by
@@ -72,17 +77,22 @@ Files in this folder: `Upscale2x.cs` (source), `Upscale2x.exe`, `Build.ps1`,
 `Make-TestPngs.ps1` (synthetic test set), `Verify-Upscale.ps1` (checker),
 `test\` (synthetic in/out), `preview\` (real batch output).
 
-## Synthetic test set (Make-TestPngs.ps1 -> test\in\)
+## Synthetic test set (`Make-TestPngs.ps1` -> `test\`)
+
+**The corpus is generated, never committed.** `tools\upscale\test\` is
+gitignored, so none of the names below is a file in the repo — run
+`Make-TestPngs.ps1` and it writes all eight into `test\in\`. They are listed
+here as fixture names, not as links.
 
 | file | purpose |
 |---|---|
-| `rgba_gradient_64x48.png` | 32bppArgb, deterministic per-pixel formula, 4 known corners incl. a HALF-ALPHA green premultiply canary and a fully-transparent pixel with non-zero blue |
-| `indexed_pal_64x48.png` | hand-crafted colortype-3 palette PNG **with tRNS** (entry 0 fully transparent). GDI+ auto-expands pal+tRNS to 32bppArgb on load |
-| `indexed_opaque_64x48.png` | same palette PNG **without tRNS** - loads as `Format8bppIndexed`, exercises the tool's manual palette-expansion path |
-| `flat_opaque_32x32.png` | solid `FF4D90C9` - HQ no-color-shift / no-edge-bleed check |
-| `flat_semi_32x32.png` | solid `80 28C85A` (alpha 128) - HQ premultiplication canary |
-| `sub\0x856ddbac_...png` | odd size 5x7 in a subfolder, SC4-resource-ID-style name - recursion + name preservation + odd-dimension doubling |
-| `notes.txt`, `fake_webp.png` | decoys: non-PNG extension + RIFF/WEBP bytes wearing a .png name |
+| **rgba_gradient_64x48.png** | 32bppArgb, deterministic per-pixel formula, 4 known corners incl. a HALF-ALPHA green premultiply canary and a fully-transparent pixel with non-zero blue |
+| **indexed_pal_64x48.png** | hand-crafted colortype-3 palette PNG **with tRNS** (entry 0 fully transparent). GDI+ auto-expands pal+tRNS to 32bppArgb on load |
+| **indexed_opaque_64x48.png** | same palette PNG **without tRNS** - loads as `Format8bppIndexed`, exercises the tool's manual palette-expansion path |
+| **flat_opaque_32x32.png** | solid `FF4D90C9` - HQ no-color-shift / no-edge-bleed check |
+| **flat_semi_32x32.png** | solid `80 28C85A` (alpha 128) - HQ premultiplication canary |
+| **sub\0x856ddbac_...png** | odd size 5x7 in a subfolder, SC4-resource-ID-style name - recursion + name preservation + odd-dimension doubling |
+| **notes.txt**, **fake_webp.png** | decoys: non-PNG extension + RIFF/WEBP bytes wearing a .png name |
 
 ## Results - `Verify-Upscale.ps1`: ALL 49 CHECKS PASSED (exit 0)
 

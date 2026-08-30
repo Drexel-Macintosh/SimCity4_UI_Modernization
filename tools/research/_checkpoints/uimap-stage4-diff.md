@@ -30,12 +30,18 @@ live dump is the authority; the model is a prediction until measured.
 | Machine findings | `tools\uimap\diff\FINDINGS-generated.md` | deterministic, regenerated |
 | Analysis | **this file** | hand-written |
 
+Everything under `tools\uimap\diff\` is **local-only derived output** — the
+tree is deliberately gitignored, so none of the paths in this table are
+clickable in the public repo. They are regenerated on demand by the
+`tools\uimap\diff\diff.py` commands quoted throughout this file (see
+**NEXT ACTION**).
+
 Generated artifacts, all deterministic, all safe to delete:
 `tools\uimap\diff\census\*.census.json`, `report.json`, `state.json`,
-`FINDINGS-generated.md`.
+`tools\uimap\diff\FINDINGS-generated.md`.
 
 Verified: from-scratch and `--resume` runs produce **byte-identical**
-`report.json` and `FINDINGS-generated.md`.
+`report.json` and `tools\uimap\diff\FINDINGS-generated.md`.
 
 ---
 
@@ -94,7 +100,7 @@ discharges it; still `519x654` makes it real. Per AXIS 4 this must be a
 **A harness defect this exposed.** The first run judged it against *Maxis's*
 script (`area=(13,1,532,401)` = 519x400) and produced a meaningless
 `[-519,-146]` delta. A mod that replaces a script replaces what "stock"
-MEANS for that id — the LOAD-ORDER LAW as data. `diff.py` now gives
+MEANS for that id — the LOAD-ORDER LAW as data. `tools\uimap\diff\diff.py` now gives
 `thirdparty-ui\` precedence for its 67 ids and *removes* the Maxis entry
 rather than adding to it, so a live window can never match the wrong design.
 **Standing consequence: any new third-party UI override must be extracted
@@ -164,7 +170,7 @@ one and leaves the other pixel-perfect. When one axis satisfies the law to
 the pixel and the other does not, the failing axis is **content or art
 driven** — REGRESSION.md law 17 ("a style-PNG widget is born at the ART's
 size"), law 21 ("text laid out once at creation does not re-wrap"), and the
-whole `kFontSizedIds` family. `diff.py` now emits `ONE-AXIS-EXACT` with the
+whole `kFontSizedIds` family. `tools\uimap\diff\diff.py` now emits `ONE-AXIS-EXACT` with the
 good axis named, so these are neither ignored nor mistaken for scaling bugs.
 
 Confirmed on the next capture: the same window reached `900x492` at
@@ -203,7 +209,7 @@ game session.
 
 ## FINDING 6 — the model join is alive, and stage 3 is confirmed by live data
 
-`tools\uimap\` was empty when this was designed, so `diff.py` was built to
+`tools\uimap\` was empty when this was designed, so `tools\uimap\diff\diff.py` was built to
 degrade. It no longer has to:
 
 - **50** ids attributable to the 12 decoded builders; **145** live ids are
@@ -315,7 +321,7 @@ Stated plainly so it is not mistaken for a clean bill of health.
   table yet**. `load_model()` handles the shapes that exist today
   (`builders[*].identification.childIds`) and the generic shapes documented
   in `RESUME.md`. When a rect table lands, `_extract_windows()` in
-  `diff.py` is the single adapter point.
+  `tools\uimap\diff\diff.py` is the single adapter point.
 - `_tests\last-selective-2x.log` has no `Settings:` line, so no factor is
   derivable; it is SKIPPED with that reason printed. Not a bug.
 
@@ -342,7 +348,10 @@ Stated plainly so it is not mistaken for a clean bill of health.
 ## HARD CONSTRAINTS HONOURED
 
 Offline only; the game was never launched, attached to or killed. The
-Plugins folder was READ ONLY. Nothing under `src\`, `dist\`, `HANDOFF.md`,
+Plugins folder was READ ONLY. Nothing under `src\`, `dist\`, the then-current
+HANDOFF.md session diary (retired 2026-08-06 and superseded by
+`START-HERE.md`; its diary content was archived to the gitignored `_archive\`,
+so nothing here is openable),
 `README.md`, `_tests\REGRESSION.md`, `VERSION-HISTORY.txt`, the existing
 `_tests\Test-*.ps1`, or another agent's `tools\uimap\` files was modified.
 Nothing durable was left in the scratchpad.

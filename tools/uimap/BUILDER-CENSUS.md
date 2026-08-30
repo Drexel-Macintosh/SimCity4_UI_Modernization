@@ -612,6 +612,28 @@ Vtable geometry slots used inside the builders (proven by reading the callees):
 
 - creates: -
 
+### `0x79BDC0` - `0x79BDC0` .. `0x79BFC0`  (512 bytes)
+
+**CHEAT DIALOG Init - entry field rect + clearance pair (v4.5.6/v4.5.7)**
+
+> **PROMOTED BUILDER** (calls no named primitive, so `by_target` can never reach it).
+> How it was found: HAND-SEEDED 2026-08-30: absent from builders.json discovered, 0x793810 precedent. The four rect immediates are ordinary C7 44 24 imm32 stores the model's schema can hold.
+> Geometry: four mov [esp+d8],imm32 (l,t,r,b = 4,6,308,26) in the 32-byte window at 0x79BE2D (kCheatRectSite) and two 83 /0 08 adds inside the 39-byte window at 0x79BF63 (kCheatClearSite - imm8 adds, may census as imm8 sites).
+
+- creates: -
+- direct rect calls: SetArea x1
+
+### `0x79CFE0` - `0x79CFE0` .. `0x79D110`  (304 bytes)
+
+**INTRO VIDEO SetArea + centring (#138 backlog, v2.93.0)**
+
+> **PROMOTED BUILDER** (calls no named primitive, so `by_target` can never reach it).
+> How it was found: HAND-SEEDED 2026-08-30: absent from builders.json discovered. Four single-immediate sites (68 imm32 push / 2D imm32 sub eax) - if constants.py emits nothing for a video-init path the emu cannot drive, that is a MEASUREMENT, not a failure.
+> Geometry: push 384/768 at 0x79D063/0x79D068 (SetArea w/h), sub eax imm32 at 0x79D089/0x79D0A4 (centring subtrahends) - kIntroVidSites.
+
+- creates: -
+- direct rect calls: SetArea x2, SetPosition x1
+
 ### `0x7A04F0` - `0x7A04F0` .. `0x7A0AE0`  (1520 bytes)
 
 **DATA VIEWS / legend re-lay (chip + row rects, v2.37.0 #78)**
@@ -647,6 +669,17 @@ Vtable geometry slots used inside the builders (proven by reading the callees):
 - direct rect calls: SetPosition x3, SetW x6
 - art instances: `0x14015549`
 
+### `0x7EAC70` - `0x7EAC70` .. `0x7EAEB0`  (576 bytes)
+
+**COST BOX right-align anchor owner (#159, v4.5.x)**
+
+> **PROMOTED BUILDER** (calls no named primitive, so `by_target` can never reach it).
+> How it was found: --discover (2 callers, 576 bytes, rect-driving) - measured in builders.json discovered 2026-08-30; mechanical promotion.
+> Geometry: the 8-byte window at 0x7EAD4B (add ebx,0x7C; push 0x8001) that kCostOriginSite re-encodes to a cave jmp; censusing the owner lets the model hold the stock push imm32 at 0x7EAD4E independently of CodePatches.
+
+- creates: -
+- direct rect calls: SetArea x1, SetPosition x1
+
 ### `0x7EAEB0` - `0x7EAEB0` .. `0x7EB320`  (1136 bytes)
 
 **SUB-FLYOUT provider - nested flyout strip metrics (v2.36.0 #50)**
@@ -658,6 +691,18 @@ Vtable geometry slots used inside the builders (proven by reading the callees):
 - creates: -
 - direct rect calls: SetAreaRect x1, SetItemMetrics x1
 - window ids touched (`GetChildWindowFromID`/`SetID`): `0x8A2CAD8B` `0x8A6E61E0`
+
+### `0x7EDEB0` - `0x7EDEB0` .. `0x7EF200`  (4944 bytes)
+
+**CITY DOCK / cost box builder - cost readout size + restore-toolbars origin (#159 v4.5.x, v4.5.3)**
+
+> **PROMOTED BUILDER** (calls no named primitive, so `by_target` can never reach it).
+> How it was found: HAND-SEEDED 2026-08-30: absent from builders.json discovered (fails a --discover criterion), said out loud per the 0x793810 precedent. Three patched sites live inside it.
+> Geometry: push imm8 32 at 0x7EEF43 (kCostBoxHeightSite), push imm32 128 at 0x7EEF54 (kCostBoxWidthSite), and the 6-byte sub/push/push block at 0x7EE15A (kRestoreToolbarsOriginSite - a block re-encode the single-immediate schema may not hold; if the two pushes census and the block does not, that is a MEASUREMENT, 0x76D3D0 precedent).
+
+- creates: -
+- direct rect calls: SetArea x1, SetPosition x2
+- window ids touched (`GetChildWindowFromID`/`SetID`): `0x43` `0x6A5E44B6` `0xAA231508`
 
 ## 3. Candidate primitives NOT yet named
 

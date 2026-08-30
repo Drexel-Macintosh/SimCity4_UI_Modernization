@@ -164,7 +164,16 @@ python _tests\Test-PackageGating.py          # SyncDat sites vs dep rows, both d
 python _tests\Test-ShippingIniKeys.py        # every seeded/reference ini key is READ by Settings.cpp
 python tools\uimap\emu\gate_btn_undercover.py
 python tools\upscale\gate_key_integrity.py <corpus> --factor <f>
+python tools\uimap\emu\gate_patch_families_combined.py   # no two patch families collide; every site table registered
+python tools\uimap\crosscheck.py                         # the offline model still reproduces the patch list
+python _packaging\Test-NoDeadLinks.py --repo             # every path a tracked doc names is a path a reader can open
 ```
+
+The last three matter for a documentation-only change too — the corpus cites
+addresses and files, and a citation the reader cannot check is the defect.
+`crosscheck.py` reads the model databases in `tools\uimap\`; regenerate those
+deliberately (`census.py` then `constants.py`) when the patch list changes,
+never as a side effect of running a gate.
 
 For a sc4pac-channel release additionally run `_tests\Test-Sc4pacInstall.ps1`
 (needs java + the sc4pac CLI jar + network — the most expensive gate, and the

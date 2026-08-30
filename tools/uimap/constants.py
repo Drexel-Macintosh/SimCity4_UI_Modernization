@@ -343,7 +343,7 @@ def main():
                                 "runtime pin" % (r["enc"], scaled, cap))
 
     out = {
-        "exe": C.EXE, "imageBase": C.IMAGE_BASE, "factorUsedForVerdict": factor,
+        "exe": C.EXE_PROVENANCE, "imageBase": C.IMAGE_BASE, "factorUsedForVerdict": factor,
         "encodings": {k: {"immSize": v[0], "pattern": v[1],
                           "ceiling": CEILING[v[0]]} for k, v in PATCHABLE.items()},
         "helperConstants": [dict(hc, helper="0x%X" % hc["helper"],

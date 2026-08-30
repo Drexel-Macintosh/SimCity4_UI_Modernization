@@ -116,7 +116,7 @@ place as the historical record. **This file is now the one to read.**
 > three rows, and `0x6A5E44B6`'s "IDENTITY UNKNOWN" was already stale when it
 > was written.** §0 below carries the corrections; the full reasoning, the
 > per-root cure briefs and the batched eyes-on runsheet are in
-> **`tools\research\_incoming\FINAL-3-PERCENT.md`**.
+> **`tools\research\FINAL-3-PERCENT.md`**.
 
 Every number below was produced by a run recorded in "How to reproduce" at the
 bottom. Where the three inventories disagreed, the disagreement is named and
@@ -819,7 +819,7 @@ legend and that #100 predicts as 8x at the 2x tier.** Re-derive "10 root slots /
 §4 — before quoting either.
 
 **⚠ AMENDED 2026-08-03 — three of these five rows changed shape. Build order,
-gates and risk for each are in `tools\research\_incoming\FINAL-3-PERCENT.md §4`.**
+gates and risk for each are in `tools\research\FINAL-3-PERCENT.md §4`.**
 
 - **Row 2, the chips, are Mode A — NOT Mode C.** `sub_438390` @ `0x43844C`
   passes `cSC4BaseViewInputControl::windowManager` → `GetMainWindow` (vt+0x0C)
@@ -937,7 +937,7 @@ observation, not a structural fact**, and this section treated it as one.
 | City LOADING / SAVING screen | no `.UI` exists at all; never appears in the tree | **STANDS** — 100% code-painted |
 
 **The four "not yet adjudicated" items are now adjudicated** (full proof in
-`tools\research\_incoming\FINAL-3-PERCENT.md §3`):
+`tools\research\FINAL-3-PERCENT.md §3`):
 
 | item | verdict |
 |---|---|
@@ -1255,7 +1255,10 @@ mechanism first.
 
 ## 9c. What changed again later on 2026-08-03 (the doc-consistency audit)
 
-No new census work. A cross-document audit found this file and `HANDOFF.md`
+No new census work. A cross-document audit found this file and the
+then-current HANDOFF.md session diary (retired 2026-08-06 and superseded by
+`START-HERE.md`; the diary itself was archived to the gitignored `_archive\`
+and is not part of this repo)
 disagreeing on four claims, and both of us disagreeing with the tools on disk.
 Resolution rule applied throughout: **the measured value wins, the loser is
 corrected in place with a dated note, nothing is deleted.**
@@ -1263,7 +1266,7 @@ corrected in place with a dated note, nothing is deleted.**
 | change | where | why |
 |---|---|---|
 | §7's crosscheck transcript marked **AMENDED** | §7 + *How to reproduce* | The gate was edited at 12:03, three minutes after this file was saved. It now prints **8 DEFERRED** alongside the 9 skips. Both the transcript and the "did not go green by narrowing" claim were true at 12:00 and are not true of the current tool |
-| `HANDOFF.md` corrected to **94.9%**, and its Q2 / `0x2BA6BB97` / `0x6A5E44B6` claims struck | `HANDOFF.md` §5 | It was saved at 11:55, five minutes before this file's amendment, and carried 96.6%, "no census of code-created windows", "proven structurally unreachable" and "identity unknown" — all four superseded here at 12:00 |
+| HANDOFF.md corrected to **94.9%**, and its Q2 / `0x2BA6BB97` / `0x6A5E44B6` claims struck | HANDOFF.md §5 (retired 2026-08-06, archived out of the repo — see the note above §9c's table) | It was saved at 11:55, five minutes before this file's amendment, and carried 96.6%, "no census of code-created windows", "proven structurally unreachable" and "identity unknown" — all four superseded here at 12:00 |
 | The v2.53.0–v2.55.0 release finally **written to `VERSION-HISTORY.txt`** | root changelog | There was no entry for v2.53.x, v2.54.x or v2.55.0 at all; the newest #57 entry still ended on the *refuted* cached-buffer theory |
 | `sub_76D3D0`'s absence recorded **inside the generated model docs** | `BUILDER-CENSUS.md`, `CONSTANT-MAP.md` | The builder and its six budget constants existed only in prose. That is the structural reason `crosscheck.py` needed a DEFERRAL rather than a pass — worth saying in the files that would otherwise look complete |
 | **STATE OF THE MODEL** written | `emu\README.md` | An honest four-bucket account of what the emulator can adjudicate, what is measured, what is assumed, and what it still cannot see (starting with: it never looks at a pixel) |
@@ -1341,9 +1344,11 @@ python tools\sdk\lookup.py 0x6BB92BCB             # step 0 for any id
 python tools\research\_checkpoints\pds-cache\art_coverage.py
 ```
 
-The 330/298/288 census and the live scan were produced by throwaway scripts in
-the session scratchpad (`recount.py`, `bucket.py`, `caps.py`, `final.py`,
-`livescan.py`). **The scratchpad is volatile** — anyone continuing this work
+The 330/298/288 census and the live scan were produced by five throwaway
+scripts written in the session scratchpad — recount, bucket, caps, final and
+livescan. They were one-off instruments, never shipped and never checked in,
+so no such files exist in this repo. **The scratchpad is volatile** — anyone
+continuing this work
 should re-derive from the recipe in §2 rather than expect those files to exist,
 and should fix `coverage_rederive.py` (§3.2) so the census has a checked-in home.
 

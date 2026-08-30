@@ -30,7 +30,7 @@ launch worthless.
 | **P1** | The install is actually **ours**, not stock-compare. | `START-HERE.md §6` warns the tree was left mid-experiment. Right now `Documents\SimCity 4\Plugins` carries **both** `…-15x.dat` **and** `…-15x.dat.x1-disabled` for SelectiveArt / DialogStatic / ItemIcons — the live `.dat` wins and the mod IS on, but the state is ambiguous. | `_tests\Set-StockCompare.ps1 -Mode Ours` then `_tests\Test-DatIntegrity.ps1`. |
 | **P1b** | **v4.5.0: which ARMING LAYOUT is on disk, and what is actually armed.** | The check above reads a filename, and from v4.5.0 the filename is a constant: every package is `z_SC4UIScale_<Pkg>.dat` at every tier and under every gate verdict, with the tiers inert beside it as `.<tag>.uipay`. Presence proves installation and nothing more. A tree carrying BOTH layouts is the one thing a listing still catches, and it is serious — two live providers for every TGI that package owns, winner decided by filename order. | Read `z_SC4UIScale_STATE.txt` in `010-SC4UIScale\` and `zzz-SC4UIScale\` (`base`, `tag`, `reason`, then the payload and live stamps). **Check a row's `liveSize`/`liveTime` against the file it names before quoting its tag** — a mismatch means the state is stale and describes a different boot. `_tests\Verify-Arming.ps1` does all of this and refuses rather than passing vacuously. |
 | **P2** | `[Logging] LogLevel` is **2 or 3**. | `DPROBE` and `EBLT` print at **Debug**. At LogLevel 1 they are silently dropped and the log looks like a clean null. | Live ini line 234 currently reads `LogLevel=3`. Leave it. |
-| **P3** | **Copy the previous `SC4UIScale.log` out before launching.** | The log is **recreated every launch**. The run-14 spin capture was lost to exactly this. (`SC4UIScale-104.csv` beside it is append-only and safe.) | `copy "…\Plugins\SC4UIScale.log" _tests\captures\<date>-pre.log` |
+| **P3** | **Copy the previous `SC4UIScale.log` out before launching.** | The log is **recreated every launch**. The run-14 spin capture was lost to exactly this. (The telemetry CSV the DLL writes beside it — `Plugins\010-SC4UIScale\SC4UIScale-104.csv`, a runtime file in the player's game folder, not a repo file — is append-only and safe.) | `copy "…\Plugins\SC4UIScale.log" _tests\captures\<date>-pre.log` |
 | **P4** | Keys go in the **existing** `[Probe]` / `[Disaster]` / `[Flyout]` sections of `Documents\SimCity 4\Plugins\SC4UIScale.ini`. | `GetPrivateProfileString` reads the **FIRST** matching section only. A second `[Probe]` block appended at the bottom **orphans every key above it** — the ini already carries this warning in-line and it has bitten before. | Edit in place at lines 373 (`[Probe]`), 470 (`[Disaster]`), 236 (`[Flyout]`). No BOM, ever. |
 
 ### P5 — THE GATE ABOVE ALL PROBE KEYS (verified in source this session)
@@ -469,7 +469,7 @@ There is a second one for the framing: if samples exist but none land in the gam
 image, it prints *"the spin is in a LIBRARY, not in the game's own code — which
 would refute #104's framing"*.
 
-**Also note:** `SpinProbe=0` disables the `SC4UIScale-104.csv` telemetry
+**Also note:** `SpinProbe=0` disables the `Plugins\010-SC4UIScale\SC4UIScale-104.csv` telemetry
 entirely (v2.67.0 made it opt-in), so a row written with the probe off is marked
 `unknown` and **must not be counted as a clean exit**. Leaving `SpinProbe=10` set
 across ordinary play is how #107 accumulates rates at no extra cost.
@@ -698,7 +698,7 @@ it" test.
 
 **After (game closed):**
 
-14. Hand back `SC4UIScale.log`, `SC4UIScale-104.csv`, and the `Trace-CityOpen` CSV.
+14. Hand back `SC4UIScale.log`, `Plugins\010-SC4UIScale\SC4UIScale-104.csv`, and the `Trace-CityOpen` CSV.
 15. Set `SpinProbe` back to `0` **only if** you do not want the per-launch CSV row; leaving it at 10 is what accumulates the #107 rates from ordinary play, at no cost.
 
 ---
