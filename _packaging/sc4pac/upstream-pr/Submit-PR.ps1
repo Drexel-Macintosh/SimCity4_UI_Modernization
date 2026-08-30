@@ -103,15 +103,39 @@ if ($cfg -match [regex]::Escape($entry)) {
 Push-Location $Clone
 try {
     if ($PSCmdlet.ShouldProcess($Clone, 'commit and push')) {
+        # PowerShell 5.1 wraps a native command's stderr in an ErrorRecord, and
+        # under ErrorActionPreference=Stop that ABORTS THE SCRIPT - even for
+        # git's harmless "LF will be replaced by CRLF" notice, at exit code 0.
+        # Check $LASTEXITCODE instead, which is the only thing that means
+        # failure here.
+        $ErrorActionPreference = 'Continue'
+        # This machine sets user.name/user.email PER REPO, not globally, so a
+        # fresh clone under %TEMP% has no identity and `git commit` dies with
+        # exit 128. Carry the identity across from the project repo rather than
+        # hard-coding it here or writing a global config on the user's behalf.
+        if (-not (git config user.email)) {
+            git config user.name  (git -C $repo config user.name)
+            git config user.email (git -C $repo config user.email)
+            Write-Output "  set the clone's git identity from $repo"
+        }
         git add lint-config.yaml "src/yaml/$Group/sc4-ui-scale.yaml"
+        if ($LASTEXITCODE -ne 0) { throw "git add failed ($LASTEXITCODE)" }
         git commit -q -m "Add ${Group}:sc4-ui-scale and its group-to-github mapping"
+        if ($LASTEXITCODE -ne 0) { throw "git commit failed ($LASTEXITCODE)" }
         git push -q -u origin $Branch
+        if ($LASTEXITCODE -ne 0) { throw "git push failed ($LASTEXITCODE)" }
+        $ErrorActionPreference = 'Stop'
     }
     Write-Output "  pushed $Branch"
 
     # ---- 4. the PR -----------------------------------------------------------
     if ($PSCmdlet.ShouldProcess('memo33/sc4pac', 'open pull request')) {
+        # --head OWNER:BRANCH is REQUIRED for a cross-fork PR. Without it gh
+        # looks for the branch on memo33/sc4pac itself and aborts with "you
+        # must first push the current branch to a remote" - which is
+        # misleading, because the push had already succeeded to the fork.
         gh pr create --repo memo33/sc4pac `
+            --head "${Owner}:${Branch}" --base main `
             --title "Add ${Group}:sc4-ui-scale (SimCity 4 UI Modernization)" `
             --body-file $prBody
     }
