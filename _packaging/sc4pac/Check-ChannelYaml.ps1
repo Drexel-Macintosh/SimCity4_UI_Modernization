@@ -50,7 +50,10 @@ function Test-ChannelYaml {
         if ($CheckAssetUrl) {
             try {
                 $head = Invoke-WebRequest -Uri $url -Method Head -MaximumRedirection 5 -UseBasicParsing -TimeoutSec 30
-                Write-Output ("  asset reachable: HTTP {0}, {1:N0} bytes" -f $head.StatusCode, $head.Headers['Content-Length'])
+                # Write-Host, NOT Write-Output: a function returns everything
+                # its pipeline emits, and this info line was coming back to
+                # callers as a phantom "failure".
+                Write-Host ("  asset reachable: HTTP {0}, {1:N0} bytes" -f $head.StatusCode, $head.Headers['Content-Length'])
             } catch {
                 $fail += "asset URL is not reachable: $url"
             }

@@ -976,4 +976,12 @@ def main(argv):
 
 
 if __name__ == "__main__":
+    # A cp1252 console cannot print the U+26A0 in the preserved prose; the
+    # 2026-08-30 run CRASHED mid-report while echoing dropped comment lines
+    # and wrote nothing. The report must never be the thing that fails.
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, OSError):
+            pass
     sys.exit(main(sys.argv[1:]))

@@ -1,159 +1,34 @@
-# ###########################################################################
-# GENERATED FILE - do not hand-edit; your edit is lost on the next build.
-#   generator : tools/sc4pac/gen_channel.py
-#   bundle    : SC4UIScale-v4.5.2
-#   generated : 2026-08-30T12:29:36Z
-# The prose below is carried verbatim from the hand-written version of this
-# file. The generator refuses to write output that drops any of it.
-# ###########################################################################
-#
-# sc4pac channel metadata for SC4UIScale - THE ANNOTATED INTERNAL RECORD.
-#
-# STATUS: SHIPPED (v4.5.1+). Every one-time blocker recorded below is CLOSED
-# (see the closure record at the bottom); the measurement record itself is
-# kept verbatim. THE FILE THAT GOES UPSTREAM IS NOT THIS ONE - it is the lean
-# file emitted by `gen_channel.py --publish`, same model and hashes, without
-# the engineering commentary. PR #199 shipped this internal file verbatim,
-# which is why that distinction now exists.
-# Everything sc4pac-side in this file was MEASURED against sc4pac 0.10.0 on
-# 2026-08-29 by installing a throwaway local channel into a scratch plugins
-# root - not read out of the docs and not inferred. Where a measurement
-# contradicted the documentation, the measurement is what is encoded here.
-#
-# ============ WHAT WAS MEASURED, AND WHAT IT CHANGED ========================
-#
-# 1. ROOT PLACEMENT IS BY EXTENSION, NOT BY `withChecksum`.
-#    sc4pac's own constant: (?:\.dat|\.sc4model|\.sc4lot|\.sc4desc|\.sc4|\.dll)$
-#    A `.dll` lands at the Plugins ROOT with or without `isIni`. Everything
-#    else stays in the package folder. That is exactly what SC4 requires of us
-#    (dat scan recursive, DLL loader top-level only), so the DLL needs no
-#    special handling - but it DOES need a `withChecksum` entry, because a file
-#    listed only under `include:` was NOT INSTALLED AT ALL.
-#
-# 2. `isIni: true` IS A TRAP FOR US. It puts the ini at the root, but renamed
-#    to `<stem>_sc4pacnew.ini`, and sc4pac never activates it - the user has to
-#    rename it by hand. Worse, an uninstall deletes `*_sc4pacnew.ini` even
-#    after the user edited it. So NO SETTINGS INI SHIPS; the DLL creates
-#    SC4UIScale.ini at the Plugins root on first run - the only copy that
-#    survives updates AND uninstall. (The read-only FontStyle asset inis are
-#    a separate case with their own rules - see INI_RULES in the generator.)
-#
-# 3. A NON-CANONICAL EXTENSION INSTALLS ONLY VIA `withChecksum`. A `.uipay`
-#    listed under `include:` was silently dropped; listed under `withChecksum`
-#    it installed into the package folder. Every payload therefore needs its
-#    own checksummed entry - there is no wildcard shortcut.
-#
-# 4. sc4pac PARSES EVERY SHIPPED `.dat` AS DBPF and aborts the install on a
-#    bad one ("seems to contain a corrupted DBPF file"). Our `.off` payloads
-#    must be real one-entry archives, which they are by construction.
-#
-# 5. AN UPDATE WIPES THE VERSIONED FOLDER. v1.0.0 -> v2.0.0 deletes
-#    `<group>.<name>.1.0.0.sc4pac` wholesale and creates a 2.0.0 folder. Two
-#    consequences, both already handled:
-#      - The DLL's write target MOVES on every package update, because the
-#        version is in the folder name. Our folder discovery finds our folders
-#        BY CONTENT rather than by name (v4.5.0), so this costs nothing.
-#      - Anything the DLL wrote into that folder is discarded. The arming pass
-#        re-runs at every boot off a fingerprint, so it self-heals on the next
-#        launch. This is WHY arming must be idempotent and fingerprint-driven.
-#
-# 6. NOTHING IN sc4pac VERIFIES INSTALLED BYTES. `update` says "Everything is
-#    up-to-date" and `repair` says "Looking good" after the installed files
-#    have been rewritten, and after an extra file is added to the package
-#    folder. This is the fact the whole content-swap design rested on.
-#    POSITIVE CONTROLS, because a silent tool proves nothing on its own:
-#    `repair` DOES report a deleted package folder as [missing] and a stray
-#    folder as [orphan], and checksum enforcement IS live - corrupting a file
-#    inside the source archive aborts the install. Verification happens in the
-#    staging directory, before the move into Plugins. So the null is real:
-#    sc4pac looks, and deliberately does not look at content.
-#
-# 7. `group: a-drexel` PASSES LINT. The rule is
-#    `[a-z0-9]+(?:-[a-z0-9]+)*`; the control (`A_Drexel`) fails it, exit 1.
-#    ⚠ A DLL package additionally requires a group->GitHub-owner mapping
-#    contributed to `lint-config.yaml` upstream, or lint refuses:
-#    "GitHub account ... is not known to belong to group a-drexel".
-#
-# ============ WHY THE GROUP ID IS `a-drexel`, AND DO NOT "TIDY" IT ==========
-#
-# LOAD-BEARING. sc4pac sorts by `<group>.<name>` inside a subfolder, and the
-# lowest canonical subfolder is `050-load-first`, where CAM lives. Our early
-# package must load BEFORE CAM so it LOSES to CAM per-TGI - losing is the
-# compatibility gate, not an accident. `a-drexel` sorts before `cam.*`;
-# `drexel` does not, and renaming it inverts CAM precedence with no error
-# anywhere. VERIFIED by per-TGI winner diff, not by argument:
-# `python tools/uimap/winner_table.py --diff <live> <proposed> --ignore-moves`
-# 1888 keys examined, 3/3 controls fired, and ZERO CAM keys changed hands.
-#
-# ============ PROBE #202 - WAS THE ONE BLOCKER, NOW CLOSED =================
-#
-# PROBE #202 (`python _tests/Probe-ScanPredicate.py --stage | --read`) asked:
-# is SC4's plugin scan gated on EXTENSION or on DBPF MAGIC? If magic, `.uipay`
-# payloads would be live plugins - three tiers of every package permanently in
-# the index - and this file's payload lists would be void. `.dat.x1-disabled`
-# being skipped proves one string is skipped; it is not proof about another.
-# MEASURED 2026-08-30, one game launch: the scan is EXTENSION-gated. The
-# payload lists in this file are sound, and the publish embargo that stood
-# here is lifted.
-#
-# ============ WHAT THE GENERATOR ADDS ======================================
-#
-# The payload lists below are MACHINE-GENERATED from the built bundle named
-# at the top of this file. Every sha256 was computed from a file that exists
-# in that bundle, and re-verified by re-hashing after the YAML was written.
-# The bundle's own SHA256SUMS.txt is NOT used as a source - in the v4.5.0-dev
-# bundle it still describes the pre-payload layout and is stale.
-#
-# Regenerate with:
-#   python tools/sc4pac/gen_channel.py --bundle dist/<Product>-v<version>
-#
-
-# GROUP ID: LOAD-BEARING, DO NOT "TIDY". sc4pac sorts by `<group>.<name>`
-# inside a subfolder, so `a-drexel` sorts before `cam.*` and this package
-# loads BEFORE CAM - which means it LOSES to CAM per-TGI. That losing IS the
-# compatibility gate. Renaming the group to `drexel` inverts CAM precedence
-# with no error anywhere. Verified by per-TGI winner-table diff: 1888 keys
-# examined, 3/3 controls fired, ZERO CAM keys changed hands.
+# Generated by tools/sc4pac/gen_channel.py --publish from SC4UIScale-v4.5.2; do not hand-edit.
 group: "a-drexel"
 name: "sc4-ui-scale"
 version: "4.5.2"
+# 050-load-first and the group id are load-bearing: `a-drexel.*` sorts
+# before `cam.*`, so this package loads BEFORE (and per-TGI loses to) CAM.
+# Losing is the compatibility gate - the art is stock-derived and a real
+# mod's own files must win. The override half ships separately below.
 subfolder: "050-load-first"
 dependencies:
 - "config:sc4-edition-windows-digital"
 assets:
 - assetId: "a-drexel-sc4-ui-scale"
   withChecksum:
-  # Lands at the Plugins ROOT because it is a .dll. Required by SC4: the dat
-  # scan is recursive, the DLL loader is top-level only.
-  # It ALSO needs the checksum for a second, measured reason: a file
-  # listed only under `include:` was NOT INSTALLED AT ALL.
+  # The DLL must land at the Plugins root (SC4 loads DLLs from the top
+  # level only); .dll is root-placed by extension, and the checksum is
+  # required for a code mod.
   - include: "/Plugins/SC4UIScale.dll"
     sha256: "39dcfa96ff41375c7bec237b3271abcf2c5127a0c9207b9e4329df554b1419d3"
-  # Shipped by --ship-asset-inis. NOTE: no `isIni: true` - that lands the
-  # file at the Plugins root renamed `_sc4pacnew.ini` and never activates
-  # it. This keeps it in the package folder, where the DLL reads it.
   - include: "/Plugins/010-SC4UIScale/FontStyle-15x.ini"
     sha256: "4fa84a8eba0a6346d180ed97f85dcd45508f970ed11725c829023996364e6c6c"
-  # Shipped by --ship-asset-inis. NOTE: no `isIni: true` - that lands the
-  # file at the Plugins root renamed `_sc4pacnew.ini` and never activates
-  # it. This keeps it in the package folder, where the DLL reads it.
   - include: "/Plugins/010-SC4UIScale/FontStyle-2x.ini"
     sha256: "bce357f38217a384e509f58a4185ddb1cd4f711171d080309084877badf225e4"
-  # Shipped by --ship-asset-inis. NOTE: no `isIni: true` - that lands the
-  # file at the Plugins root renamed `_sc4pacnew.ini` and never activates
-  # it. This keeps it in the package folder, where the DLL reads it.
   - include: "/Plugins/010-SC4UIScale/FontStyle-3x.ini"
     sha256: "56215b25384e2f313251a7258ac1d02623c3e1646fabce3cf869eec98a15de51"
-  # Shipped by --ship-asset-inis. NOTE: no `isIni: true` - that lands the
-  # file at the Plugins root renamed `_sc4pacnew.ini` and never activates
-  # it. This keeps it in the package folder, where the DLL reads it.
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_FontStyle.ini"
     sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-  # PAYLOADS. `.uipay` is a NON-CANONICAL extension: measured against
-  # sc4pac 0.10.0, such a file is silently DROPPED when listed under
-  # `include:` and installs only through a `withChecksum` entry. There is
-  # no wildcard shortcut, so each one is listed individually. Inert by
-  # construction - the DLL arms one per package at boot.
+  # Inert per-tier payloads (non-canonical extension, so each needs its
+  # own checksummed entry). The DLL copies the matching one over the
+  # package's stable .dat at boot; filenames never change, so uninstall
+  # removes exactly what was installed.
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_DialogStatic.15x.uipay"
     sha256: "dce71223366dbad90fa6d9821ef66babccb5866a8b0303e99c1797cf2879e5d1"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_DialogStatic.2x.uipay"
@@ -183,10 +58,6 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_WebText.on.uipay"
     sha256: "2c98fcf374151117ac24ed0c7ef3b287cb34fd40c0a0c15ff316db752ce11767"
   include:
-  # Stock-derived art and scripts - DESIGNED TO LOSE to a real mod's own
-  # files. See the group-id note above for how that survives sc4pac.
-  # The live `.dat` of each package installs through this folder pattern;
-  # `.dat` is one of sc4pac's canonical extensions, so it needs no checksum.
   - "/Plugins/010-SC4UIScale/"
 info:
   summary: "Scales the SimCity 4 interface to 1.5x, 2x or 3x for high-resolution displays"
@@ -211,32 +82,25 @@ info:
 
 ---
 
-# GROUP ID: LOAD-BEARING, DO NOT "TIDY". sc4pac sorts by `<group>.<name>`
-# inside a subfolder, so `a-drexel` sorts before `cam.*` and this package
-# loads BEFORE CAM - which means it LOSES to CAM per-TGI. That losing IS the
-# compatibility gate. Renaming the group to `drexel` inverts CAM precedence
-# with no error anywhere. Verified by per-TGI winner-table diff: 1888 keys
-# examined, 3/3 controls fired, ZERO CAM keys changed hands.
 group: "a-drexel"
 name: "sc4-ui-scale-mod-overrides"
 version: "4.5.2"
+# Built FROM other mods' own artwork, so it must WIN - hence the last
+# canonical subfolder. Gated at RUNTIME on each mod's files (also works
+# for hand-installed mods; a hard dependency would drag this package
+# along when e.g. CAM is uninstalled).
 subfolder: "900-overrides"
 dependencies:
 - "a-drexel:sc4-ui-scale"
 assets:
 - assetId: "a-drexel-sc4-ui-scale"
   withChecksum:
-  # Third-party artwork attribution, installed beside the art it covers.
-  # It lives INSIDE the dir root on purpose: a bundle-root extra file
-  # would change this package's longest-common-prefix and re-root the
-  # whole install one level deeper (the v4.5.0 discovery trap, again).
   - include: "/Plugins/zzz-SC4UIScale/THIRD-PARTY-NOTICES.md"
     sha256: "c014a1f802e01dcbc1b86d63ecb5dd84753433ccf7703a3e5629804cc3c708c4"
-  # PAYLOADS. `.uipay` is a NON-CANONICAL extension: measured against
-  # sc4pac 0.10.0, such a file is silently DROPPED when listed under
-  # `include:` and installs only through a `withChecksum` entry. There is
-  # no wildcard shortcut, so each one is listed individually. Inert by
-  # construction - the DLL arms one per package at boot.
+  # Inert per-tier payloads (non-canonical extension, so each needs its
+  # own checksummed entry). The DLL copies the matching one over the
+  # package's stable .dat at boot; filenames never change, so uninstall
+  # removes exactly what was installed.
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CamUI.15x.uipay"
     sha256: "6ffa4263f6d34b9a7e0bd9c1d1817c55bed45e903131a4624030f3c0a8e6aee8"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CamUI.2x.uipay"
@@ -370,14 +234,6 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.off.uipay"
     sha256: "6a8169d0a56edaadb0cd1dff050d7cadd631550e435bb7aef9d6b7bc5a7ced5d"
   include:
-  # Built FROM other mods' own artwork, so these must WIN - hence the last
-  # canonical subfolder. Gated AT RUNTIME on each mod's files by exact name
-  # and byte size, deliberately NOT as sc4pac dependencies: the gates must
-  # also work for hand-installed copies of those mods, a mod UPDATE must
-  # disable us (our copies hard-code its exact rects), and a hard dependency
-  # would mean uninstalling CAM drags this package with it.
-  # The live `.dat` of each package installs through this folder pattern;
-  # `.dat` is one of sc4pac's canonical extensions, so it needs no checksum.
   - "/Plugins/zzz-SC4UIScale/"
 info:
   summary: "Scaled UI artwork for CAM, NAM and other mods, for SC4UIScale"
@@ -396,55 +252,7 @@ info:
 
 ---
 
-# THE ASSET. One zip serves both packages.
 assetId: "a-drexel-sc4-ui-scale"
 version: "4.5.2"
-# The RELEASE publish time from the GitHub API, not a file mtime. sc4pac uses
-# this to decide whether a cached asset is stale, so it has to move when the
-# asset does.
 lastModified: "2026-08-30T12:28:41Z"
 url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.5.2/SC4UIScale-v4.5.2.zip"
-# No `nonPersistentUrl`: docs/metadata.md scopes that field to a SECOND
-# host's page (e.g. url on GitHub, nonPersistentUrl on Simtropolis) and the
-# update checkers only consume STEX/SC4E links. GitHub is our only host, so
-# the field would be noise - v4.5.1 carried a same-host HTML page here under
-# an invented rationale, corrected on the corpus survey of 2026-08-30.
-
-# ===========================================================================
-# THE 900-overrides QUESTION, MEASURED AND CLOSED
-#
-# `900-overrides` is the last canonical subfolder, and sc4pac's own CLI README
-# tells users to move their `zzz-` folders into `895-my-overrides` - i.e.
-# BELOW it. So on a canonically migrated install our override package wins
-# everything, exactly as `zzz-SC4UIScale\` does today.
-#
-# The residual exposure is a HYBRID install: digits sort before letters, so an
-# un-migrated letter-named top-level folder out-sorts `900-overrides`.
-# MEASURED on this machine, which has three of them (BSC, CSX, ~Documents):
-#   proposed layout, tree as-is      : 9 keys lost, ALL UncoveredIcons, to
-#                                      BSC prop packs
-#   proposed layout, tree migrated   : 0 keys changed, 3/3 controls fired
-# So the regression belongs to an incomplete sc4pac migration, not to this
-# design, and the cure is documentation plus a boot-time census that names the
-# offending folder instead of rendering wrong art silently.
-#
-# FORMERLY OUTSTANDING - ALL CLOSED (the list is kept so the closures have
-# their questions next to them; nothing here is open):
-#   - probe #202: CLOSED, extension-gated - measured 2026-08-30, see above.
-#   - The real sha256 of the DLL and every payload: CLOSED - computed from
-#     the bundle on every run and re-verified off the emitted YAML.
-#   - `lastModified`: CLOSED - the release publish time from the GitHub API,
-#     passed with --last-modified (which `--publish` REQUIRES; without it the
-#     internal file carries the bundle mtime as a marked placeholder).
-#   - The `group-to-github` mapping for `a-drexel`: submitted with the
-#     package in one PR (upstream precedent: PR #164). Lint verified locally
-#     against the full corpus, positive control fired.
-#   - THE INI DECISION: CLOSED, executed per-file in the generator's
-#     INI_RULES. The DLL creates SC4UIScale.ini at the Plugins ROOT and no
-#     settings ini ships - the only shape that survives both updates and
-#     uninstall. When an excluded ini is present in a bundle the YAML carries
-#     an `exclude:` block stating the reason; the v4.5.1+ bundle ships no
-#     settings ini at all, so no exclude block appears - earlier notes
-#     pointing at "the exclude blocks above" described a bundle shape that no
-#     longer exists.
-# ===========================================================================
