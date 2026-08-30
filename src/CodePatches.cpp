@@ -2800,13 +2800,22 @@ namespace CodePatches
 			return 0;
 		}
 		gCheatDialogPatched = 1;
+		// ⚠ THE ARGUMENT LIST MUST START WITH `factor`. The first version of
+		// this line opened with "x%.2f" and then passed kStockCheatRect[0] as
+		// the first vararg, so EVERY value was shifted by one: the shipped
+		// v4.5.6 log read "CHEAT DIALOG x0.00 ... the box is 26x0 ... 13pt ->
+		// 1077542912pt" while the patch itself was applying correctly. A
+		// varargs log has no compiler to catch that, and a log that misreports
+		// is worse than no log - it is the instrument every later diagnosis
+		// trusts. Caught only by reading the line after a real boot.
 		Logger::Get().WriteLine(LogLevel::Info,
-			"CodePatches: CHEAT DIALOG x%.2f - field (%d,%d,%d,%d)+%u -> "
+			"CodePatches: CHEAT DIALOG x%.2f - field (%d,%d,%d,%d)+%d -> "
 			"(%ld,%ld,%ld,%ld)+%ld, so the box is %ldx%ld instead of 312x28. "
 			"Its text is bound to FontStyle 'Default', which we scale 13pt -> "
 			"%ldpt, and the box never scaled with it - that is the clipping.",
+			static_cast<double>(factor),
 			kStockCheatRect[0], kStockCheatRect[1], kStockCheatRect[2],
-			kStockCheatRect[3], kStockCheatClear,
+			kStockCheatRect[3], static_cast<int>(kStockCheatClear),
 			v[0], v[1], v[2], v[3], clear,
 			v[2] - v[0] + clear, v[3] - v[1] + clear,
 			std::lround(13.0 * factor));

@@ -1,3 +1,45 @@
+2026-08-30  v4.5.7    CHEAT BOX + THREE NEW MODS + AN UNSCALED PACKAGE
+                      (rolls up 4.5.4 / 4.5.5 / 4.5.6, built and deployed
+                      locally but never published)
+
+  CHEAT BOX. Init 0x0079BDC0 writes four literals into its own stack frame -
+  (l,t,r,b)=(4,6,308,26), a 304x20 field - and derives the dialog with two +8
+  clearances = 312x28. No font metric, parent dim or art participates, but the
+  TEXT binds FontStyle 0x68963C4C ("Default") which we take 13 -> 19/26/39,
+  flags 0x0200 = single line no wrap. 26pt into a 20px box = the clipping.
+  Patched to emit stock x f. No .UI exists (0 of 331 stock scripts) and the
+  sweep cannot name it (GetID()==0, rebuilt per keypress inside DoModalWin).
+  ⚠ THE DECODE BRIEF'S OFFSETS WERE WRONG BY TWO (+0x0E/+0x26 vs the real
+  +0x0C/+0x24) - the brief's would have landed inside `push ecx`, corrupting
+  the stream in a TEXT-ENTRY path. Caught by disassembling all 39 bytes.
+
+  RAISE THE UI (warrior). Ships two .UI scripts and NO art, so the game ran
+  its 1x imagerects against OUR 2x sheets and read the top-left QUADRANT of
+  each - magenta on the key, black past content. New z_SC4UIScale_RaiseUI
+  carries the MOD's scripts with imagerect only; area= is never touched for
+  swept windows, so the raise survives by construction. The raise itself is
+  three hand-authored BOTTOM-EDGE grows (+32/+33/+34) on bottom-anchored
+  containers - not a translation.
+
+  REGION VIEW CENSUS UI (null-45). 449x482 dialog that never scaled while our
+  fonts did: 5 of 40 labels overflowed at 2x, 9-slice degenerate at 3x.
+  Opposite cure - dialog-static, full area= scaling, because the window is NOT
+  swept. First script this builder handles outside group 96a006b0.
+
+  SMP YELLOW PAUSE THINGY REMOVER. MEASURED NO-ACTION: its art is 100%
+  transparent (14400/14400 px), it wins cleanly, the border is gone.
+
+  WEBBUTTONUI SHIPPED AN UNSCALED SCRIPT, and this was the biggest of them:
+  rebuild_webbutton.py shutil.copy'd a byte-stock 1x aa920991 into every tier,
+  from zzz- which OUTRANKS the correctly scaled 010- copy. One mod alone broke
+  the region bar. The deliberate part was a single cleared button id; the
+  builder now derives from the SCALED staged script and applies just that.
+
+  ⚠ AND A LOG THAT LIED: the cheat patch printed "x0.00 ... 13pt ->
+  1077542912pt" while patching correctly - a varargs format missing its first
+  argument, with no compiler to catch it. Fixed; found only by reading the
+  line after a real boot.
+
 2026-08-30  v4.5.3    RESTORE-TOOLBARS BUTTON BORN BELOW THE SCREEN EDGE
 
   The last quantified uncovered defect in the coverage matrix. The 3D-view

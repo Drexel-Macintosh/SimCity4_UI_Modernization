@@ -1,5 +1,31 @@
 # Changelog
 
+## 4.5.7 (2026-08-30) - the cheat box, two new mods, and a log that was lying
+
+- **The Ctrl+X cheat box no longer clips what you type.** The box sizes itself
+  from four numbers written into the game's own code, while its text follows
+  this mod's enlarged font - so at 2x a 26pt line was being drawn into a 20px
+  box. The box now scales with the font.
+- **Support for two newly-released mods that this mod was breaking:**
+  - *Raise the UI Mod* (warrior). It ships interface layouts but no artwork, so
+    the game drew them using this mod's enlarged artwork with the original
+    small coordinates - producing magenta and black blocks on the region screen
+    and a jumbled bottom-left corner in mayor mode. Both are fixed, and the
+    mod's raise is preserved exactly.
+  - *Region View Census UI* (null-45). Its window never scaled while its text
+    did, so five of its forty labels overflowed their boxes at 2x and its frame
+    broke apart at 3x. Now scaled properly.
+  - *SMP Yellow Pause Thingy Remover* needs nothing from this mod and works as
+    intended - checked rather than assumed.
+- **Fixed: the Web Button Improvement Mod support shipped an unscaled layout.**
+  Installing that mod on its own would have broken the region screen the same
+  way, because our own package was overriding a correctly-scaled file with an
+  original-size one. It had been doing this since the package was added.
+- **Fixed: a log line reported nonsense.** The cheat-box patch logged
+  "x0.00 ... 13pt -> 1077542912pt" while doing the right thing. Harmless in
+  itself, but a diagnostic that misreports is worse than none, so it is
+  corrected.
+
 ## 4.5.3 (2026-08-30) - the button that brings the toolbars back is on screen again
 
 - **The Restore-Toolbars button was born partly below the bottom of the
