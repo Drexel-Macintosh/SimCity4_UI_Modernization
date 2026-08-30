@@ -18495,3 +18495,82 @@ passing one.
 
 **Revert:** documentation, plus four constants/comments in offline instruments.
 `git revert` is safe and changes nothing a player sees.
+
+
+---
+
+## 2026-08-30 - the deploy re-armed five gated packages, and how it was found
+
+**Found by using the tool, not by reading it.** Deploying v4.6.0 to the live
+tree turned `Test-DatIntegrity` red on five packages at once:
+
+    FAIL: z_SC4UIScale_RaiseUI: STATE.txt says tag 'off' but the live .dat's
+    bytes are the '2x' source. The DLL believes it armed one tier and the game
+    is loading another.
+
+Two of the five are scaled copies of mods that are **not installed on this
+machine**. `Set-Tier` refuses to do that without `-ArmGated`, and its comment
+says exactly why: *"arming our frozen copy of someone else's UI into a game
+without that mod is precisely what Test-ThirdPartyGates.ps1 exists to catch."*
+
+### ⭐ LAW: ONE SCRIPT, TWO STAGES, AND ONLY ONE OF THEM KNEW ABOUT THE GATES
+
+`Deploy-OnGameClose.ps1` keeps a `$DEPENDENCY_GATED` membership list and
+honours it while COPYING. It then hands the tree to
+`Convert-ToPayloadLayout.ps1`, whose seed loop copies the tier payload over
+**every** live `.dat`. The gate-aware stage ran first; the blind stage ran
+second and overwrote it.
+
+This is the neighbour-gate failure in a new place. The list existed, it was
+correct, it was consulted - and a later stage in the same run undid it. **A
+guard is only as wide as the last thing that writes.**
+
+### THE FIX IS A SNAPSHOT, NOT A TEST - and that distinction is the point
+
+The obvious repair is to teach the seeder about dependency gates. It cannot
+be taught: whether a gate is open depends on which third-party mods are
+installed and at what byte size, which only `ScaleTier.cpp` knows. A script
+that tried to recompute the verdict would be a second implementation of the
+gate, free to disagree with the first.
+
+It does not need to. **An inert live file IS the verdict**, already computed
+by the DLL at the previous boot. So the deploy now snapshots which packages
+are inert BEFORE it copies anything, and restores exactly those at the end:
+
+    gate-verdict snapshot: 6 package(s) inert before this deploy
+    restored 6 gate-off package(s) the copy/seed stages had re-armed
+
+If a gate's condition has genuinely changed since, the DLL re-arms at the next
+boot - which is the only place that decision belongs. Preserving off costs
+nothing; guessing on costs a wrong UI.
+
+### THE FIRST FIX WAS IN THE WRONG PLACE, and shipping it would have been worse
+
+The first attempt put the preservation in the seed loop: skip any live file
+that already matches its `.off` payload. It read correctly and did nothing -
+by the time the seeder runs, the caller has already copied fresh built `.dat`
+files over the live tree, so "what was inert before the deploy" is no longer
+observable from there. Re-running the deploy proved it: the packages came
+back armed, with no `kept inert` line.
+
+**A fix that reads correctly and produces no change is worse than no fix**,
+because the confident comment above it tells the next reader the problem is
+handled. The comment now points at where the preservation actually lives.
+
+### Acceptance
+
+    _tests\Deploy-OnGameClose.ps1     -> "gate-verdict snapshot: N package(s)"
+                                        then "restored N gate-off package(s)"
+    _tests\Test-DatIntegrity.ps1      -> ALL PASS, immediately after a deploy
+                                        (it was 5 FAILs before the fix)
+
+**Trap signature:** `STATE.txt says tag 'off' but the live .dat's bytes are
+the '<tier>' source` on several packages at once, straight after a deploy.
+One package is a gate that changed; several at once is a stage that ignored
+them all.
+
+**Still expected after any deploy:** `Test-ThirdPartyGates.ps1` refuses with
+*"the state file is stale (files were deployed after the last boot)"* - the
+sizes match and only the mtimes differ. That one is resolved by launching the
+game once so `CommitArming` re-stamps the arming state file the DLL writes
+into the live Plugins tree, exactly as the gate says.

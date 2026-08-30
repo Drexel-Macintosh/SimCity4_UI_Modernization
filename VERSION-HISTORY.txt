@@ -87,6 +87,24 @@
   to the reader AND to the scan, and left the exclusion with nothing to
   exclude.
 
+  ⭐ THE DEPLOY RE-ARMED FIVE GATED PACKAGES, and the tool caught it.
+  Deploying this build turned Test-DatIntegrity red on five packages at once:
+  STATE said 'off', the live bytes said '2x'. Two of the five are scaled
+  copies of mods NOT installed here - exactly what Set-Tier refuses to do
+  without -ArmGated. Cause: Deploy-OnGameClose.ps1 keeps a $DEPENDENCY_GATED
+  list and honours it while COPYING, then hands the tree to a seeder that
+  copies the tier payload over EVERY live .dat. One script, two stages, one
+  aware of the gates and one blind - the guard was only as wide as the last
+  thing that writes. The fix is a SNAPSHOT, not a test: the deploy cannot
+  evaluate the gates (they depend on which third-party mods are installed,
+  which only ScaleTier.cpp knows) and does not need to, because an inert live
+  file IS the last verdict. It now records which packages are inert before it
+  copies anything and restores exactly those at the end. ⚠ The first fix was
+  in the wrong stage - it read correctly and changed nothing, because by the
+  time the seeder runs the live tree has already been overwritten. A fix that
+  produces no change is worse than none, since its comment tells the next
+  reader the problem is handled.
+
   COLD-CLONE. The uimap tools hard-coded one machine's Steam path; they now
   use the repo's own resolver ($SC4_EXE, then sc4paths.py, then the Steam
   default). The persisted databases record the file NAME plus the fingerprint

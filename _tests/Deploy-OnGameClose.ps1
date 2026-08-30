@@ -164,6 +164,51 @@ Get-ChildItem $plug -Filter "z_SC4UIScale_*" -File -ErrorAction SilentlyContinue
 # THERE until the migration runs. Snapshotting first recorded nothing
 # and the restore left two tiers armed - caught by Test-DatIntegrity
 # on the migration's first run.)
+# ---- GATE-VERDICT SNAPSHOT (2026-08-30) ------------------------------------
+# Which packages are INERT right now, recorded BEFORE any copy runs, and put
+# back at the very end.
+#
+# ⛔ THE DEFECT THIS EXISTS FOR. A deploy copies fresh built .dat files over
+# the live tree and then seeds every live file at the ini's tier. Neither step
+# knows about dependency gates, so a package the DLL had turned OFF came back
+# holding its 2x payload - and for a third-party override that means our
+# scaled copy of ANOTHER MOD's UI sitting in a game that does not have that
+# mod. Set-Tier refuses to do exactly this without -ArmGated, and says why:
+# "arming our frozen copy of someone else's UI into a game without that mod is
+# precisely what Test-ThirdPartyGates.ps1 exists to catch." This script kept a
+# $DEPENDENCY_GATED list and honoured it when copying, then handed the tree to
+# a seeder that did not. One script, two stages, one aware of the gates and one
+# blind.
+#
+# MEASURED 2026-08-30: five packages left armed at 2x with every gate verdict
+# for them reading off, including two mods that are not installed.
+#
+# WHY A SNAPSHOT RATHER THAN A TEST. This script cannot evaluate the gates -
+# they depend on which third-party mods are installed and at what byte size,
+# which only ScaleTier.cpp knows. But it does not need to: an inert live file
+# IS the last verdict, already computed by the DLL at the previous boot. So
+# preserve it rather than recompute it. If the condition has since changed, the
+# DLL re-arms at the next boot, which is the only place that decision belongs.
+$INERT_BEFORE = @{}
+foreach ($dir in @($our, (Join-Path $plug 'zzz-SC4UIScale'))) {
+    if (-not (Test-Path $dir)) { continue }
+    Get-ChildItem $dir -Filter "*.off.uipay" -File -ErrorAction SilentlyContinue |
+        ForEach-Object {
+            $base = $_.Name -replace '\.off\.uipay$', ''
+            $live = Join-Path $dir "$base.dat"
+            if ((Test-Path $live) -and
+                (Get-Item $live).Length -eq $_.Length -and
+                (Get-FileHash $live -Algorithm SHA256).Hash -eq
+                (Get-FileHash $_.FullName -Algorithm SHA256).Hash) {
+                $INERT_BEFORE[$live] = $_.FullName
+            }
+        }
+}
+if ($INERT_BEFORE.Count) {
+    Write-Output ("  gate-verdict snapshot: " + $INERT_BEFORE.Count +
+        " package(s) inert before this deploy; will be restored at the end")
+}
+
 # ---- ARMED-TIER SNAPSHOT (2026-08-19) --------------------------------------
 # Which tier is LIVE right now, per tier-managed family, recorded BEFORE any
 # copy runs. The family blocks below each hard-code 2x as the armed tier; on a
@@ -833,6 +878,26 @@ if ($seedTier) { Write-Output ("  seeding live files at " + $seedTier + " (root 
 foreach ($convTree in @($our, (Join-Path $plug "zzz-SC4UIScale"))) {
     if ($seedTier) { & (Join-Path $PSScriptRoot "Convert-ToPayloadLayout.ps1") -Tree $convTree -Tier $seedTier }
     else           { & (Join-Path $PSScriptRoot "Convert-ToPayloadLayout.ps1") -Tree $convTree }
+}
+
+# ---- RESTORE THE GATE VERDICTS (2026-08-30) --------------------------------
+# Put back every package that was inert before this run. See the GATE-VERDICT
+# SNAPSHOT block at the top for why this is a restore and not a re-computation.
+$restoredOff = 0
+foreach ($live in $INERT_BEFORE.Keys) {
+    $off = $INERT_BEFORE[$live]
+    if (-not (Test-Path $off)) { continue }
+    if ((Test-Path $live) -and
+        (Get-Item $live).Length -eq (Get-Item $off).Length -and
+        (Get-FileHash $live -Algorithm SHA256).Hash -eq
+        (Get-FileHash $off  -Algorithm SHA256).Hash) { continue }
+    Copy-Item $off $live -Force
+    $restoredOff++
+}
+if ($restoredOff) {
+    Write-Output ("  restored " + $restoredOff + " gate-off package(s) the " +
+        "copy/seed stages had re-armed (they stay inert until the DLL's own " +
+        "gate says otherwise)")
 }
 
 $a = (Get-Item "$proj\build\Release\SC4UIScale.dll").Length

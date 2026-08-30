@@ -127,6 +127,13 @@ try {
     }
 
     # ---- seed the live files -----------------------------------------------
+    # This seeds EVERY live .dat at $Tier, including packages a dependency gate
+    # has turned off. That is deliberate here and wrong to fix here: by the
+    # time this runs, the caller has already copied fresh built .dat files over
+    # the live tree, so "what was inert before the deploy" is no longer
+    # readable from this script's vantage point. The preservation lives in
+    # Deploy-OnGameClose.ps1, which snapshots the inert set BEFORE it copies
+    # anything - see its GATE-VERDICT SNAPSHOT block.
     $seeded = 0
     foreach ($p in (Get-ChildItem $Tree -Recurse -File -Filter "*.$Tier.uipay")) {
         $base = $p.Name -replace "\.$Tier\.uipay$", ''

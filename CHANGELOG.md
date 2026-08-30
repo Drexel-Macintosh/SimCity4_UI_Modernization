@@ -2,9 +2,10 @@
 
 ## 4.6.0 (2026-08-30) - the engine documentation becomes a section
 
-**Nothing about the mod changes.** No new DLL, no repackaged art, no setting
-to adjust - this release is documentation and the gates that check it. If you
-only play the game, 4.5.9 and 4.6.0 are the same mod.
+**Nothing about your game changes.** The art packages are untouched and there
+is no new setting to adjust. The DLL is rebuilt, but only to carry developer
+instruments that are switched off unless you deliberately turn them on in the
+ini - with no ini changes, this behaves exactly as 4.5.9 did.
 
 Scaling this interface meant reverse-engineering it first, and that work was
 already in the repository - it was just undiscoverable and, in places,
@@ -27,6 +28,10 @@ contradicted itself. It is now a section you can read:
   the takedown offer covers it.
 - **Two gates that had gone quietly red are green again**, one of them for the
   first time in months. Details in `VERSION-HISTORY.txt`.
+- **Instruments for nine in-world visuals** this mod documents but has never
+  watched running - the service-radius circles, the terrain brush ring, the
+  zone colour wash and six others. All off by default; see
+  `_tests/PROBE-PLAN-OVERLAYS.json` if you want to run them.
 
 ## 4.5.9 (2026-08-30) - two mods that only matter if you use the Carbon Skin
 
