@@ -413,9 +413,10 @@ liveness contract the game itself follows.
 
 - **Win manager access:** lazy singleton accessor `0x913C46` caching into
   `[0xB628C0]` (`GetService` form `push 0xA417445E; push 0x5A4` =
-  `cIGZWinMgrPtr`, `GZServPtrs.h:50`); also `cIGZWin::GetWindowManager()`
-  (vt `+0x18`) from any held window. `cIGZWinMgr` slot map (declaration
-  order, confirmed at four binary anchors): `+0x0C` `GetMainWindow`,
+  `cIGZWinMgrPtr`, the `cRZSysServPtr` typedef in `GZServPtrs.h`); also
+  `cIGZWin::GetWindowManager()` (vt `+0x18`) from any held window.
+  `cIGZWinMgr` slot map (declaration order, confirmed at four binary
+  anchors): `+0x0C` `GetMainWindow`,
   `+0x50/54/58` valid-list add/remove/cleanup, `+0x5C` `DestroyWindow`,
   `+0x60` `IsWindowValid`, `+0x90/94` `GZGetFocus`/`GZSetFocus`, `+0xA4`
   `DoModalWin` (blocks, returns int32), `+0xA8` `IsModal`, `+0xAC`
@@ -723,9 +724,10 @@ class in the game without a guess; the SDK ships neither.
 
 ### 8.1 Reading the catalogue rows
 
-- **`0xAA7CECFD` is `cSC4WinText`** (named in `GZCLSIDDefs.h:285`, absent
-  from the exe table). Its factory `0x007BE740` allocates `0x114` bytes,
-  runs `cGZWinText`'s own constructor `0x009C19C8`, then swaps the vtable to
+- **`0xAA7CECFD` is `cSC4WinText`** (named `kcSC4WinText` in
+  `GZCLSIDDefs.h`, absent from the exe table). Its factory `0x007BE740`
+  allocates `0x114` bytes, runs `cGZWinText`'s own constructor `0x009C19C8`,
+  then swaps the vtable to
   `0x00ABA190` — which differs from `GZWinText`'s in exactly two slots: 88
   (Plot → `0x007BE7A0`) and 148 (dtor). Same object layout, same font code;
   only the painter differs. It is reached by GZCOM clsid instead of by the
@@ -935,10 +937,10 @@ The standing warning governs: the right class is not the right window.
   portrait cell; 152x38 and 91x77 into 256x256). Doubling a path-4
   `imagerect` samples past the live data into the POT padding.
 - **The BMPX draw log has a global, session-lifetime cap of 12 lines**
-  (`src\UiSpike.cpp:4922`), shared by every hooked window; one busy window
-  exhausts it. A missing `BMPX draw` line means, in order: the budget was
-  already spent; the window is under no hooked root; only then, the class is
-  not `GZWinBMP`.
+  (`src\UiSpike.cpp`, grep `gBmpDrawLog`), shared by every hooked window;
+  one busy window exhausts it. A missing `BMPX draw` line means, in order:
+  the budget was already spent; the window is under no hooked root; only
+  then, the class is not `GZWinBMP`.
 
 **Workaround.** The decision procedure for a wrong-art widget (`SC4-UI-ENGINE.md`
 §4.7): confirm the live script is the one loaded → anchor the grep on `image=`

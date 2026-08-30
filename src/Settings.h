@@ -400,6 +400,32 @@ struct Settings
 	                                  // dialogs (proven) - static .UI scaling
 	                                  // is the shipping path
 
+	// ---- DEV-ONLY PROBE KEYS - deliberately NOT members of this struct ----
+	// Every probe key in this project is resolved by the code that installs
+	// the probe, not here, and this block exists so that surface is written
+	// down in one place rather than being discoverable only by grep. The rule
+	// it follows is the one this project has already paid for twice: A PROBE
+	// KEY MUST ARM ITS OWN PROBE. Parsing a key here and honouring it
+	// somewhere else is exactly how [Probe] ViewListRepeat became a
+	// guaranteed silent null, and a second reader with its own default is a
+	// second thing that can disagree with the first.
+	//
+	// All of these default to OFF, so a shipped build with no ini changes
+	// behaves EXACTLY as it does today, and every one of them logs its
+	// resolved value at install whether or not it arms.
+	//
+	//   [UiSpike] HighlightProbe  0/1/2/3   ArmHighlightProbe   (CodePatches)
+	//   [UiSpike] ZoneQuadProbe   0/1/2     ArmZoneQuadProbe    (CodePatches)
+	//   [UiSpike] NborArrow       0/1       ArmNborArrowProbe   (CodePatches)
+	//             (2 is clamped to 1 - the immediate swap is not implemented)
+	//   [UiSpike] DotSize         float     ArmDotSizeProbe     (CodePatches)
+	//   [UiSpike] EffectKill      prefixes  LoadEffectFilterConfig
+	//   [Probe]   EffectCensus    int (40)  LoadEffectFilterConfig
+	//   [Probe]   StripItems      0/1       InstallSignpostProbe
+	// Older members of the same family: CsiKill, BalloonViewKill,
+	// BalloonViewSuppress, BalloonSprite*, CsiCountPlate, CsiAim,
+	// [Probe] DispatchQuad / GpuCap / FontGuid / ViewListRepeat.
+
 	// [Logging]
 	int logLevel = 1; // 0 = error, 1 = info, 2 = debug, 3 = trace
 

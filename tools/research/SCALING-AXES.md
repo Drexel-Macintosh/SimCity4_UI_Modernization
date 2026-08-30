@@ -11,17 +11,20 @@
 **Measured, not suspected.** Of the 63 table rows in this file that pair a
 backticked **symbol** with a `src\...:NNN` **citation**, the symbol is present
 within ±20 lines of the cited line in **5** cases and **absent in 58**.
-`src\UiSpike.cpp` was ~8.9k lines when this document was written (2026-08-03)
-and is **17,113 lines today**; `ScaleTier.cpp` is 1,895 and `CodePatches.cpp`
-4,065. Spot checks, all four wrong in the same direction:
+`src\UiSpike.cpp` was ~8.9k lines when this document was written (2026-08-03),
+17,113 lines when that rot was first measured, and **21,831 lines on
+2026-08-30**; `ScaleTier.cpp` has gone 1,895 → **4,619** and `CodePatches.cpp`
+4,065 → **8,469** over the same stretch. The four spot checks below were once
+repaired *to new line numbers* — **and every one of those repairs has rotted
+since.** That is why the right-hand column is now a grep and never a number:
 
-| This file says | Where it actually is today |
+| This file says | How to resolve it |
 |---|---|
-| `Settings::spikeScaleFactor` — `src\Settings.h:55` | **`src\Settings.h:44`** |
-| `gTierF` — `src\UiSpike.cpp:145` | **`src\UiSpike.cpp:169`** (`:145` is a comment about `PlotComposite`) |
-| `RoundHalfUp` — `src\UiSpike.cpp:151-154` | **`src\UiSpike.cpp:177`** |
-| `ScaleRound` — `src\UiSpike.cpp:3823-3826` | **`src\UiSpike.cpp:5385`** (`:3823` is the buffer force-recreate comment) |
-| `ScaleTier::Decide` — `src\ScaleTier.cpp:31-36` (`kPackages`) | `kPackages` **`src\ScaleTier.cpp:43`**; `Decide` **`:1651`**; called `src\SC4UIScaleDllDirector.cpp:218` |
+| `Settings::spikeScaleFactor` — `src\Settings.h:55` | `src\Settings.h` (grep `float spikeScaleFactor`) |
+| `gTierF` — `src\UiSpike.cpp:145` | `src\UiSpike.cpp` (grep `float gTierF =`; the §0 trap is the comment block immediately above it) |
+| `RoundHalfUp` — `src\UiSpike.cpp:151-154` | `src\UiSpike.cpp` (grep `inline int32_t RoundHalfUp`) |
+| `ScaleRound` — `src\UiSpike.cpp:3823-3826` | `src\UiSpike.cpp` (grep `inline int32_t ScaleRound`) |
+| `ScaleTier::Decide` — `src\ScaleTier.cpp:31-36` (`kPackages`) | `src\ScaleTier.cpp` (grep `kPackages[] =`, then `float Decide(`); called from `src\SC4UIScaleDllDirector.cpp` (grep `ScaleTier::Decide`) |
 
 **Law: a `file:line` that points at the wrong thing is worse than no citation** —
 it reads as measured, and this project's own law is that an inference written
@@ -30,44 +33,45 @@ number below as UNVERIFIED and resolve the symbol by name**
 (`grep -n "<symbol>" src\*.cpp`). The **claims** in this file were
 measured and mostly still hold; only their addresses rotted.
 
-Current definition lines for the load-bearing entry points, re-measured today:
+The load-bearing entry points, and the **grep that finds each** — this table
+replaced a column of line numbers because that column rotted inside a week:
 
-| Symbol | Today |
+| Symbol | Anchor |
 |---|---|
-| `UiSpike::ScaleOnShow` | `src\UiSpike.cpp:7066` |
-| `UiSpike::EarlyDockTick` | `src\UiSpike.cpp:7207` |
-| `UiSpike::EarlyMinimapBake` | `src\UiSpike.cpp:7301` |
-| `UiSpike::MarkerIsDesignUnits` | `src\UiSpike.cpp:7782` |
-| `UiSpike::ScalePanelsUnder` | `src\UiSpike.cpp:9842` |
-| `UiSpike::ScaleGodFlyouts` | `src\UiSpike.cpp:11609` |
-| `UiSpike::ScalePanelRoot` | `src\UiSpike.cpp:14007` |
-| `UiSpike::DialogDockTick` | `src\UiSpike.cpp:15574` |
-| `UiSpike::RegionWatchTick` | `src\UiSpike.cpp:16371` |
-| `UiSpike::ScaleMenuFlyouts` | `src\UiSpike.cpp:16597` |
-| `UiSpike::ScaleSubtree` | `src\UiSpike.cpp:16742` |
-| `ScaleTier::Decide` | `src\ScaleTier.cpp:1651` |
-| `kNeverScaleIds` / `kFontSizedIds` / `kAdviceListScaleSelfIds` | `src\UiSpike.cpp:4486` / `:5213` / `:5273` |
-| `kRegionPanelIds` / `kCityDialogIds` / `kDVPins` | `src\UiSpike.cpp:4452` / `:14332` / `:11395` |
-| `kThirdPartyDeps` / `kPackages` | `src\ScaleTier.cpp:184` / `:43` |
+| `UiSpike::ScaleOnShow` | `src\UiSpike.cpp` (grep `void UiSpike::ScaleOnShow`) |
+| `UiSpike::EarlyDockTick` | `src\UiSpike.cpp` (grep `void UiSpike::EarlyDockTick`) |
+| `UiSpike::EarlyMinimapBake` | `src\UiSpike.cpp` (grep `void UiSpike::EarlyMinimapBake`) |
+| `UiSpike::MarkerIsDesignUnits` | `src\UiSpike.cpp` (grep `bool UiSpike::MarkerIsDesignUnits`) |
+| `UiSpike::ScalePanelsUnder` | `src\UiSpike.cpp` (grep `int UiSpike::ScalePanelsUnder`) |
+| `UiSpike::ScaleGodFlyouts` | `src\UiSpike.cpp` (grep `void UiSpike::ScaleGodFlyouts`) |
+| `UiSpike::ScalePanelRoot` | `src\UiSpike.cpp` (grep `int UiSpike::ScalePanelRoot`) |
+| `UiSpike::DialogDockTick` | `src\UiSpike.cpp` (grep `void UiSpike::DialogDockTick`) |
+| `UiSpike::RegionWatchTick` | `src\UiSpike.cpp` (grep `void UiSpike::RegionWatchTick`) |
+| `UiSpike::ScaleMenuFlyouts` | `src\UiSpike.cpp` (grep `void UiSpike::ScaleMenuFlyouts`) |
+| `UiSpike::ScaleSubtree` | `src\UiSpike.cpp` (grep `void UiSpike::ScaleSubtree`) |
+| `ScaleTier::Decide` | `src\ScaleTier.cpp` (grep `float Decide(`) |
+| `kNeverScaleIds` / `kFontSizedIds` / `kAdviceListScaleSelfIds` | `src\UiSpike.cpp` (grep each name followed by `[] = {`) |
+| `kRegionPanelIds` / `kCityDialogIds` / `kDVPins` | `src\UiSpike.cpp` (grep `kRegionPanelIds[] = {`, `kCityDialogIds[] = {`, `kDVPins[] = {`) |
+| `kThirdPartyDeps` / `kPackages` | `src\ScaleTier.cpp` (grep `kThirdPartyDeps[] = {`, `kPackages[] = {`) |
 
 ---
 
 **Conventions used throughout this document**
 - `[M]` = **measured** this session, from source, from a shipped artifact, or from a live log line already in the repo.
-- `[INF]` = **inference**. Our law: *an inference written down as a measurement kills your next seven candidates.* Every unmarked structural statement is a direct read of the cited `file:line`.
+- `[INF]` = **inference**. Our law: *an inference written down as a measurement kills your next seven candidates.* Every unmarked structural statement is a direct read of the cited **symbol** — resolve it by grep, not by line number.
 - Axis tags: **A = UI-GEOMETRY** (window rects, art, chrome, layout constants) · **B = TEXT** (font point sizes, wrap widths, HTML size tables) · **C = UDI-BUBBLE** (the in-world mission marker) · **MIXED** (an element whose box is derived from its text, or whose text is wrapped to its box).
 
 ---
 
 ## 0. THE ONE ARCHITECTURAL FACT THAT FRAMES EVERYTHING
 
-There is **exactly one scale number in the entire DLL**: `Settings::spikeScaleFactor` (`src\Settings.h:55`), overwritten at boot by the tier decision (`src\SC4UIScaleDllDirector.cpp:195`) and mirrored into the namespace-scope `gTierF` (`src\UiSpike.cpp:145`). Every runtime lever in §1 reads one of those two. **87 occurrences of the pair in `UiSpike.cpp` alone.** `[M]`
+There is **exactly one scale number in the entire DLL**: `Settings::spikeScaleFactor` (`src\Settings.h`, grep `float spikeScaleFactor`), overwritten at boot by the tier decision (`src\SC4UIScaleDllDirector.cpp`, grep `settings.spikeScaleFactor = tier`) and mirrored into the namespace-scope `gTierF` (`src\UiSpike.cpp`, grep `float gTierF =`; the mirror is written by `UiSpike::SetTierMirror`). Every runtime lever in §1 reads one of those two. **87 occurrences of the pair in `UiSpike.cpp` alone.** `[M]`
 
-The axes are fused a second time **upstream of the DLL**: `ScaleTier::SyncStaticLayers` (`src\ScaleTier.cpp:267-402`, called from `src\SC4UIScaleDllDirector.cpp:223`) picks **one tag** (`-15x` / `-2x` / `-3x`) that gates the art dat **and** `FontStyle<tag>.ini` in the same call, and tier eligibility is gated on the **art** dat existing (`src\ScaleTier.cpp:60-86`).
+The axes are fused a second time **upstream of the DLL**: `ScaleTier::SyncStaticLayers` (`src\ScaleTier.cpp`, grep `void SyncStaticLayers`, called from `src\SC4UIScaleDllDirector.cpp`, grep `ScaleTier::SyncStaticLayers`) picks **one tag** (`-15x` / `-2x` / `-3x`) that gates the art dat **and** `FontStyle<tag>.ini` in the same call, and tier eligibility is gated on the **art** dat existing (`src\ScaleTier.cpp`, grep `bool PackageInstalled` and the "Is this tier's art actually on disk?" comment above it).
 
 **Consequence, stated plainly:** "UI 2x + Text 3x" is not expressible at any layer today — not in the settings, not in the runtime, not in the package system. §2 explains why that is the *correct* state and not a limitation to be lifted.
 
-**Warning — the `gTierF` trap, and why any new mirror must repeat an audit.** `src\UiSpike.cpp:138-144` records it in place: `ArmDeferred` installs four hooks at `PostCityInit`, **before any sweep has written `gTierF`**, so anything running from those hooks pre-sweep sees the **compiled default `2.0f`**. That is why `EarlyDockTick` deliberately reads `settings.spikeScaleFactor` (`src\UiSpike.cpp:5567`) and not `gTierF`. **A second scale number needs its own mirror and its own repeat of this audit, or it silently defaults to 2.0.**
+**Warning — the `gTierF` trap, and why any new mirror must repeat an audit.** The comment block directly above the `gTierF` definition records it in place (`src\UiSpike.cpp`, grep `gTierF mirrors settings.spikeScaleFactor`): `ArmDeferred` installs four hooks at `PostCityInit`, **before any sweep has written `gTierF`**, so anything running from those hooks pre-sweep sees the **compiled default `2.0f`**. That is why `EarlyDockTick` deliberately reads `settings.spikeScaleFactor` (`src\UiSpike.cpp`, grep `void UiSpike::EarlyDockTick`, then the `const float f = settings.spikeScaleFactor;` at its head) and not `gTierF`. **A second scale number needs its own mirror and its own repeat of this audit, or it silently defaults to 2.0.**
 
 ---
 
@@ -75,7 +79,7 @@ The axes are fused a second time **upstream of the DLL**: `ScaleTier::SyncStatic
 
 ## 1.0 How to read the tables
 
-Each row: the lever, its `file:line`, what it multiplies, which axis it belongs to, when it reads the factor, whether it is idempotent and which epoch clears it, and any **coupled pair** (Law 43: *a coupled pair ships together or not at all — and whatever moves a sprite must move its hit box*).
+Each row: the lever, **the grep that finds it**, what it multiplies, which axis it belongs to, when it reads the factor, whether it is idempotent and which epoch clears it, and any **coupled pair** (Law 43: *a coupled pair ships together or not at all — and whatever moves a sprite must move its hit box*). The "where" column names a file and a symbol; it never names a line, because line numbers in this tree rot inside a week.
 
 ---
 
@@ -83,12 +87,12 @@ Each row: the lever, its `file:line`, what it multiplies, which axis it belongs 
 
 ### 1.1a Global plumbing
 
-| Lever | file:line | Multiplies | f timing | Idempotent / epoch | Notes |
+| Lever | Where (grep) | Multiplies | f timing | Idempotent / epoch | Notes |
 |---|---|---|---|---|---|
-| `Settings::spikeScaleFactor` | `src\Settings.h:55`; parsed `src\Settings.cpp:74`; overwritten `src\SC4UIScaleDllDirector.cpp:195` | the single factor | once at boot | n/a | today carries **all three** axes |
-| `gTierF` mirror | `src\UiSpike.cpp:145`; written `:8835` (`ScaleGodFlyouts`) and `:12480` (`ScaleMenuFlyouts`) | every namespace-scope hook | written per pass, read per **draw** | n/a | see the trap at §0 |
-| `ScaleRound` | `src\UiSpike.cpp:5385` | window geometry | per call | pure | `ScaleRound` is `RoundHalfUp(v * f)` — one line, delegating (#162). |
-| `RoundHalfUp` (floor(v+0.5)) | `src\UiSpike.cpp:177` | tier-math constants, all blit dst rects, **and now window geometry too** | per call | pure | the **art pipeline** convention — matches `Upscale2x::ScaleDim` and the `.UI` builders' `scale_len`. **There is now one rounding stream, not two.** |
+| `Settings::spikeScaleFactor` | `src\Settings.h` (grep `float spikeScaleFactor`); parsed `src\Settings.cpp` (grep `"ScaleFactor"`); overwritten `src\SC4UIScaleDllDirector.cpp` (grep `settings.spikeScaleFactor = tier`) | the single factor | once at boot | n/a | today carries **all three** axes |
+| `gTierF` mirror | `src\UiSpike.cpp` (grep `float gTierF =`); written by `UiSpike::SetTierMirror` and inside `ScaleMenuFlyouts` (grep `gTierF = f;`) | every namespace-scope hook | written per pass, read per **draw** | n/a | see the trap at §0 |
+| `ScaleRound` | `src\UiSpike.cpp` (grep `inline int32_t ScaleRound`) | window geometry | per call | pure | `ScaleRound` is `RoundHalfUp(v * f)` — one line, delegating (#162). |
+| `RoundHalfUp` (floor(v+0.5)) | `src\UiSpike.cpp` (grep `inline int32_t RoundHalfUp`) | tier-math constants, all blit dst rects, **and now window geometry too** | per call | pure | the **art pipeline** convention — matches `Upscale2x::ScaleDim` and the `.UI` builders' `scale_len`. **There is now one rounding stream, not two.** |
 
 > **The two-rounding-streams entry is settled.** `llround` rounds a negative
 > half value *away from zero* (−16.5 → −17), so any window with a **negative
@@ -102,77 +106,80 @@ Each row: the lever, its `file:line`, what it multiplies, which axis it belongs 
 > corpus:** f=2 → **0** size and **0** position changes; f=3 → **0** and **0**;
 > f=1.5 → 8 sizes and 44 positions, in 6 files, **all** descendants of the 12
 > nodes with a negative absolute origin. Priced by
-> `tools\uimap\emu\gate_art_vs_window.py`: with `llround`, 1 node short at 1.5x
+> `tools\uimap\emu\gate_art_vs_window.py` (grep `llround_scale as R` for the
+> rule swap that reproduces the refuted pre-#162 behaviour): with `llround`, 1 node short at 1.5x
 > and 0 at 2x; with half-up, **0 and 0**, and the f=2 control stays 0 either way.
 >
 > Task #75's "unresolved 824-pair 1.5x divergence" was CLOSED AS REFUTED —
 > the divergence had no artifact. This row is the current state.
-| `ScaleTier::Decide` + `SyncStaticLayers` | `src\ScaleTier.cpp:31-36` (`kPackages`), `:267-402`; called `src\SC4UIScaleDllDirector.cpp:191-224` | selects ONE tag for art dat **and** FontStyle | once at boot | idempotent by file state | **MIXED A+B** — see §2.4 |
+| `ScaleTier::Decide` + `SyncStaticLayers` | `src\ScaleTier.cpp` (grep `kPackages[] =`, `float Decide(`, `void SyncStaticLayers`); called `src\SC4UIScaleDllDirector.cpp` (grep `ScaleTier::Decide`, `ScaleTier::SyncStaticLayers`) | selects ONE tag for art dat **and** FontStyle | once at boot | idempotent by file state | **MIXED A+B** — see §2.4 |
 
 ### 1.1b The generic sweep
 
-| Lever | file:line | Multiplies | f timing | Idempotent / epoch | Coupled pair |
+| Lever | Where (grep) | Multiplies | f timing | Idempotent / epoch | Coupled pair |
 |---|---|---|---|---|---|
-| `ScaleSubtree` rect scale | `src\UiSpike.cpp:17124-17501` (locator rots — grep `void UiSpike::ScaleSubtree`) | **POSITION IS EDGE-DERIVED IN THE *PARENT'S* FRAME; SIZE IS LENGTH-DERIVED FOR LEAVES AND STATE-STRIP BUTTONS.** Position: `newL/T = ScaleRound(pAbs+l,f) - ScaleRound(pAbs,f)`, rounded in the parent's absolute *design* frame, **not** `round(v*f)` (#161, `:17245-17252`; frame handed down at `:17497-17498`, seeded by `ScalePanelRoot` at `:14607-14608`). Note: `[UiSpike] ParentFrameRounding=0` collapses `pAbs` to 0 at `:17170` and restores the old `round(v*f)` exactly — it defaults **on** (`src\Settings.h:158`, parsed `src\Settings.cpp:80`). Size: `newW/H = ScaleRound(aL+w,f) - ScaleRound(aL,f)` for containers, but `ScaleRound(w,f)` when the window's vtable is `0x00ADDAF0` (#167 state-strip button class, `:17284-17294`) **or** when it has no children (#148 leaf rule, `:17327-17350` — this branch runs *after* the ternary and overrides it, so leaf wins). All three are no-ops at an integer factor by construction (`:17241-17244`, `:17282-17283`, `:17324-17326`). **Law: this row does NOT govern the advisor button row.** `0x6A15C767` is in `kDataScaledSubtreeIds` (`:5373-5374`) and `ScalePanelRoot` returns before its child loop for those ids (`:14569-14573`), so the sweep never walks those buttons — their size comes from `tools\build_selective_safe.py`, which is where #170 was fixed. (Old ref `:12617-12770` is dead: that span is now the DPROBE / disaster-flyout class probe.) | `f` param | yes, via `Classify` → `scaleMap` | window rect ↔ its cached paint buffer |
-| centre-small-leaves branch | `src\UiSpike.cpp:12657-12671` | slot centre; leaf keeps 1x size | per pass | yes (records `scaled==orig`) | leaf moves but does not grow; hit box moves with it |
-| `ScalePanelRoot` — anchor + resize | `src\UiSpike.cpp:10855-11037`; anchors `:10940-10975`; clamps `:10975-10982` | root rect, gaps `round(gapL,f)` | `f` param | yes; `PurgeSubtreeRecords` on Fresh (`:10877`) | root move ↔ root resize — **call order is load-bearing** (`:10985-10989`) |
-| double-scale guard + tombstone | `src\UiSpike.cpp:10913-10927`, `:12706-12717` | — | — | tombstone record | compares against `frameW/H`; fails **safe** (skip + one log line) |
-| `ScalePanelsUnder` city/region loop | `src\UiSpike.cpp:7463-8817`, factor read `:7467` | drives all of the above | `settings.spikeScaleFactor` | yes | — |
-| `ScaleMenuFlyouts` (size only, no root move) | `src\UiSpike.cpp:12478-12568`, `gTierF = f` at `:12480` | subtree rects, `centerLeaves=true` | per pass | yes; `menuBaseline` cleared `Disarm:5744` | flyout size ↔ spawn button |
-| `ScaleGodFlyouts` dock tables | `src\UiSpike.cpp:8826-10835`; god table `:9526-9535`; mayor table `:3320-3376` | `target = buttonAbs + f*R` | `f` + `gTierF` | yes; `lastView` nulled `Disarm:5766` | **Law:** flyout position ↔ spawn button ↔ hidden alignment marker `0x0000AAAA` |
-| `MarkerIsDesignUnits` (#94) | `src\UiSpike.cpp:6059-6085` | — (pure read of `scaleMap`) | — | pure read | marker units ↔ scaleMap record |
-| `DialogDockTick` (region dialogs) | `src\UiSpike.cpp:12204-12310`, `f` at `:12207`; table `kRegionDialogDocks` `:3801-3808` | dialog rect + dock under spawn button | per tick | yes; `dialogDocked[8]` reset on close `:12215` | dialog ↔ spawn button |
-| `RegionWatchTick` | `src\UiSpike.cpp:12314-12476` | drives the region pass | per tick | stability-gated | — |
-| in-city dialog pass (`kCityDialogIds`) | `src\UiSpike.cpp:11284-11672`; base guard `:11128-11205` | dialog rect + descendants | `settings.spikeScaleFactor` `:11284` | yes; guard `arrived == round(base*f) ±1` | **Warning: factor-parameterised guard** — new factors need a fresh product-collision check (v2.39.13/.14 scars) |
-| BMPRECT `imagerect` doubling | `src\UiSpike.cpp:6871-6924`, used `:11666` | GZWinBMP `imagerect` `[+0xe8..0xf4]` ×f | per Fresh dialog | one-shot per Fresh instance | 9-slice src rect ↔ 2x art in the dat |
-| `EarlyDockTick` (EARLYDOCK, #89) | `src\UiSpike.cpp:5490-5580`, `f` at `:5567` | dock root via `ScalePanelRoot` | `settings.spikeScaleFactor` (**not** `gTierF`, deliberately) | one-shot per city; latches reset `ArmDeferred:5414-5421`, `Disarm:5786-5792` | **Law: scale ↔ minimap surface recreate are ONE action** (`:5570-5576`) — splitting them was the v2.41.15 crash |
-| `EarlyMinimapBake` | `src\UiSpike.cpp:5584-5663`, `f` at `:5653` | two dirty bytes only | `settings.spikeScaleFactor` | one-shot per city | — |
-| `ScaleOnShow` / ShowHook | `src\UiSpike.cpp:5336-5389`, gate `:5374` | subtree via `ScaleSubtree(gTierF)` | `gTierF` per event | yes | dormant at the shipped `ShowHook=1` |
-| `Classify` / `scaleMap` | `src\UiSpike.cpp:6087-6137`; map `src\UiSpike.h:184`; record `src\UiSpike.h:90-106` | — | — | **THE idempotence engine**; cleared only in `ResetTracking` (`:5825`, app shutdown) | `ScaleRecord` stores **one** `scaledW/H` and has **no axis field** |
+| `ScaleSubtree` rect scale | `src\UiSpike.cpp` (grep `void UiSpike::ScaleSubtree`) | **POSITION IS EDGE-DERIVED IN THE *PARENT'S* FRAME; SIZE IS LENGTH-DERIVED FOR LEAVES AND STATE-STRIP BUTTONS.** Position: `newL/T = ScaleRound(pAbs+l,f) - ScaleRound(pAbs,f)`, rounded in the parent's absolute *design* frame, **not** `round(v*f)` (#161 — grep `pAbsL` inside `ScaleSubtree`; the frame is handed down on the recursive call and seeded by `ScalePanelRoot`, grep `#161: hand this DESIGN origin to the child loop`). Note: `[UiSpike] ParentFrameRounding=0` collapses `pAbs` to 0 (grep `if (!settings.spikeParentFrameRounding)`) and restores the old `round(v*f)` exactly — it defaults **on** (`src\Settings.h`, grep `spikeParentFrameRounding`; parsed `src\Settings.cpp`, grep `"ParentFrameRounding"`). Size: `newW/H = ScaleRound(aL+w,f) - ScaleRound(aL,f)` for containers, but `ScaleRound(w,f)` when the window's vtable is `0x00ADDAF0` (#167 state-strip button class — grep `0x00ADDAF0`) **or** when it has no children (#148 leaf rule — grep `#148 THE REVERSE L`; this branch runs *after* the ternary and overrides it, so leaf wins). All three are no-ops at an integer factor by construction (each guarded in place; grep the `#161`/`#167`/`#148` markers). **Law: this row does NOT govern the advisor button row.** `0x6A15C767` is in `kDataScaledSubtreeIds` (grep `kDataScaledSubtreeIds[] = {`) and `ScalePanelRoot` returns before its child loop for those ids (grep `IsDataScaledSubtreeId(win->GetID())`), so the sweep never walks those buttons — their size comes from `tools\selective-safe\build_selective_safe.py`, which is where #170 was fixed. | `f` param | yes, via `Classify` → `scaleMap` | window rect ↔ its cached paint buffer |
+| centre-small-leaves branch | `src\UiSpike.cpp` (grep `centerLeaves` inside `ScaleSubtree`) | slot centre; leaf keeps 1x size | per pass | yes (records `scaled==orig`) | leaf moves but does not grow; hit box moves with it |
+| `ScalePanelRoot` — anchor + resize | `src\UiSpike.cpp` (grep `int UiSpike::ScalePanelRoot`); anchors and clamps are the `gapT`/`gapB`/`cMinY` block inside it (grep `if (gapT > cMinY && gapB > cMinY)`) | root rect, gaps `round(gapL,f)` | `f` param | yes; `PurgeSubtreeRecords` on Fresh (grep `PurgeSubtreeRecords`) | root move ↔ root resize — **call order is load-bearing** (the comment says so in place) |
+| double-scale guard + tombstone | `src\UiSpike.cpp` (grep `double-scale` and `tombstone`) | — | — | tombstone record | compares against `frameW/H`; fails **safe** (skip + one log line) |
+| `ScalePanelsUnder` city/region loop | `src\UiSpike.cpp` (grep `int UiSpike::ScalePanelsUnder`; the factor is the `const float f = settings.spikeScaleFactor;` at its head) | drives all of the above | `settings.spikeScaleFactor` | yes | — |
+| `ScaleMenuFlyouts` (size only, no root move) | `src\UiSpike.cpp` (grep `void UiSpike::ScaleMenuFlyouts`; `gTierF = f;` is its first statement) | subtree rects, `centerLeaves=true` | per pass | yes; `menuBaseline` cleared in `UiSpike::Disarm` | flyout size ↔ spawn button |
+| `ScaleGodFlyouts` dock tables | `src\UiSpike.cpp` (grep `void UiSpike::ScaleGodFlyouts`); god table grep `kGodFlyoutDock[] = {`; mayor table grep `kMayorFlyoutDock[] = {` | `target = buttonAbs + f*R` | `f` + `gTierF` | yes; `lastView` nulled in `UiSpike::Disarm` | **Law:** flyout position ↔ spawn button ↔ hidden alignment marker `0x0000AAAA` |
+| `MarkerIsDesignUnits` (#94) | `src\UiSpike.cpp` (grep `bool UiSpike::MarkerIsDesignUnits`) | — (pure read of `scaleMap`) | — | pure read | marker units ↔ scaleMap record |
+| `DialogDockTick` (region dialogs) | `src\UiSpike.cpp` (grep `void UiSpike::DialogDockTick`; the factor is its opening `const float f = settings.spikeScaleFactor;`); table grep `kRegionDialogDocks[] = {` | dialog rect + dock under spawn button | per tick | yes; `dialogDocked[8]` reset on close (grep `dialogDocked`) | dialog ↔ spawn button |
+| `RegionWatchTick` | `src\UiSpike.cpp` (grep `void UiSpike::RegionWatchTick`) | drives the region pass | per tick | stability-gated | — |
+| in-city dialog pass (`kCityDialogIds`) | `src\UiSpike.cpp` (grep `kCityDialogIds[] = {` and its consuming loop) | dialog rect + descendants | `settings.spikeScaleFactor` | yes; guard `arrived == round(base*f) ±1` | **Warning: factor-parameterised guard** — new factors need a fresh product-collision check (v2.39.13/.14 scars) |
+| BMPRECT `imagerect` doubling | `src\UiSpike.cpp` (grep `BMPRECT`) | GZWinBMP `imagerect` `[+0xe8..0xf4]` ×f | per Fresh dialog | one-shot per Fresh instance | 9-slice src rect ↔ 2x art in the dat |
+| `EarlyDockTick` (EARLYDOCK, #89) | `src\UiSpike.cpp` (grep `void UiSpike::EarlyDockTick`) | dock root via `ScalePanelRoot` | `settings.spikeScaleFactor` (**not** `gTierF`, deliberately) | one-shot per city; latches reset in `ArmDeferred` and `Disarm` | **Law: scale ↔ minimap surface recreate are ONE action** — the `TryRecreateMinimapSurface(pDock)` call sits inside `EarlyDockTick` itself; splitting them was the v2.41.15 crash |
+| `EarlyMinimapBake` | `src\UiSpike.cpp` (grep `void UiSpike::EarlyMinimapBake`) | two dirty bytes only | `settings.spikeScaleFactor` | one-shot per city | — |
+| `ScaleOnShow` / ShowHook | `src\UiSpike.cpp` (grep `void UiSpike::ScaleOnShow`, installed by `UiSpike::InstallShowHook`) | subtree via `ScaleSubtree(gTierF)` | `gTierF` per event | yes | dormant at the shipped `ShowHook=1` |
+| `Classify` / `scaleMap` | `src\UiSpike.cpp` (grep `UiSpike::ScaleState UiSpike::Classify`); map `src\UiSpike.h` (grep `std::map<void*, ScaleRecord> scaleMap`); record `src\UiSpike.h` (grep `struct ScaleRecord`) | — | — | **THE idempotence engine**; cleared only in `UiSpike::ResetTracking` (app shutdown) | `ScaleRecord` stores **one** `scaledW/H` and has **no axis field** |
 
 ### 1.1c Sub-flyout / disaster draw-hook family (painted, not windowed)
 
-| Lever | file:line | Multiplies | f timing | Idempotent / epoch | Coupled pair |
+| Lever | Where (grep) | Multiplies | f timing | Idempotent / epoch | Coupled pair |
 |---|---|---|---|---|---|
-| SUBBORN — `vf10` field promotion, 7 fields | table `src\UiSpike.cpp:3942-3950`, install `:4015-4045` | `round(stock*gTierF)` on `[0xE4,0xE8,0xF0,0xF4,0xF8,0xFC,0x100]` | `gTierF` per construction | yes (promotes only a still-stock value) | **Law:** `[0xE4]` is **dual-use**: bar width **and** the `IsPointInMe` claim width. Fused with `gStripFieldScale = 1` at `:4040` — "neither half shippable alone" |
-| SUBBORNSCALE — Place detour | `src\UiSpike.cpp:4274-4650`, math `:4324-4333` | `ScaleRound(l+cw,gTierF) - ScaleRound(l,gTierF)`, all 4 `sr[]` | `gTierF` per Place | records drained to `scaleMap` as AlreadyScaled (`DrainBornScaleRecords` `:5151`, drained `:7477` **before** the walk) | container ↔ its born-correct paint buffer |
-| Sub-flyout ring model | `SubPlaceTop` `src\UiSpike.cpp:739`, `gSubMath` `:783`, `:9758-9805`; dock delta `:686-700`, `:791-796` | `round(-16.5*f) - 20`, `29 - round(26.5*f)`, ring blit Y | `gTierF` per open | latched per menu, self-correcting within a frame | **Law — RING LAW**: container position ↔ ring sprite Y ↔ back-arrow hit rect (`:9819-9825`) |
-| Strip item metrics `[0xf4/f8/fc]` | `src\UiSpike.cpp:2696-2701`; disaster twin `:4484-4486`, `:4531-4535` | `round(gStripBase* × gTierF)` | `gTierF` every Plot | base latched once (`gStripBaseCap`); `gSubLastStrip`/`gDisLastStrip` nulled `Disarm:5820-5821` | **Law:** item draw rect ↔ item hit rect (`gStripHitW` `:2706-2709`) |
-| Container hit-claim `[+0xe0]` (`gClaimScale`) | `src\UiSpike.cpp:2389-2408`; latch `gClaimOrig` `:231` | `round(gClaimOrig × gTierF)` | `gTierF` per draw | sane-range guard; presented as 1x inside the draw group, re-armed after | **Law — the canonical Law-43 pair** — this IS the hit box for the 2x-drawn sprite |
-| Ring atlas fractional-NN upscale | `src\UiSpike.cpp:1735-1760` | `round(sw*gTierF)`, source `ox/gTierF` | per draw | stateless | ring ↔ strip ↔ bar, welded in one buffer |
-| Sub-flyout atlas upscale | `src\UiSpike.cpp:1830-1856` | same form | per draw | stateless | — |
-| Bar widen / shift | `BarWidenEff`/`BarDXEff` `src\UiSpike.cpp:1362-1372`, draw `:1420-1450` | `round(53*W)`, `53 - round(53*W)` | `gTierF` per draw | stateless; `gBarCache` owner-keyed, cleared `Disarm:5824-5826` | bar width ↔ bar x (flush-right invariant) |
-| Family gates (`destIsContainer` heuristics) | `src\UiSpike.cpp:1539-1544`, `:9284-9287` | `round(250*gTierF)`, `round(100/200*gTierF)`, `round(250..450*gTierF)` | per draw | stateless | **Warning: size *discriminators* derived from the factor** — with more than one live factor they stop discriminating |
-| `ScaleGodFlyouts` claim re-scale sites | `src\UiSpike.cpp:4877`, `:9978`, `:10740` | `round(oldW × gTierF)` | per pass | idempotent by value compare | sprite ↔ hit box |
-| FlashGuard (dead, kept) | `src\UiSpike.cpp:1268-1290` (`gFlashGuard = 0`) | — | — | `gFgWaitRoot[4]` cleared `Disarm:5832-5836` | — |
-| Live-tune ini re-read (every 20 sweeps) | `src\UiSpike.cpp:8860-8990` | `gRingDX/DY`, `gBarDX/W`, `gStripHitW`, `gSubMath`, … | per event, ~20 sweeps | value writes only | reads `[Disaster]`/`[Flyout]`/`[Probe]` **by section, explicit keys** — a new section is therefore safe (§4.6) |
+| SUBBORN — `vf10` field promotion, 7 fields | table `src\UiSpike.cpp` (grep `kSubFields[] = {`), detour `SubVf10Detour`, install `UiSpike::InstallSubFlyoutBorn` | `round(stock*gTierF)` on `[0xE4,0xE8,0xF0,0xF4,0xF8,0xFC,0x100]` | `gTierF` per construction | yes (promotes only a still-stock value) | **Law:** `[0xE4]` is **dual-use**: bar width **and** the `IsPointInMe` claim width. Fused with `gStripFieldScale = 1` (grep `gStripFieldScale`) — "neither half shippable alone" |
+| SUBBORNSCALE — Place detour | `src\UiSpike.cpp` (grep `SubPlaceDetour`, installed by `UiSpike::InstallSubFlyoutBornScale`; the math is the `ScaleRound(l + cw, gTierF)` block inside it) | `ScaleRound(l+cw,gTierF) - ScaleRound(l,gTierF)`, all 4 `sr[]` | `gTierF` per Place | records drained to `scaleMap` as AlreadyScaled (grep `void UiSpike::DrainBornScaleRecords`; called **before** the walk in `ScalePanelsUnder`) | container ↔ its born-correct paint buffer |
+| Sub-flyout ring model | `src\UiSpike.cpp` (grep `inline int32_t SubPlaceTop`, `SubPlaceTopMb`, `int gSubMath`) | `round(-16.5*f) - 20`, `29 - round(26.5*f)`, ring blit Y | `gTierF` per open | latched per menu, self-correcting within a frame | **Law — RING LAW** (grep `RING LAW`): container position ↔ ring sprite Y ↔ back-arrow hit rect (grep `back-arrow`) |
+| Strip item metrics `[0xf4/f8/fc]` | `src\UiSpike.cpp` (grep `SubMetricsDetour`; the disaster twin is the `gDisStripBase4` block, grep `gDisStripBase4`) | `round(gStripBase* × gTierF)` | `gTierF` every Plot | base latched once (grep `gStripBaseCap`); `gSubLastStrip`/`gDisLastStrip` nulled in `UiSpike::Disarm` | **Law:** item draw rect ↔ item hit rect (grep `gStripHitW`) |
+| Container hit-claim `[+0xe0]` (`gClaimScale`) | `src\UiSpike.cpp` (grep `gClaimScale`; latch grep `gClaimOrig`) | `round(gClaimOrig × gTierF)` | `gTierF` per draw | sane-range guard; presented as 1x inside the draw group, re-armed after | **Law — the canonical Law-43 pair** — this IS the hit box for the 2x-drawn sprite |
+| Ring atlas fractional-NN upscale | `src\UiSpike.cpp` (grep `DrawDisasterElementScaled`; the upscale is its `FloorScale(s[2] - s[0], f)` pair) | `round(sw*gTierF)`, source `ox/gTierF` | per draw | stateless | ring ↔ strip ↔ bar, welded in one buffer |
+| Sub-flyout atlas upscale | `src\UiSpike.cpp` (grep `subDstW`, inside `BltClassThunk`) | same form | per draw | stateless | — |
+| Bar widen / shift | `src\UiSpike.cpp` (grep `inline float BarWidenEff`, `inline int32_t BarDXEff`; draw grep `void DrawBarScaled`) | `round(53*W)`, `53 - round(53*W)` | `gTierF` per draw | stateless; `gBarCache` owner-keyed, cleared in `UiSpike::Disarm` | bar width ↔ bar x (flush-right invariant) |
+| Family gates (`destIsContainer` heuristics) | `src\UiSpike.cpp` (grep `destIsContainer` — the size tests read `RoundHalfUp(250 * gTierF)` and friends) | `round(250*gTierF)`, `round(100/200*gTierF)`, `round(250..450*gTierF)` | per draw | stateless | **Warning: size *discriminators* derived from the factor** — with more than one live factor they stop discriminating |
+| `ScaleGodFlyouts` claim re-scale sites | `src\UiSpike.cpp` (grep `gClaimOrig * gTierF` and the claim writes inside `UiSpike::ScaleGodFlyouts`) | `round(oldW × gTierF)` | per pass | idempotent by value compare | sprite ↔ hit box |
+| FlashGuard (dead, kept) | `src\UiSpike.cpp` (grep `int     gFlashGuard`) | — | — | `gFgWaitRoot[4]` cleared in `UiSpike::Disarm` (grep `gFgWaitRoot`) | — |
+| Live-tune ini re-read (every 20 sweeps) | `src\UiSpike.cpp` (grep `LiveTuneIniPath` and the `"LiveTune"` poll that uses it) | `gRingDX/DY`, `gBarDX/W`, `gStripHitW`, `gSubMath`, … | per event, ~20 sweeps | value writes only | reads `[Disaster]`/`[Flyout]`/`[Probe]` **by section, explicit keys** — a new section is therefore safe (§4.6) |
 
 ### 1.1d Runtime-image draw hooks
 
-| Lever | file:line | Multiplies | f timing | Idempotent / epoch | Coupled pair |
+| Lever | Where (grep) | Multiplies | f timing | Idempotent / epoch | Coupled pair |
 |---|---|---|---|---|---|
-| `GaugeCtxBltThunk` — U-Drive-It dials | `src\UiSpike.cpp:6262-6318`, snap rule `:6297` | `dst = cw*m` with the fit clamp, plus **snap to 1.0 when `m < 0.75 × gGaugeScale`** | `gGaugeScale` per sweep | per-instance vtable copies, cap 16; **`gGaugeEpoch`** (`:1259`, bumped `Disarm:5722`) is the #92 fix for pointer-keyed latches | dial art ↔ console window |
-| MINIMAP / DVMAP / UDMAP surface recreate | `TryRecreateMinimapSurface` `src\UiSpike.cpp:7100-7460`; DVMAP `:7705-7875`; UDMAP `:7890-8095` | `blitSize` (`[+0xE4]`, self-updated by the class `SetArea`) | derived from the live window | latched per instance; latches + retry budgets nulled `Disarm:5767-5779` | **Law: window rect ↔ one-shot display surface** — the v2.21.0 heap overrun |
-| `BmpCtxBltThunk` — GZWinBMP plain-path dest scale | `src\UiSpike.cpp:6644-6702`, math `:6660-6675` | `dst = dst0 + round(w*m)`, `m = gBmpScale` **reduced until it fits the live window** | `gBmpScale` set once per pass at `:6991` | per-draw one-shot (`gBmpBltDone`); budgets + `gBmpxRootTrack` cleared `Disarm:5806-5809` | **Law: image dst ↔ live window size** — this is the UDI lever, §3 |
-| `HookRuntimeBmpsUnder` + `kBmpxCityRoots` | `src\UiSpike.cpp:6987-7079`; roots `:8114-8148`; call `:8150` | sets `gBmpScale = f` for **all 12 roots at once** | per sweep | class-vtable copy is process-lifetime; per-open census `FlushBmpOpenCensus` `:6963` | **MIXED A+C** — 11 UI roots + 1 UDI root on one global |
-| dialog-root twin (`kBmpxDialogRoots`) | `src\UiSpike.cpp:12144-12147` | same, 2 roots | per sweep | same | — |
-| EARLYCHART `ChartStoreThunk` | `src\UiSpike.cpp:411-470`, install `:486-524` | plot rect margins ×`gTierF`, `bandH 32→32f`, ticks `4→4f` | `gTierF` per paint | verify-before-write on the vtable slot; `gChartBornLog` reset `Disarm:5735` | **MIXED** — see R2/R3 in §2.2 |
+| `GaugeCtxBltThunk` — U-Drive-It dials | `src\UiSpike.cpp` (grep `GaugeCtxBltThunk`; the snap rule is its `sourceIsOneX` / `kFitSlack` test — #186 replaced the older relative `m < 0.75f * gGaugeScale` form, which now survives only in the comment recording that swap) | `dst = cw*m` with the fit clamp, plus **snap to 1.0 unless the source is judged still-1x** | `gGaugeScale` per sweep | per-instance vtable copies, cap 16; **`gGaugeEpoch`** (grep `gGaugeEpoch`, bumped in `UiSpike::Disarm`) is the #92 fix for pointer-keyed latches | dial art ↔ console window |
+| MINIMAP / DVMAP / UDMAP surface recreate | `src\UiSpike.cpp` (grep `void UiSpike::TryRecreateMinimapSurface`; the DVMAP and UDMAP twins are the blocks tagged `DVMAP`/`UDMAP` in their own log lines) | `blitSize` (`[+0xE4]`, self-updated by the class `SetArea`) | derived from the live window | latched per instance; latches + retry budgets nulled in `UiSpike::Disarm` | **Law: window rect ↔ one-shot display surface** — the v2.21.0 heap overrun |
+| `BmpCtxBltThunk` — GZWinBMP plain-path dest scale | `src\UiSpike.cpp` (grep `BmpCtxBltThunk`) | `dst = dst0 + round(w*m)`, `m = gBmpScale` **reduced until it fits the live window** | `gBmpScale` set once per pass (grep `gBmpScale = `) | per-draw one-shot (grep `gBmpBltDone`); budgets + `gBmpxRootTrack` cleared in `UiSpike::Disarm` | **Law: image dst ↔ live window size** — this is the UDI lever, §3 |
+| `HookRuntimeBmpsUnder` + `kBmpxCityRoots` | `src\UiSpike.cpp` (grep `void HookRuntimeBmpsUnder`; roots grep `kBmpxCityRoots[] = {`, and the call that passes them) | sets `gBmpScale = f` for **all 12 roots at once** | per sweep | class-vtable copy is process-lifetime; per-open census (grep `FlushBmpOpenCensus`) | **MIXED A+C** — 11 UI roots + 1 UDI root on one global |
+| dialog-root twin (`kBmpxDialogRoots`) | `src\UiSpike.cpp` (grep `kBmpxDialogRoots`) | same, 2 roots | per sweep | same | — |
+| EARLYCHART `ChartStoreThunk` | `src\UiSpike.cpp` (grep `ChartStoreThunk` — the definition and the one vtable-slot install that points at it) | plot rect margins ×`gTierF`, `bandH 32→32f`, ticks `4→4f` | `gTierF` per paint | verify-before-write on the vtable slot; `gChartBornLog` reset in `UiSpike::Disarm` | **MIXED** — see R2/R3 in §2.2 |
 
 ### 1.1e Byte patches (all PostAppInit one-shots into `.text`)
 
-| Lever | Director line | CodePatches | Axis |
-|---|---|---|---|
-| `ApplyRatingArrowScale` | `src\SC4UIScaleDllDirector.cpp:303` | `src\CodePatches.cpp:15` (3 imul sites) | **A** (art-coupled: 7px/rating point ↔ 2x arrow art) |
-| `ApplyTooltipWrapScale` | `:307` | `src\CodePatches.cpp:28` (`kTipWrapSites = {0x79880A, 0x7988A9}`), applied `:633` | **MIXED** — R8 |
-| `ApplyHtmlSizeScale` | `:311` | `src\CodePatches.cpp:42-45`, `:57-62`, applied `:1146-1147` | **B** — the only true runtime TEXT lever |
-| `ApplyAdviceRowScale` | `:318` | `src\CodePatches.cpp:65-153` | **MIXED** — R9 |
-| `ApplyBudgetButtonScale` | `:322` | `src\CodePatches.cpp:164-176` (35 sites) | **A** |
-| `ApplyOrdinanceInsetScale` | `:326` | `src\CodePatches.cpp:193-208`, applied `:820` | **A** (inset chosen to clear 2x icons) — but see R19 |
-| `ApplyBudgetFamilyScale` | `:330` | `src\CodePatches.cpp:235, 332, 409, 435, 456, 496` | **A** — but see R20/R21 |
-| `ApplySubFlyoutProviderScale` | `:333` | `src\CodePatches.cpp:229`, applied `:864` | **A** — **Law:** fused with SUBBORN; `sub_7EAEB0` only, the twin `sub_7E7270` must stay stock (`src\CodePatches.h:60-62`) |
-| `ApplyDataViewLegendScale` | `:341` | `src\CodePatches.cpp:541, 547`, applied `:909`, `:940` | **A** for the **origins only**; the pitch is text-derived and must never be patched (`src\CodePatches.h:70-72`) → quasi-MIXED, R16 |
+Every row resolves the same way: grep the `Apply…` name in `src\SC4UIScaleDllDirector.cpp` for the call, and in `src\CodePatches.cpp` for the definition. The site tables are named, so grep those by name too.
 
-**Warning: all nine are one-shot at `PostAppInit`.** `ScaleSizeTable` verifies against *stock* bytes before writing (`src\CodePatches.cpp:676-713`), so a second application at a new factor finds non-stock bytes and **skips**. This is the structural reason knob 1 requires a restart (§4.6).
+| Lever | Site table(s) to grep in `src\CodePatches.cpp` | Axis |
+|---|---|---|
+| `ApplyRatingArrowScale` | `kRatingImulSites` (3 imul sites) | **A** (art-coupled: 7px/rating point ↔ 2x arrow art) |
+| `ApplyTooltipWrapScale` | `kTipWrapSites = {0x79880A, 0x7988A9}`, `kStockTipWrap` | **MIXED** — R8 |
+| `ApplyHtmlSizeScale` | `kHtmlFontSizeTable`, `kHtmlHeadingSizeTable`, `kPopupStyleRetargets` | **B** — the only true runtime TEXT lever |
+| `ApplyAdviceRowScale` | grep `int ApplyAdviceRowScale`; the patched window is `0x0079388F` / `0x0079388B` | **MIXED** — R9 |
+| `ApplyBudgetButtonScale` | `kBudgetBtnSizeSites`, `kBudgetBtnXSites`, `kBudgetBtnYSites` (35 sites) | **A** |
+| `ApplyOrdinanceInsetScale` | `kOrdinanceInsetSites`, `kOrdinanceNameXImm8Sites` | **A** (inset chosen to clear 2x icons) — but see R19 |
+| `ApplyBudgetFamilyScale` | `kDeptImm8Sites`, `kDeptImm32Sites`, `kMasterNotchSites`, `kBudgetLeaDisp8Sites`, `kBudgetSubImm8Sites`, `kBizBoxSizeSites` | **A** — but see R20/R21 |
+| `ApplySubFlyoutProviderScale` | `kSubFlyoutProviderSites` | **A** — **Law:** fused with SUBBORN; `sub_7EAEB0` only, the twin `sub_7E7270` must stay stock (`src\CodePatches.h`, grep `sub_7E7270`) |
+| `ApplyDataViewLegendScale` | `kDataViewLegendLeaSites`, `kDataViewLegendImm32Sites` | **A** for the **origins only**; the pitch is text-derived and must never be patched (`src\CodePatches.h`, grep `ApplyDataViewLegendScale` and read the contract comment above it) → quasi-MIXED, R16 |
+
+**Warning: all nine are one-shot at `PostAppInit`.** `ScaleSizeTable` verifies against *stock* bytes before writing (`src\CodePatches.cpp`, grep `void ScaleSizeTable`), so a second application at a new factor finds non-stock bytes and **skips**. This is the structural reason knob 1 requires a restart (§4.6).
 
 ---
 
@@ -180,12 +187,12 @@ Each row: the lever, its `file:line`, what it multiplies, which axis it belongs 
 
 | # | Artifact | Generator | Factors built | What it bakes | Gated by |
 |---|---|---|---|---|---|
-| 1 | (art PNG upscaler) | `tools\upscale\Upscale2x.cs` — grep `private static int ScaleDim` (`:842-864`). **`ScaleDim` is NOT plain `floor(v*f+0.5)`.** It rounds half-up (`:844`), then **at a non-integer factor only** snaps the result to a multiple of `CellUnit(v)` — the LCM of whichever of `kCellCounts = {3,4}` (`:677`) divides the **source** dim (`CellUnit` `:798-807`) — ties **UP** (`:852`), abandoned if the correction exceeds 12.5% of the **scaled** dim (`Math.Abs(snapped-s)*8 > s`, `:862`). **It returns at `:845` before `CellUnit` is ever consulted when the factor is whole, which is why every snap defect (#157, #158, #171) is 1.5x-only and 2x/3x stay byte-identical.** Snap scoping is per file: `--no-snap` → `CellUnit` = 1 (`:800`), `--nine-slice` → `CellUnit` consults `{3}` alone (`:780`, `:802`). The **height** is taken out of `ScaleDim` entirely at `:876` (`oh = sNoHeightSnap ? floor(h*f+0.5) : ScaleDim(h,f)`) by `--height-exact-group` (`:97`) / `--height-exact-strips` (`:114`) — **Law: there is no `--no-height-snap` flag; the source comment at `:812` naming one is stale, `sNoHeightSnap` is only the field (`:837`)**. `--cell-strips` does **not** touch the snap: it sets `sStripStates` (`:326`) for `BuildSampleMap`'s per-state horizontal **sampling** (`:934`). NN throughout (`--hq` is never safe to ship). Factor guard `(1.0, 16.0]` at `:279-283`, not `:70`. | any `--factor` | PNG pixel dims | nothing — feeds 2–7 |
-| 2 | `z_SC4UIScale_SelectiveArt-{2x,15x,3x}.dat` | `tools\selective-safe\build_selective_safe.py` | **655 / 655 / 655** entries — #136 closed the 3x fork: the built `tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat` carries 655 in its DBPF index count; the `or FACTOR <= 2.0` tail on the `0x1441625x` glyph range is gone (`build_selective_safe.py:522-531`, now a bare `if True`); `src\CodePatches.cpp:3554-3562` "THE TIER CEILING IS GONE … 3x SelectiveArt therefore goes 651 -> 655 entries"; `_tests\Test-DatIntegrity.ps1:217` expects 655 "# #136: was 651" | 2x art in place or cloned at `iid^0x53430001` (`build_selective_safe.py:99`); `imagerect`; `area` for **all ten `kDataScaledSubtreeIds` roots, the 7 seated advisor faces, and the ticker marquee** — `src\UiSpike.cpp:5373-5486` lists exactly ten ids and `build_selective_safe.py` runs `double_subtree_areas` on every one (advisors `:1963`, the four budget roots `:2010-2011`, the three Graphs roots `:2033-2035`, dashboard `:2057`, console variant `:2082`); the faces are `ADVISOR_FACE_SEATS` `:802-810` seated at `:1976` (7 asserted at `:1988`); the marquee is `0xaa12f33c` at `:1942-1947` | **`src\ScaleTier.cpp:1803`** — the SelectiveArt gate is `SyncDat(docPlugins, L"z_SC4UIScale_SelectiveArt", pkg.tag, match)` (`:528` sits inside the FontStyle.ini stock-tier restore branch) |
-| 5 | `z_SC4UIScale_ItemIcons-{tier}.dat` | `tools\itemicons\stage_icons.py` | 356 each | 266+ toolbar picker icons | `src\ScaleTier.cpp:530` |
-| 6 | `zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-{tier}.dat` | `build_itemicons_sub.py` | 130 each | 129 mod-owned icons + Missing Thumb `0x144161EC` | `src\ScaleTier.cpp:537` |
-| 7 | `zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-{tier}.dat` | — | 2 each | CoriBoom's `.UI` + its 516x654 art | `src\ScaleTier.cpp:565`, dep-gated |
-| 10 | `zzz-SC4UIScale\z_SC4UIScale_WarriorUI-{tier}.dat` | — | 4 each | warrior's 2 flyout scripts + 2 art TGIs | **FIXED by #119 (v2.71.3).** `src\ScaleTier.cpp:1876-1878` — tier-gated on `pkg.tag`/`match` AND mod-gated via `DepOkByName`, the same shape as the four other dep-gated `SyncDat` calls (`:1840` SaveWarningUI, `:1848` CamUI, `:1860` ThirdPartyUI, `:1885` NamIcons). Rationale at `:1863-1875`; the `kThirdPartyDeps` row it consumes is `:218-220`. |
+| 1 | (art PNG upscaler) | `tools\upscale\Upscale2x.cs` — grep `private static int ScaleDim`. **`ScaleDim` is NOT plain `floor(v*f+0.5)`.** It rounds half-up (its first statement), then **at a non-integer factor only** snaps the result to a multiple of `CellUnit(v)` — the LCM of whichever of `kCellCounts = {3,4}` (grep `kCellCounts`) divides the **source** dim (grep `private static int CellUnit`) — ties **UP** (grep `Ties go UP`), abandoned if the correction exceeds 12.5% of the **scaled** dim (grep `Math.Abs(snapped - s) * 8 > s`). **It returns before `CellUnit` is ever consulted when the factor is whole (grep `if (factor == Math.Floor(factor)) return s;`), which is why every snap defect (#157, #158, #171) is 1.5x-only and 2x/3x stay byte-identical.** Snap scoping is per file: `--no-snap` → `CellUnit` = 1 (grep `if (sNoSnapThis) { return 1; }`), `--nine-slice` → `CellUnit` consults `{3}` alone (grep `kNineSliceCounts`, `sNineSliceOnly`). The **height** is taken out of `ScaleDim` entirely at every write site (grep `sNoHeightSnap ?` — `oh = sNoHeightSnap ? floor(h*f+0.5) : ScaleDim(h,f)`, four of them) by `--height-exact-group` / `--height-exact-strips` (grep those flag names in the argument parser) — **Law: there is no `--no-height-snap` flag; the one source comment naming one is stale (grep `--no-height-snap`; a single hit, in a comment), `sNoHeightSnap` is only the field (grep `private static bool sNoHeightSnap`)**. `--cell-strips` does **not** touch the snap: it sets `sStripStates` for `BuildSampleMap`'s per-state horizontal **sampling**. NN throughout (`--hq` is never safe to ship). Factor guard `(1.0, 16.0]` — grep `factor > 16.0`. | any `--factor` | PNG pixel dims | nothing — feeds 2–7 |
+| 2 | `z_SC4UIScale_SelectiveArt-{2x,15x,3x}.dat` | `tools\selective-safe\build_selective_safe.py` | **equal at every tier** — #136 closed the 3x fork: the `or FACTOR <= 2.0` tail on the `0x1441625x` glyph range is gone (grep `if True` in `build_selective_safe.py`, immediately under the `0x14416250` range); `src\CodePatches.cpp` (grep `THE TIER CEILING IS GONE` — "3x SelectiveArt therefore goes 651 -> 655 entries"); the per-tier entry counts are asserted in `_tests\Test-DatIntegrity.ps1` (grep `SelectiveArt` — the rows carry their own `# #136: was 651` history, and the count has moved again since) | 2x art in place or cloned at `iid^CLONE_XOR` (`build_selective_safe.py`, grep `CLONE_XOR =`); `imagerect`; `area` for **all ten `kDataScaledSubtreeIds` roots, the 7 seated advisor faces, and the ticker marquee** — `src\UiSpike.cpp` (grep `kDataScaledSubtreeIds[] = {`) lists the ids and `build_selective_safe.py` runs `double_subtree_areas` on every one (grep `double_subtree_areas(new_text` for the advisor, four budget, three Graphs, dashboard and console-variant calls); the faces are `ADVISOR_FACE_SEATS` seated by `seat_faces_on_apertures`; the marquee is the `id=0xaa12f33c` `widen_marquee` closure | `src\ScaleTier.cpp` — the SelectiveArt gate is `SyncDat(docPlugins, L"z_SC4UIScale_SelectiveArt", pkg.tag, match)` (grep `z_SC4UIScale_SelectiveArt"`; a second `SelectiveArt` mention sits in the payload-probe comment above `PackageInstalled` and is not the gate) |
+| 5 | `z_SC4UIScale_ItemIcons-{tier}.dat` | `tools\itemicons\stage_icons.py` | 356 each | 266+ toolbar picker icons | `src\ScaleTier.cpp` (grep `z_SC4UIScale_ItemIcons"`) |
+| 6 | `zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub-{tier}.dat` | `tools\itemicons\build_itemicons_sub.py` | 130 each | 129 mod-owned icons + Missing Thumb `0x144161EC` | `src\ScaleTier.cpp` (grep `z_SC4UIScale_ItemIconsSub`) |
+| 7 | `zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI-{tier}.dat` | — | 2 each | CoriBoom's `.UI` + its 516x654 art | `src\ScaleTier.cpp` (grep `z_SC4UIScale_ThirdPartyUI`), dep-gated |
+| 10 | `zzz-SC4UIScale\z_SC4UIScale_WarriorUI-{tier}.dat` | — | 4 each | warrior's 2 flyout scripts + 2 art TGIs | **FIXED by #119 (v2.71.3).** `src\ScaleTier.cpp` (grep `z_SC4UIScale_WarriorUI`) — tier-gated on `pkg.tag`/`match` AND mod-gated via `DepOkByName`, the same shape as the other dep-gated `SyncDat` calls (grep `DepOkByName` for the full set: SaveWarningUI, CamUI, ThirdPartyUI, NamIcons and the rest). Rationale is the comment directly above the call (grep `#119 (v2.71.3): THIS CALL WAS MISSING`); the `kThirdPartyDeps` row it consumes is the `z_SC4UIScale_WarriorUI` entry in that table. |
 
 **Correctly axis-free (neither A nor B nor C):**
 
@@ -200,11 +207,11 @@ Each row: the lever, its `file:line`, what it multiplies, which axis it belongs 
 
 Only **three** artifacts are purely on the text axis. That is the whole of it.
 
-| Lever | file:line | Multiplies | Notes |
+| Lever | Where (grep) | Multiplies | Notes |
 |---|---|---|---|
-| `FontStyle-{2x,15x,3x}.ini` | `tools\fonts\make_fontstyle.py` | the `size` token of the **88 stock** styles (the shipped files hold **90** — the two `HTML_CLONE_BLOCK` styles are added but never scaled; see the correction box below); CRLF / GUIDs / params byte-preserved | mirrored to `<install>\Plugins\FontStyle.ini` at boot by `src\ScaleTier.cpp:571-572`. Note: the game reads `FontStyle.ini` from the **install** `Plugins\`, not Documents |
-| HTML `.rdata` size tables | `src\CodePatches.cpp:42` (`kHtmlFontSizeTable 0xACD4A0 = {8,10,12,14,18,24,36}`), `:44` (`kHtmlHeadingSizeTable 0xAB4AD0 = {8,10,12,16,19,24,48}`); applied `:1146-1147` via `ScaleSizeTable` `:676-713` | `lround(stock[i] * factor)` | each rich window **copies** the table at creation (setter `0x8FEEB8` → `this+0x1A8`), so one `.rdata` write at PostAppInit reaches every instance the process will build. Gated by `[UiSpike] HtmlSizePatch` (default 1). This is what makes news, story pages, tutorials, advisor toasts, My Sims rows and Credits scale **at all** — `FontStyle.ini` can never reach them |
-| `HTML_CLONE_BLOCK` popup styles | `tools\fonts\make_fontstyle.py:195-205`; retargeted by `kPopupStyleRetargets` `src\CodePatches.cpp:57-62` | two never-scaled clone styles + 4 `push <guid>` retargets | see R11 — this exists **only** to stop the popup path compounding FontStyle × table to 4x |
+| `FontStyle-{2x,15x,3x}.ini` | `tools\fonts\make_fontstyle.py` | the `size` token of the **88 stock** styles (the shipped files hold **90** — the two `HTML_CLONE_BLOCK` styles are added but never scaled; see the correction box below); CRLF / GUIDs / params byte-preserved | mirrored to `<install>\Plugins\FontStyle.ini` at boot by `ScaleTier::SyncFont` (`src\ScaleTier.cpp`, grep `void SyncFont` and its call sites). Note: the game reads `FontStyle.ini` from the **install** `Plugins\`, not Documents |
+| HTML `.rdata` size tables | `src\CodePatches.cpp` (grep `kHtmlFontSizeTable` `0xACD4A0 = {8,10,12,14,18,24,36}` and `kHtmlHeadingSizeTable` `0xAB4AD0 = {8,10,12,16,19,24,48}`); applied inside `ApplyHtmlSizeScale` via `ScaleSizeTable` (grep `void ScaleSizeTable`) | `lround(stock[i] * factor)` | each rich window **copies** the table at creation (setter `0x8FEEB8` → `this+0x1A8`), so one `.rdata` write at PostAppInit reaches every instance the process will build. Gated by `[UiSpike] HtmlSizePatch` (default 1). This is what makes news, story pages, tutorials, advisor toasts, My Sims rows and Credits scale **at all** — `FontStyle.ini` can never reach them |
+| `HTML_CLONE_BLOCK` popup styles | `tools\fonts\make_fontstyle.py` (grep `HTML_CLONE_BLOCK`); retargeted by `kPopupStyleRetargets` (`src\CodePatches.cpp`, grep that name) | two never-scaled clone styles + 4 `push <guid>` retargets | see R11 — this exists **only** to stop the popup path compounding FontStyle × table to 4x |
 
 **Font size facts** `[M]` (13 distinct 1x sizes: `10×1, 11×3, 12×2, 13×28, 14×22, 15×4, 16×15, 17×2, 18×4, 19×2, 21×2, 24×2, 32×1`):
 
@@ -217,7 +224,8 @@ Only **three** artifacts are purely on the text axis. That is the whole of it.
 >   (2x) = **14..64**, `packages\3x\FontStyle-3x.ini` = **14..96**. The
 >   **14** floor is the never-scaled `MessageBodyHtml` clone — which this
 >   very table declares two rows down.
->   `tools\packages\PACKAGES.md:100/:114/:123` carries the correct figures.
+>   `tools\packages\PACKAGES.md` §`packages\15x\` / §`packages\3x\` and the
+>   `FontStyle.candidate.ini` paragraph under them carry the correct figures.
 > * `FontStyle.default.ini` (stock) = **88** styles. Every generated file —
 >   candidate, 15x, 3x — = **90**, because `HTML_CLONE_BLOCK` adds two. The
 >   generator's own stdout says *"88 styles, size range 15..48"* because
@@ -236,9 +244,9 @@ Only **three** artifacts are purely on the text axis. That is the whole of it.
 | `LoadScreenTitle` | 32 | 48 | 64 | 96 | |
 | `MessageHeaderHtml` / `MessageBodyHtml` | 16 / 14 | 16 / 14 | 16 / 14 | 16 / 14 | never scaled, any tier |
 
-- **`KEEP_STOCK`** (`tools\fonts\make_fontstyle.py:95`) is **empty today**. Its one historical member was `ChartTickText`, pinned because the Graphs tick gutter was a frozen 45px rect; unpinned at v2.53.2 once the geometry lever landed. Line 53 still carries the retired warning about it.
-- **`SIZE_SQUEEZE = {"Legend": 0.92}`** (`:107`, applied `:132` as `eff = factor * SIZE_SQUEEZE.get(name, 1.0)`). Measured, not aesthetic. It is **one half of a coupled pair** — see R5.
-- Shipped `packages\15x\FontStyle-15x.ini` and `packages\3x\FontStyle-3x.ini` are **byte-identical to a fresh regeneration** `[M]`; `--selfcheck` byte-reproduces `FontStyle.candidate.ini` at factor 2. `tools\fonts\FontStyle-{15x,3x}.gen.ini` are the known-stale 62-style side-outputs, already excluded from deploy (`_tests\Deploy-OnGameClose.ps1:51-59`).
+- **`KEEP_STOCK`** (`tools\fonts\make_fontstyle.py`, grep `KEEP_STOCK = set()`) is **empty today**. Its one historical member was `ChartTickText`, pinned because the Graphs tick gutter was a frozen 45px rect; unpinned at v2.53.2 once the geometry lever landed. The retired warning about it is still in the comment block directly above the empty set (grep `DO NOT UNPIN THIS AGAIN`).
+- **`SIZE_SQUEEZE = {"Legend": 0.92}`** (grep `SIZE_SQUEEZE`; applied as `eff = factor * SIZE_SQUEEZE.get(name, 1.0)` — grep `SIZE_SQUEEZE.get`). Measured, not aesthetic. It is **one half of a coupled pair** — see R5.
+- Shipped `packages\15x\FontStyle-15x.ini` and `packages\3x\FontStyle-3x.ini` are **byte-identical to a fresh regeneration** `[M]`; `--selfcheck` byte-reproduces `FontStyle.candidate.ini` at factor 2. `tools\fonts\FontStyle-{15x,3x}.gen.ini` were the known-stale 62-style side-outputs, already excluded from deploy — **RETIRED: both files were deleted from the tree on 2026-08-23** (`git log --diff-filter=D --name-only -- tools/fonts/FontStyle-15x.gen.ini`), so the hazard they posed is gone rather than merely gated. The gate that excluded them still ships and still names the three real sources: `_tests\Deploy-OnGameClose.ps1`, grep `FONT TIER SOURCES`.
 
 ---
 
@@ -246,28 +254,28 @@ Only **three** artifacts are purely on the text axis. That is the whole of it.
 
 **Exactly one element.** The in-world U-Drive-It mission marker, window id `0x48E945B4`, art TGI `{856DDBAC, 46A006B0, 094AC89A}`.
 
-| Lever | file:line | Role |
+| Lever | Where (grep) | Role |
 |---|---|---|
-| membership in `kBmpxCityRoots` | `src\UiSpike.cpp:8148` (rationale `:8129-8147`) | the **only** thing that scales its drawn image |
-| `BmpCtxBltThunk` | `src\UiSpike.cpp:6644-6702`, math `:6660-6675` | stretches dst by `m = min(gBmpScale, winW/artW, winH/artH)` |
-| `gBmpScale` | declared `src\UiSpike.cpp:6637`, set `:6991` | **Warning: one global serving all 12 roots** |
-| `gBmpCurId` | computed `src\UiSpike.cpp:6717` `[M]` | already available inside the draw thunk — the natural home for a per-id lookup |
-| window scale | the blanket city sweep, `ScalePanelRoot` call site `src\UiSpike.cpp:7624` | the marker is a direct child of the 3D view `0x9A47B417` |
-| art staging | `tools\selective-safe\build_selective_safe.py:425` | stock 32x32 → 48 / 64 / 96 at 1.5x / 2x / 3x |
-| the probe that proved it is a real window | `src\UiSpike.cpp:5117-5152` | `EDGE bubble 0x48E945B4 PRESENT / rect (1637,610 128x128) vis=1 vt=00ADF6A0` — `0x00ADF6A0` is the GZWinBMP class |
+| membership in `kBmpxCityRoots` | `src\UiSpike.cpp` (grep `kBmpxCityRoots[] = {`, then `0x48E945B4` inside it; the rationale is the `U-DRIVE-IT MISSION MARKER` comment immediately above the entry) | the **only** thing that scales its drawn image |
+| `BmpCtxBltThunk` | `src\UiSpike.cpp` (grep `BmpCtxBltThunk`) | stretches dst by `m = min(gBmpScale, winW/artW, winH/artH)` |
+| `gBmpScale` | `src\UiSpike.cpp` (grep `float  gBmpScale` for the declaration, `gBmpScale = ` for the per-pass write) | **Warning: one global serving all 12 roots** |
+| `gBmpCurId` | `src\UiSpike.cpp` (grep `gBmpCurId`) `[M]` | already available inside the draw thunk — the natural home for a per-id lookup |
+| window scale | the blanket city sweep — `src\UiSpike.cpp` (grep `int UiSpike::ScalePanelsUnder`, which calls `ScalePanelRoot` per root) | the marker is a direct child of the 3D view `0x9A47B417` |
+| art staging | `tools\selective-safe\build_selective_safe.py` (grep `0x094AC89A`) | stock 32x32 → 48 / 64 / 96 at 1.5x / 2x / 3x |
+| the probe that proved it is a real window | `src\UiSpike.cpp` (grep `EDGE bubble`) | `EDGE bubble 0x48E945B4 PRESENT / rect (1637,610 128x128) vis=1 vt=00ADF6A0` — `0x00ADF6A0` is the GZWinBMP class |
 
 Full mechanism, feasibility and ceiling: **§3**.
 
 ### What is NOT on the C axis, despite the name
 
-These are ordinary UI-A chrome and **must not** take a bubble factor. Putting them on a 2×UI axis reproduces the #46 defect exactly ("424x650 → 848x1300, 4x frame around 2x content", `src\UiSpike.cpp:3136-3139`).
+These are ordinary UI-A chrome and **must not** take a bubble factor. Putting them on a 2×UI axis reproduces the #46 defect exactly ("424x650 → 848x1300, 4x frame around 2x content" — `src\UiSpike.cpp`, grep `424x650`).
 
-| Element | id | Where | Rule |
+| Element | id | Where (grep in `src\UiSpike.cpp`) | Rule |
 |---|---|---|---|
-| Car Control / status panel (11 vehicle scripts) | `0x10000006` | `src\UiSpike.cpp:3143` | `kNeverScaleIds` — served by the static dat; runtime must not touch it (that WAS #46) |
-| Vehicle + pedestrian pickers | `0xCBF32603` | `src\UiSpike.cpp:3151` (never-scale) and `:12144` (`kBmpxDialogRoots`) | static dat for layout, BMPX for runtime thumbs |
-| Driving dashboard console (43 scripts) | `0x4BCB938A` | `:3528`, `:3608`, `:7667`; gauges `:6262-6318`; minimap `:7890-8095` | swept + art + gauge draw hook + surface recreate |
-| Console VARIANT (#93) | `0xEC1A5CBF` | `:3562`, `:3640`, probe `:7901-7930` | `kAlwaysScaleCityIds` (resident, `vis=0`) |
+| Car Control / status panel (11 vehicle scripts) | `0x10000006` | `0x10000006`, inside `kNeverScaleIds[] = {` | `kNeverScaleIds` — served by the static dat; runtime must not touch it (that WAS #46) |
+| Vehicle + pedestrian pickers | `0xCBF32603` | `0xCBF32603` — one hit inside `kNeverScaleIds`, one inside `kBmpxDialogRoots` | static dat for layout, BMPX for runtime thumbs |
+| Driving dashboard console (43 scripts) | `0x4BCB938A` | `0x4BCB938A` (it appears in `kAlwaysScaleCityIds`, `kDataScaledSubtreeIds` and the sweep); gauges `GaugeCtxBltThunk`; minimap `TryRecreateMinimapSurface` and the `UDMAP` block | swept + art + gauge draw hook + surface recreate |
+| Console VARIANT (#93) | `0xEC1A5CBF` | `0xEC1A5CBF`, plus the `UDVAR` probe line | `kAlwaysScaleCityIds` (resident, `vis=0`) |
 | UDI toolbar flyout + sub-flyout (#48/#95) | — | generic mayor-flyout dock + ring model | no UDI-specific id; ordinary flyout machinery |
 
 ---
@@ -279,55 +287,56 @@ These are ordinary UI-A chrome and **must not** take a bubble factor. Putting th
 > **Note: §1.5 and §2.2 are NOT "the same set".** §1.5 holds **15** rows
 > (M1–M15); §2.2 holds **26** (R1–R26). They overlap heavily but they are
 > different inventories at different granularities. **26 is the register's
-> own count** (`:252`) and is the number to cite for the 1:1 lock.
+> own count** (§2.2's own heading says so) and is the number to cite for the
+> 1:1 lock.
 
-| # | Element | file:line | The coupling |
+| # | Element | Where (grep) | The coupling |
 |---|---|---|---|
-| M1 | `kFontSizedIds` — 23 controls, position-only | list `src\UiSpike.cpp:3680-3703`, consumed `:12681-12700` | size deliberately **not** scaled because the font/art already sized it; position scaled by UI |
-| M2 | Ordinance/deal description popup | `src\UiSpike.cpp:11998-12065`; wrap `:12062-12067`, `:12087` | box height `125*f` sized to hold N lines of scaled font; wrap width then derived from the box |
-| M3 | Advice/news row column budget | `src\CodePatches.cpp:65-153`, patched over `83 EE 3D` @ `0x0079388F`; called `src\SC4UIScaleDllDirector.cpp:318` | `S(f) = round(18f) + 18 + 9 + round(16f)`; the headline TEXT column is the residue |
-| M4 | Tooltip wrap width | `src\CodePatches.cpp:28`, `:633` | a TEXT wrap width scaled by the UI factor to protect a code-painted frame's corner arcs |
-| M5 | HTML size tables + popup GUID retarget | `src\CodePatches.cpp:42-62`, `:1146-1147` + `tools\fonts\make_fontstyle.py:195-205` | the runtime TEXT patch and the DATA font package are one mechanism split across two artifacts |
-| M6 | Chart interior + LEGENDFIX / LEGENDSWATCH (#57) | `src\UiSpike.cpp:8330-8440`, `:8470-8600`; born twin `:411-470` | The chart renders **`ChartLabel` (`0xE9C86B5E`)**, not `Legend`, so `SIZE_SQUEEZE` never touches it (byte-verified at `0x0076DD91`). The legend ROW geometry is not band-derived: it is a six-constant right-margin budget owned by the PANEL builder `sub_76D3D0`, patched at birth by `CodePatches::ApplyGraphLegendBudgetScale`. The `32f` band write at `src\UiSpike.cpp` (chart field `+0x108`/`+0x10C`) still ships and is still MIXED — but it is UNKNOWN whether the band rect and the legend column are the same object (reference gap G33, `SDK-GAPS.md` §13): two independent instruments measured two different things. The measurement that would settle it: dump `chart+0x108` and the legend child rects in one `CHARTGEO` line at the same instant, or disassemble what reads `chart+0x108` inside the draw path `sub_9B5ADE` |
-| M7 | `kAdviceListScaleSelfIds` — recursion disabled | `src\UiSpike.cpp:3740-3757`, consumed `:12730-12736` | items game-sized to the container (A) while their content is HTML text (B), with no lever left |
-| M8 | Ticker marquee — hands off | `src\UiSpike.cpp:3777-3779`, consumed `:12628-12632`; the one `area=` edit at `tools\selective-safe\build_selective_safe.py:1165-1176` | width ships in the `.UI` at the UI factor; height is font-derived; neither reachable at runtime, by design |
-| M9 | Budget master column width pin + forced caption re-apply | `src\UiSpike.cpp:11866-11905` | widths are UI; the re-apply exists because the text paint buffer was born at the old width |
-| M10 | Neighbor Deals combo width pin | `src\UiSpike.cpp:11838-11855` | a UI width chosen to fit TEXT ("7000M"); no byte patch possible (disp8 ceiling) |
-| M11 | News reader `0xAA231508` list membership | `src\UiSpike.cpp:3436-3448` | the membership of an A-axis id list is **justified by a TEXT fact** |
-| M12 | Establish City `0x6A414973` | `src\UiSpike.cpp:3116-3128` | runtime geometry scaling breaks the **text colour** path; whole subtree handed to the static dat |
-| M13 | DialogStatic geometry corpus | `tools\dialog-static\build_dialog_static.py:1046-1051`, asserted `:671-674`; row metrics `:1105-1109`; `wingridcol` `:1116-1123`; `gutters/textoffsets/tipoffsets` `:1125-1129` | 261 entries of hand-sized boxes, every one sized to hold a specific point size |
-| M14 | Credits HTML LTEXT size map | `tools\dialog-static\build_dialog_static.py:1221-1225`, table widths `:1240-1243` | index remaps calibrated against the **runtime HTML table** but selected by the **UI package tag** |
-| M15 | Data Views legend pitch | `src\UiSpike.cpp:8663-8672`; `src\CodePatches.h:70-72`; legacy `kDVPins` `:8629-8654` | the game advances rows by `18 * ceil(measuredH / 18)` — a text-measured height with an unscaled quantum. We patch only the origins |
+| M1 | `kFontSizedIds` — 23 controls, position-only | `src\UiSpike.cpp` (grep `kFontSizedIds` — the `[] = {` hit is the list, the `for (uint32_t known : kFontSizedIds)` hit is the consumer) | size deliberately **not** scaled because the font/art already sized it; position scaled by UI |
+| M2 | Ordinance/deal description popup | `src\UiSpike.cpp` (grep `stockPopH` for the height pin, `natW = body->GetW() - 10` for the wrap) | box height `125*f` sized to hold N lines of scaled font; wrap width then derived from the box |
+| M3 | Advice/news row column budget | `src\CodePatches.cpp` (grep `int ApplyAdviceRowScale`), patched over `83 EE 3D` @ `0x0079388F`; called from `src\SC4UIScaleDllDirector.cpp` (grep `ApplyAdviceRowScale`) | `S(f) = round(18f) + 18 + 9 + round(16f)`; the headline TEXT column is the residue |
+| M4 | Tooltip wrap width | `src\CodePatches.cpp` (grep `kTipWrapSites`, `kStockTipWrap`, `void ApplyTooltipWrapScale`) | a TEXT wrap width scaled by the UI factor to protect a code-painted frame's corner arcs |
+| M5 | HTML size tables + popup GUID retarget | `src\CodePatches.cpp` (grep `kHtmlFontSizeTable`, `kPopupStyleRetargets`, `void ApplyHtmlSizeScale`) + `tools\fonts\make_fontstyle.py` (grep `HTML_CLONE_BLOCK`) | the runtime TEXT patch and the DATA font package are one mechanism split across two artifacts |
+| M6 | Chart interior + LEGENDFIX / LEGENDSWATCH (#57) | `src\UiSpike.cpp` (grep `LEGENDFIX`, `LEGENDSWATCH`, `CHARTGEO`; the born twin is `ChartStoreThunk`) | The chart renders **`ChartLabel` (`0xE9C86B5E`)**, not `Legend`, so `SIZE_SQUEEZE` never touches it (byte-verified at `0x0076DD91`). The legend ROW geometry is not band-derived: it is a six-constant right-margin budget owned by the PANEL builder `sub_76D3D0`, patched at birth by `CodePatches::ApplyGraphLegendBudgetScale` (grep `kGraphLegendImmSites`). The `32f` band write inside `ChartStoreThunk` (chart field `+0x108`/`+0x10C`) still ships and is still MIXED — but it is UNKNOWN whether the band rect and the legend column are the same object (reference gap G33 — the scope note that defines it lives in `SC4-UI-ENGINE.md` §5.4, grep `G33`; **`SDK-GAPS.md` has no §13, so that half of the old citation was already dead**): two independent instruments measured two different things. The measurement that would settle it: dump `chart+0x108` and the legend child rects in one `CHARTGEO` line at the same instant, or disassemble what reads `chart+0x108` inside the draw path `sub_9B5ADE` |
+| M7 | `kAdviceListScaleSelfIds` — recursion disabled | `src\UiSpike.cpp` (grep `kAdviceListScaleSelfIds` — list and consumer) | items game-sized to the container (A) while their content is HTML text (B), with no lever left |
+| M8 | Ticker marquee — hands off | `src\UiSpike.cpp` (grep `kAdviceListNeverTouchIds`, `0xAA12F33C`); the one `area=` edit is `tools\selective-safe\build_selective_safe.py` (grep `widen_marquee`) | width ships in the `.UI` at the UI factor; height is font-derived; neither reachable at runtime, by design |
+| M9 | Budget master column width pin + forced caption re-apply | `src\UiSpike.cpp` (grep `0x0ABCE400` — the master-only slider id that gates the block) | widths are UI; the re-apply exists because the text paint buffer was born at the old width |
+| M10 | Neighbor Deals combo width pin | `src\UiSpike.cpp` (grep `comboW`) | a UI width chosen to fit TEXT ("7000M"); no byte patch possible (disp8 ceiling) |
+| M11 | News reader `0xAA231508` list membership | `src\UiSpike.cpp` (grep `0xAA231508`, inside `kAlwaysScaleCityIds`) | the membership of an A-axis id list is **justified by a TEXT fact** |
+| M12 | Establish City `0x6A414973` | `src\UiSpike.cpp` (grep `0x6A414973`, inside `kNeverScaleIds`) | runtime geometry scaling breaks the **text colour** path; whole subtree handed to the static dat |
+| M13 | DialogStatic geometry corpus | `tools\dialog-static\build_dialog_static.py` (grep `def scale_len` for the rule, `def verify_doubled` for the assertion, `drowheight` for row metrics, `dbl_gridcol` for `wingridcol`, `dbl_tuple` for `gutters/textoffsets/tipoffsets`) | 261 entries of hand-sized boxes, every one sized to hold a specific point size |
+| M14 | Credits HTML LTEXT size map | `tools\dialog-static\build_dialog_static.py` (grep `credits_maps`, and `bump_width` for the table widths) | index remaps calibrated against the **runtime HTML table** but selected by the **UI package tag** |
+| M15 | Data Views legend pitch | `src\UiSpike.cpp` (grep `kDVPins`, and `ACTIVELY WRONG` for the standing-down rationale); `src\CodePatches.h` (grep `ApplyDataViewLegendScale` and read the contract above it) | the game advances rows by `18 * ceil(measuredH / 18)` — a text-measured height with an unscaled quantum. We patch only the origins |
 
 ---
 
 ## 1.6 EVERY ID LIST, and whether a split axis would change its membership
 
-| List | file:line | Size | Purpose | Membership changes if axes diverge? |
+| List | Where (grep) | Size | Purpose | Membership changes if axes diverge? |
 |---|---|---|---|---|
-| `kRegionPanelIds` | `src\UiSpike.cpp:3062-3065` | 9 | region panels scaled even while hidden | No |
-| `kNeverScaleIds` | `src\UiSpike.cpp:4778-4886` | **20** — the three v2.65.0 Mode C roots (`0x0A41C7B2`, `0x0A41C7B3` at `src\UiSpike.cpp:4867-4868`, `0x27DF05BF` at `:4873`) are included. The array literal opens at `src\UiSpike.cpp:4778` and closes at `:4886` — the same `+1682` shift that puts this table's `:3151` cite for `0xCBF32603` (§1.4) at `:4833` today | roots the **sweep** must not touch (static-dat served) | **YES** — every entry's justification is "the static dat serves it at the tier tag". No single tag ⇒ no premise. Consulted at only 2 sites (`ScaleOnShow`, city direct-children loop) — **not** `ScaleSubtree` |
-| `kGodToolFlyoutIds` | `:3197-3216` | 2 | skip in generic sweep | No |
-| `kGodPanelIds` | `:3233-3272` | 4 | scale by id even while `vis=0` | No |
-| `kMayorFlyoutDock` | `:3320-3376` | 8 rows | `target = buttonAbs + f·R` | **YES** `[INF]` — `R = -marker(1x)` scaled by `f`; content sized on another axis no longer lands. No measurement exists at split axes |
-| `kSubFlyoutIds` | `:3422` | 1 | shared 2nd-level container | No |
-| `kAlwaysScaleCityIds` | `:3445-3563` | 33 | pre-scale while hidden (born-2x, no open flash) | **YES** — the stated rule at `:3505` is *"IF WE SHIP 2x ART FOR A PANEL, IT MUST BE PRE-SCALED WHILE HIDDEN"*; `0xAA231508` is justified by a TEXT fact (M11) |
-| `kDataScaledSubtreeIds` | `:3584-3660` | 10 | scale ROOT at runtime, children already scaled in the `.UI`, **never recurse** | **YES, sharpest** — children born at the *package tag* factor, root scaled at the *runtime* factor, recursion **disabled** so nothing can correct a mismatch. Note: also grants TWO powers (do-not-scale AND do-not-walk) |
-| *(banned)* `kDataScaledWindowIds` | `:3662-3671` | **0** | documented ban (v2.41.1/.2/.3 — union-rect containers are ALL-OR-NONE) | must stay 0 |
-| `kFontSizedIds` | `:3680-3703` | 23 | position-only; size owned by font/art | **YES — this list IS the `UI == TEXT` assumption** (M1) |
-| `kAdviceListScaleSelfIds` | `:3740-3757` | 5 | scale self, never recurse | YES (M7). Structurally weak: keyed on ID, so any new `clsid 0xCA1492AC` window is unprotected (`:3752-3754`) |
-| `kAdviceListNeverTouchIds` | `:3777-3779` | 1 | ticker marquee | YES (M8) |
-| `kRegionDialogDocks` | `:3801-3808` | 6 | dialog ← spawn button | No |
-| `kSubFields` | `:3942-3950` | 7 | born-2x container fields | No (but `[0xE4]` is dual-use) |
-| `kGodFlyoutDock` | `:9526-9535` | 2 rows | god flyout offsets | No |
-| `kCityDialogIds` | `:11128-11205` | 6 | main-window transients the sweep cannot reach | **YES** — guard is `arrived == round(base·f) ±1` with 3 candidate bases per id; new factors triple the product set (v2.39.13/.14 scars) |
-| `kDVPins` | `:8629-8654` | 21 | Data Views legend fallback pin — **stood down** when `DataViewLegendPatchedSites() >= 8` | pitch hard-coded 18 while the game's is text-derived; already documented ACTIVELY WRONG (`:8666-8672`) |
-| `kBmpxCityRoots` | `:8114-8148` | 12 (8 My Sims + 3 Graphs + **1 UDI marker**) | GZWinBMP roots to hook | **YES — the single list that MUST split** for the C axis (§3.5) |
-| `kBmpxDialogRoots` | `:12144` | 2 | same, dialog scope | No |
-| byte-patch site tables | `src\CodePatches.cpp:15, 28, 57, 164-176, 193, 229, 235, 332, 409, 435, 456, 496, 541, 547` | — | site addresses | `kTipWrapSites` (M4), `kPopupStyleRetargets` (M5) and the advice-row site are text-adjacent; **all one-shot at PostAppInit** |
-| `kThirdPartyDeps` | **`src\ScaleTier.cpp:184-241`** (grep `kThirdPartyDeps`) | **5** | package ↔ mod gates | packages named by tag; a second tag dimension multiplies this table. All five rows are consumed: the WarriorUI row (now `src\ScaleTier.cpp:218-220`) got its `DepOkByName` gate in #119 / v2.71.3 — `src\ScaleTier.cpp:1876-1878`, with the fix recorded in the comment at `:1866-1872`. The row count moved 4 → 5 when `#139` added `NamIcons` (`:239-240`). |
-| `scaleMap` | `src\UiSpike.h:184`, `src\UiSpike.cpp:6087` | unbounded | idempotence engine | `ScaleRecord` (`src\UiSpike.h:90-106`) has **no axis field**; `MarkerIsDesignUnits` (`:6059`) reads it to answer "design or screen units" and would need an axis-qualified answer |
-| `menuBaseline` | `src\UiSpike.h:202` | dynamic | flyout-vs-machinery discriminator | No |
+| `kRegionPanelIds` | `src\UiSpike.cpp` (grep `kRegionPanelIds[] = {`) | 9 | region panels scaled even while hidden | No |
+| `kNeverScaleIds` | `src\UiSpike.cpp` (grep `kNeverScaleIds[] = {`; consumers grep `IsNeverScaleId(`) | **20** — the three v2.65.0 Mode C roots are included: grep `0x0A41C7B2`, `0x0A41C7B3` and `0x27DF05BF` **inside that literal** (each carries its own trailing comment; all three ids also appear elsewhere in the file). `0xCBF32603` (§1.4) is in the same literal — grep it there | roots the **sweep** must not touch (static-dat served) | **YES** — every entry's justification is "the static dat serves it at the tier tag". No single tag ⇒ no premise. Consulted at only 2 sites (`ScaleOnShow`, city direct-children loop) — **not** `ScaleSubtree` |
+| `kGodToolFlyoutIds` | `src\UiSpike.cpp` (grep `kGodToolFlyoutIds[] = {`) | 2 | skip in generic sweep | No |
+| `kGodPanelIds` | `src\UiSpike.cpp` (grep `kGodPanelIds[] = {`) | 4 | scale by id even while `vis=0` | No |
+| `kMayorFlyoutDock` | `src\UiSpike.cpp` (grep `kMayorFlyoutDock[] = {`) | 8 rows | `target = buttonAbs + f·R` | **YES** `[INF]` — `R = -marker(1x)` scaled by `f`; content sized on another axis no longer lands. No measurement exists at split axes |
+| `kSubFlyoutIds` | `src\UiSpike.cpp` (grep `kSubFlyoutIds[] = {`) | 1 | shared 2nd-level container | No |
+| `kAlwaysScaleCityIds` | `src\UiSpike.cpp` (grep `kAlwaysScaleCityIds[] = {`) | 33 | pre-scale while hidden (born-2x, no open flash) | **YES** — the stated rule (grep `IF WE SHIP 2x ART FOR A PANEL`) is *"IF WE SHIP 2x ART FOR A PANEL, IT MUST BE PRE-SCALED WHILE HIDDEN"*; `0xAA231508` is justified by a TEXT fact (M11) |
+| `kDataScaledSubtreeIds` | `src\UiSpike.cpp` (grep `kDataScaledSubtreeIds[] = {`) | 10 | scale ROOT at runtime, children already scaled in the `.UI`, **never recurse** | **YES, sharpest** — children born at the *package tag* factor, root scaled at the *runtime* factor, recursion **disabled** so nothing can correct a mismatch. Note: also grants TWO powers (do-not-scale AND do-not-walk) |
+| *(banned)* `kDataScaledWindowIds` | `src\UiSpike.cpp` (grep `THERE IS NO kDataScaledWindowIds` — the ban is the comment block under the `kDataScaledSubtreeIds` literal; the name has no definition anywhere) | **0** | documented ban (v2.41.1/.2/.3 — union-rect containers are ALL-OR-NONE) | must stay 0 |
+| `kFontSizedIds` | `src\UiSpike.cpp` (grep `kFontSizedIds[] = {`) | 23 | position-only; size owned by font/art | **YES — this list IS the `UI == TEXT` assumption** (M1) |
+| `kAdviceListScaleSelfIds` | `src\UiSpike.cpp` (grep `kAdviceListScaleSelfIds[] = {`) | 5 | scale self, never recurse | YES (M7). Structurally weak: keyed on ID, so any new `clsid 0xCA1492AC` window is unprotected (grep `0xCA1492AC` — the note sits just under the literal) |
+| `kAdviceListNeverTouchIds` | `src\UiSpike.cpp` (grep `kAdviceListNeverTouchIds[] = {`) | 1 | ticker marquee | YES (M8) |
+| `kRegionDialogDocks` | `src\UiSpike.cpp` (grep `kRegionDialogDocks[] = {`) | 6 | dialog ← spawn button | No |
+| `kSubFields` | `src\UiSpike.cpp` (grep `kSubFields[] = {`) | 7 | born-2x container fields | No (but `[0xE4]` is dual-use) |
+| `kGodFlyoutDock` | `src\UiSpike.cpp` (grep `kGodFlyoutDock[] = {`) | 2 rows | god flyout offsets | No |
+| `kCityDialogIds` | `src\UiSpike.cpp` (grep `kCityDialogIds[] = {`) | 6 | main-window transients the sweep cannot reach | **YES** — guard is `arrived == round(base·f) ±1` with 3 candidate bases per id; new factors triple the product set (v2.39.13/.14 scars) |
+| `kDVPins` | `src\UiSpike.cpp` (grep `kDVPins[] = {`) | 21 | Data Views legend fallback pin — **stood down** when `DataViewLegendPatchedSites() >= 8` (grep `DataViewLegendPatchedSites() >= 8`) | pitch hard-coded 18 while the game's is text-derived; already documented ACTIVELY WRONG (grep `ACTIVELY WRONG` — one hit, in the block under the table) |
+| `kBmpxCityRoots` | `src\UiSpike.cpp` (grep `kBmpxCityRoots[] = {`) | 12 (8 My Sims + 3 Graphs + **1 UDI marker**) | GZWinBMP roots to hook | **YES — the single list that MUST split** for the C axis (§3.5) |
+| `kBmpxDialogRoots` | `src\UiSpike.cpp` (grep `kBmpxDialogRoots[] = {`) | 2 | same, dialog scope | No |
+| byte-patch site tables | `src\CodePatches.cpp` — grep each table by name; §1.1e lists all of them (`kRatingImulSites`, `kTipWrapSites`, `kPopupStyleRetargets`, `kBudgetBtn*Sites`, `kOrdinance*Sites`, `kDept*Sites`, `kMasterNotchSites`, `kBudget*Sites`, `kBizBoxSizeSites`, `kSubFlyoutProviderSites`, `kDataViewLegend*Sites`) | — | site addresses | `kTipWrapSites` (M4), `kPopupStyleRetargets` (M5) and the advice-row site (grep `kAdviceRowMidSite`) are text-adjacent; **all one-shot at PostAppInit** |
+| `kThirdPartyDeps` | `src\ScaleTier.cpp` (grep `kThirdPartyDeps[] = {`) | **5** | package ↔ mod gates | packages named by tag; a second tag dimension multiplies this table. All five rows are consumed: the WarriorUI row (grep `z_SC4UIScale_WarriorUI` — first hit is the table row, the later hits are its `SyncDat` call) got its `DepOkByName` gate in #119 / v2.71.3, with the fix recorded in the comment directly above that call (grep `#119 (v2.71.3): THIS CALL WAS MISSING`). The row count moved 4 → 5 when `#139` added `NamIcons` (grep `z_SC4UIScale_NamIcons`). |
+| `scaleMap` | `src\UiSpike.h` (grep `std::map<void*, ScaleRecord> scaleMap`); written/read throughout `src\UiSpike.cpp` (grep `scaleMap`) | unbounded | idempotence engine | `ScaleRecord` (`src\UiSpike.h`, grep `struct ScaleRecord`) has **no axis field**; `MarkerIsDesignUnits` (`src\UiSpike.cpp`, grep `bool UiSpike::MarkerIsDesignUnits`) reads it to answer "design or screen units" and would need an axis-qualified answer |
+| `menuBaseline` | `src\UiSpike.h` (grep `std::map<void*, uint32_t> menuBaseline`) | dynamic | flyout-vs-machinery discriminator | No |
 
 ---
 
@@ -342,94 +351,102 @@ The original brief proposed three axes with `A == B` as a *default coupling*. Th
 
 ## 2.2 THE MIXED RISK REGISTER — 26 entries, what would break
 
-Each entry: the coupling arithmetic and its `file:line`. `u` = UI factor, `t` = text factor.
+Each entry: the coupling arithmetic and **the grep that finds it**. `u` = UI factor, `t` = text factor.
 
 **Box ← Text** (a box constant that exists only to hold text of a given size)
 
-- **R1 — Graphs legend text box.** `src\UiSpike.cpp:8386`, `:8404`: the legend row's text rect is right-anchored at a raw `obj[9] == winW2 - 4` at **every** factor while the style goes 13 → 26pt. `src\UiSpike.cpp:566` records the measurement: 26pt "Expenses" needs ~113 px and "currently wraps in 110". **This is the bug that triggered this whole task.**
+- **R1 — Graphs legend text box.** `src\UiSpike.cpp` (grep `winW2 - 4` — two hits, both inside the `LEGENDFIX` block): the legend row's text rect is right-anchored at a raw `obj[9] == winW2 - 4` at **every** factor while the style goes 13 → 26pt. The measurement is recorded in the chart comment block (grep `currently wraps in 110`): 26pt "Expenses" needs ~113 px and "currently wraps in 110". **This is the bug that triggered this whole task.**
   > Settled facts (#57 closed v2.55.0):
   > 1. **The style is `ChartLabel` (`0xE9C86B5E`), not `Legend`** (byte-verified, `0x0076DD91`), so it goes 13 → **26** pt, not 13 → 24. `Legend` is the Data Views legend.
   > 2. The shipped cure is `CodePatches::ApplyGraphLegendBudgetScale` — 8 sites in the panel builder `sub_76D3D0` — which scales the **budget**, so the box is born wide. The v2.54.x rect patch that rewrote an output rect inside an unchanged 110 px budget was refuted and reverted.
-  > 3. Several `file:line` citations in this document are stale by 13–21 lines (`coverage-matrix.md:646` calls out the identical drift for its own file). Spot-checked: `kFontSizedIds` cited `:3680-3703` → actual **`:3701`**; `kAdviceListScaleSelfIds` cited `:3740-3757` → actual **`:3761`**; `kBmpxCityRoots` cited `:8148` → actual **`:8135`**. **Grep the symbol, do not trust the number.**
-- **R2 — Graphs legend band height.** `src\UiSpike.cpp:430-434`: `if (w[0x120/4] == 32) w[0x120/4] = RoundHalfUp(32 * f)`. The 32px band was sized to hold **one** 13pt line. Pure box←text, frozen constant.
+  > 3. Every `file:line` citation in this document has since rotted outright, not by 13–21 lines (`tools\uimap\coverage-matrix.md` §0.9 *"Every line number in the pre-amendment reports is stale"* calls out the identical drift for its own file). The three spot checks recorded here — `kFontSizedIds`, `kAdviceListScaleSelfIds`, `kBmpxCityRoots` — were each repaired to a new number and each rotted again; all three now resolve only by name (§1.6). **Grep the symbol, do not trust the number.**
+- **R2 — Graphs legend band height.** `src\UiSpike.cpp` (grep `w[0x120/4] == 32` — the born write is inside `ChartStoreThunk`, the reactive twin inside the `LEGENDFIX` block): `if (w[0x120/4] == 32) w[0x120/4] = RoundHalfUp(32 * f)`. The 32px band was sized to hold **one** 13pt line. Pure box←text, frozen constant.
   > The MEASURED cause of the observed wrap is the **72 px text box inside
   > the unchanged 110 px right-margin budget** (`sub_76D3D0`), not the band
   > height (`SC4-UI-ENGINE.md` §5.4.8). The band height may well also be
   > tight — UNKNOWN, and it is the same unknown as M6 (reference gap G33):
   > nothing has shown the band rect and the legend column to be the same
   > object. And the style is `ChartLabel`, not `Legend`.
-- **R6 — Ordinance/deal popup height.** `src\UiSpike.cpp:12008-12015`: `wantH = lround(125.0 * pf)`. Rationale at `:11991-11994`: at 2x the box is 840x125 where `round(stock*f)` is 780x250, so the body lands 25px tall, *"which cannot hold ONE line of Arta 28"*.
-- **R17 — Budget master column widths + forced text re-measure.** `src\UiSpike.cpp:11880-11902`: `capX/capW/monX/monW = lround({400,120,520,85} * mf)`, chosen so "45055/54727" stops clipping to "45055/54"; then `t->SetCaption(*cap)` at `:11901` because the paint buffer was born at the old width. Box sized for text, then text forced to re-measure to the box — **both halves needed, neither sufficient**.
-- **R18 — Neighbor Deals combo width.** `src\UiSpike.cpp:11838-11855`: `comboW = lround(120.0 * spikeScaleFactor)`, gated on the exact stock width 120. Exists solely because "7000M" truncated. No byte patch possible — `lea edi,[edx+0x78]` inside `sub_7798C0` is a disp8 that cannot encode `120*f` for `f >= 1.07`. **A text-fit width with exactly one available lever.**
-- **R21 — Budget slider track.** `src\UiSpike.cpp:11814-11818`: raw `off = 79, trackW = 110`, position-only, unscaled. Structurally identical to the Graphs legend's 110 and the same failure shape.
-- **R22 — Sub-flyout container height from item metrics.** `src\UiSpike.cpp:3924-3927` (`H = max(count*(cell 44 + gap 5) - 5, 53) + 2*25`) + `src\CodePatches.cpp:229` + `kSubFields` `:3942-3950`. Not text (menu items are blits, `src\UiSpike.cpp:3904`) but the same defect class, and `[0xE4] = 53` is simultaneously the bar width **and** the `IsPointInMe` claim width.
-- **R25 — the DialogStatic corpus.** `tools\dialog-static\build_dialog_static.py:1046-1051` (every `area=` × `scale_len`), asserted `:671-674` (`verify_doubled` requires *exactly* `scale_len(v)`), plus `:1105-1109`, `:1116-1123`, `:1125-1129`. **Every one of these 261 boxes was hand-sized to hold a specific point size.** See §2.3 for the corpus numbers.
+- **R6 — Ordinance/deal popup height.** `src\UiSpike.cpp` (grep `stockPopH` — the declaration is the ordinance/plain ternary, the write is the `lround(stockPopH * pf)` two lines below): `wantH = lround(125.0 * pf)`. Rationale in the comment block above it (grep `cannot hold ONE line of Arta 28`): at 2x the box is 840x125 where `round(stock*f)` is 780x250, so the body lands 25px tall, *"which cannot hold ONE line of Arta 28"*.
+- **R17 — Budget master column widths + forced text re-measure.** `src\UiSpike.cpp` (grep `capX`, and `45055` for the measurement comment above it): `capX/capW/monX/monW = lround({400,120,520,85} * mf)`, chosen so "45055/54727" stops clipping to "45055/54"; then `t->SetCaption(*cap)` (grep `if (cap) { t->SetCaption(*cap); }`) because the paint buffer was born at the old width. Box sized for text, then text forced to re-measure to the box — **both halves needed, neither sufficient**.
+- **R18 — Neighbor Deals combo width.** `src\UiSpike.cpp` (grep `comboW`; the encoding argument is the comment above it, grep `sub_7798C0`): `comboW = lround(120.0 * spikeScaleFactor)`, gated on the exact stock width 120. Exists solely because "7000M" truncated. No byte patch possible — `lea edi,[edx+0x78]` inside `sub_7798C0` is a disp8 that cannot encode `120*f` for `f >= 1.07`. **A text-fit width with exactly one available lever.**
+- **R21 — Budget slider track.** `src\UiSpike.cpp` (grep `int32_t off = 79, trackW = 110;`): raw `off = 79, trackW = 110`, position-only, unscaled. Structurally identical to the Graphs legend's 110 and the same failure shape.
+- **R22 — Sub-flyout container height from item metrics.** `src\UiSpike.cpp` (grep `stripH = count*(cell 44 + gap 5) - 5` — the derivation block that opens the SUBBORN section) gives `H = max(count*(cell 44 + gap 5) - 5, 53) + 2*25`; the three provider constants are `src\CodePatches.cpp` (grep `kSubFlyoutProviderSites`) and the seven container fields are `kSubFields` (`src\UiSpike.cpp`, grep `kSubFields[] = {`). Not text (menu items are blits — grep `Menu items are BLITS` in the same block) but the same defect class, and `[0xE4] = 53` is simultaneously the bar width **and** the `IsPointInMe` claim width.
+- **R25 — the DialogStatic corpus.** `tools\dialog-static\build_dialog_static.py` (grep `def scaled_area` for the rule and `if nd.area is not None:` for the walk that applies it to every `area=`), asserted by `verify_doubled` (grep `def verify_doubled` — it requires *exactly* `scale_len(v)`), plus the row/grid/tuple metrics (grep `drowheight`, `dbl_gridcol`, `dbl_tuple`). **Every one of these 261 boxes was hand-sized to hold a specific point size.** See §2.3 for the corpus numbers.
 
 **Text ← Box** (a text metric derived from a box)
 
-- **R7 — the popup wrap width, R6 running backwards.** `src\UiSpike.cpp:12062-12067` and `:12087` (`natW = body->GetW() - 10`): word-wrap flag `0x0002` is turned ON and the engine re-wraps at `GetW() - 10` (335 at 1x, 680 at 2x, 1025 at 3x). **Box←text at `:12008` and text←box at `:12087` in one block. Circular by construction.**
-- **R8 — Tooltip wrap width (#41).** `src\CodePatches.cpp:28`, `kStockTipWrap = 250` → `250 * factor` (push imm32), applied `:633`. A hardcoded 250px wrap for tip TEXT inside a code-painted frame (Plot override `0x798710`); with 2x fonts the text wrapped narrow-and-tall and painted over the rounded-corner arcs. **A text metric scaled to preserve an art frame.**
-- **R10 — Advice pane usable width is art-derived at runtime.** `src\CodePatches.cpp:118-124`: the text class computes usable width as `GetW() - 2*gutter - scrollbarW` (`sub_9BCBC5` @ `0x009BCBC5`, gutter default 5 @ `0x009BFFCC`) and fetches `scrollbarW` **live** from the scrollbar window's own `GetW()`. Collapsed rows passed and expanded rows failed on a flat reserve — **the text wrap width is a function of an art width that appears and disappears.**
+- **R7 — the popup wrap width, R6 running backwards.** `src\UiSpike.cpp` (grep `SetWinTextFlag(0x0002, true)` for the flag, `natW = body->GetW() - 10` for the wrap): word-wrap flag `0x0002` is turned ON and the engine re-wraps at `GetW() - 10` (335 at 1x, 680 at 2x, 1025 at 3x). **Box←text at `stockPopH` and text←box at `natW` in one block — the two greps land ~110 lines apart in the same function. Circular by construction.**
+- **R8 — Tooltip wrap width (#41).** `src\CodePatches.cpp` (grep `kStockTipWrap` — the `= 250` declaration, then the `lround(kStockTipWrap * factor)` inside `ApplyTooltipWrapScale`; sites `kTipWrapSites`): `250` → `250 * factor` (push imm32). A hardcoded 250px wrap for tip TEXT inside a code-painted frame (Plot override `0x798710` — grep that address for the comment that names it); with 2x fonts the text wrapped narrow-and-tall and painted over the rounded-corner arcs. **A text metric scaled to preserve an art frame.**
+- **R10 — Advice pane usable width is art-derived at runtime.** `src\CodePatches.cpp` (grep `sub_9BCBC5` — the comment block that records the derivation): the text class computes usable width as `GetW() - 2*gutter - scrollbarW` (`sub_9BCBC5` @ `0x009BCBC5`, gutter default 5 @ `0x009BFFCC`) and fetches `scrollbarW` **live** from the scrollbar window's own `GetW()`. Collapsed rows passed and expanded rows failed on a flat reserve — **the text wrap width is a function of an art width that appears and disappears.**
 
 **Mixed residues** (a text column defined as whatever art columns leave behind)
 
-- **R9 — Advice/news row column budget (#88).** `src\CodePatches.cpp:148-153`, patched over `83 EE 3D` @ `0x0079388F`: `S(f) = round(18*f) + 18 + 9 + round(16*f)`, and the headline column is the **residue** `pane->GetW() - S`. Four-way coupling in one constant: arrow glyph art, dismiss-X art, a flat 9px gutter, and the live scrollbar art width — with the TEXT column defined as what is left. Its precondition contract is declared at `src\CodePatches.h:38-41`, and `src\Settings.h:97-103` warns the ini flag is **not** a safe kill switch.
+- **R9 — Advice/news row column budget (#88).** `src\CodePatches.cpp` (grep `kAdviceRowMidSite` for the `0x79388F` site constant and `int ApplyAdviceRowScale` for the patch), patched over `83 EE 3D` @ `0x0079388F`: `S(f) = round(18*f) + 18 + 9 + round(16*f)`, and the headline column is the **residue** `pane->GetW() - S`. Four-way coupling in one constant: arrow glyph art, dismiss-X art, a flat 9px gutter, and the live scrollbar art width — with the TEXT column defined as what is left. Its precondition contract is declared in `src\CodePatches.h` (grep `PRECONDITION CONTRACT`, in the block above `ApplyAdviceRowScale`), and `src\Settings.h` warns the ini flag is **not** a safe kill switch (grep `spikeAdviceRowPatch`, then `NOT A SAFE KILL SWITCH` in its trailing comment).
   > Settled state (#136, v2.88.0): the old `kAdviceXScaleMaxFactor` fork is
-  > gone. The constant still exists, at **`src\CodePatches.cpp:423`** (not
-  > `:153` — line drift), but it is **dead**: a whole-repo grep over
+  > gone. The constant still exists (`src\CodePatches.cpp`, grep
+  > `kAdviceXScaleMaxFactor`) but it is **dead**: a whole-repo grep over
   > `.cpp/.h/.py/.ps1` returns the declaration and nothing else.
-  > `ApplyAdviceRowScale` hardcodes `const bool xScaled = true;`
-  > (`src\CodePatches.cpp:3565`) with `glyphX = glyph` (`:3566`), and the
-  > mirrored `FACTOR <= 2.0` filter was deleted from
-  > `tools\selective-safe\build_selective_safe.py` in the same commit
-  > (`:523-527`). The imm8 was an ENCODING, not a law of nature: when
-  > `S > 127` the patch rewrites the 19-byte window at `0x0079388B`, folding
-  > `mov`+`sub esi, imm8` into `lea esi, [eax - imm32]` and paying for the
-  > bytes with a store proven dead by liveness (`src\CodePatches.cpp:3644`).
+  > `ApplyAdviceRowScale` hardcodes `const bool xScaled = true;` (grep
+  > `xScaled = true`) with `glyphX = glyph` (grep `glyphX = glyph`, the next
+  > line), and the mirrored `FACTOR <= 2.0` filter was deleted from
+  > `tools\selective-safe\build_selective_safe.py` in the same commit — that
+  > file's only surviving mention is the comment recording the deletion
+  > (grep `tail is GONE`). The imm8 was an ENCODING, not a law of nature:
+  > when `S > 127` the patch rewrites the 19-byte window at `0x0079388B`
+  > (grep `kAdviceRowWinSite`), folding `mov`+`sub esi, imm8` into
+  > `lea esi, [eax - imm32]` and paying for the bytes with a store proven
+  > dead by liveness (grep `proven dead` inside `ApplyAdviceRowScale`).
   > **SelectiveArt is therefore 655 entries at EVERY tier** — read straight
   > from the shipped DBPF index counts of the 2x, 1.5x and 3x packages
-  > (655/655/655) and asserted at `_tests\Test-DatIntegrity.ps1:145`,
-  > `:215`, `:217` (`# #136: was 651`), rationale at `:14-33`. **A 3x
-  > package that is not 655 is a regression, not the design.**
+  > (655/655/655) and asserted in `_tests\Test-DatIntegrity.ps1` (grep
+  > `z_SC4UIScale_SelectiveArt"` for the three `entries =` rows). **A 3x
+  > package that is not equal to the 2x one is a regression, not the
+  > design.** *(The 655 was the count when this was written; the 3x row's
+  > trailing `# #136: was 651` comment has grown a further entry since, so
+  > take the number from the gate, not from this paragraph — what is load-
+  > bearing is that the three tiers agree.)*
   > **Warning:** the coupling is still hard, only its condition changed: if
   > the wide re-encode is ever removed or logs `advice row wide re-encode
-  > REFUSED` (`src\CodePatches.cpp:3653`), the builder filter **and** the 3x
-  > count must both go back to 651 in the SAME build — art without the patch
-  > is the task-#88 defect. The `:423` trailing comment ("above this the X
-  > stays stock") and `build_selective_safe.py:498-516` ("SIXTEEN AT <=2x,
-  > TWELVE AT 3x") are stale source comments describing the repealed rule.
-- **R16 — Data Views legend pitch, quantised from measured text height.** `src\UiSpike.cpp:8663-8672` + `src\CodePatches.h:70-72`: the game advances each row by `18 * ceil(measuredH / 18)`, so a label that wraps to two lines gets a 72px slot; **the quantum 18 never scales**. We patch only the four ORIGINS (`src\CodePatches.cpp:541`, `:547`) and must never patch the pitch. The legacy `kDVPins` table (`src\UiSpike.cpp:8629-8654`) hard-codes pitch 18 and is documented ACTIVELY WRONG — measured 2026-07-31 09:32:19.577, it flattened the game's deliberate 72px gap after index 4 and dragged eight windows up by 36px.
-- **R19 — Ordinance row insets, with a live under-scale clamp.** `src\CodePatches.cpp:193-208`: header/checkbox x 18→36 and row text/strip x 34→68, to clear 2x checkbox art and the eye glyph. But `{0x77CC23, 0x44}` and `{0x77D0E0, 0x44}` are the ordinance **name text x**, where stock-coherent 2x is 136 and `push imm8` caps at 127 — **a TEXT column position deliberately under-scaled to fit an encoding limit**, clearing the measured eye (~104) by only 23px. **Warning:** that clamp is a live 3x hazard.
-- **R20 — Slider-department builder column map.** `src\CodePatches.cpp:235` (`kDeptImm8Sites`: title x 20, "Monthly Expense" header x 18, category strip+eye rows x 18 on two paths, name column x 48, building-count x 258, sliders x 260 w 110, Subtotal x 250). Every named defect in that source block is an art-glyph-vs-text-column collision at a **single coupled factor**: the eye landing on "(eye)ealth", "Large Medical Cente7", the slider track running through "Parks and Recreation".
+  > REFUSED` (grep that string in `src\CodePatches.cpp`), the builder filter
+  > **and** the 3x count must both go back to the pre-#136 651 in the SAME
+  > build — art without the patch is the task-#88 defect. The
+  > `kAdviceXScaleMaxFactor` trailing comment ("above this the X stays
+  > stock") and `build_selective_safe.py`'s `SIXTEEN AT <=2x, TWELVE AT 3x`
+  > block (grep that phrase) are stale source comments describing the
+  > repealed rule.
+- **R16 — Data Views legend pitch, quantised from measured text height.** `src\CodePatches.cpp` (grep `18 * ceil(h/18)`, the comment that records the derivation) + `src\CodePatches.h` (grep `ApplyDataViewLegendScale` and read the contract above it): the game advances each row by `18 * ceil(measuredH / 18)`, so a label that wraps to two lines gets a 72px slot; **the quantum 18 never scales**. We patch only the four ORIGINS (`src\CodePatches.cpp`, grep `kDataViewLegendLeaSites` and `kDataViewLegendImm32Sites`) and must never patch the pitch. The legacy `kDVPins` table (`src\UiSpike.cpp`, grep `kDVPins[] = {`) hard-codes pitch 18 and is documented ACTIVELY WRONG (grep `ACTIVELY WRONG` — one hit, in the block under the table) — measured 2026-07-31 09:32:19.577, it flattened the game's deliberate 72px gap after index 4 and dragged eight windows up by 36px.
+- **R19 — Ordinance row insets, with a live under-scale clamp.** `src\CodePatches.cpp` (grep `kOrdinanceInsetSites`, then `kOrdinanceNameXImm8Sites` for the clamped pair): header/checkbox x 18→36 and row text/strip x 34→68, to clear 2x checkbox art and the eye glyph. But `{0x77CC23, 0x44}` and `{0x77D0E0, 0x44}` (grep either address) are the ordinance **name text x**, where stock-coherent 2x is 136 and `push imm8` caps at 127 — **a TEXT column position deliberately under-scaled to fit an encoding limit**, clearing the measured eye (~104) by only 23px. **Warning:** that clamp is a live 3x hazard.
+- **R20 — Slider-department builder column map.** `src\CodePatches.cpp` (grep `kDeptImm8Sites[] = {`: title x 20, "Monthly Expense" header x 18, category strip+eye rows x 18 on two paths, name column x 48, building-count x 258, sliders x 260 w 110, Subtotal x 250). Every named defect in that source block is an art-glyph-vs-text-column collision at a **single coupled factor**: the eye landing on "(eye)ealth", "Large Medical Cente7", the slider track running through "Parks and Recreation".
 
 **Compounding / index couplings**
 
-- **R11 — HTML size tables ↔ FontStyle popup clones.** `src\CodePatches.cpp:42-45` + `kPopupStyleRetargets` `:57-62` + `tools\fonts\make_fontstyle.py:195-205`. The popup builders derive an HTML size **index** from the `MessageHeader`/`MessageBody` **point size** (`idx = (4*size+8)/18`), so scaling the FontStyle size silently re-indexes the table and **compounds to 4x**. The cure is four `push <guid>` retargets onto stock-size clone styles. **Warning:** the generator FATALs if the clones are missing (`tools\fonts\make_fontstyle.py:145-149`) — after they were hand-added post-generation for five weeks (a Law-45 scar).
-- **R12 — Credits HTML LTEXT size map keyed by the UI tag.** `tools\dialog-static\build_dialog_static.py:1221-1225`:
+- **R11 — HTML size tables ↔ FontStyle popup clones.** `src\CodePatches.cpp` (grep `kHtmlFontSizeTable` and `kHtmlHeadingSizeTable` for the two `.rdata` addresses, `kPopupStyleRetargets` for the retargets, and `idx = (4*size+8)/18` for the comment that derives the coupling) + `tools\fonts\make_fontstyle.py` (grep `HTML_CLONE_BLOCK`; the same formula is restated in its header comment, grep `idx=(4*size+8)/18`). The popup builders derive an HTML size **index** from the `MessageHeader`/`MessageBody` **point size** (`idx = (4*size+8)/18`), so scaling the FontStyle size silently re-indexes the table and **compounds to 4x**. The cure is four `push <guid>` retargets onto stock-size clone styles. **Warning:** the generator FATALs if the clones are missing (`tools\fonts\make_fontstyle.py`, grep `FATAL: %s missing from generated output`) — after they were hand-added post-generation for five weeks (a Law-45 scar).
+- **R12 — Credits HTML LTEXT size map keyed by the UI tag.** `tools\dialog-static\build_dialog_static.py` (grep `credits_maps`):
   ```python
   credits_maps = { "":    {"2":"1","3":"2","7":"5"},   # 2x   -> 16/20/36 pt
                    "15x": {"2":"1","3":"2","7":"6"},   # 1.5x -> 12/15/36
                    "3x":  {"2":"1","3":"2","7":"3"} }  # 3x   -> 24/30/36
   ```
-  Index remaps calibrated against the table `ApplyHtmlSizeScale` produces at the runtime factor, but **selected by the package tag**. At `u=2, t=3` the file ships the 2x map while the table is `stock×3 = {24,30,36,42,54,72,108}` → indexes 1/2/5 resolve to **24/30/72 pt instead of the approved 16/20/36** — the title doubles. The source comment at `:1210-1220` records that the *previous* maps compounded exactly this way once. Plus `:1240-1243`: the credits table `width="N"` is scaled by `scale_len` (u) while the text in those columns is sized by the HTML table (t) — the mid-word wrap ("Compose/rs") the comment describes, reintroduced. **This is the cleanest concrete instance of "the asset silently assumes font factor == UI factor".**
+  Index remaps calibrated against the table `ApplyHtmlSizeScale` produces at the runtime factor, but **selected by the package tag**. At `u=2, t=3` the file ships the 2x map while the table is `stock×3 = {24,30,36,42,54,72,108}` → indexes 1/2/5 resolve to **24/30/72 pt instead of the approved 16/20/36** — the title doubles. The source comment immediately above `credits_maps` records that the *previous* maps compounded exactly this way once. Plus the column widths (grep `def bump_width`): the credits table `width="N"` is scaled by `scale_len` (u) while the text in those columns is sized by the HTML table (t) — the mid-word wrap ("Compose/rs" — grep `Compose`) the comment describes, reintroduced. **This is the cleanest concrete instance of "the asset silently assumes font factor == UI factor".**
 
 **Couplings with NO independent lever at all** (call these out for #54)
 
-- **R4 — the Graphs tick gutter, the inverse coupling.** `src\UiSpike.cpp:536-556`: the plot's left gutter (45) is described by the game as text-derived, but **measured INVARIANT to the font** — 10pt and 20pt both produced `PLOT(45,20,866,492)` byte-identical, because the plot rect is computed once per chart object and nothing re-arms its sentinel. Text scaled; the box refused to follow. **Three levers, three refutations, all recorded in place.** The comment at `:547` states the honest lever *would have been* to scale the text and let the game re-derive — and `:551-557` records that it does not work.
-- **R13 — the ticker marquee: width and height on different mechanisms.** `src\UiSpike.cpp:5592-5607` — `kAdviceListNeverTouchIds` (`:5602`), marquee `0xAA12F33C` (`:5603`), consumed `:5607` and `:17172-17174` — + `tools\selective-safe\build_selective_safe.py` `:1936-1947` (grep `id=0xaa12f33c`) SelectiveArt writes `area=` from THREE live mechanisms, not one: (1) `double_subtree_areas` (`:646`) scales every DESCENDANT of TEN roots — advisor `0x6a15c767` (`:1963`), budget `aa3ac002`/`ca4c332d`/`aa3ac001`/`aa3ac000` (`:2011`), Graphs `8a8b5b71`/`8a8b5b72`/`0a4a8176` (`:2035`), U-Drive-It dashboard `4bcb938a` (`:2057`), console variant `ec1a5cbf` (`:2082`); (2) `seat_faces_on_apertures` (`:864`, write at `:924`, called `:1976`) translates the 7 `ADVISOR_FACE_SEATS` faces (`:802-810`) in both advisor scripts — asserted a no-op at integer factors (`:1985-1987`), exactly 7 at 1.5x (`:1988-1990`); (3) the marquee, an INLINE `widen_marquee` closure (`:1937`, applied `:1941-1943`) — NOT `double_one_window_area`, which is DORMANT with zero call sites since the #89 dock form was reverted (`:2115-2121`), as is `parity_nudge_btn_areas` (`:1241`, reverted `:2122-2125`). The marquee is the only `area=` edit that touches WIDTH ALONE — `(l, t, l + scale_len(r - l), b)` at `:1940`, leaving top and bottom untouched; `double_subtree_areas` and `double_one_window_area` scale all four coordinates. **Warning: the builder's own comments are wrong about this** (`:148` "never area=", `:1935` "the ONE deliberate exception") — believing them is what let #170 sit undetected, because `0x6A15C767` is in `kDataScaledSubtreeIds` so `ScalePanelRoot` RETURNS before the child loop (`src\UiSpike.cpp` ~`:14557`): the runtime sweep never walks the advisor buttons, and their shipped geometry comes from `double_subtree_areas` ALONE. The width ships baked in the `.UI` because the game re-imposes cached geometry every roll tick; the height is font-derived (*"3 × lineHeight of the 2x AdvisorHeadline"*, `src\UiSpike.cpp:5599`); the items are game-sized to the marquee. **Neither half is reachable at runtime, by design.**
-- **R24 — Establish City `0x6A414973`: box and text cannot be separated at all.** `src\UiSpike.cpp:3116-3119`, in `kNeverScaleIds`: runtime geometry scaling renders its `GZWinText` nodes in a **wrong colour (purple)** while TextEdit and button captions stay black, because *"runtime geometry scaling does not carry the text/art path the way a doubled .UI does"*. The whole subtree is handed to the static dat. **The only entry in this register with no runtime lever whatsoever.**
+- **R4 — the Graphs tick gutter, the inverse coupling.** `src\UiSpike.cpp` (grep `THREE LEVERS, THREE REFUTATIONS` — the ledger, and the comment block it closes is the whole citation): the plot's left gutter (45) is described by the game as text-derived, but **measured INVARIANT to the font** — 10pt and 20pt both produced `PLOT(45,20,866,492)` byte-identical (grep that string — two hits, one per font size), because the plot rect is computed once per chart object and nothing re-arms its sentinel. Text scaled; the box refused to follow. **Three levers, three refutations, all recorded in place.** A few lines above the ledger the comment states the honest lever *would have been* to scale the text and let the game re-derive (grep `the honest lever is to scale the TEXT`) — and the paragraph after it records that it does not work (grep `AND THAT SECOND THEORY DIED TOO`).
+- **R13 — the ticker marquee: width and height on different mechanisms.** `src\UiSpike.cpp` (grep `kAdviceListNeverTouchIds[] = {` for the list, `0xAA12F33C` for the marquee entry, `IsAdviceListNeverTouchId(` for the consumer) + `tools\selective-safe\build_selective_safe.py` (grep `id=0xaa12f33c` — **two hits**: `main()` and its `carbon_transform_script` twin, which the file's own comment marks *"IDENTICAL to main()"*; every builder anchor below likewise appears once per path). SelectiveArt writes `area=` from THREE live mechanisms, not one: (1) `double_subtree_areas` (grep `def double_subtree_areas`) scales every DESCENDANT of TEN roots — advisor `0x6a15c767`, budget `aa3ac002`/`ca4c332d`/`aa3ac001`/`aa3ac000`, Graphs `8a8b5b71`/`8a8b5b72`/`0a4a8176`, U-Drive-It dashboard `4bcb938a`, console variant `ec1a5cbf` (grep `double_subtree_areas(new_text` for the call set, and each root id for its own block); (2) `seat_faces_on_apertures` (grep `def seat_faces_on_apertures`, called on `ADVISOR_FACE_SEATS`) translates the 7 faces in both advisor scripts — asserted a no-op at integer factors and exactly 7 at 1.5x (grep `THE NO-OP AT AN INTEGER FACTOR IS ASSERTED` and `seat pass moved`); (3) the marquee, an INLINE `widen_marquee` closure (grep `def widen_marquee`) — NOT `double_one_window_area` (grep `def double_one_window_area`), which is DORMANT with zero call sites since the #89 dock form was reverted (grep `DO NOT DATA-DOUBLE ANYTHING IN THE HUD DOCK`), as is `parity_nudge_btn_areas` (grep that name; reverted per `THE PARITY NUDGE WAS CALLED HERE AND IS REVERTED`). The marquee is the only `area=` edit that touches WIDTH ALONE — `(l, t, l + scale_len(r - l), b)` inside `widen_marquee`, leaving top and bottom untouched; `double_subtree_areas` and `double_one_window_area` scale all four coordinates. **Warning: the builder's own comments are wrong about this** (grep `never area=` and `deliberate exception to`) — believing them is what let #170 sit undetected, because `0x6A15C767` is in `kDataScaledSubtreeIds` so `ScalePanelRoot` RETURNS before the child loop (`src\UiSpike.cpp`, grep `IsDataScaledSubtreeId(win->GetID())`): the runtime sweep never walks the advisor buttons, and their shipped geometry comes from `double_subtree_areas` ALONE. The width ships baked in the `.UI` because the game re-imposes cached geometry every roll tick; the height is font-derived (*"3 × lineHeight of the 2x AdvisorHeadline"* — `src\UiSpike.cpp`, grep `lineHeight of the 2x AdvisorHeadline`, the comment directly above `kAdviceListNeverTouchIds`); the items are game-sized to the marquee. **Neither half is reachable at runtime, by design.**
+- **R24 — Establish City `0x6A414973`: box and text cannot be separated at all.** `src\UiSpike.cpp` (grep `0x6A414973` — one hit, its entry inside `kNeverScaleIds[] = {`; the rationale is the comment block a few lines above it, grep `wrong colour (purple)`): runtime geometry scaling renders its `GZWinText` nodes in a **wrong colour (purple)** while TextEdit and button captions stay black, because *"runtime geometry scaling does not carry the text/art path the way a doubled .UI does"*. The whole subtree is handed to the static dat. **The only entry in this register with no runtime lever whatsoever.**
 
 **List memberships justified by a text fact** (the "skip-lists rot" shape, aimed at the feature)
 
-- **R14 — `kFontSizedIds`, 23 controls whose size is owned by their content.** `src\UiSpike.cpp:3680-3703`, consumed `:12681-12691` (position scaled, `SetW`/`SetH` deliberately never called). One is genuinely font-derived (`0xCBC61559` "Change style every"); 21 are `GZWinSpinner`s that size themselves from the `{46a006b0, 82b99d9d}` arrow strip. Recorded failures when slot and content disagreed: a 263x32 2x caption doubled to 526x64 and sat ~16px below its fixed-size siblings; a spinner at 60x72 clipped its DOWN arrow inside a 98x44 parent FlatRect. **At UI 2x / Text 1x these 23 stay 1x-sized but get moved to 2x coordinates → holes. At UI 1x / Text 2x they overflow their parents. This list is *definitionally* `UI == TEXT`.**
-- **R15 — `kAdviceListScaleSelfIds`, recursion deliberately disabled.** `src\UiSpike.cpp:3740-3757`, consumed `:12730-12736`. Items are game-sized to the container (`SetArea(0,0,GetW,GetH)` at item-create `0x7931F1`) while their TEXT is HTML sized by R11. **If the HTML ever outgrows the container there is no lever left, because recursion is off.**
-- **R23 — News reader `0xAA231508`.** `src\UiSpike.cpp:3436-3448`, its entry in `kAlwaysScaleCityIds`: *"its content pane is sized from the 2x FONTS and always renders large, so a frame left at 1x gets a hugely oversized pane inside it."* The geometry cure (pre-scale while hidden) is correct **only for as long as that text fact holds**.
+- **R14 — `kFontSizedIds`, 23 controls whose size is owned by their content.** `src\UiSpike.cpp` (grep `kFontSizedIds[] = {` for the list, `IsFontSizedId(win->GetID())` for the one consumer, inside `ScaleSubtree`) — position scaled, `SetW`/`SetH` deliberately never called. One is genuinely font-derived (`0xCBC61559` "Change style every"); 21 are `GZWinSpinner`s that size themselves from the `{46a006b0, 82b99d9d}` arrow strip. Recorded failures when slot and content disagreed: a 263x32 2x caption doubled to 526x64 and sat ~16px below its fixed-size siblings; a spinner at 60x72 clipped its DOWN arrow inside a 98x44 parent FlatRect. **At UI 2x / Text 1x these 23 stay 1x-sized but get moved to 2x coordinates → holes. At UI 1x / Text 2x they overflow their parents. This list is *definitionally* `UI == TEXT`.**
+- **R15 — `kAdviceListScaleSelfIds`, recursion deliberately disabled.** `src\UiSpike.cpp` (grep `kAdviceListScaleSelfIds[] = {` for the list, `IsAdviceListScaleSelfId(win->GetID())` for the consumer, also inside `ScaleSubtree`). Items are game-sized to the container (`SetArea(0,0,GetW,GetH)` at item-create `0x7931F1`) while their TEXT is HTML sized by R11. **If the HTML ever outgrows the container there is no lever left, because recursion is off.**
+- **R23 — News reader `0xAA231508`.** `src\UiSpike.cpp` (grep `0xAA231508` — the first hit is the justification comment, the second is its entry inside `kAlwaysScaleCityIds[] = {`; grep `content pane is sized from the 2x FONTS` to land on the sentence itself): *"its content pane is sized from the 2x FONTS and always renders large, so a frame left at 1x gets a hugely oversized pane inside it."* The geometry cure (pre-scale while hidden) is correct **only for as long as that text fact holds**.
 
 **The law behind four apparent no-ops**
 
-- **R3 — Graphs legend swatch re-hang.** `src\UiSpike.cpp:8412-8425`: `obj[2] = rowTextL1 - RoundHalfUp(gap0 * f); obj[4] = obj[2] + RoundHalfUp(sw * f)`. The colour swatch has **no gutter of its own** — its position is derived from the TEXT box left edge and its own 1x-era gap. Measured, the swatch is not an independent half of anything: the whole column is a **six-constant right-margin budget** owned by the PANEL builder `sub_76D3D0`, and the pair that must ship together is *budget strip ↔ plot right margin*, not *swatch ↔ text box*. The `UiSpike` rect hooks were rewriting outputs inside an unchanged 110 px budget (law 49); the shipped cure patches the budget itself so the column is born at `f`. See `_tests\REGRESSION.md` → *CHART LEGEND MATH (#57)* and *LAWS AUDITED AGAINST #57*.
-- **R5 — `SIZE_SQUEEZE` ↔ the legend rect widening.** `tools\fonts\make_fontstyle.py:107` (applied `:132`) paired with `src\UiSpike.cpp:8386`. The TEXT is shrunk 8% to fit a box; the BOX is separately widened by 4px in C++. **One coupled pair split across a Python generator and a runtime hook, with nothing asserting they still agree.** At `t ≠ u` the squeeze multiplies `t` while its partner multiplies `u`: the pair silently unpairs. Law 43 violation by construction. Settled scope: the squeeze is on style **`Legend` (`0xE9C86B5F`)**, which is the **DATA VIEWS** legend (`0x007A0747`). The GRAPHS chart pushes **`ChartLabel` (`0xE9C86B5E`)** at `0x0076DD91` — byte-verified — so `SIZE_SQUEEZE` **has never applied to the chart at all**, and every calculation that assumed the chart renders at the squeezed 24 pt was reading the wrong style (it renders at ChartLabel's raw 26 pt at 2x). The 8 % the squeeze was invented to buy is the same ~6 % that law 48 explains properly: ink grows **x2.13** per doubling (n=17, mean 2.130, sd 0.026), not x2.00. (2.121 is one string's ratio, `Income` 33->70, not the population mean.)
-- **R26 — the gauge dial dest-rect snap, and the governing law.** `src\UiSpike.cpp:6262-6318`, snap rule `:6297`: `dst = cw * m` with the same fit clamp, plus a snap to 1.0 when `m < 0.75 * gGaugeScale`. Listed because it is the third instance of the law behind R17 / R7 / R22: **the window rect and its CACHED PAINT BUFFER are a coupled pair, and the buffer is born at first-paint size.** Every box-vs-content fix in this register that looked inert (v2.50.0 / .51.0 / .52.0 on the chart) failed on **this law, not on its arithmetic**. *Prove the REPAINT before you tune the VALUE.* Bounded by #57: law 46 held for the gauges and still holds here, but it was **not** why the chart patches failed. The chart is destroyed and rebuilt on every graph switch (`0x0076D3DA-0x0076D409`), so its repaint was never in doubt; the blocker sat **upstream of the repaint** — the value being repainted came out of a right-margin budget nobody had read. Once the repaint is proven, ask **who COMPUTES** the value, not only who paints it (law 49).
+- **R3 — Graphs legend swatch re-hang.** `src\UiSpike.cpp` (grep `rowTextL1 - RoundHalfUp(gap0 * f)`; the `LEGENDSWATCH` log line a few lines below is the same block): `obj[2] = rowTextL1 - RoundHalfUp(gap0 * f); obj[4] = obj[2] + RoundHalfUp(sw * f)`. The colour swatch has **no gutter of its own** — its position is derived from the TEXT box left edge and its own 1x-era gap. Measured, the swatch is not an independent half of anything: the whole column is a **six-constant right-margin budget** owned by the PANEL builder `sub_76D3D0`, and the pair that must ship together is *budget strip ↔ plot right margin*, not *swatch ↔ text box*. The `UiSpike` rect hooks were rewriting outputs inside an unchanged 110 px budget (law 49); the shipped cure patches the budget itself so the column is born at `f`. See `_tests\REGRESSION.md` → *CHART LEGEND MATH (#57)* and *LAWS AUDITED AGAINST #57*.
+- **R5 — `SIZE_SQUEEZE` ↔ the legend rect widening.** `tools\fonts\make_fontstyle.py` (grep `SIZE_SQUEEZE = {"Legend": 0.92}` for the constant, `SIZE_SQUEEZE.get` for the application) paired with the `winW2 - 4` legend rect in `src\UiSpike.cpp` (R1). The TEXT is shrunk 8% to fit a box; the BOX is separately widened by 4px in C++. **One coupled pair split across a Python generator and a runtime hook, with nothing asserting they still agree.** At `t ≠ u` the squeeze multiplies `t` while its partner multiplies `u`: the pair silently unpairs. Law 43 violation by construction. Settled scope: the squeeze is on style **`Legend` (`0xE9C86B5F`)**, which is the **DATA VIEWS** legend (`0x007A0747`). The GRAPHS chart pushes **`ChartLabel` (`0xE9C86B5E`)** at `0x0076DD91` — byte-verified — so `SIZE_SQUEEZE` **has never applied to the chart at all**, and every calculation that assumed the chart renders at the squeezed 24 pt was reading the wrong style (it renders at ChartLabel's raw 26 pt at 2x). The 8 % the squeeze was invented to buy is the same ~6 % that law 48 explains properly: ink grows **x2.13** per doubling (n=17, mean 2.130, sd 0.026), not x2.00. (2.121 is one string's ratio, `Income` 33->70, not the population mean.)
+- **R26 — the gauge dial dest-rect snap, and the governing law.** `src\UiSpike.cpp` (grep `GaugeCtxBltThunk` for the thunk, `sourceIsOneX` for the snap rule): `dst = cw * m` with the same fit clamp, plus a snap to 1.0 when the source is judged still-1x. *(Citation note: the rule this entry was written against was the **relative** test `m < 0.75f * gGaugeScale`. #186 replaced it with the absolute `sourceIsOneX` / `kFitSlack` form; grepping the old expression now lands only in the comment that records its retirement. The coupling this entry is about is unchanged.)* Listed because it is the third instance of the law behind R17 / R7 / R22: **the window rect and its CACHED PAINT BUFFER are a coupled pair, and the buffer is born at first-paint size.** Every box-vs-content fix in this register that looked inert (v2.50.0 / .51.0 / .52.0 on the chart) failed on **this law, not on its arithmetic**. *Prove the REPAINT before you tune the VALUE.* Bounded by #57: law 46 held for the gauges and still holds here, but it was **not** why the chart patches failed. The chart is destroyed and rebuilt on every graph switch (`0x0076D3DA-0x0076D409`), so its repaint was never in doubt; the blocker sat **upstream of the repaint** — the value being repainted came out of a right-margin budget nobody had read. Once the repaint is proven, ask **who COMPUTES** the value, not only who paints it (law 49).
 
 ## 2.3 The corpus measurement — the lock is cheap, and splitting is not
 
@@ -461,12 +478,12 @@ Worst case is `PUckDate` 11pt (→17 at 1.5x, ×1.5455) inside an even-height bo
 | Budget ledger lines (×11) | `h=15`, `BdgtLedgerLineLite` 14pt (1.07) | `…I-cbc3c2b9.ui` | 30px box, 42pt text → **0.71** |
 | Select A Bridge header | `h=21`, `GenHeader` 18pt (1.17) | `…I-ebd0d36c.ui` | 42px box, 54pt text → **0.78** |
 | Establish City body rows (×3) | `h=16`, `GenBodyMedium` 13pt (1.23) | `…I-2a41436b.ui` | 32px box, 39pt text → **0.82** |
-| Audio Options playlist | `drowheight=20`, `ListBoxItem` 13pt (1.54) | `…I-ca53f06e.ui`, scaled `build_dialog_static.py:1105-1109` | 40px row, 39pt text → **1.03** |
-| Audio Options song column | `wingridcol="1,1,200"` | `build_dialog_static.py:1116-1123` | 400px column chosen for 26pt text, holding 39pt |
+| Audio Options playlist | `drowheight=20`, `ListBoxItem` 13pt (1.54) | `…I-ca53f06e.ui`, scaled by `build_dialog_static.py` (grep `drowheight`) | 40px row, 39pt text → **1.03** |
+| Audio Options song column | `wingridcol="1,1,200"` | `build_dialog_static.py` (grep `dbl_gridcol`, which rewrites every `wingridcol=`) | 400px column chosen for 26pt text, holding 39pt |
 
 ## 2.4 The upstream blocker, for completeness
 
-Even if the runtime were split, the **package system cannot express it.** `ScaleTier::kPackages` (`src\ScaleTier.cpp:31-36`) enables exactly **one whole package per factor**, and `SyncStaticLayers` (`:267-402`) selects the art dat and `FontStyle<tag>.ini` with the **same tag** (`:528` and `:571-572`). Tier eligibility is gated on the **art** dat existing (`:60-86`). An independent text axis needs a second tag dimension, a font-source gate independent of `PackageInstalled`, and a doubled `kThirdPartyDeps` table (`:114-151`).
+Even if the runtime were split, the **package system cannot express it.** `ScaleTier::kPackages` (`src\ScaleTier.cpp`, grep `kPackages[] =`) enables exactly **one whole package per factor**, and `SyncStaticLayers` (grep `void SyncStaticLayers`) selects the art dat and `FontStyle<tag>.ini` with the **same tag** — inside that function, grep `SyncDat(docPlugins, L"z_SC4UIScale_SelectiveArt"` for the art half and `SyncFont(docPlugins` for the font half, both fed the one `activeTag`. Tier eligibility is gated on the **art** dat existing (grep `bool PackageInstalled`). An independent text axis needs a second tag dimension, a font-source gate independent of `PackageInstalled`, and a doubled `kThirdPartyDeps` table (grep `kThirdPartyDeps[] = {`).
 
 ## 2.5 Verdict of record
 
@@ -474,7 +491,7 @@ Splitting UI from TEXT would **manufacture the task #41 (tooltips), #42 (news bo
 
 **Locked 1:1. Settled.**
 
-*If a future reader still wants a text knob, the only defensible shape is a **bounded** one — `t ∈ {u·0.92 … u·1.0}` — and the existing, currently-empty `KEEP_STOCK` set (`tools\fonts\make_fontstyle.py:95`) is its natural mechanism: it is the working precedent for "styles whose box is A-scaled but whose text must not follow". A free axis is refused.*
+*If a future reader still wants a text knob, the only defensible shape is a **bounded** one — `t ∈ {u·0.92 … u·1.0}` — and the existing, currently-empty `KEEP_STOCK` set (`tools\fonts\make_fontstyle.py`, grep `KEEP_STOCK = set()`) is its natural mechanism: it is the working precedent for "styles whose box is A-scaled but whose text must not follow". A free axis is refused.*
 
 ---
 
@@ -482,21 +499,21 @@ Splitting UI from TEXT would **manufacture the task #41 (tooltips), #42 (news bo
 
 ## 3.1 What the bubble is — measured, not inferred
 
-`[M]` It **is** a real `cIGZWin`. Probe `src\UiSpike.cpp:5117-5152` reports:
+`[M]` It **is** a real `cIGZWin`. The probe (`src\UiSpike.cpp`, grep `void UiSpike::EdgeProbeTick` — the `EDGE bubble 0x48E945B4` log pair at its tail) reports:
 ```
 UiSpike: EDGE bubble 0x48E945B4 PRESENT | rect (1637,610 128x128) vis=1 vt=00ADF6A0
 ```
-`0x00ADF6A0` is the **GZWinBMP** class that the BMPX hook already serves. It parents **straight to the 3D view** `0x9A47B417`, which is why every static (`.UI`-based) approach missed it — it has zero `.UI` references and is code-bound (`tools\selective-safe\build_selective_safe.py:418-425`, "pushed beside the window id at VA").
+`0x00ADF6A0` is the **GZWinBMP** class that the BMPX hook already serves. It parents **straight to the 3D view** `0x9A47B417`, which is why every static (`.UI`-based) approach missed it — it has zero `.UI` references and is code-bound (`tools\selective-safe\build_selective_safe.py`, grep `pushed beside the window id at VA` — the U-Drive-It block inside `CODE_BOUND_TGIS`).
 
-`[M]` The #46 log line `(1284,755 32x32) -> (1268,739 64x64)` is **centre growth**, a signature only `ScalePanelRoot`'s centre branch (`src\UiSpike.cpp:10958-10967`) produces — confirming it is a direct view child, not renderer-drawn and not deeper in the tree.
+`[M]` The #46 log line `(1284,755 32x32) -> (1268,739 64x64)` is **centre growth**, a signature only `ScalePanelRoot`'s centre branch (`src\UiSpike.cpp`, grep `cMinX` inside `UiSpike::ScalePanelRoot`) produces — confirming it is a direct view child, not renderer-drawn and not deeper in the tree.
 
-**It has no text.** It is a single-image leaf, hooked as a root with **no BMP children** (`src\UiSpike.cpp:7044`). No font style is involved at any bubble factor. **The TEXT axis is orthogonal to the bubble axis, for free.**
+**It has no text.** It is a single-image leaf, hooked as a root with **no BMP children** (`src\UiSpike.cpp`, grep `U-DRIVE-IT MISSION MARKER` — its lone `0x48E945B4` entry at the tail of `kBmpxCityRoots`). No font style is involved at any bubble factor. **The TEXT axis is orthogonal to the bubble axis, for free.**
 
 ## 3.2 The mechanism — three multipliers stack
 
 1. **Art:** stock `T-856ddbac_G-46a006b0_I-094ac89a.png` is **32×32** (`tools\dbpf\extracted\SimCity_1\`); SelectiveArt stages it at the tier factor → **48 / 64 / 96** for 1.5x / 2x / 3x. `[M]` (verified by reading the PNG IHDRs in `tools\selective-safe\stage`, `stage-15x`, `stage-3x`)
-2. **Window:** the exe path at `0x4B82F0` loads the art, `GetRect`s it, centres it on the world anchor and `SetArea`s the window to it — **the window is born art-sized** — then the blanket city sweep scales it by `f` (`ScalePanelRoot` call site `src\UiSpike.cpp:7624`).
-3. **Draw:** GZWinBMP's plain path sets `dst = src` (it never reads the window rect); `BmpCtxBltThunk` (`src\UiSpike.cpp:6660-6675`) multiplies dst by `gBmpScale` and then **reduces it until it fits the live window**:
+2. **Window:** the exe path at `0x4B82F0` loads the art, `GetRect`s it, centres it on the world anchor and `SetArea`s the window to it — **the window is born art-sized** — then the blanket city sweep scales it by `f` (the `ScalePanelRoot` call site in `UiSpike::ScalePanelsUnder` — `src\UiSpike.cpp`, grep `ScalePanelRoot(p.win`).
+3. **Draw:** GZWinBMP's plain path sets `dst = src` (it never reads the window rect); `BmpCtxBltThunk` (`src\UiSpike.cpp`, grep `int __fastcall BmpCtxBltThunk`; the fit reduce is the `float m = gBmpScale;` block a few lines into it) multiplies dst by `gBmpScale` and then **reduces it until it fits the live window**:
    ```
    m = gBmpScale;  if (w*m > winW) m = winW/w;  if (h*m > winH) m = winH/h;
    ```
@@ -528,13 +545,13 @@ Reasons:
 - **The required per-element multiplier for the default `B = 2·UI` is the constant 2 at every tier** — the same ratio that ships and is user-confirmed today at 2x (#60). Zero-regression default.
 - **No new art, no new font style, no new package** is needed for the default: stretch delivers it.
 - **Clipping imposes no limit:** the parent is the full-screen 3D view, so an enlarged bubble structurally cannot overflow its parent; only the screen edge bounds it.
-- **The hit box follows for free.** Its hit box *is* its window rect, and the fit clamp guarantees `drawn ≤ window` — so the sprite can never outgrow its hit box, **provided the window is scaled before the blit**. The current call order already does this: panel loop `src\UiSpike.cpp:7624`, `HookRuntimeBmpsUnder` `:8150`, draw later still. (Law 43 satisfied by construction, not by luck — but state it, because reordering those calls would break it.)
+- **The hit box follows for free.** Its hit box *is* its window rect, and the fit clamp guarantees `drawn ≤ window` — so the sprite can never outgrow its hit box, **provided the window is scaled before the blit**. The current call order already does this: the panel loop in `UiSpike::ScalePanelsUnder` (`src\UiSpike.cpp`, grep `ScalePanelRoot(p.win`), then `HookRuntimeBmpsUnder` (grep `kBmpxCityRoots`), draw later still. (Law 43 satisfied by construction, not by luck — but state it, because reordering those calls would break it.)
 
 **The three constraints:**
 
-1. **`gBmpScale` must become per-id.** It is one global (`src\UiSpike.cpp:6637`) set once per pass for all 12 roots (`:6991`, roots `:8114-8148`: eight My Sims roots, three Graphs roots, one UDI marker). Without this, **every My Sims portrait takes the bubble factor too.** The lookup has a free home: `gBmpCurId` is already computed inside `BmpDrawThunk` at `src\UiSpike.cpp:6717` `[M]`.
-2. **The bubble's window scale must bypass `ScalePanelRoot`'s generic anchor and grow unconditionally about its centre.** `ScalePanelRoot` only grows about the centre when the panel sits more than `frameW/4` (600px at 2400) from **both** side edges and `frameH/4` (400px) from top and bottom (`src\UiSpike.cpp:10943-10945`). The #46 measurement is centre growth, but the **#60 sighting at (1637,610) had only 635px of right-hand gap — 35px of margin.** `[M]` Any marker inside that quarter-screen edge band instead takes `newX = ScaleRound(gapL, f)`, which multiplies its **position** and detaches a world-anchored sprite from its mission site; the on-screen clamp at `:10975-10978` then shoves it further. **This is a live hazard at today's factor, independent of the knob, and it gets no worse with B — but a bubble-specific window scale must not inherit it.**
-3. **The ini key needs its own section.** The live-tune re-read (`src\UiSpike.cpp:8860-8990`) parses `[Disaster]`/`[Flyout]`/`[Probe]` by section with explicit keys — a `[UDriveIt]` section cannot be swallowed. A new namespace-scope mirror must repeat the `src\UiSpike.cpp:138-144` audit (§0).
+1. **`gBmpScale` must become per-id.** It is one global (`src\UiSpike.cpp`, grep `float  gBmpScale`) set once per pass for all 12 roots (assigned at the head of `HookRuntimeBmpsUnder`; the root list is `kBmpxCityRoots`: eight My Sims roots, three Graphs roots, one UDI marker). Without this, **every My Sims portrait takes the bubble factor too.** The lookup has a free home: `gBmpCurId` is already computed inside `BmpDrawThunk` (`src\UiSpike.cpp`, grep `gBmpCurId = w->GetID()`) `[M]`.
+2. **The bubble's window scale must bypass `ScalePanelRoot`'s generic anchor and grow unconditionally about its centre.** `ScalePanelRoot` only grows about the centre when the panel sits more than `frameW/4` (600px at 2400) from **both** side edges and `frameH/4` (400px) from top and bottom (`src\UiSpike.cpp`, grep `cMinX` inside `UiSpike::ScalePanelRoot`). The #46 measurement is centre growth, but the **#60 sighting at (1637,610) had only 635px of right-hand gap — 35px of margin.** `[M]` Any marker inside that quarter-screen edge band instead takes `newX = ScaleRound(gapL, f)` (grep that expression), which multiplies its **position** and detaches a world-anchored sprite from its mission site; the on-screen clamp a few lines below it (grep `clampX && gapR >= 0`) then shoves it further. **This is a live hazard at today's factor, independent of the knob, and it gets no worse with B — but a bubble-specific window scale must not inherit it.**
+3. **The ini key needs its own section.** The live-tune re-read (`src\UiSpike.cpp`, grep `LiveTuneIniPath` — the `[UiSpike] LiveTune` poll block inside `UiSpike::ScaleGodFlyouts`) parses `[Disaster]`/`[Flyout]`/`[Probe]` by section with explicit keys — a `[UDriveIt]` section cannot be swallowed. A new namespace-scope mirror must repeat the `src\UiSpike.cpp` tier-mirror audit (grep `gTierF mirrors settings.spikeScaleFactor`) (§0).
 
 **One rounding note.** Today `m = gBmpScale` and `winW/artW` are **exactly equal**, so the draw sits on the fit-clamp knife edge. At `f = 1.5` the edge-derived `ScaleRound(l+48, 1.5) - ScaleRound(l, 1.5)` can land **71 rather than 72** depending on `l`, silently clamping `m` to 1.479. `[INF]` — the arithmetic is certain, the specific `l` values in play are not measured. **Mitigation:** set the window from `round(32·B)` first, then compute the blit multiplier **from the live window** (`m = winW / artW`) rather than from a factor, and log when they differ by more than 0.01 (§4.4).
 
@@ -546,8 +563,8 @@ Layered, in the order the limits actually bite:
 
 1. **ART is the only real limit.** The tier packages stage the bubble at `32f` `[M]`. The only other bubble art that exists anywhere in the repo is `32·2f` (§3.6). Above `B = 2f` every pixel is nearest-neighbour block replication at ratio `B/f`. At `B = 2f` that ratio is exactly 2 — precisely what ships at UI 2x today and is user-confirmed. **Above it, nothing has been seen by anyone.**
 2. **CLIPPING sets no limit** (parent is the full-screen 3D view).
-3. **The imagerect-fits-image guarantee is NOT in play.** `BmpDrawThunk` skips EDGE/9-slice mode entirely (`src\UiSpike.cpp:6728`, `if (!edgeMode && gBmpScale > 1.01f)`) and the plain path is gated on `w == sw && h == sh` (`:6659`). The bubble draws through the **plain** path — the live log line proves it.
-4. **The hard mechanical stop** is `ScalePanelRoot`'s double-scale guard (`src\UiSpike.cpp:10913-10927`): `newW > frameW || newH > frameH` skips and tombstones. With `drawn = 32·B` against a 2400x1600 frame that is `32B ≤ 1600`, i.e. **B ≤ 50**. It fails **safe** (window left exactly as the game made it, one log line, no crash) and is nowhere near the useful range. **It is an assets/sanity ceiling we are choosing, not a crash ceiling — say so in the ini comment so nobody "fixes" it later.**
+3. **The imagerect-fits-image guarantee is NOT in play.** `BmpDrawThunk` skips EDGE/9-slice mode entirely (`src\UiSpike.cpp`, grep `if (!edgeMode && gBmpScale > 1.01f)`) and the plain path is gated on `w == sw && h == sh` (grep that expression in `BmpCtxBltThunk`). The bubble draws through the **plain** path — the live log line proves it.
+4. **The hard mechanical stop** is `ScalePanelRoot`'s double-scale guard (`src\UiSpike.cpp`, grep `double-scale guard` inside `UiSpike::ScalePanelRoot`): `newW > frameW || newH > frameH` skips and tombstones. With `drawn = 32·B` against a 2400x1600 frame that is `32B ≤ 1600`, i.e. **B ≤ 50**. It fails **safe** (window left exactly as the game made it, one log line, no crash) and is nowhere near the useful range. **It is an assets/sanity ceiling we are choosing, not a crash ceiling — say so in the ini comment so nobody "fixes" it later.**
 
 ## 3.6 Exactly which art builds do not exist yet, and their cost
 
@@ -570,24 +587,26 @@ So the premise "the 4x and 6x art needs building" is **half wrong, in the useful
 | bubble art @ absolute **4x** (UI 2 × 2) | yes — `tools\selective-safe\bubble4x\` (verified ≡ `--factor 4`) | 0 |
 | bubble art @ absolute **6x** (UI 3 × 2) | yes — `tools\selective-safe\bubble4x-3x\` (verified ≡ `--factor 6`) | 0 |
 | a **shippable dat** carrying any of them | **none, at any tier** | **~1.2 KB and <1 s each** |
-| a `SyncDat` base name for it | no — `src\ScaleTier.cpp` issues exactly 7 (`:528, 529, 530, 537, 545, 553, 565`) | one line |
+| a `SyncDat` base name for it | no — `src\ScaleTier.cpp` issues exactly 7 (grep `SyncDat(` inside `SyncStaticLayers` and count; §5.5 records this count moving since) | one line |
 | an ini key / Settings field / mirror | no — zero hits for bubble/udi/udriveit in `Settings.h`, `Settings.cpp`, `ScaleTier.cpp`, `SC4UIScaleDllDirector.cpp` `[M]` | §4 |
 
 **A bubble-only package is one TGI: ~1.2 KB, <1 s to build, no upscale-tree run at all.** Five advertised absolute factors ⇒ **~6 KB for the entire bubble axis, all tiers.** Compare a full tier `[M]`: factor 4 = 18.8 s upscale / 66 MB tree / ~20 MB dat `[INF]`; factor 6 = 35.0 s / 113 MB / ~27 MB `[INF]` — plus DialogStatic, ItemIcons, ItemIconsSub, three third-party dats and a FontStyle. **Four orders of magnitude apart.**
 
 **Three facts make the bubble the ONE asset in this project that may legally be over-scaled relative to its tier:**
-1. **It has zero `.UI` references** (code-bound, `build_selective_safe.py:418-425`), so there is no `imagerect` to keep in step with the pixels — the rect≤art invariant is **vacuous** for it. Every other TGI over-scaled past its tier would break that invariant immediately.
+1. **It has zero `.UI` references** (code-bound — `tools\selective-safe\build_selective_safe.py`, grep `U-DRIVE-IT mission bubble` inside `CODE_BOUND_TGIS`), so there is no `imagerect` to keep in step with the pixels — the rect≤art invariant is **vacuous** for it. Every other TGI over-scaled past its tier would break that invariant immediately.
 2. Its parent is the full-screen 3D view, so nothing clips it.
 3. Precedent exists for a 1–3 entry root package: `WebText` (3), `SaveWarningUI` (2).
 
-**Load order:** `z_SC4UIScale_UdiBubble-*.dat` sorts after `z_SC4UIScale_SelectiveArt-*.dat` (`U` > `S`) and root files load in order, later wins (`README.md:281`). It therefore beats the tier's own `32f` staging. No `zzz-` subfolder needed — no mod overrides this TGI.
+**Load order:** `z_SC4UIScale_UdiBubble-*.dat` sorts after `z_SC4UIScale_SelectiveArt-*.dat` (`U` > `S`) and root files load in order, later wins (`docs\PACKAGE-MANIFEST.md` §"Load-order law" — the rule moved out of `README.md`, which no longer carries a package table or a load-order section). It therefore beats the tier's own `32f` staging. No `zzz-` subfolder needed — no mod overrides this TGI.
 
 **Law: sharp art is a coupled TRIPLE, not a pair.** Shipping `UdiBubble-4x` **also** requires taking `0x48E945B4` off the stretch multiplier (or moving it to `kNeverScaleIds`), or you get `32·2f·f`. Ship all three or none.
 
 ## 3.7 A refuted lead is still written down as fact
 
-`src\UiSpike.cpp:4941-4950` and `_tests\REGRESSION.md`'s "TWO DEAD LEADS #1"
-assert that `{46A006B0, 094AC89A}` **"is not the marker"**. But stock art is
+`src\UiSpike.cpp` (grep `THE U-DRIVE-IT MAP MARKER` — the comment block that
+opens "the 4x-art attempt at {46a006b0, 094ac89a} shipped in v2.25.17 and did
+nothing") and `_tests\REGRESSION.md` §"TWO DEAD LEADS, both closed — do not
+re-walk" assert that `{46A006B0, 094AC89A}` **"is not the marker"**. But stock art is
 32x32, our tier-2 stage is 64x64, and the live draw reports `img 64x64` —
 **the marker is drawing our staged copy of exactly that TGI.** The 2026-07-30
 withdrawal rested on a **null** (the user reported "blue map circles
@@ -596,12 +615,14 @@ unobserved). *NULL IS NOT EVIDENCE.*
 
 **Settled:** the TGI IS the marker's art. It shipped via `CODE_BOUND_TGIS`
 (v2.21.4) together with the 15-glyph mission table at VA `0x44DEC7`; the
-one-line adjudicator was `BUBBLE_OVERRIDE_ENABLED` at
-`tools\selective-safe\build_selective_safe.py:1044` (rebuild, read whether
-`BMPX draw id=0x48E945B4` says `img 128x128`).
+one-line adjudicator was `BUBBLE_OVERRIDE_ENABLED` in
+`tools\selective-safe\build_selective_safe.py` (grep the name) (rebuild, read
+whether `BMPX draw id=0x48E945B4` says `img 128x128`).
 
 The general lesson stands: `tools\selective-safe\bubble4x*\` was armed dead
-plumbing behind one Python boolean with a live copy path at `:1048-1052` —
+plumbing behind one Python boolean with a live copy path in the
+`elif (BUBBLE_OVERRIDE_ENABLED …)` branch immediately below it (grep
+`ART OVERRIDE %08x/%08x staged`) —
 the exact shape Law 45 warns about ("if the generator's output is not the
 shippable file, it will eventually ship"), one flag from shipping.
 
@@ -618,7 +639,7 @@ KNOB 2: Bubble scale  auto (= 2 x UI) or an absolute factor
 
 Two edits to the existing ini: a comment block and one new key meaning in `[UiSpike]`, plus one new section `[UDriveIt]`. **No key is renamed or removed.**
 
-**Law: file format is non-negotiable: ASCII, CRLF, no BOM.** All three shipped `SC4UIScale.ini` copies are CRLF/no-BOM, first bytes `3b 20 53` (`; S`) `[M]`. *(Housekeeping: the one non-ASCII warning glyph in a comment in `dist\SC4UIScale-preview\SC4UIScale.ini` should be ASCII-ised when this lands — a non-ASCII byte in a non-BOM ini is read as ANSI and is pure risk for zero benefit.)*
+**Law: file format is non-negotiable: ASCII, CRLF, no BOM.** All three shipped `SC4UIScale.ini` copies are CRLF/no-BOM, first bytes `3b 20 53` (`; S`) `[M]`. *(Housekeeping: the one non-ASCII warning glyph in a comment in the preview ini should be ASCII-ised when this lands — a non-ASCII byte in a non-BOM ini is read as ANSI and is pure risk for zero benefit. **Citation retired:** `dist\SC4UIScale-preview\SC4UIScale.ini` no longer exists and `dist\` is untracked, so git cannot date its removal; the only tracked ini today is `_packaging\SC4UIScale.ini`, which is CRLF / no-BOM and byte-checked clean of non-ASCII.)*
 
 ## 4.2 `AutoScale` becomes tri-state
 
@@ -696,18 +717,19 @@ ScaleFactor=1.5
 BubbleScale=2.0
 ```
 
-**Warning:** `BubbleScale` must be read as a **string first** (`GetPrivateProfileStringA("UDriveIt","BubbleScale","auto",…)`) — a float read cannot represent `auto`. Compare case-insensitively against `auto`; otherwise `strtod` with an end-pointer check, the same shape as `src\Settings.cpp:22`.
+**Warning:** `BubbleScale` must be read as a **string first** (`GetPrivateProfileStringA("UDriveIt","BubbleScale","auto",…)`) — a float read cannot represent `auto`. Compare case-insensitively against `auto`; otherwise `strtod` with an end-pointer check, the same shape as the validated conversions in `Settings::Load` (`src\Settings.cpp`, grep `get_converted_value`) — note the `GetPrivateProfile*`-family parse this line originally pointed at has since been replaced by an `IniReader`, so the *pattern* survives there but the API does not.
 
 ## 4.4 Settings fields, validation, and log lines
 
-Fields to add beside `spikeScaleFactor` (`src\Settings.h:55`):
+Fields to add beside `spikeScaleFactor` (`src\Settings.h`, grep `spikeScaleFactor`):
 
 ```cpp
 // [UiSpike] AutoScale is now tri-state: 0 manual-no-sync, 1 auto, 2 user choice.
 int  spikeAutoScaleMode = 1;      // replaces bool spikeAutoScale (keep the bool
                                   // accessor: spikeAutoScale == (mode != 0))
 // [UDriveIt] - knob 2. UI/TEXT stay on spikeScaleFactor; this is the ONLY
-// second scale number in the DLL. See UiSpike.cpp:138-144 BEFORE adding a
+// second scale number in the DLL. Read the tier-mirror audit in UiSpike.cpp
+// (grep "gTierF mirrors settings.spikeScaleFactor") BEFORE adding a
 // namespace-scope mirror: four hooks install at ArmDeferred BEFORE any sweep
 // and would read the compiled default.
 bool  udiBubbleAuto  = true;      // BubbleScale=auto
@@ -718,7 +740,7 @@ float udiBubbleEff   = 0.0f;      // RESOLVED value after clamp - the ONLY
 
 All logging at `LogLevel::Info` via `Logger::Get().WriteLine`, prefix `UDIScale:` (matching the existing `AutoScale:` / `ScaleTier:`). **Every rejection logs the requested value, the reason, and the value actually used. No path may log only the final value.**
 
-**Knob 1 — two independent gates, both from existing code:** `PackageInstalled` (`src\ScaleTier.cpp:60`) and the fit test (`src\ScaleTier.cpp:429-431`).
+**Knob 1 — two independent gates, both from existing code:** `PackageInstalled` (`src\ScaleTier.cpp`, grep `bool PackageInstalled`) and the fit test (same file, grep `bool Fits(` and its `TierMinimumFor` / `kTierMinimums` table).
 ```
 AutoScale: user choice UI 3.00 (AutoScale=2) ACCEPTED - package -3x installed, fits 2400x1600. Auto-detect would have chosen 2.00.
 AutoScale: user choice UI 3.00 (AutoScale=2) REJECTED - needs 2640x1674, screen is 2400x1600. CLAMPED DOWN to 2.00.
@@ -772,24 +794,24 @@ Knob 2       ->  independent of all of the above; only its DEFAULT is a
 
 **Warning — that last clause matters:** if the user asks for UI 3x on a 2400x1600 screen and is clamped to 2x, `BubbleScale=auto` must resolve to **4.00, not 6.00**. The auto coupling follows the **effective** UI scale, not the requested one.
 
-Emit immediately after the existing `AutoScale: %dx%d -> tier %.2f` at `src\SC4UIScaleDllDirector.cpp:205`:
+Emit immediately after the existing `AutoScale: %dx%d -> tier %.2f` line (`src\SC4UIScaleDllDirector.cpp`, grep `-> tier %.2f`):
 ```
 AutoScale: EXPLICIT wins - UI 2.00 from ini (AutoScale=2); auto-detect for 2400x1600 would also be 2.00.
 AutoScale: EXPLICIT wins - UI 1.50 from ini (AutoScale=2); auto-detect for 2400x1600 would have chosen 2.00. User setting honoured.
 AutoScale: AUTO wins - UI 2.00 from 2400x1600 (AutoScale=1); ini ScaleFactor=3.0 is present but ignored in auto mode.
 ```
-That third line is important: today `ScaleFactor=2.0` sits in every shipped ini and is **silently overwritten** at `src\SC4UIScaleDllDirector.cpp:195`. Users will edit it, see nothing happen, and file a bug. **Say it out loud.**
+That third line is important: today `ScaleFactor=2.0` sits in every shipped ini and is **silently overwritten** (`src\SC4UIScaleDllDirector.cpp`, grep `settings.spikeScaleFactor = tier;`). Users will edit it, see nothing happen, and file a bug. **Say it out loud.**
 
 ## 4.6 Restart requirements
 
 ### Knob 1 (UI + text): **RESTART REQUIRED. No partial application, no "apply now".**
 
 Structural, not laziness:
-- The nine byte patches are **PostAppInit one-shots into `.text`** (`src\SC4UIScaleDllDirector.cpp:303-341`). `ScaleSizeTable` verifies against **stock** bytes before writing (`src\CodePatches.cpp:676-713`), so a second application at a new factor finds non-stock bytes and **skips** — the HTML tables would keep the old factor while windows moved.
-- `FontStyle-<tag>.ini` is mirrored into `<install>\Plugins\FontStyle.ini` at boot (`src\ScaleTier.cpp:571`) and the engine builds its font table **once**.
+- The nine byte patches are **PostAppInit one-shots into `.text`** (`src\SC4UIScaleDllDirector.cpp`, grep `bool PostAppInit` — the run of `CodePatches::Apply*` calls inside it). `ScaleSizeTable` verifies against **stock** bytes before writing (`src\CodePatches.cpp`, grep `void ScaleSizeTable`), so a second application at a new factor finds non-stock bytes and **skips** — the HTML tables would keep the old factor while windows moved.
+- `FontStyle-<tag>.ini` is mirrored into `<install>\Plugins\FontStyle.ini` at boot (`src\ScaleTier.cpp`, grep `void SyncFont`) and the engine builds its font table **once**.
 - Package gating is **file renames** (`.dat` ↔ `.dat.x1-disabled`); DBPF load order is read at startup only.
-- Born-correct hooks bake at construction: SUBBORN (`src\UiSpike.cpp:3941`), SUBBORNSCALE Place detour (`:4274`), EARLYCHART (`:411`). Windows already built keep the old numbers.
-- `scaleMap` records stock→scaled only (`src\UiSpike.h:90-106`); there is **no** scaled→rescaled path, and `Classify` would treat an already-scaled window as done.
+- Born-correct hooks bake at construction: SUBBORN (`src\UiSpike.cpp`, grep `UiSpike::InstallSubFlyoutBorn`), SUBBORNSCALE Place detour (grep `UiSpike::InstallSubFlyoutBornScale`), EARLYCHART (grep `EARLYCHART - the chart is BORN correct`). Windows already built keep the old numbers.
+- `scaleMap` records stock→scaled only (`src\UiSpike.h`, grep `struct ScaleRecord` and `std::map<void*, ScaleRecord> scaleMap`); there is **no** scaled→rescaled path, and `Classify` would treat an already-scaled window as done.
 - Cached paint buffers are born at first-paint size (R26) — the box would move and the pixels would not.
 
 Log line on a detected mid-session change (from the same 20-sweep poll):
@@ -799,11 +821,11 @@ UiSpike: ScaleFactor in the ini changed 2.00 -> 3.00 while running. NOT APPLIED 
 
 ### Knob 2 (bubble): **LIVE, within ~1 second.**
 
-It rides the existing live-tune re-read (`src\UiSpike.cpp:8860-8990`), which reads explicit keys **per section** — a new `[UDriveIt]` section cannot be swallowed by `[Disaster]`/`[Flyout]`/`[Probe]`. The marker is a single-image leaf with no children (`:7044`), no text, parented to the full-screen 3D view so it cannot overflow a parent, and its hit box *is* its window rect.
+It rides the existing live-tune re-read (`src\UiSpike.cpp`, grep `LiveTuneIniPath` — the `[UiSpike] LiveTune` poll block inside `UiSpike::ScaleGodFlyouts`), which reads explicit keys **per section** — a new `[UDriveIt]` section cannot be swallowed by `[Disaster]`/`[Flyout]`/`[Probe]`. The marker is a single-image leaf with no children (`src\UiSpike.cpp`, grep `COUNT THE ROOT ITSELF` in `HookRuntimeBmpsUnder`), no text, parented to the full-screen 3D view so it cannot overflow a parent, and its hit box *is* its window rect.
 
 Requirements for live to be **honest**:
 - store the bubble's **stock 32x32** in its `scaleMap` record so the new size is computed **absolutely** (`round(32·B)`), never incrementally;
-- re-set window **then** blit, in that order (the existing call order already does this: `:7624`, `:8150`, draw later);
+- re-set window **then** blit, in that order (the existing call order already does this: the `ScalePanelRoot(p.win…)` panel loop in `UiSpike::ScalePanelsUnder`, then `HookRuntimeBmpsUnder`/`kBmpxCityRoots`, draw later);
 - bypass `ScalePanelRoot`'s generic edge anchor for this id and grow **unconditionally about the centre** (§3.4 constraint 2).
 
 ```
@@ -844,15 +866,15 @@ Ineligible UI-scale options must be **greyed with the reason inline, never hidde
 
 ## 5.1 What must be built
 
-**Font side: nothing.** `[M]` Text locked 1:1 means the text factor ≡ the tier factor. The three `FontStyle-<tag>.ini` files already exist, are byte-reproducible (`make_fontstyle.py --selfcheck`), and are already hash-asserted `deployed == built` (`_tests\Test-DatIntegrity.ps1:343-345`). The bubble carries **no text at all**, so no font style is needed at any bubble factor.
+**Font side: nothing.** `[M]` Text locked 1:1 means the text factor ≡ the tier factor. The three `FontStyle-<tag>.ini` files already exist, are byte-reproducible (`make_fontstyle.py --selfcheck`), and are already hash-asserted `deployed == built` (`_tests\Test-DatIntegrity.ps1`, grep `$FONT_SOURCES` and the `FontStyle-` rows in `$BUILT_PAIRS`). The bubble carries **no text at all**, so no font style is needed at any bubble factor.
 
 **Bubble side: a package, not pixels** (§3.6). New generator `tools\bubble\build_bubble.py --absolute <B>` → `z_SC4UIScale_UdiBubble-<tag>.dat`, ~1.2 KB, <1 s. Plus one `SyncDat` line in `src\ScaleTier.cpp` and one `_tests\Test-DatIntegrity.ps1` row-pair.
 
-**Warning — tag-map.** `_factor_tag()` exists in **three copies** (`tools\selective-safe\build_selective_safe.py:59`, `tools\dialog-static\build_dialog_static.py:109`, `tools\itemicons\stage_icons.py:37`): integer → `"%dx"`, else `"%gx"` with `.`→`_`. 4→`4x`, 6→`6x`, 2.25→`2_25x` all work — **but 1.5 is special-cased to `15x`, not `1_5x`**, so an absolute bubble factor of 1.5 would tag `-15x` and read like the UI 1.5 tier tag. Cosmetic collision only (different base name), but **the bubble builder must carry its own explicit tag map and refuse anything not in it**, rather than inherit the general rule.
+**Warning — tag-map.** `_factor_tag()` exists in **three copies** — grep `def _factor_tag` in `tools\selective-safe\build_selective_safe.py`, `tools\dialog-static\build_dialog_static.py` and `tools\itemicons\stage_icons.py`: integer → `"%dx"`, else `"%gx"` with `.`→`_`. 4→`4x`, 6→`6x`, 2.25→`2_25x` all work — **but 1.5 is special-cased to `15x`, not `1_5x`**, so an absolute bubble factor of 1.5 would tag `-15x` and read like the UI 1.5 tier tag. Cosmetic collision only (different base name), but **the bubble builder must carry its own explicit tag map and refuse anything not in it**, rather than inherit the general rule.
 
 ## 5.2 `Test-ScaleComboMatrix` — PROPOSED, never written — no advertised setting without a package
 
-The Law-45 gate. Reads the advertised sets **from source, not from a copy**: UI factors from `ScaleTier::kPackages` (`src\ScaleTier.cpp:31-36`), bubble multipliers from a new `kBubbleMultipliers` table in `src\Settings.h`. **Hard-fails if either parses empty** (the anti-drift guard from `Test-ThirdPartyGates.ps1`).
+The Law-45 gate. Reads the advertised sets **from source, not from a copy**: UI factors from `ScaleTier::kPackages` (`src\ScaleTier.cpp`, grep `kPackages[] = {`), bubble multipliers from a new `kBubbleMultipliers` table in `src\Settings.h`. **Hard-fails if either parses empty** (the anti-drift guard from `Test-ThirdPartyGates.ps1`).
 
 For every cell of `UI × bubbleMult`: compute `absB = ui * mult`; assert the UI tier's four core dats + `FontStyle-<tag>.ini` exist (live or `.x1-disabled`); assert `z_SC4UIScale_UdiBubble-<absBtag>.dat` exists **unless** the cell is declared in a documented `$STRETCH_ONLY` table; assert `absB <= 2 * ui`; assert the UI factor is *reachable* at the declared target resolution via the `Decide()` mirror already in `Test-ScaleTierDecide.ps1`.
 
@@ -905,19 +927,19 @@ FAIL: corpus parsed 812 controls, expected ~2537 - parse truncated.
 - **`_tests\Deploy-OnGameClose.ps1`**: add the bubble copy lines **in the same change as the package** (Law 40; the ThirdPartyUI/WarriorUI rot is what that law is made of).
 - **The WarriorUI gate — settled (#119, v2.71.3).** Do **not** re-add the
   `SyncDat` call; doing so would double-add it.
-  - **The `SyncDat` call exists** — `src\ScaleTier.cpp:1876-1878`, `pkg.tag, match && DepOkByName(L"zzz-SC4UIScale\\z_SC4UIScale_WarriorUI", depOk)` — and it is **both** tier-gated (`match`, `:1797-1798`) and mod-gated, exactly like its three siblings.
-  - **The `kThirdPartyDeps` row is consumed.** It has moved to `:218-220` (EXACT NAME + SIZE on `UI_Compact.dat` 8702 / `Mayor_Sign_Menu.dat` 5766). `depOk` is filled at `:1766` and read at `:1877` **inside the same function** (`SyncStaticLayers`, `:1714`), which is live from `src\SC4UIScaleDllDirector.cpp:257`. The two name strings match byte-for-byte, so this does not fall through `DepOkByName`'s `return true` default (`:259`) — the failure mode where a *present* call is still ungated.
-  - There are now **ten** `SyncDat` call sites (`:1803-1885`); earlier "exactly seven" counts were stale (see the banner at the top of this document: the symbol is the anchor, the number is not).
-  - **The deploy-script staging is correct as-is — do not re-derive the alarm from it.** `_tests\Deploy-OnGameClose.ps1:181-183` lays `WarriorUI-2x.dat` down live with `-15x`/`-3x` as `.x1-disabled`; `SyncStaticLayers` flips the pair per tier at boot. The deploy never changed; what was missing was the boot-time gate.
-  - **Regression-proofed, so this cannot silently come back:** `_tests\Test-PackageGating.py` asserts that *every* `kThirdPartyDeps` row has a `SyncDat` call (its assertion 1, written for this defect) and that every gate names **its own** package. It currently reports `[zzz-SC4UIScale\z_SC4UIScale_WarriorUI] gated` across 5 rows / 10 call sites, and its #119 negative control — deleting the WarriorUI call — reproduces the original bug. Full post-mortem in the code at `src\ScaleTier.cpp:1866-1875` and in `VERSION-HISTORY.txt:2174-2185`.
-- **README package table is stale in three places** `[M]`: `ItemIcons` 266→356 and it is tiered, not `-2x`-only; `ItemIconsSub` 125→130; `SelectiveArt` 345→**655 / 655 / 655** at 1.5x / 2x / 3x (#136 (v2.88.0) ended the per-tier split: the builder's `FACTOR <= 2.0` filter on the four dismiss-X glyphs is gone — `tools\selective-safe\build_selective_safe.py:523-531`, the condition is now `if True` — so 3x ships the same 655 entries as 1.5x/2x. Asserted at `_tests\Test-DatIntegrity.ps1:14` and `:217`, and the shipped `tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat` DBPF index-count reads 655.)
+  - **The `SyncDat` call exists** — `src\ScaleTier.cpp`, grep `z_SC4UIScale_WarriorUI`: `pkg.tag, match && DepOkByName(L"zzz-SC4UIScale\\z_SC4UIScale_WarriorUI", depOk)` — and it is **both** tier-gated (the `match` predicate a few lines above, grep `const bool match =`) and mod-gated, exactly like its three siblings.
+  - **The `kThirdPartyDeps` row is consumed.** Grep `UI_Compact.dat` in `src\ScaleTier.cpp` for the row (EXACT NAME + SIZE on `UI_Compact.dat` 8702 / `Mayor_Sign_Menu.dat` 5766). `depOk` is filled (grep `depOk[d] = present && sizeOk;`) and read by the `DepOkByName` argument **inside the same function** (`SyncStaticLayers`, grep `void SyncStaticLayers`), which is live from `src\SC4UIScaleDllDirector.cpp` (grep `ScaleTier::SyncStaticLayers(settings.spikeScaleFactor)`). The two name strings match byte-for-byte, so this does not fall through `DepOkByName`'s `return true` default (grep `bool DepOkByName`) — the failure mode where a *present* call is still ungated.
+  - There are now **ten** `SyncDat` call sites (count them: grep `SyncDat(` in `src\ScaleTier.cpp`); earlier "exactly seven" counts were stale (see the banner at the top of this document: the symbol is the anchor, the number is not, and this count is itself the kind of number that keeps moving).
+  - **The deploy-script staging is correct as-is — do not re-derive the alarm from it.** `_tests\Deploy-OnGameClose.ps1` (grep `z_SC4UIScale_WarriorUI-2x.dat`) lays `WarriorUI-2x.dat` down live with `-15x`/`-3x` as `.x1-disabled`; `SyncStaticLayers` flips the pair per tier at boot. The deploy never changed; what was missing was the boot-time gate.
+  - **Regression-proofed, so this cannot silently come back:** `_tests\Test-PackageGating.py` asserts that *every* `kThirdPartyDeps` row has a `SyncDat` call (its assertion 1, written for this defect) and that every gate names **its own** package. It currently reports `[zzz-SC4UIScale\z_SC4UIScale_WarriorUI] gated` across 5 rows / 10 call sites, and its #119 negative control — deleting the WarriorUI call — reproduces the original bug. Full post-mortem in the code at `src\ScaleTier.cpp` (grep `#119 (v2.71.3): THIS CALL WAS MISSING`) and in the v2.71.3 changelog entry — **citation partly retired:** the root `VERSION-HISTORY.txt` has since been trimmed to recent releases and no longer carries v2.71.3; that entry now survives only in `_archive\SNAPSHOT-2026-08-14-pre-release-doc-pass\VERSION-HISTORY.txt` (grep `v2.71.3`).
+- **The package table is stale in three places** `[M]`: `ItemIcons` 266→356 and it is tiered, not `-2x`-only; `ItemIconsSub` 125→130; `SelectiveArt` 345→**655 / 655 / 655** at 1.5x / 2x / 3x (#136 (v2.88.0) ended the per-tier split: the builder's `FACTOR <= 2.0` filter on the four dismiss-X glyphs is gone — `tools\selective-safe\build_selective_safe.py`, grep `` `or FACTOR <= 2.0` tail is GONE ``, the condition is now `if True` — so 3x ships the same entries as 1.5x/2x. Asserted in `_tests\Test-DatIntegrity.ps1` (grep the `SelectiveArt` rows in `$EXPECTED`), and read back from the shipped `tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat` DBPF index-count. **Citation retired:** `README.md` no longer carries the package table at all; it moved to `docs\PACKAGE-MANIFEST.md` §"Package contents", where the counts to check against live today.)
 
 ## 5.6 Frozen artifacts
 
 **Nothing in this plan touches `dist\SC4TouchControls-v1.0.4\` or `-v1.0.5\`.** Both knobs live entirely in `SC4UIScale.dll` and its packages; the touch DLL is a separate binary and a separate project.
 
 Three ways it could still go wrong:
-1. `_tests\Test-DatIntegrity.ps1:277-298` asserts both frozen SHA-256 hashes **and** that the deployed `SC4TouchControls.dll` *is* the frozen v1.0.5 binary. Adding `$EXPECTED`/`$BUILT_PAIRS` rows must not perturb those blocks. **If either hash line goes red while doing #97 work, that is not a #97 regression — stop and investigate.**
+1. `_tests\Test-DatIntegrity.ps1` asserts frozen SHA-256 hashes — grep `$EXPECTED = @(` for the per-package entry counts and `$BUILT_PAIRS = @(` for the `built == deployed` hash compare (the compare itself is the `Get-FileHash` pair inside `foreach ($pair in $BUILT_PAIRS)`). Adding `$EXPECTED`/`$BUILT_PAIRS` rows must not perturb those blocks. **If either hash line goes red while doing #97 work, that is not a #97 regression — stop and investigate.** **Citation partly retired:** the second half of this claim — that the deployed `SC4TouchControls.dll` *is* the frozen v1.0.5 binary — is **no longer asserted in this gate**; `SC4TouchControls` has zero hits in the file today. The touch DLL is now held out by **name** instead, in `_tests\Set-StockPlugins.ps1` (grep `TOUCH QUARANTINE - USER ORDER` and the `$Quarantined` list under it). The repo's tracked history is a single squashed commit, so `git log --diff-filter=D` cannot date the move.
 2. Do **not** add the bubble package to any `dist\SC4TouchControls-v1.0.*` README, manifest, or USB bundle. It belongs to the UI-scale product.
 3. `Deploy-OnGameClose.ps1` already deploys into the shared `Plugins` folder where both products live; adding bubble copy lines there is fine and does not touch `dist\`.
 
@@ -930,10 +952,10 @@ Three ways it could still go wrong:
 
 1. **Adjudicate the refuted-lead-written-as-fact** (§3.7). One line settles it. Until then every downstream decision rests on a null.
 2. **Settle the unmeasured glyph-layer question** with one `GetChildCount()` on `0x48E945B4` (§8, Q2).
-3. **Make `gBmpScale` per-id** inside `BmpDrawThunk` (`gBmpCurId` already at `src\UiSpike.cpp:6717`). Without this, every My Sims portrait takes the bubble factor.
+3. **Make `gBmpScale` per-id** inside `BmpDrawThunk` (`gBmpCurId` is already computed there — `src\UiSpike.cpp`, grep `gBmpCurId = w->GetID()`). Without this, every My Sims portrait takes the bubble factor.
 4. **Give `0x48E945B4` a window scale that bypasses `ScalePanelRoot`'s generic anchor** and grows unconditionally about its centre (§3.4 constraint 2). **This is a live hazard at today's factor, independent of the knob.**
 5. **Pin `drawn = 32·B` with `B = 2·UI` hardcoded.** **Warning:** deliberate behaviour change at 1.5x (72→96) and 3x (288→192) — put it in the changelog.
-6. **Delete or promote `BUBBLE_OVERRIDE_ENABLED`** (`tools\selective-safe\build_selective_safe.py:1044`). Armed dead plumbing with a live copy path behind one boolean is the exact Law-45 shape. If promoted, `bubble4x-15x\` **must** be replaced by the direct `--factor 3` file (§3.6).
+6. **Delete or promote `BUBBLE_OVERRIDE_ENABLED`** (`tools\selective-safe\build_selective_safe.py`, grep `BUBBLE_OVERRIDE_ENABLED` — the assignment, then the `elif` copy path just below it). Armed dead plumbing with a live copy path behind one boolean is the exact Law-45 shape. If promoted, `bubble4x-15x\` **must** be replaced by the direct `--factor 3` file (§3.6).
 7. **Fix the WarriorUI gate** (§5.5).
 
 **Gate proving increment 1 done:** the proposed `Test-BubbleArtLaw` (§5.3 — never written) green in its STRETCH-route form (law arithmetic + exclusivity + zero-`.UI`-refs) at all three tiers; `Test-DatIntegrity.ps1` still green; **plus one eyes-on** — the predicted 1x-flash (§8 Q5) will be visible during the session this needs anyway.
@@ -943,7 +965,7 @@ Three ways it could still go wrong:
 **Gate:** the proposed `Test-ScaleComboMatrix` (§5.2) over `UI × {2}` (bubble fixed) + the proposed `Test-TextBoxFit` (§5.4) green at all three factors, **including its `--selftest` positive control**. Neither gate exists yet — writing them is part of this increment.
 
 ## Increment 3 — the bubble knob, STRETCH-ONLY.
-`Settings` fields per §4.4, in its **own `[UDriveIt]` section**, its own mirror, and **a repeat of the `src\UiSpike.cpp:138-144` audit**. Advertised multipliers `{1, 1.5, 2}`; every cell in `$STRETCH_ONLY`.
+`Settings` fields per §4.4, in its **own `[UDriveIt]` section**, its own mirror, and **a repeat of the `src\UiSpike.cpp` tier-mirror audit** (grep `gTierF mirrors settings.spikeScaleFactor`). Advertised multipliers `{1, 1.5, 2}`; every cell in `$STRETCH_ONLY`.
 **Gate:** the proposed `Test-ScaleComboMatrix` (§5.2 — never written) full matrix green with every cell justified as STRETCH-ONLY.
 
 ## Increment 4 (optional, quality) — sharp art.
@@ -958,17 +980,17 @@ Three ways it could still go wrong:
 **Explicitly deferred, 2026-08-03. Recorded to size it, not to design it. Build nothing here now.**
 
 What already exists:
-- **`ScaleTier::kPackages` already has a 4x slot** (`src\ScaleTier.cpp:32`, `{ 4.0f, L"-4x" }`), inert because `PackageInstalled` gates eligibility on the art dat existing (`:60-86`).
-- **`Upscale2x` accepts up to 16.0** (`tools\upscale\Upscale2x.cs:70`). `[M]` A full factor-4 upscale run costs **18.8 s / 66 MB tree / ~20 MB dat `[INF]`**; factor 6 costs **35.0 s / 113 MB / ~27 MB `[INF]`**.
+- **`ScaleTier::kPackages` already has a 4x slot** (`src\ScaleTier.cpp`, grep `{ 4.0f, L"-4x" }` — the first row of `kPackages[] = {`), inert because `PackageInstalled` gates eligibility on the art dat existing (same file, grep `bool PackageInstalled`).
+- **`Upscale2x` accepts up to 16.0** (`tools\upscale\Upscale2x.cs`, grep `factor > 16.0` — the argument-range check and the `--factor must be in (1.0, 16.0]` refusal beside it). `[M]` A full factor-4 upscale run costs **18.8 s / 66 MB tree / ~20 MB dat `[INF]`**; factor 6 costs **35.0 s / 113 MB / ~27 MB `[INF]`**.
 - `_factor_tag()` handles 4 → `4x` correctly in all three copies.
 - `make_fontstyle.py` needs one command for `FontStyle-4x.ini` (23,016 B, sub-second).
 
 **What would block it — in the order it bites:**
 
 1. **Blocker: `Decide()`'s fit cap refuses even 3x on the user's own display.** `[M]` At 2400x1600, `cap = min(2400/800, 1600/600) = 2.667`, and 3x also fails `880·3 = 2640 > 2400`. **4x needs ≥ 3520x2232.** A UI-above-3x product needs a display that does not exist on this desk.
-2. **Blocker: the imm8 encoding ceilings in `CodePatches.cpp` are the real wall.** The advice-row X fork is gone (#136 — see R9), but the encoding wall stands: at 4x the ordinance name-column x wants 136 and clamps to 127 (`:820-839`); the budget slider widths (110→440), row text widths (120→480) and master funding sliders (90→360) all blow `push imm8` (`:244, 276, 319, 327-329`). **At 3x several already clamp (R19).** A 4x UI tier ships **visibly wrong budget and ordinance columns** unless those sites are re-encoded to imm32 first. That is the largest single work item.
-3. **Closed — there is ONE rounding stream.** `ScaleRound` (`src\UiSpike.cpp:5385`) delegates to `RoundHalfUp` (`:177`) as of #162, and **#75 was CLOSED AS REFUTED** — the 824-pair 1.5x divergence had no artifact. A new factor no longer multiplies anything here. See the corrected row in §1.1a.
-4. **Warning: `kCityDialogIds`' factor-parameterised base guard** (`src\UiSpike.cpp:11128-11205`) needs a fresh product-collision check per factor (v2.39.13/.14 scars).
+2. **Blocker: the imm8 encoding ceilings in `CodePatches.cpp` are the real wall.** The advice-row X fork is gone (#136 — see R9), but the encoding wall stands: at 4x the ordinance name-column x wants 136 and clamps to 127 (`src\CodePatches.cpp`, grep `kOrdinanceNameXImm8Sites` for the two sites and `ideal 136 -> ships 127` for the worked example; the clamp itself is grep `push imm8 ceiling`); the budget slider widths (110→440), row text widths (120→480) and master funding sliders (90→360) all blow `push imm8` (same file — grep `slider width (110`, `item slider width (110`, `row capacity text width (120`, `master funding slider 1 width (90`; each comment carries its own "clamps to 127"). **At 3x several already clamp (R19).** *(Anchor note, not a change of claim: since v2.74.0 the ordinance name-column x is a **fork** — the imm8 sites above are the `f < 2.50` path, and at or above 2.50 an equal-length block re-encode takes over — grep `OrdinanceNameXUsesBlock` and `kOrdinanceNameXBlocks`. A reader greping `136` will land in both.)* A 4x UI tier ships **visibly wrong budget and ordinance columns** unless those sites are re-encoded to imm32 first. That is the largest single work item.
+3. **Closed — there is ONE rounding stream.** `ScaleRound` (`src\UiSpike.cpp`, grep `inline int32_t ScaleRound`) is a one-liner that delegates to `RoundHalfUp` (same file, grep `inline int32_t RoundHalfUp`) as of #162, and **#75 was CLOSED AS REFUTED** — the 824-pair 1.5x divergence had no artifact. A new factor no longer multiplies anything here. See the corrected row in §1.1a.
+4. **Warning: `kCityDialogIds`' factor-parameterised base guard** (`src\UiSpike.cpp`, grep `PER-ID 1x BASE SIZES for the data-born EXACT-MATCH guard` for the rationale block, then `struct CityDialog` for the table it guards) needs a fresh product-collision check per factor (v2.39.13/.14 scars).
 5. **Warning: the DialogStatic corpus at 4x** — no measurement exists. §2.3 shows 0 regressions at 2x and 3x, `[INF]` 4x should behave like the other even factor, but that is an inference and the proposed `Test-TextBoxFit` gate (§5.4 — never written) would settle it in one run.
 6. **Not a blocker, note it:** `Upscale2x` reports `Bad magic: 74` — 74 files named `.png` that are not PNG data, correctly skipped at every factor; the existing counter is the gate.
 
@@ -982,10 +1004,10 @@ Each with **the single measurement that resolves it.**
 
 | # | Question | Status | The one measurement |
 |---|---|---|---|
-| **Q1** | Is `{46A006B0, 094AC89A}` the marker's art? Our own source (`src\UiSpike.cpp:4941-4950`) and `_tests\REGRESSION.md` say **NO**, on a null; stock art is 32x32, our 2x stage is 64x64, and the live draw reports `img 64x64`. | **CONTRADICTION IN OUR OWN DOCS** — the "no" rests on a null (*NULL IS NOT EVIDENCE*) | Flip `BUBBLE_OVERRIDE_ENABLED` at `tools\selective-safe\build_selective_safe.py:1044`, rebuild, read whether `BMPX draw id=0x48E945B4` says `img 128x128`. **Do this before building anything.** Then correct or delete the refuted note either way. |
-| **Q2** | Does the bubble carry a second **glyph** layer? If it does, that art is shared game-wide (`46A006A7` slider, `82B99D9D` spinner — `HANDOFF.md:1247`) and is pinned to the UI factor, so **a 4x bubble would carry a 2x glyph**. The 15 glyph entries at `build_selective_safe.py:427-441` were staged on a premise later refuted (the `0x44DEC1` table is a resource-registration table, not glyphs), so the layer may not exist at all. | **UNMEASURED** | One `GetChildCount()` on `0x48E945B4`, or a second `BMPX draw` line for it, in the same pass as Q1. **Settle before choosing the sharp-art route.** |
+| **Q1** | Is `{46A006B0, 094AC89A}` the marker's art? Our own source (`src\UiSpike.cpp`, grep `THE U-DRIVE-IT MAP MARKER`) and `_tests\REGRESSION.md` say **NO**, on a null; stock art is 32x32, our 2x stage is 64x64, and the live draw reports `img 64x64`. | **CONTRADICTION IN OUR OWN DOCS** — the "no" rests on a null (*NULL IS NOT EVIDENCE*) | Flip `BUBBLE_OVERRIDE_ENABLED` in `tools\selective-safe\build_selective_safe.py` (grep the name), rebuild, read whether `BMPX draw id=0x48E945B4` says `img 128x128`. **Do this before building anything.** Then correct or delete the refuted note either way. |
+| **Q2** | Does the bubble carry a second **glyph** layer? If it does, that art is shared game-wide (`46A006A7` slider, `82B99D9D` spinner — recorded in the session diary that was retired 2026-08-06 into the local-only archive tree, so this citation is **evidence a published reader cannot check**; the two instance ids are the anchor, and they are greppable in the staged corpus) and is pinned to the UI factor, so **a 4x bubble would carry a 2x glyph**. The 15 glyph entries in `build_selective_safe.py` (grep `per-mission icon table at VA 0x44DEC7` — the run of `(0x46A006B0, …)` tuples under `mission icon table @0x44DEC7` inside `CODE_BOUND_TGIS`) were staged on a premise later refuted (the `0x44DEC1` table is a resource-registration table, not glyphs), so the layer may not exist at all. | **UNMEASURED** | One `GetChildCount()` on `0x48E945B4`, or a second `BMPX draw` line for it, in the same pass as Q1. **Settle before choosing the sharp-art route.** |
 | **Q3** | Which reading of "udriveit bubble" did the user mean — **R1** the in-world marker `0x48E945B4`, or **R2** the mission *proposal* popup / whole UDI HUD? The user has called those "bubbles" before (`_tests\REGRESSION.md` ~v2.25.19, *"I clicked multiple and one is still open"*). | **This document assumes R1 throughout, and R1 is what #46/#60 called "the bubble" and what the user confirmed as "markers are 2x now".** | ASK. The stakes are asymmetric: **R1 costs almost nothing; R2 means a whole extra DialogStatic build at factor 2f PLUS a FontStyle at 2f** (font sizes 40–128 at UI 2x) and **manufactures the #41/#42/#57 defect family deliberately** — the exact thing §2 refuses. Do not silently assume. |
-| **Q4** | Are there any **pre-rendered text art** assets (art whose pixels are typeset glyphs) that would need the text axis rather than the art axis? | **STRUCTURAL NULL, declared honestly.** `tools\dbpf\extracted-png-tgi.csv` has no name column — 2281 rows of TGI + offset only — so a name-based scan **could not have found them**, pass or fail. The only text-shaped art positively identified from our own docs is the advice-row "X" glyph in the `0x1441625x` sheet (`build_selective_safe.py:446-518`), which is a pictogram, not typeset copy. | A pixel pass over the 188-PNG scaled set, not an index query. **Low priority given the 1:1 lock** — with text ≡ UI, pre-rendered text art is on the same factor as everything else and cannot desync. It only becomes urgent if the lock is ever revisited. |
+| **Q4** | Are there any **pre-rendered text art** assets (art whose pixels are typeset glyphs) that would need the text axis rather than the art axis? | **STRUCTURAL NULL, declared honestly.** `tools\dbpf\extracted-png-tgi.csv` has no name column — 2281 rows of TGI + offset only — so a name-based scan **could not have found them**, pass or fail. The only text-shaped art positively identified from our own docs is the advice-row "X" glyph in the `0x1441625x` sheet (`build_selective_safe.py`, grep `range(0x14416250, 0x1441625F + 1)` — the CODE_BOUND range, and `sc4://HTML/46a006b0/1441625X` for the consumer note), which is a pictogram, not typeset copy. | A pixel pass over the 188-PNG scaled set, not an index query. **Low priority given the 1:1 lock** — with text ≡ UI, pre-rendered text art is on the same factor as everything else and cannot desync. It only becomes urgent if the lock is ever revisited. |
 | **Q5** | The **predicted 1x-flash**: because the marker's window is scaled by the periodic sweep but **born art-sized**, a freshly appearing marker should draw at `32f` for up to one sweep interval before jumping to `32f²`. | `[INF]` **predicted, unobserved** — derived from the born-art-sized fact (§3.2 step 2) and the sweep cadence, not seen | One look during the eyes-on that increment 1 needs anyway. If real, it is the ordinary reactive-sweep flash family and the cure is the known one: make it born-correct. |
 | **Q6** | Does the fit clamp bite at f = 1.5? Today `m = gBmpScale` and `winW/artW` are **exactly** equal, so the draw sits on a knife edge; `ScaleRound(l+48, 1.5) - ScaleRound(l, 1.5)` can land 71 rather than 72 depending on `l`, silently clamping `m` to 1.479. | `[INF]` the arithmetic is certain; the `l` values actually in play are **not measured** | Log the modelled `winW` and `m` for the marker at f = 1.5 over a few mission spawns. **Mitigated for free** by the §4.4 requirement to compute `m` from the live window and warn on a >0.01 disagreement — do that regardless of the answer. |
 | **Q7** | Do the `kMayorFlyoutDock` offsets (`R = -marker(1x)` × f) still land if a flyout's content is sized on a different axis than its marker? | `[INF]` **moot under the 1:1 lock** — recorded only so a future reader who reopens §2 knows this was never measured at split axes | Would need a split-axis build to measure. **Do not build one to find out.** |
@@ -995,12 +1017,14 @@ Each with **the single measurement that resolves it.**
 
 ## APPENDIX — corrections this catalog made to earlier notes
 
-`[M]` Verified against source this session; earlier drafts and adjacent notes carried these wrong:
+`[M]` Verified against source when this catalog was written (2026-08-03); earlier drafts and adjacent notes carried these wrong.
 
-- `gBmpCurId` is set at **`src\UiSpike.cpp:6717`**, not `:6712`.
-- `kAdviceListNeverTouchIds` is declared at **`src\UiSpike.cpp:3777-3779`**, consumed at `:12628-12632`.
-- `kFontSizedIds` is at **`src\UiSpike.cpp:3680-3703`** (23 entries), consumed `:12681-12700`.
-- `ApplyHtmlSizeScale`'s table writes are at **`src\CodePatches.cpp:1146-1147`**; the table constants at `:42` and `:44`.
+**Read this appendix as a list of SYMBOLS, not of addresses.** Five of the seven corrections below were originally stated as line numbers — the first of them literally one number set against another — and **every one of those numbers has since rotted**, on both sides. What the corrections were actually about (which symbol; that a declaration site is not its consumption site) survives, and is now written as the grep that finds it:
+
+- `gBmpCurId` is **set** inside the draw thunk, not merely declared — `src\UiSpike.cpp`, grep `gBmpCurId = w->GetID()` for the assignment the original correction was pointing at, and `uint32_t gBmpCurId` for the declaration it is not. Both numbers in that correction are dead.
+- `kAdviceListNeverTouchIds` is **declared** in one place and **consumed** in another — `src\UiSpike.cpp`, grep `const uint32_t kAdviceListNeverTouchIds[] = {` for the declaration and `for (uint32_t known : kAdviceListNeverTouchIds)` for the consumer. That two-site split *is* the correction; the addresses never were.
+- `kFontSizedIds` carries **23 entries** — `src\UiSpike.cpp`, grep `const uint32_t kFontSizedIds[] = {`, consumed by `IsFontSizedId` (grep `inline bool IsFontSizedId`). `[M]` The count is the durable half of this row and it still holds: re-counted from the array literal on 2026-08-30, still 23.
+- `ApplyHtmlSizeScale`'s two table writes are in its own body — `src\CodePatches.cpp`, grep `void ApplyHtmlSizeScale` and read the two `ScaleSizeTable(` calls inside it. The stock tables those writes verify against are `kStockHtmlFontSizes` and `kStockHtmlHeadingSizes` (grep each by name); the VAs they patch are `kHtmlFontSizeTable` / `kHtmlHeadingSizeTable`.
 - `tools\selective-safe\bubble4x-15x\…094ac89a.png` is a **double-resample and must not ship** — use `tools\upscale\preview-3x\SimCity_1\…094ac89a.png` (§3.6).
-- `WarriorUI` gating is settled — `SyncDat` exists at `src\ScaleTier.cpp:1876-1878` (#119, v2.71.3; §5.5).
+- `WarriorUI` gating is settled — the `SyncDat` call exists (`src\ScaleTier.cpp`, grep `z_SC4UIScale_WarriorUI` and take the `SyncDat(` call site among the hits; the post-mortem sits directly above it, grep `#119 (v2.71.3): THIS CALL WAS MISSING`) (#119, v2.71.3; §5.5).
 - README package counts are stale in three places (§5.5).

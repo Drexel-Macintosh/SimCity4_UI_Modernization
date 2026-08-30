@@ -371,6 +371,58 @@ namespace CodePatches
 	// always logs the resolved value.
 	void ArmDispatchQuadProbe();
 
+	// ---- Overlay-plan probes (dev only, OFF by default) -----------------
+	// All three are armed from the tier-decision tail, the one site that runs
+	// at EVERY factor, and each reads its OWN key: a probe key must arm its
+	// own probe, never ride on an unrelated gate. Every one logs its resolved
+	// value whether or not it installs. With no ini keys set, none of them is
+	// installed and the build behaves exactly as it does today.
+
+	// HIGHLIGHT (row 10): occupant SetHighlight 0x5E90E0 - the dark-green
+	// Query hover, the dark-red Demolish hover, the mayor-pointer lot tint.
+	// [UiSpike] HighlightProbe: 0 = off, 1 = log only, 2 = rewrite ONLY the
+	// modes 7->2 and 5->1 (so Query must turn pure red and Demolish pure
+	// green - the one prediction only this mechanism can make), 3 = force
+	// mode 0. Verify-before-hook on the 5 stock prologue bytes; typed detour,
+	// because this is the one site in the plan whose arity is KNOWN.
+	void ArmHighlightProbe();
+
+	// ZONEQUAD (row 13b): the lot-display cell-quad builder 0x6CC970, which
+	// paints the persistent zone colour wash. [UiSpike] ZoneQuadProbe:
+	// 0 = off, 1 = log (count, this, lot, zone type, the RGBA re-read from the
+	// ZoneManager's own two getters), 2 = log + skip the builder.
+	// A call count of ZERO VOIDS the mode-2 result - it is not a null.
+	void ArmZoneQuadProbe();
+
+	// NBORARROW (row 15): naked log-and-relay on 0x6D4860, the sole consumer
+	// of the neighbour-connection arrow exemplar. [UiSpike] NborArrow:
+	// 0 = off, 1 = log only. Mode 2 (the instance-id immediate swap at
+	// 0x6D4A67) is NOT implemented - it takes an exemplar-miss path the game
+	// has never run - and a 2 is clamped to 1 with a log line saying so.
+	void ArmNborArrowProbe();
+
+	// DOTSIZE (row 4): naked write-then-relay on the class-B rebuild
+	// 0x5F7810, writing [ecx+0x80] (sizeParam) before the original runs, so
+	// every U-Drive-It route dot is sized from our float. [UiSpike] DotSize:
+	// 0 or absent = off, otherwise the value, clamped to 0.005..8.0 (the
+	// upper bound is the game's own SetSize clamp). 0.02 is the
+	// suppression-equivalent - sub-pixel dots, visually an absence, with
+	// none of the stack exposure an early return at 0x5F7C80 would carry.
+	// Idempotent: also called from InstallSignpostProbe, which is where the
+	// probe plan places it; whichever runs first does the work.
+	// ⚠ The SPATTACH / SPSTRIP half of this row's control needs
+	// [UiSpike] MissionBubbleFx=3 AND a scaling tier - a DotSize-only launch
+	// writes the size but logs none of the class-B return addresses the
+	// measurement is read against.
+	void ArmDotSizeProbe();
+
+	// EFFECTFILTER ([UiSpike] EffectKill, [Probe] EffectCensus): resolve and
+	// log both keys at EVERY factor. Idempotent; InstallMissionBubbleScale
+	// also calls the same loader. The kill itself still needs that hook, and
+	// the loader says so in the log when the list is non-empty and the hook is
+	// absent - so "never armed" can never be misread as "changed nothing".
+	void ArmEffectFilter();
+
 	// GPUCAP (register row #4): the DX7 draw-call census (gdcap.cpp wired
 	// into the DLL). Armed from the tier-decision tail (any factor); gated
 	// by [Probe] GpuCap (N = Clear boundaries); always logs the resolved

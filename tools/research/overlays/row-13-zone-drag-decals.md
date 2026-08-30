@@ -42,6 +42,15 @@ exe bytes unless marked otherwise.
 - Prologue `83 EC 70 53 8B 5C 24 78` (sub esp,0x70; push ebx; …). Stack arg
   = a **cISC4Lot**; `this` = the display/manager object (fields: +0x24 = the
   per-cell LOT GRID, +0x4C/+0x50 = city cell bounds).
+- **Signature MEASURED 2026-08-30, not derived from the prologue.** A review
+  correctly objected that a prologue reading `[esp+0x78]` proves arg1 *exists*
+  and says nothing about an arg2 — and a typed detour that under-pops corrupts
+  the caller's stack. Linear disassembly settles it: the function has exactly
+  **two exits, `0x6CC9AA` and `0x6CCE10`, both `ret 4`** — one stack argument.
+  Both exits are `pop edi/ebp/ebx; add esp,0x70; ret 4` with **no `al`/`eax`
+  set on either path**, so the function is **`void`**: it returns nothing, and
+  any probe "returning success" on a suppressed call would be inventing a value
+  no caller reads. Full signature: `void __thiscall(cISC4Lot*)`.
 - The arg is proven a cISC4Lot by THREE independent vtable-slot matches
   against `vendor\...\cISC4Lot.h`:
   - `vt+0x7C` at `0x6CC984` → `GetZoneType` (slot 31), result 0..15

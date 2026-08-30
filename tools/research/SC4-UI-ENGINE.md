@@ -157,46 +157,60 @@ a window descends from decides how it can be fixed at all**:
 Descent from the host is **NECESSARY, NOT SUFFICIENT**, and the sufficiency
 half fails for two structurally different reasons.
 
-**1. The sweep never recurses to FIND a panel.** `ScalePanelsUnder` takes a
-flat `EnumChildren` of the host (`src\UiSpike.cpp:10185`), so `ScalePanelRoot`
+**1. The sweep never recurses to FIND a panel.** `ScalePanelsUnder`
+(`src\UiSpike.cpp`, grep `int UiSpike::ScalePanelsUnder`) takes a flat
+`EnumChildren` of the host into `CollectCtx`, so `ScalePanelRoot`
 is only ever called on a **direct child** of the view, and a direct child is
-skipped outright by any of eight gates: region whitelist (`:10233`),
-`kNeverScaleIds` (`:10237`), god-tool flyouts (`:10245`), mayor-only flyouts
-(`:10255`), the shared sub-flyout container (`:10262`), hidden and not
-id-excepted (`:10273`), full-screen overlays (`:10300`), degenerate size
-(`:10305`) — plus the 128-panel cap (`:10177-10196`). On the **region screen**
-`:10233` makes the pass **whitelist-only**, so "descends from `0xEA659793`" says
+skipped outright by any of eight gates — all of them a `continue` in that one
+loop, each greppable by its predicate: region whitelist (`IsRegionPanelId`),
+`kNeverScaleIds` (`IsNeverScaleId`), god-tool flyouts (`IsGodToolFlyoutId`),
+mayor-only flyouts (`IsMayorOnlyFlyoutId`), the shared sub-flyout container
+(`IsSubFlyoutId`), hidden and not id-excepted (`!p.win->IsVisible()`),
+full-screen overlays (`p.w >= screenW * 9 / 10`), degenerate size
+(`p.w <= 0 || p.h <= 0`) — plus the 128-panel cap (`PanelInfo panels[128]`,
+top of the same function). On the **region screen** that first `IsRegionPanelId`
+gate makes the pass **whitelist-only**, so "descends from `0xEA659793`" says
 almost nothing about reachability.
 
 **2. Whole subtrees are walled off BELOW a swept root.** `ScalePanelRoot`
 scales and anchors the root, then **RETURNS** for any id in
-`kDataScaledSubtreeIds` — `src\UiSpike.cpp:14568-14573`, which sits **after**
-the root move/resize (ends `:14553`) and **before** the child loop (`:14579`,
-`ScaleSubtree` at `:14608`). That is the **only** call site of
-`IsDataScaledSubtreeId` in `src\`, and `ScaleSubtree` never consults it, so
+`kDataScaledSubtreeIds` — `src\UiSpike.cpp`, grep
+`if (IsDataScaledSubtreeId(win->GetID()))`, which sits **after** the root
+move/resize (it follows the `"UiSpike: panel 0x%08X (%d,%d %dx%d) -> ..."` log
+line) and **before** the child loop (`if (win->GetChildCount() > 0)`, which
+recurses via `ScaleSubtree`). That is the **only** call site of
+`IsDataScaledSubtreeId` in `src\` — grep it and you get exactly two hits, the
+`inline bool` definition and this one — and `ScaleSubtree` never consults it, so
 nothing re-opens those subtrees later. **Every descendant of such a root is a
 3D-view descendant the sweep NEVER WALKS.**
 
-**Warning: read the list, never a copy of it.** `kDataScaledSubtreeIds` spans
-`src\UiSpike.cpp:5373-5486` and is longer than the advisor/Graphs/U-Drive-It
-story suggests — **ten** ids: the advisor strip
-(`:5374`), the three Graphs roots (`:5386-5388`), the U-Drive-It dashboard
-(`:5397`) and its fifth console variant (`:5429`), and the **four**
-Monthly-Budget roots (`:5466-5469`). A hand-list here would rot silently, and
-only in the case you needed it. Note: the array CLOSES at `:5486`: `kFontSizedIds`
-opens at `:5505` and the ids under it (Building Style Control `:5506`/`:5514`,
-the `0xAA3ACB00` and `0x00000200` spinner blocks `:5523-5527`) are a **different
-array with a different rule** — they are not walled off from the sweep.
+**Warning: read the list, never a copy of it.** `kDataScaledSubtreeIds`
+(`src\UiSpike.cpp`, grep `const uint32_t kDataScaledSubtreeIds[]`) is longer
+than the advisor/Graphs/U-Drive-It story suggests — **ten** ids, in declaration
+order and each with its own trailing comment: the advisor strip, the three
+Graphs roots, the U-Drive-It dashboard and its fifth console variant, and the
+**four** Monthly-Budget roots. Grep the array and count what is actually inside
+it; a hand-list here would rot silently, and only in the case you needed it.
+Grep the ARRAY, not a bare id — several of these ids appear in
+`kAlwaysScaleCityIds` and in the probe table too, and membership there means
+something else. Note: the array closes before `kFontSizedIds` (grep
+`const uint32_t kFontSizedIds[]`), and the ids under THAT one (Building Style
+Control `0xCBC61559` and its `0xABC61550` years spinner, the `0xAA3ACB00` and
+`0x00000200` spinner blocks) are a **different array with a different rule** —
+they are not walled off from the sweep.
 
 **What is DATA-only is the DESCENDANTS, not the root.** The root is still
 runtime-scaled and re-anchored every pass — deliberately, so HUD edge-anchoring
-keeps working at any resolution (`src\UiSpike.cpp:5361-5364`; §7.3 cure 1). The
-children ship born-scaled from `double_subtree_areas` in
-`tools\selective-safe\build_selective_safe.py:646`, and that builder is the ONLY
-place their geometry can be changed.
+keeps working at any resolution (`src\UiSpike.cpp`, grep
+`DATA-PRE-SCALED SUBTREES` — the header comment over the array says it in one
+line; §7.3 cure 1). The children ship born-scaled from `double_subtree_areas` in
+`tools\selective-safe\build_selective_safe.py` (grep
+`def double_subtree_areas`), and that builder is the ONLY place their geometry
+can be changed.
 
 **The advisor strip is the worked example.** Its seven buttons live under
-`0x6A15C767` (`src\UiSpike.cpp:5374`), which is in the list, so a fix aimed at
+`0x6A15C767` (`src\UiSpike.cpp`, the first entry in `kDataScaledSubtreeIds`),
+which is in the list, so a fix aimed at
 `ScaleSubtree` is aimed at code that does not run there. The log says so in one
 line: `city panel 0x6A15C767 - 1 windows scaled`. The cure belongs in the DATA
 builder.
@@ -210,7 +224,7 @@ Consequences, and this is the whole decision tree for a new panel:
 
 | Parentage | Treatment | Why |
 |---|---|---|
-| Under `0x9A47B417` | **Runtime scale** (`ScalePanelRoot` + `ScaleSubtree`) + 2x art in `SelectiveArt` — **Law: UNLESS the root id is in `kDataScaledSubtreeIds` (`src\UiSpike.cpp:5373`): `ScalePanelRoot` scales and anchors the ROOT, then RETURNS at `src\UiSpike.cpp:14568-14573`, before the child-enumeration loop that opens at `:14579`. `ScaleSubtree` is never entered below it and the children ship pre-scaled in the `.UI` (`double_subtree_areas` in `build_selective_safe.py`; §7.3 cure 1, §6.2)** | the sweep walks this subtree every tick, **except below a `kDataScaledSubtreeIds` root, where it stops AT the root**. Stated no stronger than the evidence: the gate lives only in `ScalePanelRoot` — `ScaleSubtree` does not consult the list (`IsDataScaledSubtreeId` has exactly one call site, `:14570`), so the exception holds because the sweep enters through `ScalePanelRoot` (`:10320`). The one path that could bypass it, `ScaleOnShow` (`:7371`), needs `gShowHookMode >= 2` and the shipped default is `0` (`:7217`) |
+| Under `0x9A47B417` | **Runtime scale** (`ScalePanelRoot` + `ScaleSubtree`) + 2x art in `SelectiveArt` — **Law: UNLESS the root id is in `kDataScaledSubtreeIds` (`src\UiSpike.cpp`, grep `const uint32_t kDataScaledSubtreeIds[]`): `ScalePanelRoot` scales and anchors the ROOT, then RETURNS at `if (IsDataScaledSubtreeId(win->GetID()))`, before the child-enumeration loop that opens at `if (win->GetChildCount() > 0)`. `ScaleSubtree` is never entered below it and the children ship pre-scaled in the `.UI` (`double_subtree_areas` in `build_selective_safe.py`; §7.3 cure 1, §6.2)** | the sweep walks this subtree every tick, **except below a `kDataScaledSubtreeIds` root, where it stops AT the root**. Stated no stronger than the evidence: the gate lives only in `ScalePanelRoot` — `ScaleSubtree` does not consult the list (grep `IsDataScaledSubtreeId`: two hits in `src\`, the `inline bool` definition and that single call site), so the exception holds because the sweep enters through `ScalePanelRoot` (its only sweep call site, grep `ScalePanelRoot(p.win, screenW, screenH, f)` inside `ScalePanelsUnder`). The one path that could bypass it, `ScaleOnShow` (grep `void UiSpike::ScaleOnShow`), needs `gShowHookMode >= 2` and the shipped default is `0` (grep `int       gShowHookMode = 0;`, and the `ShowHook itself ships at 0` comment in `InstallShowHook`) |
 | Under the main window | **Static 2x `.UI`** (`build_dialog_static.py`: `area=` included) | "transient dialogs parented at the MAIN-WINDOW level (parent `0x00000000`), OUTSIDE the city runtime sweep... static-doubling them cannot double-scale" — live dump; `build_dialog_static.py` TARGETS comment |
 | **Both layers act** | **BUG: ~4x** | the failure mode below |
 
@@ -520,12 +534,14 @@ vtable base. That is how base-vs-override was settled without a game launch.
 **Law: THERE IS MORE THAN ONE BUFFER CLASS, AND MORE THAN ONE WAY OUT OF A
 BUFFER.** Naming one class and one slot is exactly how five separate
 instruments can all report "every blit corrected" while the screen shows
-uncorrected art. From `src\UiSpike.cpp:390–480` and `:3925–3955`.
+uncorrected art. From `src\UiSpike.cpp`: grep the two class vtable constants
+`kBufClassVt` (`0x00AC1400`) and `kBufClassVt2` (`0x00ADB418`), and the two
+draw channels that hook them, `BltClassThunk` and `BltStripThunk`.
 
 | Class vtable | Where it turns up | Slot 29 (`Blt`) |
 |---|---|---|
 | **`0x00AC1400`** | the main UI buffer class — flyout container buffers, the shared screen buffer | `0x826AD0` |
-| **`0x00ADB418`** | a **second, different** buffer class. Region-screen map items hold these at `[item+0x28]`/`[item+0x2C]` (verified on two independent runs, `src\UiSpike.cpp:16059`) | `0x00991BA0` — and it **can take a renderer path under dgVoodoo** |
+| **`0x00ADB418`** | a **second, different** buffer class, constructed at exactly one site (`0x00990B7C`) into a device member — grep `0x00ADB418` in `src\UiSpike.cpp` and `src\CodePatches.cpp`. ⚠ **The region-screen attribution this row used to carry is RETRACTED AT ITS SOURCE.** It said map items hold these at `[item+0x28]`/`[item+0x2C]`, "verified on two independent runs"; the very comment it cited was rewritten in v2.83.1 to say that is "FALSE AND WAS NEVER TRUE" — region tile buffers measure `0x00AC1400` on all nine items in every capture. Grep `CORRECTED v2.83.1` in `src\UiSpike.cpp`, and `kIGZBufferVt` / `kTileBufVt` for the vtable that actually ships | `0x00991BA0` — and it **can take a renderer path under dgVoodoo** |
 
 **`0x00AC1400` slot / field map**
 
@@ -576,7 +592,10 @@ Two consequences that are pure gold and reusable:
   halo.
 
 **The colour key, in the exact form the code tests it**
-(`src\UiSpike.cpp:2491`). Pixels are **32bpp BGRA**, so magenta is *not* a `0xFF00FF`
+(`src\UiSpike.cpp`, inside `BltClassThunk` — grep the unique comment
+`mod frames are RGBA`, which sits between the two tests below; the bare magenta
+test also appears at a second, alpha-guardless blit site, so grep that comment
+rather than the pixel compare). Pixels are **32bpp BGRA**, so magenta is *not* a `0xFF00FF`
 word compare — it is a per-byte test, and writing it as a word is a real way to
 get it wrong:
 
@@ -923,7 +942,9 @@ failure mode: it is a crash, usually far from the hook.
 Sims portrait hook was installed and never called. And `ArmDeferred` installs four hooks
 at `PostCityInit`, **before any sweep has written `gTierF`**, so anything running
 from them pre-sweep sees the compiled default `2.0f` — pre-sweep code must read
-`settings.spikeScaleFactor` instead (`src\UiSpike.cpp:160-169`). **A hook that
+`settings.spikeScaleFactor` instead (`src\UiSpike.cpp`, grep `---- TIER MATH` —
+the block that spells out the `gTierF` mirror and names `EarlyDockTick` as the
+hook that reads settings directly for this reason). **A hook that
 arms lazily produces a guaranteed null, and nothing in the log says so.**
 
 ### 2.6 `GZWinBMP` — the SetImage crop LATCH (byte-verified)
@@ -1613,30 +1634,40 @@ art": the dials' TGIs are ALL already staged 2x-in-place
 Plus: `imagerect` doubles **iff** that control's art went 2x; every `font=`
 name becomes a GUID. **Three live stages edit `area=`:**
 
-1. `double_subtree_areas` (`build_selective_safe.py:646`; called at `:1963`,
-   `:2011`, `:2035`, `:2057`, `:2082`) — pre-scales a whole subtree (§7.3).
-2. `seat_faces_on_apertures` (`:864`, rewrite at `:924-926`, called `:1976`) —
-   runs immediately AFTER the advisor call at `:1963`, on the same `new_text`.
-   Seats the 7 advisor faces (`ADVISOR_FACE_SEATS`, `:802-810` — the same 7 ids
-   in both `I-cbc905cd` and `I-4a160034`, so 14 windows) on their frame's
-   MEASURED art aperture. The delta is FATAL beyond 1px (G5, `:921-922`) and is
-   `(0,0)` — nothing written — at an integer tier, which is ASSERTED, not
-   assumed (`:918-919`, `:1985-1987`).
-3. the ticker-marquee design-width widen for `I-2a2aed99`, inline at
-   `:1936-1946` (`re.subn` on `id=0xaa12f33c`, FATAL unless it matches exactly
-   once). The code calls it "the ONE deliberate exception" at `:1934-1935`; see
-   also the **Ticker marquee `0xAA12F33C`** row later in this file.
+1. `double_subtree_areas` (grep `def double_subtree_areas`) — pre-scales a whole
+   subtree (§7.3). Grep `double_subtree_areas(new_text` for its call sites, and
+   expect them in **two** transform paths, not one: `main()` and
+   `carbon_transform_script` each run the same advisor/budget/Graphs/dashboard/
+   console-variant series, so a change made in one and not the other ships a
+   half-cure.
+2. `seat_faces_on_apertures` (grep `def seat_faces_on_apertures`; the tag
+   rewrite is its `re.sub(_SEAT_AREA, ...)`, and `_seat_one_tag` is what asserts
+   the id is unique) — runs immediately AFTER the advisor `double_subtree_areas`
+   call, on the same `new_text`, in both paths. Seats the 7 advisor faces
+   (`ADVISOR_FACE_SEATS` — the same 7 ids in both `I-cbc905cd` and
+   `I-4a160034`, so 14 windows) on their frame's MEASURED art aperture. The
+   delta is FATAL beyond 1px (grep `G5 a seat, never a nudge`) and is `(0,0)` —
+   nothing written — at an integer tier, which is ASSERTED, not assumed (grep
+   `INTEGER TIER: NOTHING IS WRITTEN`).
+3. the ticker-marquee design-width widen for `I-2a2aed99`, inline in both paths
+   (grep `TICKER MARQUEE DESIGN WIDTH` for the rationale block, then the `re.subn`
+   on `id=0xaa12f33c` below it, FATAL unless it matches exactly once). The code
+   calls it "the ONE deliberate exception" in that same block — the phrase wraps
+   across two lines, so grep `deliberate exception` rather than the whole
+   sentence; see also the **Ticker marquee `0xAA12F33C`** row later in this file.
 
-Note: `parity_nudge_btn_areas` (`:1241`, write at `:1273`) and
-`double_one_window_area` (`:931`, write at `:957`) also contain `area=` writes
-but are **defined and never called** (`:2122-2125`). A grep for `area=` finds
-five write sites; only the three above are live.
+Note: `parity_nudge_btn_areas` (grep `def parity_nudge_btn_areas`) and
+`double_one_window_area` (grep `def double_one_window_area`) also contain
+`area=` writes but are **defined and never called** — grep either name and the
+`def` line is the only hit. A grep for `area=` finds five write sites; only the
+three above are live.
 
 Outside those three the builder leaves `area=` alone — which is why the panels
 it does **not** pre-scale must stay runtime-scaled. (The pre-scaled subtrees are
 the opposite case: `0x6A15C767` is in `kDataScaledSubtreeIds`, so
-`ScalePanelRoot` returns before the child loop — `src\UiSpike.cpp:14568-14573` —
-and the runtime sweep never walks those buttons.)
+`ScalePanelRoot` returns before the child loop — `src\UiSpike.cpp`, grep
+`if (IsDataScaledSubtreeId(win->GetID()))` — and the runtime sweep never walks
+those buttons.)
 
 **Law: ART AND RUNTIME SCALE MUST MOVE TOGETHER — including in reverts.** Art
 without the scale, or the scale without the art, produce the *identical*
@@ -1760,9 +1791,9 @@ still come out even.** Which divide that is depends entirely on what the sheet
 
 | ROLE | What the engine does | Sizing rule for a scaled sheet | Derived from |
 |---|---|---|---|
-| **N-state strip** (buttons, ItemIcons, checkboxes) | `cell = imageWidth / N`, state selected by index. Cut **HORIZONTALLY ONLY** | **Width:** the snap unit is `CellUnit(v)` = the LCM of whichever of `{3,4}` divide the **1x** dimension (`tools\upscale\Upscale2x.cs:846`, `:798-807`, `:677`). `CellUnit` takes only the dimension and **never sees N**, so it can over-snap and it can miss entirely: a 4-state sheet whose width also divides by 3 snaps on **12** — the Zoom Out 84px sheet goes to 132, cell **33** against a 32px window — and the corpus's two **8**-state strips (`cell-strips.txt:8`, `:154`) are never snapped to a multiple of N at all, since 8 ∉ `{3,4}` (`Upscale2x.cs:684-688` works that case out). **Height:** exact only when `sNoHeightSnap` is set (`:876`), and only `--height-exact-group` / `--height-exact-strips` set it (`:361`, `:417`). The corpus rebuild passes **neither**, so **button and checkbox heights ARE cell-snapped**. Only **ItemIcons** take the exact height, via `--height-exact-group 6A386D26` in the ItemIcon builders. Measured with `gate_btn_undercover.py --tier 15x`: `{(0,1):1, (1,0):1, (0,2):347, (0,6):3}` — **351 of 352 are the cell TALLER than the window; exactly one is width.** **Law: DO NOT "FIX" THE HEIGHT HALF FROM THIS ROW.** Passing `--height-exact-strips` leaves the two known 1.5x hairlines unchanged and breaks the "?" button `{46a006b0,14415860}`; it is a forbidden cure. Those hairline buttons are runtime-swept and their widths already agree under both rules. | `upscale\find_cell_strips.py` — reads **the `.UI` that BINDS each sheet**. 193 of 2206. Note: that derived list reaches the per-state **SAMPLER** (`Upscale2x.cs:317-327` → `:734`) and `--height-exact-strips` **only**. It never reaches `CellUnit`, so N does not drive the width snap — `Upscale2x.cs:403-409` says so outright, and that separation is deliberate |
+| **N-state strip** (buttons, ItemIcons, checkboxes) | `cell = imageWidth / N`, state selected by index. Cut **HORIZONTALLY ONLY** | ⚠ **THIS CELL DESCRIBES PRE-#171 / PRE-#177 BEHAVIOUR AND BOTH HALVES HAVE BEEN OVERTAKEN BY THE CODE IT CITES. Re-measure before acting on it.** **Width, as the tool works today:** `ScaleDim` (`tools\upscale\Upscale2x.cs`, grep `private static int ScaleDim`) takes a **cell-first** branch BEFORE `CellUnit` is ever consulted — grep `CELL-FIRST STRIP SIZING` (#171/#165) and the guard `if (stripAxis && sStripStates > 1 && v % sStripStates == 0)`, which returns `sStripStates * R(v/sStripStates, f)` and never falls through to the snap. `sStripStates` arrives per file from `cell-strips.txt`, so **N DOES drive the width snap for every listed strip**. The code's own worked examples contradict the historical text: Zoom Out 84px/4 states is `4 * R(21*1.5) = 128`, cell **32** — EXACT, not 132/cell 33; the 8-state radiocheck 136px is `8 * R(17*1.5) = 208`, cell **26** — EXACT, so the corpus's two 8-state strips (`1abe787d 14416245` and `46a006b0 14416315` in `cell-strips.txt` — grep the TGI, not a line number) ARE now snapped to a multiple of N. `CellUnit` (grep `private static int CellUnit`) is still the LCM of whichever of `kCellCounts = {3,4}` divide the 1x dimension and still never sees N — it now governs only the sheets the cell-first branch does not claim. **Height, as the tool works today:** exact when `sNoHeightSnap` is set (grep `private static bool sNoHeightSnap`), which `--height-exact-group` and `--height-exact-strips` set. **The corpus rebuild now passes `--height-exact-strips` twice** — grep `--height-exact-strips` in `upscale\Rebuild-Corpus.ps1`: the #177 derived list, then the #185 hand-authored slab list, which the parser appends. The historical claims that the rebuild "passes neither", that heights "ARE cell-snapped", and that passing the flag is "a forbidden cure" are therefore all overtaken, and the `gate_btn_undercover.py --tier 15x` figures once quoted here (`{(0,1):1, (1,0):1, (0,2):347, (0,6):3}`) predate both flags — do not requote them without a fresh run. Only **ItemIcons** take the exact height via `--height-exact-group 6A386D26` in the ItemIcon builders. | `upscale\find_cell_strips.py` — reads **the `.UI` that BINDS each sheet**. 193 of 2206. ⚠ The note that stood here — that the derived list reaches the per-state SAMPLER and `--height-exact-strips` **only**, and "never reaches `CellUnit`, so N does not drive the width snap" — is **half true and half overtaken**: it still never reaches `CellUnit`, but since #171 it reaches `ScaleDim`'s cell-first branch through `sStripStates`, which is precisely N driving the width. The sampler is `BuildSampleMap` (grep `private static int[] BuildSampleMap`), fed `sStripStates` from `UpscaleNearest` |
 | **9-slice frame** (`blttype=edge`, `edgeimage=yes`) | `cell = (img->Width()/3, img->Height()/3)`; corners unstretched, edges stretch only *along* the run. **Note on the drawer:** `0x00794100` does not serve this row — it is `cSC4WinAlertBorder`'s own slot-88 draw, a code-created full-screen window that appears in **no `.UI` script at all**, so it can never own a role derived *from* the `.UI` corpus. The drawer for this row is the widget's own slot-88 draw: **`GZWinBMP` → `0x009BC325`** (EDGE branch, entered on flag bit 8 of the holder at `[this+0xD8]` via its `vt[10]`), **`GZWinBtn` → `0x009B05E0`** (its draw's nine-slice branch). **Note: each of the three drawers performs the `/3` ITSELF and hands an already-cut cell to a blitter that contains no divide** — `0x008D9550` for the alert border (one caller image-wide), `0x008D8800` for `GZWinBMP` and `GZWinBtn`. The arithmetic in this row: `0x009BC325` divides the *source rect*, which for a sheet with no `imagerect` **is** the image's natural rect. | snap to a multiple of **3, and 3 alone** | `upscale\find_nine_slice.py` |
-| **Tiled background** (`blttype=tiled`) | src-follows-dst: the source is **repeated** across the destination. No divide at all | **Law: snap NOTHING.** Its only contract is with its WINDOW, and the window scales by a plain round | `no-snap.txt` is generated by **`upscale\find_no_snap.py`** (`no-snap.txt:2`, `find_no_snap.py:124`), and its scope is `blttype=tiled` **OR** a sheet a `.UI` binds 1:1 to a window of exactly its 1x size, in either case only if no `.UI` ever draws it as a `GZWinBtn` state or a 9-slice and it is absent from `cell-strips.txt`/`nine-slice.txt` (`find_no_snap.py:22-28`). **121 entries**, and this is the file the corpus rebuild binds to `--no-snap`; the exe parses only `--cell-strips`/`--nine-slice`/`--no-snap` (`Upscale2x.cs:146,182,214`) |
+| **Tiled background** (`blttype=tiled`) | src-follows-dst: the source is **repeated** across the destination. No divide at all | **Law: snap NOTHING.** Its only contract is with its WINDOW, and the window scales by a plain round | `no-snap.txt` is generated by **`upscale\find_no_snap.py`** — the generated file says so on its own header line, `Generated by tools\upscale\find_no_snap.py` — and its scope is `blttype=tiled` **OR** a sheet a `.UI` binds 1:1 to a window of exactly its 1x size, in either case only if no `.UI` ever draws it as a `GZWinBtn` state or a 9-slice and it is absent from `cell-strips.txt`/`nine-slice.txt` (grep `Qualifies here if` in `find_no_snap.py`: the module docstring states all four conditions). It held **121 entries** when this row was written and holds **233** today, so recount it (`grep -vc "^#" no-snap.txt`) rather than quoting either figure. This is the file the corpus rebuild binds to `--no-snap`; the exe parses only `--cell-strips`/`--nine-slice`/`--no-snap` (grep each flag string in `Upscale2x.cs` — one `string.Equals` arm each) |
 
 **Law: DERIVED LISTS, NEVER HAND-LISTS.** Every one of those three lists is
 generated from the `.UI` corpus. The counter-example is measured: scoping the
@@ -1811,7 +1842,7 @@ claim to scale an icon and a disagreement is a visible defect:
 | Copy | Scope | Where |
 |---|---|---|
 | offline art pipeline | the shipped dats | `tools\upscale\Upscale2x.cs` — `ScaleDim`, `CellUnit`, `kCellCounts = {3,4}` |
-| **runtime ICONSYNTH** | third-party ItemIcons enlarged live at boot | `src\ScaleTier.cpp` — `RoundHalfUp` `:1270`, `kCellCounts` `:1294`, `CellUnit` `:1298`, `ScaleDim` `:1309`, `ResampleCells` `:1342` |
+| **runtime ICONSYNTH** | third-party ItemIcons enlarged live at boot | `src\ScaleTier.cpp` — grep each by name, all five in one block: `int RoundHalfUp`, `const int kCellCounts[]`, `int CellUnit`, `int ScaleDim`, `void ResampleCells` |
 
 The runtime copy's header calls itself *"THE OFFLINE UPSCALER'S DIMENSION RULE,
 PORTED VERBATIM"* and carries the worked example that forced it:
@@ -1826,11 +1857,13 @@ COPIES HAVE DRIFTED, and it is live, not hypothetical.** The runtime copy has
 `sNoSnapThis` / `sNoHeightSnap` role scoping — confirmed by reading
 `ScaleDim`'s signature (`int ScaleDim(int v, float factor)`, two arguments,
 one overload) and by the absence of any `NoHeightSnap`/`HeightExact` text
-anywhere in `ScaleTier.cpp`. That absence is not academic: `rebuild_namicons.py:43`
-builds the shipped NamIcons packages with `--height-exact-group 6A386D26` —
+anywhere in `ScaleTier.cpp`. That absence is not academic:
+`tools\itemicons\rebuild_namicons.py` (grep `--height-exact-group`, its single
+hit) builds the shipped NamIcons packages with `--height-exact-group 6A386D26` —
 `sNoHeightSnap` for exactly the TGI group (`{0x856DDBAC,0x6A386D26}`) the
-runtime ICONSYNTH path exists to enlarge (`ScaleTier.cpp:1656`'s
-`kIconType`/`kIconGroup` check). Run over the real 392-file 1x corpus in
+runtime ICONSYNTH path exists to enlarge (grep `const uint32_t kIconType` in
+`ScaleTier.cpp` for the pair, and `t == kIconType && g == kIconGroup` for the
+check itself). Run over the real 392-file 1x corpus in
 `tools\itemicons\nam-1x` at f=1.5: **WIDTH agrees on all 392** (the runtime's
 direct cell-first formula and the offline pipeline's plain-`ScaleDim`-then-
 round-to-4 happen to coincide here), but **122 of 392 sheets — every 176×44
@@ -1844,7 +1877,8 @@ no-ops at 2x/3x — **the no-op control holds (proven, S3); the 1.5x agreement
 control does not (measured FAIL, S5).**
 
 The runtime path also carries **its own** per-cell resampler,
-`ResampleCells` (`src\ScaleTier.cpp:1040`) — the rule that a 4-state strip
+`ResampleCells` (`src\ScaleTier.cpp`, grep `void ResampleCells` for the
+definition and the bare name for its two call sites) — the rule that a 4-state strip
 is four independent images sharing a texture, implemented a second time. Same
 drift risk, same control.
 
@@ -2494,12 +2528,14 @@ Income 33→70, "Population by Age" 87→185. Per-point advance is ~6 % larger a
 26 pt than at 13 pt (glyph-advance rounding inside the font).
 
 > **The ×2.13 figure is a population mean, not a single sample.** `2.121` is
-> one string's ratio: `Income` 33 → 70 (`emu_text_extent.py:157`). Over the
-> full n=17 pair set (`emu_text_extent.py:140-158`) the figures are **mean
+> one string's ratio: `Income` 33 → 70 — the last entry in `PAIRS_13_26`
+> (`tools\uimap\emu\emu_text_extent.py`, grep `PAIRS_13_26`). Over that
+> full n=17 pair set the figures are **mean
 > 2.130, sd 0.026**, pooled **2080/975 = 2.133**, spread **2.085 (`Air
-> Pollution`) .. 2.188 (`Commute Time`)** — and `emu_text_extent.py:37`
-> states **"2.13 \u00b1 0.03"**: the \u00b1 0.03 band belongs to the mean.
-> `src\CodePatches.cpp:589` carries 2.121, the single-string figure. The
+> Pollution`) .. 2.188 (`Commute Time`)** — and that file's module docstring
+> (grep `2.13 +- 0.03`) states **"2.13 \u00b1 0.03"**: the \u00b1 0.03 band belongs to the mean.
+> `src\CodePatches.cpp` carries 2.121, the single-string figure — grep `2.121`,
+> a single hit, in the graph-legend strip block above `kGraphLegendStrips`. The
 > load-bearing fact is only that the ratio is not 2.00.
 
 > **Therefore a box of `round(stockBox * f)` WRAPS MORE THAN STOCK.** Boxes
@@ -2767,10 +2803,12 @@ the fix to DATA or add a pin-back pass. Do not retune the constant.
 this document.*
 
 **There is exactly ONE scale number in the DLL**: `Settings::spikeScaleFactor`
-(`src\Settings.h:44`), written once at boot from `ScaleTier::Decide`
-(`src\ScaleTier.cpp:1651`, called `src\SC4UIScaleDllDirector.cpp:218`) and
-mirrored into namespace-scope `gTierF` (`src\UiSpike.cpp:169`) for the hooks
-that cannot see the settings object. **UI scale and TEXT scale are locked 1:1
+(`src\Settings.h`, grep `float spikeScaleFactor`), written once at boot from
+`ScaleTier::Decide` (`src\ScaleTier.cpp`, grep `float Decide(int width, int height)`;
+its one out-of-file call site is `ScaleTier::Decide(gfxW, gfxH)` in
+`src\SC4UIScaleDllDirector.cpp`, whose next lines assign `settings.spikeScaleFactor`)
+and mirrored into namespace-scope `gTierF` (`src\UiSpike.cpp`, grep
+`float gTierF = 1.0f;`) for the hooks that cannot see the settings object. **UI scale and TEXT scale are locked 1:1
 by decision of record; there is no text knob.**
 
 `Decide(width, height)` — walk the package table **largest first** and take the
@@ -2794,14 +2832,16 @@ Dropping it admits resolutions with **no slack**: a panel then crosses
 polls panel over the RCI meter (measured −256px at 1400x1050, −385px at
 1920x1080).
 
-**Warning: `kPackages` declares FOUR tiers, not three** (`src\ScaleTier.cpp:43`):
+**Warning: `kPackages` declares FOUR tiers, not three** (`src\ScaleTier.cpp`,
+grep `const Package kPackages[]`):
 `4.0f/-4x`, `3.0f/-3x`, `2.0f/-2x`, `1.5f/-15x`. **No `-4x` package is built**,
 so `PackageInstalled` always rejects it and 4x is unreachable — but the
 table is the thing `Decide` iterates, so anyone who stages a `-4x` art dat turns
 4x on with no other change. Docs that say "three tiers" are describing what
 ships, not what the code will select.
 
-**One tag gates two layers.** `SyncStaticLayers` (`src\ScaleTier.h:27`) picks a
+**One tag gates two layers.** `SyncStaticLayers` (declared in `src\ScaleTier.h`,
+defined in `src\ScaleTier.cpp` — grep `void SyncStaticLayers(float factor)`) picks a
 single tag and uses it for **both** the art dats and `FontStyle<tag>.ini`, and
 stashes every other tier's dats as `.x1-disabled`. *"UI 2x + text 3x" is not
 expressible at any layer* — not in settings, not at runtime, not in packaging.
@@ -2810,7 +2850,7 @@ expressible at any layer* — not in settings, not at runtime, not in packaging.
 
 | Kind | Rule | Integer-tier behaviour |
 |---|---|---|
-| window geometry | `ScaleRound(v, f)` = `RoundHalfUp(v*f)` (`src\UiSpike.cpp:5385`) — **children round inside the PARENT's design frame**, not independently | exact |
+| window geometry | `ScaleRound(v, f)` = `RoundHalfUp(v*f)` (`src\UiSpike.cpp`, grep `inline int32_t ScaleRound`) — **children round inside the PARENT's design frame**, not independently | exact |
 | art sheet dimensions | `ScaleDim` + the ROLE rules (§4.6c) | **provable no-op** |
 | blit destination extents | **Law: FLOOR, never round up** — `RoundHalfUp(srcExtent*f)` with an odd source at f=1.5 manufactures a destination column that has no source pixel (the stray line down the right edge of the sun/moon rings) | exact |
 | byte-patched exe constants | re-encoded per tier by `CodePatches.cpp`; each must **reduce exactly to the stock byte at f=1** | that reduction is the control |
@@ -2838,30 +2878,41 @@ default, not the rule, and the exceptions are the ones that bite.** TWO
 builders write `area=` into the shipped scripts, so a window is born 1x only
 if NEITHER of them owns it:
 
-1. `build_selective_safe.py::double_subtree_areas` (`:646`) rewrites `area=` on
-   every descendant — never the root, and alignment markers `0x0000AAAA` are
-   skipped (`:701-702`) — of **TEN roots across FIVE call sites**: advisor
-   strip `0x6A15C767` (`:1963`), the **four** budget roots (`:2010-2011`), the
-   three Graphs roots (`:2033-2035`), the U-Drive-It dashboard `0x4BCB938A`
-   (`:2057`) and the console variant `0xEC1A5CBF` (`:2082`). This runs at
+1. `build_selective_safe.py::double_subtree_areas` (grep
+   `def double_subtree_areas`) rewrites `area=` on every descendant — never the
+   root, and alignment markers `0x0000AAAA` are skipped (grep
+   `ALIGNMENT MARKERS (id 0x0000AAAA)`) — of **TEN roots across FIVE call
+   sites**: advisor strip `0x6A15C767`, the **four** budget roots, the three
+   Graphs roots, the U-Drive-It dashboard `0x4BCB938A` and the console variant
+   `0xEC1A5CBF`. Note that those five calls appear **once per transform path**
+   and there are two (`main()` and `carbon_transform_script`), so
+   `grep -c 'double_subtree_areas(new_text'` returns ten, not five. This runs at
    **every tier**, not only fractional ones.
-   `seat_faces_on_apertures` (`:864`, rewrite at `:924-926`, called `:1976`)
-   adds **no new** pre-scaled windows: it re-seats 7 children that
-   `double_subtree_areas` already wrote, by at most 1px, in each of the two
-   advisor scripts — 14 `area=` sites, the same 7 ids twice (`:798-800`) — and
-   **only at a fractional tier** (`:918-919` writes nothing when the delta is
-   zero; `:1985-1987` FATALs if it ever moves anything at an integer factor).
+   `seat_faces_on_apertures` (grep `def seat_faces_on_apertures`; the tag
+   rewrite is its `re.sub(_SEAT_AREA, ...)`) adds **no new** pre-scaled windows:
+   it re-seats 7 children that `double_subtree_areas` already wrote, by at most
+   1px, in each of the two advisor scripts — 14 `area=` sites, the same 7 ids
+   twice (grep `ADVISOR_FACE_SEATS`) — and **only at a fractional tier** (grep
+   `INTEGER TIER: NOTHING IS WRITTEN` for the zero-delta skip, and
+   `THE NO-OP AT AN INTEGER FACTOR IS ASSERTED` for the FATAL that fires if it
+   ever moves anything at an integer factor).
 2. `build_dialog_static.py` scales the `area=` of **every node it owns, ROOTS
-   INCLUDED** — `scaled_area()` (`:783-789`) applied to `walk(roots)`
-   (`:1418-1421`) — across its whole `TARGETS` corpus (`:292`).
+   INCLUDED** — `scaled_area()` (grep `def scaled_area`) applied to
+   `walk(roots)` (grep `def walk`) — across its whole `TARGETS` corpus (grep
+   `^TARGETS = \[` so the separate `TP_TARGETS` list does not match, and note
+   `TARGETS += discover_query_family()` extends it at runtime).
 
 **Neither is repaired downstream, and that is deliberate on both sides.**
 `ScalePanelRoot` **returns before the child loop** for any
-`kDataScaledSubtreeIds` member (`src\UiSpike.cpp:14568-14573`; list at
-`:5373`), and every static-dialog root sits in `kNeverScaleIds`
-(`src\UiSpike.cpp:4778`; e.g. Establish City `0x6A414973` at `:4806`) because
-running the sweep on top of the doubled script double-scales it — measured
-868x468 -> 1736x936 (`:4803`). See also `build_dialog_static.py:755-757`.
+`kDataScaledSubtreeIds` member (`src\UiSpike.cpp`, grep
+`if (IsDataScaledSubtreeId(win->GetID()))`; list at
+`const uint32_t kDataScaledSubtreeIds[]`), and every static-dialog root sits in
+`kNeverScaleIds` (grep `const uint32_t kNeverScaleIds[]`; e.g. Establish City
+`0x6A414973`, whose entry comment names script `I-2a41436b`) because running the
+sweep on top of the doubled script double-scales it — measured 868x468 ->
+1736x936, which appears twice in that file (grep `868x468`: once beside the
+`kNeverScaleIds` entry, once as the "Establish City 4x precedent"). See also
+`build_dialog_static.py`, grep `Establish City`.
 
 **Warning: so for these windows the answer to "the sweep will fix it" is NO.** A
 wrong number a builder writes there ships exactly as written — the advisor

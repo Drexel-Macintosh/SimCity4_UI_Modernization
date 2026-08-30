@@ -559,6 +559,32 @@ public:
 			CodePatches::ArmGpuCapProbe();
 			CodePatches::ArmFontGuidProbe();
 
+			// The world-overlay probes (2026-08-30) live on the same tail for
+			// the same reason: each must be armable at EVERY factor, including
+			// the 1x control launch where the tier logic forces ScaleAll to 0.
+			// Each reads its own key ([UiSpike] HighlightProbe /
+			// ZoneQuadProbe / NborArrow), each defaults to 0, and each logs
+			// its resolved value - so a session without those keys is fully
+			// inert and a session with one can never be mistaken for one
+			// without.
+			CodePatches::ArmHighlightProbe();
+			CodePatches::ArmZoneQuadProbe();
+			CodePatches::ArmNborArrowProbe();
+			// DOTSIZE too: InstallSignpostProbe also arms it (that is where
+			// the probe plan puts it), but that path sits behind
+			// MissionBubbleFx >= 3 AND ScaleAll, so on its own the key could
+			// resolve to nothing with no line saying why. The call is
+			// idempotent - whichever site runs first does the work and logs
+			// the resolved value exactly once.
+			CodePatches::ArmDotSizeProbe();
+			// EffectKill / EffectCensus, for the same reason and with the
+			// sharper edge: their only previous reader sat behind BOTH
+			// ScaleAll and MissionBubbleFx, so the 1x CONTROL launch - the one
+			// configuration a control round is FOR - read neither key and
+			// logged neither value. A kill that never armed and a kill that
+			// changed nothing look identical in a capture.
+			CodePatches::ArmEffectFilter();
+
 			// #182: the sync runs for MANUAL tiers too. This gate used to be
 			// AutoScale-only, and that is the SECOND instance of the exact
 			// failure documented for #149 below ("AutoScale=0 - a supported
@@ -1217,9 +1243,16 @@ public:
 			// verbatim the "lazy and not self-armed" defect this project
 			// already recorded against [Probe] EdgeBlt, and it cost a live
 			// session. A probe key must ARM ITS OWN PROBE.
-			if (settings.spikeScaleAll
-				&& (settings.spikeMissionBubbleFx >= 3
-					|| CodePatches::ViewListRepeatRequested()))
+			// 2026-08-30: and the fix above was itself half-applied. The key
+			// armed its own probe, but the whole clause still sat behind
+			// spikeScaleAll - which the tier logic FORCES to 0 at stock tier.
+			// So a 1x control launch armed nothing and produced a guaranteed
+			// silent null, in the one configuration a control run needs. The
+			// probe key now stands alone; the MissionBubbleFx path keeps its
+			// ScaleAll conjunct, because that one really is a scaling probe.
+			if (CodePatches::ViewListRepeatRequested()
+				|| (settings.spikeScaleAll
+					&& settings.spikeMissionBubbleFx >= 3))
 			{
 				CodePatches::InstallPickProbe();
 			}

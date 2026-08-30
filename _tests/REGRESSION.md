@@ -18057,3 +18057,129 @@ a PNG that was right all along.
 AND STAND DOWN FOR THE REMOVER.** Our folder wins by construction, so any art
 we upscale silently overrides the player's choice between the author's own
 options. The gate belongs on the CHOICE, not on the art.
+
+
+---
+
+## 2026-08-30 - the engine documentation becomes a section, and two gates that had stopped meaning anything
+
+**v4.6.0. No code shipped.** The DLL and every package are byte-identical to
+v4.5.9. What changed is the documentation, the gates over it, and two
+instruments that had been failing long enough to be ignored.
+
+### ⭐ LAW: A STANDING RED IS A DISABLED GATE
+
+`gate_patch_families_combined.py` exists to make one failure impossible: "a
+new table nobody registered FAILS the gate rather than being silently
+skipped", in its own header's words. It was failing on **40 unregistered
+symbols** across five feature arcs. The register had recorded the problem as
+*five* unregistered tables, all cost-box. Measured: 40, of which three were
+cost-box.
+
+That gap is the finding. Nobody mis-measured; the redness DRIFTED while
+everyone knew it was red. A gate that has been failing for months is
+indistinguishable from a gate that is switched off, except that it costs you
+the illusion of coverage. **The register's own note said this** - "a standing
+red makes every later red look pre-excused" - and then the register itself
+quoted a stale composition of that red.
+
+**Cure:** every symbol classified by READING THE APPLIER, never the name.
+A `Site` suffix does not make a site (`kX8DispatchSite` is a detour target);
+a `Stock` array is usually a memcmp pattern, not a table of addresses; and
+three of the ten real site tables turned out to be `.rdata` DATA, which must
+be registered *and then excluded* from the instruction-overlap math or they
+poison it. Final: 10 site tables, 14 stock-verify patterns, 16 detour
+targets/vtable identities. **Green, with a mutation control** - unregister one
+table in a scratch copy, the gate fails on exactly that table.
+
+### crosscheck: 47 misses to 0, without lowering the bar
+
+The offline model was 25 days behind `CodePatches.cpp`. Four owner functions
+were seeded into `census.py` `EXTRA_BUILDERS` and the model regenerated.
+
+The part worth keeping: after regeneration the model **could** hold the four
+intro-video sites and both restore-toolbars constants, so those two families
+LEFT the skip list rather than hiding in it. A skip is a question the gate
+does not ask; leaving a question unasked when you have just made it answerable
+is how a green run becomes decoration. What remains skipped is skipped with
+the measured reason and the falsifier:
+
+- **Real geometry, wrong subsystem.** The CSI, signpost and region-camera
+  immediates are genuine scaled constants living in renderer / dispatch-view
+  code, which the census's rect-driving discovery cannot reach. *Measured:*
+  all four owners absent from `builders.json` `discovered`, so promotion is
+  structurally unavailable, not merely undone.
+- **Branch not driven.** The cheat-dialog and cost-box readout sites emitted
+  nothing even after their owners were seeded. *Positive control:* sibling
+  sites in the SAME owner (`sub_7EDEB0`) did census, so the emulator reaches
+  the function and not that branch.
+
+### ⭐ LAW: FAMILIES, TABLES AND SITES ARE THREE DIFFERENT NUMBERS
+
+Prose said "about thirty byte-patched layout constants". The drift register
+said "36 families, 274 sites". Both were the same conflation, and the first
+attempt at the fix **repeated it** - correcting the number while keeping the
+wrong noun.
+
+    FAMILY  one ini-gated applier          - what a user turns on      = 18
+    TABLE   one k... array/scalar in src   - what a maintainer edits   = 36
+    SPAN    one contiguous verified range  - what actually gets written = 295
+
+The gate is now the only thing allowed to state these counts, the same rule
+`coverage-matrix.md` already applies to coverage. A number with no owning
+instrument drifts into whichever noun the sentence needed.
+
+### ⭐ LAW: FIX THE PROSE, NOT THE GATE
+
+`Test-NoDeadLinks.py --repo` (new: checks the TRACKED set, which is what a
+GitHub reader can click - an untracked file on disk resolves locally and 404s
+for them) reported 127 hits. Most were false positives, and each exclusion now
+states its reason: submodule SDK headers, runtime artifacts, generated trees.
+
+Four hits were documents naming a file *because it does not exist* ("
+Rebuild-Previews.ps1 was never written and no such file exists"). I wrote an
+allowlist for them, and deleted it the same hour. **The right fix was in the
+prose**: a sentence that says a name was never written should not format that
+name as a live path. Dropping the backticks says the same thing to the reader
+AND to the scan, and left the allowlist with nothing to exclude - so it went,
+because an exclusion nobody can check is how a gate stops meaning anything.
+
+The submodule-header exclusion is a LOOKUP against the checked-out submodule,
+not a name pattern, deliberately: a prefix rule would also wave through a
+misspelled cIGZ-something header, and a citation of a header the SDK does not
+have is exactly the dead reference this gate is for. If the submodule is
+absent the set is empty and every header citation is reported - a refusal, not
+a silent pass.
+
+*(Written first with a made-up header name as the example, in backticks. The
+gate flagged it on the next run - which is both the lookup proving it beats a
+prefix rule, and the fix-the-prose law applying to the paragraph that states
+it. The example is now prose.)*
+
+### The disclosure was wrong in the direction that matters
+
+`THIRD-PARTY-NOTICES` said the repository contains "no EA code, and no EA
+artwork, sound or `.dat` data". A content census - every tracked non-code file
+under `tools\` read and classified, the classifier itself spot-checked
+adversarially - found ~220 text files of decoded game data and scripts, four
+whole-function disassembly listings, six modified locale/font files, and about
+a dozen modder-authored Lua scripts that arrived through the same decode pass.
+
+**An absolute claim about a tree nobody has censused is a claim about what you
+INTENDED to collect.** New §4a states what is there, excludes it from the CC0
+dedication like the derived art, and extends the takedown offer to cover it
+file by file. Three other documents repeated the overclaim and now agree.
+
+### Acceptance
+
+    python tools\uimap\emu\gate_patch_families_combined.py   -> PASS, 0 overlaps,
+                                                                295 spans / 36 tables / 18 families
+    python tools\uimap\crosscheck.py                         -> 268 adjudicated, 0 MISSED
+    python _packaging\Test-NoDeadLinks.py --repo             -> ALL PASS
+    _tests\Sync-Check.ps1                                    -> PASS
+
+**Trap signature:** if `crosscheck` reports misses again, check
+`constants.json`'s mtime against `CodePatches.cpp` FIRST - the file-age race
+is this instrument's oldest failure mode and it looks exactly like a real
+hole. **Revert:** documentation only; `git revert` is safe and changes nothing
+a player sees.

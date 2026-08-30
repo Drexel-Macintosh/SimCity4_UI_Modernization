@@ -450,7 +450,14 @@ _V459_HOOKS = ("kCsiDrawVa", "kSpAttachVa", "kSpBindVa", "kSpHoverVa",
                "kBalloonBuildVa", "kDrawVa", "kSetFontStyleByGuid",
                "kRegionBuildFn", "kRegionItemBuildFn", "kRegionOverlayFn",
                "kRegionPanClampFn", "kRegionInvalidateFn",
-               "kRegionCamSetScale", "kCostOriginBack")
+               "kRegionCamSetScale", "kCostOriginBack",
+               # 2026-08-30 overlay probes - the same shape as every VA above:
+               # MinHook rewrites a prologue, no immediate is edited, and each
+               # install memcmps its stock bytes first. DotSize is the one that
+               # WRITES, but it writes a float into an OBJECT FIELD ([ecx+0x80])
+               # at run time, never into .text - so there is still no patch site
+               # here for a constant model to hold.
+               "kHighlightVa", "kZoneQuadVa", "kNborArrowVa", "kDotSizeVa")
 for _name in _V459_HOOKS:
     SKIPPED[_name] = SKIPPED["_V459_HOOK_VA_DOC"]
 del SKIPPED["_V459_HOOK_VA_DOC"]

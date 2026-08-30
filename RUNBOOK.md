@@ -189,12 +189,19 @@ transparent and *draws as pink* on screen.
 
 ```powershell
 _packaging\Build-Dist.ps1          # player-ready bundle
-_packaging\Build-PublicRepo.ps1    # public source export, privacy-gated
 ```
 
-`Build-PublicRepo.ps1` runs `Test-NoForeignContent.py`, which refuses to export
-if it finds user paths, hostnames, other-project names, or tokens. That gate is
-why this repository is clean; keep it in the path.
+**There is no export step.** This working tree pushes straight to the public
+remote, so what ships is decided by the `.gitignore` allowlist and proven by
+`_tests\Sync-Check.ps1` — which scans the tracked set for machine paths and
+refuses any file whose leading bytes are image, archive or executable,
+whatever its extension. `_packaging\Build-PublicRepo.ps1` belongs to the older
+two-repo arrangement and is marked superseded in its own header; do not run it
+expecting its output to be what the public sees.
+
+`_packaging\Test-NoForeignContent.py <dir>` is still worth running by hand
+against a changed doc set: it refuses on names that can only mean another
+project, and reports softer matches for one human read.
 
 ---
 

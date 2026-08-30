@@ -4509,6 +4509,150 @@ namespace CodePatches
 		int   gBubbleAllLogs = 0;    // mode >= 3: unfiltered spawn census
 		int   gBubbleBandLogs = 0;   // offer-band (0x49xxxx-0x4Axxxx) spawns
 
+		// ---- EFFECTFILTER (overlay plan, probe 1) -------------------------
+		// FOUR research rows collapse onto this ONE already-shipped detour:
+		// the service-radius circles (PlopMode_*), the lot direction arrow
+		// (Lot_Direction_Arrow), the terrain-brush ground ring
+		// (mountain/valley/level/smooth_tool_*) and the zone DRAG furniture
+		// (local_grid / local_tile_outline) all spawn through
+		// CreateEffectByName 0x5939B0. Two levers, both ini-gated, both inert
+		// unless the keys are set:
+		//
+		//   [Probe]   EffectCensus = N   - the BUBBLEALL line budget. Default
+		//     40 = today's exact hard-coded behaviour, so a shipped build with
+		//     no ini change is byte-identical. The 40-line budget is provably
+		//     SPENT DURING CITY LOAD, so without raising it every tool-cursor
+		//     name is a FILTERED NULL - the same defect already recorded
+		//     against the click channel below.
+		//
+		//   [UiSpike] EffectKill = comma-separated name PREFIXES, case-
+		//     insensitive. A match returns 0 WITHOUT calling the original and
+		//     WITHOUT writing *ppOut. That is byte-faithful to the exe's own
+		//     failure contract: it writes *ppOut at exactly one site
+		//     (0x593AB9, on success) and never on a failure path, so a
+		//     suppressed spawn is indistinguishable from a stock "no such
+		//     effect" and both call sites' existing null checks (the
+		//     [esi+0xD8]==0 guard at 0x4C16CB, the `cmp [edi],0` sibling
+		//     idiom) already handle it. Writing a null there instead would be
+		//     a behaviour the exe never produces.
+		//
+		// PREFIX, not equality, so one entry kills the active/inactive pair of
+		// a brush family without touching its siblings - which is exactly what
+		// makes the differential-suppression round readable (raise ring gone,
+		// lower/level/smooth rings still drawing, in the same second).
+		//
+		// The list is parsed ONCE at install into a fixed array - no
+		// allocation, no locking, nothing but a memcmp on the hot path.
+		const int kEffectKillMax = 8;
+		const int kEffectKillLen = 32;
+		char gEffectKill[kEffectKillMax][kEffectKillLen] = {};
+		int  gEffectKillCount = 0;
+		int  gEffectCensus = 40;     // [Probe] EffectCensus; 40 = stock budget
+		int  gEffectKillLogs = 0;
+		volatile LONG gEffectKilled = 0;
+
+		// Case-insensitive PREFIX match against the parsed kill list.
+		bool MatchesEffectKill(const char* name)
+		{
+			if (!name || gEffectKillCount <= 0) { return false; }
+			for (int i = 0; i < gEffectKillCount; ++i)
+			{
+				const size_t n = strlen(gEffectKill[i]);
+				if (n == 0) { continue; }
+				if (_strnicmp(name, gEffectKill[i], n) == 0) { return true; }
+			}
+			return false;
+		}
+
+		// Parse both EFFECTFILTER keys ONCE, at install, and ALWAYS log what
+		// they resolved to (house law: a lever that can be mis-armed must
+		// print its resolved value every time, or an inert setting reads as a
+		// result). Effect names are ASCII, so the wide ini text is narrowed
+		// with a bounded byte copy; anything non-ASCII simply will not match a
+		// name and is harmless.
+		bool gEffectFilterLoaded = false;
+
+		// ⭐ A PROBE KEY MUST ARM ITS OWN PROBE - and this one did not.
+		// Until 2026-08-30 the only caller sat inside InstallMissionBubbleScale,
+		// which returns early unless the tier is scaling AND MissionBubbleFx is
+		// high enough. spikeScaleAll is FORCED to 0 at the stock tier, so on a
+		// 1x CONTROL launch - the exact configuration a control round needs -
+		// EffectKill and EffectCensus were never read, never armed and never
+		// logged. A capture would then show no kill and no line saying why:
+		// "suppression had no visible effect" is indistinguishable from
+		// "suppression never armed". That is verbatim the ViewListRepeat defect
+		// this same session fixed one file over.
+		//
+		// Now idempotent and called unconditionally from the tier tail, so the
+		// resolved values are ALWAYS in the log whatever the tier decides.
+		void LoadEffectFilterConfig()
+		{
+			if (gEffectFilterLoaded) { return; }
+			gEffectFilterLoaded = true;
+
+			wchar_t ini[MAX_PATH] = {};
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
+
+			gEffectCensus = static_cast<int>(GetPrivateProfileIntW(
+				L"Probe", L"EffectCensus", 40, ini));
+			if (gEffectCensus < 0) { gEffectCensus = 0; }
+
+			wchar_t raw[512] = {};
+			GetPrivateProfileStringW(L"UiSpike", L"EffectKill", L"",
+				raw, 512, ini);
+			gEffectKillCount = 0;
+			memset(gEffectKill, 0, sizeof(gEffectKill));
+			const wchar_t* p = raw;
+			while (*p && gEffectKillCount < kEffectKillMax)
+			{
+				while (*p == L' ' || *p == L'\t' || *p == L',') { ++p; }
+				if (!*p) { break; }
+				const wchar_t* start = p;
+				while (*p && *p != L',') { ++p; }
+				const wchar_t* end = p;
+				while (end > start
+					&& (end[-1] == L' ' || end[-1] == L'\t')) { --end; }
+				int n = 0;
+				char* dst = gEffectKill[gEffectKillCount];
+				for (const wchar_t* q = start;
+					q < end && n < (kEffectKillLen - 1); ++q, ++n)
+				{
+					dst[n] = (*q < 128) ? static_cast<char>(*q) : '?';
+				}
+				dst[n] = '\0';
+				if (n > 0) { ++gEffectKillCount; }
+			}
+
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: EffectCensus resolved to %d (read from [Probe]; "
+				"40 = the stock BUBBLEALL budget, which city load SPENDS - "
+				"raise it or every tool-cursor name is a filtered null). "
+				"EffectKill resolved to %d prefix(es) (read from [UiSpike]; "
+				"0 = OFF, the shipped default).",
+				gEffectCensus, gEffectKillCount);
+			for (int i = 0; i < gEffectKillCount; ++i)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: EffectKill prefix[%d] = \"%s\" "
+					"(case-insensitive).", i, gEffectKill[i]);
+			}
+			// A non-empty kill list that cannot fire must SAY SO here. The hook
+			// it rides (CreateEffectByName) is installed only by
+			// InstallMissionBubbleScale, which declines at a non-scaling tier -
+			// so without this line an operator at 1x sees the prefixes echoed
+			// back and reasonably concludes they are armed.
+			if (gEffectKillCount > 0 && !gCreateEffectOrig)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: WARNING - EffectKill lists %d prefix(es) but "
+					"the CreateEffectByName hook is NOT installed yet, so "
+					"nothing is being suppressed. That hook needs a scaling "
+					"tier and [UiSpike] MissionBubbleFx>=1. If the kill is what "
+					"you are testing, this launch will show a false absence of "
+					"effect - i.e. no absence at all.", gEffectKillCount);
+			}
+		}
+
 		// TEN drawer identifications from static analysis never executed
 		// (every hooked VA armed clean and fired zero). This instrument
 		// uses NO analysis: when the PROVEN-LIVE click spawn fires, the
@@ -4715,6 +4859,351 @@ namespace CodePatches
 				"CodePatches: CSIDRAW armed on cSC4DispatchVehicleView::Draw "
 				"0x0046D990 (kill=%d). A call count of ZERO means this drawer "
 				"never runs and the kill result is VOID.", gCsiKill);
+		}
+
+		// ---- HIGHLIGHT: occupant SetHighlight 0x5E90E0 --------------------
+		// The dark-green Query hover, the dark-red Demolish hover and the
+		// red tint every occupant of a lot takes under the plain mayor
+		// pointer are all ONE mechanism: the renderer tints the occupant's
+		// own model from a flag byte. SetHighlight is occupant vt+0x44 =
+		// 0x5E90E0; it reads GetHighlight (vt+0x40), compares it to the new
+		// mode at [esp+0x10], and on a difference runs 0x5E90F8-0x5E9107:
+		//   mov cl,[edi+0x2E] ; and cl,0x0F ; mov dl,bl ; shl dl,4
+		//   add cl,dl ; mov [edi+0x2E],cl
+		// - the mode in the HIGH NIBBLE of byte [occupant+0x2E]. Draw-time
+		// tint at 0x7D4FB0 is `[SC4DrawContext+0x54] + mode*16` pushed as the
+		// texture-environment constant colour, so the mode IS the colour:
+		//   7 = (0,.37,0,1) dark green   5 = (.66,0,0,1) dark red
+		//   1 = (0,1,0,1) pure green     2 = (1,0,0,1) pure red
+		//
+		// ARITY IS KNOWN, NOT GUESSED - this is the one thing that makes a
+		// TYPED detour legal here: __thiscall with ecx = occupant,
+		// [esp+4] = dwHighlight, [esp+8] = bSendMessageNow. Everything else in
+		// this plan whose arity is unknown is a NAKED log-and-relay instead.
+		//
+		// 0x5E90E0 has ZERO direct callers (it is reached only through
+		// vt+0x44) and 46 .rdata vtable slots point at it, so one body hook
+		// covers essentially every occupant class that does not override it.
+		//
+		//   [UiSpike] HighlightProbe = 0 off (not installed at all)
+		//                              1 log only
+		//                              2 rewrite ONLY 7->2 and 5->1, so the
+		//                                Query hover must turn PURE RED and
+		//                                the Demolish hover PURE GREEN. Every
+		//                                other value is passed through
+		//                                untouched, so the network tool's own
+		//                                highlight modes are undisturbed and
+		//                                the blast radius stays readable.
+		//                              3 force mode 0 (no glow at all)
+		//
+		// LOG VOLUME IS A REAL HAZARD HERE, not a tidiness point: this can be
+		// called per-occupant per-frame, and an unconditional line per call
+		// floods the log and stalls the render thread badly enough to look
+		// like a hang. So: a full line only when the INCOMING mode differs
+		// from the last one seen, plus a running total every 500 calls.
+		typedef bool(__fastcall* HighlightFn)(void*, void*, uint32_t, uint32_t);
+		HighlightFn gHighlightOrig = nullptr;
+		volatile LONG gHighlightCalls = 0;
+		LONG gHighlightLast = -1;    // last INCOMING mode; -1 = none seen yet
+		int  gHighlightLogs = 0;     // detail lines spent (hard cap, see below)
+		int gHighlightProbe = 0;
+		const uintptr_t kHighlightVa = 0x5E90E0;
+		const uint8_t kHighlightStock[5] = { 0x53, 0x55, 0x57, 0x8B, 0xF9 };
+
+		// The read-back of [occupant+0x2E]. Kept in its own function so the
+		// SEH frame never shares a scope with anything that unwinds.
+		uint32_t SafeReadByte(const void* p, size_t off)
+		{
+			__try
+			{
+				return *(static_cast<const uint8_t*>(p) + off);
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				return 0xFFFFFFFFu;
+			}
+		}
+
+		bool __fastcall HighlightDetour(void* self, void* edx,
+			uint32_t mode, uint32_t send)
+		{
+			const LONG n = InterlockedIncrement(&gHighlightCalls);
+			uint32_t want = mode;
+			if (gHighlightProbe == 2)
+			{
+				// ONLY the two modes the row names. 0 and everything else pass
+				// through verbatim.
+				if (mode == 7) { want = 2; }
+				else if (mode == 5) { want = 1; }
+			}
+			else if (gHighlightProbe == 3) { want = 0; }
+
+			const bool r = gHighlightOrig
+				? gHighlightOrig(self, edx, want, send) : false;
+
+			// ⚠ THE CHANGE FILTER IS NOT A BUDGET, and on its own it is not
+			// even a throttle. gHighlightLast is ONE process-wide value, while
+			// an ordinary hover alternates un-highlight (0) on the previous
+			// occupant with highlight (7) on the new one - so while the pointer
+			// moves, "changed" is true on essentially every call and the filter
+			// degrades to the unconditional per-call line it was written to
+			// prevent, each one carrying an SEH frame and a file write. Every
+			// sibling probe here has a hard line budget; this one now does too,
+			// and the running total keeps reporting after it is spent, because
+			// a probe that stops reporting is not reporting a null - it is
+			// reporting nothing.
+			const bool changed = (static_cast<LONG>(mode) != gHighlightLast);
+			const bool budget = (gHighlightLogs < 64);
+			if (changed) { gHighlightLast = static_cast<LONG>(mode); }
+			if (changed && budget)
+			{
+				++gHighlightLogs;
+				// The BYTE-LEVEL prediction, observable in the log alone with
+				// nothing on screen: after the original runs, the mode must be
+				// in the HIGH NIBBLE of [occupant+0x2E]. That is what makes
+				// this probe self-validating.
+				const uint32_t b = self ? SafeReadByte(self, 0x2E) : 0xFFFFFFFFu;
+				const int hi = (b == 0xFFFFFFFFu)
+					? -1 : static_cast<int>((b >> 4) & 0x0F);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: HIGHLIGHT #%ld this=%p mode=%u->%u send=%u "
+					"ok=%u [+0x2E]=0x%02X hi=%d (probe=%d).",
+					n, self, mode, want, send, r ? 1u : 0u,
+					(b == 0xFFFFFFFFu) ? 0 : (b & 0xFF), hi, gHighlightProbe);
+			}
+			else if ((n % 500) == 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: HIGHLIGHT running total %ld calls, %d detail "
+					"line(s) of 64 spent (last mode=%ld). Detail lines are "
+					"emitted on mode CHANGE and capped; the total keeps "
+					"reporting after the cap so silence never has to be "
+					"guessed at.", n, gHighlightLogs, gHighlightLast);
+			}
+			return r;
+		}
+
+		void InstallHighlightProbe()
+		{
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			void* t = reinterpret_cast<void*>(base - kImageBase + kHighlightVa);
+			// VERIFY BEFORE HOOK. 53 55 57 8B F9 is exactly 5 bytes with no
+			// relative operands, so the jmp rel32 patch and the relocated
+			// prologue are both clean - but only if the bytes are ours.
+			if (memcmp(t, kHighlightStock, sizeof(kHighlightStock)) != 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: HIGHLIGHT prologue mismatch at 0x%08X - "
+					"NOT installed, occupant highlighting stays stock.",
+					static_cast<unsigned>(kHighlightVa));
+				return;
+			}
+			const MH_STATUS init = MH_Initialize();
+			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
+			if (MH_CreateHook(t, reinterpret_cast<void*>(&HighlightDetour),
+					reinterpret_cast<void**>(&gHighlightOrig)) != MH_OK
+				|| MH_EnableHook(t) != MH_OK)
+			{
+				Logger::Get().WriteLine(LogLevel::Error,
+					"CodePatches: HIGHLIGHT failed to hook 0x005E90E0.");
+				return;
+			}
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: HIGHLIGHT armed on occupant SetHighlight "
+				"0x005E90E0 (mode=%d). If the glow appears on screen with NO "
+				"HIGHLIGHT line, the occupant class in play overrides vt+0x44 "
+				"elsewhere and the hook is scoped wrong - that is a finding, "
+				"not a null.", gHighlightProbe);
+		}
+
+		// ---- ZONEQUAD: lot-display cell-quad builder 0x6CC970 -------------
+		// The PERSISTENT green/blue/yellow wash over zoned land (as distinct
+		// from the drag-time rectangle and grid lines, which are the
+		// local_grid / local_tile_outline effects on the EFFECTFILTER hook).
+		// [0xAB1B98+0xAC] = 0x006CC970 confirms slot 43 of the claimed vtable.
+		//
+		// ARITY IS DERIVED, NOT GUESSED: the prologue `83 EC 70 53 8B 5C 24 78`
+		// means that after `sub esp,0x70` and one push, [esp+0x78] is the
+		// original [esp+4] - exactly ONE stack argument. So this is
+		// __thiscall(self, cISC4Lot*) and the typed __fastcall shape below is
+		// correct.
+		//
+		//   [UiSpike] ZoneQuadProbe = 0 off (not installed) / 1 log / 2 kill
+		//
+		// THE COLOUR READ. The original assembles its RGBA into its own frame
+		// at [esp+0x18..0x1B] from two ZoneManager [0xB43D14] calls -
+		// GetZoneDragColor (vt+0x3C) at 0x6CC9B9 with the shr 0x18/0x10/0x08
+		// unpack, and GetZoneDisplayAlpha (vt+0x40) at 0x6CC9D9. A detour
+		// cannot read another function's frame slot, so the probe asks the
+		// SAME two getters for the SAME values. Both prototypes come from the
+		// vendored SDK header cISC4ZoneManager.h, where they sit at exactly
+		// those two slots - a verified signature, not a guessed one:
+		//   vt+0x3C  uint32_t GetZoneDragColor(ZoneType) const
+		//   vt+0x40  uint8_t  GetZoneDisplayAlpha() const
+		// The lot's zone type likewise comes from cISC4Lot vt+0x7C
+		//   vt+0x7C  ZoneType GetZoneType() const        (int32_t, no args)
+		//
+		// The alpha byte is the cheap second prediction: the data-view code
+		// toggles it live (SetZoneDisplayAlpha @0x7A4A9E/0x7A4AB2), so opening
+		// the Zones data view must CHANGE it while the RGB bytes stay put. The
+		// data view is opened long AFTER the city-load burst, so an
+		// alpha-CHANGE line must never be capped away - it gets its own
+		// uncapped channel, the same cure the click channel needed.
+		// ⭐ ARITY AND RETURN ARE MEASURED, NOT DERIVED (2026-08-30).
+		// A review flagged the earlier `bool(...)` typedef as a guess: the
+		// prologue proves arg1 EXISTS, it says nothing about an arg2, and a
+		// typed relay that under-pops corrupts the caller's stack. So the image
+		// was read instead of reasoned about. Linear disassembly of 0x6CC970
+		// finds exactly TWO exits, 0x6CC9AA and 0x6CCE10, and both are `ret 4` -
+		// ONE stack arg, so __fastcall(self, edx, a1) is correct. Both exits are
+		// also `pop edi/ebp/ebx; add esp,0x70; ret 4` with NO al/eax set on
+		// either path: this function returns NOTHING. It is void, and the
+		// earlier `return true` on the kill path was inventing a value no caller
+		// reads. Typing it void says that out loud.
+		//
+		// The same disassembly settles the argument identity, which the review
+		// also called a guess: at 0x6CC984 the ORIGINAL does `mov eax,[ebx];
+		// call [eax+0x7c]` on this very pointer and compares the result against
+		// 0xF before using it as a 16-entry jump index - the game itself calls
+		// slot 0x7C on arg1 and treats the result as a zone type. Our probe
+		// calling the same slot on the same pointer is therefore provably as
+		// safe as the function we hooked.
+		typedef void(__fastcall* ZoneQuadFn)(void*, void*, void*);
+		typedef int32_t(__fastcall* LotZoneTypeFn)(void*, void*);
+		typedef uint32_t(__fastcall* ZoneDragColorFn)(void*, void*, int32_t);
+		typedef uint8_t(__fastcall* ZoneDisplayAlphaFn)(void*, void*);
+
+		ZoneQuadFn gZoneQuadOrig = nullptr;
+		volatile LONG gZoneQuadCalls = 0;
+		int gZoneQuadLogs = 0;
+		int gZoneQuadProbe = 0;
+		int gZoneQuadLastAlpha = -1;
+		const uintptr_t kZoneQuadVa = 0x6CC970;
+		const uint8_t kZoneQuadStock[8] =
+			{ 0x83, 0xEC, 0x70, 0x53, 0x8B, 0x5C, 0x24, 0x78 };
+		const uintptr_t kZoneManagerPtr = 0xB43D14;
+
+		void __fastcall ZoneQuadDetour(void* self, void* edx, void* lot)
+		{
+			const LONG n = InterlockedIncrement(&gZoneQuadCalls);
+			const bool budget = (gZoneQuadLogs < 40);
+			const bool periodic = ((n % 500) == 0);
+			// volatile: MSVC only guarantees a local's value across an SEH
+			// unwind if it is volatile. Without it an optimised build can leave
+			// alphaMoved indeterminate after a fault, and a garbage-true would
+			// print a spurious ALPHA-CHANGED on the UNCAPPED channel - poisoning
+			// the one prediction this probe exists to test, loudly.
+			volatile int32_t zt = -1;
+			volatile uint32_t rgb = 0;
+			volatile int alpha = -1;
+			volatile bool alphaMoved = false;
+			__try
+			{
+				// Alpha is read on EVERY call - it is the change detector, and
+				// the data view is opened long after the load burst has spent
+				// the ordinary line budget.
+				const uintptr_t base =
+					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				void* zm = *reinterpret_cast<void**>(
+					base - kImageBase + kZoneManagerPtr);
+				void** zvt = zm ? *reinterpret_cast<void***>(zm) : nullptr;
+				if (zvt)
+				{
+					alpha = static_cast<int>(reinterpret_cast<ZoneDisplayAlphaFn>(
+						zvt[0x40 / 4])(zm, nullptr));
+				}
+				alphaMoved = (alpha != gZoneQuadLastAlpha);
+				if (alphaMoved || budget || periodic)
+				{
+					if (lot)
+					{
+						void** lvt = *reinterpret_cast<void***>(lot);
+						zt = reinterpret_cast<LotZoneTypeFn>(
+							lvt[0x7C / 4])(lot, nullptr);
+					}
+					if (zvt && zt >= 0)
+					{
+						rgb = reinterpret_cast<ZoneDragColorFn>(
+							zvt[0x3C / 4])(zm, nullptr, zt);
+					}
+				}
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				// Repair EVERY local, not just zt: a half-set state after a
+				// fault is exactly the indeterminate line the volatiles above
+				// exist to prevent.
+				zt = -2;
+				rgb = 0;
+				alpha = -1;
+				alphaMoved = false;
+			}
+			// The alpha CHANGE is the data-view prediction and gets its OWN
+			// uncapped channel, so the city-load burst cannot spend it.
+			//
+			// FIRST OBSERVATION IS NOT A CHANGE. gZoneQuadLastAlpha starts at a
+			// value no real alpha byte can hold, so without this the very first
+			// call always printed ALPHA-CHANGED - putting a false positive of
+			// exactly the predicted shape at the top of every capture, where an
+			// operator grepping for the data-view prediction would find it.
+			const bool firstAlpha = (gZoneQuadLastAlpha < 0);
+			if (alphaMoved) { gZoneQuadLastAlpha = alpha; }
+			const bool alphaReport = alphaMoved && !firstAlpha;
+			if (alphaReport || budget || periodic)
+			{
+				if (!alphaReport && !periodic) { ++gZoneQuadLogs; }
+				const uint32_t rgbv = rgb;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: ZONEQUAD #%ld this=%p lot=%p zone=%d "
+					"rgb=%02X%02X%02X alpha=%d%s (mode=%d).",
+					n, self, lot, static_cast<int>(zt),
+					(rgbv >> 24) & 0xFF, (rgbv >> 16) & 0xFF, (rgbv >> 8) & 0xFF,
+					static_cast<int>(alpha),
+					alphaReport ? " ALPHA-CHANGED"
+								: (firstAlpha ? " (first observation)" : ""),
+					gZoneQuadProbe);
+			}
+			// Mode 2: skip the builder entirely. The zone DATA is untouched -
+			// this only skips the display build - but do not save the city
+			// afterwards. Returning nothing is not a choice here: the function
+			// is void (both measured exits set no eax), so a suppressed call is
+			// byte-for-byte the same shape as a completed one from the caller's
+			// side. That is what makes this kill readable as an absence rather
+			// than as a value the exe never produces.
+			if (gZoneQuadProbe >= 2) { return; }
+			if (gZoneQuadOrig) { gZoneQuadOrig(self, edx, lot); }
+		}
+
+		void InstallZoneQuadProbe()
+		{
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			void* t = reinterpret_cast<void*>(base - kImageBase + kZoneQuadVa);
+			if (memcmp(t, kZoneQuadStock, sizeof(kZoneQuadStock)) != 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: ZONEQUAD prologue mismatch at 0x%08X - "
+					"NOT installed, the zone wash stays stock.",
+					static_cast<unsigned>(kZoneQuadVa));
+				return;
+			}
+			const MH_STATUS init = MH_Initialize();
+			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
+			if (MH_CreateHook(t, reinterpret_cast<void*>(&ZoneQuadDetour),
+					reinterpret_cast<void**>(&gZoneQuadOrig)) != MH_OK
+				|| MH_EnableHook(t) != MH_OK)
+			{
+				Logger::Get().WriteLine(LogLevel::Error,
+					"CodePatches: ZONEQUAD failed to hook 0x006CC970.");
+				return;
+			}
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: ZONEQUAD armed on the lot-display cell-quad "
+				"builder 0x006CC970 (mode=%d). MANDATORY CONTROL: a call count "
+				"of ZERO voids the kill result - it is not a null. Expect a "
+				"BURST at city load and one call per lot on drag-release.",
+				gZoneQuadProbe);
 		}
 
 		// ------------------------------------------------------------------
@@ -5737,12 +6226,70 @@ namespace CodePatches
 		void* gSpStripTramp = nullptr;
 		volatile LONG gSpStripCalls = 0;
 		int gSpStripLogs = 0;
+		// STRIPCOUNT: [Probe] StripItems = 0 (today's exact line) / 1 (adds the
+		// content-vector count and the first item's identity).
+		int gStripItems = 0;
+
+		// The class-A content vector at this+0x574 (begin) / this+0x578 (end),
+		// 8-byte items. Read behind SEH: this is a model of the object layout,
+		// and a model that is wrong must cost a log line, not the session.
+		struct StripPeek
+		{
+			int count;        // -1 = the read faulted
+			void* first;      // first item pointer, or null
+			uint32_t vt;      // that item's vtable VA, or 0
+			uint32_t slot14;  // the VA in its vt+0x14 slot, or 0
+		};
+
+		StripPeek PeekStripContent(void* self, uintptr_t base)
+		{
+			StripPeek p = { -1, nullptr, 0, 0 };
+			__try
+			{
+				const uint8_t* o = static_cast<const uint8_t*>(self);
+				const uintptr_t begin = *reinterpret_cast<const uintptr_t*>(o + 0x574);
+				const uintptr_t end = *reinterpret_cast<const uintptr_t*>(o + 0x578);
+				if (end >= begin && ((end - begin) % 8) == 0)
+				{
+					p.count = static_cast<int>((end - begin) / 8);
+				}
+				else
+				{
+					p.count = -2;   // the pair is not a vector - say so
+				}
+				if (p.count > 0 && begin)
+				{
+					void* item = *reinterpret_cast<void* const*>(begin);
+					p.first = item;
+					if (item)
+					{
+						const uintptr_t vt = *reinterpret_cast<const uintptr_t*>(item);
+						p.vt = static_cast<uint32_t>(vt - base + kImageBase);
+						const uintptr_t s =
+							*reinterpret_cast<const uintptr_t*>(vt + 0x14);
+						p.slot14 = static_cast<uint32_t>(s - base + kImageBase);
+					}
+				}
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				p.count = -1;
+			}
+			return p;
+		}
 
 		void __stdcall SpStripLog(void* self)
 		{
-			InterlockedIncrement(&gSpStripCalls);
-			if (gSpStripLogs >= 16) { return; }
-			++gSpStripLogs;
+			const LONG n = InterlockedIncrement(&gSpStripCalls);
+			// THE BUDGET FIX. gSpStripLogs capped at 16 while the counter ran
+			// uncapped, so a long route trace printed its first 16 calls and
+			// then went silent with no total ever emitted - a probe that stops
+			// reporting is not reporting a null, it is reporting nothing.
+			// Every 100th call now prints a running total regardless.
+			const bool detail = (gSpStripLogs < 16);
+			const bool total = ((n % 100) == 0);
+			if (!detail && !total) { return; }
+			if (detail) { ++gSpStripLogs; }
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 			const uintptr_t d = base - kImageBase;
@@ -5759,9 +6306,30 @@ namespace CodePatches
 						d + kMarkerZoomTableVa + zoom * 4), 4);
 				}
 			}
+			if (gStripItems != 0)
+			{
+				// The one unverified link in the row-16 model - whether the
+				// route dots are strip ITEMS at all - closed in the same
+				// launch as everything else.
+				//
+				// The item's own sizePx sits behind vt+0x14, and this probe
+				// does NOT call it: no prototype for that slot has been read,
+				// and the house rule is that an unknown arity is never called
+				// through a guessed signature. The slot's VA is logged instead,
+				// which names the function for an offline read.
+				const StripPeek p = PeekStripContent(self, base);
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: SPSTRIP #%ld this=%p zoom=%u table=%.3f "
+					"items=%d first=%p vt=0x%08X vt+0x14=0x%08X%s.",
+					n, self, zoom, static_cast<double>(tv),
+					p.count, p.first, p.vt, p.slot14,
+					total ? " (running total)" : "");
+				return;
+			}
 			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: SPSTRIP #%ld this=%p zoom=%u table=%.3f.",
-				gSpStripCalls, self, zoom, static_cast<double>(tv));
+				"CodePatches: SPSTRIP #%ld this=%p zoom=%u table=%.3f%s.",
+				n, self, zoom, static_cast<double>(tv),
+				total ? " (running total)" : "");
 		}
 		__declspec(naked) void SpStripDetour()
 		{
@@ -5822,6 +6390,271 @@ namespace CodePatches
 				popad
 				jmp dword ptr [gSpAttachTramp]
 			}
+		}
+
+		// ---- DOTSIZE: class-B sizeParam write at rebuild 0x5F7810 ---------
+		// The U-Drive-It dotted route path. Class B (ctor 0x5F8300, dtor
+		// 0x5F76C0, allocator 0x5F7680) sizes its sprite in its rebuild:
+		//   0x5F78C4  fmul [esi+0x80] (sizeParam, ctor default 1.0f) x
+		//             [0xA8D45C] (16.0f = one cell) -> fst [esi+0x90]
+		// so writing [ecx+0x80] before the rebuild runs makes the original
+		// read OUR value and size every dot from it.
+		//
+		// NAKED, not typed: 0x5F7810's arity is UNKNOWN, and the house
+		// thiscall law forbids a typed relay through an unknown arity. The
+		// logger only needs ecx, which a naked thunk hands over for free.
+		//
+		// AND NOT THROUGH SetSize 0x5F7B10, ever: SetSize CALLS 0x5F7810, so
+		// calling it from inside this hook is unbounded recursion and a
+		// guaranteed stack overflow. The direct member write also bypasses
+		// SetSize's own fcomp clamps, which is why the row's "16.0f is
+		// refused" prediction is NOT available on this route - two-sidedness
+		// comes from 4.0 (4x wider) versus 0.25 (4x narrower) instead, and
+		// 0.02 is the suppression-equivalent (sub-pixel dots, visually an
+		// absence) with none of the stack exposure a real kill would carry.
+		//
+		//   [UiSpike] DotSize = <float>. 0 or absent = OFF (not installed).
+		//   Accepted range 0.005..8.0 - the upper bound is the game's OWN,
+		//   from SetSize's fcomp against [0xA8E178] = 8.0f at 0x5F7B25.
+		void* gDotSizeTramp = nullptr;
+		volatile LONG gDotSizeCalls = 0;
+		int gDotSizeLogs = 0;
+		float gDotSize = 0.0f;
+		const uintptr_t kDotSizeVa = 0x5F7810;
+		const uint8_t kDotSizeStock[6] = { 0x83, 0xEC, 0x1C, 0x56, 0x8B, 0xF1 };
+
+		bool SafeWriteFloat(void* p, size_t off, float v)
+		{
+			__try
+			{
+				*reinterpret_cast<float*>(
+					static_cast<uint8_t*>(p) + off) = v;
+				return true;
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				return false;
+			}
+		}
+
+		void __stdcall DotSizeLog(void* self)
+		{
+			const LONG n = InterlockedIncrement(&gDotSizeCalls);
+			bool ok = false;
+			if (self && gDotSize > 0.0f)
+			{
+				// BEFORE the relay, so the original reads our value.
+				ok = SafeWriteFloat(self, 0x80, gDotSize);
+			}
+			const bool detail = (gDotSizeLogs < 24);
+			if (detail) { ++gDotSizeLogs; }
+			if (!detail && (n % 100) != 0) { return; }
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: DOTSIZE #%ld this=%p wrote [+0x80]=%.3f (%s)%s.",
+				n, self, static_cast<double>(gDotSize),
+				ok ? "ok" : "WRITE FAULTED - value not applied",
+				detail ? "" : " (running total)");
+		}
+		__declspec(naked) void DotSizeDetour()
+		{
+			__asm {
+				pushad
+				pushfd
+				push ecx
+				call DotSizeLog
+				popfd
+				popad
+				jmp dword ptr [gDotSizeTramp]
+			}
+		}
+
+		bool gDotSizeResolved = false;
+
+		// Idempotent: called both from InstallSignpostProbe (where the plan
+		// puts it, beside the strip/attach blocks) and from the tier-decision
+		// tail (so the key arms its OWN probe at any factor, rather than
+		// riding MissionBubbleFx and ScaleAll - the gate that turned
+		// [Probe] ViewListRepeat into a guaranteed silent null twice).
+		void InstallDotSizeProbe()
+		{
+			if (gDotSizeResolved) { return; }
+			gDotSizeResolved = true;
+
+			wchar_t ini[MAX_PATH] = {};
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
+			wchar_t dbuf[32] = {};
+			GetPrivateProfileStringW(L"UiSpike", L"DotSize", L"0",
+				dbuf, 32, ini);
+			const float raw = static_cast<float>(_wtof(dbuf));
+			gDotSize = 0.0f;
+			if (raw > 0.0f)
+			{
+				// Sanity clamp. The upper bound is the GAME'S OWN: SetSize
+				// 0x5F7B10 refuses anything above [0xA8E178] = 8.0f at
+				// 0x5F7B25, and a member write that bypassed that clamp would
+				// be handing the rebuild a size the game itself would not
+				// accept. NaN cannot survive `raw > 0.0f`.
+				if (raw < 0.005f) { gDotSize = 0.005f; }
+				else if (raw > 8.0f) { gDotSize = 8.0f; }
+				else { gDotSize = raw; }
+			}
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: DotSize resolved to %.3f from raw %.3f (read "
+				"from [UiSpike]; 0 = OFF and NOT installed; accepted range "
+				"0.005..8.0, upper bound taken from the game's own SetSize "
+				"clamp).",
+				static_cast<double>(gDotSize), static_cast<double>(raw));
+			if (gDotSize <= 0.0f) { return; }
+
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			void* ds = reinterpret_cast<void*>(base - kImageBase + kDotSizeVa);
+			if (memcmp(ds, kDotSizeStock, sizeof(kDotSizeStock)) != 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: DOTSIZE prologue mismatch at 0x%08X - NOT "
+					"installed, the route dots stay stock.",
+					static_cast<unsigned>(kDotSizeVa));
+				return;
+			}
+			const MH_STATUS init = MH_Initialize();
+			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
+			{
+				Logger::Get().WriteLine(LogLevel::Error,
+					"CodePatches: DOTSIZE MH_Initialize failed (%d).", init);
+				return;
+			}
+			if (MH_CreateHook(ds, reinterpret_cast<void*>(&DotSizeDetour),
+					&gDotSizeTramp) != MH_OK
+				|| MH_EnableHook(ds) != MH_OK)
+			{
+				Logger::Get().WriteLine(LogLevel::Error,
+					"CodePatches: DOTSIZE failed to hook 0x005F7810.");
+				return;
+			}
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: DOTSIZE armed on the class-B rebuild 0x005F7810, "
+				"writing [ecx+0x80] = %.3f before the relay. The class-A "
+				"visuals in the same module (the query route-trace strip from "
+				"0x5F5FB0, the signpost markers) must keep drawing unchanged "
+				"in the SAME frame - that is the control.",
+				static_cast<double>(gDotSize));
+		}
+
+		// ---- NBORARROW: neighbour-connection marker 0x6D4860 (LOG ONLY) ---
+		// The arrow plates standing where a road / rail / highway / avenue
+		// crosses into an adjacent city tile. Sole code consumer of exemplar
+		// instance 0x29F10000: `push 0x29f10000` at 0x6D4A66 feeding
+		// `call [edx+0x3C]` at 0x6D4A6D, inside this function.
+		//
+		// NAKED log-and-relay, never a typed prototype: the arity is unknown,
+		// and an early return here could not pick the right `ret N`. Entry
+		// state, from the prologue 8B 54 24 08 83 EC 0C 53 55 56 57:
+		//   ecx      = this
+		//   [esp+4]  = arg1, the {3,7,0xB} selector (edi is loaded at
+		//              0x6D486B from [esp+0x20], which after sub esp,0xC plus
+		//              four pushes IS entry esp+4)
+		//   [esp+8]  = arg2
+		// Behind pushad (32) + pushfd (4) those sit at [esp+40] / [esp+44],
+		// with the return address at [esp+36].
+		//
+		//   [UiSpike] NborArrow = 0 off / 1 log only.
+		//
+		// MODE 2 IS DELIBERATELY NOT IMPLEMENTED. The plan's mode 2 is a
+		// 4-byte immediate swap at 0x6D4A67 that makes the exemplar fetch MISS,
+		// which takes a game code path nobody has ever exercised, at city load,
+		// for every edge connection - the highest-risk item in the whole plan,
+		// for the marginal prize of converting a timing match into an absence.
+		// A value of 2 in the ini is CLAMPED to 1 (see ArmNborArrowProbe) and
+		// the clamp is logged, so an ini asking for the swap gets the safe
+		// half and says so rather than silently doing nothing.
+		void* gNborArrowTramp = nullptr;
+		volatile LONG gNborArrowCalls = 0;
+		int gNborArrowLogs = 0;
+		int gNborArrow = 0;
+		const uintptr_t kNborArrowVa = 0x6D4860;
+		const uint8_t kNborArrowStock[11] =
+			{ 0x8B, 0x54, 0x24, 0x08, 0x83, 0xEC, 0x0C,
+			  0x53, 0x55, 0x56, 0x57 };
+
+		void __stdcall NborArrowLog(void* self, uint32_t a1, uint32_t a2,
+			void* retaddr)
+		{
+			const LONG n = InterlockedIncrement(&gNborArrowCalls);
+			// The proof is a TIMING match - exactly one new line at the instant
+			// the neighbour-connection prompt is accepted - so the budget is
+			// generous, and its exhaustion is ANNOUNCED rather than silent: a
+			// probe that stops printing without saying so turns a measurement
+			// into an unexplained null.
+			if (gNborArrowLogs >= 64) { return; }
+			++gNborArrowLogs;
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uint32_t retVa = static_cast<uint32_t>(
+				reinterpret_cast<uintptr_t>(retaddr) - base + kImageBase);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: NBORARROW #%ld this=%p sel=%u arg2=0x%08X "
+				"ret=0x%08X.", n, self, a1, a2, retVa);
+			if (gNborArrowLogs == 64)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: NBORARROW line budget (64) reached - further "
+					"calls are counted but not printed.");
+			}
+		}
+		// Stack walk for the thunk below, with E = esp on entry:
+		//   pushad (-32) + pushfd (-4)      -> esp = E-36
+		//   [esp+36] = [E+0]  = return address     ; push -> esp = E-40
+		//   [esp+48] = [E+8]  = arg2               ; push -> esp = E-44
+		//   [esp+48] = [E+4]  = the {3,7,0xB} selector
+		// __stdcall takes its arguments right-to-left, so the last push (ecx)
+		// is the FIRST parameter, and the callee pops all 16 bytes.
+		__declspec(naked) void NborArrowDetour()
+		{
+			__asm {
+				pushad
+				pushfd
+				mov eax, [esp + 36]
+				push eax
+				mov eax, [esp + 48]
+				push eax
+				mov eax, [esp + 48]
+				push eax
+				push ecx
+				call NborArrowLog
+				popfd
+				popad
+				jmp dword ptr [gNborArrowTramp]
+			}
+		}
+
+		void InstallNborArrowProbe()
+		{
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			void* t = reinterpret_cast<void*>(base - kImageBase + kNborArrowVa);
+			if (memcmp(t, kNborArrowStock, sizeof(kNborArrowStock)) != 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: NBORARROW prologue mismatch at 0x%08X - "
+					"NOT installed.", static_cast<unsigned>(kNborArrowVa));
+				return;
+			}
+			const MH_STATUS init = MH_Initialize();
+			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
+			if (MH_CreateHook(t, reinterpret_cast<void*>(&NborArrowDetour),
+					&gNborArrowTramp) != MH_OK
+				|| MH_EnableHook(t) != MH_OK)
+			{
+				Logger::Get().WriteLine(LogLevel::Error,
+					"CodePatches: NBORARROW failed to hook 0x006D4860.");
+				return;
+			}
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: NBORARROW armed on 0x006D4860 (log only, "
+				"mode=%d). Expect EXACTLY ONE new line at the instant a "
+				"neighbour connection is accepted, and N lines since load for "
+				"N arrows on screen.", gNborArrow);
 		}
 
 		// SetTrackedTarget 0x528580 - STACK-PROVEN LIVE (frame 0x52B1B0 =
@@ -7236,6 +8069,29 @@ namespace CodePatches
 			InstallBalloonSpriteProbe();
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+
+			// STRIPCOUNT's key. It belongs HERE and only here: it changes what
+			// the SPSTRIP logger prints, and that logger exists only if this
+			// function installs it - so this is the condition it genuinely
+			// depends on, not an unrelated gate. Read ABOVE the quad/texture
+			// prologue check below, which has its own `return`.
+			{
+				wchar_t ini[MAX_PATH] = {};
+				ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
+				gStripItems = static_cast<int>(GetPrivateProfileIntW(
+					L"Probe", L"StripItems", 0, ini));
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: StripItems resolved to %d (read from "
+					"[Probe]; 0 = today's exact SPSTRIP line, 1 adds the "
+					"content-vector count and the first item's identity).",
+					gStripItems);
+			}
+			// DOTSIZE is armed from here as well as from the tier-decision
+			// tail. It is idempotent, so the second call is a no-op; having
+			// both means the key arms its own probe at ANY factor and ANY
+			// MissionBubbleFx, while still sitting where the plan puts it.
+			InstallDotSizeProbe();
+
 			void* q = reinterpret_cast<void*>(base - kImageBase + kSpQuadVa);
 			void* t = reinterpret_cast<void*>(base - kImageBase + kSpTexVa);
 			if (memcmp(q, kSpQuadStock, sizeof(kSpQuadStock)) != 0
@@ -7417,8 +8273,17 @@ namespace CodePatches
 		uint32_t __fastcall CreateEffectDetour(void* self, void* edx,
 			const char* name, void** out)
 		{
-			const uint32_t r = gCreateEffectOrig
-				? gCreateEffectOrig(self, edx, name, out) : 0;
+			// EFFECTFILTER: the kill decision is taken BEFORE the original
+			// runs - the whole point is that the original never runs. The
+			// census block below still prints the killed name (with ok=0), so
+			// the absence on screen stays ATTRIBUTABLE; a kill that logged
+			// nothing would turn a measured suppression into an unexplained
+			// silence.
+			const bool kill = (name != nullptr) && MatchesEffectKill(name);
+			const uint32_t r = kill
+				? 0u
+				: (gCreateEffectOrig
+					? gCreateEffectOrig(self, edx, name, out) : 0u);
 			// v3.0.16 UNFILTERED census (the mission_selection filter made
 			// every earlier "zero spawns" verdict a FILTERED NULL - the
 			// balloon's own effect name passed through unlogged). Mode 3:
@@ -7440,13 +8305,28 @@ namespace CodePatches
 						"CodePatches: BUBBLEBAND %s ret=0x%08X ok=%u.",
 						name, rv, r & 0xFF);
 				}
-				else if (!band && gBubbleAllLogs < 40)
+				else if (!band && gBubbleAllLogs < gEffectCensus)
 				{
 					++gBubbleAllLogs;
 					Logger::Get().WriteLine(LogLevel::Info,
 						"CodePatches: BUBBLEALL %s ret=0x%08X ok=%u.",
 						name, rv, r & 0xFF);
 				}
+			}
+			if (kill)
+			{
+				const LONG k = InterlockedIncrement(&gEffectKilled);
+				if (gEffectKillLogs < 40)
+				{
+					++gEffectKillLogs;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: BUBBLEKILL #%ld %s ret=0x%08X - "
+						"original NOT called, *ppOut NOT written.",
+						k, name, rv);
+				}
+				// The exe's own failure contract: return 0, leave the caller's
+				// out-slot exactly as it found it.
+				return 0;
 			}
 			do
 			{
@@ -7565,6 +8445,117 @@ namespace CodePatches
 			"any factor).", gDqOn);
 		if (gDqOn != 0) { InstallDispatchQuadProbe(); }
 	}
+
+	// ---- Overlay-plan probes armed from the SAME tail, for the SAME reason.
+	// Each of these reads its OWN key and arms its OWN probe. None of them
+	// rides MissionBubbleFx, ScaleAll or any other gate: the ViewListRepeat
+	// key already cost this project two live sessions by being read in one
+	// place and honoured in another, and by then sitting behind a ScaleAll
+	// conjunct the stock tier forces to 0. Every one of them logs its resolved
+	// value whether or not it installs, so an inert setting can never be read
+	// as a result.
+
+	void ArmHighlightProbe()
+	{
+		wchar_t ini[MAX_PATH] = {};
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
+		gHighlightProbe = static_cast<int>(GetPrivateProfileIntW(
+			L"UiSpike", L"HighlightProbe", 0, ini));
+		if (gHighlightProbe < 0 || gHighlightProbe > 3)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: HighlightProbe %d is outside 0..3 - treated as "
+				"OFF.", gHighlightProbe);
+			gHighlightProbe = 0;
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: HighlightProbe resolved to %d (read from [UiSpike]; "
+			"0 = OFF and NOT installed, 1 = log, 2 = swap 7->2 and 5->1, "
+			"3 = force 0; armed from the tier-decision tail, any factor).",
+			gHighlightProbe);
+		if (gHighlightProbe != 0) { InstallHighlightProbe(); }
+	}
+
+	void ArmZoneQuadProbe()
+	{
+		wchar_t ini[MAX_PATH] = {};
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
+		gZoneQuadProbe = static_cast<int>(GetPrivateProfileIntW(
+			L"UiSpike", L"ZoneQuadProbe", 0, ini));
+		if (gZoneQuadProbe < 0 || gZoneQuadProbe > 2)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: ZoneQuadProbe %d is outside 0..2 - treated as "
+				"OFF.", gZoneQuadProbe);
+			gZoneQuadProbe = 0;
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: ZoneQuadProbe resolved to %d (read from [UiSpike]; "
+			"0 = OFF and NOT installed, 1 = log, 2 = log + skip the builder; "
+			"armed from the tier-decision tail, any factor).", gZoneQuadProbe);
+		// THE SEQUENCING LAW, DETECTED RATHER THAN RECITED. Printing the
+		// warning on every armed launch makes it noise on the launches where it
+		// does not apply and invisible on the one where it does. Both keys are
+		// readable here, so the conflict is a measurement: mode 2 kills the
+		// zone WASH, a 'local_' EffectKill kills the zone DRAG furniture, and
+		// arming both erases both halves of the split that is this row's entire
+		// prediction. Refuse the mode-2 arm rather than silently destroying the
+		// finding - a probe that cannot produce its measurement should not run.
+		if (gZoneQuadProbe >= 2)
+		{
+			LoadEffectFilterConfig();
+			for (int i = 0; i < gEffectKillCount; ++i)
+			{
+				if (_strnicmp(gEffectKill[i], "local_",
+					strlen(gEffectKill[i])) == 0)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: REFUSING ZoneQuadProbe=2 - EffectKill "
+						"carries \"%s\", which suppresses the zone DRAG "
+						"furniture, while mode 2 suppresses the zone WASH. "
+						"Together they erase both halves of the split this "
+						"probe measures, and the capture would show a plain "
+						"absence instead of a prediction. Run them in "
+						"SEPARATE launches. Falling back to mode 1 (log "
+						"only).", gEffectKill[i]);
+					gZoneQuadProbe = 1;
+					break;
+				}
+			}
+		}
+		if (gZoneQuadProbe != 0) { InstallZoneQuadProbe(); }
+	}
+
+	// EffectKill / EffectCensus, armed from the tier tail like their siblings
+	// so their resolved values reach the log at EVERY factor - see the comment
+	// on LoadEffectFilterConfig for the silent null this cures.
+	void ArmEffectFilter() { LoadEffectFilterConfig(); }
+
+	void ArmNborArrowProbe()
+	{
+		wchar_t ini[MAX_PATH] = {};
+		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
+		const int raw = static_cast<int>(GetPrivateProfileIntW(
+			L"UiSpike", L"NborArrow", 0, ini));
+		gNborArrow = raw;
+		// MODE 2 IS CLAMPED TO 1 ON PURPOSE. The plan's mode 2 is the
+		// instance-id immediate swap at 0x6D4A67, which makes an exemplar
+		// fetch MISS and takes a game code path nobody has ever exercised, at
+		// city load, for every edge connection. It is the highest-risk item in
+		// the plan and it is not implemented; an ini asking for it gets the
+		// safe log-only half and is told so, rather than silently getting
+		// nothing or silently getting the risk.
+		if (gNborArrow >= 2) { gNborArrow = 1; }
+		if (gNborArrow < 0) { gNborArrow = 0; }
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: NborArrow resolved to %d from raw %d (read from "
+			"[UiSpike]; 0 = OFF and NOT installed, 1 = log only). Mode 2 (the "
+			"0x6D4A67 immediate swap) is NOT IMPLEMENTED and is clamped to 1.",
+			gNborArrow, raw);
+		if (gNborArrow != 0) { InstallNborArrowProbe(); }
+	}
+
+	void ArmDotSizeProbe() { InstallDotSizeProbe(); }
 
 	// ---- Build 1 (2026-08-24): register rows #4 (GPUCAP) and #24 (FONTGUID)
 
@@ -7984,6 +8975,13 @@ namespace CodePatches
 		// also carries the MARKERSIZE lever (the marker's own per-object
 		// size), so this is a FIX path now, not only diagnosis.
 		if (mode >= 3) { InstallSignpostProbe(); }
+
+		// EFFECTFILTER knobs - read BEFORE the hook that consumes them is
+		// enabled, the same arm-before-the-consumer discipline the gBubbleScale
+		// comment above enforces. With no keys set this resolves to the stock
+		// 40-line budget and an empty kill list, so the detour behaves exactly
+		// as it does today.
+		LoadEffectFilterConfig();
 
 		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 		void* target = reinterpret_cast<void*>(base - kImageBase + kCreateEffectVa);

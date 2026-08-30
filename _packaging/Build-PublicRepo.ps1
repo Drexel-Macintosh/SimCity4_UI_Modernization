@@ -1,5 +1,23 @@
 # Build-PublicRepo.ps1 - assemble the PUBLISHABLE repo. Curated, not swept.
 #
+# ⛔ SUPERSEDED 2026-08-30 - THIS IS NO LONGER HOW THE PROJECT PUBLISHES.
+#
+# This script exists for a two-repo world: a private working tree, and a
+# curated export pushed to a separate public repo. That is not the current
+# arrangement. THE WORKING TREE PUSHES DIRECTLY TO THE PUBLIC REMOTE, and the
+# .gitignore allowlist - not this manifest - decides what ships. The research
+# corpus and the offline model, which this file's own comments call out as
+# things to exclude ("tools: the BUILD PIPELINE only - NOT the research
+# corpus, NOT the disassembly apparatus"), are published on purpose: they are
+# the engine documentation, indexed from README.md and fronted by
+# docs\DECOMPILATION-STATUS.md.
+#
+# Kept, not deleted, for two reasons: its leak-scan approach is still sound
+# and worth reading before writing another one, and the paragraph below is a
+# real lesson about the difference between two questions. But do not run it
+# expecting its output to be what the public sees, and do not treat its
+# exclusion list as policy - it documents a policy the project moved off.
+#
 # ⛔ WHY THIS REPLACED EXPORT-PUBLIC.ps1's FILE LIST (2026-08-06).
 # EXPORT-PUBLIC.ps1 was built for task #108, whose question was "what is SAFE
 # to publish" - a privacy sweep. Its allowlist was written to be generous:

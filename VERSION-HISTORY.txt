@@ -1,3 +1,100 @@
+2026-08-30  v4.6.0    THE ENGINE DOCUMENTATION BECOMES A SECTION
+                      (documentation + gates only; the DLL and every package
+                      are byte-identical to v4.5.9)
+
+  THE DISCLOSURE WAS WRONG IN THE DIRECTION THAT MATTERS. THIRD-PARTY-NOTICES
+  said "It contains no EA code, and no EA artwork, sound or .dat data is
+  copied into this repository". A content census - every tracked non-code file
+  under tools\ read and classified, the classifier itself spot-checked
+  adversarially - measured what is actually there: ~220 text files of decoded
+  game data and scripts, 4 whole-function disassembly listings, 6 modified
+  locale/font files, and about a dozen modder-authored Lua scripts that came
+  through the same decode pass. New section 4a states all of it, excludes it
+  from the CC0 dedication like the derived art, and extends the takedown offer
+  to cover it file by file. The same overclaim was repeated in README, LICENSE
+  and PACKAGE-MANIFEST; all four now agree. ⭐ THE LESSON: an absolute claim
+  about a tree nobody has censused is a claim about what you INTENDED to
+  collect, not about what is there. Measure the tree, then write the sentence.
+
+  TWO GATES WERE RED AND HAD BEEN LONG ENOUGH TO STOP MEANING ANYTHING.
+  gate_patch_families_combined - the gate whose entire purpose is that "a new
+  table nobody registered FAILS rather than being silently skipped" - was
+  failing on 40 unregistered symbols accumulated across five feature arcs. Its
+  own header warns about exactly this: a standing red makes every later red
+  look pre-excused, and the COMPOSITION of the redness had drifted without
+  anyone reading it (the register recorded five unregistered tables, all
+  cost-box; it was 40, and only three of those were cost-box). Every symbol
+  was classified by reading the applier, not the name: 10 real site tables
+  (three of them .rdata data, registered and then excluded from the
+  instruction-overlap math), 14 memcmp stock-verify patterns, 16 MinHook
+  detour targets and one vtable identity. GREEN, with a mutation control -
+  unregister one table in a scratch copy and the gate fails on exactly that
+  table.
+
+  crosscheck went 47 MISSES -> 0, and not by lowering the bar. Four owner
+  functions were seeded into census.py EXTRA_BUILDERS and the model
+  regenerated (it had been 25 days behind CodePatches.cpp). The regenerated
+  model then held the four intro-video sites and both restore-toolbars
+  constants for real, so those two families LEFT the skip list rather than
+  hiding in it. What genuinely cannot be modelled is skipped with the measured
+  reason and the falsifier that reopens it: the CSI/signpost/region-camera
+  immediates are real geometry in the wrong subsystem (renderer code the
+  census's rect-driving discovery cannot reach - measured, all four owners
+  absent from builders.json discovered), and the cheat-dialog and cost-box
+  branches emitted nothing even after their owners were seeded, with the
+  sibling sites in the SAME owner censusing as the positive control.
+
+  ⭐ FAMILIES, TABLES AND SITES ARE THREE DIFFERENT NUMBERS. Prose said "about
+  thirty byte-patched layout constants". The drift register said 36 families /
+  274 sites. Both were the same conflation: a FAMILY is one ini-gated applier
+  (what a user turns on), a TABLE is one k... array in the source, a SPAN is
+  one contiguous byte range verified and written. Measured at v4.6.0 by the
+  gate itself, which is now the only thing allowed to state these counts:
+  18 families, 36 tables, 295 spans. The first attempt at this fix repeated
+  the error - it corrected the number and kept the wrong noun.
+
+  PUBLICATION BLOCKERS CLOSED. The overlays census row that held three states
+  for the offer balloon; the NineSlice /3 attribution, corrected in two files
+  and still stale in three others (0x00794100 is cSC4WinAlertBorder's own
+  draw - GZWinBMP's slot-88 draw 0x009BC325 divides in its EDGE branch and
+  calls a blitter that contains no divide); defect #165 recorded as open in
+  the ledger and closed in the register; the coverage denominator quoted at a
+  superseded figure; the window-class population printed as both 111 and 115
+  (re-measured with the instrument: 116 addresses carry the slot-87 marker,
+  111 pass the class census, the 5 extras named). Three window mechanisms
+  documented only outside the engine reference were folded in: the
+  align=/valign token system with the self-scaling CENTER seat, GZWinCombo
+  internals, and the generic scrollbar id family 0x42B7C35x.
+
+  NAVIGATION. docs\DECOMPILATION-STATUS.md is the front door, with a reading
+  order and - new - an EXPLICITLY STATED GRADING BAR, because two lenses had
+  been grading by different rules: DOCUMENTED means a measurement matched a
+  PREDICTION, so eight in-world census rows stay PARTIAL rather than being
+  promoted by a looser bar. Folder READMEs at tools\research, tools\uimap and
+  research\ so GitHub renders an index instead of a bare file list; laws
+  INDEX.md renamed README.md for the same reason.
+
+  Test-NoDeadLinks gained --repo: the same check over the TRACKED SET, which
+  is what a reader on GitHub can click (an untracked file on disk resolves
+  locally and 404s for them). 127 initial hits went to 0. Most were false
+  positives and each exclusion states its reason - submodule SDK headers
+  (verified by LOOKUP against the submodule, not a name pattern, so a citation
+  of a header the SDK does not have still fails), runtime artifacts, generated
+  trees. ⭐ AN ALLOWLIST OF "NAMES MENTIONED BECAUSE THEY DO NOT EXIST" WAS
+  WRITTEN AND DELETED THE SAME HOUR: the right fix was in the prose. A
+  document that says "Rebuild-Previews.ps1 was never written" should not
+  format that name as a live path - dropping the backticks says the same thing
+  to the reader AND to the scan, and left the exclusion with nothing to
+  exclude.
+
+  COLD-CLONE. The uimap tools hard-coded one machine's Steam path; they now
+  use the repo's own resolver ($SC4_EXE, then sc4paths.py, then the Steam
+  default). The persisted databases record the file NAME plus the fingerprint
+  rather than an install path - the fingerprint is the identity every gate
+  checks, the path added nothing and differed per machine. funcs.json,
+  builders.json and constants.json now ship, so the emulator and its gates run
+  on a fresh clone with no regeneration.
+
 2026-08-30  v4.5.9    CARBON COMBINATIONS: THE COMPOSED LAYOUT + THE PAUSE GATE
                       (rolls up 4.5.8; both dormant without the Carbon Skin)
 

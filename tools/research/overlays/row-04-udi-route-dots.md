@@ -59,6 +59,30 @@ NOT into SetSize.
 
 ## 2. THE SIZE SOURCE (class B) — all byte-verified
 
+**Blast radius of a hook on the rebuild — MEASURED 2026-08-30, discharging the
+probe plan's stated prerequisite.** This note previously asserted "no vtable
+refs, coverage total" without establishing that the *callers* are all class B,
+which is the claim a hook that writes `[this+0x80]` actually depends on. Scanned
+`.text` for every `E8 rel32` resolving to `0x5F7810`:
+
+| Call site | Returns to | Inside class B (`0x5F7650`–`0x5F8450`) |
+|---|---|---|
+| `0x5F7AFE` | `0x5F7B03` | yes |
+| `0x5F7B3C` | `0x5F7B41` | yes |
+| `0x5F7BF4` | `0x5F7BF9` | yes |
+| `0x5F7C6C` | `0x5F7C71` | yes |
+| `0x5F7D72` | `0x5F7D77` | yes |
+| `0x5F805F` | `0x5F8064` | yes |
+| `0x5F8259` | `0x5F825E` | yes |
+
+Seven direct callers, seven inside class B, and **zero `.rdata` references** —
+so the function is reachable only from class B and never through a vtable. A
+detour on it therefore cannot see another class's object, which is what makes
+writing the size member unconditionally safe. *Positive control for the
+scanner:* the same pass finds the expected caller counts for other functions in
+the module, and a target with known vtable entries returns a non-zero `.rdata`
+count.
+
 The rebuild `0x5F7810` computes the on-screen size:
 
 ```

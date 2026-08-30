@@ -14,12 +14,14 @@ version that stamps the running DLL's log header, and `VERSION-HISTORY.txt:1`
 is the newest ledger entry. When any document disagrees with the macro, the
 macro is the one that is running.
 
-**This file's own content stops at 2026-08-19.** For anything after that —
-including a Graphics Options selector rewrite, a v3.14 flyout state-machine
-rewrite, and an open sub-flyout arm-alignment defect (short-count strips like
-Sports Grounds and Plazas) — read `UNKNOWNS-AND-NEXT-TARGETS.md` §D.1 first, then the
-newest-dated `..\HANDOFF-*.md` in the repo root. Both postdate this file and
-are not summarized here.
+**This file's own content stops at 2026-08-19**, and several arcs postdate it
+— a Graphics Options selector rewrite, a v3.14 flyout state-machine rewrite,
+and an open sub-flyout arm-alignment defect (short-count strips like Sports
+Grounds and Plazas). For anything after that date read
+[UNKNOWNS-AND-NEXT-TARGETS.md](UNKNOWNS-AND-NEXT-TARGETS.md) §D.1, then
+[../CHANGELOG.md](../CHANGELOG.md) and `VERSION-HISTORY.txt`. (The dated
+`HANDOFF-*.md` files this paragraph used to send you to were retired
+2026-08-06; the ledger and the register carry what they held.)
 
 This file is the entry point. If you have lost everything else and found this,
 read it top to bottom and you can continue.
@@ -105,7 +107,7 @@ all pass, and write down that you did.
 | Fonts and text layout | `tools\research\FONTS-AND-DIALOGS.md` |
 | Which art is bound how | `tools\research\UI-ART-BINDING.md` |
 | We override another mod — what and why? | `tools\research\UPSTREAM-*-REPORT.md`, one per mod |
-| Publishing | `_packaging\Build-PublicRepo.ps1` + `Test-NoForeignContent.py` |
+| Publishing | The tree pushes directly to the public remote; the `.gitignore` allowlist decides what ships and `_tests\Sync-Check.ps1` proves it |
 
 Generated files (`REPORT*.md`, `BUILDER-CENSUS.md`, `CONSTANT-MAP.md`,
 `coverage-matrix.md`, `package-list*.txt`) are pipeline **output**. Re-run the

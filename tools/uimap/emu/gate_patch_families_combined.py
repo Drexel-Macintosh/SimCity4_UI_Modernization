@@ -195,7 +195,16 @@ NON_SITE_TABLES = {"kGraphLegendStrips", "kStockHtmlFontSizes", "kStockHtmlHeadi
                    "kMarkerStripStock", "kDrawStock",        # SPSTRIP / DRAWCAP probes
                    "kStockMarkerZoom",                       # zoom-table stock float bits
                    "kAdd", "kSub",                           # DISPATCHQUAD prologues (0x46F240 / 0x7D2990)
-                   "kProlog"}                                # FONTGUID (#24) SetFontStyleByGUID prologue
+                   "kProlog",                                # FONTGUID (#24) SetFontStyleByGUID prologue
+                   # 2026-08-30, the overlay-probe build. Same shape again:
+                   # memcmp stock prologues gating a MinHook install. The gate
+                   # caught all nine of these on the FIRST run after the code
+                   # landed, which is the anti-rot property doing exactly its
+                   # job on brand-new code rather than months later.
+                   "kHighlightStock",                        # HIGHLIGHT  0x5E90E0
+                   "kZoneQuadStock",                         # ZONEQUAD   0x6CC970
+                   "kNborArrowStock",                        # NBORARROW  0x6D4860
+                   "kDotSizeStock"}                          # DOTSIZE    0x5F7810
 # Scalars that are NOT patch sites: the module base every site is expressed
 # against, and stock-value constants. Excluded by NAME so the anti-rot sweep
 # still shouts about anything genuinely new.
@@ -218,7 +227,13 @@ NON_SITE_SCALARS = {"kImageBase", "kX8DispatchSite", "kX8StubBlock",
                     "kMarkerStripVa", "kArtFetchVa",          # SPSTRIP / ARTFETCH log probes
                     "kBalloonBuildVa", "kDrawVa",             # BALLOONKIND / DRAWCAP log probes
                     "kSetFontStyleByGuid",                    # FONTGUID (#24) detour target
-                    "kWinTextIfaceVt"}                        # GZWinText vtable identity 0xAE0118
+                    "kWinTextIfaceVt",                        # GZWinText vtable identity 0xAE0118
+                    # 2026-08-30 overlay probes: four detour targets and one
+                    # .bss singleton pointer. None is an imm-patch site; the
+                    # probes read and relay, they do not edit an immediate.
+                    "kHighlightVa", "kZoneQuadVa",
+                    "kNborArrowVa", "kDotSizeVa",
+                    "kZoneManagerPtr"}                        # .bss cISC4ZoneManager* 0xB43D14
 
 # --------------------------------------------------------------------------
 FAILURES = []

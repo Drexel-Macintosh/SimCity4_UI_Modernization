@@ -1,5 +1,33 @@
 # Changelog
 
+## 4.6.0 (2026-08-30) - the engine documentation becomes a section
+
+**Nothing about the mod changes.** No new DLL, no repackaged art, no setting
+to adjust - this release is documentation and the gates that check it. If you
+only play the game, 4.5.9 and 4.6.0 are the same mod.
+
+Scaling this interface meant reverse-engineering it first, and that work was
+already in the repository - it was just undiscoverable and, in places,
+contradicted itself. It is now a section you can read:
+
+- **A front door.** `docs/DECOMPILATION-STATUS.md` says what is documented,
+  what is only partly understood, what is still unknown, and lists every hook
+  and byte patch the DLL installs. The repository README points at it, and
+  each research folder now has an index that GitHub renders in place.
+- **The corpus agrees with itself.** Every contradiction the project's own
+  register had flagged as a publication blocker is closed: a census row that
+  held three different states for one visual, an attribution corrected in two
+  places but left stale in three others, a defect recorded as simultaneously
+  open and closed, and a patch count that was wrong by roughly ten times
+  because "families", "tables" and "sites" had been used interchangeably.
+- **Honest labelling.** The repository claimed to contain no EA content of any
+  kind. It does contain some, in text form, as the evidence behind the
+  documentation - decoded scripts and data records, a few disassembly
+  listings. `THIRD-PARTY-NOTICES.md` §4a now says exactly what and why, and
+  the takedown offer covers it.
+- **Two gates that had gone quietly red are green again**, one of them for the
+  first time in months. Details in `VERSION-HISTORY.txt`.
+
 ## 4.5.9 (2026-08-30) - two mods that only matter if you use the Carbon Skin
 
 Both changes in this release are invisible unless you have Scoty's Carbon Skin
