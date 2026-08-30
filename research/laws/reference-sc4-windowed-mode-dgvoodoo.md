@@ -59,7 +59,9 @@ honest probe is `SetProcessDPIAware()` followed by
 
 ## Which number feeds the tier decision
 
-Measured in source at `src\SC4UIScaleDllDirector.cpp:177-213`:
+Measured in source in `src\SC4UIScaleDllDirector.cpp` (grep
+`DirectX + FullScreen/Borderless -> render = monitor native`, the comment
+block heading the block that computes `gfxW`/`gfxH`):
 
 | Driver + WindowMode | resolution used for the tier |
 |---|---|
@@ -67,7 +69,7 @@ Measured in source at `src\SC4UIScaleDllDirector.cpp:177-213`:
 | DirectX + Windowed | the requested window size |
 | Software (any mode) | the requested size |
 
-In the FullScreen branch (`:190-198`) `gfxW/gfxH` are overwritten with
+In the FullScreen branch (grep `gfxW = monW`) `gfxW/gfxH` are overwritten with
 `GetSystemMetrics(SM_CXSCREEN/SM_CYSCREEN)`, because dgVoodoo forces native
 mode regardless of the request — a request for 1600x1200 still produces a
 2400x1600 window tree. In the normal FullScreen configuration the ini

@@ -65,8 +65,9 @@ staging failure and is not one.
 paragraph named the "move in a sim" marker as its one confirmed instance. That
 was closed on 2026-08-19 - user-confirmed - as an ordinary `GZWinBMP` window
 pair (`0x27DF05BE` green / `0x27DF05BF` red), and the cure is live: both ids
-sit in `kBmpxCityRoots` (`src\UiSpike.cpp:5471`) and the world-anchored
-`GZWinMoveTo` skip handles them (`:12812`). The law kept naming it for ten
+sit in `src\UiSpike.cpp` (grep `kBmpxCityRoots`) and the world-anchored
+`GZWinMoveTo` skip handles them (grep `worldAnchored`). The law kept naming it
+for ten
 more days, which is exactly the "static defect = hypothesis" failure this
 project has a standing law against - a reader following this section would
 conclude a window we already scale is renderer-only and stop looking.
