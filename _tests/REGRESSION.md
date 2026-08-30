@@ -17822,3 +17822,73 @@ their boxes at 2x fit, and the 9-slice frame draws cleanly. Both of the week's
 script-shipping mods (warrior's Raise the UI, null-45's Region View Census) are
 now confirmed on screen, by opposite cures: imagerect-only on the swept HUD,
 full area= scaling on the never-swept dialog.
+
+---
+
+## 2026-08-30 - the cheat box, and a bigger defect found while looking at it
+
+### The cheat entry box (v4.5.6) - USER-CONFIRMED CLIPPED
+
+`Ctrl+X` opens a dialog whose `Init` (`0x0079BDC0`) writes FOUR LITERALS into
+its own stack frame - `(l,t,r,b) = (4,6,308,26)`, a 304x20 text field - and
+derives the dialog from them with two `+8` clearances, giving 312x28. **No font
+metric, parent dimension or art participates.** But its TEXT binds FontStyle
+GUID `0x68963C4C` ("Default"), which we scale 13pt -> 19/26/39, and its flags
+set bit `0x0200` = single line, no wrap. A 26pt line into a 20px box is the
+clipping the user photographed.
+
+Cured by scaling the six numbers so the game's own `Init` emits stock x f:
+468x42 / 624x56 / 936x84. No other lever could reach it - **zero of the 331
+extracted stock scripts mention this dialog** (it is built entirely in code),
+and the sweep cannot name it either (`GetID()` is 0, and a fresh object is
+created, shown and destroyed inside one `DoModalWin` per keypress).
+
+⭐ **THE OFFSETS IN THE DECODE BRIEF WERE WRONG BY TWO, AND ONLY READING THE
+BYTES CAUGHT IT.** The brief put the two `add r32,8` clearances at block
+offsets `+0x0E` and `+0x26`. Disassembling all 39 bytes puts them at `+0x0C`
+and `+0x24` - the brief's offsets land inside `push ecx` and the instruction
+after it. Writing there would have corrupted the instruction stream **in the
+text-entry path**. NEVER RE-PIN A FINGERPRINT WITHOUT READING THE BYTES, and
+that applies to a fingerprint handed to you by an analysis as much as to one
+found in a note.
+
+Both blocks are verified before EITHER is written, and the rect block rolls
+back if the clearance write fails.
+
+### The bigger one: z_SC4UIScale_WebButtonUI shipped an UNSCALED script
+
+Found while auditing which of our own packages collide inside `zzz-`. Measured,
+four ways, on the first three `imagerect` values of `aa920991`:
+
+```
+stock (1x)           (0,0,1154,41) (0,0,50,30) (0,0,408,102)
+our SelectiveArt     (0,0,2308,82) (0,0,100,60) (0,0,816,204)
+our RaiseUI          (0,0,2308,82) (0,0,100,60) (0,0,816,204)
+our WebButtonUI      (0,0,1154,41) (0,0,50,30) (0,0,408,102)   <-- STOCK
+```
+
+`rebuild_webbutton.py` did `shutil.copy` of a static 1x "inert" file into every
+tier. Because the package lives in `zzz-SC4UIScale\` it **outranks the
+correctly scaled copy in `010-`**, so installing the Web Button Improvement Mod
+- ON ITS OWN, with no other mod - made the region bar read 1x source rectangles
+out of our 2x art sheets: the top-left quarter of every sheet. It also lost the
+four `{46a006b0,470261e5}` clone retargets and the #183 population align.
+
+**This is bigger than the sort trap that led me to it**: the sort trap needs
+two mods, this needs one, and it had been shipping since the package was added.
+
+**The deliberate part was ONE ID.** Diffing the inert file against stock, its
+entire functional delta is `id=0x4a779a1a -> id=0x00000000` on the website
+button - which is what makes the mod's Option A "Click Prevented" prevent the
+click. Every other difference was collateral. The builder now takes the tier's
+SCALED script that selective-safe already staged and applies that one edit.
+Verified on the rebuilt package: imagerects doubled, align `leftbottom`, 4
+retargets, **and zero live button ids** - the mod's purpose intact.
+
+⚠ The module docstring had asserted the opposite - "the mod's region .UI is
+left to runtime scaling; doubling it here would double-scale" - and that false
+belief is what let it sit. The docstring is corrected in place.
+
+⭐ **A COMMENT THAT DESCRIBES WHAT THE CODE SHOULD DO IS NOT EVIDENCE THAT IT
+DOES.** This one was confidently wrong for the life of the package, in the file
+that contained the defect, and it read as a reason not to look.
