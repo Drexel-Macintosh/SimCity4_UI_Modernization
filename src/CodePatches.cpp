@@ -6125,6 +6125,15 @@ namespace CodePatches
 		// stock balloon is the same half-patched state as the reverse - the
 		// cost-box law. gSignpostApplied is set at SIGNPOST's success point
 		// and nowhere else.
+		// NAMED 2026-08-30 so the anti-rot sweep can see them. Both were typed
+		// as bare inline literals inside the applier - a complete, live, shipping
+		// two-site .text family with ZERO gate coverage, found while running down
+		// the 0x00A88260 two-writer defect. Same shape as a dozen registered
+		// families: `68 imm32` push, verify-before-write on the opcode and the
+		// exact stock float bits (14.0f box, 9.0f seat), one VirtualProtect span.
+		// The gate could not have told anyone it existed.
+		const uintptr_t kPinDigitSites[2] = { 0x005F1EEC, 0x005F1EFC };
+
 		void ApplyPinDigitScale(float want)
 		{
 			if (!gSignpostApplied)
@@ -6138,8 +6147,8 @@ namespace CodePatches
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 			const uintptr_t delta = base - kImageBase;
-			uint8_t* pb = reinterpret_cast<uint8_t*>(0x005F1EEC + delta);
-			uint8_t* pg = reinterpret_cast<uint8_t*>(0x005F1EFC + delta);
+			uint8_t* pb = reinterpret_cast<uint8_t*>(kPinDigitSites[0] + delta);
+			uint8_t* pg = reinterpret_cast<uint8_t*>(kPinDigitSites[1] + delta);
 			uint32_t curB = 0, curG = 0;
 			memcpy(&curB, pb + 1, 4);
 			memcpy(&curG, pg + 1, 4);
@@ -6956,8 +6965,14 @@ namespace CodePatches
 			// vtable 0xA87238 (the captured iface vtable): slot +0x4C must
 			// hold 0x6AAC50, +0x98 must hold 0x80BC00 - verify both, swap
 			// both or neither.
-			uintptr_t* s30 = reinterpret_cast<uintptr_t*>(0xA87238 + 0x4C + delta);
-			uintptr_t* s38 = reinterpret_cast<uintptr_t*>(0xA87238 + 0x98 + delta);
+			// NAMED 2026-08-30: CHECK C found this address typed inline. It is
+			// a genuine write target - VirtualProtect PAGE_READWRITE over both
+			// slots below - so a name is what lets any registry account for it.
+			const uintptr_t kProxyGetterVt = 0x00A87238;
+			uintptr_t* s30 = reinterpret_cast<uintptr_t*>(
+				kProxyGetterVt + 0x4C + delta);
+			uintptr_t* s38 = reinterpret_cast<uintptr_t*>(
+				kProxyGetterVt + 0x98 + delta);
 			if (*s30 != 0x6AAC50 + delta || *s38 != 0x80BC00 + delta)
 			{
 				Logger::Get().WriteLine(LogLevel::Info,

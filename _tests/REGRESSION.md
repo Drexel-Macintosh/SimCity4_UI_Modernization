@@ -18697,3 +18697,63 @@ behaviour silently while fixing a structural bug.
 live two-site `.text` family (`0x005F1EEC`/`0x005F1EFC`) written from inline
 literals with zero gate coverage, and the gate never reads `UiSpike.cpp` at all
 (59 inline exe-range literals there, several of them real write targets).
+
+
+---
+
+## 2026-08-30 - CHECK C: the gate now asks a question registration cannot answer
+
+The 0x00A88260 defect and the unregistered PINDIGIT family had the same shape:
+an exe address typed as a **bare literal inside an applier body**. The anti-rot
+sweep is the strongest property this gate has, and it has one structural limit
+- **it can only notice a family somebody named.** Nobody forgot to register
+PINDIGIT; there was nothing to register.
+
+So CHECK C asks a different question. Not "is every named thing registered"
+but **"is every address we WRITE TO attributable to a name at all"** - which is
+the question that would have caught both on the day each was typed.
+
+### It also reads the file the gate had never opened
+
+`gate_patch_families_combined.py` read `CodePatches.cpp` and the director. It
+had never read `UiSpike.cpp` - the larger of the two, ~21,800 lines - so every
+write target in it was outside every check this gate makes. CHECK C reads both.
+
+### ⭐ TUNING IT WAS THE WORK, because a check that cries wolf gets ignored
+
+First run: **16 hits, 14 of them false.** Three refinements, each measured:
+
+| Rejected shape | Why it is not a write |
+|---|---|
+| `reinterpret_cast<void*>(VA)` | a MinHook detour target or a vtable identity value |
+| `if (vt != reinterpret_cast<void**>(VA))` | a COMPARISON - reading an address to recognise a class is not writing to it |
+| `uint8_t* p = ...; MH_CreateHook(p, ...)` | typed, but only memcmp'd and handed to MinHook, which does its own writing through its own API |
+
+The final shape is narrow and deliberate: a **typed** (non-`void`) pointer
+**bound to a variable**, whose name is not then passed to `MH_CreateHook`.
+16 -> 4 -> 2, and both survivors were real.
+
+### What it found on its first honest run
+
+`InstallProxyGetterProbe` swaps two slots of vtable `0x00A87238` under
+`VirtualProtect`, with the base typed inline. Named `kProxyGetterVt`.
+
+Then the two checks handed off to each other exactly as designed: **CHECK C
+forced a name, and the anti-rot sweep immediately demanded a classification for
+it.** It is a vtable base whose slots are swapped, not an imm-patch site, so it
+joins the other vtable identities in `NON_SITE_SCALARS`.
+
+### Acceptance, with the control
+
+    python tools\uimap\emu\gate_patch_families_combined.py
+      -> PASS, 316 spans / 44 tables / 22 families, 0 overlaps
+      -> CHECK C: "none - every write target resolves through a named constant"
+
+**Mutation control:** strip the `kProxyGetterVt` name in a scratch copy of the
+source and point the gate at it - CHECK C reports both sites and fails. Run
+that before trusting a green CHECK C; a check nobody has seen fail is a check
+nobody has tested.
+
+**Trap signature:** CHECK C firing on a NEW address means someone typed a patch
+target inline. The fix is a `k`-name, not an exclusion - and the anti-rot sweep
+will then ask what kind of thing it is, which is the second half of the answer.

@@ -120,6 +120,12 @@ WIDTHS = {
     # registration says the WRITES do not collide; it says nothing about the
     # feature, which is BACKLOG.
     "kIntroVidSites":            (5, "68 imm32 (push) or 2D imm32 (sub eax) - both 5"),
+    # PINDIGIT, registered 2026-08-30. A complete live .text family that had
+    # shipped with ZERO gate coverage because both sites were typed as bare
+    # inline literals - found while running down the 0x00A88260 two-writer
+    # defect, not by this gate, which is the point. `68 imm32` push, opcode +
+    # 4 imm bytes verified and written, same shape as kIntroVidSites above.
+    "kPinDigitSites":            (5, "68 imm32 (push 14.0f box / 9.0f seat)"),
     # kStackShiftSite lived here for one hour on 2026-08-30, as the POSITIVE
     # CONTROL for widening CHECK A to see data-vs-data collisions: registering
     # it made this gate FAIL on 0x00A88260 against kCsiConsts, which is the
@@ -235,6 +241,13 @@ NON_SITE_SCALARS = {"kImageBase", "kX8DispatchSite", "kX8StubBlock",
                     "kBalloonBuildVa", "kDrawVa",             # BALLOONKIND / DRAWCAP log probes
                     "kSetFontStyleByGuid",                    # FONTGUID (#24) detour target
                     "kWinTextIfaceVt",                        # GZWinText vtable identity 0xAE0118
+                    # 2026-08-30, surfaced BY CHECK C rather than by anyone
+                    # remembering: a vtable BASE whose slots +0x4C/+0x98 are
+                    # swapped under VirtualProtect. The writes are slot swaps,
+                    # not imm-patch sites, so it classifies with the other
+                    # vtable identities - but it needed a NAME before anything
+                    # could classify it at all.
+                    "kProxyGetterVt",
                     # 2026-08-30 overlay probes: four detour targets and one
                     # .bss singleton pointer. None is an imm-patch site; the
                     # probes read and relay, they do not edit an immediate.
@@ -260,6 +273,91 @@ def strip_comments(s):
     s = re.sub(r"/\*.*?\*/", "", s, flags=re.S)
     s = re.sub(r"//[^\n]*", "", s)
     return s
+
+
+EXE_LO, EXE_HI = 0x00401000, 0x00B20000
+
+
+def sweep_inline_write_targets(paths):
+    """CHECK C - exe addresses typed INLINE and used as write targets.
+
+    ⛔ WHY THIS EXISTS, and why it is not the anti-rot sweep.
+
+    The anti-rot property above is the strongest thing in this gate, and it has
+    one structural limit: it can only notice a family SOMEBODY NAMED. Both
+    defects found on 2026-08-30 were addresses typed as bare literals inside an
+    applier body, where no amount of registration discipline would have helped:
+
+      * 0x00A88260 - a second writer of a constant kCsiConsts already owned.
+        Because it had no name, CHECK A could not see the collision, and the
+        CSI family silently never applied on any boot at any factor.
+      * 0x005F1EEC / 0x005F1EFC - a complete live two-site .text family that
+        had shipped with zero coverage. Nobody forgot to register it; there was
+        nothing to register.
+
+    So this check does not ask "is every named thing registered". It asks
+    "is every address we WRITE TO attributable to a name at all" - which is the
+    question that would have caught both on the day each was typed.
+
+    HONEST SCOPE, because a check that cries wolf gets ignored:
+      * It reports only literals that reach a NON-CONST pointer cast, which is
+        how this codebase turns an address into something writable. A literal
+        used in a bounds test, a vtable identity compare, a return-address band
+        or a log line is not reported.
+      * MinHook detour targets are NOT write targets in this sense - MinHook
+        rewrites a prologue through its own API and the project classifies
+        those under NON_SITE_SCALARS. They are excluded by the same convention.
+      * It reads BOTH source files. The gate had only ever read CodePatches.cpp
+        and the director, so every write target in UiSpike.cpp - the larger of
+        the two files - was outside every check this file makes.
+    """
+    reported = []
+    for path in paths:
+        body = strip_comments(read(path))
+        # Blank string literals so an address quoted in a log line is invisible.
+        body = re.sub(r'"(?:[^"\\]|\\.)*"', '""', body)
+        named = set()
+        for m in re.finditer(r"\bk\w+\s*(?:\[\s*\d*\s*\])?\s*=\s*\{?([^;]*);",
+                             body):
+            for hx in re.findall(r"0x[0-9A-Fa-f]{6,8}", m.group(1)):
+                named.add(int(hx, 16))
+        # THE SHAPE THAT MEANS "WRITABLE", and only that shape:
+        #     <type>* <name> = reinterpret_cast<<type>*>( ... 0xVA ... );
+        # i.e. an exe address turned into a TYPED pointer and bound to a
+        # variable. Three near-misses are deliberately NOT this shape, and
+        # each was a false positive on the first run of this check:
+        #   * reinterpret_cast<void*>(VA)      - a MinHook detour target or a
+        #     vtable identity value. MinHook rewrites a prologue through its
+        #     own API; the project classifies those under NON_SITE_SCALARS.
+        #   * if (vt != reinterpret_cast<void**>(VA))  - a COMPARISON. Reading
+        #     an address to recognise a class is not writing to it.
+        #   * a bare literal in a bounds test or a return-address band.
+        # Tuning this before shipping was the point: a check that cries wolf
+        # gets ignored, and this file already carries that lesson twice.
+        for m in re.finditer(
+                r"\b(?!void\b)\w+\s*\*+\s*(\w+)\s*=\s*reinterpret_cast\s*"
+                r"<\s*(?!const\b)(?!void\s*\*\s*>)[^>]*\*+\s*>\s*\(",
+                body):
+            var = m.group(1)
+            # A TYPED POINTER IS STILL NOT A WRITE TARGET IF ITS ONLY JOB IS TO
+            # BE HOOKED. DISPATCHQUAD builds uint8_t* p1/p2, memcmp's the stock
+            # prologue through them, then passes them straight to MH_CreateHook
+            # - MinHook does the writing, through its own API, and the project
+            # classifies detour targets under NON_SITE_SCALARS. Flagging those
+            # would have made this check 4 false positives out of 6 on its
+            # first tuned run.
+            scope = body[m.end():m.end() + 4000]
+            if re.search(r"MH_CreateHook\s*\(\s*%s\b" % re.escape(var), scope):
+                continue
+            tail = body[m.end():m.end() + 240]
+            expr = tail.split(";", 1)[0]
+            for hx in re.findall(r"0x[0-9A-Fa-f]{6,8}", expr):
+                va = int(hx, 16)
+                if not (EXE_LO <= va < EXE_HI) or va in named:
+                    continue
+                line = body.count("\n", 0, m.start()) + 1
+                reported.append((os.path.basename(path), line, va))
+    return reported
 
 
 def parse_tables(src):
@@ -477,6 +575,18 @@ def main():
     print("  These are CONFIGURATIONS A USER CAN REACH where one builder's")
     print("  constants are half-scaled. #104 lives somewhere in this space.")
     print("  Flagging is not proof: confirm on screen before changing anything.")
+
+    # ---- CHECK C: exe addresses typed inline and used as write targets ----
+    UISPIKE = os.path.join(ROOT, "src", "UiSpike.cpp")
+    inline = sweep_inline_write_targets([CODEPATCHES, UISPIKE])
+    print("\nCHECK C - inline write targets (addresses no name can be checked against)")
+    if inline:
+        for f, ln, va in sorted(inline):
+            fail("INLINE WRITE TARGET 0x%08X at %s:%d - typed as a literal, so "
+                 "no registry can see it and no overlap check can include it. "
+                 "Give it a k-name." % (va, f, ln))
+    else:
+        print("  none - every write target resolves through a named constant.")
 
     print("\nOWNERSHIP (derived from the director's call sites, not hand-kept)")
     for t in sorted(table_applier):
