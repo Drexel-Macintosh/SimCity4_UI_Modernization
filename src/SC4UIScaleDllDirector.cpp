@@ -144,6 +144,13 @@ public:
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", iniPath, MAX_PATH);
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.log", logPath, MAX_PATH);
 
+		// BEFORE the load, never after: ScaleAll and ScaleRegion default to
+		// FALSE in code, so a fresh install with no ini reads those defaults,
+		// BootState correctly forces stock, and the mod does nothing at all.
+		// Measured on a real sc4pac install - the metadata already promised
+		// the DLL creates this file; it did not. Writes only when absent.
+		const bool seededIni = ScaleTier::SeedIniIfAbsent();
+
 		settings.Load(iniPath);
 
 		Logger& logger = Logger::Get();
@@ -158,6 +165,16 @@ public:
 				static_cast<int>(sizeof(shown)), nullptr, nullptr);
 			logger.WriteLine(LogLevel::Info,
 				"Settings + log resolved to %s", shown);
+		}
+		if (seededIni)
+		{
+			logger.WriteLine(LogLevel::Info,
+				"First run: no SC4UIScale.ini existed, so one was written at "
+				"the Plugins root with the recommended settings. This mod "
+				"ships no ini on purpose - a package manager deletes its own "
+				"package folder on every update, and your tier choice would go "
+				"with it. Edit that file to change anything; it is never "
+				"overwritten.");
 		}
 		// v4.5.0: and WHICH folders those resolved from - discovered by
 		// content, or fallen back to the v4.2.0 names.

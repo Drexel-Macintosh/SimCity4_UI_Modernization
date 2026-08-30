@@ -387,6 +387,107 @@ namespace
 	}
 	// ==== END FOLDER-DISCOVERY ============================================
 
+	// ============ THE STARTER INI ==========================================
+	// v4.5.0 stopped shipping an ini - correctly, because a package manager
+	// deletes the versioned package folder on every update and an ini kept
+	// inside it loses the player's tier on each version bump. What it did NOT
+	// do was create one instead, and the channel metadata claimed it did.
+	//
+	// MEASURED on a real sc4pac install (2026-08-30): no ini was created, so
+	// Settings::Load fell through to the compiled defaults - and `ScaleAll`
+	// and `ScaleRegion` both default to FALSE. BootState then correctly
+	// refuses to draw scaled art inside 1x windows and forces stock. The
+	// player installs the mod, launches, and the game is completely unchanged,
+	// with nothing to edit and nothing on screen to explain it.
+	//
+	// The project's own shipped ini has warned about exactly this for months:
+	// "DO NOT DELETE ScaleAll OR ScaleRegion. Both are OFF in the DLL's
+	// built-in defaults ... remove either one and that half of the mod simply
+	// does nothing, with no error and no complaint in the log." Removing the
+	// file removed both keys.
+	//
+	// So the DLL writes the file the metadata already promised. Only when it
+	// is ABSENT - an existing ini is never touched, and this never overwrites
+	// a player's settings.
+	const char* const kStarterIni =
+		"; ===========================================================================\r\n"
+		";  SC4UIScale.ini  -  SimCity 4 Deluxe UI scaling\r\n"
+		"; ===========================================================================\r\n"
+		";\r\n"
+		";  Written by the mod on its first run because no ini was found. Every\r\n"
+		";  value below is already the recommended one - you do not need to edit\r\n"
+		";  anything to use the mod.\r\n"
+		";\r\n"
+		";  DO NOT DELETE ScaleAll OR ScaleRegion. Both are OFF in the DLL's\r\n"
+		";  built-in defaults, so they are the only keys here that do NOT fall back\r\n"
+		";  to something useful: remove either and that half of the mod does\r\n"
+		";  nothing, with no error anywhere. Every other key may be deleted and\r\n"
+		";  falls back to exactly the value shown.\r\n"
+		";\r\n"
+		";  Save as plain UTF-8 or ANSI, WITHOUT a byte-order mark. Some editors\r\n"
+		";  add one silently; the game then reads the file as unreadable and falls\r\n"
+		";  back to defaults.\r\n"
+		"; ===========================================================================\r\n"
+		"\r\n"
+		"[UiSpike]\r\n"
+		"\r\n"
+		"; Scale the city-view UI. This is the main switch.\r\n"
+		"ScaleAll=1\r\n"
+		"\r\n"
+		"; Extend the same scaling to the region screen.\r\n"
+		"ScaleRegion=1\r\n"
+		"\r\n"
+		"[Scaling]\r\n"
+		"\r\n"
+		"; Pick the factor automatically from the resolution the game renders at.\r\n"
+		"; 1 = automatic (recommended). Minimum resolutions: 1440x1080 for 1.5x,\r\n"
+		"; 1920x1440 for 2x, 2880x2160 for 3x. Below 1440x1080 the mod stays inert\r\n"
+		"; and the game is stock.\r\n"
+		"AutoScale=1\r\n"
+		"\r\n"
+		"; The factor used when AutoScale=0. Supported: 1.5, 2.0, 3.0.\r\n"
+		"ScaleFactor=2.00\r\n"
+		"\r\n"
+		"; Keep the in-game UI Scale picker (Graphic Options) working at 1x, so 1x\r\n"
+		"; is not a one-way door that needs a hand edit to leave.\r\n"
+		"SelectorAtStock=1\r\n"
+		"\r\n"
+		"; The region screen's website button points at a dead EA address; send it\r\n"
+		"; to the Simtropolis community hub instead.\r\n"
+		"WebRedirect=1\r\n"
+		"\r\n"
+		"; Workaround for a stock-game hang when quitting after opening the Budget\r\n"
+		"; window. Does nothing unless the hang is detected.\r\n"
+		"SpinFix=1\r\n"
+		"\r\n"
+		"[Logging]\r\n"
+		"\r\n"
+		"; 0 = errors only, 1 = normal, 2 = verbose, 3 = debug.\r\n"
+		"LogLevel=1\r\n";
+
+	bool SeedIniIfAbsentImpl()
+	{
+		wchar_t ini[MAX_PATH] = {};
+		OurIniPath(ini, MAX_PATH);
+		if (ini[0] == 0) { return false; }
+		if (GetFileAttributesW(ini) != INVALID_FILE_ATTRIBUTES) { return false; }
+
+		// CREATE_NEW, not CREATE_ALWAYS: if anything raced us to the file
+		// between the check above and here, theirs wins. Never clobber.
+		HANDLE h = CreateFileW(ini, GENERIC_WRITE, 0, nullptr, CREATE_NEW,
+			FILE_ATTRIBUTE_NORMAL, nullptr);
+		if (h == INVALID_HANDLE_VALUE) { return false; }
+		const DWORD len = static_cast<DWORD>(strlen(kStarterIni));
+		DWORD wrote = 0;
+		// No BOM. Standing order, and the file's own header repeats it: a BOM
+		// makes the parser treat the whole file as unreadable.
+		const BOOL ok = WriteFile(h, kStarterIni, len, &wrote, nullptr);
+		CloseHandle(h);
+		if (!ok || wrote != len) { DeleteFileW(ini); return false; }
+		return true;
+	}
+
+
 	void LogOurDirsImpl()
 	{
 		ResolveOurDirs();
@@ -3035,6 +3136,11 @@ namespace ScaleTier
 	void LogOurDirs()
 	{
 		LogOurDirsImpl();
+	}
+
+	bool SeedIniIfAbsent()
+	{
+		return SeedIniIfAbsentImpl();
 	}
 
 

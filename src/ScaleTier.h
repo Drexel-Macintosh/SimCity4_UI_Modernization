@@ -74,6 +74,12 @@ namespace ScaleTier
 	// many files moved; MigratedRootFileNames() names them for the log line
 	// the director prints once the logger is up.
 	int MigrateRootLooseFiles();
+
+	// Write a starter SC4UIScale.ini at the Plugins root when none exists.
+	// Returns true if it wrote one. MUST run before Settings::Load: the two
+	// keys that switch this mod on default to OFF in the code, so a fresh
+	// install with no ini is silently inert.
+	bool SeedIniIfAbsent();
 	const char* MigratedRootFileNames();
 
 	// v4.5.0: prints which folders this mod actually resolved to, and
