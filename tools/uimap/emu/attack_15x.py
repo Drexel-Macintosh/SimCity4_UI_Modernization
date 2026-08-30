@@ -422,7 +422,11 @@ def a9():
     print(SEP)
     print("    %-10s %-7s %-8s %-14s %-14s %s"
           % ("tier/hyp", "pt", "lineH", "I8 demands", "proportional", "verdict"))
-    LH = {13: 15, 18: 21, 20: 23, 24: 28, 26: 28, 36: 42, 39: 45}
+    # Unmeasured extrapolation round(pt*15/13), except 26 -> 28 which IS
+    # measured.  19 was added 2026-08-30 when PT_RAW[1.5] was corrected from
+    # 20 to the shipped 19 (make_fontstyle.py floors at non-integer factors
+    # since 2026-08-06); 20 is kept because PT_SQUEEZED still reaches it.
+    LH = {13: 15, 18: 21, 19: 22, 20: 23, 24: 28, 26: 28, 36: 42, 39: 45}
     diverge = []
     for f in P.TIERS:
         for tag, pm in (("SQZ", P.PT_SQUEEZED), ("RAW", P.PT_RAW)):

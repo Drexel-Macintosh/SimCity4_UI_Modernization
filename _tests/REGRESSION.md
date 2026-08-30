@@ -1579,8 +1579,12 @@ pattern again. Fix shipped:
 - Both builders now print the classified warning this section's law demanded:
   `WARNING LEFT1X {g,i} ... DANGLING` vs `MISSING-2X`.
 
-**The BMPX hook (task #47, UiSpike.cpp).** GZWinBMP Plot 0x9BC325 (class vt
-0x00ADF6A0 slot 88, 151 slots) draws PLAIN images with **dst = src size at
+**The BMPX hook (task #47, UiSpike.cpp).** GZWinBMP **GZPaint** 0x9BC325
+(class vt 0x00ADF6A0 slot 88, 151 slots — *renamed 2026-08-30: this line said
+"Plot". Slot 88 is `GZPaint`; `Plot` is slot 89 = `0x0099BA07` and merely
+calls `PlotComposite()`/`PlotPresent()`. `SDK-GAPS.md` §1. The hook is
+unaffected — it always sat on slot 88; only the name was wrong*)
+draws PLAIN images with **dst = src size at
 the window origin** via ONE ctx vt[38] blit — the window rect is never read,
 so runtime-supplied 1x pixels sit 1x in a doubled window. The hook: one
 SHARED patched vtable copy (no per-instance table — every GZWinBMP shares the
@@ -1628,10 +1632,29 @@ UiSpike: BMPX draw id=0x22220000 img 36x41 win 72x82 -> dst 72x82 (x2.00)
 ```
 **Trap signatures:** a `BMPX draw ... (x2.00)` line for a picker THUMB means
 that vehicle's thumb instance is outside the 112 (the hook is covering for
-missing data — report it); a portrait still 1x-in-corner with NO BMPX draw
-line means its window class is not GZWinBMP (re-measure, do not widen);
-`ChildSnapshot OVERFLOW` in the log means a >256-child parent exists (raise
-deliberately).
+missing data — report it); `ChildSnapshot OVERFLOW` in the log means a
+>256-child parent exists (raise deliberately).
+
+⚠ **A MISSING `BMPX draw` LINE HAS THREE CAUSES — READ THEM IN THIS ORDER.**
+*Corrected 2026-08-30. This bullet used to read "a portrait still
+1x-in-corner with NO BMPX draw line means its window class is not GZWinBMP
+(re-measure, do not widen)". **That is unsound: the draw logger is
+BUDGETED**, so one busy window can spend the budget and every later window
+then draws correctly while logging nothing.* The budget is
+`src\UiSpike.cpp:10277 if (gBmpDrawLog < 40)` — a cap of **40**, not
+unlimited. Ordered reading of a missing line:
+
+1. **The budget was spent.** Check for the saturation notice first
+   (`gBmpDrawLogSatLogged`, declared `:9026`, armed `:10292-10294`) — the
+   instrument now announces when it goes blind, which the old cap of 12 did
+   not. The budget re-arms per city (`:9204`) and per OPEN (`:10661`,
+   `:10687`), so "no line" late in a long session says nothing at all.
+2. **The window is under no hooked root.** `HookRuntimeBmpsUnder` is pointed
+   at exactly two root lists (city and dialog); a window outside both is
+   never walked.
+3. **Only then**: the class is wrong — its vtable is not GZWinBMP
+   `0x00ADF6A0`, and the gate rejects on vtable identity before anything else
+   runs. Re-measure, do not widen.
 
 ## Pending (update when landed)
 
@@ -1813,10 +1836,23 @@ The LAWS this day minted (each cost at least one shipped regression):
    stretch across tile addressing splits/side-swaps the image. Ship scaled
    art so every draw is a pure copy; snap the hook multiplier to 1.0 when
    the source is already scaled.
-8. **PBUFFS ARE BORN AT FIRST-PAINT SIZE** ([win+0x6c] allocated from the
+8. **PBUFFS ARE BORN AT FIRST-PAINT SIZE** ([win+0x64] allocated from the
    window's then-current size): a runtime-swept window paints once at 1x
    before the sweep → permanently clipped buffer → born-2x data is the fix
    (the U-Drive-It consoles, v2.25.14).
+   ⛔ **FIELD CORRECTED 2026-08-30: this law said [win+0x6c] until now.**
+   [+0x6c] is the DRAW CONTEXT, not a buffer — the getters settle it in two
+   instructions each: 0x0099BEF9 = `mov eax,[ecx+0x6c]; ret` (slot 93
+   GetDrawContext), 0x0099BEFD = `mov eax,[ecx+0x68]; ret` (slot 94
+   GetBufferToDrawTo), 0x009D419D = `mov eax,[ecx+0x64]; ret` (slot 101
+   GetPrivateBuffer). The private buffer is [win+0x64] — the field
+   PrivateBuffer(bool) 0x0099EA70 allocates and the refined hit test
+   0x0099BBBE Locks. The law's CONCLUSION (born-2x is the cure) is unaffected
+   and is independently explained by the class-private caches in
+   SDK-GAPS.md §3; only the field name was wrong. REFUTED 4 below (the
+   log-only probe that found [+0x6c] carries no pixels) had already caught
+   this from the other direction, and this law kept the old field anyway —
+   a correction is not applied until every copy of the claim is walked.
 
 9. **A CODE-CREATED WIDGET WITH A STYLE PNG IS BORN AT THE ART'S SIZE**
    (v2.25.25): the budget rows (style 140155B7, 1320x18) and subtotal
@@ -3667,7 +3703,25 @@ the stock 102-wide sheet in the correctly-doubled 204-wide window:
 `src.L = (102-204)>>1 = -51`, `src.R = 204-51 = 153` — a **204-wide read across
 a 102-wide image**, i.e. two copies of the 24-cell segment ladder. Shipping the
 sheet at 204x52 makes `src.L = 0`, `src.R = 204`: an exact 1:1. The row divisor
-is `imgH-1`, so it scales with the sheet and the fill level is unchanged.
+is `imgH-1`, so it scales with the sheet and the fill level is unchanged
+**to within one ladder cell — 23 of the 201 integer ratings**.
+*(Softened 2026-08-30: this said "the fill level is unchanged", full stop.
+Measured: the shipped 204x52 sheet is an exact 2× block replicate — 0
+mismatching pixels of 10,608 — so the divisor becomes 51 rather than 25, and
+comparing `ftol(f×25+0.5)` against `ftol(f×51+0.5) // 2` over
+`f = clamp(rating/200 + 0.5, 0, 1)` diverges on exactly 23 of 201 ratings,
+always by ONE cell = 6 px at 2x, first at rating −96. Cosmetic; not a defect
+to act on — a width-only 204x26 sheet would have been byte-identical to stock.
+`floor(j/2)` is the MEASURED row map and gives 23; a `round` map gives 57, so
+do not repeat the claim that 23 holds under both.)*
+
+**TRAP — TWO CAPTURE FILES IN `tools\capture\out\` ARE MISNAMED.**
+`verify-windowed-citybubble.png` and `verify-windowed-citybubble-crop.png`
+contain **no city bubble**: opened and looked at 2026-08-30, the crop (950x650)
+is London region terrain with the "Kensington / Bob" and "Fulham / Robert"
+city labels and nothing else in frame. Do not cite either as bubble evidence,
+and do not read them as a null about the bar.
+
 Fill law, for reference: `frac = rating/200 + 0.5` (signed byte rating,
 `[0xAB98B8]=0.005`), clamped [0,1].
 
@@ -5603,9 +5657,13 @@ simply has no resolution term.
 `cSC4WinRegionView` (clsid `0x2BA6BB97`, vt `0x00AB9658`) does **not paint**.
 Its slot-88 draw `0x00648F00` is literally `B0 01 C3` = `mov al,1 / ret`,
 followed by `CC` padding. Verified by raw byte read, not by tooling.
-⛔ `sdkgaps-04.md:248` claims that window "hit-tests cities through its own
-mask." **That is WRONG** — slot 149 (`0x007B2440`) is a short forwarder into
-its children. Corrected here; fix the note when `_incoming\` is promoted.
+⛔ The 2026-07-31 `sdkgaps-04` decode draft (line 248) claimed that window
+"hit-tests cities through its own mask." **That is WRONG** — slot 149
+(`0x007B2440`) is a short forwarder into its children. ⚠ **This line once
+ended "fix the note when `_incoming\` is promoted."** That draft was
+adjudicated and retired 2026-08-30 without the false sentence ever being
+promoted, so there is no note left to fix — **this entry is now the only
+record of the correction**, and it stays here permanently.
 
 ### The projection maths (VERIFIED IN BYTES, still believed correct)
 `sub_7CBE40`, the camera projection recompute:
@@ -9693,9 +9751,16 @@ structurally independent of the other two (law 34):
 - `tools\research\MAYOR-MODE.md` — the callee list of `0x9BC325` dumped out of
   the exe **2026-07-29**: it contains `008d8800` and does **not** contain
   `008d9550`. A call-graph fact, independent of anyone's reading of the branch.
-- `tools\research\_incoming\sdkgaps-06.md` §4A.6 (2026-07-31) — instruction
-  level: the `/3` is `idiv ecx` at `0x9BC414` and again at `0x9BC422`, then
-  `helper_0x8D8800(ctx, image, &src, &this[0x24], fillCentre=1)`.
+- The `sdkgaps-06` decode draft §4A.6 (2026-07-31; adjudicated and retired
+  2026-08-30) — instruction level: the `/3` is `idiv ecx` at `0x9BC414` and
+  again at `0x9BC422`, then
+  `helper_0x8D8800(ctx, image, &src, &this[0x24], fillCentre=1)`. **Re-read
+  out of the exe 2026-08-30** before the draft was retired, so this line no
+  longer rests on it: `0x009BC418 f7 f9` and `0x009BC422 f7 f9` with the
+  shared `6a 03 / 59` (`push 3; pop ecx`) at `0x009BC415`, then
+  `0x009BC428 8d 43 24` (`lea eax,[ebx+0x24]`), `0x009BC42C 8d 45 f0`,
+  `0x009BC430 ff b3 dc 00 00 00`, `0x009BC436 ff 73 6c`,
+  `0x009BC439 e8 c2 c3 f1 ff` → `0x008D8800`, `add esp,0x14`.
 
 `GZWinBtn` is the same shape a third time: its own draw divides in the
 nine-slice branch (`cornerW = srcW/3` at `0x009B05E9`, `cornerH` at
@@ -9715,18 +9780,52 @@ divides the **source rect**, not `img->Width()`. A `GZWinBMP` carrying no
 `find_nine_slice.py`'s derivation are untouched by this correction. The
 attribution moved; the arithmetic did not. Do **not** re-open #157 over this.
 
-⛔ **STILL OPEN — WHICH OPERANDS, and it changes nothing shipped today.**
-`sdkgaps-06.md` §4A.6 reads the branch as dividing **only `src.r` and `src.b`**,
-leaving `l`/`t` alone, so the cell would be `(r/3 − l, b/3 − t)` and `imagerect`
-would never be an inset — contradicting `UI-ART-BINDING.md` §3. **Do not act on
-that yet.** It rests on a single `_incoming\` draft, and
-`tools\research\_incoming\README.md` declares that whole folder raw and "known
-to contain mistakes"; sdkgaps-06's own OPEN section reports that an offline
-recomposition under its own reading yields a flat, corner-less box where the
-game visibly renders decorated chrome. It can only matter for edge BMPs that
+✅ **WHICH OPERANDS — CLOSED 2026-08-30, and it changes nothing shipped
+today.** ⚠ **This block read "STILL OPEN … Do not act on that yet. It rests on
+a single `_incoming\` draft, and `_incoming\README.md` declares that whole
+folder raw" until 2026-08-30.** That reasoning is retired with the folder: the
+draft's reading was re-measured directly out of the exe, twice and
+independently (the digest's adversarial pass, and again here), so it no longer
+rests on anybody's prose.
+
+**The branch divides only `src.r` and `src.b`.** `0x009BC3A1 a5 a5 a5 a5` —
+four `movsd` — lays the source rect down at `[ebp-0x10]`, `[ebp-0xC]`,
+`[ebp-8]`, `[ebp-4]`; the plain path immediately below translates it as
+`(−l, −t, +r, +b)` — its four arithmetic ops, not contiguous, are
+`2b 45 f0` / `2b 4d f4` / `03 45 f8` / `03 4d fc` from `0x009BC3C2` — which is
+what fixes those four slots as `cRZRect`'s
+`(l,t,r,b)` order (SDK-GAPS.md §1.2). The edge branch at `0x009BC411` — taken
+by `0x009BC3B7 75 58` after `push 8; call [eax+0x28]` on the image sub-object
+`[ebx+0xD8]` — then `idiv`s **`[ebp-8]` and `[ebp-4]` only**, at `0x009BC418`
+and `0x009BC422` off one shared `push 3; pop ecx`. `l` and `t` are never
+touched. So the corner cell really is `(r/3 − l, b/3 − t)` sampled from
+`(l,t)`, and on an `edgeimage` an `imagerect` is **never** a plain inset.
+(Minor: the draft placed the first `idiv` at `0x9BC414`; that VA is the `cdq`.)
+
+**The doc residual is CLOSED (2026-08-30).** `UI-ART-BINDING.md` §3's
+`edgeimage` bullet had been rewritten with the correction and then still
+ENDED with the old "fixed 12/22px borders, stretched middle" clause — it
+asserted both readings at once. That clause is struck; under these bytes the
+art gives a **48x38** cell, not a 12/22 px border.
+
+⛔ **THE REAL RESIDUAL IS A DIFFERENT LINK, AND IT IS STILL OPEN.** An
+offline PIL recomposition of the real chrome PNGs under this reading composes
+a flat, corner-less box where the game renders decorated chrome
+(`{1abe787d,14416240}` 180x180 and `{1abe787d,144161e4}` 78x78). **Do not let
+that be read as evidence against the branch** — it asks whether the rect the
+script DECLARES is the rect in `[win+0xE8]` at draw time, which is a question
+about the imagerect's lifecycle, not about the divide. `Init` overwriting it
+is already eliminated offline (the deserializer applies `imagerect=` in
+**pass 2**, `0x00950053`/`0x0095005A`, while the factory runs `Init` BETWEEN
+the passes at `0x00957C25`). Two candidates remain: flag `0x10` is not
+actually set live on those 56 controls, or the decorated chrome the player
+sees is a different window in the stack. Canonical statement and the probe
+that settles it now live at `SDK-GAPS.md` §2.1 OPEN — log `[win+0xF8] & 0x18`,
+`[win+0xE8..0xF4]` and the live W/H for one edge BMP (Save-dialog body
+`{1abe787d,144161ee}`, `imagerect=(22,35,180,180)`) and compare the composed
+corners against a stock screenshot. It can only matter for edge BMPs that
 actually declare an `imagerect`; the no-`imagerect` majority is settled either
-way. The probe that would close it is named in that draft's OPEN section (log
-`[win+0xF8] & 0x18` and `[win+0xE8..0xF4]` plus live W/H for one edge BMP).
+way.
 
 ## #162 — TWO PHANTOM HAIRLINES AT 1.5x, AND THE FIX WAS ALREADY IN THE FILE (2026-08-15)
 
@@ -18183,3 +18282,216 @@ file by file. Three other documents repeated the overclaim and now agree.
 is this instrument's oldest failure mode and it looks exactly like a real
 hole. **Revert:** documentation only; `git revert` is safe and changes nothing
 a player sees.
+
+---
+
+## 2026-08-30 (later) - #104 gets an entry at last, and four laws the raw drafts were holding
+
+**Documentation only. No code shipped; the DLL and every package are
+byte-identical.** `tools\research\_incoming\` - twenty-one RAW agent drafts,
+"unverified, overlapping, and known to contain mistakes" by their own README,
+and TRACKED, so a reader found them - was adjudicated claim by claim and then
+attacked. Almost nothing survived: three of the six drafts in this slice were
+mid-investigation snapshots of an arc that had already been cured, and their
+tables described a build three weeks old. What survived is below, plus the one
+file that had to be RESCUED rather than deleted.
+
+### #104 was cured, shipped, and written down NOWHERE
+
+`SpinFix` has been default ON since v2.62.0 (`src\Settings.h`, grep
+`spikeSpinFix`). This ledger's last word on it still read "the long-running
+#104", `gate_patch_families_combined.py` still printed "#104 is the open proof
+that they may not be", and grepping this file for `ChildDeleteAll`, `99DD6F`,
+`9DC172`, `9DB0FD` or `sentinel` returned nothing. **A confirmed, default-ON
+binary patch into another vendor's teardown path existed only as a comment
+inside the file that performs it.** `SDK-GAPS.md` §4 carried the validity-set
+half (`IsWindowValid`, `DoDestroyWindow`'s discarded `bl`) and neither the call
+chain nor the destructor ORDER, which is the part that makes the spin
+inevitable rather than merely possible.
+
+Both are now in `SC4-UI-ENGINE.md` §8.7, re-derived from the exe rather than
+copied: `WinMain 0x0044C170` → `0x0087B0B9` → **`cGZFrameWork::Shutdown
+0x0087AB07..0x0087AC20`** (281 bytes per `funcs.json`; opens
+`8B 0D AC 40 B5 00` = `mov ecx,[0x00B540AC]`), both hops single-caller in
+`edges.json`. Then `~cGZWinMgr 0x009DC172` frees the validity hashtable's
+bucket array, `~cGZMessageServer 0x0092FE56` Releases windows still registered
+as message targets, and each one's `~cGZWin 0x0099E1A2` calls
+**`ChildDeleteAll 0x0099DD6F`** - which `edges.json` confirms has exactly ONE
+caller image-wide, `0x0099E1AC`.
+
+> ⭐ **LAW: A DESTRUCTOR ORDER IS AN API.** After `~cGZWinMgr`,
+> `IsWindowValid` is not a predicate - it is a constant FALSE. Every caller
+> that reads FALSE as "already gone, skip it" rather than "I cannot tell"
+> inherits the bug. A hook on a teardown path must ask WHEN it runs relative
+> to `0x009DC172`, not merely WHETHER its object still exists.
+
+> ⭐ **LAW: A LOOP WHOSE EXIT DEPENDS ON A SIDE EFFECT MUST TEST THE SIDE
+> EFFECT.** `ChildDeleteAll` stores `DoDestroyWindow`'s result in `bl` and then
+> re-reads the list head regardless. That is why this presents as a 100%-CPU
+> spin at exit and not as a crash: nothing is corrupted, the terminating
+> condition simply cannot be reached from inside.
+
+### ⭐ LAW: AN n=1 NULL AGAINST AN INTERMITTENT FAILURE IS A COIN FLIP
+
+The corollary to NULL IS NOT EVIDENCE that the #104 arc paid for. Thirteen
+configurations were bisected against the spin, one trial each, and every CLEAN
+verdict was recorded as evidence. It could never have converged, and the
+eventual mechanism says why: whether the spin happens depends on **which
+windows are still registered when `~cGZMessageServer` drains its notification
+map** - a per-session ORDERING property, not a config property. The same fact
+is why v2.62.0 had to make the cure REPEATABLE rather than one-shot
+(`src\SpinProbe.cpp`, grep `the fix is REPEATABLE, not one-shot`): orphan two
+windows and curing the first loop simply lets the next begin. **Positive
+observations from that bisect survive; not one of its nulls does.** Before
+bisecting anything, establish the failure's reproduction RATE - otherwise the
+bisect measures the rate and not the variable.
+
+### ⭐ LAW: A CLAMP THAT DOES NOT LOG IS INVISIBLE TO EVERY CENSUS BUILT FROM THE LOG
+
+Seven budget-family `push imm8` sites clamp to 127 at **f = 1.5 AND f = 2.0** -
+`0x788D1B` / `0x78916A` (stock 110), `0x787021` / `0x787072` (90), `0x7870DD`
+(120), `0x787165` / `0x78724A` (85, which reaches 128 and only just crosses);
+`0x78B9A1` (60) joins them at 3x. All eight sit inside dialogs whose 2x
+appearance is USER-CONFIRMED, so we have been shipping a value we did not
+intend - and could not see it. `ApplyBudgetFamilyScale` clamps in silence
+(`src\CodePatches.cpp`, grep `push imm8 ceiling (slider width at f=2)` and
+`sub imm8 ceiling`) while the ordinance clamp forty lines away logs a line per
+site (grep `ordinance inset %ld clamped to 127`). **That asymmetry, not the
+clamping, is the finding.** `SCALING-AXES.md` R19's "At 3x several already
+clamp" is corrected in place; the per-site source comments were already right.
+
+**Not fixed, deliberately.** Correcting the values means re-encoding nine sites
+inside a user-confirmed 2x dialog - the #98 law. What is owed here is a log
+line, not a number.
+
+### ⭐ LAW: ONE CREATION CALL CAN TAKE ITS X AND ITS Y FROM TWO DIFFERENT INI FLAGS
+
+Read out of the exe at both twins:
+
+    0x0077C994  83 E8 02        sub eax,2      <- kBudgetSubImm8Sites  -> BudgetDeptPatch     (y)
+    0x0077C998  6A 12           push 0x12      <- kOrdinanceInsetSites -> OrdinanceInsetPatch (x)
+    0x0077C99A  68 01 DE BC 0A  push 0x0ABCDE01
+    0x0077C9A2  E8 B9 CC FF FF  call 0x00779660
+
+    0x0077CE34  2B 86 88 00 00 00   sub eax,[esi+0x88]
+    0x0077CE3A  83 E8 02            <- BudgetDeptPatch     (y)
+    0x0077CE3E  6A 12               <- OrdinanceInsetPatch (x)
+    0x0077CE44  E8 17 C8 FF FF      call 0x00779660
+
+A user who arms one flag and not the other gets a HALF-SCALED window: scaled
+height with a stock inset, or the reverse. It is a real defect class, it is
+independent of any patch-byte collision, and **no gate can currently see it.**
+`gate_patch_families_combined.py` Check B buckets spans by 4KB and reports
+`0x0077C000..0x0077CFFF flags={BudgetDeptPatch, OrdinanceInsetPatch}` - the
+right neighbourhood, never the call site.
+
+### #106: what the family gate does and does not check
+
+The gate is BUILT and GREEN today (`295 site spans across 36 tables, 18
+families, overlaps: 0`; `9 of 28 4KB regions` flagged by Check B). Recorded
+here so its coverage stops being inferred from its name: it implements **CHECK
+A - BYTE OVERLAP** and **CHECK B - SPLIT OWNERSHIP** and nothing else. Still
+unbuilt, in the order they would pay:
+
+1. **Per-creation-call x/y pairing** - the check that would name `0x0077C9A2`
+   and `0x0077CE44` above. Check B's 4KB bucket is a deliberate proxy for
+   "same builder"; this is the real question.
+2. **A clamp census over the union of the site tables** - the check that would
+   have found the seven silent clamps without needing a log.
+3. **Reduce-to-stock at f=1 with every flag armed simultaneously.**
+4. **A `--selftest`** - the string does not occur in the file. A gate with no
+   positive control cannot prove it is able to go red.
+
+The gate's closing line has been corrected. It cited #104 as its standing
+example of an unsafe configuration, which was wrong twice over: #104 was a
+teardown spin in the game's own destructors, never a patch-family defect, and
+it is cured. It now cites the split creation call, which is a real one.
+
+### THE LOG IS RECREATED ON EVERY LAUNCH - the mechanism, not just the rule
+
+`src\Logger.cpp` opens with `_wfsopen(logFilePath, L"w", _SH_DENYWR)`. Mode
+`"w"` TRUNCATES, so a launch destroys the previous capture before it writes a
+line. `PROBES-NEEDED.md` P3 already states the rule and the cost - the run-14
+spin capture, the only positive measurement #104 had produced at that point,
+lost exactly this way - and the artifact record corroborates it:
+`_tests\captures\` holds runs 6-13 and 15-22, and no run 14. Recorded here with
+the mechanism so the rule cannot be argued with. **Copy the log out BEFORE
+launching, not after.** (The `-104.csv` telemetry file beside it is append-only
+and safe.)
+
+### RESCUED, NOT DELETED: `_tests\LINEH-TIER-CAPTURE-PROCEDURE.md`
+
+One file in `_incoming\` was load-bearing. `tools\uimap\emu\README.md` names it
+as `measure_lineh_tier.py`'s procedure and `PROBES-NEEDED.md` L-A4 cites it, so
+deleting it with the rest of the folder would have broken a tool README and
+lost the only written procedure for an OPEN measurement:
+`prove_chart_legend.py` still carries `LINEH_BY_PT = {13: 15, 24: 28, 26: 28}`
+and none of the four captures it prescribes exists. `git mv`d here so history
+follows; both references retargeted.
+
+**It had gone stale in the way it warned about, from the side it did not
+expect.** Its deliverable named `LINEH_BY_PT[20]` for 1.5x. The shipped legend
+style is 19 pt: `make_fontstyle.py::scale_size` stopped rounding half-up on
+2026-08-06 and now FLOORS at non-integer factors, so `floor(13 × 1.5) = 19` and
+`tools\packages\15x\FontStyle-15x.ini` ships `GraphInsetLegend = "Arta", "19"`.
+3x is untouched - an integer factor still rounds, 39 either way.
+
+> ⭐ **LAW: A PROCEDURE'S DELIVERABLE ROTS WITH THE GENERATOR UNDER IT.** The
+> doc's own §2b hazard was "a silent, wrong `LINEH_BY_PT[39]`" from a missed
+> font copy. What actually went stale was the ROUNDING RULE, three days after
+> it was written. The INSTRUMENT survived that - `measure_lineh_tier.py` reads
+> the pt out of the `--fontstyle` file instead of computing it, which is why
+> `--fontstyle` is not optional. The CONSUMER did not: `prove_chart_legend.py`
+> `PT_RAW[1.5]` said 20 and its selftest asserted round-half-up at every tier,
+> so a correct capture would have been filed under a pt the game never renders.
+> **Read the shipped table; never re-derive a constant from a rule you last
+> checked a month ago.**
+
+`PT_RAW[1.5]` is now 19, and the selftest asserts the generator's ACTUAL shape
+(round at integer factors, floor otherwise) so it goes red if `scale_size`
+moves again. `attack_15x.py` gained the matching extrapolation row.
+`Test-ChartLegendMath.ps1` now prints `SKIP (U1: lineH unknown at 19pt)`.
+
+### Dropped, and why - so nobody re-promotes them
+
+- **The `sub_77C660` 17-callee census** and the **`ApplySubFlyoutProviderScale`
+  ownership proof.** Both reproduce exactly; both are autopsies of hypotheses
+  that are dead twice over, and both are already in `src\CodePatches.cpp` and
+  printed by the gate's own ownership table on every run.
+- **The ordinance name-column Patch B write-up.** Fully superseded: it shipped
+  as `kOrdinanceNameXBlocks` gated at `kOrdinanceNameXBlockMinPct = 250`, and
+  the source carries the reasoning in the draft's own terms.
+- **The `W - 203` name-column citation** (`0x787C1F`). Contradicted: that VA is
+  in `sub_7876B0`, the slider-department builder, not in the ordinance path,
+  and there is no "+8" addition - the 8 is a field offset into the rect a
+  `vt+0x30` call returned. A cross-dialog mislocation.
+- **The 1.5x font-CEIL table** (41 of 88 sizes rounded up). True when written,
+  INVERTED in what ships since the 2026-08-06 floor fix, and the law underneath
+  it - that 1.5x is the only tier whose sizes can be non-integer - is already
+  canonical here in three places and in the generator's own comment.
+- **"`kWidestDesignPx = 880` is the wrong quantity."** A model with no
+  measurement behind either proposed threshold, and its premise (panels placed
+  at `ScaleRound(l,f)`) is no longer true for the 21 `kCityHudFamilyIds`.
+- **The 1386..2003 anchor branch-flip band.** Already in the shipping source -
+  `src\UiSpike.cpp`, grep `flipped to the f-free CENTER law`. The draft's
+  novelty check grepped `tools\research\*.md` and never looked at `src\`.
+
+### Acceptance
+
+    python tools\uimap\emu\prove_chart_legend.py --selftest    -> OVERALL: PASS
+    python tools\uimap\emu\prove_chart_legend.py               -> OVERALL: PASS
+    python tools\uimap\emu\measure_lineh_tier.py --selftest    -> 0 failure(s)
+    python tools\uimap\emu\attack_15x.py                       -> runs clean
+    python tools\uimap\emu\gate_patch_families_combined.py     -> PASS, 0 overlaps
+    _tests\Test-ChartLegendMath.ps1                            -> ALL PASS (32 assertions)
+    python _packaging\Test-NoDeadLinks.py --repo               -> ALL PASS
+
+**Known-red and NOT caused by this pass:** `tools\uimap\emu\break_labelset.py`
+raises `TypeError: inv3() missing 3 required positional arguments` at its
+line 150 - `prove_chart_legend.inv3` grew three parameters and this caller was
+never updated. Verified red against the UNMODIFIED oracle before any edit here,
+so it is pre-existing. Per the standing-red law it is a disabled gate, not a
+passing one.
+
+**Revert:** documentation, plus four constants/comments in offline instruments.
+`git revert` is safe and changes nothing a player sees.

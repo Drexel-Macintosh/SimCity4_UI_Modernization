@@ -1,11 +1,21 @@
 """gate_ordinance_namex.py - the OFFLINE GATE for the ordinance NAME-COLUMN x
 re-encode (the 136 -> 127 push-imm8 clamp at 0x0077CC23 / 0x0077D0E0).
 
-STATUS OF THE THING IT GATES: HELD, NOT SHIPPING.  This gate exists so the
-re-encode is *ready* and can never ship un-round-tripped, per the standing law
-that a block re-encode must be capstone round-tripped in a durable artifact
-(pattern: gate_graphlegend_leftanchor.py).  See
-tools\\research\\_incoming\\SHUTDOWN-SPIN.md section 3 for why it is held.
+STATUS OF THE THING IT GATES: SHIPPING at f >= 2.50, imm8 clamp below it.
+This gate exists so the re-encode can never ship un-round-tripped, per the
+standing law that a block re-encode must be capstone round-tripped in a durable
+artifact (pattern: gate_graphlegend_leftanchor.py).
+
+  CORRECTION 2026-08-30.  This paragraph read "HELD, NOT SHIPPING ... See
+  tools\\research\\_incoming\\SHUTDOWN-SPIN.md section 3 for why it is held."
+  Both halves are dead.  That draft was adjudicated and retired with the rest
+  of the raw-decode folder, and its two named blockers were discharged in the
+  shipping code long before: src/CodePatches.cpp:553-556 carries
+  kOrdinanceNameXBlocks {0x0077CBFC,43,34} / {0x0077D0B9,43,34}, the two spill
+  sites 0x77CC23/0x77D0E0 moved into their own kOrdinanceNameXImm8Sites at
+  :512-515, and OrdinanceNameXUsesBlock() at :521-525 splits the two paths on
+  an integer percent (kOrdinanceNameXBlockMinPct = 250), so f=2.00 still
+  reproduces v2.73.3 exactly and only f >= 2.50 takes the block re-encode.
 
 WHAT THIS ADJUDICATES (law 44 - a probe must adjudicate the FIX, not sight it)
 

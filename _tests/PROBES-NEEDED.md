@@ -298,7 +298,7 @@ checks (27%)**, almost all vertical, at the two tiers we ship alongside 2×. A
 skip is never a pass. One capture per tier clears it permanently.
 
 **INI:** none. **Instrument:** `tools\uimap\emu\measure_lineh_tier.py`.
-**Full procedure:** `tools\research\_incoming\lineh-tier-capture-procedure.md`.
+**Full procedure:** `_tests\LINEH-TIER-CAPTURE-PROCEDURE.md`.
 
 **IN-GAME ACTION (~2 minutes).**
 1. Load your usual test city.

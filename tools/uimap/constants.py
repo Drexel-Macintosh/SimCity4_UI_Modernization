@@ -463,9 +463,19 @@ def write_md(out, factor):
           "that reaches geometry through an object field (`mov [esi+0x9C], "
           "eax` row cursors) or through more than one local hop is not "
           "listed.",
-          "2. `SetArea(const Rect*)` (`vt+0xD8`) passes a pointer; the "
-          "constants that built the rect are found only when they are "
-          "register-traceable at the call.",
+          "2. `SetArea(const Rect*)` (`vt+0xD8`) passes a pointer, so nothing "
+          "is register-traceable at the call itself. The constants are "
+          "recovered instead from the FOUR MEMBER STORES that populate the "
+          "stack rect, by `rect_records()` walking `rectMembers` "
+          "(`geomextra.resolve_rect()` upstream). That resolver is "
+          "all-or-nothing: it emits nothing unless all four of l/t/r/b "
+          "resolve, so an empty `rectMembers` is a RECORDED NULL - the rect "
+          "was seen and refused, not missed. Currently 8 such records "
+          "(2 each of Rect.l/t/r/b). *Reworded 2026-08-30: this note used to "
+          "say the constants 'are found only when they are register-traceable "
+          "at the call', which described the zero-coverage state before the "
+          "member-store resolver existed and named a mechanism that is not "
+          "the one in use.*",
           "3. Twin detection is textual (same value+encoding+role+owner). It "
           "does not prove which twin is LIVE - offline that needs the "
           "branch condition, and the project's rule is to patch both.",

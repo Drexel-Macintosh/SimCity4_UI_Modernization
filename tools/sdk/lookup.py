@@ -94,8 +94,11 @@ def _read(path):
 # carry FROZEN 2026-07-21..24 copies of live docs (verified: the bundled
 # GOD-MODE-FLYOUTS.md still calls Create Disaster "UNSOLVED" weeks after it
 # was solved). dist/ and _working-backup/ are shipped/frozen snapshots too.
-# _incoming/ is RAW agent output - useful as leads, never as evidence - so it
-# is searched but LABELLED rather than excluded.
+# _incoming/ WAS raw agent output - useful as leads, never as evidence - so it
+# is searched but LABELLED rather than excluded. As of 2026-08-30 the drafts
+# are retired and only a closing note remains there, so the label costs
+# nothing; the entry stays because _checkpoints/ still needs it and because a
+# future raw drop belongs under the same rule.
 EXCLUDE_DIRS = ("_HANDOFF-SimCity4-Complete", "dist", "_working-backup",
                 "superseded", "_archive", "__pycache__", ".git")
 UNTRUSTED_DIRS = ("_incoming", "_checkpoints")

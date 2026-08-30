@@ -190,16 +190,34 @@ for a regression.
 
 | Parent | Count | What |
 |---|---|---|
-| `0x0423278F` | **35** | budget content-pane children, ids `0x0000012C`…, all `32x32` |
+| `0x0423278F` | **35** | budget content-pane children — see the correction below |
 | `0x0423278D` | 3 | shared text popup interior |
 | others | 7 | one each under tip layer, view, HUD, main window |
 
-The 35 are the biggest blind spot and they are the **budget family** — the
-exact area STOCK-REFERENCE.md was captured for. Invisible to every oracle
-because: their ids are per-row generics appearing in no `.UI` script under a
-stable identity; `bak-stock800` is a *region* boot dump that never entered a
-city so contains no budget window at all; and no `panel` event fires for
-them (they are children, not scaled roots).
+⚠ **CORRECTED 2026-08-30 — BOTH HALVES OF THE `0x0423278F` ROW WERE WRONG.**
+It read "ids `0x0000012C`…, all `32x32`" and, below, "their ids are per-row
+generics appearing in no `.UI` script under a stable identity". The
+surviving capture (`_checkpoints/pds-cache/SC4UIScale-snapshot.log:373-404`)
+refutes both:
+
+- **Not all 32x32, and not 35.** Under `0x0423278F` (itself 900x754) there
+  are **31 children plus the dialog**: 12 checkboxes `0x12C`…`0x137` at
+  **32x32**, 12 row strips `0x2F4`…`0x2FF` at **2640x36**, 4 scroll arrows
+  `0x551`…`0x554` at **128x20**, Cancel `0x16D` and Accept `0x1CD` at
+  **360x60**, and the content pane `0x0423278E` at **900x754**. Only 12 of
+  the 31 are 32x32.
+- **Not identity-less generics.** Both id runs are `base + k` off
+  `mov`-immediates set once in `sub_77C660` before either loop —
+  `0x0077C670 mov dword [esp+0x3C], 0x12C` (checkboxes) and
+  `0x0077C678 mov dword [esp+0x24], 0x1F4` (strips, then `+0x100` at runtime
+  per the outer/inner rule, giving `0x2F4`+k). They are **derivable offline**;
+  what hid them is that a push-only literal scan cannot see a `mov`-immediate
+  into a stack slot.
+
+The rest of the finding stands: they are invisible to the oracles because
+`bak-stock800` is a *region* boot dump that never entered a city so contains
+no budget window at all, and no `panel` event fires for them (they are
+children, not scaled roots).
 
 **This is the concrete argument for stages 1-3.** These windows are built by
 code, so only a builder/constant map can state their stock geometry.

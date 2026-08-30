@@ -45,11 +45,21 @@ this SDK can reach it. Recognising that early is worth days.
 
 **Two facts govern how this document's slot numbers are read.**
 
-1. **The vendor header `cIGZWin.h` is missing one virtual.** Between
-   `GZWinMoveTo` (real 56) and `FitRectToWindow` sits an undeclared **relative**
-   move at real slot 57, `0x0099BD27` — `mov edx,[ecx+0xB4]; add edx,[esp+8]`
-   (a delta, not an absolute). So **every header-derived slot NAME above 56 is
-   one too low**, while the *indices* are unaffected.
+1. **The vendor header `cIGZWin.h` is missing one virtual — and lists one the
+   game does not have.** Between `GZWinMoveTo` (real 56) and `FitRectToWindow`
+   sits an undeclared **relative** move at real slot 57, `0x0099BD27` —
+   `mov edx,[ecx+0xB4]; add edx,[esp+8]` (a delta, not an absolute). **The
+   resulting shift is a BAND, not a tail. Corrected 2026-08-30:** this item
+   used to say "every header-derived slot NAME above 56 is one too low, while
+   the indices are unaffected", which fails at the top of the range. Taking
+   *header-implied slot = declaration index + 3* (`cIGZUnknown` declares
+   exactly three virtuals), the shift is **0 at or below real 56**, **+1 from
+   real 57 to 133**, **undefined across real 134–138** (the header names six
+   `GZOnMouse*` for the game's five 3-arg slots), and **0 again from real 139
+   up** — the six-for-five collapse cancels the +1, which is why the header's
+   `GZOnCaptureChanged`/`GZOnCommand`/5-arg `SendMsg` land on the measured 139
+   / 142 / 144 with no correction. `SDK-GAPS.md` §1 carries the anchor table.
+   Never name a slot in 134–138 by counting the header.
 2. **Slot 88 (`vt+0x160`) is the PER-CLASS "draw myself"**, not the composite
    driver. Measured across four classes, all distinct:
    `cSC4WinAuraBar 0x797CC0` · `GZWinBMP 0x9BC325` (the hooked one) ·
@@ -88,8 +98,11 @@ outside, and neither carried a positive control:
 1. *"`RGKID` shows no window where it renders."* The dump stops one level
    above the bar.
 2. *"A/B with `RatingArrowPatch=0` still doubles it."* True and irrelevant —
-   that patch scales the **HUD** controller (`0x7E86C0-0x7E8A80`, the `imul ,7`
-   sites). The region bar is a different class with different art, so the A/B
+   that patch scales the **HUD** controller — the function entered at
+   `0x007E8510` (size 1408, ending at `0x007E8A90`, the next start); the
+   `imul …,7` block at `0x7E86C0-0x7E8A80` sits INSIDE it and is not a
+   function boundary (`funcs.json`: `0x7E8510` is a start, `0x7E86C0` is
+   not). The region bar is a different class with different art, so the A/B
    tested a subsystem that was never involved.
 
 **Two independent nulls, both structural, and their agreement reads as proof.**
@@ -291,7 +304,7 @@ Three things depend on this and have each broken once:
 | Fact | Evidence |
 |---|---|
 | Window rect lives at `this+0xA8..0xB4` = (L,T,R,B) on the `cIGZWin` subobject | `DYNAMIC-CONTROLS.md` method notes; getters `GetW 0x99C81B`, `GetH 0x99C82A`, `GetL 0x99BC53` |
-| `GZWinMoveTo` is **RELATIVE** — moves BY a delta in parent space, never TO an absolute | `README.md` FACTS; `ScalePanelRoot` comment "proven by the cycle-20 diagnostics" |
+| `GZWinMoveTo` is **RELATIVE** — moves BY a delta in parent space, never TO an absolute. ⚠ **OPEN as of 2026-08-30, and canon currently disagrees with itself on WHY.** The behaviour is not in doubt: every shipped mover passes an explicitly computed delta (`win->GZWinMoveTo(targetL − curL, targetT − curT)`, `UiSpike.cpp` ×20) on user-confirmed-correct docking paths. But the binary puts the ABSOLUTE mover at real slot 56 `+0xE0` (`0x0099C8C5`: computes W/H from `[+0xA8..+0xB4]`, calls `SetArea(x, y, x+W, y+H)`) and the RELATIVE one at real slot 57 `+0xE4` (`0x0099BD27`: adds the args to `[+0xA8]`/`[+0xAC]`/`[+0xB0]`/`[+0xB4]` first) — and **neither is overridden anywhere**: across the 111 window-class vtables slot 56 holds `0x0099C8C5` and slot 57 holds `0x0099BD27` in 111 of 111, against 28 distinct implementations at slot 55 — while the vendor header computes `GZWinMoveTo` at `+0xE0` (`SDK-GAPS.md` §1). **Do not "fix" either statement from the other.** Two facts to hand whoever closes it: the shipped DLL emits **zero** `call [reg+0xE0]` and 14 `call [reg+0xE4]` (measured on `build\Release\SC4UIScale.dll`), which points at the relative slot but is not proof, since other interfaces share those offsets and 20 source call sites do not reconcile with 14; and the decisive measurement is one log line — `GetL()`/`GetT()` immediately before and after a single `win->GZWinMoveTo(dx,dy)`: L moving **to** dx is slot 56, moving **by** dx is slot 57 | `README.md` FACTS; `ScalePanelRoot` comment "proven by the cycle-20 diagnostics"; slot bodies disassembled 2026-08-30 |
 | **MSVC reverses the vtable order of overloaded virtuals**, so adjacent overloaded pairs like `GetArea`/`SetArea` land in swapped slots vs the header and are unusable via naive vtable indexing | `README.md` FACTS; `GetAreaAbsolute()` is avoided for exactly this reason (`UiSpike.cpp` AbsTopLeft comment) |
 | Confirmed slots: `GetW +0xA4`, `GetH +0xA8`, `GetArea* +0xC0`, `SetW +0xCC`, `SetSize +0xD4`, `SetArea4 +0xDC`, `GZWinMoveTo +0xE0`, `GetChildAsRecursive +0x94`, `Show +0x110` / `Hide +0x114`, **`GetID +0xFC` / `SetID +0x100`** | `DYNAMIC-CONTROLS.md` method notes (community `cIGZWin.h` confirmed against game code). ⚠ **CORRECTED 2026-08-24:** this row read "`SetID +0xFC`" for months — wrong, and it is the very overload-reversal trap the row two above warns about. Byte-verified on `cGZWinText`'s vtable `0xADFEB8`: `+0xFC` → `0x99BE66` = `mov eax,[ecx+0x10]; ret` (a zero-arg **getter**, it cannot be a setter), `+0x100` → `0x99BE5C` = `mov eax,[esp+4]; mov [ecx+0x10],eax; ret 4` (the **setter**). Our shipped code is unaffected — it calls the vendor header, never raw slots — but every `SetID +0xFC` in older notes and memories inherits the error |
 | `InvalidateSelfAndParents()` is the ONLY safe repaint primitive after a geometry change — without it the game keeps the stale paint until a mouse hover invalidates (the panel then scales only when the pointer passes over it) | `GOD-MODE-FLYOUTS.md` "Other hard-won rules"; **never** call Plot/draw entry points from a hook |
@@ -347,7 +360,7 @@ shipped regression.
 
 | Class (clsid / vtable) | Size determined by | Art binding | SCALING RULE |
 |---|---|---|---|
-| **`GZWinBMP`** (iid `0xC12CEA13`, descriptor `0xAD5CE0`; class vtable **`0x00ADF6A0`**, Plot override `0x9BC325`) | Its own `area=`; but the **DRAW** is `dst = origin + srcW×srcH` — the draw follows the SOURCE IMAGE, not the window | `image={gid,iid}` + optional `imagerect=` source crop; 419 controls have `area` exactly == PNG dims (1:1 blit) | **2x art scales the draw with NO code hook.** **Law:** `imagerect` must double whenever its art doubles. Corollary: **a 2x source rect over a 1x bitmap draws only the corner that exists** — that is exactly what a shadowed art override looks like on screen. Evidence: `MAYOR-MODE.md` "EMERGENCY = the missed-art-pass case" (Plot `0x9BC325`, 3-state branch divides src by 3, helper `0x8D8800`); `UI-ART-BINDING.md` addendum. **Warning: the LIVE `imagerect` is a bind-time LATCH** — `SetImage` (`0x9BC57E→0x9BC447`) rewrites `[win+0xE8]` from the window's area *at that moment* and `SetArea` never touches it, so content bound before a resize keeps drawing its pre-resize size (§2.6) |
+| **`GZWinBMP`** (iid `0xC12CEA13`, descriptor `0xAD5CE0`; class vtable **`0x00ADF6A0`**, **slot 88 `GZPaint`** `0x9BC325` — *renamed 2026-08-30; this cell said "Plot override", but slot 88 is `GZPaint` and `Plot` is slot 89 = `0x0099BA07` (`SDK-GAPS.md` §1). The hook is unaffected — it always sat on slot 88*) | Its own `area=`; but the **DRAW** is `dst = origin + srcW×srcH` — the draw follows the SOURCE IMAGE, not the window | `image={gid,iid}` + optional `imagerect=` source crop; 419 controls have `area` exactly == PNG dims (1:1 blit) | **2x art scales the draw with NO code hook.** **Law:** `imagerect` must double whenever its art doubles. ⚠ *A corollary was struck here 2026-08-30: "a 2x source rect over a 1x bitmap draws only the corner that exists — that is exactly what a shadowed art override looks like on screen."* **`SetImageRect` `0x009BC103` makes that impossible**: whenever an image is bound it clamps `l,t` up to ≥0 and `r,b` down to the image's real dimensions (`l = max(0,l)` `0x9BC11E`, `t` `0x9BC124`, `r = min(r, GetWidth)` `0x9BC12C-3E`, `b = min(b, GetHeight)` `0x9BC141-56`; the clamping is skipped entirely when `[win+0xDC]` is null). A `(0,0,w,h)`-form crop therefore clamps back to the whole 1x image and draws **1x**; a crop with non-zero `l,t` clamps into an inverted rect. Full decode: `SDK-GAPS.md` §2. Evidence for the draw law: `MAYOR-MODE.md` "EMERGENCY = the missed-art-pass case" (`0x9BC325`, edge branch divides src `r`/`b` by 3, helper `0x8D8800`); `UI-ART-BINDING.md` addendum. **Warning: the LIVE `imagerect` is a bind-time LATCH** — `SetImage` (`0x9BC57E→0x9BC447`) rewrites `[win+0xE8]` from the window's area *at that moment* and `SetArea` never touches it, so content bound before a resize keeps drawing its pre-resize size (§2.6) |
 | **`GZWinText`** (cGZWinText, ctor `0x9C19C8`, 0x114 bytes, main vt `0xADFEB8`, iface vt `0xAE0118`, `cIGZWinText` iid `0x212cdc1f` at `+0xD8`) | The **font style**, resolved at creation | `font=` style; no image | Doubled window + doubled FontStyle style = correct. **Law:** only if `font=` is **GUID-valued** (§5.1). Controllers bind the interface and update captions only (`0x7EE64D`/`0x7EE668`) |
 | **`GZWinBtn`** (iid `0x00008810`, descriptor `0xAD5CAC`; button class vtable `0x00ADDAF0`) | Its `area=`; the art is a **horizontal 4-state strip** (normal/hover/pressed/disabled), state selected by `imageWidth ÷ 4` — proportional, no pixel constants (875 buttons satisfy `pngW = 4×btnW`) | `image={gid,iid}` strip | **Safest case: a 2x strip still picks the right cell.** Verified in-game on the Audio playlist checkbox (8 states of 16x16, slicing is `imageWidth/8`). The generic strip `{46a006b0,144161eb}` (120x30) serves buttons 130–370px wide but is always 30 tall, so horizontal fit is proportional and the vertical dimension is the widget's own (`SDK-GAPS.md` G27) |
 | **`GZWinTextEdit`** | `area=` | `image=` (format also defines `thumbimage`/`containerimage`/`backimage` for Scrollbar2/OptGrp/TextEdit, **none in use** in the shipped corpus) | Scales like a plain window. Data point: under runtime-only scaling its captions render **correctly** where sibling `GZWinText` nodes go purple (§1.2) |
@@ -360,12 +373,12 @@ shipped regression.
 | **`0xCBCBF1E0`** (unnamed, 134 uses; outer vt `0x00AB4900`, window vt **`0x00AB46A0` at `obj+4`** — factory `0x00466220` returns base+4, Plot `0x00762830`, ctor `0x007628E0`, custom iid `0x0BCBF1DF`, 0x108 bytes — `SDK-GAPS.md` §8.1) — code-painted **gauge dials** | its own **cached buffer**, which keeps its 1x size while the window doubles | code-painted (its TGIs *are* staged 2x and it still draws small) | Symptom: a correct 2x black circle with a small dial face pinned top-left (`SDK-GAPS.md` G34). The My Sims portraits are the same shape, and a per-open census of hook calls found the hook installed and never called there; one leaf invalidate per open cured them (law 41). Run that instrument here before reaching for **force-recreate-buffer** (§7.3). **Law:** probe the vtable AND scope the hook to the owning root `0x4BCB938A` first — class identity alone is what crashed the game on Earned Cars (§2.1 note) |
 | **`0x00AB6AA8`** (vtable) container + **`0x00AB6D88`** (vtable) strip — the **flyout pair** | on-screen size == the **source buffer's** physical size, NOT the window rect (composite is a 1:1 clipped copy) | immediate-mode blits from an art atlas read out of the draw context | See §2.1 — the most involved widget in the game and the source of most reusable technique |
 | **`0xAA12E5F5`** — rich-text pane (`GetClassID 0x8FA317`; creation sites `0x443FC9`, `0x76A182`, `0x78CE11`, `0x7931F0`; created via `CreateInstance(clsid 0xAA12E5F5, iid 0x4A11FD4A)`) | Content-sized from the **HTML engine's** point tables — *not* FontStyle | text is HTML; page art via `sc4://` URLs | Text scales only via the `.rdata` table patch (§5.2). It appears as `id=2` in the five message-box scripts and is the item AdviceList creates |
-| **`GZWinCustom`, `id=0x0000AAAA`** — the **alignment marker** | sized like the panel's **anchor** (usually its spawn button) | none; `winflag_visible=no` | **Law: POSITIONING DATA. NEVER SCALE IT — not at runtime, not in shipped data.** See §6.1 |
+| **`GZWinCustom`, `id=0x0000AAAA`** — the **alignment marker** (class vt `0x00AD6AA0`, registry clsid `0x478D1E6F`; ctor stores it at `0x0095BACD`, `GZPaint` `0x0095BA43`) | sized like the panel's **anchor** (usually its spawn button) | none; `winflag_visible=no` | **Law: POSITIONING DATA. NEVER SCALE IT IN SHIPPED DATA** — `double_subtree_areas` skips `id=0x0000AAAA` and must keep doing so. ⚠ *Amended 2026-08-30: this cell read "not at runtime, not in shipped data". The runtime half is false as a description of what we do — our own sweep DOES double markers when it reaches their subtree. Measured on ONE node across two ticks of the same `RGKID 3.0` path: `(110,0 20x20)` at `17:39:47.281` → `(220,0 40x40)` at `17:39:47.339`; all four markers double in position and size (`220→440`, `-28,-32 → -56,-64`, `567→1134`).* **Consequence: a marker's LIVE rect may be in DESIGN or SCREEN units depending on whether the sweep reached that subtree, and you cannot tell by looking at it.** Resolve it with `UiSpike::MarkerIsDesignUnits` (a pure read of `scaleMap`), never by assuming a baked 1x offset and never by a size heuristic — the two mod flyouts disagree PERMANENTLY (`0xAB954023` S&L script `(4,5)` reads live `(8,10)` = SCALED; `0x49923239` Landscape script `(3,59)` reads live `(3,59)` = DESIGN), and docking design units as screen units put the Landscape ring 59 px onto the wrong button. See §6.1 |
 | **`GZWinSpinner`** | derives its size from its **arrow strip** `{46a006b0,82b99d9d}` | that strip | **Law:** art-sized ⇒ `kFontSizedIds` treatment: **scale position, leave size alone** (§6.2) |
 | **`GZWinGrid`** | `drowheight` / `dcolwidth` (**d-prefixed** — a `\browheight` regex silently missed them) and `wingridcol="a,b,width"` where **every 3rd slot is a PIXEL width** | per-row art may be code-bound (`0x14416244`) | Scale the d-attributes and the width slot only; never the two index slots (`build_dialog_static.py`; `DYNAMIC-CONTROLS.md` addendum) |
 | **`cSC4WinRCI`** clsid `0xC7A0E17E` (factory `0x466170`, ctor `0x7A9770`, **Draw `0x7A9500`**, vt `0xAB8628`) | **the WINDOW rect** — reads `this+0xA8..0xB4`, `half = extent/2` from the window, log-scales the demand value; **no pixel constants anywhere in the function** | none (FillRect via draw context) | Fully proportional: **follows doubling automatically**. If it looks stock, the three 8x71 column windows (`0x09D27EB0`/`0x29D27EC0`/`0x49D27ED0`) were not actually resized — dump their W/H (expect 16x142) |
 | **`cSC4WinTrendBar`** clsid `0xAA5C2F86` (factory `0x4661A0`, ctor `0x7BF5E0`, **Draw `0x7BF0A0`** = vt `0xABA430` slot 88, main vt `0xABA68C`, iface iid `0xCA5C2F84`) | **its ART's pixel size**, drawn *centred* in the window (`x = L+(winW−imgW)/2`); the fill marker is `fraction × (imgdim−1)`; **the FILL sheet is a SIX-cell strip — `bandW = fillW/6`** (`0x7BF0E4` `imul 0xAAAAAAAB` / `0x7BF0F5` `shr 2`, the /6 reciprocal; byte-verified) | **code-bound** `{46A006B0,0x14015580}` groove + `{…,0x14015584}` fill, loaded by the polls controller at `0x7ED4AC` and pushed in via **`SetImages` `0x7BEEB0` (main vt slot 4) — stores POINTERS only** — **zero `.UI` refs**, so `find_cell_strips.py`'s `.UI` derivation is blind BY CONSTRUCTION; the fill's states=6 lives in its `CODE_BOUND` table (byte evidence inline) | Content scale = **art size only**. Note the deceptive symptom: the fill is proportioned relative to its own groove image, so the bar reads "correct" even while the whole unit renders 1x centred in a 2x frame. **Note: IMMUNE to §2.6's SetImage latch** (measured): Draw re-reads EVERY geometric input live per frame — groove/fill dims via `cIGZBuffer` Width/Height virtuals each draw, vertical extent from the draw rect that **vt`+0x184` (base impl `0x99CF6A`) recomputes INSIDE the SetArea chain** — full member census found zero stale-able geometry; bind-before-sweep and bind-after-sweep draw identically, f=2 control pixel-exact. (`+0x184` = slot 97, which for this family is a draw-rect recompute) |
-| **`GZWinFlatRect`** | `area=`; the ticker's clip strip is **resized by code** at init to `SetSize(W, min(2×lineHeight, H))` | `fillcolor` | Ordinary — but see §6.3: some are re-imposed |
+| **`GZWinFlatRect`** (registry entry 0: clsid `0xC2AFA76E`, iid `0xC2AFA76F`; class vtable **`0x00AE20A0`**, `GZPaint` `0x009CD1FF`, ctor `0x009CD842`) | `area=`; the ticker's clip strip is **resized by code** at init to `SetSize(W, min(2×lineHeight, H))` | `fillcolor` | Ordinary — but see §6.3: some are re-imposed. **This is the OUTER half of the `+0x100` pair** (`SDK-GAPS.md` §4.1): a `GZWinFlatRect` at `id+0x100` wrapping a `GZWinBtn` (`vt 0x00ADDAF0`) at the raw id — the two vtables §4.1 names "outer" and "inner" are these classes |
 
 ### 2.1 The flyout pair `0x00AB6AA8` / `0x00AB6D88` in detail
 
@@ -518,8 +531,17 @@ the x 200..400 band.
    downstream hook.**
 2. **Base `IsPointInMe`** **`0x0099C97C`**: coarse `[this+0x14]` rect test; if
    flag `0x80000` (MouseTrans) then transform (slot 59) and run the **refined**
-   test slot 149 (`[vt+0x254]` → `0x0099BBBE` → the `[this+0x64]` mask
-   sub-object's 2-arg HitTest, **result inverted: 0 = opaque = clickable**).
+   test slot 149 (`[vt+0x254]` → `0x0099BBBE` → **the window's own private
+   `cIGZBuffer` at `[this+0x64]`**, Locked with `0x800` and read per pixel,
+   **result inverted: 0 = opaque = clickable**). *Corrected 2026-08-30:* this
+   line used to call `[this+0x64]` "the mask sub-object". It is not a
+   sub-object — it is the same field slot 101 `GetPrivateBuffer` returns
+   (`0x009D419D` = `mov eax,[ecx+0x64]`) and that `PrivateBuffer(bool)`
+   `0x0099EA70` allocates. The disassembly of `0x0099BBBE` touches nothing
+   else: `[esi+0x64]` null-check, `[vt+0x60]` readiness, `[vt+0x18](0x800)`
+   lock, `[vt+0x64](x,y)` per-pixel read. That is why a stale or wrongly-sized
+   private buffer mis-routes **clicks**, not just pixels, on a MouseTrans
+   window (`SDK-GAPS.md` §1.2).
 3. **Custom overrides exist.** Always read the class vtable before assuming
    base behaviour. Useful slot offsets: slot 40 `[vt+0xA0]`, slot 59
    `[vt+0xEC]`, slot 62 `[vt+0xF8]`, slot 121 `[vt+0x1E4]`, slot 149
@@ -1259,15 +1281,22 @@ slots `vt+0x10C`/`vt+0x110` (§1.4, §2.2) — is:
 > **Moveable, Sortable, AcceptFocus**, exactly the "every window is BORN
 > visible" ctor constant already used in §7.2/§1.4
 > (`tools\research\_checkpoints\uimap-stage3-emu.md` "SECOND FOLLOW-UP", and
-> independently in `tools\research\_incoming\subsystems-02.md` §2.4's field
-> table, both against ctors `0x0099DA15`/`0x0099DB3C`). `GetFlag(1)` /
+> independently in the 2026-07-31 `subsystems-02` decode draft's field table,
+> both against ctors `0x0099DA15`/`0x0099DB3C`; that draft was adjudicated and
+> retired 2026-08-30 and its half of this evidence now lives in
+> `SDK-GAPS.md` §3, "The flag dword at `[win+0xC8]` is born `0x8903`").
+> `GetFlag(1)` /
 > `GetFlag(2)` are the disassembled bodies of `IsVisible`/`IsEnabled`
 > (`tools\research\regionmap\slice-2.md` §0.1 cGZWin vtable map; also
 > `SDK-GAPS.md` line 42). `GetFlag(4 AlphaBlend)`, `GetFlag(0x10000
 > PrivateBuffer)`, and the raw `flags & 0x20000` / `flags & 0x40000` tests
-> are read directly off `PlotComposite`'s disassembly (`0x0099E62D`,
-> `subsystems-02.md` §2.4.2 step 4). `GetFlag(0x80000 MouseTrans)` is in base
-> `IsPointInMe` (`0x0099C97C`; `subsystems-01.md` line 100/226, folded into
+> are read directly off `PlotComposite`'s disassembly (`0x0099E62D`) —
+> originally in the same retired `subsystems-02` draft, now canonical in
+> `SDK-GAPS.md` §3's `PlotComposite` walk (grep `PrivateBufferErase`).
+> `GetFlag(0x80000 MouseTrans)` is in base
+> `IsPointInMe` (`0x0099C97C`; first written down in the retired
+> `subsystems-01` draft, now `SDK-GAPS.md` §1.2 "Hit-testing" gate 2, and
+> folded into
 > §2.2 item 2 above). `GetFlag(0x200000 IgnoreMouse)` is in the hit-test
 > router (`0x0099DFA9`, §2.2 item 1; `SDK-GAPS.md` §1.2 "Hit-testing",
 > grep `WinFlag_IgnoreMouse`).
@@ -1490,8 +1519,14 @@ copies scaled anyway so shared-art refs stay consistent.
 
 ## 4. Art binding — the four paths a pixel takes to the screen
 
-The store: **2,280 PNGs** (type `0x856DDBAC`) in `SimCity_1.dat` across 10
-groups — `46a006b0` 810, `1abe787d` 743, `6a386d26` 356, `4c06f888` 112,
+The store: **2,280 image resources** (type `0x856DDBAC`) in `SimCity_1.dat`
+across 10 groups. *(Reworded 2026-08-30 — this line said "2,280 PNGs".
+`0x856DDBAC` is a generic IMAGE type, not a PNG type: **2,206 are PNG, 41 are
+JFIF/JPEG, 26 are SHPI/FSH, 7 are Windows BMP**, and an art tool must decode
+by magic bytes rather than assume. That correction is already canonical at
+`SDK-GAPS.md` §9 and `UI-ART-BINDING.md` §2 with the per-group split; this
+opener had simply not been carried across. The group histogram below is
+unaffected.)* Groups — `46a006b0` 810, `1abe787d` 743, `6a386d26` 356, `4c06f888` 112,
 `ab7e5421` 93, `00000001` 62, `ca133ecb` 41, `22dec92d` 39, `6a1eed2c` 20,
 `a9179251` 4. Only **431** distinct `{gid,iid}` pairs are referenced from `.UI`
 text. **The other ~1,850 are bound some other way** — that gap is the whole
@@ -1517,6 +1552,26 @@ makes selective retargeting possible**. The one shipped counter-example is
 `0x82B9B75B` exists in no archive while the instance is a real strip under
 `0x46A006B0` (`SDK-GAPS.md` G11). No
 `thumbimage`/`containerimage`/`backimage` is in use.
+
+⭐ **`{g,i}` IS NOT A SYNONYM FOR ART — ANCHOR ON `image=`.** Five attributes
+in the shipped corpus carry a `{gid,iid}` brace pair and only one of them is
+an image. Census over the whole extracted corpus, `([A-Za-z_]+)=\{8hex,8hex\}`
+(re-run 2026-08-30):
+
+| attribute | occurrences | distinct pairs |
+|---|---|---|
+| `image=` | 2,962 | 431 |
+| `captionres=` | 1,777 | 546 |
+| `btnclicksnd=` | 1,422 | 19 |
+| `tipres=` | 983 | 183 |
+| `btnupsnd=` | 49 | 3 |
+| **total brace pairs** | **7,193** | — |
+
+A bare brace-pair grep therefore over-reports art refs by **4,231
+occurrences and 751 distinct keys** — captions and sounds counted as
+pictures. This is why a bare-brace scan can never be used to audit art
+coverage; it is the `.UI`-text cousin of the standing law that text scanners
+are blind to code-bound art.
 
 **Fixable at:** the art layer (`build_selective_safe.py`) — plus the
 `imagerect` on the same control.
@@ -2059,8 +2114,9 @@ recorded camera-path ("movie") feature, defaulting to
 0x8A8CC775(×2), 0xAA8CC64E, 0x8A8CC773, 0x4A8CD34E, 0xA8CD3FF, 0xA8CD401,
 0xA8CD400` from a passed-in property holder via `vt+0x8C`, and its own
 literal art-load at `0x7BC624` is `{0x856DDBAC, 0x1ABE787D, 0x2558A4CB}` —
-already on record in `tools\research\_incoming\sdkgaps-03.md` (the "ONE REAL
-GAP FOUND" passage) as the **Photo Album** panel's 296×222 backdrop, sourced
+already on record — from the 2026-07-31 `sdkgaps-03` decode draft's "ONE REAL
+GAP FOUND" passage, adjudicated and retired 2026-08-30 — as the **Photo
+Album** panel's 296×222 backdrop, sourced
 from `I-4a8cc5ea` (captions "Photo Album"/"Albums"/"expand"/"Close", scripted
 root `0x0A8CD3EE`). `sub_7BC350`'s single caller (`0x7BCFA1`, `funcs.json`:
 1 caller) resolves its target child via property `0xA8CD3FF` (same Photo
@@ -2733,11 +2789,27 @@ It also explains the special case the god constant table needed: the shared
 window `0xCA35CBED` needs two offsets (terrain-fx 40 / day-night 160) because
 **swapping the SCRIPT moves its marker**.
 
-**Law: NEVER SCALE A MARKER — not at runtime, and not in shipped data.**
+**Law: NEVER SCALE A MARKER IN SHIPPED DATA.**
 Doubling the advisor strip's marker (229,63) along with the rest of the subtree
 births the strip shifted by exactly `−(229,63)`: native (209,1412) →
 **(−20,1349)**, proven live. `double_subtree_areas` skips `id=0x0000AAAA`
 tags (19 edits per script instead of 20).
+
+⚠ **Amended 2026-08-30 — the runtime half of this law was a statement of
+intent, not of behaviour.** It read "not at runtime, and not in shipped
+data". The RUNTIME sweep *does* double markers whenever it reaches their
+subtree: same `RGKID 3.0` node, two ticks apart, `(110,0 20x20)` at
+`17:39:47.281` → `(220,0 40x40)` at `17:39:47.339`, and all four markers on
+that panel move and grow together (`220→440`, `-28,-32 → -56,-64`,
+`567→1134`). **So a live marker rect is in DESIGN units on some windows and
+SCREEN units on others, and its size does not tell you which.** Do not
+"correct" this by suppressing the sweep and do not dock off a baked 1x
+offset — both were tried. The measured resolver is
+`UiSpike::MarkerIsDesignUnits` (`src\UiSpike.cpp`), a pure read of the
+`scaleMap` we already keep of every window we scaled; a size heuristic using
+the spawn button as a ruler was killed by the offline gate before it shipped
+(S&L's marker is 64 wide against a 47-design/94-live button, so it would have
+guessed wrong and the guess would have stayed invisible). #94, v2.47.0.
 
 **Markers do more than dock flyouts:**
 - They encode **designed panel interlock**: `I-2bc90671` carries
@@ -3054,8 +3126,8 @@ then subsystems.
 | `0x77258B–0x772735` | ticker init (caches marquee rect, `3 × lineHeight`); `0x7726E2+` clip-strip resize; `0x7726B4` AdvisorHeadline fetch |
 | `0x7EE64D` / `0x7EE668` | HUD binds `cIGZWinText` (iid `0x212CDC1F`) for funds/pop |
 | `0x7EE69E` | HUD loads its `.UI` by TGI `{0x96A006B0, 0x2A2AED99}` |
-| `0x7E86C0–0x7E8A80` | mayor-rating controller |
-| **`sub_7E8510`** | the rating-fill composer — builds one buffer per rating tick (`row = artH*(rating+100)/200` of `{46a006b0,14015549}`, replicated to all rows) and pushes it via `cIGZWinBMP::SetImage` on EVERY firing, even delta=0 (§2.6) |
+| `0x7E86C0–0x7E8A80` | the mayor-rating `imul …,7` arrow block — **an inner range, not a function.** It lives inside `sub_7E8510` on the row below; `funcs.json` has `0x7E8510` as a start and `0x7E86C0` not, and `0x7E851D`/`0x7E86C0`/`0x7E86E5`/`0x7E87B1`/`0x7E89D7`/`0x7E8A02` all bisect to it *(corrected 2026-08-30)* |
+| **`sub_7E8510`** (`0x007E8510`–`0x007E8A90`, size 1408; the end is the next start, `UpdateAlertBorder`) | the rating-fill composer AND the owner of the arrow block above — builds one buffer per rating tick (`row = artH*(rating+100)/200` of `{46a006b0,14015549}`, replicated to all rows) and pushes it via `cIGZWinBMP::SetImage` on EVERY firing, even delta=0 (§2.6) |
 | `0x7E883B` | `GZWinMoveTo` re-assert of the meter position from the `[ctl+0x378/0x37C]` latch, every refresh (RATEANCHOR) |
 | `0x7ED224` | polls-panel init — binds the small rating meter to the SAME `14015549` sheet through the GZWinBMP family |
 | **`0x7E87B1`, `0x7E89D7`, `0x7E8A02`** | the three `imul r32,r/m32,7` sites — **7 px per rating point, ARROWS ONLY** (reveal `SetW(delta*7)` + reposition; no pixel constant exists in the FILL chain — §2.6), bytes `6B F6 07` / `6B C9 07` / `6B C9 07`, patched imm8 at `+2` |
@@ -3133,6 +3205,72 @@ patch and logs, so a different exe build **degrades instead of corrupting**.
 No game file is ever modified — all patches are in-memory. The eight
 graph-legend sites go further and are **verify-ALL-before-write-ANY**: a
 partial application would split a coupled pair (§5.4.9).
+
+### 8.7 Framework teardown — the shutdown chain, and why it can hang
+
+§7 covers the timing model while the game is running. This is the other end,
+and it is the one place where the window model stops holding: **during
+teardown the window manager dies before the windows do**, so anything that
+consults it gets a wrong answer rather than an error.
+
+`SDK-GAPS.md` §4 owns the validity set itself — `IsWindowValid`'s bucket
+arithmetic, `DoDestroyWindow`'s discarded `bl`, and the qualifier that an empty
+set answers FALSE for everything. **What is added here is the CALL CHAIN and
+the ORDER**, which is what makes the spin inevitable rather than merely
+possible; neither was written down anywhere but in the source that patches it.
+
+| VA | What |
+|---|---|
+| `0x0044C170` | `WinMain`; its `call 0x0087B0B9` at `0x0044C221` is the only one |
+| `0x0087B0B9` | 35-byte wrapper; its `call` at `0x0087B0D1` is the only caller of Shutdown |
+| **`0x0087AB07`–`0x0087AC20`** | **`cGZFrameWork::Shutdown`** (281 bytes). Opens `8B 0D AC 40 B5 00` = `mov ecx,[0x00B540AC]` — the framework/COM singleton |
+| `0x00B540AC` | the framework singleton pointer. *(The app singleton is a separate pointer and is NOT `0x00B540B4`; that address has ten `.text` references, all inside the framework cluster. Unresolved here — do not cite one.)* |
+| `0x009DC172` | `~cGZWinMgr` (171 B). Runs FIRST |
+| `0x0092FE56` | `~cGZMessageServer` |
+| `0x0099E1A2` | `~cGZWin` (283 B) |
+| **`0x0099DD6F`** | **`cGZWin::ChildDeleteAll`** (68 B). Exactly ONE caller image-wide, `0x0099E1AC`, inside `~cGZWin` |
+| `0x009DB0FD` | `DoDestroyWindow` (vtable-only, 102 B) — returns FALSE when the manager says the window is invalid |
+
+**The order is the mechanism.** `~cGZWinMgr` destructs the validity hashtable
+and **frees the bucket array while leaving `[set+4]`/`[set+8]` dangling**. Then
+`~cGZMessageServer` drains its notification map and Releases every window still
+registered as a message target. Each of those runs `~cGZWin` → `ChildDeleteAll`,
+whose every removal goes through `mgr->IsWindowValid` — which now answers FALSE
+for **every** window, because the set is gone. `DoDestroyWindow` returns FALSE
+having unlinked nothing, `ChildDeleteAll` records that failure in `bl` and
+**never tests it**, and re-reads the same first child forever. The loop's own
+bytes carry its only exit:
+
+    0x0099DD76  8B 46 44   mov eax,[esi+0x44]   ; the child list object
+    0x0099DD79  8B 08      mov ecx,[eax]        ; sentinel = [list+0]
+    0x0099DD7D  FF 40 04   inc dword [eax+4]    ; iteration guard
+    0x0099DD80  8B 11      mov edx,[ecx]        ; first = [sentinel]
+    0x0099DD82  3B D1      cmp edx,ecx          ; EMPTY when first == sentinel
+
+**Two laws for anyone reading a hang or writing a teardown hook.**
+
+⭐ **A DESTRUCTOR ORDER IS AN API.** `IsWindowValid` is not a predicate during
+teardown; after `~cGZWinMgr` it is a constant FALSE, and every caller that
+treats FALSE as "already gone, skip it" instead of "I cannot tell" inherits the
+bug. Any hook that runs on the teardown path must ask **when** it runs relative
+to `0x009DC172`, not merely **whether** the object it wants still exists.
+
+⭐ **A LOOP WHOSE EXIT DEPENDS ON A SIDE EFFECT MUST TEST THE SIDE EFFECT.**
+`ChildDeleteAll` stores the removal result and then re-reads the list head
+regardless. That is why the failure presents as a 100%-CPU spin at exit and not
+as a crash: nothing is corrupted, the terminating condition simply cannot be
+reached from inside.
+
+The shipped cure (mod defect #104, `[UiSpike] SpinFix`, default ON) does not
+call back into the engine — see `src\SpinProbe.cpp`, grep `#104 THE FIX`, and
+`_tests\REGRESSION.md`. Two 4-byte writes point the sentinel at itself so the
+`cmp edx,ecx` above reads EMPTY, taken only with the target thread suspended
+and only when the spin has been MEASURED. **The obvious repair —
+`parent->ChildDelete(child)` — is the trap**: the live vtable's `+0x3C` is
+`0x0099EA6B`, not the expected `0x0099E2BD`, `ChildDelete` is `+0x44`, and its
+helper calls `mgr->IsWindowValid`, i.e. reads the freed bucket array. That is
+the general shape: **on this path, every route that goes through the engine
+goes through the object that is already dead.**
 
 ---
 

@@ -69,7 +69,8 @@ EXTERNAL = re.compile(
 #      excluded: derived _work/diff output, the volatile scratchpad, and the
 #      game-derived extraction trees a cold clone regenerates.
 GENERATED = re.compile(
-    r"(?:^|[\\/])(?:z_SC4UIScale_STATE\.txt|SHA256SUMS\.txt)$|"
+    r"(?:^|[\\/])(?:z_SC4UIScale_STATE\.txt|SHA256SUMS\.txt"
+    r"|prestate-lineh-tier\.txt)$|"
     r"(?:^|[\\/])(?:vendor|scratchpad|_work|diff|extracted[\w-]*)[\\/]|"
     r"^(?:vendor|scratchpad)[\\/]|"
     r"[\\/]generated[\w.-]*sites[\w.-]*\.txt$|^generated[\w.-]*\.txt$|"
@@ -159,15 +160,20 @@ def main():
         print("  vendor SDK headers visible: %d%s" % (
             len(sdk), "" if sdk else "  (submodule not checked out - every "
                                      "header citation will be reported)"))
-        # Same exclusions as the export mode, plus the two trees the repo's
-        # own tools refuse to quote as current knowledge: vendored source and
-        # the raw agent drafts (their README says nothing there is
-        # authoritative, so their links are leads, not claims).
+        # Same exclusions as the export mode, plus vendored source, which the
+        # repo's own tools refuse to quote as current knowledge.
+        #
+        # `_incoming/` was excluded here too until 2026-08-30, on the grounds
+        # that its README declared nothing in it authoritative, so its links
+        # were leads rather than claims. Those drafts are now adjudicated and
+        # retired; all that folder holds is the closing note that old
+        # citations land on, and that note names a dozen destination files -
+        # exactly the kind of reference this gate exists to keep honest. So it
+        # is checked like any other doc now.
         docs = [ROOT / p for p in _tracked()
                 if p.endswith(".md")
                 and "vendor" not in Path(p).parts
-                and "submenus-dll-src" not in Path(p).parts
-                and "_incoming" not in Path(p).parts]
+                and "submenus-dll-src" not in Path(p).parts]
     else:
         docs = [p for p in ROOT.rglob("*.md")
                 if "vendor" not in p.relative_to(ROOT).parts]

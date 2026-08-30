@@ -10,9 +10,11 @@ neither:
   A. SetArea(const Rect*)  - vt+0xD8 takes a POINTER. The constants that
      built the rect are the four dword stores into the stack local the
      `lea` points at. Recovering them is the "rect-store resolver" named
-     as missing in tools\\research\\_incoming\\sdkgaps-01.md OPEN #2.
+     as missing in the 2026-07-31 sdkgaps-01 decode draft, OPEN #2 - that
+     draft was adjudicated and retired 2026-08-30, and THIS MODULE IS WHAT
+     BECAME OF IT, so nothing is lost with it.
 
-     ⛔ The forbidden shortcut (sdkgaps-01.md blind spot 2): mapping
+     ⛔ The forbidden shortcut (that draft's blind spot 2): mapping
      0xD8's single argument to l/t/r/b. At 0x7A082C the pushed value is
      `lea ecx,[esp+0x90]`, which classify() reads as value=0x90 - a
      STACK FRAME OFFSET. Publishing that as "geometry constant 144" is

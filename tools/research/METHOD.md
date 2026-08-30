@@ -415,6 +415,7 @@ blind spot rather than a fact:**
 | 4 | `VisTrace` v1 | logged only visibility FLIPS — a window CREATED on the event was silently baselined |
 | 5 | `EdgeBlt` | the class-Blt hook was not installed yet (it installs lazily on the first flyout) |
 | 6 | `EdgeBlt`, armed | the UI buffer class **never composites to the screen** — every dest is panel-sized, so a full-screen border could not appear in principle |
+| 7 | `FLASHSET` again, correctly scoped | it reports each window id **at most once per PROCESS** — `static uint32_t seen[96]` + `static int seenCount` in `NoteFlashCandidate` (`src\UiSpike.cpp`), with an id early-out and a hard `>= 96` stop, and **neither is reset anywhere**. So it is structurally incapable of observing a RECURRING flash: on a city→region return those ids were already spent at boot, and the absence of lines is not evidence the return did not flash. Its sibling `gBmpDrawLog` learned this lesson and got three re-arm sites; this one did not. One-line fix: key the dedupe on `(id, arrivalSerial)`, or clear `seen`/`seenCount` when `regionActive` goes false |
 
 **THE RULE: before reporting "X does not happen", state the positive control —
 what WOULD this instrument have printed if X did happen, and has it ever
@@ -432,6 +433,29 @@ Cheap positive controls that work:
 And the corollary for reporting: **say which negatives are structural and which
 are measured.** A structural null belongs in the write-up as "could not have
 seen it", never in the evidence column.
+
+⭐ **THE DISCOVERY-FILTER LAW — A FILTER MUST BE RUN AGAINST THE THINGS YOU
+ALREADY FOUND. IF IT CANNOT RE-FIND THEM, IT IS NOT A FILTER, IT IS A LID.**
+Worked case, still live in the tree: `tools\uimap\census.py --discover` skips
+any function with `callers < 2` (`census.py:507
+if fm.meta[start]["callers"] < 2: continue`, and the print at `:522` still
+advertises "unnamed rect-driving helpers with >=2 callers"). Run that
+predicate against the census's OWN builders and **8 of the 12 fail it** —
+`0x77C660`, `0x77E600`, `0x786690`, `0x7876B0`, `0x78B120`, `0x77A480`,
+`0x77A960` at 1 caller, `0x78BCA0` at 0 (`kind: vtable-only`). A top-level
+dialog builder is called from exactly one place, so the filter is biased
+**precisely against the thing its output is sold as finding**. A caller-count
+threshold finds shared helpers; a geometry-call-count threshold finds
+builders — the predicate was measuring the wrong property.
+
+The tell that this has happened to you: the tool starts conceding the point
+in prose instead of in code. `census.py` now carries five such concessions —
+`:215` records a builder excluded because "`--discover`'s callers>=2 lid
+excludes it", `:225` says another "fails `--discover` criteria and always
+will", and three HAND-SEEDED builders around `:256`/`:269`/`:278` each carry
+"absent from `builders.json` discovered (fails a `--discover` criterion)".
+**A defect being paid for one hand-seed at a time is still a defect.** Cost so
+far: every top-level builder in the game must be found by hand.
 
 ---
 

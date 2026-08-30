@@ -283,3 +283,43 @@ To re-verify the purge on any build:
    full value (8) instead of wandering 8/7/6.
 5. Enter a city afterwards and confirm the city HUD scale-up still logs its usual counts (no
    double-scale guard lines) - guards remain as backstop.
+
+---
+
+## 4. ANCHORING, separate from the rot: the top flyout clamps to x=0 at 1.5x
+
+**UNRETESTED HAZARD, not a confirmed live defect.** One measurement, from a
+4-week-old capture of a build already known to be broken. Written down because
+the clamp it names is still in the code and this window is still outside every
+exemption.
+
+`0x09EBEE45` is genuinely FRAME-CENTRED, which `STOCK-PARITY.md` already
+records independently: design l `(18,4)` in an 800 frame, `(818,4)` at 2400,
+both centring on 1207. `(2400-1400)/2 = 300` and `18 + 300 = 318`, which is
+exactly the design l a 1400-wide frame reports - so the centring is corroborated
+by two captures that were never compared for this purpose.
+
+At 1.5x on a 1400x1050 screen the generic root pass drove it to x=0:
+
+    UiSpike: panel 0x09EBEE45 (318,4 778x204) -> (0,6 1167x306)
+
+(`_tests\captures\2026-08-03-TIER15X-dashboard-broken-SC4UIScale.log:111`.)
+
+The mechanism is the on-screen clamp `if (clampX && gapL >= 0 && newX < 0)
+newX = 0;` (`src\UiSpike.cpp`, grep `gapL >= 0 && newX < 0`). **A clamp is the
+wrong instrument on a frame-centred window** - the general form of that is
+already canonical in `SDK-GAPS.md` §10's Anchoring bullet ("any unconditional
+on-screen clamp is wrong here", written against the deliberately over-wide
+centred bar `0x6A91DC14`, 1154 px in an 800 frame), and this is the same law
+reaching a different window set.
+
+**What makes it still reachable:** `0x09EBEE45` is NOT one of the 21
+`kCityHudFamilyIds` (`src\UiSpike.cpp`, grep `kCityHudFamilyIds`), so the
+co-anchor exemption that took the city dashboard out of the generic branch
+never covered it and `clampX` stays true here. **What makes it a hazard and not
+a finding:** nothing has looked at this window at 1.5x since, and the capture
+comes from a build with other known 1.5x defects, so the observed `-> (0,6 …)`
+cannot be separated from those by re-reading the log. **Falsifier, one launch:**
+force 1.5x, open the region top flyout, and read its `panel 0x09EBEE45` line -
+an x that is not 0 closes this; an x of 0 promotes it to a defect with a known
+cure shape (exempt the id, as the family ids are exempted).

@@ -314,7 +314,18 @@ CHECKBOX, PLAIN = "checkbox", "plain"
 LINEH_BY_PT = {13: 15, 24: 28, 26: 28}
 
 PT_SQUEEZED = {1.0: 13, 1.5: 18, 2.0: 24, 3.0: 36}   # make_fontstyle.py ships
-PT_RAW      = {1.0: 13, 1.5: 20, 2.0: 26, 3.0: 39}   # f*13, no SIZE_SQUEEZE
+PT_RAW      = {1.0: 13, 1.5: 19, 2.0: 26, 3.0: 39}   # f*13, no SIZE_SQUEEZE
+# 2026-08-30 CORRECTION: PT_RAW[1.5] was 20 and is 19.  It was right when it
+# was written and stopped being right on 2026-08-06, when make_fontstyle.py's
+# scale_size() changed from round-half-up to FLOOR at NON-INTEGER factors
+# (rounding was clipping every long label at 1.5x - see its own comment block).
+# GraphInsetLegend carries no SIZE_SQUEEZE, so floor(13*1.5) = 19, and
+# tools\packages\15x\FontStyle-15x.ini ships `GraphInsetLegend = "Arta", "19"`.
+# The integer tiers are structurally immune - floor == round on a whole
+# multiple - which is why only this one entry moved.  MEASURED against the
+# shipped table, not derived from a rule: re-read that file if the generator
+# changes again.  Consequence had it stayed 20: measure_lineh_tier.py's
+# capture would have been filed under a pt the game never renders.
 # RAW is the MEASURED one (U4).  SQUEEZED is retained because certifying under
 # a refuted hypothesis too is strictly stronger and costs nothing.
 PT_HYPS = (("SQUEEZED", PT_SQUEEZED), ("RAW", PT_RAW))
@@ -891,8 +902,15 @@ def selftests():
         want = 13 if f == 1.0 else int(math.floor(13 * f * 0.92 + 0.5))
         _self(PT_SQUEEZED[f] == want, "SQUEEZED pt at f=%g" % f,
               "%d != %d" % (PT_SQUEEZED[f], want))
-        _self(PT_RAW[f] == int(math.floor(13 * f + 0.5)),
-              "RAW pt at f=%g" % f)
+        # 2026-08-30: this used to assert round-half-up at EVERY tier, which
+        # was the generator's rule until 2026-08-06 and is now its rule only
+        # for INTEGER factors.  Asserted in the shape the generator actually
+        # has, so the selftest goes red if scale_size() moves again rather
+        # than agreeing with a rule nobody ships.
+        want_raw = (int(math.floor(13 * f + 0.5)) if float(f).is_integer()
+                    else int(math.floor(13 * f)))
+        _self(PT_RAW[f] == want_raw, "RAW pt at f=%g" % f,
+              "%d != %d" % (PT_RAW[f], want_raw))
     # the closed-form advance decomposition the box rule rests on
     for lab in ("Total Garbage", "Incinerated", "Capacity"):
         a = TX.advance_width(lab, 13)

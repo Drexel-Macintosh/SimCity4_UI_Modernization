@@ -237,7 +237,8 @@ every case). The window itself is skipped by the generic sweep on **geometry**, 
 same guard exists at `:12587` and `:5122`. At exactly 100%×100% it is unconditionally
 skipped. That is a structural reason, not a gap.
 
-**One correction to a sibling note.** `tools\research\_incoming\sdkgaps-04.md §2.6/§8.6`
+**One correction to a sibling note.** The 2026-07-31 `sdkgaps-04` decode draft (§2.6/§8.6;
+adjudicated and retired 2026-08-30, so the correction is kept here rather than there)
 says the class has a "three-image setter at `0x007942F0`" filling `+0xE0/+0xE4/+0xE8`.
 **Wrong.** `sub_7942F0` is in no vtable and is no immediate anywhere in the image; its only
 caller is `0x0079710A` inside `sub_796C68` — a different class. It cannot be an AlertBorder
@@ -793,9 +794,11 @@ single retained log, with the positive control the reports never stated.**
 **state-dependent measured null** meaning "no bubble open" — precisely the standing order's
 PRE-FOUNDING failure mode.
 
-The cited evidence is disqualified twice: `crossfire-04.md:56` identifies the 800×600 source
-as a one-shot BOOT dump with no city hovered, taken with the DLL inert at tier 1; and the
-2400×1600 `children=0` lines are from the same no-bubble state.
+The cited evidence is disqualified twice: **the 800×600 source is a one-shot BOOT dump with
+no city hovered, taken with the DLL inert at tier 1**; and the 2400×1600 `children=0` lines
+are from the same no-bubble state. *(That first fact was carried here as a citation of
+`tools\research\_incoming\crossfire-04.md:56`; inlined 2026-08-30 so this argument does not
+depend on a file in the RAW drafts folder.)*
 
 **And the killer: we already shipped a user-confirmed fix into this "unreachable" subtree.**
 `_tests\REGRESSION.md:3531` — REGION BUBBLE MAYOR RATING BAR, v2.37.1, **task #72,
@@ -821,13 +824,26 @@ they filed the window categorically under "content code-painted / structurally u
 and 13 enumerated descendants refute that categorically.
 
 **Also refuted by the same instrument analysis:** `RGKID`'s print depth is hard-capped at
-4 levels and it skips invisible children. `crossfire-04.md:11` gives the control — across
-4721 log lines the label-depth histogram is {0 dots:53, 1:91, 2:30, 3:1} with **zero 4-dot
-labels**, so the printer works at depth 4 and simply has no depth-5 branch. Consequence:
+4 levels and it skips invisible children. The control: **across 4721 log lines the
+label-depth histogram is {0 dots:53, 1:91, 2:30, 3:1} with zero 4-dot labels**, so the
+printer works at depth 4 and simply has no depth-5 branch. *(That histogram was carried
+here as a citation of `tools\research\_incoming\crossfire-04.md:11`; inlined 2026-08-30 so
+this argument does not depend on a file in the RAW drafts folder.)* Consequence:
 `cSC4WinAuraBar 0x4A553000` — a plain **visible** window at level 5, declared 102×11 in
 `I-ca539340` — was ruled "NOT A WINDOW / code-painted" by `task55-47-runtimeimg.md:1455`.
 **A saturated enumerator manufactured an unreachability verdict.** Any future
 "code-painted" verdict must state the enumerator's depth cap and visibility gate.
+
+⚠ **AND ITS SIBLING CAPS — a WIDE subtree truncates as silently as a deep one.**
+Depth is not the only lid on this dumper. Read out of `src\UiSpike.cpp` (the four nested
+print levels): the level-2 loop is capped at **`j < 24`**, level 3 at **`q < 16`** and
+level 4 at **`z < 16`**, and the innermost level does not recurse at all. There are also
+**two visibility gates that stop the walk, not just the print** — the top-level
+`if (!w || !w->IsVisible()) { continue; }` and, one level down,
+`if (!c->IsVisible()) { continue; }` before the grandchild enumeration. So a parent with
+30 children shows 24 and says nothing about the other 6, and an invisible container hides
+its entire subtree. **State the sibling caps alongside the depth cap whenever an `RGKID`
+null is offered as evidence.**
 
 ### 5.2 ✗ BROKEN — "194 sites and 64 ids bound the code-created set; 93.9% is a FLOOR"
 

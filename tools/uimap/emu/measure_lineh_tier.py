@@ -122,7 +122,13 @@ LEGEND_TOP = 20            # legend column top inset, unscaled (U5)
 CERT_STRIP = {1.0: 108, 1.5: 178, 2.0: 240, 3.0: 371}
 
 # Repo package FontStyle files, per tier.  GraphInsetLegend is the legend style
-# (GUID 0x4a909aaa); make_fontstyle.py scales it round-half-up from the 1x 13.
+# (GUID 0x4a909aaa).  make_fontstyle.py scales it from the 1x 13 -- ROUND
+# half-up at an INTEGER factor, FLOOR at a non-integer one (2026-08-06; before
+# that it rounded everywhere, and rounding clipped every long label at 1.5x).
+# So the shipped sizes are 13 / 19 / 26 / 39, NOT the 13 / 20 / 26 / 39 this
+# comment claimed until 2026-08-30.  Nothing here depends on that: the pt is
+# READ from the file below, never computed -- which is exactly why --fontstyle
+# is not optional.
 FONTSTYLE_BY_TIER = {
     1.0: os.path.join(REPO, "tools", "fonts", "FontStyle.default.ini"),
     1.5: os.path.join(REPO, "tools", "packages", "15x", "FontStyle-15x.ini"),

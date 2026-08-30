@@ -497,10 +497,25 @@ namespace
 	// row move landed the row's eye component on them (MWKID 12:12:09 +
 	// screenshot). Both sites are `push imm8`, so the applier's 127 clamp is the
 	// whole story and it is the SAME wrong pixel at every tier above 2x:
-	//   f=2  ideal 136 -> ships 127, still 23px clear of the eye
-	//        [chk 36..68][eye ~84..104][name 127+]      CONFIRMED ON SCREEN GOOD
-	//   f=3  ideal 204 -> ships 127, i.e. 29px INSIDE the eye
-	//        [chk 54..102][eye ~126..156][name 127]     "ying Parking"
+	//   f=2  ideal 136 -> ships 127, ~10px clear of the eye
+	//        [chk 36..68][eye 78..117][name 127+]       CONFIRMED ON SCREEN GOOD
+	//   f=3  ideal 204 -> ships 127, i.e. ~49px INSIDE the eye
+	//        [chk 54..102][eye 117..176][name 127]      "ying Parking"
+	//
+	// CORRECTED 2026-08-30 - THE EYE SPANS WERE THE 1x EXTENT AT 2x/3x ORIGINS.
+	// This comment used to read [eye ~84..104] at f=2 and [eye ~126..156] at
+	// f=3, i.e. 20px and 30px wide. Somebody doubled/tripled the ORIGIN and not
+	// the EXTENT. Alpha-scanned (a>16) off the shipped sheets, per row-strip
+	// cell: stock {46a006b0,140155b7} 1320x18 has one ink run at cols 5..24 in
+	// its 330-wide cell; the 2x sheet 2640x36 has it at 10..49 in a 660-wide
+	// cell; the 3x sheet 3960x54 at 15..74 in a 990-wide cell. Strip x is 34
+	// stock / 68 at 2x / 102 at 3x, so the eye ends at 58 / 117 / 176.
+	//   The MARGIN was wrong by more than half: stock puts the name at x=68
+	// with the eye ending at 58 = a 10px gap, and the clamped 127 against an
+	// eye ending at 117 is the SAME 10px gap - the clamp reproduces the stock
+	// spacing exactly, it does not buy 23px of headroom. The f=3 row was
+	// understated for the same reason (49px inside, not 29) - historical now,
+	// since at or above x2.50 the block re-encode owns these two sites.
 	// The v2.25.28 comment that justified the clamp reasoned entirely in 2x
 	// numbers - law 53: a tuned correction is only proven in the state it was
 	// tuned in, and 2x was that state.
@@ -3031,11 +3046,18 @@ namespace CodePatches
 				// push imm8 ceiling: clamp rather than skip - a slightly
 				// tighter indent beats the icon-on-text overlap. This is the
 				// f < 2.5 path ONLY: the name column's ideal 136 at f=2 becomes
-				// 127 and still clears the measured eye by 23px, which is the
+				// 127 and still clears the measured eye by ~10px, which is the
 				// CONFIRMED ON SCREEN 2x state. At f >= 2.5 the name-x sites are in
 				// no array this helper is handed - ApplyOrdinanceNameColumnScale
-				// owns them, because 204 clamped to 127 lands the label 29px
+				// owns them, because 204 clamped to 127 lands the label ~49px
 				// INSIDE the eye.
+				// CORRECTED 2026-08-30: these two numbers were 23px and 29px.
+				// The eye's right edge is 117 at 2x and 176 at 3x (alpha scan of
+				// the shipped row-strip sheets; derivation in the comment above
+				// kOrdinanceNameXImm8Sites). The margin the clamp actually buys
+				// is 10px - which is EXACTLY the stock gap (name 68 vs eye end
+				// 58), so the clamp preserves stock spacing rather than leaving
+				// headroom. Do not treat 23px as slack that can be spent.
 				Logger::Get().WriteLine(
 					LogLevel::Info,
 					"CodePatches: ordinance inset %ld clamped to 127 at 0x%08X.",

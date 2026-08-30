@@ -1,5 +1,16 @@
 # TARGET: the USER, for one sitting at the game. Clears oracle unknown **U1** (`lineH(pt)` at the 1.5x and 3x tiers), and — free, from the same 1.5x launch — **U6** and **U8**. Instrument: `tools\uimap\emu\measure_lineh_tier.py`. Consumer: `tools\uimap\emu\prove_chart_legend.py`.
 
+> **PROVENANCE, 2026-08-30.** Written 2026-08-03 and held in
+> `tools\research\_incoming\` until that folder was retired. It moved here
+> rather than being deleted with the rest of it because it is an UNSPENT WORK
+> ORDER, not a diary: `tools\uimap\emu\README.md` names it as
+> `measure_lineh_tier.py`'s procedure, `PROBES-NEEDED.md` L-A4 cites it, and
+> none of the four captures it prescribes exists — `prove_chart_legend.py`
+> still carries `LINEH_BY_PT = {13: 15, 24: 28, 26: 28}` and still emits
+> `lineH unknown at pt=%d (U1)` skips. One correction was applied on the way
+> in and is marked **[CORRECTED 2026-08-30]** where it lands: the 1.5x point
+> size the deliverable names.
+
 ## WHY (one paragraph, then the steps)
 
 `prove_chart_legend.py` knows `lineH` at **two** point sizes only — 15 px @ 13 pt and
@@ -210,8 +221,28 @@ three negative controls, including the 56 trap on the 2x live checkbox tops. A g
 that cannot go red is not a gate.
 
 The script prints `lineH` with its uncertainty and the exact one-line oracle edit
-(`LINEH_BY_PT[20] = …`, `LINEH_BY_PT[39] = …`), or it REFUSES and names the single
+(`LINEH_BY_PT[19] = …`, `LINEH_BY_PT[39] = …`), or it REFUSES and names the single
 measurement that clears the refusal. It never prints a number it cannot defend.
+
+> **[CORRECTED 2026-08-30] the 1.5x pt is 19, not the 20 this line said when it
+> was written.** `make_fontstyle.py::scale_size` rounded half-up until
+> **2026-08-06**, when it was changed to FLOOR at non-integer factors because
+> rounding clipped every long label at 1.5x (its own comment: *"THIS USED TO
+> ROUND (floor(size\*f + 0.5)) AND THAT CLIPPED EVERY LONG LABEL AT 1.5x"*).
+> `GraphInsetLegend` carries no `SIZE_SQUEEZE`, so `floor(13 × 1.5) = 19`, and
+> `tools\packages\15x\FontStyle-15x.ini` ships `GraphInsetLegend = "Arta", "19"`
+> today. 3x is unaffected — an integer factor still rounds, and 39 both ways.
+>
+> This is §2b's own hazard ("a silent, wrong `LINEH_BY_PT[39]`") arriving from
+> the direction it did not anticipate: not a missed font copy, but the
+> GENERATOR'S ROUNDING RULE changing underneath the doc. **The instrument is
+> safe** — `measure_lineh_tier.py` reads the pt out of the `--fontstyle` file
+> rather than assuming it, which is why `--fontstyle` is not optional. The
+> CONSUMER was not: `prove_chart_legend.py`'s `PT_RAW` said `1.5: 20` and its
+> selftest asserted round-half-up, so a correct measurement would have been
+> filed under a pt the game never renders. Both were corrected in the same
+> pass; re-derive them from the shipped `FontStyle` table again if the
+> generator ever changes.
 
 ---
 
@@ -251,7 +282,8 @@ is checkable rather than remembered.
 
 ## 5. WHAT THIS DOES AND DOES NOT SETTLE
 
-- **Settles:** `lineH(20)` and `lineH(39)`, i.e. `LINEH_BY_PT` at the two shipped
+- **Settles:** `lineH(19)` and `lineH(39)` (**[CORRECTED 2026-08-30]** — 19, not
+  the 20 written here on 2026-08-03; see §3), i.e. `LINEH_BY_PT` at the two shipped
   tiers where it is currently unknown. Those two integers un-skip the row stack, the
   column-overflow test and the checkbox-pitch test at f=1.5 and f=3.
 - **Settles, same 1.5x launch, from the log rather than the pixels:** U8 (`winW` at

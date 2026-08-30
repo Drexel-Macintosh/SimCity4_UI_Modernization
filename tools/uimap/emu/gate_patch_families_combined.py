@@ -460,7 +460,12 @@ def main():
     print("\nPASS - no byte overlap, every site table registered.")
     print("Reminder: Check B findings above are UNRESOLVED BY DESIGN. This gate")
     print("proves the bytes do not collide; it does not prove the CONFIGURATIONS")
-    print("are safe, and #104 is the open proof that they may not be.")
+    print("are safe. 2026-08-30: this line used to cite #104 as the open proof")
+    print("of that - #104 was a teardown spin in the game's own destructors and")
+    print("is CURED (SpinFix, default ON); it was never a patch-family defect.")
+    print("The standing example is 0x0077C9A2 / 0x0077CE44, where ONE creation")
+    print("call takes y from BudgetDeptPatch and x from OrdinanceInsetPatch -")
+    print("Check B sees only the 4KB neighbourhood, never the call site.")
     return 0
 
 

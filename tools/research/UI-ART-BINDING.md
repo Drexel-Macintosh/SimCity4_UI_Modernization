@@ -13,7 +13,11 @@ retargeting for images shared with unscaled screens, and doubled `imagerect`
 values wherever art is 2x.**
 
 The engine-side binding model behind these rules is documented in
-`SC4-UI-ENGINE.md` §4/§4A.
+`SC4-UI-ENGINE.md` §4 (the four art paths) and `SDK-GAPS.md` §2 (the complete
+`GZWinBMP` class — interface, object map, flag bits, both draw paths).
+*(Repointed 2026-08-30: this line, `SDK-GAPS.md` §2 and §3 below all cited a
+"`SC4-UI-ENGINE.md` §4A" that does not exist — §4 is "Art binding" and §4.1
+follows it. The `GZWinBMP` decode landed in `SDK-GAPS.md` §2/§2.1/§2.2.)*
 
 Four independent reasons, each fatal to blanket replacement, evidence below:
 
@@ -136,11 +140,18 @@ Three attributes control it (SC4D wiki property table plus empirical checks):
   9-slice and `imagerect=(l,t,r,b)` is a SOURCE RECT in bitmap pixel coordinates,
   never an inset: `GZPaint` divides only `r` and `b` by 3 and leaves `l`/`t`
   alone, so the 9-slice cell is `(r/3 − l, b/3 − t)` sampled from `(l,t)`
-  (`SC4-UI-ENGINE.md` §4A.7). Chrome image `{1abe787d,14416240}` is 180x180 and is
-  drawn with `imagerect=(12,22,180,180)` into areas 270x70, 266x74, 320x91 — fixed
-  12/22px borders, stretched middle. **The numbers live in the .UI text, in
+  (`SDK-GAPS.md` §2/§2.1). Chrome image `{1abe787d,14416240}` is 180x180 and is
+  drawn with `imagerect=(12,22,180,180)` into areas 270x70, 266x74, 320x91.
+  *(Struck 2026-08-30: this bullet ended "— fixed 12/22px borders, stretched
+  middle", the pre-correction reading, so it asserted BOTH readings at once.
+  Under the verified bytes that art gives a **48x38 cell**, not a 12/22 px
+  border.)* **The numbers live in the .UI text, in
   pixels: 2x art requires doubling all four `imagerect` values, and the runtime
-  layer doubles `imagerect` whenever it doubles `area`.**
+  layer doubles `imagerect` whenever it doubles `area`.** ⛔ One link in this
+  chain is still OPEN — whether the DECLARED rect is the rect in `+0xE8` at
+  draw time; see the OPEN in `SDK-GAPS.md` §2.1, and note that its failed
+  offline recomposition is not evidence against the `r`/`b`-only reading
+  above.
 - `imagerect` with `edgeimage=no` is a source crop, and Maxis uses it for
   pixel-registered collages: in the region screen file (I-c973b411, present in both
   G-96a006b0 and G-08000600), the 235x222 background `{46a006b0,13d14ca0}` is

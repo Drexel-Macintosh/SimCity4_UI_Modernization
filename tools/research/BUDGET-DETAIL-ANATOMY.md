@@ -50,6 +50,17 @@ corrupts the group-2 cursor too.
 
 ## 2. ELEMENT IDENTIFICATIONS
 
+- **THE TWO ORDINANCES ID BASES ARE IN THE IMAGE — as `mov`-immediates, not
+  pushes.** `sub_77C660` sets both once, two instructions past the prologue
+  and before either loop:
+  `0x0077C670 C7 44 24 3C 2C 01 00 00` = `mov dword [esp+0x3C], 0x12C`
+  (checkbox) and `0x0077C678 C7 44 24 24 F4 01 00 00` =
+  `mov dword [esp+0x24], 0x1F4` (row strip). The live tree closes on them
+  exactly: 12 checkboxes `0x12C`…`0x137` = base+k, 12 row strips
+  `0x2F4`…`0x2FF` = `0x1F4 + 0x100 + k` (base plus the `+0x100` outer/inner
+  offset). So these "per-row generic" ids are **fully derivable offline** —
+  the general note is `SDK-GAPS.md` §4 item 4, whose "the value does not
+  exist in the image" is true only of the per-instance ids.
 - Ids 0x551-0x554 (128x20, art 140155CB/CC) are **the per-section SCROLL
   ARROWS** (exe ids 0x451-0x454, +0x100 at runtime; 4-state strips,
   CB = up, CC = down, cell 16x10 at 1x). Anchored `x = W-33` (1x const), y from
@@ -105,6 +116,48 @@ sub_77A080/77A120 = vector copies; sub_77C3C0/77C420 = vector erase;
 sub_77D7E0 = vector insert; [obj+0x68] at 0x7772xx = 3-colour label class
 (NOT scroll state); vscrollimage .ui keys unused here; 0x1441624A-C =
 file-browser icons; no literal 339/0x153 exists in the exe (combo-derived).
+
+## 7. EVERY STOCK RECT HERE IS RECOVERABLE OFFLINE
+
+**PNG IHDRs plus exe immediates close the Ordinances dialog exactly — no
+capture required.** Art, stock → shipped 2x (read straight from the IHDRs):
+
+| TGI instance | stock | shipped 2x | role |
+|---|---|---|---|
+| `0x140155B7` | 1320x18 | 2640x36 | row strip (4 cells of 330) |
+| `0x144161EA` | 128x16 | 256x32 | — |
+| `0x140155CB` / `CC` | 64x10 | 128x20 | scroll arrows up / down |
+| `0x140155B4` | 88x20 | 176x40 | — |
+| `0x140155F0`…`F7` | 450 × {29,23,36,41,23,36,41,40} | 900 × {58,46,72,82,46,72,82,80} | the band set |
+
+**The band arithmetic closes to the pixel.** With `slabs = floor(rows/2)`
+and the two section row counts n1=3 / n2=9:
+
+    H = 29 + 23 + 36×1 + 41 + 23 + 36×4 + 41 + 40 = 377
+
+and the live dialog is **900x754 = 2 × (450 × 377)** (`0x0423278F` in the
+surviving snapshot). **`floor` is the only fit** — `ceil` gives 449, which
+matches nothing. ⚠ Untested caveat, stated by the source: whether
+`floor(n/2)` generalises to the other four department families has NOT been
+checked. The x column agrees too: `push 0x22` at `0x0077CAE0` (strip x = 34,
+live 68) sits between `push 0x140155b7` at `0x0077CADA` and
+`call 0x77b960` at `0x0077CAEB`.
+
+### 7.1 The Accept/Cancel plate is SHARED and ships no in-place 2x
+
+`{0x856DDBAC, 0x46A006B0, 0x144161EB}` — the button plate, stock 120x30 — is
+classified **SHARED** in `refmap.csv:216` and served by
+**clone+retarget** to `0x46A006B0 / 0x470261EA`. Consequences, all verified:
+no 2x file exists for it under `tools\selective-safe\stage*`, and
+`src\CodePatches.cpp` contains **zero** occurrences of `144161EB`, so none of
+the six hardcoded `push 0x144161EB` code sites is retargeted. **A
+code-sized 360x60 button therefore draws from a 1x plate on the default
+path.** Carbon carve-out: the Carbon art packages DO ship the ORIGINAL TGI at
+tier size (`carbon-art-up-art` 240x60, `-15x` 180x45, `-3x` 360x90), so the
+exposure is real only on the non-Carbon path — which is what the public
+bundle ships. ⚠ **The visual consequence itself is a HYPOTHESIS, not a
+measurement**: nobody has looked at the button. The check is one screenshot
+of Budget ▸ Ordinances at f=2 on a non-Carbon install.
 
 ---
 
@@ -199,6 +252,83 @@ wrapping is the only cure.
 
 A stock capture of this popup is not load-bearing: the geometry reduces to
 stock at f=1 by construction, so the popup is correct without one.
+
+## P6. THE COMMAND DISPATCH — how `sub_78B120` routes a click
+
+Decoded from the exe (1.1.641.0 Steam), byte-verified 2026-08-30. This is the
+function that owns the ordinance popup; knowing where a given id lands is what
+tells you whether a candidate patch is on the closing path or not.
+
+**The table.** Ids `0x67..0xCF` go through a two-level jump, base id `0x67`:
+
+    0x78B143  8D 43 99              lea   eax,[ebx-0x67]
+    0x78B146  83 F8 68              cmp   eax,0x68
+    0x78B149  0F 87 AE 03 00 00     ja    0x78B4FD          ; out of range
+    0x78B14F  0F B6 80 28 BC 78 00  movzx eax,byte [eax+0x78BC28]   ; 0x69-byte index
+    0x78B156  FF 24 85 08 BC 78 00  jmp   [eax*4+0x78BC08]          ; 8-entry table
+
+`0x78BC08` reads `78B26E 78B287 78B266 78B406 78B15D 78B227 78B1E1 78B4FD`, and
+the `0x69`-byte index at `0x78BC28` is `00 01 07 07 07 07 02 07 …` closing
+`03 04 05 06`. Decoded:
+
+| command id | handler | |
+|---|---|---|
+| `0x67` | `0x78B26E` | |
+| `0x68` | `0x78B287` | the CLOSING branch |
+| `0x6D` | `0x78B266` | |
+| `0xCC` | `0x78B406` | the NON-closing branch |
+| `0xCD` / `0xCE` / `0xCF` | `0x78B15D` / `0x78B227` / `0x78B1E1` | |
+| every other `0x69..0xCB` | `0x78B4FD` | index byte `07` = the default |
+
+**The two backdrop ids are NOT in that table, and the split is asymmetric.**
+Both are routed by explicit compares ahead of it:
+
+    0x78B128  81 FB 84 03 00 00     cmp ebx,0x384
+    0x78B137  0F 87 7A 01 00 00     ja  0x78B2B7
+    0x78B13D  0F 84 44 01 00 00     je  0x78B287     ; 0x384 -> CLOSING
+    …
+    0x78B2CB  2D 85 03 00 00        sub eax,0x385
+    0x78B2D0  0F 84 30 01 00 00     je  0x78B406     ; 0x385 -> NON-closing
+
+So the ordinance twin's backdrop `0x384` reaches the same handler as command
+`0x68` and closes; the empty-ledger twin's backdrop `0x385` reaches `0x78B406`
+and does not. `0x78B287` is
+`mov ecx,[esp+0x64]; mov eax,[edi+0x14]; mov edx,[ecx]; push eax; call [edx+0x3C]`
+— a one-argument virtual on the object at `[esp+0x64]`, handed the popup held
+in `[this+0x14]` (the same field written at `0x77BF24`, §P1). **The slot is
+`+0x3C` as MEASURED and is deliberately left unnamed here:** the live `cIGZWin`
+vtable's `+0x3C` is `0x0099EA6B` and `ChildDelete` is `+0x44`
+(`SC4-UI-ENGINE.md` §8.7), so "ChildRemove" would be an inference dressed as a
+reading. What IS settled is the effect — this branch detaches the popup and the
+other one does not. `0x78B406` is
+`mov eax,[esp+0x64]; push 0x42B7C353; push eax; mov ecx,edi; call sub_779850`
+and removes nothing. **The twins share a builder pattern and NOT a teardown
+path** — the P1 law that they are two builders with their own copies of every
+constant extends to the dispatch.
+
+**`sub_779850` posts CONDITIONALLY, and the false branch is not a no-op.** Its
+shape is GetWindowManager → `GetFlag(0x1000)` → post, with a gate between the
+second and third:
+
+    0x779850  56 8B 74 24 08 85 F6 74 52     esi = arg0; NULL -> out
+              8B 06 57 8B CE FF 50 18        call [vt+0x18]   GetWindowManager
+              8B 16 68 00 10 00 00 8B CE
+              FF 92 0C 01 00 00              push 0x1000; call [vt+0x10C]  GetFlag
+    0x779874  84 C0 74 16                    FALSE -> 0x77988C
+              … 6A 0F … FF 50 24             push 0xF; call [mgr vt+0x24]  post
+
+Only when `GetFlag(0x1000)` returns true does the **type-`0xF`** message go out
+carrying the sender and the command dword. When it returns false control falls
+to `0x77988C`, which calls `[vt+0x2C]` with six arguments — **a different path,
+not silence.** Word any claim about this as *"the type-0xF post is gated"*;
+"otherwise nothing happens" is wrong.
+
+`0x42B7C353` is not an unknown command. It is a **generic-scrollbar child id**,
+stamped by framework helper `sub_99A70F` and shared by every scrollable GZWin
+control in the game — see `SC4-UI-ENGINE.md` §2, the `0x42B7C35x` row, and
+`SDK-GAPS.md` §7. That makes anything keyed on it GAME-WIDE by construction,
+which is the reason to stay off this branch, not the unknown it was once
+mistaken for.
 
 ## THE CREATE SIZE vs THE FINAL SIZE
 
