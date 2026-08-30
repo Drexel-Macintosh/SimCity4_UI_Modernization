@@ -409,7 +409,8 @@ def group_line_note():
 
 
 def emit(bundle_dir, product, raw_version, version, last_modified, claims,
-         asset_id, sums, ship_asset_inis, group=GROUP):
+         asset_id, sums, ship_asset_inis, group=GROUP,
+         real_last_modified=False):
     L = []
     stamp = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     L += [
@@ -530,13 +531,24 @@ def emit(bundle_dir, product, raw_version, version, last_modified, claims,
             f"#   marker was stripped for the tag and the URL, so this points at tag",
             f"#   v{version}, which does not exist until that release is published.",
         ]
-    L += [
-        "# ⚠ `lastModified` is the newest file mtime in the bundle, used as a",
-        "#   placeholder. Re-stamp it from the published release asset before the",
-        "#   channel goes live.",
-    ]
+    if not real_last_modified:
+        L += [
+            "# ⚠ `lastModified` is the newest file mtime in the bundle, used as a",
+            "#   placeholder. Re-stamp it from the published release asset before the",
+            "#   channel goes live.",
+        ]
     L.append(f"assetId: {q(asset_id)}")
     L.append(f"version: {q(version)}")
+    if real_last_modified:
+        # Emitted, not hand-added afterwards. The v4.5.0 entry carried these two
+        # comments because someone typed them into a GENERATED file, and the
+        # comment-preservation check then blocked the next run rather than lose
+        # them - which is exactly what it is for. The generator owns them now.
+        L += [
+            "# The RELEASE publish time from the GitHub API, not a file mtime. sc4pac uses",
+            "# this to decide whether a cached asset is stale, so it has to move when the",
+            "# asset does.",
+        ]
     L.append(f"lastModified: {q(last_modified)}")
     L.append(
         "url: "
@@ -544,6 +556,15 @@ def emit(bundle_dir, product, raw_version, version, last_modified, claims,
             f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/download/"
             f"v{version}/{product}-v{version}.zip"
         )
+    )
+    L += [
+        "# Recommended by docs/metadata.md whenever `withChecksum` is used: if the",
+        "# checksummed asset ever moves or is re-cut, this is where sc4pac sends the",
+        "# user rather than failing with a hash mismatch and no next step.",
+    ]
+    L.append(
+        "nonPersistentUrl: "
+        + q(f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest")
     )
     L.append("")
     L += PRESERVED_TRAILER.split("\n")
@@ -554,8 +575,14 @@ def emit(bundle_dir, product, raw_version, version, last_modified, claims,
         "# this records which of those items the generated file has since closed.",
         "#   CLOSED  - the real sha256 of the DLL, and of every payload, is now",
         "#             computed from the bundle on every run.",
-        "#   OPEN    - `lastModified` is still a placeholder (bundle mtime).",
-        "#   OPEN    - probe #202. Unchanged, and still the only hard blocker.",
+        ("#   CLOSED  - `lastModified` is the release publish time from the GitHub"
+         if real_last_modified else
+         "#   OPEN    - `lastModified` is still a placeholder (bundle mtime)."),
+        ("#             API, passed with --last-modified, not a file mtime."
+         if real_last_modified else
+         "#             Pass --last-modified once the release is published."),
+        "#   CLOSED  - probe #202: the plugin scan is EXTENSION-gated, measured,",
+        "#             so the .uipay payload lists in this file are sound.",
         "#   OPEN    - the `group-to-github` mapping for `a-drexel`. Lint still",
         "#             refuses without it; the fix is upstream, NOT a group rename.",
         "#   CHANGED - THE INI DECISION is now executed, per-file, in the `exclude:`",
@@ -712,7 +739,8 @@ def main(argv):
 
         asset_id = f"{args.group}-{PACKAGES[0]['name']}"
         text = emit(bundle, product, raw_version, version, last_modified,
-                    claims, asset_id, sums, args.ship_asset_inis, group=args.group)
+                    claims, asset_id, sums, args.ship_asset_inis, group=args.group,
+                    real_last_modified=bool(args.last_modified))
 
         # ---- CHECKSUM RE-VERIFY, off the emitted text --------------------
         n_pairs, problems = verify_emitted_checksums(text, plugins)
