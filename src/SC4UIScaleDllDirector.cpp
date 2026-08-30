@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.5.5"
+#define UISCALE_VERSION_STR "4.5.6"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -925,6 +925,17 @@ public:
 		if (settings.spikeRestoreToolbarsPatch > 0 && ScaleTier::ScaledArtArmed())
 		{
 			CodePatches::ApplyRestoreToolbarsOrigin(settings.spikeScaleFactor);
+		}
+		// v4.5.6 CHEAT DIALOG. Gated on spikeScaleAll and the factor, NOT on
+		// ScaledArtArmed(): this box has no art at all - it is a fill-colour
+		// rect - and what oversizes its text is the scaled FONT, which follows
+		// the tier directly. Gating it on the art packages would tie it to a
+		// condition it does not depend on, which is the mistake the
+		// restore-toolbars comment above exists to avoid in the other
+		// direction.
+		if (settings.spikeScaleAll && settings.spikeCheatDialogPatch > 0)
+		{
+			CodePatches::ApplyCheatDialogScale(settings.spikeScaleFactor);
 		}
 		// v2.55.0 task #57: the GRAPHS legend budget is NOT armed here. It is
 		// one half of a coupled pair with EARLYCHART's plot right margin, and

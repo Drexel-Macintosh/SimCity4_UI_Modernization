@@ -261,6 +261,12 @@ struct Settings
 	                                  // (its law needs a ring blit at the new
 	                                  // size), which is the second settle.
 	                                  // 0 = size at birth, dock via the sweep
+	int  spikeCheatDialogPatch = 1;   // v4.5.6: the Ctrl+X cheat entry box
+	                                  // sizes itself from four hardcoded
+	                                  // literals while its text follows our
+	                                  // scaled FontStyle, so the typed line is
+	                                  // clipped at every scaled tier. Scales
+	                                  // the box with the font. 0 = stock box.
 	int  spikeRestoreToolbarsPatch = 1; // v4.5.3: the button that brings the
 	                                  // HUD back is sized by its own art
 	                                  // strip (which we enlarge) but placed

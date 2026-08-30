@@ -61,6 +61,36 @@ SITES = [
     # they were already prescribed in CodePatches.cpp with their bytes and so
     # give this file a control that is not the site under test.
     (
+        "kCheatRectSite",
+        0x0079BE2D,
+        bytes([0xC7, 0x44, 0x24, 0x14, 0x04, 0x00, 0x00, 0x00,
+               0xC7, 0x44, 0x24, 0x18, 0x06, 0x00, 0x00, 0x00,
+               0xC7, 0x44, 0x24, 0x1C, 0x34, 0x01, 0x00, 0x00,
+               0xC7, 0x44, 0x24, 0x20, 0x1A, 0x00, 0x00, 0x00]),
+        bytes([0xFF] * 32),
+        "The cheat dialog's field rect, written as four literals into the "
+        "Init's own stack frame: (l,t,r,b) = (4,6,308,26), i.e. a 304x20 "
+        "text field. Fully pinned - the stack slots are context and the "
+        "immediates are what the patch rewrites.",
+    ),
+    (
+        "kCheatClearSite",
+        0x0079BF63,
+        bytes([0x8B, 0x4C, 0x24, 0x18, 0x8B, 0x6C, 0x24, 0x10, 0x8B, 0x06,
+               0x2B, 0xCD, 0x83, 0xC1, 0x08, 0x51, 0x8B, 0xCE, 0xFF, 0x90,
+               0xCC, 0x00, 0x00, 0x00, 0x8B, 0x44, 0x24, 0x1C, 0x8B, 0x6C,
+               0x24, 0x14, 0x8B, 0x16, 0x2B, 0xC5, 0x83, 0xC0, 0x08]),
+        # The two `add r32,8` register fields are masked; everything else,
+        # including both +8 immediates, is pinned. THE OFFSETS MATTER: the
+        # adds are at +0x0C and +0x24. A decode brief once placed them at
+        # +0x0E and +0x26, which lands inside `push ecx` and the following
+        # instruction - caught only by disassembling all 39 bytes.
+        bytes([0xFF] * 13 + [0xF8] + [0xFF] * 22 + [0xF8] + [0xFF]),
+        "The cheat dialog turning its field rect into SetW/SetH with two +8 "
+        "clearances, giving a 312x28 box. The whole 39-byte stream is pinned "
+        "so the two add sites cannot drift.",
+    ),
+    (
         "kCostBoxHeightSite",
         0x007EEF43,
         bytes([0x6A, 0x20]),

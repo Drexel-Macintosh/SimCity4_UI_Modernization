@@ -103,6 +103,7 @@ void Settings::Load(const wchar_t* iniPath)
 	spikeSubFlyoutBornScale = gi(spike, "SubFlyoutBornScale", spikeSubFlyoutBornScale);
 	spikeSubFlyoutBornDock = gi(spike, "SubFlyoutBornDock", spikeSubFlyoutBornDock);
 	spikeFlyoutBornOnOpen = gi(spike, "FlyoutBornOnOpen", spikeFlyoutBornOnOpen);
+	spikeCheatDialogPatch = gi(spike, "CheatDialogPatch", spikeCheatDialogPatch);
 	spikeRestoreToolbarsPatch = gi(spike, "RestoreToolbarsPatch", spikeRestoreToolbarsPatch);
 	spikeDataViewLegendPatch = gi(spike, "DataViewLegendPatch", spikeDataViewLegendPatch);
 	spikeDockDialogs = gi(spike, "DockDialogs", spikeDockDialogs ? 1 : 0) != 0;

@@ -2654,6 +2654,165 @@ namespace CodePatches
 		}
 	}
 
+	// ============ CHEAT ENTRY DIALOG (v4.5.6) =============================
+	// THE Ctrl+X CHEAT BOX, whose typed text is clipped at every scaled tier.
+	// USER-CONFIRMED ON SCREEN 2026-08-30 (screenshot: "Region_Census" with
+	// the baseline sliced off).
+	//
+	// THE MECHANISM. Command 0x2A9496C9 (`kCommandID_OpenCheatCodeDialog`,
+	// string read at .data 0x00A88964) reaches a dialog whose Init is
+	// 0x0079BDC0. That Init writes FOUR LITERALS into its own stack frame and
+	// nothing else touches the geometry:
+	//
+	//   0x0079BE2D  C7 44 24 14 04..  [esp+0x14] = 4      left
+	//   0x0079BE35  C7 44 24 18 06..  [esp+0x18] = 6      top
+	//   0x0079BE3D  C7 44 24 1C 34 01 [esp+0x1C] = 308    right
+	//   0x0079BE45  C7 44 24 20 1A..  [esp+0x20] = 26     bottom
+	//
+	// and later reads the same four slots back (esp has moved by 4 between
+	// the two blocks, which is why the offsets differ) to size the dialog:
+	//
+	//   0x0079BF63  mov ecx,[esp+0x18] / mov ebp,[esp+0x10] / sub ecx,ebp
+	//               add ecx,8      -> SetW(304 + 8) = 312
+	//               mov eax,[esp+0x1C] / mov ebp,[esp+0x14] / sub eax,ebp
+	//               add eax,8      -> SetH(20 + 8)  = 28
+	//
+	// So the box is a 304x20 text field inset (4,6) in a 312x28 dialog, and
+	// NOT ONE font metric, parent dimension or art asset participates. The
+	// TEXT, however, is font-driven: Init binds FontStyle GUID 0x68963C4C
+	// ("Default"), which our tables take 13pt -> 19 / 26 / 39. Its flags set
+	// bit 0x0200 = single line, no wrap, so a bigger font makes the line
+	// TALLER and never re-wraps. A 26pt line into a 20px box is the clipping.
+	//
+	// THE CURE. Scale the four rect literals and the two +8 clearances, so
+	// the game's own Init emits stock x f: 468x42 / 624x56 / 936x84, with the
+	// child field exactly 304x20 x f. Output is stock behaviour times the
+	// factor and the junctions are correct by construction - one writer, no
+	// correction pass, nothing cancelling anything.
+	//
+	// WHY NOT THE OTHER LEVERS. There is no .UI to override: ZERO of the 331
+	// extracted stock scripts mention this dialog, it is built entirely in
+	// code. And the sweep cannot name it - its GetID() is 0 and nothing on
+	// the construction path calls SetID - while a fresh object is allocated,
+	// shown and destroyed inside one DoModalWin on every Ctrl+X, so a sweep
+	// could only ever be one presented frame late on the very window the
+	// player is typing into.
+	//
+	// ⚠ THE OFFSETS BELOW WERE DERIVED FROM THE BYTE STREAM, NOT ASSUMED.
+	// The decode brief placed the two `add r32,8` sites at block offsets
+	// +0x0E and +0x26; disassembling all 39 bytes puts them at +0x0C and
+	// +0x24. Writing at the brief's offsets would have landed inside `push
+	// ecx` and the following instruction - a corrupted stream in a text-entry
+	// path. Never re-pin a fingerprint without reading the bytes.
+	const uintptr_t kCheatRectSite = 0x0079BE2D;      // 32 bytes, 4 x imm32
+	const uintptr_t kCheatClearSite = 0x0079BF63;     // 39 bytes, 2 x imm8
+	const int kCheatClearOff1 = 0x0C;                 // add ecx,8  -> SetW
+	const int kCheatClearOff2 = 0x24;                 // add eax,8  -> SetH
+	const int kStockCheatRect[4] = { 4, 6, 308, 26 }; // l, t, r, b
+	const uint8_t kStockCheatClear = 8;
+	int gCheatDialogPatched = 0;
+
+	int CheatDialogPatched()
+	{
+		return gCheatDialogPatched;
+	}
+
+	int ApplyCheatDialogScale(float factor)
+	{
+		gCheatDialogPatched = 0;
+		long v[4];
+		for (int i = 0; i < 4; i++) { v[i] = std::lround(kStockCheatRect[i] * factor); }
+		const long clear = std::lround(kStockCheatClear * factor);
+		if (clear == kStockCheatClear && v[2] == kStockCheatRect[2])
+		{
+			return 0;   // stock factor
+		}
+		// REFUSE, NEVER CLAMP. The clearance is an imm8 operand; the rect
+		// fields are imm32 and cannot overflow at any sane factor. A clamped
+		// clearance would silently under-size the box, which is the defect.
+		if (clear < 1 || clear > 127)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: cheat dialog x%.2f wants clearance %ld - will not "
+				"fit imm8, skipped (box keeps its stock size).", factor, clear);
+			return 0;
+		}
+		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t delta = base - kImageBase;
+		uint8_t* pr = reinterpret_cast<uint8_t*>(kCheatRectSite + delta);
+		uint8_t* pc = reinterpret_cast<uint8_t*>(kCheatClearSite + delta);
+
+		// BOTH BLOCKS ARE VERIFIED BEFORE EITHER IS WRITTEN. Half-applied is
+		// not catastrophic here (rect-only leaves the field 4px taller than
+		// its dialog) but it is a state nobody chose, and verifying first
+		// makes it unreachable rather than merely unlikely.
+		uint8_t expectRect[32], replRect[32];
+		memcpy(expectRect, pr, sizeof(expectRect));
+		bool shapeOk = true;
+		for (int i = 0; i < 4; i++)
+		{
+			const int o = i * 8;
+			if (expectRect[o] != 0xC7 || expectRect[o + 1] != 0x44
+				|| expectRect[o + 2] != 0x24) { shapeOk = false; break; }
+			uint32_t imm = 0;
+			memcpy(&imm, expectRect + o + 4, 4);
+			if (static_cast<long>(imm) != kStockCheatRect[i]) { shapeOk = false; break; }
+		}
+		const bool clearOk =
+			pc[kCheatClearOff1] == 0x83 && pc[kCheatClearOff1 + 2] == kStockCheatClear
+			&& (pc[kCheatClearOff1 + 1] & 0xF8) == 0xC0
+			&& pc[kCheatClearOff2] == 0x83 && pc[kCheatClearOff2 + 2] == kStockCheatClear
+			&& (pc[kCheatClearOff2 + 1] & 0xF8) == 0xC0;
+		if (!shapeOk || !clearOk)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: cheat dialog sites 0x%08X/0x%08X do not hold the "
+				"stock shape - skipped (rect ok=%d, clearance ok=%d).",
+				static_cast<uint32_t>(kCheatRectSite),
+				static_cast<uint32_t>(kCheatClearSite),
+				shapeOk ? 1 : 0, clearOk ? 1 : 0);
+			return 0;
+		}
+		memcpy(replRect, expectRect, sizeof(replRect));
+		for (int i = 0; i < 4; i++)
+		{
+			const uint32_t imm = static_cast<uint32_t>(v[i]);
+			memcpy(replRect + i * 8 + 4, &imm, 4);
+		}
+		uint8_t expectClear[39], replClear[39];
+		memcpy(expectClear, pc, sizeof(expectClear));
+		memcpy(replClear, expectClear, sizeof(replClear));
+		replClear[kCheatClearOff1 + 2] = static_cast<uint8_t>(clear);
+		replClear[kCheatClearOff2 + 2] = static_cast<uint8_t>(clear);
+
+		if (!VerifiedWrite("cheat dialog rect", kCheatRectSite, delta,
+			expectRect, replRect, sizeof(expectRect)))
+		{
+			return 0;
+		}
+		if (!VerifiedWrite("cheat dialog clearance", kCheatClearSite, delta,
+			expectClear, replClear, sizeof(expectClear)))
+		{
+			// Roll the first block back - a rect without its clearance is the
+			// one half-state this function exists to make unreachable.
+			VerifiedWrite("cheat dialog rect (rollback)", kCheatRectSite, delta,
+				replRect, expectRect, sizeof(expectRect));
+			return 0;
+		}
+		gCheatDialogPatched = 1;
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: CHEAT DIALOG x%.2f - field (%d,%d,%d,%d)+%u -> "
+			"(%ld,%ld,%ld,%ld)+%ld, so the box is %ldx%ld instead of 312x28. "
+			"Its text is bound to FontStyle 'Default', which we scale 13pt -> "
+			"%ldpt, and the box never scaled with it - that is the clipping.",
+			kStockCheatRect[0], kStockCheatRect[1], kStockCheatRect[2],
+			kStockCheatRect[3], kStockCheatClear,
+			v[0], v[1], v[2], v[3], clear,
+			v[2] - v[0] + clear, v[3] - v[1] + clear,
+			std::lround(13.0 * factor));
+		return 1;
+	}
+
 	// ============ RESTORE-TOOLBARS BUTTON ORIGIN (v4.5.3) =================
 	// THE BUTTON THAT BRINGS THE HUD BACK, born 10 px off the bottom of the
 	// screen at 2x. USER-CONFIRMED ON SCREEN 2026-08-30 ("yes it does jump").

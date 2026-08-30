@@ -86,6 +86,15 @@ WIDTHS = {
     # half-applied state unreachable (law 43, both halves or neither) - the
     # encoding enforces the pairing instead of a comment asking for it.
     "kRestoreToolbarsOriginSite": (6, "83 /5 1c 50 6a 0c (sub eax,28; push eax; push 12)"),
+    # v4.5.6 CHEAT DIALOG. Two spans, both verified before either is written.
+    # The rect block is four adjacent `mov [esp+d8],imm32` writing the field's
+    # l/t/r/b into the Init's own stack frame; the clearance block holds the
+    # two `add r32,8` that turn that field into the dialog's SetW/SetH. They
+    # are registered separately because they are 310 bytes apart, but the
+    # patcher treats them as one unit - a rect without its clearance is a
+    # state the function makes unreachable.
+    "kCheatRectSite":            (32, "4 x C7 44 24 <d8> <imm32> (l,t,r,b into the stack frame)"),
+    "kCheatClearSite":           (39, "block holding 2 x 83 /0 08 at +0x0C and +0x24"),
     "kAdviceRowMidSite":         (3, "83 /5 3d (sub r32,61)"),
     # #136: the WIDE form of the SAME patch. 0x0079388B..0x0079389D contains
     # kAdviceRowMidSite (0x0079388F) by construction - the window swallows the

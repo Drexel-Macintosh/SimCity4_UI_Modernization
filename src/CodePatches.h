@@ -222,6 +222,23 @@ namespace CodePatches
 	// composed at runtime from the measured text height and must never be
 	// patched - that is also what lets a two-line label keep its taller slot.
 	// Returns the number of sites that took; 8 = fully born correct.
+	// v4.5.6: the Ctrl+X CHEAT ENTRY DIALOG, whose typed text is clipped at
+	// every scaled tier. The dialog's Init writes four rect literals into its
+	// own stack frame (4, 6, 308, 26) and derives its size from them with two
+	// +8 clearances - a 304x20 field in a 312x28 box, with no font metric,
+	// parent dimension or art involved. But its TEXT is bound to FontStyle
+	// "Default", which we scale 13pt -> 19/26/39, and its flags force a single
+	// unwrapped line, so a taller line is simply clipped. Patches the four
+	// literals and the two clearances so the game's own Init emits stock x f.
+	//
+	// No .UI exists for this window (zero of 331 stock scripts mention it) and
+	// the sweep cannot name it (GetID() is 0, and it is created, shown and
+	// destroyed inside one DoModalWin per keypress), so a byte patch is the
+	// only lever that can reach it. Returns 1 if it took; verifies BOTH blocks
+	// before writing EITHER, and rolls the first back if the second fails.
+	int ApplyCheatDialogScale(float factor);
+	int CheatDialogPatched();
+
 	// v4.5.3: the RESTORE-TOOLBARS button, born below the bottom of the
 	// screen at every scaled tier. The game builds it and never sizes it -
 	// its rect comes entirely from its four-frame art strip, which we ship
