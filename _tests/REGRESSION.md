@@ -17237,3 +17237,105 @@ claim feel measured.
 that produced it took one agent and no launch, and could have been run on the
 FIRST day. When a whole workstream rests on one claim about an external tool,
 exercise the tool before building on it.
+
+
+## v4.5.0 SHIPPED BROKEN FOR sc4pac - the depth cap nobody compared (2026-08-30)
+
+The user asked "have we fully tested it?" about the sc4pac path. The honest
+answer was no, and the untested half was broken.
+
+### The defect
+
+`ScaleTier.cpp` `ScanForOurDirs` walked the Plugins tree looking for the two
+folders that carry our packages, classifying BY CONTENT so a package manager
+could name them anything. It capped at `if (depth > 2)`.
+
+The channel entry we generated declares `subfolder: "050-load-first"` for the
+early package. sc4pac installs into `Plugins\<subfolder>\<grp>.<name>.<ver>.sc4pac\`
+and strips each package's LONGEST COMMON DIRECTORY PREFIX. Our two packages
+therefore land at DIFFERENT DEPTHS, and that asymmetry is the whole defect:
+
+| package | why | marker depth |
+| --- | --- | --- |
+| override | every file is under `/Plugins/zzz-SC4UIScale/`, so the whole prefix is stripped | **2** - found |
+| early | it also ships the DLL at `/Plugins/`, so the common prefix is only `/Plugins/` and `010-SC4UIScale/` SURVIVES | **3** - never reached |
+
+So the override half discovered and armed correctly while the early half fell
+back to `Plugins\010-SC4UIScale\` - which does not exist on an sc4pac install,
+and which `MigrateRootLooseFiles` then CREATES, empty, on every boot. `ArmOne`
+finds no payload there, logs `NO PAYLOAD AT ALL`, and leaves the installed
+`.dat` exactly as shipped. Those files are byte-identical to the **2x**
+payloads (measured: `z_SC4UIScale_SelectiveArt.dat` == `.2x.uipay`, same for
+ItemIcons and DialogStatic). Net effect of installing v4.5.0 with sc4pac:
+**SelectiveArt / ItemIcons / DialogStatic / WebText pinned at 2x at every tier**
+while CamUI / ItemIconsSub / the whole override half arm to the chosen factor.
+A mixed-factor screen - the same class as the exclusion-experiment bug that
+broke the 3x UI, and it would have shipped to anyone who used the channel entry.
+
+### How it was found, and why nothing caught it earlier
+
+Every sc4pac claim recorded on 2026-08-29 was about WHERE BYTES LAND. The
+install test placed files, listed folders, verified 85/85 checksums and proved
+a clean uninstall - and never once asked the DLL what it resolved. The game was
+never started against an sc4pac tree. The link between "the files are in the
+right place" and "the mod works" had no test on either side of it.
+
+Found by lifting `ScanForOurDirs` verbatim out of the source, compiling it
+standalone, and running it against a simulated tree in the shape the channel
+entry actually asks for. That took one agent and no launch - the same sentence
+this file wrote about the previous correction, one day earlier.
+
+### Three more sites the same premise had broken
+
+Discovery existed since v4.5.0, but four consumers never used it:
+
+1. **`GetOurFilePathA` did not route the ini.** The W door sends
+   `SC4UIScale.ini` to the Plugins root; the A door called `OurFilePath`
+   directly and answered the package folder. UiSpike's LiveTune block comes
+   through the A door, so its entire `[Probe]`/`[Disaster]`/`[SubFlyout]` key
+   set was reading a file that does not exist and silently taking defaults.
+   Proven from the shipped DLL's own log, one boot: line 2 names the root,
+   line 459 names `010-SC4UIScale\`.
+2. **Two of six `ClassifyDir` markers matched nothing we ship.**
+   `z_SC4UIScale_ItemIcons-*` is a v2.x tier-tagged name (v4.5.0 ships
+   `ItemIcons.dat`), and `UncoveredIcons` is synthesized at runtime, never
+   installed. Four markers were doing the work of six. The hyphen turned out
+   to be load-bearing in a second way: a bare `ItemIcons*` also matches
+   `ItemIconsSub`, which lives in the OVERRIDE folder.
+3. **The carbon-skin check hard-coded `zzz-SC4UIScale`** in both its file
+   pattern and its sort-order comparison, so a correct sc4pac install reported
+   "Carbon Skin is installed but NO carbon packages are present" with 44 carbon
+   payloads sitting in the folder it never looked at.
+
+### The law
+
+⭐ **A LAYOUT THE CODE HAS NEVER SEEN IS AN UNTESTED CODE PATH, NOT A
+CONFIGURATION.** Discovery-by-content was written precisely so the folder
+names could change - and then was only ever RUN against the one layout whose
+names had not changed. The generated channel entry named the new layout in
+plain text, in this repo, for a day; nothing compared it against the walk that
+had to find it.
+
+⭐ **AND: WHERE THE BYTES LAND IS NOT WHETHER IT WORKS.** Every sc4pac check
+to date stopped at file placement, and file placement was perfect in the exact
+run where the mod would have rendered at two different scales at once. Any
+"installs cleanly" claim needs one more question after it: and then what reads
+them?
+
+### What now exists so it cannot recur
+
+* `_tests/Test-FolderDiscovery.ps1` - lifts the discovery code out of
+  `ScaleTier.cpp` BETWEEN SENTINELS (never by line number, so it cannot drift),
+  compiles it standalone, and runs it against five trees: the sc4pac layout the
+  channel declares, a root-placed variant, the hand-install control, a
+  split-brain half-migration, and an empty tree as the negative control. It
+  carries its own MUTATION CONTROL: it rebuilds the harness with the depth cap
+  put back to 2 and REFUSES to pass unless that build fails the sc4pac case.
+  A test that has never failed is a claim, not a measurement.
+* `_tests/Test-Sc4pacInstall.ps1` - the install/uninstall run as a committed
+  script instead of prose an agent typed once into a temp directory. It
+  reproduces the hybrid-install ordering exposure by copying the live tree's
+  letter-named folders rather than testing a clean tree that cannot show it.
+* Discovery now COUNTS candidates and warns when more than one directory
+  carries our markers. First match still wins; it is no longer silent about
+  having had a choice.

@@ -225,6 +225,13 @@ namespace
 	// Scans two levels: our own top-level layout, and `<subfolder>/<pkg>` as
 	// sc4pac lays it out. Falls back to the v4.2.0 names and SAYS SO - a
 	// silently wrong folder here disarms every package we own.
+	// ==== BEGIN FOLDER-DISCOVERY ==========================================
+	// Everything between these sentinels is lifted VERBATIM by
+	// _tests/Test-FolderDiscovery.ps1, compiled standalone and run against
+	// simulated Plugins trees. Extraction is by sentinel, never by line
+	// number, so the test cannot silently drift away from the code it claims
+	// to cover. The only external dependency permitted in here is
+	// PluginsRootQuiet, which the harness stubs.
 	struct OurDirs
 	{
 		bool     resolved;
@@ -238,16 +245,30 @@ namespace
 	OurDirs gOurDirs = {};
 
 	// Which marker does this directory carry? bit0 = early, bit1 = override.
+	//
+	// EVERY PATTERN HERE MUST MATCH A FILE WE ACTUALLY SHIP. Two of the
+	// original six did not, and nothing noticed because the survivors happened
+	// to be enough:
+	//   * `ItemIcons-*` (hyphen) is a v2.x tier-tagged name. v4.5.0 ships
+	//     `z_SC4UIScale_ItemIcons.dat` / `.2x.uipay`, so the hyphen form never
+	//     matched again. The dot is load-bearing: a bare `ItemIcons*` would
+	//     also match `ItemIconsSub`, which lives in the OVERRIDE folder, and
+	//     would set the early bit on it.
+	//   * `UncoveredIcons*` is synthesized at runtime and is not a shipped
+	//     file at all, so it can never classify a freshly installed tree.
+	// Replaced with names verified present in dist/SC4UIScale-v4.5.0/Plugins/.
 	int ClassifyDir(const wchar_t* dir)
 	{
 		struct Marker { const wchar_t* pat; int bit; };
 		const Marker markers[] = {
 			{ L"z_SC4UIScale_SelectiveArt*",    1 },
 			{ L"z_SC4UIScale_DialogStatic*",    1 },
-			{ L"z_SC4UIScale_ItemIcons-*",      1 },
+			{ L"z_SC4UIScale_ItemIcons.*",      1 },
+			{ L"z_SC4UIScale_ItemIcons-*",      1 },   // pre-4.5.0 trees
 			{ L"z_SC4UIScale_CamUI*",           2 },
 			{ L"z_SC4UIScale_ItemIconsSub*",    2 },
-			{ L"z_SC4UIScale_UncoveredIcons*",  2 },
+			{ L"z_SC4UIScale_ThirdPartyUI*",    2 },
+			{ L"z_SC4UIScale_SelectorUI*",      2 },
 		};
 		int bits = 0;
 		for (const Marker& m : markers)
@@ -261,9 +282,40 @@ namespace
 		return bits;
 	}
 
+	// How many directories carried each marker set. First match still WINS -
+	// this only exists so a second candidate is REPORTED instead of silently
+	// losing. A stale hand-installed 010-SC4UIScale\ sorts before 050-load-first
+	// and would quietly out-rank the sc4pac-managed package on a migration.
+	int gEarlyCandidates = 0;
+	int gOvrCandidates = 0;
+
+	// DEPTH 3, and the number is a measurement, not a margin.
+	//
+	// sc4pac installs a package into `Plugins\<subfolder>\<grp>.<name>.<ver>.sc4pac\`
+	// and strips the longest common directory prefix from the package's files.
+	// Our two packages therefore land at DIFFERENT depths, which is exactly the
+	// trap:
+	//   override pkg - every file shares `/Plugins/zzz-SC4UIScale/`, so that
+	//                  prefix is stripped and the markers sit at DEPTH 2:
+	//                  Plugins\900-overrides\<pkg>.sc4pac\
+	//   early pkg    - it also ships the DLL at `/Plugins/`, so the common
+	//                  prefix is only `/Plugins/` and `010-SC4UIScale/` is
+	//                  PRESERVED, putting the markers at DEPTH 3:
+	//                  Plugins\050-load-first\<pkg>.sc4pac\010-SC4UIScale\
+	// At the old cap of 2 the override half resolved and the early half fell
+	// back to a `Plugins\010-SC4UIScale\` that does not exist - which
+	// MigrateRootLooseFiles then creates, empty. ArmOne finds no payload, logs
+	// "NO PAYLOAD AT ALL" and leaves the installed .dat alone; those files are
+	// byte-identical to the 2x payloads, so SelectiveArt / ItemIcons /
+	// DialogStatic / WebText stay pinned at 2x at EVERY tier while the override
+	// half arms correctly. A mixed-factor screen, from one comparison.
+	//
+	// Cost: directory metadata only, and SC4's own plugin scan already walks
+	// this whole tree recursively reading DBPF headers. Measured on the live
+	// tree: 86 directories exist within 4 levels.
 	void ScanForOurDirs(const wchar_t* dir, int depth, int& earlyBits, int& ovrBits)
 	{
-		if (depth > 2) { return; }
+		if (depth > 3) { return; }
 		wchar_t pat[MAX_PATH];
 		swprintf_s(pat, L"%s*", dir);
 		WIN32_FIND_DATAW fd = {};
@@ -276,20 +328,33 @@ namespace
 			wchar_t sub[MAX_PATH];
 			swprintf_s(sub, L"%s%s\\", dir, fd.cFileName);
 			const int bits = ClassifyDir(sub);
-			if ((bits & 1) && !earlyBits)
+			if (bits & 1)
 			{
-				earlyBits = 1;
-				wcscpy_s(gOurDirs.early, MAX_PATH, sub);
-				wcscpy_s(gOurDirs.earlyLeaf, 64, fd.cFileName);
+				++gEarlyCandidates;
+				if (!earlyBits)
+				{
+					earlyBits = 1;
+					wcscpy_s(gOurDirs.early, MAX_PATH, sub);
+					wcscpy_s(gOurDirs.earlyLeaf, 64, fd.cFileName);
+				}
 			}
-			if ((bits & 2) && !ovrBits)
+			if (bits & 2)
 			{
-				ovrBits = 1;
-				wcscpy_s(gOurDirs.override_, MAX_PATH, sub);
-				wcscpy_s(gOurDirs.overrideLeaf, 64, fd.cFileName);
+				++gOvrCandidates;
+				if (!ovrBits)
+				{
+					ovrBits = 1;
+					wcscpy_s(gOurDirs.override_, MAX_PATH, sub);
+					wcscpy_s(gOurDirs.overrideLeaf, 64, fd.cFileName);
+				}
 			}
+			// Never descend into a folder that is already one of ours.
 			if (!bits) { ScanForOurDirs(sub, depth + 1, earlyBits, ovrBits); }
-		} while (FindNextFileW(h, &fd) && !(earlyBits && ovrBits));
+			// The walk deliberately does NOT stop once both are found. Stopping
+			// early is what made a second candidate invisible, and "which of
+			// the two did we pick" is the only question worth asking on a
+			// half-migrated install.
+		} while (FindNextFileW(h, &fd));
 		FindClose(h);
 	}
 
@@ -300,6 +365,8 @@ namespace
 		wchar_t root[MAX_PATH] = {};
 		PluginsRootQuiet(root, MAX_PATH);
 		int e = 0, o = 0;
+		gEarlyCandidates = 0;
+		gOvrCandidates = 0;
 		ScanForOurDirs(root, 1, e, o);
 		if (!e)
 		{
@@ -318,6 +385,7 @@ namespace
 		// was split to avoid. The director calls LogOurDirs() once the logger
 		// is up.
 	}
+	// ==== END FOLDER-DISCOVERY ============================================
 
 	void LogOurDirsImpl()
 	{
@@ -334,12 +402,53 @@ namespace
 			gOurDirs.earlyFound ? "discovered" : "FALLBACK to the v4.2.0 name",
 			b,
 			gOurDirs.overrideFound ? "discovered" : "FALLBACK to the v4.2.0 name");
+
+		// A SECOND CANDIDATE IS THE HALF-MIGRATED INSTALL, and it is silent
+		// otherwise: first match wins, and the line above prints only the
+		// winner. The realistic shape is a hand install left in place while
+		// sc4pac adds its own copy - `010-SC4UIScale` sorts before
+		// `050-load-first`, so the ABANDONED folder wins and the managed one
+		// is never armed. Two providers of every TGI, one of them stale.
+		if (gEarlyCandidates > 1 || gOvrCandidates > 1)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: WARNING - %d directories carry our EARLY marker "
+				"and %d carry our OVERRIDE marker. Exactly one of each is "
+				"correct. The paths above are simply the first found, so a "
+				"leftover hand-installed folder can outrank the one your "
+				"package manager owns. Delete the copy you are not using.",
+				gEarlyCandidates, gOvrCandidates);
+		}
 	}
 
 	const wchar_t* EarlyDirPtr()
 	{
 		ResolveOurDirs();
 		return gOurDirs.early;
+	}
+
+	const wchar_t* OverrideDirPtr()
+	{
+		ResolveOurDirs();
+		return gOurDirs.override_;
+	}
+
+	// The TOP-LEVEL folder our override package sits under, relative to the
+	// Plugins root - `zzz-SC4UIScale` hand-installed, `900-overrides` under a
+	// package manager. Load order is decided by the top-level component, so
+	// this, not the leaf, is what a sort-position comparison must use.
+	void OverrideTopLevel(wchar_t* out, size_t outLen)
+	{
+		ResolveOurDirs();
+		if (!out || outLen == 0) { return; }
+		out[0] = 0;
+		wchar_t root[MAX_PATH] = {};
+		PluginsRootQuiet(root, MAX_PATH);
+		const size_t rootLen = wcslen(root);
+		const wchar_t* rel = gOurDirs.override_;
+		if (rootLen && _wcsnicmp(rel, root, rootLen) == 0) { rel += rootLen; }
+		wcscpy_s(out, outLen, rel);
+		if (wchar_t* slash = wcschr(out, L'\\')) { *slash = L'\0'; }
 	}
 
 	void OurPackagesDir(wchar_t* out, size_t outLen)
@@ -2802,6 +2911,20 @@ namespace ScaleTier
 		wchar_t wname[MAX_PATH] = {};
 		MultiByteToWideChar(CP_ACP, 0, name, -1, wname, MAX_PATH);
 		wchar_t wpath[MAX_PATH] = {};
+		// THE SAME ROUTING AS THE W DOOR. This called OurFilePath directly and
+		// so answered the package folder for the ini while every W caller
+		// answered the root - two answers in one process. UiSpike's LiveTune
+		// block comes through here, so its whole [Probe]/[Disaster]/[SubFlyout]
+		// key set was reading a file that does not exist and silently taking
+		// defaults. Proven by the shipped DLL's own log: line 2 names the root,
+		// line 459 names 010-SC4UIScale\, same boot.
+		if (_wcsicmp(wname, L"SC4UIScale.ini") == 0)
+		{
+			OurIniPath(wpath, MAX_PATH);
+			WideCharToMultiByte(CP_ACP, 0, wpath, -1, out,
+				static_cast<int>(outLen), nullptr, nullptr);
+			return;
+		}
 		OurFilePath(wname, wpath, MAX_PATH);
 		WideCharToMultiByte(CP_ACP, 0, wpath, -1, out,
 			static_cast<int>(outLen), nullptr, nullptr);
@@ -3810,27 +3933,38 @@ namespace ScaleTier
 						if (ca == 0) { return 0; }
 					}
 				};
-				const int cUp = foldCmp(folder, L"zzz-SC4UIScale", true);
-				const int cLo = foldCmp(folder, L"zzz-SC4UIScale", false);
+				// Compare against the folder we ACTUALLY occupy. Against the
+				// literal v4.2.0 name this verdict was computed for a folder
+				// that need not exist, and got the answer wrong in both
+				// directions on any package-manager install.
+				wchar_t ourTop[MAX_PATH] = {};
+				OverrideTopLevel(ourTop, MAX_PATH);
+				const int cUp = foldCmp(folder, ourTop, true);
+				const int cLo = foldCmp(folder, ourTop, false);
 				if (cUp >= 0 || cLo >= 0)
 				{
 					Logger::Get().WriteLine(
 						LogLevel::Info,
 						"ScaleTier: WARNING - the skin folder '%ls' can sort "
-						"AT/AFTER zzz-SC4UIScale (upcased cmp %d, lowercased "
-						"cmp %d). Under that ordering the skin loads after our "
-						"overrides and every carbon package is armed but never "
-						"rendered. Rename the folder so it sorts earlier under "
-						"both foldings (the supported name is zz-scoty-mods).",
-						folder, cUp, cLo);
+						"AT/AFTER our override folder '%ls' (upcased cmp %d, "
+						"lowercased cmp %d). Under that ordering the skin loads "
+						"after our overrides and every carbon package is armed "
+						"but never rendered. Rename the folder so it sorts "
+						"earlier under both foldings (the supported name is "
+						"zz-scoty-mods).",
+						folder, ourTop, cUp, cLo);
 				}
 			}
 		}
 		if (carbonSkinPresent)
 		{
+			// Our override folder is NOT named zzz-SC4UIScale under a package
+			// manager - it is <group>.<name>.<version>.sc4pac. Hard-coding the
+			// v4.2.0 name here made a correct install report "installed but NO
+			// carbon packages are present" with 44 carbon payloads sitting in
+			// the folder this pattern never looked at.
 			wchar_t pat[MAX_PATH];
-			swprintf_s(pat, L"%szzz-SC4UIScale\\z_SC4UIScale_ZCarbon*",
-				pluginsRoot);
+			swprintf_s(pat, L"%sz_SC4UIScale_ZCarbon*", OverrideDirPtr());
 			WIN32_FIND_DATAW cfd = {};
 			HANDLE ch = FindFirstFileW(pat, &cfd);
 			if (ch == INVALID_HANDLE_VALUE)
