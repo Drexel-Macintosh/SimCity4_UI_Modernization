@@ -5740,8 +5740,12 @@ namespace CodePatches
 				VirtualProtect(p, sizeof(float), old, &old);
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
+				// "leader 43" was wrong and is corrected here: 43 is the SLOT
+				// PITCH (quad edge + 1), read only by the four collision-escape
+				// probes. The leader walk never touches it.
 				"CodePatches: CSI indicator x%d.%02d - quad 42 -> %d px, orbit "
-				"50 -> %d, leader 43 -> %d, centre 21 -> %d (drawer 0x0046D990).",
+				"50 -> %d, slot pitch 43 -> %d, centre 21 -> %d (drawer "
+				"0x0046D990).",
 				static_cast<int>(want),
 				static_cast<int>((want - static_cast<int>(want)) * 100),
 				static_cast<int>(std::floor(42.0f * want + 0.5f)),
@@ -5986,35 +5990,48 @@ namespace CodePatches
 		// cSC4DispatchVehicleView::Draw. Sole consumer. A solo indicator never
 		// reads it, so 1x and every non-stacked pin are pixel-identical by
 		// construction.
-		void ApplyStackShift(float want)
-		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			float* p = reinterpret_cast<float*>(
-				0x00A88260 + base - kImageBase);
-			// Never-repin rule: the stock bytes must read exactly 43.0f
-			// (0x422C0000) or another mod / a prior partial write owns them.
-			if (*p != 43.0f)
-			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: STACKSHIFT 0x00A88260 reads %.2f, expected "
-					"43.00 - REFUSED (nothing written).", *p);
-				return;
-			}
-			DWORD old = 0;
-			if (!VirtualProtect(p, sizeof(float), PAGE_READWRITE, &old))
-			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: STACKSHIFT VirtualProtect failed.");
-				return;
-			}
-			*p = 43.0f * want;
-			VirtualProtect(p, sizeof(float), old, &old);
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: STACKSHIFT 0x00A88260 x%.2f -> %.1f px - the "
-				"indicator collision push (digit-under-hat spacing). Solo "
-				"pins unaffected by construction.", want, *p);
-		}
+		// ⛔ ApplyStackShift WAS HERE, AND IT WAS A SECOND WRITER OF A CONSTANT
+		// kCsiConsts ALREADY OWNS. Deleted 2026-08-30.
+		//
+		// It wrote 0x00A88260 - which kCsiConsts lists as entry [2] of 5 - and
+		// it ran FIRST (its call site sat immediately above ApplyCsiScale's,
+		// behind a byte-identical gate). ApplyCsiScale then verified before
+		// writing, found 86.0 where it expected the stock 43.0, and refused.
+		// Its verify loop is all-or-nothing with an early return, so the refusal
+		// aborted the whole table: NONE of the five CSI constants was written,
+		// on every boot, at every factor, for as long as both functions shipped.
+		// The boot log proves it - the STACKSHIFT success line and the CSI
+		// REFUSED line are adjacent, and ApplyCsiScale's own success line
+		// appears nowhere in the file.
+		//
+		// ⭐ AND THE TWO RULES WERE NEVER THE SAME RULE. This function wrote the
+		// raw product `43.0f * want`; ApplyCsiScale writes RoundHalfUp. They
+		// agree at 2x and 3x by arithmetic accident and DIVERGE at 1.5x, where
+		// raw gives 64.5 - and 64.5 is the value this project already A/B-proved
+		// makes the deployment count vanish at 1.5x (see the kCsiConsts comment
+		// block). So the redundant writer was not merely redundant: it was
+		// writing the known-bad value first and then blocking the known cure.
+		//
+		// WHAT 0x00A88260 ACTUALLY IS, decoded rather than inherited: the
+		// indicator slot PITCH. All eight readers are one loop inside
+		// cSC4DispatchVehicleView::Draw - fadd/fsub pairs at 0x0046E556 and
+		// 0x0046E56F (down), 0x0046E5C6/0x0046E5DF (up), 0x0046E636/0x0046E653
+		// (right), 0x0046E6B3/0x0046E6CC (left) - each building a candidate rect
+		// from a BLOCKER's rect and testing it with sub_46B830 (0 = free).
+		// Boxes are 42x42 (built with [0x00A8819C] at 0x0046E392/0x0046E3A0), so
+		// 43 is derived: quad edge + 1. Neither old comment was right -
+		// "outline / leader offset" was wrong (the leader walk uses
+		// [0x00A88264]=1.75, [0x00B07F70]=1.0 and [0x00A8825C]=2.0, and never
+		// reads this address), and "digit-under-hat spacing" named one symptom.
+		// A SOLO INDICATOR NEVER REACHES THE PROBE BLOCK - sub_46B830 returns
+		// free on the first call when the list is empty - which is the useful
+		// half of the old log line, kept here.
+		//
+		// ⚠ WHAT IS NOT SETTLED: whether RoundHalfUp(43*f) is the right VALUE.
+		// If 43 is "edge + 1 px gutter", then at 2x it yields 86 = 84 + 2, a
+		// DOUBLED gutter, where 85 would hold the gutter at 1 px. Single
+		// ownership fixes the two-writers defect; it does not decide that. Left
+		// deliberately as inherited behaviour rather than changed silently.
 
 		bool gSignpostApplied = false;
 
@@ -8968,7 +8985,6 @@ namespace CodePatches
 		// patch. STAGED pending the adversarial verify verdict on the
 		// digit-anchor decode; the function refuses unless the stock bytes
 		// match, so a wrong verdict costs a log line, not a corruption.
-		if (factor > 1.01f && mode >= 2) { ApplyStackShift(factor); }
 		// THE CSI QUAD - the actual balloon size (0x00A8819C = 42 px).
 		if (factor > 1.01f && mode >= 2) { ApplyCsiScale(factor); }
 		// #188 SHIPS ON BY DEFAULT (mode 2). The offer balloon is the

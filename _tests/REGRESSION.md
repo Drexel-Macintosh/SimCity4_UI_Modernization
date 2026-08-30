@@ -18574,3 +18574,126 @@ them all.
 sizes match and only the mtimes differ. That one is resolved by launching the
 game once so `CommitArming` re-stamps the arming state file the DLL writes
 into the live Plugins tree, exactly as the gate says.
+
+
+---
+
+## 2026-08-30 - a patch family that had NEVER applied, found by reading one boot log
+
+The user launched v4.6.0 and said it looked fine. Reading the log anyway
+turned up two adjacent lines:
+
+    CodePatches: STACKSHIFT 0x00A88260 x2.00 -> 86.0 px
+    CodePatches: CSI 0x00A88260 reads 86, expected 43 - REFUSED (nothing written).
+
+**Two appliers write the same `.rdata` float.** `ApplyStackShift` runs first
+and writes it; `ApplyCsiScale` verifies before writing, sees the changed value
+and refuses. On disk the constant is 43.0 (measured), so the executable was
+never the problem.
+
+### ⭐ THE REFUSAL WAS NOT THE DEFECT - THE EARLY RETURN WAS
+
+`ApplyCsiScale`'s verify loop is all-or-nothing and `return`s on the first
+mismatch. `0x00A88260` is entry **[2] of 5**. So the refusal aborted the whole
+table: **none of the five CSI constants was ever written, on every boot, at
+every factor, for as long as both functions shipped.** Its success line
+(`CSI indicator x… - quad 42 -> …`) appears **zero times** in the preserved
+446-line log — and that absence is the proof, not the refusal message.
+
+The all-or-nothing verify is *correct* — a half-written geometry family is
+worse than an unwritten one. What made it a defect was a second writer it was
+never designed to share an address with.
+
+### ⭐ THE TWO RULES WERE NEVER THE SAME RULE
+
+`ApplyStackShift` wrote the raw product `43.0f * want`. `ApplyCsiScale` writes
+`RoundHalfUp`. They agree at 2x and 3x **by arithmetic accident** and diverge
+everywhere else:
+
+    f=1.5   raw 64.5   vs   RoundHalfUp 65      DIVERGENT
+    f=2.0   raw 86     vs   86                  equal, by coincidence
+    f=3.0   raw 129    vs   129                 equal, by coincidence
+
+64.5 at 1.5x is the value this project **already A/B-proved** makes the
+deployment count vanish, with RoundHalfUp recorded as the cure in
+`kCsiConsts`' own comment block. So the redundant writer was not merely
+redundant — **it wrote the known-bad value first and then blocked the known
+cure from ever landing.** The user runs at 2x, which is exactly why nothing
+looked wrong.
+
+### WHAT THE CONSTANT ACTUALLY IS
+
+Decoded rather than inherited. All eight readers are one loop inside
+`cSC4DispatchVehicleView::Draw`: `fadd`/`fsub` pairs at `0x0046E556`/`:E56F`
+(down), `:E5C6`/`:E5DF` (up), `:E636`/`:E653` (right), `:E6B3`/`:E6CC` (left),
+each building a candidate rect from a **blocker's** rect and testing it with
+`sub_46B830` (0 = free). Boxes are 42×42, built with `[0x00A8819C]` at
+`0x0046E392`/`:E3A0`. So **43 is derived: quad edge + 1** — the indicator slot
+pitch.
+
+Both previous comments were wrong. "outline / leader offset" (kCsiConsts) is
+flatly false — the leader walk uses `[0x00A88264]`=1.75, `[0x00B07F70]`=1.0 and
+`[0x00A8825C]`=2.0 and never reads this address. "digit-under-hat spacing"
+(ApplyStackShift) named one symptom it was chased from.
+
+### ⭐ LAW: TWO BLINDNESSES, AND NEITHER FIX ALONE FINDS IT
+
+`gate_patch_families_combined.py` said PASS throughout. Two independent holes:
+
+1. **`ApplyStackShift` typed the address as a bare inline literal.** The
+   anti-rot sweep finds `k…` tables and named scalars; an address typed inside
+   a function body is invisible to it.
+2. **`kCsiConsts` was in `RDATA_TABLES`, which CHECK A skips entirely.** The
+   stated reason — "they are data, not instruction streams" — is right that a
+   `.rdata` float has no instruction adjacency and **wrong** that data-vs-data
+   collisions can be discarded with it. *(That exclusion was added by this
+   project the day before this defect was found. It did not cause the
+   collision, but it removed the one instrument that could have named it.)*
+
+**Measured: fixing either alone leaves the gate green.** Widening CHECK A
+gives 314 spans instead of 295 and still finds 0 overlaps, because the second
+writer is invisible. Naming the second writer alone changes nothing, because
+`kCsiConsts` is still skipped. Only both together produce two DATA spans at one
+address under different appliers.
+
+### THE POSITIVE CONTROL WAS APPLIED TO THE INSTRUMENT
+
+The gate was widened **first**, the second writer given a name **second**, and
+the gate made to FAIL before any code was fixed:
+
+    FAIL CROSS-FAMILY OVERLAP 0x00A88260..0x00A88264
+         (kCsiConsts/ApplyCsiScale) vs (kStackShiftSite/ApplyStackShift)
+
+Only then was `ApplyStackShift` deleted, and the gate returned to green. **A
+gate change that goes straight to green teaches nobody that it works.**
+
+### Acceptance
+
+    python tools\uimap\emu\gate_patch_families_combined.py  -> PASS, 314 spans,
+                                                               0 overlaps
+    python tools\uimap\crosscheck.py                        -> 268/268, 0 missed
+
+**The live prediction, at 2x, on the next launch** — this line has never once
+appeared in any log:
+
+    CodePatches: CSI indicator x2.00 - quad 42 -> 84 px, orbit 50 -> 100,
+                 slot pitch 43 -> 86, centre 21 -> 42 (drawer 0x0046D990).
+
+**⚠ WHAT IS NOT CLAIMED.** No on-screen consequence. The project's own #188
+CSIKILL note records that v3.0.34 scaled all four of these constants, the write
+landed, and *nothing moved on screen* — they are the hit/clip box, not the
+drawn quad; the drawn balloon rides `ApplyCsiIndicatorScale`'s `.text`
+immediates, which applied normally throughout. What is proven is a
+wrong-by-construction constant state on every boot. Per STATIC DEFECT =
+HYPOTHESIS, the pixels are unmeasured.
+
+**⚠ ALSO NOT SETTLED:** whether `RoundHalfUp(43*f)` is the right *value*. If 43
+is "edge + 1 px gutter", 2x yields 86 = 84 + 2 — a doubled gutter, where 85
+would hold it at 1 px. Single ownership fixes the two-writers defect; it does
+not decide that, and inheriting 86 was a deliberate choice not to change
+behaviour silently while fixing a structural bug.
+
+**Still open, found in the same sweep:** `ApplyPinDigitScale` is a complete
+live two-site `.text` family (`0x005F1EEC`/`0x005F1EFC`) written from inline
+literals with zero gate coverage, and the gate never reads `UiSpike.cpp` at all
+(59 inline exe-range literals there, several of them real write targets).

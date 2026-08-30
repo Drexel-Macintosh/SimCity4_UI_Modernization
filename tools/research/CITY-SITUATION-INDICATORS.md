@@ -163,6 +163,53 @@ inner glyph is clickable, not the surrounding pin.
 
 ---
 
+## 3a. The slot pitch `0x00A88260` = 43.0f, and the two-writer defect it hid
+
+Decoded 2026-08-30, after a live boot log showed one applier refusing because
+another had already written this address.
+
+**What it is: the indicator SLOT PITCH — quad edge + 1.** All eight readers are
+one loop inside `cSC4DispatchVehicleView::Draw`, four `fadd`/`fsub` pairs that
+build a candidate rect from a *blocker's* rect and test it for overlap:
+
+| Probe | Sites | Direction |
+|---|---|---|
+| `fadd [0x00A88260]` | `0x0046E556`, `0x0046E56F` | down (y0, y1) |
+| `fsub [0x00A88260]` | `0x0046E5C6`, `0x0046E5DF` | up |
+| `fadd [0x00A88260]` | `0x0046E636`, `0x0046E653` | right (x0, x1) |
+| `fsub [0x00A88260]` | `0x0046E6B3`, `0x0046E6CC` | left |
+
+Each candidate goes to `sub_46B830(cand, listHead, bounds, out)`, which returns
+0 = free (the caller accepts the placement), or 1 and copies the blocking
+node's rect out. Boxes are 42×42, built with `[0x00A8819C]` at `0x0046E392` and
+`0x0046E3A0` — so **43 is derived, not independent: `[0x00A8819C] + 1`.**
+
+**A solo indicator never reaches this block** — `sub_46B830` returns free on the
+first call when the list is empty — which is why a lone offer balloon is
+unaffected by anything here.
+
+⛔ **Two earlier descriptions of this constant were wrong.** `kCsiConsts` called
+it the "outline / leader offset": the leader walk uses `[0x00A88264]` = 1.75 as
+its distance multiplier, `[0x00B07F70]` = 1.0 to normalise, and `[0x00A8825C]`
+= 2.0 as the step, and never reads `0x00A88260` at all. A deleted second
+applier called it "digit-under-hat spacing", which named the symptom it was
+chased from rather than the quantity.
+
+⚠ **Do not scale the walk's constants.** `[0x00A8825C]` = 2.0 has 62 references
+across the whole binary — it is a shared generic literal. `[0x00A88264]` = 1.75
+and `[0x00B07F70]` = 1.0 are dimensionless. Only 42 / 50 / 43 / 21 / 21 are
+pixel quantities.
+
+**The defect this decode came out of** is in `_tests/REGRESSION.md` under
+"a patch family that had NEVER applied": a second writer of this address made
+`ApplyCsiScale` refuse, and because its verify loop is all-or-nothing with an
+early return, *none* of the five CSI constants was written on any boot at any
+factor. Fixed by deleting the second writer; the family now has one owner.
+
+⚠ **Still unsettled:** whether `RoundHalfUp(43×f)` is the right scaled value.
+If 43 is "edge + 1 px gutter", 2x gives 86 = 84 + 2 — a doubled gutter, where
+85 would hold it at 1 px. Ownership is fixed; the value is inherited.
+
 ## 4. Constants that are NOT the size
 
 Scaling any of these leaves the CSI's size unchanged. What each one actually

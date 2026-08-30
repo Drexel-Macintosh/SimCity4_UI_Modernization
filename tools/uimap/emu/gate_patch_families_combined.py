@@ -120,6 +120,13 @@ WIDTHS = {
     # registration says the WRITES do not collide; it says nothing about the
     # feature, which is BACKLOG.
     "kIntroVidSites":            (5, "68 imm32 (push) or 2D imm32 (sub eax) - both 5"),
+    # kStackShiftSite lived here for one hour on 2026-08-30, as the POSITIVE
+    # CONTROL for widening CHECK A to see data-vs-data collisions: registering
+    # it made this gate FAIL on 0x00A88260 against kCsiConsts, which is the
+    # collision that had been running unseen on every boot. The redundant
+    # writer was then deleted from CodePatches.cpp, so the symbol is gone and
+    # the row with it. The control is recorded rather than kept: a gate change
+    # that goes straight to green teaches nobody that it works.
     # .rdata tables, not .text sites. Registered and then EXCLUDED from the
     # overlap check because they are data, not instruction streams.
     "kHtmlFontSizeTable":        (28, "7 dwords in .rdata - DATA, excluded"),
@@ -381,10 +388,31 @@ def main():
         NOTES.append("registered but not found in source: %s (renamed or removed?)" % t)
 
     # ---- CHECK A: byte overlap across families ----
-    spans = []   # (lo, hi, table, family)
+    #
+    # ⛔ RDATA_TABLES USED TO `continue` HERE, AND THAT HID A LIVE COLLISION.
+    # The exclusion was added 2026-08-30 with the reasoning "they are data, not
+    # instruction streams - they must not enter CHECK A's overlap math." Half
+    # of that is right: a .rdata float has no instruction adjacency, so
+    # comparing it against a .text span is meaningless. The other half was
+    # wrong. TWO FAMILIES WRITING THE SAME DATA ADDRESS IS EXACTLY AS REAL A
+    # COLLISION AS TWO FAMILIES WRITING THE SAME INSTRUCTION BYTES, and
+    # skipping the table entirely threw that away with it.
+    #
+    # MEASURED, the day after the exclusion shipped: ApplyStackShift and
+    # ApplyCsiScale both write 0x00A88260. StackShift runs first; CsiScale's
+    # verify-before-write then sees the changed value, and because its loop is
+    # all-or-nothing with an early return, NONE of its five constants is ever
+    # written - on every boot, at every factor. This gate said PASS throughout.
+    #
+    # So: every table now enters `spans`, tagged with its section, and only the
+    # comparison is narrowed - a data span is compared against other data
+    # spans, never against an instruction span. The boundary is the same one
+    # the DLL itself uses to tell .text from .rdata.
+    TEXT_HI = 0x00A20000
+    spans = []   # (lo, hi, table, family, is_data)
     unknown_width = []
     for name, entries in sorted(tables.items()):
-        if name not in WIDTHS or name in RDATA_TABLES:
+        if name not in WIDTHS:
             continue
         fam = owner.get(name, "(unowned)")
         for e in entries:
@@ -392,7 +420,8 @@ def main():
             if w is None:
                 unknown_width.append((name, e["site"]))
                 continue
-            spans.append((e["site"], e["site"] + w, name, fam))
+            spans.append((e["site"], e["site"] + w, name, fam,
+                          e["site"] >= TEXT_HI))
     for name, site in unknown_width:
         fail("cannot derive width for %s site 0x%08X - the dyn field is missing, "
              "so this site is UNCHECKED" % (name, site))
@@ -400,11 +429,15 @@ def main():
     spans.sort()
     overlaps = 0
     for i in range(len(spans) - 1):
-        lo1, hi1, t1, f1 = spans[i]
+        lo1, hi1, t1, f1, d1 = spans[i]
         for j in range(i + 1, len(spans)):
-            lo2, hi2, t2, f2 = spans[j]
+            lo2, hi2, t2, f2, d2 = spans[j]
             if lo2 >= hi1:
                 break
+            if d1 != d2:
+                # One .text span, one .rdata span. They cannot occupy the same
+                # bytes; only an address-range coincidence could pair them.
+                continue
             if _are_alternates(t1, t2):
                 print("  note: %s / %s overlap by design (mutually exclusive "
                       "encodings of one patch) - not a double-write" % (t1, t2))
@@ -428,7 +461,7 @@ def main():
     # 4KB is a heuristic PROXY for "same builder" - it is deliberately coarse,
     # and every hit is a QUESTION, not a defect.
     buckets = {}
-    for lo, hi, t, f in spans:
+    for lo, hi, t, f, _d in spans:
         buckets.setdefault(lo >> 12, set()).add(f)
     split = {k: v for k, v in buckets.items() if len(v) > 1}
     print("\nCHECK B - split ownership (STRUCTURAL FLAG, not a defect proof)")
@@ -436,7 +469,7 @@ def main():
           % (len(split), len(buckets)))
     for k in sorted(split):
         fams = sorted(split[k])
-        tabs = sorted({t for lo, hi, t, f in spans if (lo >> 12) == k})
+        tabs = sorted({t for lo, hi, t, f, _d in spans if (lo >> 12) == k})
         print("    0x%08X..0x%08X  flags={%s}" % (k << 12, ((k + 1) << 12) - 1,
                                                   ", ".join(fams)))
         if VERBOSE:
