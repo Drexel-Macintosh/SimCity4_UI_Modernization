@@ -17459,3 +17459,84 @@ machinery deserves its own measured session. Candidate for deletion.
 the scale picker is present at 1x - the SelectorUI commit fix is confirmed
 visually, not just at the file level. The 2x boot's log independently showed
 the full record -> commit -> ArmOne chain servicing SelectorUI (0 FAILED).
+
+---
+
+## 2026-08-30 (later) - 951 game-derived files were PUBLIC, and the gate said PASS
+
+Found by the post-release verification pass, not by the gate written to prevent
+it. `tools/research/sharp15/` - 25.4 MB, **607 PNG images extracted from
+shipped game archives**, plus a file carrying a real machine path on 9 lines -
+was tracked and pushed to the PUBLIC repo. The project's own `.gitignore`
+excluded exactly that tree, with the policy spelled out: *"nothing derived from
+the game install ever enters this repo ... the art is not ours to carry."*
+
+### Why the policy did not hold
+
+**A `.gitignore` added after the fact untracks NOTHING.** The rule landed
+2026-08-29; the files were already in the index, so every later push carried
+them. An ignore rule is a promise about the FUTURE and says nothing about the
+present - and nothing measured the present.
+
+### Why the gate did not catch it - two blindnesses, both self-inflicted
+
+1. `Sync-Check.ps1`'s privacy regex matched only `C:\Users\` with BACKSLASHES.
+   The leaked file used forward slashes, which is what most Python writes.
+2. Its art check tested the **FILE EXTENSION**, and the images were named
+   `.bin`. **That is this project's own law - "text scanners are blind to
+   binaries" - being broken by the gate written to enforce it.**
+
+Both were fixed by measurement, not by adding strings to a list: the privacy
+scan now accepts either separator, and the art scan classifies every tracked
+file by MAGIC BYTES (PNG/JPEG/GIF/BMP/DBPF/PE) with its own positive control,
+and REFUSES on files too large to scan instead of skipping them silently. The
+hardened gate immediately flagged its own source file, because the comment
+explaining the fix quoted the leaked path. That is the correct behaviour and it
+is why the comment now says not to paste one.
+
+### The scrub, and its exact residual
+
+History rewritten with `git filter-repo` (backup bundle taken and verified
+first: `sc4uiscale-PRE-REWRITE-2026-08-30-1155.bundle`, 105 MB, complete).
+
+Measured BEFORE, so the blast radius was known rather than feared: the art
+entered at `029e13a`, only **41 of 274 commits** carried it and only **6 of 19
+tags**. Because a rewrite re-points tags by NAME and GitHub releases reference
+tags by name with assets stored separately, **no release had to be deleted** -
+the user had offered to delete all of them, and the measurement made that
+unnecessary.
+
+Two passes were needed, and the first one's miss is the lesson: `--replace-text`
+with `literal:C:\Users\<name>` did NOT match `C:\Users\<name>` as escaped
+inside committed `.js` workflow scripts. **A literal rule matches one encoding
+of a string, not the string.** Pass two used `regex:<name>(?!Trenta)` so every
+escaping form fell at once while the deliberate `<name>Trenta` GitHub-identity
+notes in the PR docs survived.
+
+VERIFIED AFTER, each with a positive control:
+* HEAD tree hash **byte-identical** to pre-rewrite (`313da43…`) - the working
+  content was never altered, only history.
+* 19/19 tags, 274/274 commits, 833/833 tracked files.
+* Art objects reachable from any ref: 1013 -> only `make_even_strips.py`.
+* Commits containing the username path, any encoding: 0.
+* On GitHub: the file is `Not Found` at `main`, `v4.5.2`, `v4.5.1`, `v4.4.0`;
+  a file we KEPT is still served (control); all 18 releases and the 118 MB
+  v4.5.2 asset intact; 0 forks.
+
+⚠ **RESIDUAL, stated rather than glossed:** GitHub does not garbage-collect
+unreferenced objects on a force-push. The file is gone from every branch and
+tag, but is STILL retrievable by anyone who knows an exact pre-rewrite commit
+SHA. Only GitHub Support can run the GC that removes it. **A force-push is not
+a delete.**
+
+### Laws
+
+⭐ **AN IGNORE RULE IS NOT A REMOVAL.** Adding a path to `.gitignore` leaves
+every already-tracked file exactly where it was. Whenever an ignore rule is
+added for something that should never have been committed, `git rm --cached`
+in the SAME commit, and assert the tracked count changed.
+
+⭐ **A GATE THAT TESTS THE NAME CANNOT SEE THE CONTENT.** Extension lists,
+filename patterns and path prefixes are all defeated by a rename. Classify by
+bytes, and carry a positive control so a broken classifier fails loudly instead
+of passing quietly.
