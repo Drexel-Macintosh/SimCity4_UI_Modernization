@@ -1,15 +1,20 @@
 # ###########################################################################
 # GENERATED FILE - do not hand-edit; your edit is lost on the next build.
 #   generator : tools/sc4pac/gen_channel.py
-#   bundle    : SC4UIScale-v4.5.1
-#   generated : 2026-08-30T10:55:52Z
+#   bundle    : SC4UIScale-v4.5.2
+#   generated : 2026-08-30T12:26:00Z
 # The prose below is carried verbatim from the hand-written version of this
 # file. The generator refuses to write output that drops any of it.
 # ###########################################################################
 #
-# sc4pac channel metadata for SC4UIScale.
+# sc4pac channel metadata for SC4UIScale - THE ANNOTATED INTERNAL RECORD.
 #
-# STATUS: shape settled, blocked on ONE engine fact (probe #202, below).
+# STATUS: SHIPPED (v4.5.1+). Every one-time blocker recorded below is CLOSED
+# (see the closure record at the bottom); the measurement record itself is
+# kept verbatim. THE FILE THAT GOES UPSTREAM IS NOT THIS ONE - it is the lean
+# file emitted by `gen_channel.py --publish`, same model and hashes, without
+# the engineering commentary. PR #199 shipped this internal file verbatim,
+# which is why that distinction now exists.
 # Everything sc4pac-side in this file was MEASURED against sc4pac 0.10.0 on
 # 2026-08-29 by installing a throwaway local channel into a scratch plugins
 # root - not read out of the docs and not inferred. Where a measurement
@@ -28,9 +33,10 @@
 # 2. `isIni: true` IS A TRAP FOR US. It puts the ini at the root, but renamed
 #    to `<stem>_sc4pacnew.ini`, and sc4pac never activates it - the user has to
 #    rename it by hand. Worse, an uninstall deletes `*_sc4pacnew.ini` even
-#    after the user edited it. So THIS PACKAGE SHIPS NO INI AT ALL; the DLL
-#    creates SC4UIScale.ini at the Plugins root on first run. See the ini note
-#    at the bottom - it reverses part of v4.4.0 and needs a decision.
+#    after the user edited it. So NO SETTINGS INI SHIPS; the DLL creates
+#    SC4UIScale.ini at the Plugins root on first run - the only copy that
+#    survives updates AND uninstall. (The read-only FontStyle asset inis are
+#    a separate case with their own rules - see INI_RULES in the generator.)
 #
 # 3. A NON-CANONICAL EXTENSION INSTALLS ONLY VIA `withChecksum`. A `.uipay`
 #    listed under `include:` was silently dropped; listed under `withChecksum`
@@ -79,15 +85,16 @@
 # `python tools/uimap/winner_table.py --diff <live> <proposed> --ignore-moves`
 # 1888 keys examined, 3/3 controls fired, and ZERO CAM keys changed hands.
 #
-# ============ THE ONE REMAINING BLOCKER ====================================
+# ============ PROBE #202 - WAS THE ONE BLOCKER, NOW CLOSED =================
 #
-# PROBE #202, staged, needs one game launch:
-#   `python _tests/Probe-ScanPredicate.py --stage | --read`
-# Is SC4's plugin scan gated on EXTENSION or on DBPF MAGIC? If magic, `.uipay`
-# payloads are live plugins - three tiers of every package permanently in the
-# index - and this file's payload lists are void. `.dat.x1-disabled` being
-# skipped proves one string is skipped; it is not proof about a different one.
-# Do not publish this channel entry until #202 comes back extension-gated.
+# PROBE #202 (`python _tests/Probe-ScanPredicate.py --stage | --read`) asked:
+# is SC4's plugin scan gated on EXTENSION or on DBPF MAGIC? If magic, `.uipay`
+# payloads would be live plugins - three tiers of every package permanently in
+# the index - and this file's payload lists would be void. `.dat.x1-disabled`
+# being skipped proves one string is skipped; it is not proof about another.
+# MEASURED 2026-08-30, one game launch: the scan is EXTENSION-gated. The
+# payload lists in this file are sound, and the publish embargo that stood
+# here is lifted.
 #
 # ============ WHAT THE GENERATOR ADDS ======================================
 #
@@ -109,7 +116,7 @@
 # examined, 3/3 controls fired, ZERO CAM keys changed hands.
 group: "a-drexel"
 name: "sc4-ui-scale"
-version: "4.5.1"
+version: "4.5.2"
 subfolder: "050-load-first"
 dependencies:
 - "config:sc4-edition-windows-digital"
@@ -121,7 +128,7 @@ assets:
   # It ALSO needs the checksum for a second, measured reason: a file
   # listed only under `include:` was NOT INSTALLED AT ALL.
   - include: "/Plugins/SC4UIScale.dll"
-    sha256: "d72fae76585ca4b751866432a53fe50b9a4be185f434328f01be9520d983be03"
+    sha256: "39dcfa96ff41375c7bec237b3271abcf2c5127a0c9207b9e4329df554b1419d3"
   # Shipped by --ship-asset-inis. NOTE: no `isIni: true` - that lands the
   # file at the Plugins root renamed `_sc4pacnew.ini` and never activates
   # it. This keeps it in the package folder, where the DLL reads it.
@@ -154,7 +161,7 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_DialogStatic.3x.uipay"
     sha256: "6da19421d65ecf55a26695ad4726aeee139e28156e68363eb79590ce81cae8f7"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_DialogStatic.off.uipay"
-    sha256: "33236b36d676c7450125e7f61c9e756920241db1d28850b3557a6d48dd462835"
+    sha256: "a79139cb9c91a6799db21aa17f73a64b72b9fb0a506fd8860b8d0dd8c6a0a17a"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.15x.uipay"
     sha256: "aa81a1c7f001ef612890cec024bcc33f5be332dfe4c4c2ccc569c8d58378ec87"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.2x.uipay"
@@ -162,7 +169,7 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.3x.uipay"
     sha256: "4714374b6da5d2a0f2b229ef7c861dc8c423f2b6765dc923ead23150ddebfc72"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.off.uipay"
-    sha256: "7488c9e939e1ebc08cf14a7855f5fd1aabd6bb685cb83726b477f7c1b54ac4cb"
+    sha256: "c901b8400bb6ac431f8a575c3dab34c19d4b3d596d52327ab7ba5cfc4260c286"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.15x.uipay"
     sha256: "d90751e7d8e959b9fe1e56e279d51cee2b52d1dc19ad6d7fb0175c9934d1322d"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.2x.uipay"
@@ -170,9 +177,9 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.3x.uipay"
     sha256: "4a421535d3cde7b60af78c42eb2f4776dc8ec0fe400ab8f1f2714ce58600383d"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.off.uipay"
-    sha256: "6d482e9cbb31c9b3b037ec1ad6d26d83a42b9a2ea8d336f9d7ee81c1bdbcfbcd"
+    sha256: "ac220b5b72d5e45e811d61f878851afd555d889147c9b0bfe031a6d536475a38"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_WebText.off.uipay"
-    sha256: "19ca501c51dbb9ad70f2b52f813b97bb34cccd6bcc979046efe307fb3c94cac3"
+    sha256: "e70b5ea67e6e982ce2c5b639ff538f4edb25be271fd92591faf43ab8ea7794a9"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_WebText.on.uipay"
     sha256: "2c98fcf374151117ac24ed0c7ef3b287cb34fd40c0a0c15ff316db752ce11767"
   include:
@@ -183,18 +190,23 @@ assets:
   - "/Plugins/010-SC4UIScale/"
 info:
   summary: "Scales the SimCity 4 interface to 1.5x, 2x or 3x for high-resolution displays"
-  conflicts: "Requires game version 1.1.641. Refuses to patch any other build."
+  conflicts: "Only compatible with game version 1.1.641, the Windows digital edition."
   description: |2
 
     Enlarges the game's own UI - toolbars, dialogs, menus, icons and fonts -
     so the interface stays usable at modern resolutions, instead of scaling
     the whole frame and blurring the city.
 
-    The scale factor is chosen automatically from the resolution the game
-    actually renders at, and can be changed in-game under
-    Options -> Graphic Options. Below 1320x900 the mod stays completely
-    inert and the game is exactly stock.
-  author: "Drexel-Macintosh"
+    - The scale factor (1.5x / 2x / 3x) is chosen automatically from the
+      resolution the game actually renders at, and can be changed in-game
+      under *Options > Graphic Options*.
+    - Below 1440x1080 the mod stays completely inert and the game is
+      exactly stock.
+    - On first launch the mod writes its settings file `SC4UIScale.ini` at
+      the Plugins root (a file kept in the package folder would be deleted
+      by every update). Settings survive updates; the file stays behind on
+      uninstall and can be deleted by hand.
+  author: "Drexel Macintosh"
   website: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization"
 
 ---
@@ -207,13 +219,19 @@ info:
 # examined, 3/3 controls fired, ZERO CAM keys changed hands.
 group: "a-drexel"
 name: "sc4-ui-scale-mod-overrides"
-version: "4.5.1"
+version: "4.5.2"
 subfolder: "900-overrides"
 dependencies:
 - "a-drexel:sc4-ui-scale"
 assets:
 - assetId: "a-drexel-sc4-ui-scale"
   withChecksum:
+  # Third-party artwork attribution, installed beside the art it covers.
+  # It lives INSIDE the dir root on purpose: a bundle-root extra file
+  # would change this package's longest-common-prefix and re-root the
+  # whole install one level deeper (the v4.5.0 discovery trap, again).
+  - include: "/Plugins/zzz-SC4UIScale/THIRD-PARTY-NOTICES.md"
+    sha256: "c014a1f802e01dcbc1b86d63ecb5dd84753433ccf7703a3e5629804cc3c708c4"
   # PAYLOADS. `.uipay` is a NON-CANONICAL extension: measured against
   # sc4pac 0.10.0, such a file is silently DROPPED when listed under
   # `include:` and installs only through a `withChecksum` entry. There is
@@ -226,7 +244,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CamUI.3x.uipay"
     sha256: "36167544df11140685892ac23de297434bd4025a64342d1eae50ce43a58c0b46"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CamUI.off.uipay"
-    sha256: "5d0c98a18e9e6f2cb5de61d5d02d90e861d67b5cab7537ac547865f86b21ef23"
+    sha256: "08f35ddc8b3bbcacd3549d855c6e58cf3a992d5fc5b6cf4d952041f10c184337"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.15x.uipay"
     sha256: "dd3ddb81f9a605c67078e93548a26727aaa469ebd211f2b0ff681b6a2a49ae9b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.2x.uipay"
@@ -234,7 +252,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.3x.uipay"
     sha256: "eea37c6549f05c1ab352a9c4b059eecf181c4d4f14441aa06fe4585afcfab043"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.off.uipay"
-    sha256: "e14f49236d98607feca5e5d4301fed022a3385eb0b7098b188d19ba80ca4e553"
+    sha256: "c0995a24b03cc07e0ac5fe657df5e2198b26e38a22395ef092a8b153a546d6ec"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.15x.uipay"
     sha256: "02948c1c943389727fb44b6844224acc8b9eb3e259c13389afda78e9eb093b47"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.2x.uipay"
@@ -242,7 +260,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.3x.uipay"
     sha256: "10371223ae3ddab19b94b5d2e885ebb6b6e30fdd49492f531fe1c17572279adb"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.off.uipay"
-    sha256: "eee46095532f41c0051bd1e8abf6f5fe2ed3a9073401adc78d45853a24e7514e"
+    sha256: "736b78890cce04ca3252d5a7a9abf77f534f1a2343e81f82d35ad9d0dbd6d669"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.15x.uipay"
     sha256: "7e0f7ddf00f8469cbb9fb3336fa19a5058b9a475c342b7d2ec774bad78fe1508"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.2x.uipay"
@@ -250,7 +268,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.3x.uipay"
     sha256: "ca3635ea69c8e165a013c242efb27a086a7f8d134dca82e8c773ab1e02642646"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.off.uipay"
-    sha256: "61b143f84ebd25e9d60286def5b765d8fcc4b1f5de39a6d562fc50637ea5b223"
+    sha256: "e291cf83ae5c28037b9f47b91ceab1146b42ac8084f2824bfbe6deb9a8a3d456"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.15x.uipay"
     sha256: "a94472303d2a1f391420f069b6616320a3d27abeee63751c85bacae9916b7977"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.2x.uipay"
@@ -258,11 +276,11 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.3x.uipay"
     sha256: "a2ec37dc5b9e729f8d64cabd74d4a71b92715e0dd8aa19e63314829ae5444a78"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.off.uipay"
-    sha256: "3df61f187468ac387eca9efe21bc0c610d97a0fef79cb24102b899f68b6a252f"
+    sha256: "0cf367d50af441c5a69b123e33179f0fc76e5ca7cd0a258148f24c3982d9662b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SelectorUI.1x.uipay"
     sha256: "1bd7a470b923d31a3b6ed98b50a949dfd3fb687848e4d33e3e6c8c88ecd84973"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SelectorUI.off.uipay"
-    sha256: "c2dd4eddde745ba3dda883aad966f71df90092c93bc7e069a5dfd78e3bbff50b"
+    sha256: "82724134be2de44e95e22810e330a2b61de2b4b0ed1d317c7571a9cdbfe92605"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.15x.uipay"
     sha256: "2e9715e6f87a43ee2a19cff3e4b70a35eed5fe9bf823ccd5f45d1bc993f4d2d4"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.2x.uipay"
@@ -270,7 +288,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.3x.uipay"
     sha256: "896e6f796fa52797569fd3816e47a055b826774e1475f54c09edda7cd7308c9c"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.off.uipay"
-    sha256: "74159cfabb27fcc2e42e34efe567b34d2d0e24423dda60da0c2173d07076c46a"
+    sha256: "ea5a1b5dd9c174f9608f6100bebb817a444d7f4a35142dc812f99f08894f7d08"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.15x.uipay"
     sha256: "dcfd8144a6e76921e303e4d8dad7906140e8ffc0f557a048f0d275fc70a6b605"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.2x.uipay"
@@ -278,7 +296,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.3x.uipay"
     sha256: "e0fe50480f34f8e2e5cb7ed39589e675fc7b94fcecb5c9646789acde3d539e30"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.off.uipay"
-    sha256: "43034b52ab442506541c717b0e4dafe1d6a474ff92fd13fa0594c286f09f95b1"
+    sha256: "86c2bfbd01e69b5f7b8d3dbb852d2cd60f58f3de53f608430afe28bc555748f6"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.15x.uipay"
     sha256: "3e703bb2d9ad16aa487b59ef673a04765e9d7a2254aaf5a99d4ed7226f336ba1"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.2x.uipay"
@@ -286,7 +304,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.3x.uipay"
     sha256: "beb26e3f466827718078a946182781b75b9719f72aadd73f37fece41917d67a3"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.off.uipay"
-    sha256: "b56d89bed99d846b2d267b497a881da0aaee0b84427ebb6d96af9375cae4baed"
+    sha256: "616510465293eb450311576635fd213f9f718e62d021a67142f136ffd829e57b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.15x.uipay"
     sha256: "5991c73f70931249b57344de6739c2472b53a58c607ca5c1dc1a1a22612a22b1"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.2x.uipay"
@@ -294,7 +312,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.3x.uipay"
     sha256: "14193c4ad83d84b635be5fc1a131419b42317c6a43a540aff62ee7a8b6bcfc2f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.off.uipay"
-    sha256: "b0d581fd4719346221526a9592a2ef678fe642c17827ebcbadec608a29252895"
+    sha256: "f0569f207dc591bda4c3b2bfa7f21483f41d058de8ad64d4895209723b34335a"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.15x.uipay"
     sha256: "a7707263517d4df9be0f5edc5a749002f8096f3b36c95467129aa3b200d084a9"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.2x.uipay"
@@ -302,7 +320,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.3x.uipay"
     sha256: "caa08b2b5e63f860607d5365ce8b8c6acbf3ac2bd4983471524f8649d96f72bc"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.off.uipay"
-    sha256: "59062f6b775a751509b1ce68394c31f8660996d57e215e4812921a808f761cc4"
+    sha256: "991c59e1ccb18714f707d0311696de182532b0bdef31cffda0bddbd36b166a82"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.15x.uipay"
     sha256: "502ce4f2f49061167acbe885fc5f1b3c1ecde2cd6918868f22a6bec058b87088"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.2x.uipay"
@@ -310,7 +328,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.3x.uipay"
     sha256: "5ce37b4bf4ae011f55ff8a649d8fd90bb598d5eef8b748864e70fdb14e2b37a0"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.off.uipay"
-    sha256: "c4e20f97a8e60422e074e125c5b4965756f71dada39178f7ef93bf12fbe5183c"
+    sha256: "8be3ef4b22f05b709e3366a67f1caf3c8920aabbb22d5fb14eb89c2233a2d44a"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.15x.uipay"
     sha256: "2b1e7a4346f9e06877487ed9db41d7dc57cf995103051ef8bc455964042fe001"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.2x.uipay"
@@ -318,7 +336,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.3x.uipay"
     sha256: "e2b7aa75d137e3000de72ec416bdd1c51610e319fe8c78fd8017e96e46c2f15a"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.off.uipay"
-    sha256: "e89daaf9be6bbd66ab7a4b76d6ab2a758c7fc621d0f860cd4ee4e81b5154b74f"
+    sha256: "cae87545127a1c06e9d6a31cb4463dfecfc8aa53dca9b2d4e56d0e9fd2e5f3c6"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.15x.uipay"
     sha256: "ade0be0891cca8578de161df8b2b821eba686272b28b508b2a94f3099ef35eb8"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.2x.uipay"
@@ -326,7 +344,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.3x.uipay"
     sha256: "06f3490037d604aab51fa0004aa43a493956739feeb5b64ae91650cbab93502f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.off.uipay"
-    sha256: "a825484b434e899f286fef6ef669258ee73f3aff83440d0cb03cd177bf4451d3"
+    sha256: "9560942401ad2572581b86ec9505e7ba9ee0e8440595ab32a37e0b41993459a0"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.15x.uipay"
     sha256: "16a182e6a53363824909f9da50ab6fc596d7d56ee969de94dbeb2d9ba634ffca"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.2x.uipay"
@@ -334,7 +352,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.3x.uipay"
     sha256: "7ea002b9c2692056e7469508aed8cfe90a550c93185a9511240812914db27fea"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.off.uipay"
-    sha256: "22d63fbcd2452428f7a0631ea185c391475486c7c68db1ab57905f0d567923bc"
+    sha256: "541cf8d5775884880616fc6006bd10642d02d1417b999b3dac0b5c2bea45faf7"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.15x.uipay"
     sha256: "a2f6c794c405223392cd0019454d9ed6d6ae2de06da0f5ac347284e820919182"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.2x.uipay"
@@ -342,7 +360,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.3x.uipay"
     sha256: "fd33506897dea8bee59bd4fdbbe1515b2b2ae8bdac6453f8b4560b36df33504b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.off.uipay"
-    sha256: "435cbca1a59d1c6708ccfe70f3f7fa315a9beffbfb22eff9a764f7f87e597188"
+    sha256: "42096654f03fce07ede11b482c0009f6d131ae45dbf1c012253cef72628ea387"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.15x.uipay"
     sha256: "9e0ace5806751fea5ae34b65bd29f5c22ec8a5fab25f79b465bdd8ea2543c193"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.2x.uipay"
@@ -350,7 +368,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.3x.uipay"
     sha256: "3705d7fedff6f61e3f0e7410d074c512685ee54aa541f7227b834d0c8bd188df"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.off.uipay"
-    sha256: "967126213c26b377a670bb2f1c0a278769665df67f2afdda512ecc10c5419f96"
+    sha256: "6a8169d0a56edaadb0cd1dff050d7cadd631550e435bb7aef9d6b7bc5a7ced5d"
   include:
   # Built FROM other mods' own artwork, so these must WIN - hence the last
   # canonical subfolder. Gated AT RUNTIME on each mod's files by exact name
@@ -363,31 +381,34 @@ assets:
   - "/Plugins/zzz-SC4UIScale/"
 info:
   summary: "Scaled UI artwork for CAM, NAM and other mods, for SC4UIScale"
+  warning: "Letter-named top-level override folders from a hand install (e.g. zzz-...) sort after 900-overrides and can beat this package's artwork. If you migrated from a hand install, move them into 895-my-overrides as the sc4pac docs recommend."
   description: |2
 
     Enlarged copies of other mods' own interface artwork, so a scaled UI
     stays consistent when those mods are installed. Inert without them.
 
-    Covers CAM, the Network Addon Mod, Save Warning, 36 Slot Building
-    Styles, God Terraforming in Mayor Mode, and Scoty's Carbon Skin.
-    Artwork belongs to those authors - see THIRD-PARTY-NOTICES.md.
-  author: "Drexel-Macintosh"
+    Covers the Colossus Addon Mod, the Network Addon Mod, Save Warning,
+    36 Slot Building Styles, God Terraforming in Mayor Mode, and Scoty's
+    Carbon Skin. The artwork belongs to those authors - see
+    THIRD-PARTY-NOTICES.md, installed in this package's folder.
+  author: "Drexel Macintosh"
   website: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization"
 
 ---
 
 # THE ASSET. One zip serves both packages.
+# ⚠ `lastModified` is the newest file mtime in the bundle, used as a
+#   placeholder. Re-stamp it from the published release asset before the
+#   channel goes live.
 assetId: "a-drexel-sc4-ui-scale"
-version: "4.5.1"
-# The RELEASE publish time from the GitHub API, not a file mtime. sc4pac uses
-# this to decide whether a cached asset is stale, so it has to move when the
-# asset does.
-lastModified: "2026-08-30T10:54:08Z"
-url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.5.1/SC4UIScale-v4.5.1.zip"
-# Recommended by docs/metadata.md whenever `withChecksum` is used: if the
-# checksummed asset ever moves or is re-cut, this is where sc4pac sends the
-# user rather than failing with a hash mismatch and no next step.
-nonPersistentUrl: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/latest"
+version: "4.5.2"
+lastModified: "2026-08-30T12:24:58Z"
+url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.5.2/SC4UIScale-v4.5.2.zip"
+# No `nonPersistentUrl`: docs/metadata.md scopes that field to a SECOND
+# host's page (e.g. url on GitHub, nonPersistentUrl on Simtropolis) and the
+# update checkers only consume STEX/SC4E links. GitHub is our only host, so
+# the field would be noise - v4.5.1 carried a same-host HTML page here under
+# an invented rationale, corrected on the corpus survey of 2026-08-30.
 
 # ===========================================================================
 # THE 900-overrides QUESTION, MEASURED AND CLOSED
@@ -407,38 +428,23 @@ nonPersistentUrl: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization
 # design, and the cure is documentation plus a boot-time census that names the
 # offending folder instead of rendering wrong art silently.
 #
-# STILL OUTSTANDING
-#   - probe #202 (above) - the only hard blocker.
-#   - The real sha256 of the extracted DLL, and a real `lastModified`.
-#   - A `group-to-github` mapping for `a-drexel` contributed upstream, which a
-#     DLL package cannot pass lint without.
-#   - THE INI DECISION. Shipping it in the package folder loses the user's
-#     tier choice on every update (the folder is wiped); shipping it with
-#     `isIni: true` lands it inert as `_sc4pacnew.ini` and deletes it on
-#     uninstall even if edited. The measured-correct answer is that the DLL
-#     creates SC4UIScale.ini at the Plugins ROOT and we ship no ini - which
-#     partly reverses v4.4.0's "the root holds only the DLL", and is the one
-#     thing here that is a judgement call rather than a measurement.
-# ===========================================================================
-
-# ===========================================================================
-# GENERATOR ADDENDUM to STILL OUTSTANDING, above. Nothing there was deleted;
-# this records which of those items the generated file has since closed.
-#   CLOSED  - the real sha256 of the DLL, and of every payload, is now
-#             computed from the bundle on every run.
-#   CLOSED  - `lastModified` is the release publish time from the GitHub
-#             API, passed with --last-modified, not a file mtime.
-#   CLOSED  - probe #202: the plugin scan is EXTENSION-gated, measured,
-#             so the .uipay payload lists in this file are sound.
-#   OPEN    - the `group-to-github` mapping for `a-drexel`. Lint still
-#             refuses without it; the fix is upstream, NOT a group rename.
-#   CHANGED - THE INI DECISION is now executed, per-file, in the `exclude:`
-#             blocks above. SC4UIScale.ini is excluded unconditionally and
-#             that is measured-correct. The other two inis are excluded by
-#             the same blanket rule but are NOT the same case: they are
-#             read-only assets an update simply re-extracts, and excluding
-#             them costs unscaled text (FontStyle-*.ini) and the orphaned
-#             FontStyle.ini that the empty placeholder was added to solve.
-#             `gen_channel.py --ship-asset-inis` ships those two and only
-#             those two. This one needs a human decision.
+# FORMERLY OUTSTANDING - ALL CLOSED (the list is kept so the closures have
+# their questions next to them; nothing here is open):
+#   - probe #202: CLOSED, extension-gated - measured 2026-08-30, see above.
+#   - The real sha256 of the DLL and every payload: CLOSED - computed from
+#     the bundle on every run and re-verified off the emitted YAML.
+#   - `lastModified`: CLOSED - the release publish time from the GitHub API,
+#     passed with --last-modified (which `--publish` REQUIRES; without it the
+#     internal file carries the bundle mtime as a marked placeholder).
+#   - The `group-to-github` mapping for `a-drexel`: submitted with the
+#     package in one PR (upstream precedent: PR #164). Lint verified locally
+#     against the full corpus, positive control fired.
+#   - THE INI DECISION: CLOSED, executed per-file in the generator's
+#     INI_RULES. The DLL creates SC4UIScale.ini at the Plugins ROOT and no
+#     settings ini ships - the only shape that survives both updates and
+#     uninstall. When an excluded ini is present in a bundle the YAML carries
+#     an `exclude:` block stating the reason; the v4.5.1+ bundle ships no
+#     settings ini at all, so no exclude block appears - earlier notes
+#     pointing at "the exclude blocks above" described a bundle shape that no
+#     longer exists.
 # ===========================================================================

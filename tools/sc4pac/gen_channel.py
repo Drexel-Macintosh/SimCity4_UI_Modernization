@@ -12,8 +12,18 @@ plus inert `z_SC4UIScale_<Pkg>.<tag>.uipay` files (tags 15x / 2x / 3x / on /
 off).  Measured against sc4pac 0.10.0: a file with a NON-CANONICAL EXTENSION
 installs ONLY through a `withChecksum` entry - listed under `include:` it is
 silently dropped.  So every `.uipay` needs its own entry carrying a real
-sha256.  That is ~78 entries whose hashes change on every build: not a
-hand-maintained list.
+sha256.  That is ~80 entries whose hashes change on every build (the exact
+count is printed by every run): not a hand-maintained list.
+
+Two outputs
+-----------
+The default output is the ANNOTATED INTERNAL file (the measurement record,
+211+ comment lines).  `--publish` additionally writes a LEAN file for the
+upstream channel PR - same model, same hashes, corpus-normal comment volume.
+v4.5.1's PR #199 shipped the internal file verbatim, engineering commentary
+and a "Do not publish" line included; the lean emitter exists so that can
+never happen again.  `--publish` refuses to run without `--last-modified`
+(the release publish time from the GitHub API).
 
 What it does NOT do
 -------------------
@@ -48,7 +58,11 @@ import sys
 GROUP = "a-drexel"
 GITHUB_OWNER = "Drexel-Macintosh"
 GITHUB_REPO = "SimCity4_UI_Modernization"
+# The corpus convention is a display name, not a handle (cf. "Null 45",
+# "CasperVg", "memo, Panda").
+AUTHOR_DISPLAY = "Drexel Macintosh"
 OUT_RELPATH = os.path.join("_packaging", "sc4pac", "drexel-sc4-ui-scale.yaml")
+PUBLISH_RELPATH = os.path.join("_packaging", "sc4pac", "publish", "sc4-ui-scale.yaml")
 
 # sc4pac's own root-placement / canonical-extension constant, quoted from the
 # measurement record in PRESERVED_HEADER below.  A file matching this installs
@@ -76,16 +90,25 @@ PACKAGES = [
         file_roots=["SC4UIScale.dll"],
         dir_roots=["010-SC4UIScale"],
         summary="Scales the SimCity 4 interface to 1.5x, 2x or 3x for high-resolution displays",
-        conflicts="Requires game version 1.1.641. Refuses to patch any other build.",
+        conflicts="Only compatible with game version 1.1.641, the Windows digital edition.",
+        warning=None,
+        # "Below <WxH>" is gated against kTierMinimums in src/ScaleTier.cpp on
+        # every run - v4.5.1 published "below 1320x900" (the pre-audit
+        # 880*f/600*f formula) against a measured 1440x1080 floor.
         description="""
     Enlarges the game's own UI - toolbars, dialogs, menus, icons and fonts -
     so the interface stays usable at modern resolutions, instead of scaling
     the whole frame and blurring the city.
 
-    The scale factor is chosen automatically from the resolution the game
-    actually renders at, and can be changed in-game under
-    Options -> Graphic Options. Below 1320x900 the mod stays completely
-    inert and the game is exactly stock.""",
+    - The scale factor (1.5x / 2x / 3x) is chosen automatically from the
+      resolution the game actually renders at, and can be changed in-game
+      under *Options > Graphic Options*.
+    - Below 1440x1080 the mod stays completely inert and the game is
+      exactly stock.
+    - On first launch the mod writes its settings file `SC4UIScale.ini` at
+      the Plugins root (a file kept in the package folder would be deleted
+      by every update). Settings survive updates; the file stays behind on
+      uninstall and can be deleted by hand.""",
     ),
     dict(
         name="sc4-ui-scale-mod-overrides",
@@ -95,23 +118,30 @@ PACKAGES = [
         dir_roots=["zzz-SC4UIScale"],
         summary="Scaled UI artwork for CAM, NAM and other mods, for SC4UIScale",
         conflicts=None,
+        warning=(
+            "Letter-named top-level override folders from a hand install "
+            "(e.g. zzz-...) sort after 900-overrides and can beat this "
+            "package's artwork. If you migrated from a hand install, move "
+            "them into 895-my-overrides as the sc4pac docs recommend."
+        ),
         description="""
     Enlarged copies of other mods' own interface artwork, so a scaled UI
     stays consistent when those mods are installed. Inert without them.
 
-    Covers CAM, the Network Addon Mod, Save Warning, 36 Slot Building
-    Styles, God Terraforming in Mayor Mode, and Scoty's Carbon Skin.
-    Artwork belongs to those authors - see THIRD-PARTY-NOTICES.md.""",
+    Covers the Colossus Addon Mod, the Network Addon Mod, Save Warning,
+    36 Slot Building Styles, God Terraforming in Mayor Mode, and Scoty's
+    Carbon Skin. The artwork belongs to those authors - see
+    THIRD-PARTY-NOTICES.md, installed in this package's folder.""",
     ),
 ]
 
 # --------------------------------------------------------------------------
 # INI POLICY.  Per-file, explicit, with the reason carried into the YAML.
 #
-# Default: SHIP NO INI AT ALL.  The reasons differ per file and two of them
-# have a functional cost, so they are spelled out one by one rather than
-# collapsed into "no inis".  `--ship-asset-inis` flips the two read-only
-# asset inis back on (as `withChecksum` entries, NEVER `isIni: true`).
+# Default: the user CONFIG ini never ships; the two read-only ASSET inis
+# ship by default (as `withChecksum` entries, NEVER `isIni: true`) because
+# excluding them has a measured functional cost - unscaled text at every
+# tier. `--no-asset-inis` excludes them; nothing ever ships the config ini.
 # --------------------------------------------------------------------------
 INI_RULES = [
     (
@@ -130,12 +160,12 @@ INI_RULES = [
         "asset",
         "a per-tier FontStyle SOURCE, read by the DLL out of this folder\n"
         "and copied over the live Plugins/FontStyle.ini at boot.\n"
-        "⚠ COST OF EXCLUDING IT, measured in src/ScaleTier.cpp:1594-1611: with the\n"
+        "⚠ COST OF EXCLUDING IT (grep src/ScaleTier.cpp for the string): with the\n"
         "source absent the DLL logs \"font source FontStyle<tag>.ini missing - text\n"
         "stays 1x\" and continues. An sc4pac install therefore gets a scaled UI with\n"
         "UNSCALED TEXT at every tier. It is read-only and never user-edited, so the\n"
         "UPDATE hazard above does not apply to it - an update re-extracts it.\n"
-        "Re-enable with `gen_channel.py --ship-asset-inis`.",
+        "Shipped by default since v4.5.2; excluded only by --no-asset-inis.",
     ),
     (
         re.compile(r"^z_SC4UIScale_FontStyle\.ini$", re.I),
@@ -146,7 +176,7 @@ INI_RULES = [
         "generates. It is deliberately NOT named FontStyle.ini - #182 proved a\n"
         "live-named empty font file crashes a vanilla game after a hand removal.\n"
         "⚠ COST OF EXCLUDING IT: the orphaned-FontStyle.ini problem it was added to\n"
-        "solve comes back. Re-enable with `gen_channel.py --ship-asset-inis`.",
+        "solve comes back. Shipped by default since v4.5.2 (--no-asset-inis excludes).",
     ),
 ]
 
@@ -164,9 +194,14 @@ def ini_rule(basename):
 # "tidy"; the comment-preservation check exists to make a drop impossible to
 # do silently.
 # --------------------------------------------------------------------------
-PRESERVED_HEADER = r"""# sc4pac channel metadata for SC4UIScale.
+PRESERVED_HEADER = r"""# sc4pac channel metadata for SC4UIScale - THE ANNOTATED INTERNAL RECORD.
 #
-# STATUS: shape settled, blocked on ONE engine fact (probe #202, below).
+# STATUS: SHIPPED (v4.5.1+). Every one-time blocker recorded below is CLOSED
+# (see the closure record at the bottom); the measurement record itself is
+# kept verbatim. THE FILE THAT GOES UPSTREAM IS NOT THIS ONE - it is the lean
+# file emitted by `gen_channel.py --publish`, same model and hashes, without
+# the engineering commentary. PR #199 shipped this internal file verbatim,
+# which is why that distinction now exists.
 # Everything sc4pac-side in this file was MEASURED against sc4pac 0.10.0 on
 # 2026-08-29 by installing a throwaway local channel into a scratch plugins
 # root - not read out of the docs and not inferred. Where a measurement
@@ -185,9 +220,10 @@ PRESERVED_HEADER = r"""# sc4pac channel metadata for SC4UIScale.
 # 2. `isIni: true` IS A TRAP FOR US. It puts the ini at the root, but renamed
 #    to `<stem>_sc4pacnew.ini`, and sc4pac never activates it - the user has to
 #    rename it by hand. Worse, an uninstall deletes `*_sc4pacnew.ini` even
-#    after the user edited it. So THIS PACKAGE SHIPS NO INI AT ALL; the DLL
-#    creates SC4UIScale.ini at the Plugins root on first run. See the ini note
-#    at the bottom - it reverses part of v4.4.0 and needs a decision.
+#    after the user edited it. So NO SETTINGS INI SHIPS; the DLL creates
+#    SC4UIScale.ini at the Plugins root on first run - the only copy that
+#    survives updates AND uninstall. (The read-only FontStyle asset inis are
+#    a separate case with their own rules - see INI_RULES in the generator.)
 #
 # 3. A NON-CANONICAL EXTENSION INSTALLS ONLY VIA `withChecksum`. A `.uipay`
 #    listed under `include:` was silently dropped; listed under `withChecksum`
@@ -236,15 +272,16 @@ PRESERVED_HEADER = r"""# sc4pac channel metadata for SC4UIScale.
 # `python tools/uimap/winner_table.py --diff <live> <proposed> --ignore-moves`
 # 1888 keys examined, 3/3 controls fired, and ZERO CAM keys changed hands.
 #
-# ============ THE ONE REMAINING BLOCKER ====================================
+# ============ PROBE #202 - WAS THE ONE BLOCKER, NOW CLOSED =================
 #
-# PROBE #202, staged, needs one game launch:
-#   `python _tests/Probe-ScanPredicate.py --stage | --read`
-# Is SC4's plugin scan gated on EXTENSION or on DBPF MAGIC? If magic, `.uipay`
-# payloads are live plugins - three tiers of every package permanently in the
-# index - and this file's payload lists are void. `.dat.x1-disabled` being
-# skipped proves one string is skipped; it is not proof about a different one.
-# Do not publish this channel entry until #202 comes back extension-gated."""
+# PROBE #202 (`python _tests/Probe-ScanPredicate.py --stage | --read`) asked:
+# is SC4's plugin scan gated on EXTENSION or on DBPF MAGIC? If magic, `.uipay`
+# payloads would be live plugins - three tiers of every package permanently in
+# the index - and this file's payload lists would be void. `.dat.x1-disabled`
+# being skipped proves one string is skipped; it is not proof about another.
+# MEASURED 2026-08-30, one game launch: the scan is EXTENSION-gated. The
+# payload lists in this file are sound, and the publish embargo that stood
+# here is lifted."""
 
 PRESERVED_DLL_NOTE = r"""# Lands at the Plugins ROOT because it is a .dll. Required by SC4: the dat
 # scan is recursive, the DLL loader is top-level only."""
@@ -277,18 +314,25 @@ PRESERVED_TRAILER = r"""# ======================================================
 # design, and the cure is documentation plus a boot-time census that names the
 # offending folder instead of rendering wrong art silently.
 #
-# STILL OUTSTANDING
-#   - probe #202 (above) - the only hard blocker.
-#   - The real sha256 of the extracted DLL, and a real `lastModified`.
-#   - A `group-to-github` mapping for `a-drexel` contributed upstream, which a
-#     DLL package cannot pass lint without.
-#   - THE INI DECISION. Shipping it in the package folder loses the user's
-#     tier choice on every update (the folder is wiped); shipping it with
-#     `isIni: true` lands it inert as `_sc4pacnew.ini` and deletes it on
-#     uninstall even if edited. The measured-correct answer is that the DLL
-#     creates SC4UIScale.ini at the Plugins ROOT and we ship no ini - which
-#     partly reverses v4.4.0's "the root holds only the DLL", and is the one
-#     thing here that is a judgement call rather than a measurement.
+# FORMERLY OUTSTANDING - ALL CLOSED (the list is kept so the closures have
+# their questions next to them; nothing here is open):
+#   - probe #202: CLOSED, extension-gated - measured 2026-08-30, see above.
+#   - The real sha256 of the DLL and every payload: CLOSED - computed from
+#     the bundle on every run and re-verified off the emitted YAML.
+#   - `lastModified`: CLOSED - the release publish time from the GitHub API,
+#     passed with --last-modified (which `--publish` REQUIRES; without it the
+#     internal file carries the bundle mtime as a marked placeholder).
+#   - The `group-to-github` mapping for `a-drexel`: submitted with the
+#     package in one PR (upstream precedent: PR #164). Lint verified locally
+#     against the full corpus, positive control fired.
+#   - THE INI DECISION: CLOSED, executed per-file in the generator's
+#     INI_RULES. The DLL creates SC4UIScale.ini at the Plugins ROOT and no
+#     settings ini ships - the only shape that survives both updates and
+#     uninstall. When an excluded ini is present in a bundle the YAML carries
+#     an `exclude:` block stating the reason; the v4.5.1+ bundle ships no
+#     settings ini at all, so no exclude block appears - earlier notes
+#     pointing at "the exclude blocks above" described a bundle shape that no
+#     longer exists.
 # ==========================================================================="""
 
 
@@ -463,7 +507,8 @@ def emit(bundle_dir, product, raw_version, version, last_modified, claims,
         # special cases carry their own explanation and belong at the top.
         def wc_key(rel):
             b = os.path.basename(rel).lower()
-            return (0 if b.endswith(".dll") else 1 if b.endswith(".ini") else 2, rel)
+            return (0 if b.endswith(".dll") else 1 if b.endswith(".ini")
+                    else 2 if b.endswith(".md") else 3, rel)
 
         wc = sorted((r for r, v in mine.items() if v[1] == "withChecksum"), key=wc_key)
         ex = sorted(r for r, v in mine.items() if v[1] == "excluded-ini")
@@ -481,6 +526,11 @@ def emit(bundle_dir, product, raw_version, version, last_modified, claims,
                     L.append("  # Shipped by --ship-asset-inis. NOTE: no `isIni: true` - that lands the")
                     L.append("  # file at the Plugins root renamed `_sc4pacnew.ini` and never activates")
                     L.append("  # it. This keeps it in the package folder, where the DLL reads it.")
+                elif base.lower().endswith(".md"):
+                    L.append("  # Third-party artwork attribution, installed beside the art it covers.")
+                    L.append("  # It lives INSIDE the dir root on purpose: a bundle-root extra file")
+                    L.append("  # would change this package's longest-common-prefix and re-root the")
+                    L.append("  # whole install one level deeper (the v4.5.0 discovery trap, again).")
                 elif not first_payload_note_done:
                     first_payload_note_done = True
                     L.append("  # PAYLOADS. `.uipay` is a NON-CANONICAL extension: measured against")
@@ -514,11 +564,13 @@ def emit(bundle_dir, product, raw_version, version, last_modified, claims,
 
         L.append("info:")
         L.append(f"  summary: {q(pkg['summary'])}")
+        if pkg.get("warning"):
+            L.append(f"  warning: {q(pkg['warning'])}")
         if pkg["conflicts"]:
             L.append(f"  conflicts: {q(pkg['conflicts'])}")
         L.append("  description: |2")
         L += pkg["description"].split("\n")
-        L.append(f"  author: {q(GITHUB_OWNER)}")
+        L.append(f"  author: {q(AUTHOR_DISPLAY)}")
         L.append(f"  website: {q(f'https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}')}")
 
     L += ["", "---", ""]
@@ -558,44 +610,104 @@ def emit(bundle_dir, product, raw_version, version, last_modified, claims,
         )
     )
     L += [
-        "# Recommended by docs/metadata.md whenever `withChecksum` is used: if the",
-        "# checksummed asset ever moves or is re-cut, this is where sc4pac sends the",
-        "# user rather than failing with a hash mismatch and no next step.",
+        "# No `nonPersistentUrl`: docs/metadata.md scopes that field to a SECOND",
+        "# host's page (e.g. url on GitHub, nonPersistentUrl on Simtropolis) and the",
+        "# update checkers only consume STEX/SC4E links. GitHub is our only host, so",
+        "# the field would be noise - v4.5.1 carried a same-host HTML page here under",
+        "# an invented rationale, corrected on the corpus survey of 2026-08-30.",
     ]
-    L.append(
-        "nonPersistentUrl: "
-        + q(f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/latest")
-    )
     L.append("")
     L += PRESERVED_TRAILER.split("\n")
-    L += [
-        "",
-        "# ===========================================================================",
-        "# GENERATOR ADDENDUM to STILL OUTSTANDING, above. Nothing there was deleted;",
-        "# this records which of those items the generated file has since closed.",
-        "#   CLOSED  - the real sha256 of the DLL, and of every payload, is now",
-        "#             computed from the bundle on every run.",
-        ("#   CLOSED  - `lastModified` is the release publish time from the GitHub"
-         if real_last_modified else
-         "#   OPEN    - `lastModified` is still a placeholder (bundle mtime)."),
-        ("#             API, passed with --last-modified, not a file mtime."
-         if real_last_modified else
-         "#             Pass --last-modified once the release is published."),
-        "#   CLOSED  - probe #202: the plugin scan is EXTENSION-gated, measured,",
-        "#             so the .uipay payload lists in this file are sound.",
-        "#   OPEN    - the `group-to-github` mapping for `a-drexel`. Lint still",
-        "#             refuses without it; the fix is upstream, NOT a group rename.",
-        "#   CHANGED - THE INI DECISION is now executed, per-file, in the `exclude:`",
-        "#             blocks above. SC4UIScale.ini is excluded unconditionally and",
-        "#             that is measured-correct. The other two inis are excluded by",
-        "#             the same blanket rule but are NOT the same case: they are",
-        "#             read-only assets an update simply re-extracts, and excluding",
-        "#             them costs unscaled text (FontStyle-*.ini) and the orphaned",
-        "#             FontStyle.ini that the empty placeholder was added to solve.",
-        "#             `gen_channel.py --ship-asset-inis` ships those two and only",
-        "#             those two. This one needs a human decision.",
-        "# ===========================================================================",
+    return "\n".join(L) + "\n"
+
+
+def emit_lean(bundle_dir, product, version, last_modified, claims, asset_id,
+              sums, group=GROUP):
+    """The file that goes UPSTREAM. Same model and hashes as the internal
+    file, corpus-normal comment volume (the 693-file survey put the median at
+    0 comment lines and the busiest DLL package at 44; the internal file's
+    211 made PR #199 read as a leaked engineering document). Only the load-
+    bearing facts a channel maintainer needs survive as comments."""
+    L = [
+        f"# Generated by tools/sc4pac/gen_channel.py --publish from "
+        f"{os.path.basename(os.path.normpath(bundle_dir))}; do not hand-edit.",
     ]
+    for i, pkg in enumerate(PACKAGES):
+        if i:
+            L += ["", "---", ""]
+        L.append(f"group: {q(group)}")
+        L.append(f"name: {q(pkg['name'])}")
+        L.append(f"version: {q(version)}")
+        if i == 0:
+            L.append("# 050-load-first and the group id are load-bearing: `a-drexel.*` sorts")
+            L.append("# before `cam.*`, so this package loads BEFORE (and per-TGI loses to) CAM.")
+            L.append("# Losing is the compatibility gate - the art is stock-derived and a real")
+            L.append("# mod's own files must win. The override half ships separately below.")
+        else:
+            L.append("# Built FROM other mods' own artwork, so it must WIN - hence the last")
+            L.append("# canonical subfolder. Gated at RUNTIME on each mod's files (also works")
+            L.append("# for hand-installed mods; a hard dependency would drag this package")
+            L.append("# along when e.g. CAM is uninstalled).")
+        L.append(f"subfolder: {q(pkg['subfolder'])}")
+        if pkg["dependencies"]:
+            L.append("dependencies:")
+            for d in pkg["dependencies"]:
+                L.append(f"- {q(d)}")
+        L.append("assets:")
+        L.append(f"- assetId: {q(asset_id)}")
+
+        mine = {r: v for r, v in claims.items() if v[0] == pkg["name"]}
+
+        def wc_key(rel):
+            b = os.path.basename(rel).lower()
+            return (0 if b.endswith(".dll") else 1 if b.endswith(".ini")
+                    else 2 if b.endswith(".md") else 3, rel)
+
+        wc = sorted((r for r, v in mine.items() if v[1] == "withChecksum"), key=wc_key)
+        if wc:
+            L.append("  withChecksum:")
+            payload_note_done = False
+            for rel in wc:
+                base = os.path.basename(rel)
+                if base.lower().endswith(".dll"):
+                    L.append("  # The DLL must land at the Plugins root (SC4 loads DLLs from the top")
+                    L.append("  # level only); .dll is root-placed by extension, and the checksum is")
+                    L.append("  # required for a code mod.")
+                elif base.lower().endswith(".uipay") and not payload_note_done:
+                    payload_note_done = True
+                    L.append("  # Inert per-tier payloads (non-canonical extension, so each needs its")
+                    L.append("  # own checksummed entry). The DLL copies the matching one over the")
+                    L.append("  # package's stable .dat at boot; filenames never change, so uninstall")
+                    L.append("  # removes exactly what was installed.")
+                L.append(f"  - include: {q('/Plugins/' + rel)}")
+                L.append(f"    sha256: {q(sums[rel])}")
+
+        L.append("  include:")
+        for d in pkg["dir_roots"]:
+            L.append(f"  - {q('/Plugins/' + d + '/')}")
+
+        L.append("info:")
+        L.append(f"  summary: {q(pkg['summary'])}")
+        if pkg.get("warning"):
+            L.append(f"  warning: {q(pkg['warning'])}")
+        if pkg["conflicts"]:
+            L.append(f"  conflicts: {q(pkg['conflicts'])}")
+        L.append("  description: |2")
+        L += pkg["description"].split("\n")
+        L.append(f"  author: {q(AUTHOR_DISPLAY)}")
+        L.append(f"  website: {q(f'https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}')}")
+
+    L += ["", "---", ""]
+    L.append(f"assetId: {q(asset_id)}")
+    L.append(f"version: {q(version)}")
+    L.append(f"lastModified: {q(last_modified)}")
+    L.append(
+        "url: "
+        + q(
+            f"https://github.com/{GITHUB_OWNER}/{GITHUB_REPO}/releases/download/"
+            f"v{version}/{product}-v{version}.zip"
+        )
+    )
     return "\n".join(L) + "\n"
 
 
@@ -670,10 +782,22 @@ def main(argv):
     ap.add_argument("--version", default=None, help="override the release version discovered from the bundle name")
     ap.add_argument("--last-modified", default=None, help="override the asset lastModified stamp")
     ap.add_argument("--group", default=GROUP, help="override the group id (used ONLY for the deliberately-broken lint control)")
-    ap.add_argument("--ship-asset-inis", action="store_true",
-                    help="also ship the read-only FontStyle sources and the empty placeholder (never the user config ini)")
+    # DEFAULT ON since v4.5.2. The v4.5.1 channel shipped WITH the asset inis
+    # (85 checksums = 81 + the 4 FontStyle files) - they are what scales the
+    # text - but the flag defaulted OFF, so one forgotten flag on a future
+    # regeneration would have silently shipped a channel with unscaled text
+    # at every tier, and every count floor would still have passed. The
+    # hazardous direction is now the one that needs the explicit flag.
+    ap.add_argument("--ship-asset-inis", dest="ship_asset_inis",
+                    action="store_true", default=True,
+                    help="(default) ship the read-only FontStyle sources and the empty placeholder (never the user config ini)")
+    ap.add_argument("--no-asset-inis", dest="ship_asset_inis",
+                    action="store_false",
+                    help="exclude the asset inis - COSTS UNSCALED TEXT at every tier; measured, not hypothetical")
     ap.add_argument("--allow-comment-loss", action="store_true",
                     help="permit the new output to drop comment lines the old one had")
+    ap.add_argument("--publish", action="store_true",
+                    help=f"ALSO write the lean upstream file ({PUBLISH_RELPATH}); requires --last-modified")
     ap.add_argument("--check-only", action="store_true", help="run every check, print the report, write nothing")
     args = ap.parse_args(argv)
 
@@ -686,6 +810,36 @@ def main(argv):
 
         product, raw_version, release_version = discover_version(bundle)
         version = args.version or release_version
+
+        if args.publish and not args.last_modified:
+            raise Fail(
+                "--publish requires --last-modified (the release publish time "
+                "from the GitHub API: gh api repos/OWNER/REPO/releases/tags/vX "
+                "--jq .published_at). The upstream file must never carry a "
+                "bundle-mtime placeholder."
+            )
+
+        # ---- DESCRIPTION-VS-SOURCE GATE ---------------------------------
+        # The published description states the minimum resolution; the
+        # authority is kTierMinimums in src/ScaleTier.cpp. v4.5.1 published
+        # "below 1320x900" (the pre-audit 880*f/600*f formula) against a
+        # measured floor of 1440x1080 - a threshold nobody re-checked after
+        # the thresholds were re-measured. THRESHOLDS COME FROM CONTROLS.
+        tier_src_path = os.path.join(repo, "src", "ScaleTier.cpp")
+        tier_src = open(tier_src_path, encoding="utf-8").read()
+        mrow = re.search(r"\{\s*1\.5f\s*,\s*(\d+)\s*,\s*(\d+)\s*\}", tier_src)
+        if not mrow:
+            raise Fail("could not read the 1.5x row of kTierMinimums from src/ScaleTier.cpp")
+        floor = f"{mrow.group(1)}x{mrow.group(2)}"
+        for pkg in PACKAGES:
+            for stated in re.findall(r"[Bb]elow (\d+x\d+)", pkg["description"]):
+                if stated != floor:
+                    raise Fail(
+                        f"{pkg['name']}: description says 'below {stated}' but "
+                        f"kTierMinimums' 1.5x row is {floor} - fix the "
+                        "description in PACKAGES, never the source."
+                    )
+        print(f"MIN-RES GATE    : description floor {floor} matches kTierMinimums")
 
         plugins, all_files, claims, orphans = scan(bundle)
 
@@ -742,15 +896,25 @@ def main(argv):
                     claims, asset_id, sums, args.ship_asset_inis, group=args.group,
                     real_last_modified=bool(args.last_modified))
 
+        lean_text = None
+        if args.publish:
+            lean_text = emit_lean(bundle, product, version, last_modified,
+                                  claims, asset_id, sums, group=args.group)
+
         # ---- CHECKSUM RE-VERIFY, off the emitted text --------------------
-        n_pairs, problems = verify_emitted_checksums(text, plugins)
-        if n_pairs != len(sums):
-            raise Fail(f"emitted YAML carries {n_pairs} checksum entries, expected {len(sums)}")
-        if problems:
-            for p in problems:
-                print(f"   {p}")
-            raise Fail(f"{len(problems)} emitted sha256 entries failed re-verification")
-        print(f"RE-VERIFIED     : {n_pairs}/{n_pairs} emitted sha256 entries re-hashed and matched")
+        # Both outputs, not just the internal one: the lean file is the one
+        # that ships upstream, so it is the one that most needs measuring.
+        for label, doc in (("internal", text), ("lean", lean_text)):
+            if doc is None:
+                continue
+            n_pairs, problems = verify_emitted_checksums(doc, plugins)
+            if n_pairs != len(sums):
+                raise Fail(f"{label} YAML carries {n_pairs} checksum entries, expected {len(sums)}")
+            if problems:
+                for p in problems:
+                    print(f"   {p}")
+                raise Fail(f"{len(problems)} {label} sha256 entries failed re-verification")
+            print(f"RE-VERIFIED     : {n_pairs}/{n_pairs} {label} sha256 entries re-hashed and matched")
 
         # ---- TORN-READ GUARD ---------------------------------------------
         fp_after = tree_fingerprint(plugins)
@@ -795,6 +959,15 @@ def main(argv):
         with open(out, "w", encoding="utf-8", newline="\n") as f:
             f.write(text)
         print(f"WROTE           : {out} ({len(text.splitlines())} lines)")
+        if lean_text is not None:
+            lean_out = os.path.join(repo, PUBLISH_RELPATH)
+            os.makedirs(os.path.dirname(lean_out), exist_ok=True)
+            with open(lean_out, "w", encoding="utf-8", newline="\n") as f:
+                f.write(lean_text)
+            n_comments = sum(1 for ln in lean_text.split("\n")
+                             if ln.lstrip().startswith("#"))
+            print(f"WROTE           : {lean_out} "
+                  f"({len(lean_text.splitlines())} lines, {n_comments} comment lines)")
         return 0
 
     except Fail as e:

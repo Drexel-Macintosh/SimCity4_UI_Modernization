@@ -64,12 +64,31 @@ if ($Uninstall) {
             $removed++
         }
     }
-    # tier files the DLL renamed while running, plus its log
-    Get-ChildItem $plug -Filter "z_SC4UIScale_*" -Recurse -File -ErrorAction SilentlyContinue |
-        ForEach-Object {
-            if ($PSCmdlet.ShouldProcess($_.FullName, "remove")) { Remove-Item $_.FullName -Force }
-            $removed++
-        }
+    # Files the DLL created or re-armed while running, plus its log - scoped
+    # to the THREE places a zip install can put them (the Plugins root and
+    # our two folders). NEVER -Recurse over all of Plugins: a package-manager
+    # (sc4pac) copy of this mod lives inside *.sc4pac package folders, and a
+    # recursive sweep would strip those bare while sc4pac still lists the
+    # package as installed.
+    $sweepDirs = @($plug,
+                   (Join-Path $plug "010-SC4UIScale"),
+                   (Join-Path $plug "zzz-SC4UIScale")) | Where-Object { Test-Path $_ }
+    foreach ($d in $sweepDirs) {
+        Get-ChildItem $d -Filter "z_SC4UIScale_*" -File -ErrorAction SilentlyContinue |
+            ForEach-Object {
+                if ($PSCmdlet.ShouldProcess($_.FullName, "remove")) { Remove-Item $_.FullName -Force }
+                $removed++
+            }
+    }
+    $sc4pacCopies = @(Get-ChildItem $plug -Directory -Recurse -Filter "*.sc4pac" -ErrorAction SilentlyContinue |
+        Where-Object { Get-ChildItem $_.FullName -Recurse -Filter "z_SC4UIScale_*" -ErrorAction SilentlyContinue |
+                       Select-Object -First 1 })
+    if ($sc4pacCopies) {
+        Write-Output "NOTE: a package-manager (sc4pac) copy of this mod exists under:"
+        $sc4pacCopies | ForEach-Object { Write-Output "  $($_.FullName)" }
+        Write-Output "This uninstaller leaves it alone. Remove it with:"
+        Write-Output "  sc4pac remove a-drexel:sc4-ui-scale a-drexel:sc4-ui-scale-mod-overrides"
+    }
     # DLL-generated files in the mod folder, and any pre-v4.2.0 leftovers at
     # the Plugins root (older releases installed everything there).
     $ourDir = Join-Path $plug "010-SC4UIScale"
@@ -112,12 +131,14 @@ if ($Uninstall) {
 # DLL especially, which would otherwise load as a SECOND copy of this mod.
 $legacyMoved = 0
 $ourDir = Join-Path $plug "010-SC4UIScale"
-# v4.4.0 ROOT CLEANUP: only the DLL stays at the Plugins root now - the
-# game loads DLLs from the top level only, so it has no choice. The ini,
-# log, gcap and #104 csv moved into 010-SC4UIScale/ so the folder carries
-# everything a user (or a package manager) would remove. Matches what the
-# 30 sc4pac DLL packages already do: .dll at the root, data in a folder.
-foreach ($keep in @("FontStyle.ini.user-original", "SC4UIScale.ini",
+# v4.4.0 ROOT CLEANUP: the log, gcap and #104 csv live in 010-SC4UIScale/
+# so the folder carries everything a user (or a package manager) would
+# remove. The INI IS NOT IN THIS LIST: v4.5.0 moved it back to the Plugins
+# root (a package manager deletes its package folder on every update,
+# taking an ini kept there with it - measured), and v4.5.1's installer
+# still moving it INTO the folder re-created the exact ping-pong the
+# deploy script's own comment warns about. The DLL reads the ROOT copy.
+foreach ($keep in @("FontStyle.ini.user-original",
                     "SC4UIScale.gcap", "SC4UIScale-104.csv")) {
     # user state from the old layout: carry it into the new home
     $old = Join-Path $plug $keep
@@ -131,6 +152,23 @@ foreach ($keep in @("FontStyle.ini.user-original", "SC4UIScale.ini",
         }
         $legacyMoved++
     }
+}
+# v4.5.0 REVERSAL: a 010-resident ini from a v4.4.x install migrates BACK
+# to the root, or it would sit unread forever while the DLL seeds a fresh
+# default beside the DLL and the user wonders where their settings went.
+$iniOld = Join-Path $ourDir "SC4UIScale.ini"
+$iniNew = Join-Path $plug "SC4UIScale.ini"
+if (Test-Path $iniOld) {
+    if (-not (Test-Path $iniNew)) {
+        if ($PSCmdlet.ShouldProcess($iniOld, "migrate ini back to the Plugins root")) {
+            Move-Item $iniOld $iniNew -Force
+        }
+    } else {
+        if ($PSCmdlet.ShouldProcess($iniOld, "remove shadowed 010- ini (root copy wins)")) {
+            Remove-Item $iniOld -Force
+        }
+    }
+    $legacyMoved++
 }
 # Regenerated or dev-only: never carried forward.
 foreach ($stale in @("FontStyle.ini", "FontStyle.ini.x1-disabled",
@@ -162,13 +200,9 @@ foreach ($rel in $owned) {
             New-Item -ItemType Directory -Path $toDir -Force | Out-Null
         }
     }
-    # The user's SETTINGS survive an upgrade: the bundle ini installs only
-    # when no ini exists yet (fresh install, or the migration above already
-    # carried the old one into place). Every other file is ours to replace.
-    if ((Split-Path $rel -Leaf) -eq "SC4UIScale.ini" -and (Test-Path $to)) {
-        Write-Output "kept your existing SC4UIScale.ini (settings preserved)"
-        continue
-    }
+    # (The bundle ships NO ini since v4.5.0. The DLL seeds one at the
+    # Plugins root on its first run and never overwrites an existing one,
+    # so user settings survive upgrades without installer involvement.)
     if ($PSCmdlet.ShouldProcess($to, "copy")) { Copy-Item $from $to -Force }
     $copied++
 }

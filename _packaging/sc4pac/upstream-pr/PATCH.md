@@ -98,13 +98,14 @@ and line 582 tests that captured string against the configured set for the group
 if gh_owner not in grp2gh.get(group, set()):
 ```
 
-The asset URL in `_packaging/sc4pac/drexel-sc4-ui-scale.yaml` is:
+The asset URL in the generated yaml is the versioned release download:
 
 ```
-https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.5.0/SC4UIScale-v4.5.0.zip
+https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v<version>/SC4UIScale-v<version>.zip
 ```
 
-so group 1 captures `Drexel-Macintosh`. Running the real `lint.py` against the real
+so group 1 captures `Drexel-Macintosh` regardless of the release version.
+Running the real `lint.py` against the real
 file reproduces it verbatim:
 
 ```

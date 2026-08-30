@@ -1,3 +1,23 @@
+2026-08-30  v4.5.2    THE 1x PICKER PACKAGE COULD NEVER ARM + DEAD INI KEYS
+
+  Adversarial audit of the sc4pac arc's own fixes. Two DLL defects: the
+  record/commit split welded CommitArming to SyncStaticLayers' tail, so
+  SyncSelectorPackage's want - recorded after it - was never applied on any
+  boot (at 1x the scale picker never came back: the one-way door again,
+  4th occurrence of the neighbour-gate shape; the commit now belongs to the
+  director, after the boot's last record). And the seeded SC4UIScale.ini put
+  five keys under [Scaling] while Settings.cpp reads them from [UiSpike] -
+  dead keys masked by matching defaults. Also: seed failures now logged;
+  STATE.txt scoped per folder; one WebButtonModPresent instead of two
+  divergent copies; discovery hardened (junction skip + length guards);
+  Install.ps1 uninstall scoped away from sc4pac trees and the v4.4.x ini
+  migration direction reversed to match v4.5.0; SHA256SUMS written after
+  the payload conversion and the release zip cut by the build script;
+  channel metadata corrected (1440x1080 floor, lean upstream file). New
+  gates: starter-ini keys (mutation-controlled), dist-installer round-trip,
+  SHA256SUMS re-verify, CsiIcons rows; Test-PackageGating un-stuck (red
+  since v4.5.0 behind a stale matcher and a roster gap).
+
 2026-08-30  v4.5.1    v4.5.0 DID NOT WORK WHEN INSTALLED BY sc4pac
 
   v4.5.0 replaced hard-coded folder names with discovery BY CONTENT so a

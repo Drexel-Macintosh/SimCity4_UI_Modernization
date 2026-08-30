@@ -406,6 +406,14 @@ $EXPECTED = @(
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "2x";  entries = 4 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "15x"; entries = 4 },
   @{ rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "3x";  entries = 4 },
+  # CsiIcons (v4.5.2): the U-Drive-It offer-balloon icons - the package that
+  # shipped the WRONG TIER twice (#196) yet had no entry-count row and no
+  # built-vs-deployed row; the 2026-08-30 audit found it was the only live
+  # SyncDat package with neither. 16 entries at every tier, measured off the
+  # DBPF headers of tools\packages\<tier>\ (matches PACKAGE-MANIFEST.md).
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "2x";  entries = 16 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "15x"; entries = 16 },
+  @{ rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "3x";  entries = 16 },
   @{ rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "15x"; entries = 696 },
   @{ rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "15x"; entries = 265 }, # #178: see the 2x row note (2026-08-16)
   @{ rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "3x";  entries = 696 },   # #136: was 651; #190: was 655
@@ -842,6 +850,13 @@ $BUILT_PAIRS = @(
   @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-2x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "2x" }
   @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "15x" }
   @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "3x" }
+  # CsiIcons (v4.5.2): hand-rescued in Build-Dist (parser blind spot) and
+  # hand-copied in Deploy, but tracked by NEITHER manifest gate until the
+  # 2026-08-30 audit - for the package that shipped the wrong tier twice
+  # (#196). All three tiers from tools\packages\<tier>\.
+  @{ b = "tools\packages\2x\z_SC4UIScale_CsiIcons-2x.dat";            rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "2x" }
+  @{ b = "tools\packages\15x\z_SC4UIScale_CsiIcons-15x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "15x" }
+  @{ b = "tools\packages\3x\z_SC4UIScale_CsiIcons-3x.dat";            rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "3x" }
   # UncoveredIcons ROWS DELIBERATELY ABSENT FROM THIS LIST.
   # Unlike every other package here, this one only EXISTS when the player has
   # third-party icons we do not cover. On a clean install there is nothing to
@@ -1598,12 +1613,57 @@ if ($nBubble -eq 0 -and $failures.Count -eq 0) {
     "loop did not run. Refusal, not a pass.")
 }
 
+# ---- SHA256SUMS.txt vs THE BUNDLE (v4.5.2) ----------------------------------
+# v4.5.1 shipped a manifest written BEFORE the payload converter ran: 66 rows
+# for 106 files, zero rows for the 80 payloads, and rows naming deleted files.
+# Build-Dist now writes it after conversion; this re-verifies INDEPENDENTLY -
+# a manifest correct by construction is one refactor away from wrong again.
+# Runs only when a bundle for the CURRENT DLL version exists (dist is not
+# always present; absence is reported, never silently skipped).
+$verSrc2 = Get-Content (Join-Path $proj "src\SC4UIScaleDllDirector.cpp") -Raw
+$nSums = 0
+if ($verSrc2 -match '#define\s+UISCALE_VERSION_STR\s+"([0-9.]+(?:-[A-Za-z0-9]+)?)"') {
+  $bundleDir = Join-Path $proj ("dist\SC4UIScale-v" + $Matches[1])
+  $sumsFile = Join-Path $bundleDir "SHA256SUMS.txt"
+  if (-not (Test-Path $sumsFile)) {
+    Write-Output ("note: no dist bundle for v" + $Matches[1] + " - SHA256SUMS check skipped (build one with _packaging\Build-Dist.ps1)")
+  } else {
+    $sumRows = @{}
+    foreach ($ln in (Get-Content $sumsFile | Where-Object { $_ -match '^[0-9A-Fa-f]{64}\s+\S' })) {
+      $h2, $rel2 = $ln -split '\s+', 2
+      $sumRows[$rel2.Trim()] = $h2.ToUpperInvariant()
+    }
+    $bundleFiles2 = @(Get-ChildItem (Join-Path $bundleDir "Plugins") -Recurse -File)
+    foreach ($f2 in $bundleFiles2) {
+      $rel2 = $f2.FullName.Substring($bundleDir.Length + 1)
+      if (-not $sumRows.ContainsKey($rel2)) {
+        $failures += ("SHA256SUMS.txt has NO row for bundle file " + $rel2 + " - the manifest describes a different layout than the bundle (the v4.5.1 defect)")
+        continue
+      }
+      if ((Get-FileHash $f2.FullName -Algorithm SHA256).Hash -ne $sumRows[$rel2]) {
+        $failures += ("SHA256SUMS.txt hash MISMATCH for " + $rel2)
+      } else { $nSums++ }
+      $sumRows.Remove($rel2)
+    }
+    foreach ($orphanRow in $sumRows.Keys) {
+      $failures += ("SHA256SUMS.txt names a file the bundle does not have: " + $orphanRow)
+    }
+    if ($nSums -eq 0 -and $failures.Count -eq 0) {
+      $failures += "SHA256SUMS check verified ZERO files with zero failures - the loop never ran; refusal, not a pass"
+    }
+    # Visible even when other sections fail: "ran and clean" must be
+    # distinguishable from "never ran" without reading the code.
+    Write-Output ("SHA256SUMS check: " + $nSums + " bundle file(s) re-verified against the manifest")
+  }
+}
+
 if ($failures.Count -eq 0) {
   Write-Output ("ALL PASS (layout $layout; $nExamined tier sources counted + " +
     "$($FONT_SOURCES.Count) font sources + DLL presence/root quarantine + " +
     "$nOverlapChecked both-layout candidates + $nHash deployed==built hashes + " +
     "$nPayloadChecked payload sets + $nArmDetected armed-tier determinations + " +
-    "$nLiveChecked live files + $nBubble/3 bubble payload sizes)")
+    "$nLiveChecked live files + $nBubble/3 bubble payload sizes + " +
+    "$nSums SHA256SUMS rows re-verified)")
   exit 0
 }
 $failures | ForEach-Object { Write-Output ("FAIL: " + $_) }

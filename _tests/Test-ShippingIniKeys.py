@@ -86,17 +86,45 @@ def keys_read_by_the_dll():
     return found
 
 
-def keys_declared_in_the_ini():
+def keys_declared_in_text(text):
     declared = []
     section = None
-    with open(INI, encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if line.startswith("[") and line.endswith("]"):
-                section = line[1:-1]
-            elif line and not line.startswith(";") and "=" in line:
-                declared.append((section, line.split("=", 1)[0].strip()))
+    for line in text.split("\n"):
+        line = line.strip()
+        if line.startswith("[") and line.endswith("]"):
+            section = line[1:-1]
+        elif line and not line.startswith(";") and "=" in line:
+            declared.append((section, line.split("=", 1)[0].strip()))
     return declared
+
+
+def keys_declared_in_the_ini():
+    with open(INI, encoding="utf-8") as fh:
+        return keys_declared_in_text(fh.read())
+
+
+def starter_ini_text():
+    """kStarterIni is THE ini every v4.5.x user actually gets: no install
+    path ships _packaging/SC4UIScale.ini any more - the DLL seeds this C
+    string at the Plugins root on first launch. Extracted from the source,
+    concatenated string literals decoded, so this gate validates the file
+    that ships rather than the reference copy that ships to nobody."""
+    with open(os.path.join(REPO, "src", "ScaleTier.cpp"), encoding="utf-8",
+              errors="replace") as fh:
+        src = fh.read()
+    # The terminator is the semicolon AFTER the last string literal - the ini
+    # text itself is full of `;` comment markers, so "first semicolon" is
+    # wrong. Match the whole run of adjacent literals instead.
+    m = re.search(r'kStarterIni\s*=\s*((?:\s*"(?:[^"\\]|\\.)*")+)\s*;', src)
+    if not m:
+        return None
+    parts = re.findall(r'"((?:[^"\\]|\\.)*)"', m.group(1))
+    if not parts:
+        return None
+    text = "".join(parts)
+    return (text.replace("\\r\\n", "\n")
+                .replace('\\"', '"')
+                .replace("\\\\", "\\"))
 
 
 # ---------------------------------------------------------------------------
@@ -203,9 +231,67 @@ def main():
             print("    %s" % m)
         return 1
 
+    # ------------------------------------------------------------------
+    # THE STARTER INI - the ini v4.5.x users ACTUALLY get. Since v4.5.0 no
+    # install path ships _packaging/SC4UIScale.ini; the DLL seeds
+    # kStarterIni at the Plugins root on first launch. v4.5.1 seeded five
+    # of its eight keys under [Scaling] while Settings.cpp reads all five
+    # from [UiSpike] - five dead keys this gate structurally could not see,
+    # because it only validated the reference file that ships to nobody.
+    # ------------------------------------------------------------------
+    starter = starter_ini_text()
+    if starter is None:
+        print()
+        print("FAIL: could not extract kStarterIni from src/ScaleTier.cpp -")
+        print("      the seeded ini would go unvalidated, which is how the")
+        print("      v4.5.1 dead-section defect shipped.")
+        return 1
+    sdecl = keys_declared_in_text(starter)
     print()
-    print("ALL PASS (%d documented keys, all reachable; %d load-bearing keys"
-          " present; no BOM)" % (len(declared), len(REQUIRED)))
+    print("  kStarterIni (seeded by the DLL, src/ScaleTier.cpp): %d keys" % len(sdecl))
+    if len(sdecl) < 5:
+        print("FAIL: only %d key(s) parsed out of kStarterIni - the extraction"
+              " is broken, not the ini." % len(sdecl))
+        return 1
+    sfail = []
+    for section, key in sdecl:
+        ok = (section, key) in read
+        print("  [%s] %-14s %s" % (section, key,
+              "read by the DLL" if ok else "*** NOT READ ***"))
+        if not ok:
+            sfail.append("[%s] %s" % (section, key))
+    # MUTATION CONTROL: the exact v4.5.1 defect (AutoScale seeded under
+    # [Scaling]) must be reportable, or a pass above proves nothing about
+    # this gate's ability to fail.
+    if ("Scaling", "AutoScale") in read:
+        print("FAIL: mutation control is vacuous - the matcher claims the DLL")
+        print("      reads AutoScale from [Scaling], so the dead-section")
+        print("      defect could never be caught.")
+        return 1
+    print("  mutation control: [Scaling] AutoScale would read as NOT READ -")
+    print("      the v4.5.1 dead-section defect is catchable by this gate.")
+    if sfail:
+        print()
+        print("FAIL: kStarterIni seeds %d key(s) in a section the DLL never"
+              " reads them from:" % len(sfail))
+        for f in sfail:
+            print("    %s" % f)
+        print("  This is the v4.5.1 dead-section class. Fix the SECTION in")
+        print("  kStarterIni - the compiled defaults masking it today will not")
+        print("  mask a user's edit.")
+        return 1
+    smissing = gate_required_keys(sdecl, settings_src)
+    if smissing:
+        print()
+        print("FAIL: kStarterIni omits %d load-bearing key(s):" % len(smissing))
+        for m2 in smissing:
+            print("    %s" % m2)
+        return 1
+
+    print()
+    print("ALL PASS (%d reference keys + %d seeded keys, all reachable;"
+          " load-bearing keys present in both; no BOM)"
+          % (len(declared), len(sdecl)))
     return 0
 
 

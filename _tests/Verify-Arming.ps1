@@ -25,6 +25,15 @@ $ErrorActionPreference = 'Stop'
 
 if ($Restore) {
     if (-not (Test-Path $RestorePoint)) { throw "no restore point at $RestorePoint" }
+    # NEVER plant a hand install over a sc4pac-managed one: 010-SC4UIScale\
+    # at the top level out-sorts the managed copy in 050-load-first\, so a
+    # restore into such a tree silently doubles every TGI.
+    $managed = @(Get-ChildItem $Plugins -Directory -Recurse -Filter '*.sc4pac' -ErrorAction SilentlyContinue |
+        Where-Object { Get-ChildItem $_.FullName -Recurse -Filter 'z_SC4UIScale_*' -ErrorAction SilentlyContinue |
+                       Select-Object -First 1 })
+    if ($managed.Count) {
+        throw "REFUSING -Restore: this tree carries a sc4pac-managed copy of the mod ($($managed[0].FullName)) - a restored hand install would out-sort it and double every TGI"
+    }
     foreach ($d in '010-SC4UIScale','zzz-SC4UIScale') {
         $t = Join-Path $Plugins $d
         if (Test-Path $t) { Remove-Item -LiteralPath $t -Recurse -Force }
@@ -38,7 +47,44 @@ if ($Restore) {
 $fail = @()
 $note = @()
 
-$log = Join-Path $Plugins '010-SC4UIScale\SC4UIScale.log'
+# ---- folder discovery, BY CONTENT (v4.5.2) ----------------------------------
+# Through v4.5.1 this script hard-coded 010-SC4UIScale\ / zzz-SC4UIScale\, so
+# it could not run on the very tree Test-Sc4pacInstall.ps1 tells you to point
+# it at (sc4pac renames both folders and nests the early one one level
+# deeper). Markers are parsed out of the DLL's own ClassifyDir table - the
+# single authority - and the walk mirrors its depth-3 cap.
+$tierSrc = Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) 'src\ScaleTier.cpp') -Raw
+$mTable = [regex]::Match($tierSrc, 'const Marker markers\[\] = \{(.*?)\};', 'Singleline')
+if (-not $mTable.Success) { throw 'could not read the ClassifyDir marker table from ScaleTier.cpp - refusing (zero markers would pass vacuously)' }
+$markerEarly = @(); $markerOverride = @()
+foreach ($m in [regex]::Matches($mTable.Groups[1].Value, 'L"([^"]+)",\s*(\d)')) {
+    if ($m.Groups[2].Value -eq '1') { $markerEarly += $m.Groups[1].Value }
+    else { $markerOverride += $m.Groups[1].Value }
+}
+if ($markerEarly.Count -lt 2 -or $markerOverride.Count -lt 2) { throw "marker parse too thin (early=$($markerEarly.Count) override=$($markerOverride.Count)) - refusing" }
+function Test-DirMarkers([string]$dir, [string[]]$pats) {
+    foreach ($p in $pats) {
+        if (@(Get-ChildItem -LiteralPath $dir -Filter $p -File -ErrorAction SilentlyContinue).Count) { return $true }
+    }
+    return $false
+}
+$lvl1 = @(Get-ChildItem -LiteralPath $Plugins -Directory -ErrorAction SilentlyContinue)
+$lvl2 = @($lvl1 | ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory -ErrorAction SilentlyContinue })
+$lvl3 = @($lvl2 | ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory -ErrorAction SilentlyContinue })
+$ourDir = $null; $zzzDir = $null
+foreach ($d in ($lvl1 + $lvl2 + $lvl3)) {
+    if (-not $ourDir -and (Test-DirMarkers $d.FullName $markerEarly)) { $ourDir = $d.FullName }
+    if (-not $zzzDir -and (Test-DirMarkers $d.FullName $markerOverride)) { $zzzDir = $d.FullName }
+    if ($ourDir -and $zzzDir) { break }
+}
+if (-not $ourDir -or -not $zzzDir) {
+    throw "could not discover both folders by content (early=$(if($ourDir){$ourDir}else{'NOT FOUND'}), override=$(if($zzzDir){$zzzDir}else{'NOT FOUND'})) - nothing below would be evidence"
+}
+Write-Output "folders: early=$ourDir"
+Write-Output "         override=$zzzDir"
+Write-Output ''
+
+$log = Join-Path $ourDir 'SC4UIScale.log'
 if (-not (Test-Path $log)) { throw "no log at $log - has the game been launched?" }
 $logText = Get-Content $log -Raw
 
@@ -84,17 +130,20 @@ Write-Output ''
 if ($tagged.Count   -ne 0) { $fail += "$($tagged.Count) tier-tagged .dat file(s) remain - migration did not complete" }
 if ($disabled.Count -ne 0) { $fail += "$($disabled.Count) .x1-disabled file(s) remain - the rename layout survives" }
 if ($tmp.Count      -ne 0) { $fail += "$($tmp.Count) orphaned .dat.tmp - ArmOne staged a copy it never committed" }
-if ($payloads.Count -lt 40) { $fail += "only $($payloads.Count) payloads - expected ~70; migration looks partial" }
+if ($payloads.Count -lt 40) { $fail += "only $($payloads.Count) payloads - expected ~80; migration looks partial" }
 if ($stable.Count   -lt 10) { $fail += "only $($stable.Count) live packages - expected ~20" }
 
 # ---- the state file, which is the diagnosis a constant filename destroys -----
 $armed = @(); $off = @()
-foreach ($d in '010-SC4UIScale','zzz-SC4UIScale') {
-    $s = Join-Path $Plugins "$d\z_SC4UIScale_STATE.txt"
+foreach ($d in $ourDir, $zzzDir) {
+    $s = Join-Path $d 'z_SC4UIScale_STATE.txt'
     if (-not (Test-Path $s)) { $fail += "no z_SC4UIScale_STATE.txt in $d"; continue }
     foreach ($line in (Get-Content $s | Where-Object { $_ -notmatch '^#' -and $_.Trim() })) {
         $c = $line -split "`t"
-        if ($c.Count -lt 3) { continue }
+        # 7 columns is the written format (base/tag/reason/4 stamps) - the
+        # other three parsers of this file already required it, and a >=3
+        # floor here silently accepted truncated rows the DLL never wrote.
+        if ($c.Count -lt 7) { continue }
         if ($c[1] -eq 'off') { $off += $c[0] } else { $armed += "$($c[0])=$($c[1])" }
     }
 }

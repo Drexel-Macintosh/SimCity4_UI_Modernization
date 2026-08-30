@@ -140,23 +140,26 @@ def main():
     print("  positive control: parser found all %d always-present packages." % len(known))
     print()
 
-    # ---- SelectiveArt's own wiring check (v4.0.3 pilot) -------------------
+    # ---- SelectiveArt's own wiring check ---------------------------------
     # The #119 shape, one mechanism later: a call that is WRITTEN but never
     # actually reached is indistinguishable from no call at all until
-    # something asserts it is wired. SyncDatStable takes activeTag directly
-    # (not pkg.tag/match like SyncDat), so it cannot be found by the regex
-    # above - this checks its own call site exists, once.
-    stable_call = re.search(
-        r'SyncDatStable\(\s*(?:docPlugins|pluginsRoot)\s*,\s*L"z_SC4UIScale_SelectiveArt"\s*,'
-        r'\s*activeTag\s*\)', src)
-    if not stable_call:
+    # something asserts it is wired.
+    # HISTORY: the v4.0.3 stable-filename PILOT gave SelectiveArt its own
+    # SyncDatStable(...) call, and this check demanded that exact shape. The
+    # v4.5.0 content-swap generalized the pilot to EVERY package and retired
+    # SyncDatStable - SelectiveArt went back to a plain SyncDat site - but
+    # this check kept demanding the retired function, so the gate stood RED
+    # from v4.5.0 until the 2026-08-30 audit found it (it was also missing
+    # from RUNBOOK's gate roster, so nobody ran it - a red gate nobody runs
+    # is the same as no gate).
+    if "z_SC4UIScale_SelectiveArt" not in calls:
         failures.append(
-            "SyncDatStable(docPlugins, L\"z_SC4UIScale_SelectiveArt\", "
-            "activeTag) not found - SelectiveArt's stable-filename sync may "
-            "be computed and never actually called (the #119 shape).")
-        print("  [z_SC4UIScale_SelectiveArt (stable)                 ] *** NOT WIRED ***")
+            "SyncDat(docPlugins, L\"z_SC4UIScale_SelectiveArt\", ...) not "
+            "found - SelectiveArt's sync may be computed and never actually "
+            "called (the #119 shape).")
+        print("  [z_SC4UIScale_SelectiveArt                          ] *** NOT WIRED ***")
     else:
-        print("  [z_SC4UIScale_SelectiveArt (stable)                 ] wired")
+        print("  [z_SC4UIScale_SelectiveArt                          ] wired")
 
     # ---- 1 + 3: every dep row has a gated call ---------------------------
     for name in dep_names:

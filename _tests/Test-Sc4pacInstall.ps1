@@ -19,8 +19,10 @@
 [CmdletBinding()]
 param(
     # The CLI ships inside the sc4pac GUI download. Parameterised rather than
-    # vendored: it is 74 MB and it is not ours to redistribute.
-    [string]$Cli = 'C:\Users\<user>\Downloads\sc4pac-gui-windows-x64 (1)\cli\sc4pac-cli.jar',
+    # vendored: it is 74 MB and it is not ours to redistribute. No user-profile
+    # default - a committed C:\Users\... path is exactly what Sync-Check.ps1
+    # exists to refuse. Set $env:SC4PAC_CLI_JAR once, or pass -Cli.
+    [string]$Cli = $env:SC4PAC_CLI_JAR,
     [string]$Root = 'C:\dev\_sc4pac-test\run',
     # The download cache is deliberately OUTSIDE $Root so a re-run does not
     # re-fetch the 118 MB release asset. Deleting it is safe, just slow.
@@ -55,12 +57,12 @@ function Note($m) { $script:note += $m; Write-Output "  note: $m" }
 
 # ---- PRE-FLIGHT --------------------------------------------------------------
 Write-Output 'PRE-FLIGHT'
-if (-not (Test-Path $Cli)) {
+if (-not $Cli -or -not (Test-Path $Cli)) {
     Write-Output "REFUSING: no sc4pac CLI at"
-    Write-Output "  $Cli"
+    Write-Output "  $(if ($Cli) { $Cli } else { '(no -Cli given and $env:SC4PAC_CLI_JAR is unset)' })"
     Write-Output 'It ships inside the sc4pac GUI download (the cli\ subfolder):'
     Write-Output '  https://github.com/memo33/sc4pac-gui/releases/latest'
-    Write-Output 'Pass its path with -Cli.'
+    Write-Output 'Pass its path with -Cli, or set $env:SC4PAC_CLI_JAR once.'
     exit 2
 }
 if (-not (Test-Path $Yaml)) { throw "no package yaml at $Yaml" }
@@ -78,12 +80,14 @@ Write-Output "  java       $([Diagnostics.FileVersionInfo]::GetVersionInfo($java
 
 # The yaml is generated; a placeholder hash means someone ran the generator
 # without a real bundle and every checksum assertion below would be vacuous.
+# The checks live in the ONE shared pre-flight (Check-ChannelYaml.ps1), also
+# dot-sourced by Submit-PR.ps1 - they used to be verbatim copies here. -Repo
+# additionally pins the yaml's version to the DLL's UISCALE_VERSION_STR, a
+# gate that existed nowhere before 2026-08-30.
+. (Join-Path $repo '_packaging\sc4pac\Check-ChannelYaml.ps1')
 $yamlText = Get-Content $Yaml -Raw
-$hashCount = ([regex]'sha256: "').Matches($yamlText).Count
-$zeroCount = ([regex]'sha256: "0{64}"').Matches($yamlText).Count
-Write-Output "  package yaml: $hashCount sha256 entries, $zeroCount placeholders"
-if ($hashCount -lt 50) { Fail "only $hashCount sha256 entries in the yaml - expected ~85" }
-if ($zeroCount -gt 0)  { Fail "$zeroCount placeholder sha256 entries - the checksum test would be vacuous" }
+Write-Output "  package yaml: $(([regex]'sha256: "').Matches($yamlText).Count) sha256 entries"
+foreach ($f in (Test-ChannelYaml -YamlPath $Yaml -Repo $repo)) { Fail $f }
 if ($fail.Count) { Write-Output 'REFUSING:'; $fail | ForEach-Object { Write-Output "  - $_" }; exit 1 }
 
 # ---- LAY OUT THE SCRATCH TREE ------------------------------------------------
@@ -232,8 +236,14 @@ Write-Output "  root files: $(if ($rootFiles.Count) { ($rootFiles | ForEach-Obje
 $rootDll = @($rootFiles | Where-Object { $_.Extension -eq '.dll' })
 if ($rootDll.Count -ne 1) { Fail "expected exactly 1 DLL at the Plugins root, found $($rootDll.Count) - SC4's DLL loader is top-level only" }
 elseif ($rootDll[0].Name -ne 'SC4UIScale.dll') { Fail "root DLL is $($rootDll[0].Name), expected SC4UIScale.dll" }
-$rootOther = @($rootFiles | Where-Object { $_.Extension -ne '.dll' })
-if ($rootOther.Count) { Fail "$($rootOther.Count) non-DLL file(s) at the Plugins root: $(($rootOther | ForEach-Object Name) -join ', ')" }
+# SC4UIScale.ini is ALLOWED at the root: the DLL creates it there on first
+# launch BY DESIGN (the only location that survives both package updates and
+# uninstall), and Test-DatIntegrity's $ROOT_ALLOWED agrees. v4.5.1's version
+# of this check contradicted that - it never fired only because this script
+# never launches the game; a -LaunchReady tree that HAD been launched would
+# have gone red on correct behaviour.
+$rootOther = @($rootFiles | Where-Object { $_.Extension -ne '.dll' -and $_.Name -ne 'SC4UIScale.ini' })
+if ($rootOther.Count) { Fail "$($rootOther.Count) unexpected non-DLL file(s) at the Plugins root: $(($rootOther | ForEach-Object Name) -join ', ')" }
 
 $newIni = @(Get-ChildItem $plugins -Recurse -File -Filter '*_sc4pacnew.ini')
 if ($newIni.Count) { Fail "$($newIni.Count) *_sc4pacnew.ini file(s) - isIni landed an inert ini we would never activate" }

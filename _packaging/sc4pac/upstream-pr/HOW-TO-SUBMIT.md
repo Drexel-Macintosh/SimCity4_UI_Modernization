@@ -25,10 +25,13 @@ that already has packages in the channel. A **mapping-only PR has no precedent**
 linter would never exercise it, and a maintainer has no way to review it. Expect
 it to be held until the package arrives.
 
-So the mapping should ride along with the package. **The package is not
-publishable yet** — see the blockers in `LINT-FINDINGS` at the bottom of this
-file (placeholder sha256, no `v4.5.0` release, probe #202 open). Clear those
-first, then run Path A.
+So the mapping should ride along with the package. **Every one-time blocker is
+CLOSED** (real sha256s, published release, probe #202 measured extension-gated
+— see `LINT-FINDINGS` at the bottom for the record). The submission source is
+the LEAN file emitted by `gen_channel.py --publish` into
+`_packaging/sc4pac/publish/sc4-ui-scale.yaml`; the annotated internal yaml
+never goes upstream (PR #199 shipped it verbatim — that is why the distinction
+exists, and why `Submit-PR.ps1`'s pre-flight now refuses the internal file).
 
 Path B (mapping only) is included for the case where memo33 explicitly asks for
 the config change as a separate first step.
@@ -44,25 +47,30 @@ gh repo fork memo33/sc4pac --clone=true --remote=false -- --depth=50
 cd sc4pac
 ```
 
-### A2. Branch
+### A2. Branch — based on UPSTREAM main
 
 ```bash
-git checkout -b add-a-drexel-sc4-ui-scale
+git fetch https://github.com/memo33/sc4pac.git main
+git checkout -B add-a-drexel-sc4-ui-scale FETCH_HEAD
 ```
+
+(`Submit-PR.ps1` does this itself since v4.5.2 — its first real run proved the
+old flow never created the branch at all, so a fresh clone committed to `main`
+and the push died on a missing refspec.)
 
 ### A3. Add the package file
 
 ```bash
 mkdir -p src/yaml/a-drexel
-cp /c/dev/SC4UIScale/_packaging/sc4pac/drexel-sc4-ui-scale.yaml \
+cp /c/dev/SC4UIScale/_packaging/sc4pac/publish/sc4-ui-scale.yaml \
    src/yaml/a-drexel/sc4-ui-scale.yaml
 ```
 
-Then **strip the internal engineering commentary** from the copy. The working
-file carries a long header of measurement notes, an open-probe blocker and
-internal TODOs that should not go upstream. Keep the metadata (from `group:`
-onward) and any comment that explains a decision a reviewer would otherwise
-question — the `a-drexel` sort-order rationale is worth keeping in a short form.
+That file is the LEAN output of `gen_channel.py --publish` — already stripped,
+already carrying the short load-bearing rationales a reviewer needs (the
+`a-drexel` sort order, the payload mechanism, the DLL root note). Never copy
+`drexel-sc4-ui-scale.yaml`: that is the annotated internal record, and the
+pre-flight refuses it.
 
 ### A4. Add the lint-config line
 
@@ -158,36 +166,34 @@ too, which would be confusing on a config-only PR.
 
 ---
 
-## LINT-FINDINGS — clear these before Path A
+## LINT-FINDINGS — the original list, ALL CLOSED (kept as the record)
 
-Measured by running upstream `lint.py` against
-`_packaging/sc4pac/drexel-sc4-ui-scale.yaml` inside a full clone of the channel.
+Measured by running upstream `lint.py` inside a full clone of the channel.
+**Lint is clean once the mapping is added** — 693 files, exit 0. The
+2026-08-29 audit found five install-correctness blockers lint cannot see;
+every one is closed, and the closure is enforced by a gate, not by memory:
 
-**Lint itself is clean once the mapping is added** — 693 files, exit 0. There is
-no second round of lint complaints waiting. Everything below is a
-*channel-review / install-correctness* blocker that lint cannot see.
+1. ~~Placeholder sha256~~ **CLOSED** — every entry is computed from the built
+   bundle and re-verified off the emitted YAML on every `gen_channel.py` run;
+   `Check-ChannelYaml.ps1` (shared by Submit-PR and Test-Sc4pacInstall)
+   refuses any zero-hash.
 
-1. **The `sha256` is a placeholder of 64 zeros.** Lint only checks the shape, so
-   it passes, but sc4pac verifies extracted-file checksums before moving files
-   into Plugins — the install would abort for every user. Must be the sha256 of
-   the extracted `SC4UIScale.dll`, not of the zip.
+2. ~~Asset URL points at an unpublished release~~ **CLOSED** — the release
+   exists, `Build-Dist.ps1` now cuts the zip itself from the gated bundle,
+   and the shared pre-flight HEAD-requests the URL before any PR opens.
 
-2. **The asset URL points at a release that does not exist.** The yaml declares
-   `version: "4.5.0"` and a URL under `.../download/v4.5.0/SC4UIScale-v4.5.0.zip`,
-   but the latest published release is **`v4.4.0`** (asset `SC4UIScale-v4.4.0.zip`).
-   `gh api .../releases/tags/v4.5.0` returns 404. Publish v4.5.0 first, or point
-   the metadata at v4.4.0.
+3. ~~`lastModified` placeholder~~ **CLOSED** — `--publish` refuses to run
+   without `--last-modified` (the GitHub release publish time), so the
+   upstream file can never carry a bundle-mtime placeholder.
 
-3. **`lastModified` is a placeholder** (`2026-08-29T00:00:00Z`). Should be the
-   real release timestamp.
+4. ~~No `nonPersistentUrl`~~ **CLOSED, by removal** — the corpus survey
+   (2026-08-30) showed the field is for a SECOND host's page (GitHub url +
+   Simtropolis nonPersistentUrl) consumed by the STEX/SC4E update checkers.
+   GitHub is our only host, so the field is correctly absent.
 
-4. **No `nonPersistentUrl`.** `docs/metadata.md` recommends one whenever
-   `withChecksum` is used, so update-checking tools can see new releases. Not an
-   error, but a likely review comment.
-
-5. **Probe #202 is still open** — the file's own header says not to publish the
-   channel entry until it comes back extension-gated. That is a project blocker,
-   not an upstream one, but it gates the whole submission.
+5. ~~Probe #202 open~~ **CLOSED** — measured 2026-08-30: SC4's plugin scan is
+   EXTENSION-gated, so the `.uipay` payload lists are sound and the publish
+   embargo is lifted.
 
 6. **`config:sc4-edition-windows-digital` resolves fine.** Linting the file
    alone reports it as undefined; that is an artefact of single-file linting.

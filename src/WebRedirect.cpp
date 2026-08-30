@@ -109,31 +109,6 @@ namespace
 			|| _wcsnicmp(s, L"www.", 4) == 0;
 	}
 
-	// The cyclone-boom "Web Button Improvement Mod" - searched recursively by
-	// file name (its dat name varies by option A/B/C and version).
-	bool WebButtonModPresent()
-	{
-		// v4.2.0: the mod being hunted lives ANYWHERE under the Plugins
-		// root; with our DLL in Plugins\010-SC4UIScale\ a module-dir walk
-		// would only see our own folder and keep the redirect armed against
-		// an installed mod. Root resolution shared with ScaleTier.
-		wchar_t dir[MAX_PATH] = {};
-		ScaleTier::GetPluginsRootW(dir, MAX_PATH);
-		const wchar_t* needle = L"web button improvement mod";
-		try
-		{
-			for (const auto& entry : std::filesystem::recursive_directory_iterator(dir))
-			{
-				if (!entry.is_regular_file()) { continue; }
-				std::wstring name = entry.path().filename().wstring();
-				for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
-				if (name.find(needle) != std::wstring::npos) { return true; }
-			}
-		}
-		catch (...) { /* unreadable tree -> treat as absent */ }
-		return false;
-	}
-
 	HINSTANCE WINAPI HookShellExecuteA(
 		HWND hwnd, LPCSTR op, LPCSTR file, LPCSTR params, LPCSTR dir, INT show)
 	{
@@ -184,8 +159,15 @@ namespace WebRedirect
 {
 	void Install()
 	{
-		// Decide the behaviour from the mod's presence, once.
-		g_blockDeadEa = WebButtonModPresent();
+		// Decide the behaviour from the mod's presence, once. ONE detector:
+		// ScaleTier's two-root version (Documents Plugins + install Plugins).
+		// This file used to carry its own one-root twin, and the two
+		// DISAGREED whenever the mod sat in the install root - WebText stood
+		// down while the redirect stayed armed, the exact split ScaleTier's
+		// comment says must not happen.
+		wchar_t docPlugins[MAX_PATH] = {};
+		ScaleTier::GetPluginsRootW(docPlugins, MAX_PATH);
+		g_blockDeadEa = ScaleTier::WebButtonModPresent(docPlugins);
 
 		// MinHook may already be initialized by ScaleRemap; tolerate that.
 		const MH_STATUS init = MH_Initialize();

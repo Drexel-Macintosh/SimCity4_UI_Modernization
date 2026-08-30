@@ -23,13 +23,19 @@ development builds that were never published.
 
        Documents\SimCity 4\Plugins\
 
-   Keep the folder structure. The mod is TWO subfolders plus two loose
-   files:
+   Keep the folder structure. The mod is TWO subfolders plus one loose
+   file:
 
        Plugins\SC4UIScale.dll     (the game only loads DLLs from the
-       Plugins\SC4UIScale.ini      top level - these two cannot move)
+                                   top level - the DLL cannot move)
        Plugins\010-SC4UIScale\    (all the mod's packages and fonts)
        Plugins\zzz-SC4UIScale\    (overrides that must load after other mods)
+
+   On its first launch the mod writes one more loose file beside the DLL:
+
+       Plugins\SC4UIScale.ini     (your settings - created for you if
+                                   missing, never overwritten, and kept at
+                                   the root so upgrades cannot delete it)
 
    Both folder names are load-bearing - SimCity 4 loads plugin folders in
    name order, and each position is chosen so the right files win (and
@@ -77,18 +83,19 @@ Documents\SimCity 4\Plugins\ :
 
     010-SC4UIScale\               (the whole folder)
     zzz-SC4UIScale\               (the whole folder)
-    SC4UIScale.dll                (the one loose file at the root)
+    SC4UIScale.dll                (loose at the root)
+    SC4UIScale.ini                (loose at the root - your settings)
 
-That is everything. From v4.4.0 the DLL is the only file this mod leaves at
-the Plugins root - the game loads DLLs from the top level and nowhere else,
-so it has no choice; the settings, log and everything else live inside
-010-SC4UIScale\ and go with the folder. (This is the same shape every
+That is everything. The DLL and the ini are the only files this mod keeps at
+the Plugins root: the game loads DLLs from the top level and nowhere else, and
+the ini sits beside it so a package-manager update (which replaces the whole
+package folder) cannot delete your settings. The log and everything else live
+inside 010-SC4UIScale\ and go with the folder. (The same shape every
 sc4pac-installed DLL mod uses: the .dll at the root, its data in a folder.)
 
-(Upgrading from before v4.4.0? The mod moves your old root files into
-010-SC4UIScale\ by itself on the first launch, settings included. If you
-never launch it again and see loose SC4UIScale.ini / .log / .gcap files at
-the root, they are pre-4.4.0 leftovers - delete those too.)
+(Upgrading from before v4.4.0? The mod moves your old root files - log, gcap,
+csv - into 010-SC4UIScale\ by itself on the first launch. Your SC4UIScale.ini
+stays at the root, which is where the mod reads it from v4.5.0 on.)
 
 THE FONT IN THE GAME'S OWN FOLDER CLEANS ITSELF UP. The game only reads a
 loose font file from its install directory, so the mod copies the matching
@@ -112,8 +119,10 @@ and regions are never touched.
   SETTINGS
 -------------------------------------------------------------------------------
 
-SC4UIScale.ini sits beside the DLL (in 010-SC4UIScale\) and is commented throughout. You do not
-need to touch it. The two keys worth knowing:
+SC4UIScale.ini sits at the Plugins root, beside the DLL, and is commented
+throughout. The mod creates it on its first launch if it is missing, and it is
+never overwritten afterwards. You do not need to touch it. The two keys worth
+knowing:
 
     ScaleAll=1        the in-city UI. Set 0 to disable that half.
     ScaleRegion=1     the region screen, including the region map itself.

@@ -1,5 +1,40 @@
 # Changelog
 
+## 4.5.2 (2026-08-30) - the 1x scale picker could never arm; settings edits on fresh installs did nothing
+
+- **The in-game scale picker's 1x package could never activate.** The package
+  that keeps the Graphic Options scale picker working at 1x - so 1x is not a
+  one-way door you can only leave by editing a file - was requested at every
+  boot but the request was recorded one step after the pass that applies
+  requests had already run. On a machine running at 1x, the picker never came
+  back. (At 1.5x/2x/3x nothing was visibly wrong, which is why the v4.5.1
+  release test could not catch it.)
+- **Editing the auto-created settings file mostly did nothing.** The
+  `SC4UIScale.ini` the mod writes on first launch put five of its eight
+  settings (`AutoScale`, `ScaleFactor`, `SelectorAtStock`, `WebRedirect`,
+  `SpinFix`) under a `[Scaling]` heading; the mod reads all five from
+  `[UiSpike]`. The written values matched the built-in defaults, so nothing
+  looked wrong - until you changed one and nothing happened. Fixed, and the
+  ini-key test now validates the file the mod actually writes, not just the
+  reference copy in the repo.
+- **A failed first-run settings write is no longer silent.** If the ini cannot
+  be created (read-only Plugins folder, for instance), the log now says so and
+  why, instead of the mod being inert with an empty log.
+- **The zip installer got its first test suite, and it found three bugs:**
+  uninstall deleted `z_SC4UIScale_*` files from *anywhere* under Plugins
+  (including a sc4pac-managed copy of this mod, which it now leaves alone with
+  a notice); upgrading from v4.4.x moved your settings file into
+  `010-SC4UIScale\` where the mod no longer reads it (it now migrates it back
+  to the Plugins root, keeping your edits); and `SHA256SUMS.txt` described a
+  file layout the bundle no longer shipped (it is now written last, and the
+  release zip is now built - and hashed - by the packaging script itself).
+- **Channel/packaging corrections** ahead of resubmitting the sc4pac PR: the
+  published minimum resolution now matches the code's real 1440x1080 floor
+  (was stated as 1320x900), the upstream package file is a clean generated
+  document instead of the internal engineering record, third-party artwork
+  attribution now installs with the overrides package, and the arming state
+  files no longer duplicate every entry across both folders.
+
 ## 4.5.1 (2026-08-30) - v4.5.0 did not work when installed by sc4pac
 
 - **If you installed v4.5.0 through sc4pac, half the mod was stuck at 2x.**

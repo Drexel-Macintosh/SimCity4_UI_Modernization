@@ -4,10 +4,19 @@ Generates `_packaging/sc4pac/drexel-sc4-ui-scale.yaml` — the sc4pac channel
 metadata for this mod — from a **built bundle**.
 
 ```
-python tools/sc4pac/gen_channel.py --bundle dist/SC4UIScale-v4.5.0-dev
+python tools/sc4pac/gen_channel.py --bundle dist/SC4UIScale-v<version>
 ```
 
 The output file is generated. Do not hand-edit it; edit the generator.
+
+**Two outputs.** The default output is the annotated INTERNAL record. The file
+that goes upstream is the LEAN one written by `--publish` (into
+`_packaging/sc4pac/publish/sc4-ui-scale.yaml`) — same model and hashes,
+corpus-normal comment volume. `--publish` refuses to run without
+`--last-modified` (the release publish time: `gh api
+repos/<owner>/<repo>/releases/tags/v<version> --jq .published_at`).
+`Submit-PR.ps1`'s pre-flight refuses the internal file outright — PR #199
+shipped it verbatim, which is why the split exists.
 
 ## Why it is generated
 
@@ -15,9 +24,9 @@ The v4.5.0 payload layout ships one live `z_SC4UIScale_<Pkg>.dat` per package
 plus inert `z_SC4UIScale_<Pkg>.<tag>.uipay` files (tags `15x` / `2x` / `3x` /
 `on` / `off`). Measured against sc4pac 0.10.0: **a file with a non-canonical
 extension installs only through a `withChecksum` entry — listed under
-`include:` it is silently dropped.** So all 78 payloads need an individual
-entry carrying a real sha256, and those hashes change on every build. That is
-not a hand-maintained list.
+`include:` it is silently dropped.** So every payload (~80; the exact count is
+printed by each run) needs an individual entry carrying a real sha256, and
+those hashes change on every build. That is not a hand-maintained list.
 
 The design decisions and the full measured record of sc4pac's behaviour live in
 the `PRESERVED_*` constants at the top of `gen_channel.py`, copied verbatim from
@@ -37,9 +46,13 @@ within a subfolder, so `a-drexel` sorts before `cam.*`: this package loads
 before CAM and therefore *loses* to CAM per-TGI, which is the compatibility
 gate. Renaming it to `drexel` inverts CAM precedence silently. Do not "tidy" it.
 
-**No ini ships.** See the per-file `exclude:` comments in the output for what
-each excluded ini was for and what excluding it costs. Two of the four have a
-functional cost; `--ship-asset-inis` ships those two (never the user config).
+**The user CONFIG ini never ships** — the DLL seeds `SC4UIScale.ini` at the
+Plugins root on first launch, the only location that survives both updates
+and uninstall. The two read-only ASSET inis (FontStyle sources + the empty
+placeholder) **ship by default** since v4.5.2, because excluding them has a
+measured cost: unscaled text at every tier. `--no-asset-inis` excludes them.
+(The reasons are per-file in `INI_RULES`; when an excluded ini is actually
+present in a bundle, the yaml carries an `exclude:` block stating why.)
 
 ## Self-checks
 

@@ -17339,3 +17339,118 @@ them?
 * Discovery now COUNTS candidates and warns when more than one directory
   carries our markers. First match still wins; it is no longer silent about
   having had a choice.
+
+---
+
+## 2026-08-30 - the adversarial pass: five defects in the sc4pac arc's OWN fixes, and a gate that had been red since v4.5.0
+
+Full adversarial audit of the sc4pac setup (three read-only survey lanes over
+the packaging, the DLL-side code, and the toolchain; every load-bearing claim
+re-verified against the code before acting - two claims were rejected in that
+re-verification). Shipped as v4.5.2. The findings, worst first:
+
+### 1. SelectorUI was never committed - the FOURTH occurrence of the neighbour-gate shape
+
+The v4.5.0 record/commit split (`SyncDat` records into `gWant`, one
+`CommitArming()` pass touches disk) welded the commit to the TAIL of
+`SyncStaticLayers`. `SyncSelectorPackage` records AFTER that call returns - on
+every path, including the version gate - so the selector's want was recorded
+into a pool nothing would ever commit again. At the stock tier the scale
+picker package could not arm and 1x was a ONE-WAY DOOR again: the exact bug
+the comments above both call sites document fixing twice before (#149, #182,
+the 2026-08-19 selector), re-created by the very redesign that fixed its
+predecessor. The `:3835` invalid-factor early-return also discarded the
+already-recorded WebText want.
+
+**THE LAW, fourth strike:** A RECORDER MUST NEVER OWN THE COMMIT. The commit
+gates on "the boot's LAST record has been made", and only the caller that
+makes the last record - the director - can know that moment. v4.5.2 moves
+`CommitArming()` to the director, after `SyncSelectorPackage`, on both paths.
+The 2x live run that "confirmed" v4.5.1 could not see this: at a scaled tier
+the selector is inert by design, so the missing commit changed no bytes.
+
+### 2. The starter ini seeded five keys into a section nothing reads
+
+`kStarterIni` - the only ini any v4.5.x user gets - put `AutoScale`,
+`ScaleFactor`, `SelectorAtStock`, `WebRedirect`, `SpinFix` under `[Scaling]`;
+`Settings.cpp` reads all five from `[UiSpike]`. Masked because the compiled
+defaults equal the seeded values, so the confirming live run was structurally
+blind to it: a user EDITING the seeded file got nothing, silently.
+`Test-ShippingIniKeys.py` - built for exactly this dead-key class - validated
+only `_packaging/SC4UIScale.ini`, which since v4.5.0 ships to NOBODY. The
+gate now parses `kStarterIni` out of the source and cross-checks every key,
+with a red-on-old mutation control (run: the v4.5.1 shape fails, the fix
+passes). **VALIDATE THE FILE THAT SHIPS, not the reference copy.**
+
+### 3. Test-PackageGating had been RED since v4.5.0 - and nobody ran it
+
+Its SelectiveArt wiring check demanded `SyncDatStable(...)`, a function the
+v4.5.0 content-swap retired. The gate was also absent from RUNBOOK's roster,
+so the red was never seen. A RED GATE NOBODY RUNS IS THE SAME AS NO GATE -
+the roster is now complete and the matcher checks the call that exists.
+
+### 4. The public zip path had zero coverage, and all three of its defects lived there
+
+`Install.ps1 -Uninstall` swept `z_SC4UIScale_*` RECURSIVELY over all of
+Plugins (would strip a coexisting sc4pac package folder bare); the migrate
+list still moved the root ini INTO `010-SC4UIScale\` (recreating the exact
+ping-pong the deploy script's comment warns about, one release after it was
+fixed); and a keep-your-ini branch guarded a file the bundle stopped shipping.
+`SHA256SUMS.txt` was written BEFORE the payload converter ran - 66 rows for
+106 files, rows naming deleted files. And NOTHING in the repo built the
+release zip at all: the yaml's 85 hashes came from the bundle directory while
+`url:` pointed at a hand-made zip nobody compared against them.
+Now: `Test-DistInstall.ps1` round-trips the installer over a fresh tree, a
+v4.4.x layout and a seeded sc4pac tree (with a positive control proving the
+sweep ran); Build-Dist writes the manifest after conversion AND cuts the zip
+itself; Test-DatIntegrity re-verifies the manifest independently.
+
+### 5. The channel published numbers the source contradicts
+
+The package description said "below 1320x900 the mod stays inert" - the
+pre-audit 880*f/600*f formula - against `kTierMinimums`' measured 1440x1080.
+THRESHOLDS COME FROM CONTROLS applies to PROSE too: gen_channel now parses
+the 1.5x row out of `ScaleTier.cpp` and refuses a description that disagrees.
+Also: PR #199 shipped the annotated INTERNAL yaml verbatim (211 comment
+lines, a "Do not publish" line, a TODO list retracted 140 lines later - the
+2nd-highest comment count in the 693-file corpus). `--publish` now emits a
+lean upstream file; Submit-PR's shared pre-flight refuses the internal one,
+and refuses to run at all without the release's real `lastModified`.
+
+### Smaller, same session
+
+* STATE.txt rows are now scoped to their folder (both files were
+  byte-identical, every base duplicated, and the 64-row cap would have
+  silently disabled the steady-state check at a 22nd package - every-boot
+  payload re-copies forever).
+* `WebButtonModPresent` existed TWICE with different roots (ScaleTier
+  two-root, WebRedirect one-root) - the redirect and WebText could disagree.
+  One exported implementation now; `GetOurFilePathA` likewise became a
+  wrapper over the W door instead of a divergent copy.
+* Discovery hardened: junction/symlink reparse tags skipped (OneDrive cloud
+  tags deliberately NOT skipped - the live tree lives under OneDrive),
+  length guards before every concat (secure-CRT truncation aborts the
+  process), and a failed ini seed now logs WHY instead of being
+  indistinguishable from "already present".
+* `Set-Tier` walked 2 levels where the DLL walks 3 (the v4.5.0 off-by-one,
+  ported); it now mirrors depth 3 and REFUSES a one-half-only census instead
+  of falling back into a mixed-tier arm. `Verify-Arming` discovers folders by
+  marker (it could not run on the tree Test-Sc4pacInstall points it at) and
+  its `-Restore` refuses a sc4pac tree. Deploy refuses sc4pac trees and scopes
+  the converter to our two folders.
+* `--ship-asset-inis` defaulted OFF while the shipped v4.5.1 channel needed
+  it ON (85 = 81 + the 4 FontStyle files): one forgotten flag away from a
+  channel with unscaled text at every tier. Default flipped; the hazardous
+  direction now needs the explicit flag (`--no-asset-inis`).
+* Deleted dead: `Build-ProposedLayout.ps1` (models the never-shipped
+  `zz-drexel` layout), `EXPORT-PUBLIC.ps1` (superseded 2026-08-06, still
+  carrying a rival publish allowlist).
+
+### DEVIATION from the audit plan, recorded honestly
+
+Deploy's `$TIER_FAMILIES` snapshot/restore got a measured-state comment, not
+the planned drift gate: on every payload-layout tree the start-of-run
+snapshot is EMPTY (it matches rename-era `-<tier>.dat` names), so the block
+only shuffles mid-run intermediate state that the end-of-run converter
+supersedes. Gating a dead list would be decoration; REMOVING live-tree
+machinery deserves its own measured session. Candidate for deletion.

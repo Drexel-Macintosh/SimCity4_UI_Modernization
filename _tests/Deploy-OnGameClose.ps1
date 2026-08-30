@@ -12,6 +12,22 @@ $plug = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plug
 # losing is the compatibility gate). zzz-SC4UIScale\ stays a TOP-LEVEL folder,
 # unchanged - its whole purpose is sorting after those same mod folders.
 $our = Join-Path $plug '010-SC4UIScale'
+
+# REFUSE A SC4PAC-MANAGED TREE (v4.5.2). This dev deploy hand-places the whole
+# install; run against a tree that also carries the sc4pac packages it would
+# create a SECOND copy of every TGI (and the hand copy in 010-\ out-sorts the
+# managed one in 050-load-first\), then the converter would rewrite files
+# sc4pac's manifest owns. The two install channels must never share a tree.
+$sc4pacDirs = @(Get-ChildItem $plug -Directory -Recurse -Filter '*.sc4pac' -ErrorAction SilentlyContinue |
+    Where-Object { Get-ChildItem $_.FullName -Recurse -Filter 'z_SC4UIScale_*' -ErrorAction SilentlyContinue |
+                   Select-Object -First 1 })
+if ($sc4pacDirs.Count) {
+    Write-Output "REFUSING to deploy: this Plugins tree carries a sc4pac-managed copy of the mod:"
+    $sc4pacDirs | ForEach-Object { Write-Output "  $($_.FullName)" }
+    Write-Output "Remove it first (sc4pac remove a-drexel:sc4-ui-scale a-drexel:sc4-ui-scale-mod-overrides)"
+    Write-Output "or deploy into a different tree. A dual install is two live providers per TGI."
+    exit 1
+}
 if (-not (Test-Path $our)) { New-Item -ItemType Directory $our | Out-Null }
 
 # #104: the game HANGS ON SHUTDOWN often enough that this loop blocked twice in
@@ -159,6 +175,18 @@ Get-ChildItem $plug -Filter "z_SC4UIScale_*" -File -ErrorAction SilentlyContinue
 # filename to detect ("z_SC4UIScale_SelectiveArt-2x.dat" never exists any
 # more - see the STABLE-FILENAME PILOT block below). It gets its own
 # dedicated snapshot/restore, not this generic by-filename one.
+# ⚠ MEASURED 2026-08-30: on a payload-layout tree (every v4.5.x install) the
+# START-of-run snapshot below always comes up EMPTY - live files are stable
+# `<base>.dat` names, never the `-<tier>.dat` names this list matches - so
+# $ARMED_BEFORE only ever describes the MID-RUN rename-layout state the
+# Copy-Item blocks create, and the payload converter at the end of this
+# script supersedes whatever the restore decided (stable-dat content comes
+# from the converter's tier fallback, and the DLL re-arms from the ini at
+# next boot regardless). The block is kept because Build-Dist regex-parses
+# this file and because removing live-tree-touching machinery deserves its
+# own measured session - but do NOT extend this list: it is not the tier
+# authority (ScaleTier.cpp's SyncDat sites are), and it covers 5 of ~20
+# tier-managed packages by design of its era, not by decision.
 $TIER_FAMILIES = @(
     @{ Sub = "";                 Base = "z_SC4UIScale_DialogStatic" },
     @{ Sub = "";                 Base = "z_SC4UIScale_ItemIcons"    },
@@ -264,7 +292,7 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat" "$our\z_SC4
 
 # ITEM ICONS - ADDED 2026-08-03 (#116). These were MISSING from this script
 # for its whole life, and ScaleTier actively tier-manages them
-# (ScaleTier.cpp:530 SyncDat "z_SC4UIScale_ItemIcons"), so the deployed copies
+# (ScaleTier.cpp: the SyncDat "z_SC4UIScale_ItemIcons" site), so the deployed copies
 # had frozen at whatever build epoch last hand-placed them. CAUGHT IN THE ACT
 # tonight: a PNG re-deflate pass rebuilt every package, this script reported
 # "SelectiveArt + DialogStatic tiers", and the live ItemIcons silently stayed
@@ -291,7 +319,7 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ItemIcons-3x.dat" "$our\z_SC4UIS
 # be active.
 $zzz = Join-Path $plug "zzz-SC4UIScale"
 # ItemIconsSub - ADDED 2026-08-03 (#116), same omission as ItemIcons above.
-# ScaleTier.cpp:537 tier-manages this one too.
+# ScaleTier.cpp's SyncDat site tier-manages this one too.
 Copy-Item "$proj\tools\itemicons\_work\z_SC4UIScale_ItemIconsSub-2x.dat" "$zzz\z_SC4UIScale_ItemIconsSub-2x.dat" -Force
 Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_ItemIconsSub-15x.dat" "$zzz\z_SC4UIScale_ItemIconsSub-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ItemIconsSub-3x.dat" "$zzz\z_SC4UIScale_ItemIconsSub-3x.dat.x1-disabled" -Force
@@ -593,7 +621,7 @@ foreach ($dir in @($our, "$plug\zzz-SC4UIScale")) {
 # Every other package is TIER-gated only, and for those a -2x.x1-disabled twin
 # means "not the active tier" or "stale from an earlier deploy", never "turn it
 # off". Matching on the filename alone disarmed CsiIcons completely (2026-08-19)
-# because ScaleTier.cpp:1872 states it has no dependency gate at all.
+# because ScaleTier.cpp's kThirdPartyDeps table has no row for it at all.
 $DEPENDENCY_GATED = @(
     "z_SC4UIScale_CamUI",         # CAM
     "z_SC4UIScale_WarriorUI",     # Warrior's UI mod
@@ -746,13 +774,40 @@ if ($armedTierNow -and $armedTierNow -ne "2x" -and (Test-Path $selArtStable)) {
 #
 # So neither side edits its copies. BOTH call the same converter last, and it
 # converts whatever it finds. Two callers, one conversion, nothing to drift.
-& (Join-Path $PSScriptRoot "Convert-ToPayloadLayout.ps1") -Tree $plug
+# SCOPED TO OUR TWO FOLDERS, never the whole Plugins root (v4.5.2): the
+# converter recursively deletes and rewrites tier-tagged files, and pointed at
+# $plug it would walk every third-party folder too - on a tree that ever
+# carried a sc4pac install, that rewrites checksummed package-folder content
+# the manager's manifest owns. Our files live only in these two dirs.
+# -Tier is resolved HERE from the root ini: the converter's own lookup only
+# searches inside -Tree, and the ini moved to the Plugins root in v4.5.0 -
+# without this a 1.5x/3x machine would get 2x-seeded live files for the
+# window between deploy and the next boot's re-arm.
+$seedTier = ''
+$rootIniPath = Join-Path $plug 'SC4UIScale.ini'
+if (Test-Path $rootIniPath) {
+    $mSF = [regex]::Match((Get-Content $rootIniPath -Raw), '(?m)^\s*ScaleFactor\s*=\s*([\d.]+)')
+    if ($mSF.Success) {
+        switch ([double]$mSF.Groups[1].Value) {
+            1.5 { $seedTier = '15x' } 2 { $seedTier = '2x' }
+            3   { $seedTier = '3x' }  4 { $seedTier = '4x' }
+        }
+    }
+}
+if ($seedTier) { Write-Output ("  seeding live files at " + $seedTier + " (root ini ScaleFactor)") }
+foreach ($convTree in @($our, (Join-Path $plug "zzz-SC4UIScale"))) {
+    if ($seedTier) { & (Join-Path $PSScriptRoot "Convert-ToPayloadLayout.ps1") -Tree $convTree -Tier $seedTier }
+    else           { & (Join-Path $PSScriptRoot "Convert-ToPayloadLayout.ps1") -Tree $convTree }
+}
 
 $a = (Get-Item "$proj\build\Release\SC4UIScale.dll").Length
 $b = (Get-Item "$plug\SC4UIScale.dll").Length
 if ($a -ne $b) { Write-Output "DEPLOY SIZE MISMATCH src=$a dst=$b"; exit 1 }
 # The old line here named only SelectiveArt + DialogStatic and was how the
 # ItemIcons omission stayed invisible - it read as a complete manifest.
+# WebText IS deployed (the Copy-Item at the tools\webtext block above, since
+# v4.5.0) - the old summary still listed it as hand-placed, the exact
+# stale-manifest shape the comment above this line warns about.
 Write-Output ("deployed SC4UIScale.dll + SelectiveArt/DialogStatic/ItemIcons/ItemIconsSub tiers " +
-    "+ 3rd-party gated dats + 3 FontStyle tier sources at " + (Get-Date -Format "HH:mm:ss") +
-    "   (NOT deployed, hand-placed: WebText, MenuFix)")
+    "+ 3rd-party gated dats + WebText + 3 FontStyle tier sources at " + (Get-Date -Format "HH:mm:ss") +
+    "   (NOT deployed, hand-placed: MenuFix)")

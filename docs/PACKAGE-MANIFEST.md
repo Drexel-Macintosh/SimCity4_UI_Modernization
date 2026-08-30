@@ -299,8 +299,8 @@ providers for every TGI, with an identical file count and nothing going red.)
 
 | File (as built / deployed) | Source in this project | Destination |
 |---|---|---|
-| `SC4UIScale.dll` | `build\Release\` | `Documents\SimCity 4\Plugins\` - the ROOT: the game only loads DLLs from the top level (measured, v4.2.0 maiden boot). **The DLL is the only thing this mod leaves at the root** (v4.4.0); the ini, log and gcap live in `010-SC4UIScale\` |
-| `SC4UIScale.ini` | `_packaging\SC4UIScale.ini` | `Plugins\010-SC4UIScale\` |
+| `SC4UIScale.dll` | `build\Release\` | `Documents\SimCity 4\Plugins\` - the ROOT: the game only loads DLLs from the top level (measured, v4.2.0 maiden boot). The log and gcap live in `010-SC4UIScale\`; the ini sits at the ROOT beside the DLL (v4.5.0) |
+| `SC4UIScale.ini` | **not shipped** (v4.5.0) - the DLL seeds it from `kStarterIni` on first launch; `_packaging\SC4UIScale.ini` is the commented reference copy | `Plugins\` - the ROOT, where every update and uninstall leaves it alone (a copy in the package folder dies on every sc4pac update; measured) |
 | `z_SC4UIScale_SelectiveArt-<tier>.dat` | `tools\selective-safe\` / `tools\packages\<tag>\` | `Plugins\010-SC4UIScale\` |
 | `z_SC4UIScale_DialogStatic-<tier>.dat` | `tools\dialog-static\` / `tools\packages\<tag>\` | `Plugins\010-SC4UIScale\` |
 | `z_SC4UIScale_ItemIcons-<tier>.dat` | `tools\itemicons\` | `Plugins\010-SC4UIScale\` |

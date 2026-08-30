@@ -80,6 +80,12 @@ namespace ScaleTier
 	// keys that switch this mod on default to OFF in the code, so a fresh
 	// install with no ini is silently inert.
 	bool SeedIniIfAbsent();
+	// Why the last SeedIniIfAbsent returned false, when that false means
+	// FAILURE (nullptr when the ini simply already existed). Read AFTER
+	// Logger::Init: seeding runs before any log sink exists, and a silent
+	// seed failure is an inert mod with an empty log - the exact fresh-
+	// install symptom the seeder was built to eliminate.
+	const char* SeedIniFailure(unsigned long* lastError);
 	const char* MigratedRootFileNames();
 
 	// v4.5.0: prints which folders this mod actually resolved to, and
@@ -175,6 +181,21 @@ namespace ScaleTier
 	// the DLL reported the selector live; the v4.5.0 shape of that same fault
 	// is a live `.dat` holding `.off` bytes, which a listing cannot show).
 	void SyncSelectorPackage(bool stockTier);
+
+	// THE ONE PASS THAT TOUCHES DISK. The DIRECTOR calls this after the LAST
+	// SyncDat/SyncSelectorPackage record of each boot path. It must never be
+	// welded into a recorder: v4.5.1 had it on SyncStaticLayers' tail, so
+	// the selector want recorded after that call was silently discarded on
+	// every boot (4th occurrence of the neighbour-gate shape). Idempotent
+	// and cheap when re-run (steady state is four file stats per package).
+	void CommitArming();
+
+	// cyclone-boom "Web Button Improvement Mod" detection, BOTH plugin roots
+	// (the Documents tree passed in, plus <install>\Plugins). THE only
+	// detector: WebRedirect.cpp used to carry a one-root twin, and the two
+	// disagreed whenever the mod sat in the install root - WebText stood
+	// down while the ShellExecute redirect stayed armed.
+	bool WebButtonModPresent(const wchar_t* pluginsDir);
 
 	// #149 stage 2. SyncStaticLayers runs before the game opens a single dat,
 	// so it can only NAME the icons no package of ours enlarges. This runs at

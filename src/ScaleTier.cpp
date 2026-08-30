@@ -132,7 +132,7 @@ namespace
 			s_warned = true;
 			Logger::Get().WriteLine(LogLevel::Info,
 				"ScaleTier: PluginsRoot - no ancestor named 'Plugins' within "
-				"2 levels of the DLL; falling back to the DLL's own folder. "
+				"3 levels of the DLL; falling back to the DLL's own folder. "
 				"Third-party dependency detection may be blind.");
 		}
 	}
@@ -185,7 +185,6 @@ namespace
 		if (!out || outLen == 0) { return; }
 		out[0] = L'\0';
 		// v4.5.0: the folder is DISCOVERED, not named.
-		const wchar_t* sub = L"";
 		const wchar_t* root = EarlyDirPtr();
 		// LENGTH-CHECKED, not wcscat_s-and-hope: the secure-CRT concat
 		// ABORTS THE PROCESS on truncation, and this path is now one
@@ -193,9 +192,8 @@ namespace
 		// over-long path we hand back an EMPTY string - every consumer
 		// here degrades to its default on a path it cannot open, which
 		// is a setting lost, not a game killed.
-		if (wcslen(root) + wcslen(sub) + wcslen(name) + 1 > outLen) { return; }
+		if (wcslen(root) + wcslen(name) + 1 > outLen) { return; }
 		wcscpy_s(out, outLen, root);
-		wcscat_s(out, outLen, sub);
 		wcscat_s(out, outLen, name);
 	}
 
@@ -217,7 +215,7 @@ namespace
 	// ship. Which of the two it is, is decided by WHICH packages it holds:
 	//   EARLY    - holds SelectiveArt. Must LOSE to CAM/NAM: it carries
 	//              stock-derived copies that a real mod is entitled to beat.
-	//   OVERRIDE - holds CamUI / ItemIconsSub / UncoveredIcons. Must WIN:
+	//   OVERRIDE - holds CamUI / ItemIconsSub / ThirdPartyUI. Must WIN:
 	//              these are built FROM those mods' own art.
 	// One folder holding both is legal and both handles point at it (a
 	// single-package install); a folder holding neither marker is not ours.
@@ -259,6 +257,10 @@ namespace
 	// Replaced with names verified present in dist/SC4UIScale-v4.5.0/Plugins/.
 	int ClassifyDir(const wchar_t* dir)
 	{
+		// Longest marker below is 29 chars; a dir this close to MAX_PATH
+		// cannot be ours, and the secure-CRT concat would ABORT THE PROCESS
+		// on truncation rather than fail the match.
+		if (wcslen(dir) + 32 >= MAX_PATH) { return 0; }
 		struct Marker { const wchar_t* pat; int bit; };
 		const Marker markers[] = {
 			{ L"z_SC4UIScale_SelectiveArt*",    1 },
@@ -316,6 +318,10 @@ namespace
 	void ScanForOurDirs(const wchar_t* dir, int depth, int& earlyBits, int& ovrBits)
 	{
 		if (depth > 3) { return; }
+		// Length guard, not concat-and-hope: this walk runs on ARBITRARY
+		// third-party folder names, and secure-CRT truncation ABORTS THE
+		// PROCESS. A path too long to extend cannot hold our folders.
+		if (wcslen(dir) + 2 >= MAX_PATH) { return; }
 		wchar_t pat[MAX_PATH];
 		swprintf_s(pat, L"%s*", dir);
 		WIN32_FIND_DATAW fd = {};
@@ -325,6 +331,20 @@ namespace
 		{
 			if (fd.cFileName[0] == L'.') { continue; }
 			if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) { continue; }
+			// Junctions and symlinks are SKIPPED: a Plugins-into-Plugins
+			// junction would be walked as a second tree, counting one real
+			// install as two candidates (and recursing until the depth cap).
+			// OneDrive cloud placeholders also carry the reparse attribute -
+			// the live tree lives under OneDrive - but with IO_REPARSE_TAG_
+			// CLOUD* tags, so ONLY the two link tags are excluded.
+			if ((fd.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+				&& (fd.dwReserved0 == IO_REPARSE_TAG_MOUNT_POINT
+					|| fd.dwReserved0 == IO_REPARSE_TAG_SYMLINK)) { continue; }
+			// Too long to concat = cannot be ours (see the guard above); a
+			// leaf that cannot fit the 64-wchar leaf buffers below cannot be
+			// ours either (sc4pac's longest generated name is 48).
+			if (wcslen(dir) + wcslen(fd.cFileName) + 2 >= MAX_PATH) { continue; }
+			if (wcslen(fd.cFileName) >= 64) { continue; }
 			wchar_t sub[MAX_PATH];
 			swprintf_s(sub, L"%s%s\\", dir, fd.cFileName);
 			const int bits = ClassifyDir(sub);
@@ -409,6 +429,15 @@ namespace
 	// So the DLL writes the file the metadata already promised. Only when it
 	// is ABSENT - an existing ini is never touched, and this never overwrites
 	// a player's settings.
+	//
+	// EVERY KEY BELOW MUST SIT IN THE SECTION Settings.cpp READS IT FROM.
+	// v4.5.1 seeded AutoScale, ScaleFactor, SelectorAtStock, WebRedirect and
+	// SpinFix under a "[Scaling]" header while Settings.cpp reads all five
+	// from [UiSpike] - five dead keys, masked only because the compiled
+	// defaults happened to equal the seeded values; a user editing
+	// ScaleFactor here got nothing. _tests/Test-ShippingIniKeys.py now
+	// parses THIS string out of the source and cross-checks every key
+	// against the section Settings.cpp actually reads it from.
 	const char* const kStarterIni =
 		"; ===========================================================================\r\n"
 		";  SC4UIScale.ini  -  SimCity 4 Deluxe UI scaling\r\n"
@@ -437,8 +466,6 @@ namespace
 		"; Extend the same scaling to the region screen.\r\n"
 		"ScaleRegion=1\r\n"
 		"\r\n"
-		"[Scaling]\r\n"
-		"\r\n"
 		"; Pick the factor automatically from the resolution the game renders at.\r\n"
 		"; 1 = automatic (recommended). Minimum resolutions: 1440x1080 for 1.5x,\r\n"
 		"; 1920x1440 for 2x, 2880x2160 for 3x. Below 1440x1080 the mod stays inert\r\n"
@@ -465,25 +492,55 @@ namespace
 		"; 0 = errors only, 1 = normal, 2 = verbose, 3 = debug.\r\n"
 		"LogLevel=1\r\n";
 
+	// Why the last SeedIniIfAbsentImpl returned false, when that false means
+	// FAILURE rather than "already present". Read by the director AFTER
+	// Logger::Init - seeding runs before any log sink exists, and v4.5.1's
+	// three-way false (already there / no path / write failed) made a
+	// read-only Plugins root produce an inert mod with an empty log.
+	const char* gSeedFailWhy = nullptr;
+	unsigned long gSeedFailErr = 0;
+
 	bool SeedIniIfAbsentImpl()
 	{
+		gSeedFailWhy = nullptr;
+		gSeedFailErr = 0;
 		wchar_t ini[MAX_PATH] = {};
 		OurIniPath(ini, MAX_PATH);
-		if (ini[0] == 0) { return false; }
+		if (ini[0] == 0)
+		{
+			gSeedFailWhy = "the ini path did not resolve (path too long?)";
+			return false;
+		}
 		if (GetFileAttributesW(ini) != INVALID_FILE_ATTRIBUTES) { return false; }
 
 		// CREATE_NEW, not CREATE_ALWAYS: if anything raced us to the file
 		// between the check above and here, theirs wins. Never clobber.
 		HANDLE h = CreateFileW(ini, GENERIC_WRITE, 0, nullptr, CREATE_NEW,
 			FILE_ATTRIBUTE_NORMAL, nullptr);
-		if (h == INVALID_HANDLE_VALUE) { return false; }
+		if (h == INVALID_HANDLE_VALUE)
+		{
+			gSeedFailErr = GetLastError();
+			// ERROR_FILE_EXISTS is the CREATE_NEW race contract working as
+			// documented (someone beat us to the file), not a failure.
+			if (gSeedFailErr != ERROR_FILE_EXISTS)
+			{
+				gSeedFailWhy = "CreateFileW refused (read-only Plugins?)";
+			}
+			return false;
+		}
 		const DWORD len = static_cast<DWORD>(strlen(kStarterIni));
 		DWORD wrote = 0;
 		// No BOM. Standing order, and the file's own header repeats it: a BOM
 		// makes the parser treat the whole file as unreadable.
 		const BOOL ok = WriteFile(h, kStarterIni, len, &wrote, nullptr);
 		CloseHandle(h);
-		if (!ok || wrote != len) { DeleteFileW(ini); return false; }
+		if (!ok || wrote != len)
+		{
+			gSeedFailErr = GetLastError();
+			gSeedFailWhy = "WriteFile failed mid-seed (partial file deleted)";
+			DeleteFileW(ini);
+			return false;
+		}
 		return true;
 	}
 
@@ -1110,9 +1167,14 @@ namespace
 		}
 	}
 
-	// The single pass that touches disk. Runs once, after every SyncDat call
-	// for this boot has been made.
-	void CommitArming()
+	// The single pass that touches disk. The DIRECTOR calls this (through
+	// ScaleTier::CommitArming) after the LAST record of each boot path -
+	// never a recorder itself. v4.5.1 welded it to the tail of
+	// SyncStaticLayers, so SyncSelectorPackage's want - recorded AFTER that
+	// call - was never committed on ANY boot: the 4th occurrence of the
+	// neighbour-gate shape (#149, #182, the 2026-08-19 selector, this).
+	// Only the maker of the boot's last record can know when to commit.
+	void CommitArmingImpl()
 	{
 		if (gWantCount == 0) { return; }
 
@@ -1260,8 +1322,18 @@ namespace
 	// directory listing no longer tells you the armed tier or a gate verdict.
 	struct ArmRow
 	{
+		// v4.5.2: rows are scoped to the FOLDER they describe. Without the
+		// dir, LoadArmState aggregated both folders' files into one pool and
+		// WriteArmState wrote the whole pool to BOTH folders: files byte-
+		// identical, every base duplicated, and the 64-row cap saturating -
+		// a 22nd package would silently lose its steady-state check and
+		// re-copy its payload every boot forever.
+		wchar_t  dir[MAX_PATH];
 		wchar_t  base[96];
 		wchar_t  tag[16];
+		// Serviced by ArmOne this boot. Rows never touched (a package that
+		// is gone, or v4.5.1's cross-folder duplicates) are pruned at write.
+		bool     touched;
 		// 160, not 64: this column is what REPLACES the diagnosis a constant
 		// filename destroys, and the real verdicts ("dep ABSENT (x.dat)",
 		// "dep CHANGED", "PARTIAL") do not fit in 64.
@@ -1270,6 +1342,7 @@ namespace
 	};
 	ArmRow gArmRows[64] = {};
 	int    gArmRowCount = 0;
+	ArmRow* FindArmRow(const wchar_t* dir, const wchar_t* base);
 
 	const wchar_t kStateFile[] = L"z_SC4UIScale_STATE.txt";
 
@@ -1292,8 +1365,17 @@ namespace
 				&s.paySize, &s.payTime, &s.liveSize, &s.liveTime);
 			if (got == 7 && gArmRowCount < 64)
 			{
+				wchar_t wbase[96] = {};
+				MultiByteToWideChar(CP_UTF8, 0, b, -1, wbase, 96);
+				// v4.5.1 wrote every row to every folder, so an upgraded
+				// file carries every base twice - first row wins, the
+				// duplicate is dropped here, and anything never touched by
+				// ArmOne this boot is pruned at write. One boot self-cleans.
+				if (FindArmRow(dir, wbase)) { continue; }
 				ArmRow& row = gArmRows[gArmRowCount++];
-				MultiByteToWideChar(CP_UTF8, 0, b, -1, row.base, 96);
+				wcscpy_s(row.dir, MAX_PATH, dir);
+				wcscpy_s(row.base, 96, wbase);
+				row.touched = false;
 				MultiByteToWideChar(CP_UTF8, 0, t, -1, row.tag, 16);
 				strcpy_s(row.reason, r);
 				row.stamp = s;
@@ -1302,11 +1384,15 @@ namespace
 		fclose(f);
 	}
 
-	ArmRow* FindArmRow(const wchar_t* base)
+	ArmRow* FindArmRow(const wchar_t* dir, const wchar_t* base)
 	{
 		for (int i = 0; i < gArmRowCount; i++)
 		{
-			if (_wcsicmp(gArmRows[i].base, base) == 0) { return &gArmRows[i]; }
+			if (_wcsicmp(gArmRows[i].base, base) == 0
+				&& _wcsicmp(gArmRows[i].dir, dir) == 0)
+			{
+				return &gArmRows[i];
+			}
 		}
 		return nullptr;
 	}
@@ -1367,13 +1453,14 @@ namespace
 		if (!StatFile(src, &now.paySize, &now.payTime)) { return false; }
 		const bool haveLive = StatFile(live, &now.liveSize, &now.liveTime);
 
-		ArmRow* row = FindArmRow(base);
+		ArmRow* row = FindArmRow(dir, base);
 		if (haveLive && row && _wcsicmp(row->tag, usedTag) == 0
 			&& row->stamp.paySize == now.paySize
 			&& row->stamp.payTime == now.payTime
 			&& row->stamp.liveSize == now.liveSize
 			&& row->stamp.liveTime == now.liveTime)
 		{
+			row->touched = true;
 			return true;   // steady state: four stats, zero I/O
 		}
 
@@ -1405,8 +1492,10 @@ namespace
 		{
 			if (gArmRowCount >= 64) { return true; }
 			row = &gArmRows[gArmRowCount++];
+			wcscpy_s(row->dir, MAX_PATH, dir);
 			wcscpy_s(row->base, 96, base);
 		}
+		row->touched = true;
 		wcscpy_s(row->tag, 16, usedTag);
 		strcpy_s(row->reason, reason ? reason : "");
 		row->stamp = now;
@@ -1433,6 +1522,10 @@ namespace
 		for (int i = 0; i < gArmRowCount; i++)
 		{
 			const ArmRow& r = gArmRows[i];
+			// Only rows that BELONG to this folder and were serviced this
+			// boot: cross-folder rows and stale leftovers are pruned, which
+			// is also what cleans up the duplicated files v4.5.1 wrote.
+			if (_wcsicmp(r.dir, dir) != 0 || !r.touched) { continue; }
 			char b[128] = {}, t[32] = {};
 			WideCharToMultiByte(CP_UTF8, 0, r.base, -1, b, sizeof(b),
 				nullptr, nullptr);
@@ -1513,7 +1606,8 @@ namespace
 			// stable name here, closing the window entirely rather than
 			// relying on the next call succeeding.
 			const bool wasArmed =
-				_wcsicmp(fd.cFileName + wcslen(fd.cFileName) - wcslen(kDisabledSuffix),
+				wcslen(fd.cFileName) < wcslen(kDisabledSuffix)
+				|| _wcsicmp(fd.cFileName + wcslen(fd.cFileName) - wcslen(kDisabledSuffix),
 					kDisabledSuffix) != 0;
 			if (FileExists(dst)) { DeleteFileW(from); moved++; }
 			else if (MoveFileExW(from, dst, 0)) { moved++; }
@@ -3030,24 +3124,17 @@ namespace ScaleTier
 
 	void GetOurFilePathA(const char* name, char* out, size_t outLen)
 	{
+		// ONE DOOR, the W one. This function used to duplicate the W door's
+		// ini routing rather than call it, and the two DRIFTED once already:
+		// UiSpike's LiveTune block came through here and its whole
+		// [Probe]/[Disaster]/[SubFlyout] key set read a file that does not
+		// exist - proven by the shipped DLL's own log naming two different
+		// ini folders in one boot. A duplicated rule can drift; a wrapper
+		// cannot.
 		wchar_t wname[MAX_PATH] = {};
 		MultiByteToWideChar(CP_ACP, 0, name, -1, wname, MAX_PATH);
 		wchar_t wpath[MAX_PATH] = {};
-		// THE SAME ROUTING AS THE W DOOR. This called OurFilePath directly and
-		// so answered the package folder for the ini while every W caller
-		// answered the root - two answers in one process. UiSpike's LiveTune
-		// block comes through here, so its whole [Probe]/[Disaster]/[SubFlyout]
-		// key set was reading a file that does not exist and silently taking
-		// defaults. Proven by the shipped DLL's own log: line 2 names the root,
-		// line 459 names 010-SC4UIScale\, same boot.
-		if (_wcsicmp(wname, L"SC4UIScale.ini") == 0)
-		{
-			OurIniPath(wpath, MAX_PATH);
-			WideCharToMultiByte(CP_ACP, 0, wpath, -1, out,
-				static_cast<int>(outLen), nullptr, nullptr);
-			return;
-		}
-		OurFilePath(wname, wpath, MAX_PATH);
+		GetOurFilePathW(wname, wpath, MAX_PATH);
 		WideCharToMultiByte(CP_ACP, 0, wpath, -1, out,
 			static_cast<int>(outLen), nullptr, nullptr);
 	}
@@ -3162,6 +3249,17 @@ namespace ScaleTier
 	bool SeedIniIfAbsent()
 	{
 		return SeedIniIfAbsentImpl();
+	}
+
+	const char* SeedIniFailure(unsigned long* lastError)
+	{
+		if (lastError) { *lastError = gSeedFailErr; }
+		return gSeedFailWhy;
+	}
+
+	void CommitArming()
+	{
+		CommitArmingImpl();
 	}
 
 
@@ -3687,11 +3785,15 @@ namespace ScaleTier
 		PluginsRoot(pluginsRoot, MAX_PATH);
 		SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_SelectorUI",
 			L"-1x", stockTier);
+		// "want RECORDED", not "ARMED": this function only records. v4.5.1's
+		// line said ARMED while the want was never committed - a healthy-
+		// looking log over a package that could not arm. Disk truth is the
+		// CommitArming line that follows in the director.
 		Logger::Get().WriteLine(LogLevel::Info,
-			"ScaleTier: SelectorUI-1x %ls (tier is %ls). This is the ONLY "
-			"package armed by the ABSENCE of a tier, and it is what keeps 1x "
-			"from being a one-way door.",
-			stockTier ? L"ARMED" : L"stashed",
+			"ScaleTier: SelectorUI-1x want RECORDED: %ls (tier is %ls). The "
+			"ONLY package armed by the ABSENCE of a tier - it keeps 1x from "
+			"being a one-way door. Disk truth is the CommitArming line.",
+			stockTier ? L"armed" : L"off",
 			stockTier ? L"stock" : L"scaled");
 	}
 
@@ -3758,7 +3860,11 @@ namespace ScaleTier
 			}
 			try
 			{
-				for (const auto& entry : std::filesystem::recursive_directory_iterator(dir))
+				// skip_permission_denied: one unreadable subfolder used to
+				// throw and abort the WHOLE walk via the catch below, so the
+				// mod read as absent because some unrelated folder was locked.
+				for (const auto& entry : std::filesystem::recursive_directory_iterator(
+					dir, std::filesystem::directory_options::skip_permission_denied))
 				{
 					if (!entry.is_regular_file()) { continue; }
 					std::wstring name = entry.path().filename().wstring();
@@ -4297,11 +4403,12 @@ namespace ScaleTier
 		SyncFont(docPlugins, instPlugins, activeTag);
 		SyncFont(docPlugins, docPlugins, activeTag);
 
-		// Everything above only RECORDED what it wants. This is the one
-		// pass that touches disk, and it runs after the last SyncDat of
-		// the boot so a package that never received an active call can be
-		// told apart from one whose tier simply came up later in the loop.
-		CommitArming();
+		// Everything above only RECORDED what it wants. NO COMMIT HERE:
+		// SyncSelectorPackage records AFTER this function returns, and a
+		// commit welded to this tail silently discarded that want on every
+		// boot (shipped in v4.5.1 - the selector package could never arm at
+		// the stock tier, re-opening the 1x one-way door). The DIRECTOR
+		// commits once, after its last record.
 	}
 
 	// ============ FONTSTYLE.INI SHUTDOWN REVERT (v4.0.4) ===================

@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.5.1"
+#define UISCALE_VERSION_STR "4.5.2"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -176,6 +176,23 @@ public:
 				"with it. Edit that file to change anything; it is never "
 				"overwritten.");
 		}
+		else
+		{
+			// v4.5.2: a FAILED seed is no longer indistinguishable from "the
+			// ini was already there". Seeding runs before the logger exists,
+			// so the reason is stashed and reported here - without this, a
+			// read-only Plugins root is an inert mod with an empty log.
+			unsigned long seedErr = 0;
+			const char* seedWhy = ScaleTier::SeedIniFailure(&seedErr);
+			if (seedWhy)
+			{
+				logger.WriteLine(LogLevel::Error,
+					"SEED FAILED: no SC4UIScale.ini exists and one could not "
+					"be created (%s, err %lu). ScaleAll and ScaleRegion "
+					"default to OFF, so the mod stays INERT until an ini "
+					"exists at the Plugins root.", seedWhy, seedErr);
+			}
+		}
 		// v4.5.0: and WHICH folders those resolved from - discovered by
 		// content, or fallen back to the v4.2.0 names.
 		ScaleTier::LogOurDirs();
@@ -211,6 +228,11 @@ public:
 				static_cast<unsigned>(kMinSupportedGameVersion));
 			ScaleTier::SyncStaticLayers(1.0f);
 			ScaleTier::SyncSelectorPackage(false);
+			// Records above, disk below. The recorders never commit
+			// themselves - see ScaleTier::CommitArming for the law and the
+			// v4.5.1 bug (the selector want recorded after the old in-line
+			// commit was discarded on every boot).
+			ScaleTier::CommitArming();
 			return;
 		}
 		// REQUIREMENT: enumerate the display's modes NOW, on a
@@ -610,6 +632,17 @@ public:
 			// "is the tier stock" - so that, and nothing else, is what it is
 			// gated on.
 			ScaleTier::SyncSelectorPackage(!tierActive);
+
+			// THE COMMIT - HERE, AND ONLY HERE ON THIS PATH. Everything
+			// above (SyncStaticLayers AND SyncSelectorPackage) only records
+			// wants; this one pass applies them to disk. v4.5.1 welded the
+			// commit to the tail of SyncStaticLayers, so the selector want
+			// recorded one line up was discarded on EVERY boot - at the
+			// stock tier the scale picker package could never arm, and 1x
+			// was a one-way door again. 4th occurrence of the neighbour-
+			// gate shape: only the maker of the boot's LAST record can know
+			// when the recording is finished, and that is the director.
+			ScaleTier::CommitArming();
 
 			// #149: OUTSIDE the AutoScale branch, deliberately. The scan
 			// depends only on the FACTOR, never on how the factor was chosen.

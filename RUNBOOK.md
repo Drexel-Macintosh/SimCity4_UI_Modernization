@@ -136,11 +136,15 @@ _tests\Set-Tier.ps1 -Tier 1            # 1x baseline control - all packages off
 _tests\Set-Tier.ps1 -Status            # report only
 ```
 
-`Deploy-OnGameClose.ps1` **is the manifest.** A package that is not copied there
-does not ship, and the release builder parses that same file to assemble the
-distribution. Three packages have rotted by being hand-placed into the Plugins
-folder and never wired in — they looked fine locally and were simply absent on
-a clean install. If you add a package, add it there.
+`Deploy-OnGameClose.ps1` **is the manifest — with three exceptions.** A package
+that is not copied there does not ship, and the release builder parses that
+same file to assemble the distribution; three packages have rotted by being
+hand-placed into the Plugins folder and never wired in. If you add a package,
+add it there. But `Build-Dist.ps1` cannot regex-parse ~30 of Deploy's copy
+lines (named-parameter form, expression-built paths) and compensates with
+hardcoded blocks — SelectorUI, CsiIcons and the ZCarbon set — so a package
+added in one of those shapes must be wired in BOTH files, and the bundle's
+layout-mixture tripwire is what catches a half-edit.
 
 Preserve `SC4UIScale.log` before relaunching; it is recreated on every launch.
 
@@ -151,9 +155,18 @@ Preserve `SC4UIScale.log` before relaunching; it is recreated on every launch.
 ```powershell
 _tests\Test-DatIntegrity.ps1                 # deployed == built
 _tests\Test-ThirdPartyGates.ps1              # third-party overrides stay gated
+_tests\Test-FolderDiscovery.ps1              # the DLL's discovery code, compiled + mutation-tested
+_tests\Sync-Check.ps1                        # repo vs GitHub, user-path scan
+_tests\Verify-Arming.ps1                     # after a boot: content-swap arming, STATE.txt
+python _tests\Test-PackageGating.py          # SyncDat sites vs dep rows, both directions
+python _tests\Test-ShippingIniKeys.py        # every seeded/reference ini key is READ by Settings.cpp
 python tools\uimap\emu\gate_btn_undercover.py
 python tools\upscale\gate_key_integrity.py <corpus> --factor <f>
 ```
+
+For a sc4pac-channel release additionally run `_tests\Test-Sc4pacInstall.ps1`
+(needs java + the sc4pac CLI jar + network — the most expensive gate, and the
+only one that exercises the real install path).
 
 The colour-key gate is the one to never skip. Magenta `0xFF00FF` is the game's
 transparency key; if a resample nudges an exact key pixel it stops being

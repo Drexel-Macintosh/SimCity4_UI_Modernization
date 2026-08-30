@@ -278,11 +278,18 @@ function Test-DirMarkers([string] $dir, [string[]] $pats) {
 }
 function Find-OurDirs([string] $root) {
     $early = $null; $override = $null
-    # Two levels: our own top-level layout, and <subfolder>\<pkg> as sc4pac
-    # lays it out.
-    $cands = @(Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue)
-    $cands += @($cands | ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory -ErrorAction SilentlyContinue })
-    foreach ($d in $cands) {
+    # THREE levels, mirroring the DLL's depth-3 cap (ScaleTier.cpp, mutation-
+    # tested by Test-FolderDiscovery.ps1). sc4pac's prefix stripping puts the
+    # two packages at DIFFERENT depths: override markers at depth 2
+    # (900-overrides\<pkg>.sc4pac\), early markers at depth 3
+    # (050-load-first\<pkg>.sc4pac\010-SC4UIScale\). This function walked two
+    # levels through v4.5.1 - the same off-by-one that shipped v4.5.0 broken -
+    # so on a sc4pac tree it found the override half only and armed HALF the
+    # install while every zero-is-red refusal stayed green.
+    $lvl1 = @(Get-ChildItem -LiteralPath $root -Directory -ErrorAction SilentlyContinue)
+    $lvl2 = @($lvl1 | ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory -ErrorAction SilentlyContinue })
+    $lvl3 = @($lvl2 | ForEach-Object { Get-ChildItem -LiteralPath $_.FullName -Directory -ErrorAction SilentlyContinue })
+    foreach ($d in ($lvl1 + $lvl2 + $lvl3)) {
         if (-not $early -and (Test-DirMarkers $d.FullName $markerEarly)) { $early = $d.FullName }
         if (-not $override -and (Test-DirMarkers $d.FullName $markerOverride)) { $override = $d.FullName }
         if ($early -and $override) { break }
@@ -292,6 +299,21 @@ function Find-OurDirs([string] $root) {
 $found = Find-OurDirs $Plugins
 $earlyFound = [bool]$found.Early
 $overrideFound = [bool]$found.Override
+# ONE HALF FOUND = REFUSE, never fall back. A fallback name beside one real
+# discovered half means arming half the install at the new tier and leaving
+# the other half where it was - a mixed-tier screen with every census green,
+# which is exactly what the v4.5.1 two-level walk produced on sc4pac trees.
+# (BOTH missing keeps the v4.2.0-name fallback: an empty or stock tree is a
+# legitimate state and the per-dir censuses downstream stay the judges.)
+if ($earlyFound -ne $overrideFound) {
+    Deny "folder discovery found only ONE half of the install" @(
+        ("early    : " + $(if ($earlyFound) { $found.Early } else { "NOT FOUND" })),
+        ("override : " + $(if ($overrideFound) { $found.Override } else { "NOT FOUND" })),
+        "",
+        "Arming one half at a new tier while the other half keeps the old one",
+        "is a mixed-tier screen with no red anywhere. Fix the install (or the",
+        "marker files) so both halves resolve, then re-run.")
+}
 $our = if ($earlyFound) { $found.Early } else { Join-Path $Plugins "010-SC4UIScale" }
 $zzz = if ($overrideFound) { $found.Override } else { Join-Path $Plugins "zzz-SC4UIScale" }
 $msg = "folders: early={0} ({1}), override={2} ({3})"
