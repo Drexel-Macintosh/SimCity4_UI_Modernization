@@ -47,10 +47,16 @@ no-mod install.
 
    ```
    Documents\SimCity 4\Plugins\
-     010-SC4UIScale\      packages, fonts, settings, log
+     010-SC4UIScale\      packages, fonts, log
      zzz-SC4UIScale\      overrides that must beat other mods
-     SC4UIScale.dll       the only loose file at the root
+     SC4UIScale.dll       the only loose file the bundle installs
    ```
+
+   On its first launch the mod writes one more loose file beside the DLL,
+   `SC4UIScale.ini` - your settings. It lives at the **Plugins root**, not in
+   the mod's folder, because a package manager replaces the whole versioned
+   package folder on every update and your settings would go with it. It is
+   created only when absent and is never overwritten.
 
    The DLL has to sit at the root: SimCity 4's dat scan is recursive but its
    **DLL loader is top-level only**. Everything else lives in the folders, so

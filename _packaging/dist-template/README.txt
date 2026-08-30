@@ -9,8 +9,8 @@ the world at your monitor's native resolution.
 
 It is not whole-frame upscaling. The world stays sharp.
 
-This is the first public release. Earlier version numbers belong to internal
-development builds that were never published.
+Version numbers below 4.0.0 belong to internal development builds that were
+never published; the public release history starts at v4.0.0.
 
 
 -------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ a failure; the log says so explicitly.
   UNINSTALL
 -------------------------------------------------------------------------------
 
-Run  .\Install.ps1 -Uninstall  , or delete three things by hand from
+Run  .\Install.ps1 -Uninstall  , or delete four things by hand from
 Documents\SimCity 4\Plugins\ :
 
     010-SC4UIScale\               (the whole folder)
