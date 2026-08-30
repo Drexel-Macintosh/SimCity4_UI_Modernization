@@ -17,11 +17,34 @@
 [CmdletBinding()]
 param(
     [string]$Plugins = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins'),
-    [string]$RestorePoint = (Join-Path $PSScriptRoot 'restore-point-pre-armone'),
+    # NOT defaulted here on purpose - see below.
+    [string]$RestorePoint = '',
     [switch]$Restore
 )
 
 $ErrorActionPreference = 'Stop'
+
+# ⛔ $PSScriptRoot IS EMPTY DURING PARAMETER BINDING under Windows PowerShell
+# 5.1 when the script is invoked with `-File`. This default used to live in the
+# param block, so `powershell -File _tests\Verify-Arming.ps1` died on
+# "Join-Path : Cannot bind argument to parameter 'Path' because it is an empty
+# string" before running a single check - while the interactive form the header
+# documents (`.\_tests\Verify-Arming.ps1`) worked fine.
+#
+# That is the worst shape a gate can have: it passes for the person who wrote
+# the invocation into the runbook and crashes for anything that automates it,
+# and a crash is not a verdict. Resolved in the BODY, where $PSScriptRoot is
+# always populated.
+#
+# ⚠ THIS PROJECT HAD ALREADY PAID FOR THIS ONCE. `Trace-CityOpen.ps1` carries
+# the same warning in its own param block - there it was WORSE than a crash,
+# because an empty root silently wrote the first trace to the drive root
+# instead of the project. The cure was found, written down, and applied to
+# exactly one script. Porting it here is the "check our previous work first"
+# law: the answer existed, in this folder, and this file did not have it.
+if (-not $RestorePoint) {
+    $RestorePoint = Join-Path $PSScriptRoot 'restore-point-pre-armone'
+}
 
 if ($Restore) {
     if (-not (Test-Path $RestorePoint)) { throw "no restore point at $RestorePoint" }
