@@ -298,7 +298,14 @@ $msg = "folders: early={0} ({1}), override={2} ({3})"
 Write-Output ($msg -f $our, $(if ($earlyFound) { "discovered by content" } else { "FALLBACK to the v4.2.0 name" }),
     $zzz, $(if ($overrideFound) { "discovered by content" } else { "FALLBACK to the v4.2.0 name" }))
 $ourDirs = [ordered]@{ early = $our; override = $zzz }
-$ini = Join-Path $our "SC4UIScale.ini"
+# THE INI IS AT THE PLUGINS ROOT, not in our folder. v4.4.0 moved it into
+# 010-SC4UIScale\ for tidiness and v4.5.0 moved it BACK, because a package
+# manager deletes the versioned package folder on every update and the tier
+# choice went with it. This script was never updated, so `Set-Tier -Status`
+# has been refusing with "no SC4UIScale.ini ... the tier cannot be set without
+# it" on a perfectly healthy install - the DLL writes the root copy and this
+# looked in the folder the DLL had already stopped using.
+$ini = Join-Path $Plugins "SC4UIScale.ini"
 $STATE_FILE = "z_SC4UIScale_STATE.txt"
 
 # ===========================================================================
@@ -724,13 +731,14 @@ if (-not (Test-Path $ini)) {
     # named neither the file's purpose nor the fix. Two Set-Tier runs failed
     # that way on 2026-08-29 before anyone read the stack.
     Deny "no SC4UIScale.ini at $ini" @(
-        "That path is <our early folder>\SC4UIScale.ini - v4.4.0 moved the ini,",
-        "log and gcap INTO the mod folder; the Plugins root carries the DLL and",
-        "nothing else.",
+        "That path is the PLUGINS ROOT. v4.5.0 put the ini back there on",
+        "purpose: a package manager wipes the versioned package folder on every",
+        "update, and the tier choice would not survive a single version bump.",
+        "The log and gcap stayed in the mod folder; only the ini came back out.",
         "",
-        "If the folder above is a FALLBACK guess (see the 'folders:' line at the",
-        "top of this run), the real one was not discovered by content - check",
-        "that the tree really holds our packages.")
+        "The DLL creates this file on its first run, so the usual cause is that",
+        "the game has not been launched since the mod was installed. Launch it",
+        "once, then re-run this.")
 }
 # NEVER write this file with a BOM (standing order).
 $raw = [System.IO.File]::ReadAllBytes($ini)

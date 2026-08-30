@@ -1,3 +1,47 @@
+2026-08-30  v4.5.1    v4.5.0 DID NOT WORK WHEN INSTALLED BY sc4pac
+
+  v4.5.0 replaced hard-coded folder names with discovery BY CONTENT so a
+  package manager could name our folders itself. The walk stopped two levels
+  below Plugins. sc4pac strips each package's longest common directory prefix,
+  which puts our two packages at DIFFERENT depths: the override package's
+  markers land at level 2 and are found, the early package keeps its
+  010-SC4UIScale\ subfolder and lands at level 3, and was not. The early half
+  fell back to a folder that does not exist on an sc4pac install, ArmOne found
+  no payloads there, and the installed dats - byte-identical to the 2x payloads
+  - stayed at 2x under EVERY tier while the override half followed the chosen
+  factor. A mixed-scale UI. Hand installs were never affected.
+  NOW: the walk reaches level 3, and it COUNTS candidates so a half-migrated
+  tree (hand install left in place, sc4pac install added on top) says so
+  instead of silently taking whichever sorted first.
+  ALSO, all the same wrong premise: GetOurFilePathA never routed the ini to the
+  Plugins root the way the wide-char door does, so UiSpike's LiveTune block
+  read a nonexistent file and took defaults; two of six ClassifyDir markers
+  matched files we no longer ship; the carbon-skin check hard-coded
+  zzz-SC4UIScale and reported "NO carbon packages present" on a correct sc4pac
+  install; Set-Tier looked for the ini in the mod folder and refused to run;
+  and the dev deploy moved the ini back out of the root on every deploy,
+  deleting the root copy when both existed.
+  GATE: Test-FolderDiscovery.ps1 lifts the discovery code out of ScaleTier.cpp
+  between sentinels, compiles it standalone and runs five layouts including an
+  empty negative control - and carries a MUTATION CONTROL that rebuilds with
+  the old depth cap and refuses to pass unless that build fails.
+  Test-Sc4pacInstall.ps1 makes the install/uninstall a committed script.
+
+2026-08-29  v4.5.0    ARMING IS A CONTENT SWAP, NOT A RENAME
+
+  Through v4.4.0 a tier was armed by RENAMING dats (.dat <-> .dat.x1-disabled),
+  so 53 of 68 installed files sat under a name no manifest would contain.
+  NOW: one stable z_SC4UIScale_<Pkg>.dat per package whose CONTENT is swapped
+  at boot from an inert .<tag>.uipay payload the game never loads. Measured,
+  not assumed: probe #202 showed SC4's plugin scan is EXTENSION-gated, with 13
+  of our live dats named in the same census as the control. The swap is atomic
+  (.tmp + MoveFileEx) and fingerprint-driven, so it self-heals after a package
+  update wipes the folder.
+  ALSO: folder discovery BY CONTENT rather than by name, so a package manager
+  can name the folders; and the ini moved back to the Plugins root, because an
+  update deletes the versioned package folder and the tier choice went with it.
+  NOTE: the discovery shipped one level too shallow - see v4.5.1.
+
 2026-08-29  v4.4.0    THE PLUGINS ROOT IS NOW JUST THE DLL
 
   Through 4.3.1 this mod left FIVE loose files at the Plugins root (dll, ini,

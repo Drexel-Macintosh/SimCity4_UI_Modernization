@@ -70,7 +70,15 @@ $MIGRATE_DELETE = @("FontStyle.ini",
 # does this itself at boot too (ScaleTier::MigrateRootLooseFiles); doing it
 # here as well means a deploy leaves a clean root even when the game is
 # never launched afterwards, so the root-is-clean check can run at once.
-foreach ($name in @("SC4UIScale.ini", "SC4UIScale-104.csv", "SC4UIScale.gcap")) {
+# v4.5.0: SC4UIScale.ini IS NOT IN THIS LIST ANY MORE. It belongs at the
+# Plugins root - a package manager wipes the versioned package folder on every
+# update, so an ini kept inside it loses the player's tier on each version bump.
+# Leaving it here made the ini PING-PONG: the deploy moved it into
+# 010-SC4UIScale\, the DLL's own migration moved it back out on the next launch,
+# forever. Worse, the "subfolder copy wins" branch below DELETES the root copy
+# when both exist - which discards the settings the game is actually using in
+# favour of a stale one. The log and gcap do still belong in the folder.
+foreach ($name in @("SC4UIScale-104.csv", "SC4UIScale.gcap")) {
     $old = Join-Path $plug $name
     if (Test-Path $old) {
         $new = Join-Path $our $name

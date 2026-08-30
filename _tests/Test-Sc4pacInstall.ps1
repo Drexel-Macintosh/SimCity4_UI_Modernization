@@ -34,6 +34,8 @@ param(
     # This constrains the HARNESS only - a real user fetches the published channel
     # over https and never builds one.
     [string]$Channel,
+    [ValidateSet('Windows-digital', 'Windows-disc', 'macOS')]
+    [string]$Edition = 'Windows-digital',
     # Copy the live tree's letter-named top-level folders (BSC, CSX, ...) in, so
     # the hybrid-install ordering exposure is REPRODUCED rather than assumed
     # away. -Migrated instead builds the canonical layout sc4pac documents.
@@ -133,12 +135,12 @@ $elevated = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIde
     [Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if ($Channel) {
-    if (-not (Test-Path (Join-Path $Channel 'channel.json'))) {
-        throw "-Channel '$Channel' does not look like a built channel (no channel.json)"
+    if (-not (Test-Path (Join-Path $Channel 'sc4pac-channel-contents.json'))) {
+        throw "-Channel '$Channel' does not look like a built channel (no sc4pac-channel-contents.json)"
     }
     # Reuse means the yaml on disk may be NEWER than the channel that was built
     # from it, which would silently test a stale package. Refuse rather than warn.
-    $chanStamp = (Get-Item (Join-Path $Channel 'channel.json')).LastWriteTimeUtc
+    $chanStamp = (Get-Item (Join-Path $Channel 'sc4pac-channel-contents.json')).LastWriteTimeUtc
     $yamlStamp = (Get-Item $Yaml).LastWriteTimeUtc
     if ($yamlStamp -gt $chanStamp) {
         throw ("the package yaml is NEWER than the prebuilt channel " +
@@ -183,8 +185,18 @@ $profileJson = @{
         pluginsRoot = $plugins
         cacheRoot   = $Cache
         tempRoot    = (Join-Path $Root 'temp')
-        variant     = @{}
-        channels    = @($chanUrl)
+        # sc4pac asks which SC4 edition you have and REFUSES to proceed in a
+        # non-interactive shell without an answer ("Operation aborted as
+        # terminal is non-interactive"). -y does not cover variant selection.
+        # This machine runs the Steam build, which is the digital edition.
+        variant     = @{ 'config:sc4-edition:edition' = $Edition }
+        # OUR channel first, then the official one. The official channel is not
+        # optional: sc4pac resolves shared config packages such as
+        # `config:sc4-edition-windows-digital` from it, and without it the
+        # install aborts with "Some packages could not be resolved" before a
+        # single file is written. A local-channel-only test would have been
+        # testing a situation no user is ever in.
+        channels    = @($chanUrl, 'https://memo33.github.io/sc4pac/channel/')
     }
     explicit = @()
 } | ConvertTo-Json -Depth 6
@@ -226,14 +238,19 @@ if ($rootOther.Count) { Fail "$($rootOther.Count) non-DLL file(s) at the Plugins
 $newIni = @(Get-ChildItem $plugins -Recurse -File -Filter '*_sc4pacnew.ini')
 if ($newIni.Count) { Fail "$($newIni.Count) *_sc4pacnew.ini file(s) - isIni landed an inert ini we would never activate" }
 
-$pkgDirs = @(Get-ChildItem $plugins -Recurse -Directory | Where-Object { $_.Name -like '*.sc4pac' })
+$allPkgDirs = @(Get-ChildItem $plugins -Recurse -Directory | Where-Object { $_.Name -like '*.sc4pac' })
+# OURS only. sc4pac pulls in config:sc4-edition and its edition-specific
+# sibling as real dependencies, so a bare count of *.sc4pac folders is a count
+# of the whole dependency graph, not of us.
+$pkgDirs = @($allPkgDirs | Where-Object { $_.Name -like 'a-drexel.*' })
 Write-Output "  package folders:"
-foreach ($d in $pkgDirs) {
+foreach ($d in $allPkgDirs) {
     $rel = $d.FullName.Substring($plugins.Length).TrimStart('\')
     $n = @(Get-ChildItem $d.FullName -Recurse -File).Count
-    Write-Output "    $rel  ($n files)"
+    $mine = if ($d.Name -like 'a-drexel.*') { 'OURS' } else { 'dependency' }
+    Write-Output "    $rel  ($n files, $mine)"
 }
-if ($pkgDirs.Count -ne 2) { Fail "expected 2 package folders, found $($pkgDirs.Count)" }
+if ($pkgDirs.Count -ne 2) { Fail "expected 2 packages of ours, found $($pkgDirs.Count) (of $($allPkgDirs.Count) total)" }
 
 # THE FLATTENING. sc4pac strips the longest common directory prefix, so our two
 # packages do NOT land the same shape: the early one keeps 010-SC4UIScale\, the
@@ -277,14 +294,20 @@ else { Write-Output "  all $($allDat.Count) live .dat begin DBPF" }
 # ---- ORDERING ----------------------------------------------------------------
 Write-Output ''
 Write-Output 'LOAD ORDER'
-$topSorted = @(Get-ChildItem $plugins -Directory | Sort-Object Name)
-Write-Output "  top level, in load order: $(($topSorted | ForEach-Object Name) -join ' | ')"
+# ORDINAL sort, not Sort-Object's culture-aware default: culture comparison put
+# `~Documents` FIRST in this listing while the ordinal check below correctly
+# placed it last, so the printed "load order" contradicted the verdict beside
+# it. Ordinal is also the closer model of what the game does.
+$topNames = [Collections.Generic.List[string]]::new()
+Get-ChildItem $plugins -Directory | ForEach-Object { $topNames.Add($_.Name) }
+$topNames.Sort([StringComparer]::Ordinal)
+Write-Output "  top level, in load order: $($topNames -join ' | ')"
 $ovr = @($pkgDirs | Where-Object { $_.FullName -like '*900-overrides*' })
 if ($ovr.Count) {
-    $after = @($topSorted | Where-Object { [string]::CompareOrdinal($_.Name, '900-overrides') -gt 0 })
+    $after = @($topNames | Where-Object { [string]::CompareOrdinal($_, '900-overrides') -gt 0 })
     if ($after.Count) {
         Note ("$($after.Count) top-level folder(s) load AFTER 900-overrides and can outrank our override package: " +
-              (($after | ForEach-Object Name) -join ', ') +
+              ($after -join ', ') +
               ". This is the documented hybrid-install exposure, not a new defect.")
     } else {
         Write-Output '  nothing out-sorts 900-overrides in this tree'

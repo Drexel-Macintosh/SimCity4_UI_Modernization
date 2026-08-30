@@ -1,5 +1,39 @@
 # Changelog
 
+## 4.5.1 (2026-08-30) - v4.5.0 did not work when installed by sc4pac
+
+- **If you installed v4.5.0 through sc4pac, half the mod was stuck at 2x.**
+  The dialogs, item icons and the main art package rendered at 2x no matter
+  which tier you picked, while the third-party overrides followed your choice -
+  so the UI came out at two different scales at once. A hand-installed v4.5.0
+  was not affected.
+- **The cause.** v4.5.0 stopped hard-coding its folder names and started
+  finding its two folders by looking at what is inside them - so that a package
+  manager could name those folders whatever it likes. That search only looked
+  two levels below `Plugins`. sc4pac puts one of our two packages three levels
+  down, because it strips a shared folder prefix from one package and not the
+  other. The search found the override folder and missed the other one, then
+  fell back to a folder name that does not exist on an sc4pac install.
+- **Fixed**, and the fix is covered by a test that proves it catches the bug:
+  `Test-FolderDiscovery.ps1` builds the layout sc4pac actually produces, plus
+  four others including an empty tree, and rebuilds itself with the old
+  behaviour to confirm the old behaviour fails.
+- **Also fixed, all from the same wrong assumption:**
+  - The live-tuning settings block read the ini from the wrong folder, so every
+    key in it silently fell back to its default.
+  - Two of the six filename patterns used to identify our folders matched files
+    we no longer ship.
+  - With the Carbon Skin installed, the log claimed "NO carbon packages are
+    present" on an sc4pac install that had all 44 of them.
+  - `Set-Tier` looked for `SC4UIScale.ini` in the mod folder and refused to run
+    with "the tier cannot be set without it". The ini has been at the `Plugins`
+    root since v4.5.0.
+  - The developer deploy script moved the ini back into the mod folder on every
+    deploy, and deleted the root copy when both existed.
+- The mod now says so in the log when more than one folder looks like ours -
+  the shape you get if you leave a hand install in place and then add the
+  sc4pac one on top.
+
 ## 4.4.0 (2026-08-29) - the Plugins root is now just the DLL
 
 - **This mod used to leave five loose files at your `Plugins` root** - the
