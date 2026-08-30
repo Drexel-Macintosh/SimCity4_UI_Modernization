@@ -17815,3 +17815,10 @@ zero hits (a mod is not obliged to carry the node).
 must run on whichever copy of that script we actually ship - a fix keyed to the
 branch rather than to the file is a fix that disappears the moment a mod takes
 the file over.
+
+**USER-CONFIRMED 2026-08-30, v4.5.5:** "Region Census is correct and looks
+perfect." The dialog now scales with its text - the 5 labels that overflowed
+their boxes at 2x fit, and the 9-slice frame draws cleanly. Both of the week's
+script-shipping mods (warrior's Raise the UI, null-45's Region View Census) are
+now confirmed on screen, by opposite cures: imagerect-only on the swept HUD,
+full area= scaling on the never-swept dialog.
