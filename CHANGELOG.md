@@ -1,5 +1,29 @@
 # Changelog
 
+## 4.5.3 (2026-08-30) - the button that brings the toolbars back is on screen again
+
+- **The Restore-Toolbars button was born partly below the bottom of the
+  screen, and then visibly jumped larger.** Hide the toolbars and the small
+  button that brings them back appears in the bottom-left corner - at 2x its
+  lower edge was cut off by the screen edge, and a moment later it grew to
+  double size and was cut off worse. Both are fixed; it now sits clear of the
+  edge and does not move after it appears.
+- **Why it happened.** The game builds that button without giving it a size -
+  its size comes entirely from its four-frame button artwork, which this mod
+  enlarges. But the game then places it using two fixed numbers that were
+  written for the original artwork, so the button grew while its position did
+  not. The amount it hung off the edge did not depend on your resolution: 1 px
+  at 1.5x, 10 px at 2x, 29 px at 3x.
+- **The jump was this mod's own doing.** Once the button became visible, the
+  routine that enlarges interface panels enlarged it a second time - putting
+  2x artwork inside a 4x frame. The mod now leaves that button alone, because
+  the button is already correct when it is created.
+- **New setting `RestoreToolbarsPatch`** under `[UiSpike]` (on by default)
+  turns both halves off together if you ever want the old behaviour. The fix
+  only applies while this mod's enlarged artwork is actually in use - with the
+  packages switched off the game's original placement is already right, and
+  changing it would move a correctly-placed button.
+
 ## 4.5.2 (2026-08-30) - the 1x scale picker could never arm; settings edits on fresh installs did nothing
 
 - **The in-game scale picker's 1x package could never activate.** The package

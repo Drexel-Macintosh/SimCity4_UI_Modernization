@@ -17634,3 +17634,15 @@ MOVES A CONSTANT NOBODY SCALED.** Whenever a package enlarges art in place,
 ask what reads that art's dimensions. If the answer is "a hardcoded placement
 constant", the art change has silently created a geometry defect, and the cure
 belongs at the constant, gated on the art actually being ours.
+
+**USER-CONFIRMED ON SCREEN 2026-08-30, after the cure:** "working perfectly".
+The boot log agrees and the arithmetic lands exactly where it was designed to:
+`CodePatches: RESTORE-TOOLBARS x2.00 - origin (12, viewH-28) -> (24, viewH-56)`,
+and the button is now born `(24,1544) 42x38` - bottom edge 1582 against a
+1600-px screen, **18 px clear**, which is `round(28f) - round(19f)` exactly.
+UiSpike's SHOWHOOK now reports it `log only` at 42x38 instead of re-doubling it
+to 84x76, so both halves are confirmed live from one boot. Note for anyone
+reading the old captures: the patched origin `(24,1544)` happens to equal the
+origin the buggy sweep used to move it to - the sweep had the POSITION right
+and the SIZE wrong, which is why the jump was the visible symptom and the clip
+was not.

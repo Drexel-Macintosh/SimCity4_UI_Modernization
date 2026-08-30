@@ -1,3 +1,23 @@
+2026-08-30  v4.5.3    RESTORE-TOOLBARS BUTTON BORN BELOW THE SCREEN EDGE
+
+  The last quantified uncovered defect in the coverage matrix. The 3D-view
+  HUD constructor builds this button and NEVER SIZES IT - the rect comes
+  entirely from its four-frame art strip, which we enlarge in place - then
+  places it with two raw 1x constants, GZWinMoveTo(12, viewH-28). Overflow
+  is (cellH - 28) and the view height cancels, so it was resolution-
+  independent: +1 / +10 / +29 px at 1.5x / 2x / 3x. On top of that our own
+  panel sweep re-doubled it to 84x76 once visible (2x art in a 4x box, 20 px
+  off-screen), which the capture logs flagged as "THIS ONE FLASHED ON
+  SCREEN" and the user confirmed by eye BEFORE any byte was written.
+  Cured at the source: one 6-byte block patch (both constants together, so a
+  half-applied state is unreachable) makes the builder emit
+  (round(12f), viewH - round(28f)); UiSpike stands down on window 0x43 once
+  that patch is live. Gated on ScaledArtArmed(), never on ScaleAll - with
+  the packages stashed the stock 28 is correct. Verified from three
+  independent instruments (image bytes, two capture logs, crosscheck.py) and
+  confirmed on screen at 2x: born (24,1544) 42x38, bottom 1582 vs a 1600-px
+  screen, 18 px clear. New gate Test-PatchSiteBytes.py pins the stock bytes.
+
 2026-08-30  v4.5.2    THE 1x PICKER PACKAGE COULD NEVER ARM + DEAD INI KEYS
 
   Adversarial audit of the sc4pac arc's own fixes. Two DLL defects: the
