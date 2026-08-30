@@ -1,6 +1,6 @@
 archive : C:\dev\SC4UIScale\tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat  (13411333 bytes)
 version : DBPF 1.0   index 7.0
-dates   : created 0x6A946B6B  modified 0x6A946B6B
+dates   : created 0x6A947EE7  modified 0x6A947EE7
 index   : 696 entries @ 0xCC6DA5 (13920 bytes)
 holes   : 0 @ 0x0 (0 bytes)
 DIR     : compression directory absent (all uncompressed)

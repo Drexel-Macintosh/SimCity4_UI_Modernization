@@ -483,6 +483,14 @@ Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_WarriorUI-3x.dat" "$zzz\z_SC4UIS
 Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_RaiseUI.dat" "$zzz\z_SC4UIScale_RaiseUI-2x.dat" -Force
 Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_RaiseUI-15x.dat" "$zzz\z_SC4UIScale_RaiseUI-15x.dat.x1-disabled" -Force
 Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_RaiseUI-3x.dat" "$zzz\z_SC4UIScale_RaiseUI-3x.dat.x1-disabled" -Force
+# ZCarbonRaiseUI (2026-08-30): Scoty's OPTIONAL composed Carbon+Raise scripts,
+# for the one combination neither RaiseUI nor ZCarbonArt can serve. Sorts after
+# ZCarbonArt so it wins both contested scripts when its gate is open, and is
+# gated on the composed file itself - which only exists when both mods are
+# installed, so its presence is the conjunction.
+Copy-Item "$proj\tools\selective-safe\z_SC4UIScale_ZCarbonRaiseUI.dat" "$zzz\z_SC4UIScale_ZCarbonRaiseUI-2x.dat" -Force
+Copy-Item "$proj\tools\packages\15x\z_SC4UIScale_ZCarbonRaiseUI-15x.dat" "$zzz\z_SC4UIScale_ZCarbonRaiseUI-15x.dat.x1-disabled" -Force
+Copy-Item "$proj\tools\packages\3x\z_SC4UIScale_ZCarbonRaiseUI-3x.dat" "$zzz\z_SC4UIScale_ZCarbonRaiseUI-3x.dat.x1-disabled" -Force
 # RegionCensusUI (2026-08-30): null-45's mod-ONLY region census dialog, which
 # never scales itself while our 2x fonts scale its text - 5 of 40 labels
 # overflow at 2x. Built by dialog-static (static/never-swept window, so its
@@ -643,6 +651,7 @@ $DEPENDENCY_GATED = @(
     "z_SC4UIScale_WarriorUI",     # Warrior's UI mod
     "z_SC4UIScale_RaiseUI",       # Warrior's Raise the UI Mod
     "z_SC4UIScale_RegionCensusUI",# null-45's Region View Census UI
+    "z_SC4UIScale_ZCarbonRaiseUI",# Scoty's composed Carbon+Raise scripts
     "z_SC4UIScale_ThirdPartyUI",  # assorted third-party UI overrides
     "z_SC4UIScale_SaveWarningUI", # save-warning mod
     "z_SC4UIScale_NamIcons",      # NAM

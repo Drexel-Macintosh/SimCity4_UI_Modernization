@@ -958,6 +958,34 @@ namespace
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonArt",
 		  L"scoty_carbon_PNG.dat", false, 3460148,
 		  L"scoty_Carbon_Files.dat", 268639 },
+		// CARBON + RAISE THE UI, the combination neither package can serve
+		// (2026-08-30). Scoty ships an OPTIONAL composed file,
+		// z_scoty_Carbon_RaiseUI.dat, holding his own Carbon layout WITH
+		// warrior's raise already folded in - and it is a genuinely THIRD
+		// layout, not a merge of the two we already carry:
+		//     stock                 c973b411 root (30,-5,265,218)  223 tall
+		//     warrior's raise                     (30,-5,265,250)  255 tall
+		//     ZCarbonArt (carbon)                 (30,-5,265,223)  228 tall
+		//     Scoty's composed                    (30,-5,265,258)  263 tall
+		// So with both mods installed, NO combination of our existing
+		// packages produces the right geometry - which is why this is a new
+		// package and not a rename. (A rename was investigated and is
+		// structurally impossible here: any name that beats ZCarbonArt must
+		// begin "ZCarbon", and every other Z-name sorts after ALL the ZCarbon
+		// packages.)
+		//
+		// z_SC4UIScale_ZCarbonRaiseUI sorts after z_SC4UIScale_ZCarbonArt
+		// ('A' < 'R') and so wins both contested scripts, and before
+		// ZCarbonSaveWarning / ZCarbonStyles / ZCarbonUI, which carry neither.
+		//
+		// GATED ON THE COMPOSED FILE ALONE, and that is not a shortcut: the
+		// file only exists on an install that has BOTH mods, so its presence
+		// IS the conjunction. Same shape as ZCarbonGodMod, which likewise
+		// constitutes its layout by itself. EXACT SIZE: our copy hard-codes
+		// these rects, so any update to Scoty's file must disable us.
+		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonRaiseUI",
+		  L"z_scoty_Carbon_RaiseUI.dat", false, 7078,
+		  L"scoty_Carbon_Files.dat", 268639 },
 		// Upscaled copies of Carbon's icon strips at its own TGIs.
 		{ L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonIcons",
 		  L"scoty_carbon_PNG.dat", false, 3460148,
@@ -4433,6 +4461,9 @@ namespace ScaleTier
 			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonUI",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonUI", depOk));
+			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonRaiseUI",
+				pkg.tag, match && DepOkByName(
+					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonRaiseUI", depOk));
 			SyncDat(pluginsRoot, L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonArt",
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonArt", depOk));

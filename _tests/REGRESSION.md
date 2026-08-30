@@ -17892,3 +17892,74 @@ belief is what let it sit. The docstring is corrected in place.
 ⭐ **A COMMENT THAT DESCRIBES WHAT THE CODE SHOULD DO IS NOT EVIDENCE THAT IT
 DOES.** This one was confidently wrong for the life of the package, in the file
 that contained the defect, and it read as a reason not to look.
+
+---
+
+## 2026-08-30 - the zzz-internal sort trap: why a RENAME was impossible, and what we shipped instead
+
+`z_SC4UIScale_RaiseUI` (v4.5.4) lost both its scripts to two of our OWN packages,
+because inside `zzz-SC4UIScale\` load order is ASCII and LAST WINS:
+`RaiseUI < WebButtonUI < ZCarbonArt`.
+
+### The obvious fix was structurally impossible
+
+Rename RaiseUI to sort late? Any name that beats `ZCarbonArt` must itself begin
+`ZCarbon` - and every OTHER Z-name (`ZRaiseUI`, `ZZRaiseUI`, ...) sorts after
+ALL the ZCarbon packages, because `'C' < 'R'`. So a renamed RaiseUI would
+either still lose, or would beat Carbon's own layout while being gated on
+warrior's mod - and in the Raise+WebButton state it would restore the live
+website-button id and undo the Web Button mod's "Click Prevented", which is
+the outcome this project names worst.
+
+### What made the answer obvious: THERE ARE THREE LAYOUTS, NOT TWO
+
+Measured on the `c973b411` root rect:
+
+```
+stock                      (30,-5,265,218)   223 tall
+warrior's raise            (30,-5,265,250)   255 tall
+Carbon's own (ZCarbonArt)  (30,-5,265,223)   228 tall
+Scoty's COMPOSED variant   (30,-5,265,258)   263 tall
+```
+
+**No combination of our packages can produce the fourth row.** Scoty ships an
+optional `z_scoty_Carbon_RaiseUI.dat` (7,078 B) holding his Carbon layout with
+warrior's raise already folded in - and this repo had been VENDORING it under
+`tools/research/carbon/source/` without ever enrolling it.
+
+### The fix
+
+New `z_SC4UIScale_ZCarbonRaiseUI`, built through selective-safe from Scoty's
+composed scripts. It sorts after `ZCarbonArt` ('A' < 'R') so it wins both
+contested scripts, and before `ZCarbonSaveWarning` / `Styles` / `UI`, which
+carry neither. Gated on the composed file ALONE - it only exists on an install
+that has both mods, so **its presence IS the conjunction**, the same shape as
+`ZCarbonGodMod`.
+
+Verified on the built artifact: `area=` byte-identical to Scoty's source (his
+composed layout preserved), exactly two attribute kinds changed - `imagerect`
+and `font` - and the #183 align carried in.
+
+⭐ **WHEN OUR OWN PACKAGES COLLIDE, THE QUESTION IS NOT "WHO SHOULD WIN" BUT
+"IS THERE A LAYOUT NOBODY IS SHIPPING".** Two packages fighting over a TGI is
+usually a sign that the *combination* of their two mods is a state neither was
+built for. Renaming picks a loser; enrolling the composed source serves the
+state.
+
+### DEFECT 3 (pause border) - decided, not yet built
+
+`z_SC4UIScale_ZCarbonArt` carries a 240x240 SOLID GOLD `{46A006B0,14315E61}`,
+and `zzz-` outranks the mod folders - so with Carbon installed we repaint the
+yellow pause border over any remover.
+
+**The measurement that settles the design:** scanning all 25 Carbon dats, the
+TGI appears in exactly TWO - `scoty_carbon_PNG.dat` (the gold re-skin, so our
+copy is legitimately derived from Scoty's art, not invented) and
+**`y_scoty_Carbon_Yellow-pause-remover.dat` - Scoty ships his own remover.**
+
+So this is not "our override vs a third-party mod"; it is **our copy of Scoty's
+art defeating Scoty's own remover**, and the user's choice between the two is
+the thing being overridden. Dropping the TGI outright would cost Carbon users
+who WANT the border its 2x sharpness, so the right shape is per-TGI: split it
+into its own tiny package armed on Carbon present AND no remover present -
+the inverse-gate pattern WebText and SelectorUI already use. NOT BUILT YET.
