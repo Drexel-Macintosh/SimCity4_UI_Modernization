@@ -157,6 +157,10 @@ _tests\Test-DatIntegrity.ps1                 # deployed == built
 _tests\Test-ThirdPartyGates.ps1              # third-party overrides stay gated
 _tests\Test-FolderDiscovery.ps1              # the DLL's discovery code, compiled + mutation-tested
 _tests\Test-DistInstall.ps1                  # the public zip installer, install+uninstall round-trip
+- `_tests\Test-GameFolderClean.ps1` - asserts we leave NOTHING in the
+  player's SimCity 4 install folder. Run with the game CLOSED. Nothing
+  else in the net looks at that folder, which is how a 23 KB leftover
+  shipped for several releases while the README promised otherwise.
 _tests\Sync-Check.ps1                        # repo vs GitHub; user paths + binary art BY CONTENT
 python _tests\Test-PatchSiteBytes.py         # byte-patch sites still hold their expected bytes
 _tests\Verify-Arming.ps1                     # after a boot: content-swap arming, STATE.txt

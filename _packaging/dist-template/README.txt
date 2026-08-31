@@ -97,19 +97,31 @@ sc4pac-installed DLL mod uses: the .dll at the root, its data in a folder.)
 csv - into 010-SC4UIScale\ by itself on the first launch. Your SC4UIScale.ini
 stays at the root, which is where the mod reads it from v4.5.0 on.)
 
-THE FONT IN THE GAME'S OWN FOLDER CLEANS ITSELF UP. The game only reads a
-loose font file from its install directory, so the mod copies the matching
-one to <SimCity 4 install>\Plugins\FontStyle.ini while it runs - and moves it
-back out again when the game shuts down normally. So after a clean exit there
-is nothing there to delete. If the game crashed on its last run, check that
-path and delete a leftover FontStyle.ini by hand, or the game keeps using the
-enlarged font after everything above is gone.
+THE FONT IN THE GAME'S OWN FOLDER. The game reads a loose font file from two
+fixed places and nowhere else - it does not look inside mod folders - so the
+only way an enlarged font can apply at all is for the mod to put one at
+<SimCity 4 install>\Plugins\FontStyle.ini while it runs. It removes that file
+again when the game shuts down normally, leaving nothing behind.
+
+  CORRECTED IN THIS RELEASE. Earlier versions RENAMED that file on exit
+  instead of removing it, so a clean shutdown left a 23 KB
+  FontStyle.ini.x1-disabled sitting in your SimCity 4 install folder
+  permanently - which this file used to claim did not happen. If you have
+  installed an older version, look in <SimCity 4 install>\Plugins\ and
+  delete FontStyle.ini.x1-disabled by hand: it is ours, it is inert, and
+  nothing needs it. This version also removes it for you on its next
+  normal shutdown.
+
+If the game CRASHED on its last run the mod never got to clean up: check
+<SimCity 4 install>\Plugins\ and delete a leftover FontStyle.ini by hand, or
+the game keeps using the enlarged font after everything above is gone.
 
 If you had your OWN FontStyle.ini before installing, the mod saved it once as
-FontStyle.ini.user-original and never touched it again. Look for that file in
-BOTH Plugins folders and rename it back to FontStyle.ini instead of just
-deleting it. If it is not there, you had no font file of your own and deleting
-is correct - the game falls back to its built-in font.
+FontStyle.ini.user-original and never touched it again, and it restores your
+file rather than deleting anything of yours. Look for it in BOTH Plugins
+folders and rename it back to FontStyle.ini if it is still there. If it is not
+there, you had no font file of your own and deleting is correct - the game
+falls back to its built-in font.
 
 Nothing else is written anywhere, there are no registry keys, and your cities
 and regions are never touched.

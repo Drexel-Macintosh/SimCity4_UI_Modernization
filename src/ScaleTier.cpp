@@ -1992,6 +1992,43 @@ namespace
 							"is the safe direction.", aside);
 					}
 				}
+				// ⛔ LEAVE NOTHING BEHIND IN THE GAME'S OWN FOLDER.
+				// Until 2026-08-30 this only ever RENAMED our font to
+				// FontStyle.ini.x1-disabled - which meant a clean exit left a
+				// 23 KB file sitting in Program Files forever, under a name
+				// carrying none of the z_SC4UIScale_ marking every other file
+				// of ours uses. That is exactly the landmine #182 was written
+				// to remove, reintroduced with a different suffix, and the
+				// shipped README promised the opposite ("after a clean exit
+				// there is nothing there to delete"). Reported by a player who
+				// found it in
+				// Steam\steamapps\common\SimCity 4 Deluxe\Plugins.
+				//
+				// PROVEN OURS, NOT ASSUMED OURS - the same discipline the
+				// stale-stash branch above already uses. We delete only a file
+				// byte-identical to one of the tier sources we ship, or an
+				// empty one (ours by construction, per #182). Anything else
+				// keeps the old move-aside behaviour: a scaled font staying
+				// live is a cosmetic defect, and deleting a font we cannot
+				// prove is ours is not.
+				const wchar_t* liveTag = MatchesAnyTierFontSource(live, srcDir);
+				if (liveTag != nullptr || IsEmptyFile(live))
+				{
+					if (DeleteFileW(live))
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"ScaleTier: %ls DELETED at stock tier (it was %ls). "
+							"Nothing of ours is left in that folder - the game "
+							"falls back to its own built-in font table.",
+							live, liveTag != nullptr
+								? L"byte-identical to one of our tier sources"
+								: L"empty, so ours by construction (#182)");
+						return;
+					}
+					Logger::Get().WriteLine(LogLevel::Info,
+						"ScaleTier: could not delete %ls (err %u) - falling "
+						"back to the move-aside path.", live, GetLastError());
+				}
 				if (!MoveFileExW(live, aside, 0))
 				{
 					Logger::Get().WriteLine(
@@ -2001,7 +2038,10 @@ namespace
 					return;
 				}
 				Logger::Get().WriteLine(
-					LogLevel::Info, "ScaleTier: %ls removed (stock tier).", live);
+					LogLevel::Info,
+					"ScaleTier: %ls moved aside to %ls (stock tier). It was NOT "
+					"provably one of ours, so it is kept rather than deleted.",
+					live, aside);
 			}
 			return;
 		}
@@ -4551,10 +4591,27 @@ namespace ScaleTier
 				pkg.tag, match && DepOkByName(
 					L"zzz-SC4UIScale\\z_SC4UIScale_ZCarbonGodMod", depOk));
 		}
-		// Install root FIRST (the copy the game reads); Documents mirror
-		// second (kept for inspectability + package consistency).
+		// ⛔ THE DOCUMENTS MIRROR IS GONE (2026-08-30). There used to be a
+		// second SyncFont(docPlugins, docPlugins, ...) here, writing a
+		// FontStyle.ini into OUR OWN mod folder "for inspectability + package
+		// consistency".
+		//
+		// MEASURED: the game never read it and could not have. The whole
+		// executable contains exactly ONE "FontStyle.ini" string (0x00A86DC8),
+		// referenced twice from one function at 0x0044DC85, each time as
+		// <dir> + the filename where <dir> comes from a vtable getter (slots
+		// +0xDC then +0xD4 on the same object), with an exists-check whose
+		// jne short-circuits the second probe. TWO FIXED PATHS, no recursive
+		// search, no subfolder probe - so a FontStyle.ini inside
+		// Plugins\010-SC4UIScale\ is unreachable by construction.
+		//
+		// The only thing that ever read it was our own Set-Tier -Status,
+		// which printed "FontStyle.ini matches: <tier>" - and Set-Tier wrote
+		// the file itself so that its own status line would have something to
+		// report. A file that exists so the tool checking for it finds
+		// something is not a feature. The live tier is already reported by the
+		// boot log, the armed packages and the tier sources themselves.
 		SyncFont(docPlugins, instPlugins, activeTag);
-		SyncFont(docPlugins, docPlugins, activeTag);
 
 		// Everything above only RECORDED what it wants. NO COMMIT HERE:
 		// SyncSelectorPackage records AFTER this function returns, and a
@@ -4613,7 +4670,37 @@ namespace ScaleTier
 		wchar_t instPlugins[MAX_PATH];
 		InstallPluginsDir(instPlugins, MAX_PATH);
 		SyncFont(docPlugins, instPlugins, nullptr);
-		SyncFont(docPlugins, docPlugins, nullptr);
+		// The Documents mirror is no longer written (see SyncStaticLayers),
+		// but a tree upgraded from an older build still HAS one. Clean both
+		// its forms up once, here, so the rename does not simply strand them.
+		{
+			wchar_t stale[MAX_PATH];
+			swprintf_s(stale, L"%sFontStyle.ini", docPlugins);
+			if (FileExists(stale)
+				&& (MatchesAnyTierFontSource(stale, docPlugins)
+					|| IsEmptyFile(stale)))
+			{
+				if (DeleteFileW(stale))
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"ScaleTier: removed the legacy Documents font mirror "
+						"%ls - the game never read it (two fixed probe paths, "
+						"neither inside a mod folder).", stale);
+				}
+			}
+			swprintf_s(stale, L"%sFontStyle.ini%s", docPlugins, kDisabledSuffix);
+			if (FileExists(stale)
+				&& (MatchesAnyTierFontSource(stale, docPlugins)
+					|| IsEmptyFile(stale)))
+			{
+				if (DeleteFileW(stale))
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"ScaleTier: removed the legacy stashed Documents font "
+						"mirror %ls.", stale);
+				}
+			}
+		}
 	}
 }
 

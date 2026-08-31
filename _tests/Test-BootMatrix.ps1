@@ -8,6 +8,15 @@
 # PASS = exit 0, "ALL PASS".
 $ErrorActionPreference = "Stop"
 $plugins = (Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4\Plugins')
+# ⛔ THE FONT ASSERTIONS BELOW USED $plugins AND SO CHECKED A PATH NOTHING
+# HAS WRITTEN SINCE v4.2.0. The live font the game reads is
+# <install>\Plugins\FontStyle.ini; the Documents copy they were testing was a
+# mirror we wrote for ourselves, and it was removed entirely on 2026-08-30.
+# A gate asserting a file that no longer exists is not a gate - it either fails
+# forever or, worse, is quietly never run. Pointed at the real path.
+$gameDir = $env:SC4_GAME_DIR
+if (-not $gameDir) { $gameDir = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe" }
+$fontDir = Join-Path $gameDir 'Plugins'
 $gfx = "$plugins\SC4GraphicsOptions.ini"
 $log = "$plugins\010-SC4UIScale\SC4UIScale.log"   # v4.4.0 root cleanup
 $exe = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe"
@@ -70,9 +79,9 @@ foreach ($m in $MATRIX) {
       if ($t -eq $m.tag -and -not $live) { $failures += "$label - $t art dat should be LIVE" }
       if ($t -ne $m.tag -and $live) { $failures += "$label - $t art dat should be GATED" }
     }
-    if (-not (Test-Path "$plugins\FontStyle.ini")) { $failures += "$label - FontStyle.ini not live" }
+    if (-not (Test-Path "$fontDir\FontStyle.ini")) { $failures += "$label - FontStyle.ini not live" }
     elseif ($m.tag) {
-      $liveHash = (Get-FileHash "$plugins\FontStyle.ini" -Algorithm SHA256).Hash
+      $liveHash = (Get-FileHash "$fontDir\FontStyle.ini" -Algorithm SHA256).Hash
       $srcHash = (Get-FileHash "$plugins\FontStyle$($m.tag).ini" -Algorithm SHA256).Hash
       if ($liveHash -ne $srcHash) { $failures += "$label - live FontStyle.ini is not the $($m.tag) table" }
     }
@@ -83,7 +92,7 @@ foreach ($m in $MATRIX) {
     foreach ($t in $ALL_TAGS) {
       if (Test-Path "$plugins-SC4UIScale\z_SC4UIScale_SelectiveArt$t.dat") { $failures += "$label - $t art dat NOT gated at stock" }
     }
-    if (Test-Path "$plugins\FontStyle.ini") { $failures += "$label - FontStyle.ini NOT removed at stock" }
+    if (Test-Path "$fontDir\FontStyle.ini") { $failures += "$label - FontStyle.ini NOT removed at stock" }
   }
   Write-Output ("checked " + $label + " -> " + $(if ($failures.Count -eq 0) { "ok so far" } else { "issues: " + $failures.Count }))
 }

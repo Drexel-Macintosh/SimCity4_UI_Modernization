@@ -314,6 +314,11 @@ if ($earlyFound -ne $overrideFound) {
         "is a mixed-tier screen with no red anywhere. Fix the install (or the",
         "marker files) so both halves resolve, then re-run.")
 }
+# The game install dir, resolved ONCE here because -Status (far above the old
+# definition at the bottom of this file) now reports the font from the path the
+# GAME reads rather than from a copy we wrote for ourselves.
+$gameDir = $env:SC4_GAME_DIR
+if (-not $gameDir) { $gameDir = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe" }
 $our = if ($earlyFound) { $found.Early } else { Join-Path $Plugins "010-SC4UIScale" }
 $zzz = if ($overrideFound) { $found.Override } else { Join-Path $Plugins "zzz-SC4UIScale" }
 $msg = "folders: early={0} ({1}), override={2} ({3})"
@@ -548,7 +553,9 @@ function Show-State {
     } else {
         Write-Warning ("no SC4UIScale.ini at {0} - the tier cannot be set without it." -f $ini)
     }
-    $font = Join-Path $our "FontStyle.ini"
+    # Report from the file the GAME reads, not from a copy we made for
+    # ourselves. $fontLive is <install>\Plugins\FontStyle.ini.
+    $font = Join-Path (Join-Path $gameDir "Plugins") "FontStyle.ini"
     if (Test-Path $font) {
         $h = (Get-FileHash -LiteralPath $font -Algorithm SHA256).Hash
         $which = "unrecognised"
@@ -1012,8 +1019,7 @@ if ($wantTag -and (Test-Path $restoreFile) -and -not $DryRun) { Remove-Item -Lit
 # by their tagged names (ScaleTier.cpp: MatchesAnyTierFontSource /
 # "%sFontStyle%s.ini"), so this half is unchanged by v4.5.0 - only the tag list
 # is derived now instead of hand-written.
-$gameDir = $env:SC4_GAME_DIR
-if (-not $gameDir) { $gameDir = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe" }
+# $gameDir was resolved near the top of this script.
 $fontLive = Join-Path $gameDir "Plugins\FontStyle.ini"
 if ($isStock) {
     # 1x BASELINE. Restore the user's ORIGINAL font table rather than any of
@@ -1068,8 +1074,13 @@ if (-not (Test-Path $src)) {
             "Program Files is ACL-protected and the game reads the font from THERE."
         Write-Warning ($m -f $fontLive, $_.Exception.Message)
     }
-    # Keep the Documents copy in step too, so -Status reports the truth.
-    Copy-Item -LiteralPath $src -Destination (Join-Path $our "FontStyle.ini") -Force
+    # THE DOCUMENTS COPY IS NO LONGER WRITTEN (2026-08-30).
+    # It existed so -Status could print "FontStyle.ini matches: <tier>" - i.e.
+    # this script wrote a file so that this script would have something to
+    # report. The game never read it and could not have: the executable holds
+    # exactly ONE "FontStyle.ini" string, probed at TWO FIXED PATHS with no
+    # recursive search, neither of them inside a mod folder. -Status now
+    # reports the tier from the live font the game actually reads.
 }
 
 Show-State

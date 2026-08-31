@@ -19112,3 +19112,92 @@ instruction-vs-operand distinction this project keeps re-learning.
 A DAT-side art census was also attempted and is a **structural null**: of 36,388
 FSH entries, only 2.3% carry a plaintext name; the rest are QFS-compressed and
 invisible to a byte scan. It proves nothing, and says so.
+
+
+---
+
+## 2026-08-30 - we were leaving a file in the player's game folder, and the README said we weren't
+
+**Player report:** a `FontStyle.ini`-shaped file turning up in
+`Steam\steamapps\common\SimCity 4 Deluxe\Plugins`, contradicting the shipped
+instructions. Reproduced on this machine in one measurement:
+`FontStyle.ini.x1-disabled`, **23,016 bytes**, sitting in Program Files.
+
+### The installer was innocent, and checking that first mattered
+
+The downloaded v4.5.9 bundle contains only the three tier sources and the empty
+`z_SC4UIScale_FontStyle.ini` placeholder - **no live-named file** - and
+`Install.ps1` copies only what the bundle holds. The #182 packaging rename was
+correctly applied. **The runtime never got it.**
+
+### ⭐ THE ENGINE FACT THAT SETTLES THE WHOLE DESIGN
+
+The proposed fix was "reference the font from inside our two mod folders".
+**Measured: that is impossible.** The entire executable contains exactly ONE
+`"FontStyle.ini"` string (`0x00A86DC8`), referenced twice from one function at
+`0x0044DC85`. Each reference builds `<dir> + "FontStyle.ini"` where `<dir>`
+comes from a vtable getter (slots `+0xDC` then `+0xD4` on the same object),
+followed by an exists-check whose `jne` short-circuits the second probe.
+
+**Two fixed paths. No recursive search. No subfolder probe.** A `FontStyle.ini`
+inside `Plugins\010-SC4UIScale\` is unreachable by construction, so the font can
+only apply by occupying one of those two exact paths under that exact name.
+Renaming the live file means the enlarged font silently stops working.
+
+### ⭐ AND THE MIRROR EXISTED ONLY TO BE FOUND BY THE TOOL LOOKING FOR IT
+
+The DLL also wrote a second copy into our own folder, described in the source as
+"kept for inspectability + package consistency". Chasing its consumers found a
+closed loop: **`Set-Tier` wrote it so that `Set-Tier -Status` could print
+`FontStyle.ini matches: <tier>`.** Nothing else read it, and the game provably
+could not. A file that exists so the check for it succeeds is not a feature.
+Deleted outright rather than renamed - the user asked the right question ("if
+it's read by nothing why do we even need it?") and the answer was: we don't.
+
+### The four fixes
+
+1. **Stock tier now DELETES our font instead of stashing it.** The old path only
+   ever renamed it to `.x1-disabled`, so every clean exit left 23 KB in Program
+   Files forever, under a name carrying none of the `z_SC4UIScale_` marking -
+   the #182 landmine reintroduced with a different suffix. Deletion reuses the
+   existing **proven-ours** test (`MatchesAnyTierFontSource` or empty); anything
+   not provably ours keeps the old move-aside, because a scaled font staying
+   live is cosmetic and deleting a font we cannot prove is ours is not.
+2. **The Documents mirror is gone**, and shutdown removes a legacy one from
+   upgraded trees so the change does not simply strand it.
+3. **README corrected.** It promised "after a clean exit there is nothing there
+   to delete" while we left 23 KB. It now states the two-fixed-paths fact, owns
+   the regression, and tells players with older installs what to delete by hand.
+4. **New gate: `_tests/Test-GameFolderClean.ps1`.**
+
+### ⛔ THE REAL GAP WAS THAT NOTHING WATCHED THAT FOLDER
+
+Every existing gate inspects the Documents Plugins tree, which is ours. **The
+game's own install folder - where the damage lands - had no test at all.** The
+new gate asserts the resting state there, identifies our files by hash against
+the shipped tier sources rather than by name, leaves a player's own font and its
+`.user-original` alone, and **refuses rather than passes** when it cannot find
+the tier sources it needs to recognise anything.
+
+**Positive control, run before the fix:** it failed with
+`FontStyle.ini.x1-disabled is byte-identical to our own FontStyle-2x.ini
+(23,016 bytes)`. After deleting the leftover: PASS. Red before, green after, on
+the real defect.
+
+⚠ It is a RESTING-STATE gate - run with the game closed. A live `FontStyle.ini`
+there while playing is the mechanism working, not a failure, and the gate skips
+rather than lying if it sees the game running.
+
+### Also fixed: a gate asserting a path nothing had written since v4.2.0
+
+`Test-BootMatrix` checked `Documents\...\Plugins\FontStyle.ini` - the Plugins
+ROOT - but the DLL has written the mirror into `010-SC4UIScale\` since v4.2.0
+and the live font the game reads was never there at all. Repointed at the real
+path. **A gate asserting a file that no longer exists either fails forever or is
+quietly never run**; either way it stopped being evidence some releases ago.
+
+⚠ **My own near-miss, caught by a syntax check and worth recording:** the first
+edit to both scripts used a `$GameDir` that does not exist in either - in
+`Set-Tier` the variable is defined 460 lines BELOW where I used it. Two shipped
+scripts would have silently resolved an empty path. Fixed by resolving it once,
+early, and the parser check is now the habit.
