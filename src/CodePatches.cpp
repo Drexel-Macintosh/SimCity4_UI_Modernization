@@ -6531,7 +6531,7 @@ namespace CodePatches
 			return p;
 		}
 
-		void __stdcall SpStripLog(void* self)
+		void __stdcall SpStripLog(void* self, void* retaddr)
 		{
 			const LONG n = InterlockedIncrement(&gSpStripCalls);
 			// THE BUDGET FIX. gSpStripLogs capped at 16 while the counter ran
@@ -6546,6 +6546,10 @@ namespace CodePatches
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 			const uintptr_t d = base - kImageBase;
+			// WHO CALLED. 0x5F5FB0 has five call sites in four functions, so
+			// without this the log cannot tell a sign from an offer balloon.
+			const uint32_t retVa = static_cast<uint32_t>(
+				reinterpret_cast<uintptr_t>(retaddr) - d);
 			uint32_t zoom = 0xFFFFFFFFu;
 			float tv = 0.0f;
 			void* vu = *reinterpret_cast<void**>(d + 0xB43DD8);
@@ -6573,22 +6577,37 @@ namespace CodePatches
 				const StripPeek p = PeekStripContent(self, base);
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: SPSTRIP #%ld this=%p zoom=%u table=%.3f "
-					"items=%d first=%p vt=0x%08X vt+0x14=0x%08X%s.",
+					"items=%d first=%p vt=0x%08X vt+0x14=0x%08X "
+					"ret=0x%08X%s.",
 					n, self, zoom, static_cast<double>(tv),
-					p.count, p.first, p.vt, p.slot14,
+					p.count, p.first, p.vt, p.slot14, retVa,
 					total ? " (running total)" : "");
 				return;
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: SPSTRIP #%ld this=%p zoom=%u table=%.3f%s.",
-				n, self, zoom, static_cast<double>(tv),
+				"CodePatches: SPSTRIP #%ld this=%p zoom=%u table=%.3f "
+				"ret=0x%08X%s.",
+				n, self, zoom, static_cast<double>(tv), retVa,
 				total ? " (running total)" : "");
 		}
+		// ⛔ THIS DETOUR USED TO LOG NO RETURN ADDRESS, AND THAT MADE ITS
+		// OWN EXPERIMENT UNREADABLE. 0x5F5FB0 has FIVE call sites in four
+		// functions, and the 0x590 occupant it serves has TWO creation paths -
+		// the Sign tool and one other. The shipped log printed
+		// this/zoom/table/items/first/vt, none of which says WHO called. So
+		// "gesture A logs and gesture B adds lines" could not be told apart
+		// from "an offer balloon or another signpost-family object appeared
+		// during gesture B", and the round-4 experiment could not distinguish
+		// its own outcome (2). The sibling SpAttachDetour has grabbed the
+		// return address since it was written; this is that same shape, four
+		// lines later than it should have been.
 		__declspec(naked) void SpStripDetour()
 		{
 			__asm {
 				pushad
 				pushfd
+				mov eax, [esp + 36]
+				push eax
 				push ecx
 				call SpStripLog
 				popfd
@@ -9640,7 +9659,7 @@ namespace CodePatches
 					if (probe[0] != L'\0')
 					{
 						Logger::Get().WriteLine(LogLevel::Info,
-							"CodePatches: \u26a0 BalloonViewKill is set to "
+							"CodePatches: WARNING - BalloonViewKill is set to "
 							"\"%ls\" under [%ls], but this lever is read from "
 							"[UiSpike] ONLY - so it is OFF. Move the line into "
 							"the [UiSpike] section. A key under the wrong "
