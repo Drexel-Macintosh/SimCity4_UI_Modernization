@@ -1967,8 +1967,24 @@ namespace
 		// the player's. (Byte compare, not size: the three tier fonts are all
 		// 23,016 bytes, so size alone cannot even tell them apart.)
 		wchar_t userOrig[MAX_PATH];
-		swprintf_s(userOrig, L"%sFontStyle.ini.user-original", liveDir);
-		if (FileExists(live) && !FileExists(userOrig))
+		swprintf_s(userOrig, L"%s%ls.user-original", liveDir, ourName);
+		// ⛔ WITH THE REDIRECT ACTIVE THERE IS NOBODY TO PRESERVE.
+		// The whole .user-original mechanism exists because we used to write
+		// the player's own FontStyle.ini and had to be able to give it back.
+		// Once CodePatches::ApplyFontNameRedirect lands, the file we write is
+		// z_SC4UIScale_FontStyle.ini - a name nothing but this mod ever writes -
+		// so anything found under it is OURS by construction and there is no
+		// original to snapshot.
+		//
+		// Skipping it is not a tidy-up, it is a bug fix. Left running, the
+		// snapshot mistook our OWN file for the player's (byte-identity fails
+		// against a tier source once the file carries our header stamp), saved
+		// it as .user-original, "restored" it on exit, and left BOTH files in
+		// the game folder - measured twice, on 2026-08-31, in the two sessions
+		// after each half of this change. A mechanism that can only misfire is
+		// worse than no mechanism.
+		const bool redirected = CodePatches::FontNameRedirected();
+		if (!redirected && FileExists(live) && !FileExists(userOrig))
 		{
 			const wchar_t* ourTag = MatchesAnyTierFontSource(live, srcDir);
 			if (ourTag != nullptr || IsEmptyFile(live))
@@ -2023,7 +2039,7 @@ namespace
 			// if we kept one; only then move ours aside. Note the missing
 			// MOVEFILE_REPLACE_EXISTING - a stale aside from a previous run is
 			// left alone rather than clobbered.
-			if (FileExists(userOrig))
+			if (!redirected && FileExists(userOrig))
 			{
 				if (CopyFileW(userOrig, live, FALSE))
 				{
@@ -2114,7 +2130,9 @@ namespace
 				// prove is ours is not.
 				const wchar_t* liveTag = MatchesAnyTierFontSource(live, srcDir);
 				const bool marked = HasOurFontMarker(live);
-				if (marked || liveTag != nullptr || IsEmptyFile(live))
+				// `redirected` alone is proof of ownership: the game is looking
+				// for a filename only this mod ever writes.
+				if (redirected || marked || liveTag != nullptr || IsEmptyFile(live))
 				{
 					if (DeleteFileW(live))
 					{
@@ -2122,7 +2140,9 @@ namespace
 							"ScaleTier: %ls DELETED at stock tier (it was %ls). "
 							"Nothing of ours is left in that folder - the game "
 							"falls back to its own built-in font table.",
-							live, marked
+							live, redirected
+								? L"under our own redirected filename"
+								: marked
 								? L"stamped with our own header"
 								: (liveTag != nullptr
 									? L"byte-identical to one of our tier sources"
