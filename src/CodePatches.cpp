@@ -9204,7 +9204,55 @@ namespace CodePatches
 		// The LIVE lever (the two above are the dormant twin + the glow):
 		// the marker per-zoom table, sole consumer = the balloon strip
 		// builder. This is the patch that moves the on-screen balloon.
-		if (factor > 1.01f && mode >= 2) { ApplyMarkerZoomScale(factor); }
+		//
+		// ⛔ OFF BY DEFAULT SINCE 2026-08-31: IT WAS A SECOND 2x ON TOP OF A
+		// CORRECT ONE. Measured from a player's own 1x / 2x / marker-off
+		// screenshot set, the sign plate isolated as a connected component in
+		// all three and the UI used as an in-frame ruler (dock icons 2.00x):
+		//
+		//        sign width   1x = 59 px
+		//                     2x = 223 px   -> 3.78x, far past the UI's 2.00x
+		//        2x, this patch OFF = 112 px -> 1.90x, i.e. correct
+		//
+		//     so THIS TABLE ALONE CONTRIBUTED 1.99x (223/112) on top of a 2x
+		//     something else already applied correctly. The player reported it
+		//     as "way too big" and was right; every disassembly pass that
+		//     preceded the screenshots predicted a clean 2x and was wrong,
+		//     because the second multiplier lives outside the code path any of
+		//     them was looking at.
+		//
+		// The likeliest source of the correct 2x: the plate sizes itself to its
+		// TEXT, and this mod scales the font. A sign is then enlarged by
+		// construction and needs no help from this table. NOT PROVEN - it is
+		// the standing hypothesis, and the fix does not depend on it.
+		//
+		// BLAST RADIUS, checked on screen before shipping: this table also
+		// scales the dispatch markers, which was the reason it was applied at
+		// all ("Dispatch markers share the builder and co-scale (desired)").
+		// With the patch off the player confirmed the dispatch pin "looks
+		// good", so those do not need it either. That was the one question
+		// that could have made this fix trade one bug for another, and it was
+		// asked before the change rather than after.
+		//
+		// Kept as an ini key rather than deleted: the builder may draw
+		// families nobody has looked at yet, and re-enabling must not need a
+		// rebuild. `[UiSpike] MarkerZoomScale=1` restores the old behaviour.
+		{
+			wchar_t mzIni[MAX_PATH] = {};
+			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", mzIni, MAX_PATH);
+			const int mzWant = static_cast<int>(GetPrivateProfileIntW(
+				L"UiSpike", L"MarkerZoomScale", 0, mzIni));
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: MarkerZoomScale resolved to %d (read from "
+				"[UiSpike]; 0 = OFF and NOT applied, the default since "
+				"2026-08-31 - it was measured adding a second 2x on top of a "
+				"correct one, making the signpost 3.78x where the UI is "
+				"2.00x). 1 restores the pre-4.7.1 behaviour.", mzWant);
+			if (mzWant != 0 && factor > 1.01f && mode >= 2)
+			{
+				ApplyMarkerZoomScale(factor);
+			}
+		}
 		// (v3.0.23's ApplyBalloonCellScale(2) + 2x sheet dat lived here -
 		// reverted v3.0.24 after regressing the mayor-hat pole balloon; see
 		// the BALLOONCELL ledger comment above ApplySignpostScale.)

@@ -19710,3 +19710,64 @@ at 2x. One screenshot at the same camera:
 answer is no. What has changed is that the wrong lever is now eliminated by
 measurement rather than suspected, and the next step costs one launch instead
 of another day of disassembly.
+
+
+---
+
+## 2026-08-31 - FIXED: the marker zoom table was a second 2x on top of a correct one
+
+The player's original report - "the sign post looks way too big" - is fixed,
+and it was fixed by their screenshots, not by disassembly.
+
+### The measurement that settled it
+
+Three captures at 2400x1600, same city, same sign, same zoom, the plate
+isolated as a connected component in each and the UI used as an **in-frame
+ruler** (dock icons measure exactly 2.00x between 1x and 2x):
+
+| | sign width | vs 1x |
+|---|---|---|
+| 1x | 59 px | - |
+| 2x, shipping | 223 px | **3.78x** |
+| 2x, marker scaling OFF | 112 px | **1.90x** |
+
+**The table alone contributed 1.99x** (223/112), on top of a 2x that something
+else already applied correctly.
+
+### ⭐ EVERY DISASSEMBLY PASS PREDICTED A CLEAN 2x, AND EVERY ONE WAS WRONG
+
+Three workflows, nine agents, ~390 tool calls across the day. They produced a
+complete and internally correct decode - the constants are pixel sizes, `K` is
+world-units-per-pixel, the arithmetic cancels to exactly 44 px at every zoom -
+and they were right about all of it. **The second multiplier lives outside the
+code path any of them was asked about**, so no amount of rigour inside that
+path could have found it.
+
+⚠ The lesson is not "the analysis was bad". It is that **a question about a
+mechanism cannot answer a question about a symptom.** The player asked "is it
+2x or 4x". Every pass was asked "is this product double-multiplied", answered
+correctly, and left the real question untouched. One A/B screenshot pair
+settled in ten minutes what the decode could not settle in a day.
+
+### The fix, and the blast-radius question asked BEFORE shipping it
+
+`ApplyMarkerZoomScale` is now behind `[UiSpike] MarkerZoomScale`, **default 0 =
+off**, logging its resolved value like every other lever.
+
+The one thing that could have turned this into a trade rather than a fix: that
+table also scales the **dispatch markers**, which is why it was applied at all
+("Dispatch markers share the builder and co-scale (desired)"). If they needed
+it, removing it would have swapped a sign bug for a pin bug. So the player was
+asked to look at the pin in the marker-off capture *before* the change: **"it
+looks good."** Both visuals are correct without it.
+
+Kept as a key rather than deleted, because the builder may draw families nobody
+has looked at yet and re-enabling should not need a rebuild.
+
+### The standing hypothesis for the correct 2x, explicitly NOT proven
+
+The plate likely sizes itself to its TEXT, and this mod scales the font - so a
+sign is enlarged by construction and never needed help from this table, while a
+dispatch pin carries no text and apparently does not need it either. **Not
+proven, and the fix does not depend on it.** Recorded so the next person knows
+which door to open first, not as a finding.
