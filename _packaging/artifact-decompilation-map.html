@@ -178,7 +178,7 @@
 <div class="wrap">
 
 <header class="mast">
-  <div class="eyebrow">SimCity 4 Deluxe 1.1.641 · survey 18 Aug 2026 · updated 30 Aug 2026</div>
+  <div class="eyebrow">SimCity 4 Deluxe 1.1.641 · survey 18 Aug 2026 · updated 31 Aug 2026</div>
   <h1>SC4 UI Decompilation Map</h1>
   <p class="standfirst">What the SimCity&nbsp;4 interface has given up so far, what it is still holding,
   and which door to try next. Four independent survey passes over the SC4UIScale
@@ -186,7 +186,9 @@
   engine reference published as a section of the repository. The newest entries
   come from a different kind of work: <em>watching the game run</em>, which
   confirmed three in-world overlays, refuted a fourth, and caught a shipped
-  patch family that had never once applied.</p>
+  patch family that had never once applied. The most recent entry came from a
+  player's bug report, and overturned a limit this project had accepted as
+  fixed.</p>
 </header>
 
 <div class="stats">
@@ -674,6 +676,104 @@
       the real capture</b> — replaying the failing session's own name sequence — before another play
       session was requested, and that replay is now a permanent test. A broken instrument is not a
       quiet failure mode; it is a confident one.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>A constraint that turned out not to be one</h2>
+  <p class="sub">A player reported a file of ours in their SimCity&nbsp;4 folder that the
+  documentation promised was not there. Both halves of that were true, and fixing it properly meant
+  overturning something this project had treated as a fact about the engine.</p>
+  <div class="pick">
+    <h3>The font filename is four pointers, not a fixed name</h3>
+    <p>SimCity&nbsp;4 reads a loose font file from two fixed places and looks in no mod folder, so
+    every version of this mod had to write the game's <em>own</em> <code>FontStyle.ini</code> —
+    overwriting whatever the player had, keeping a backup, and putting it back on exit. Three steps,
+    each a chance to go wrong, and it went wrong twice in two days.</p>
+    <p>Asked why the file couldn't simply use a different name, the answer given — twice — was that
+    the game probes two fixed <em>paths</em>, so the <em>filename</em> was fixed too. <b>Those are
+    different claims.</b> The filename is four <code>push imm32</code> operands:</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Site</th><th>Bytes</th><th>Operand</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td class="rank">0x0044DC98</td><td><code>68 D5 6D A8 00</code></td><td><code>0x00A86DD5</code></td><td class="cost">end pointer</td></tr>
+          <tr><td class="rank">0x0044DC9D</td><td><code>68 C8 6D A8 00</code></td><td><code>0x00A86DC8</code></td><td class="cost">begin pointer</td></tr>
+          <tr><td class="rank">0x0044DCD1</td><td><code>68 D5 6D A8 00</code></td><td><code>0x00A86DD5</code></td><td class="cost">end, second probe</td></tr>
+          <tr><td class="rank">0x0044DCD6</td><td><code>68 C8 6D A8 00</code></td><td><code>0x00A86DC8</code></td><td class="cost">begin, second probe</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p><code>0xA86DD5 − 0xA86DC8 = 13</code> — the length of the filename — and neither address is
+    referenced anywhere else in the executable. Four pointers decide the whole name, and repointing
+    them is the same patch a dozen families in this codebase already perform.</p>
+    <ul>
+      <li><b>The game now looks for our own filename.</b> The player's <code>FontStyle.ini</code> is
+      never read, overwritten, backed up or restored. The entire preservation mechanism became
+      <em>unnecessary</em> rather than carefully handled — and it had misfired twice, once mistaking
+      the mod's own file for the player's and "restoring" it.</li>
+      <li><b>A crash stopped being expensive, and that is measurable.</b> Reading the four operands
+      back out of the executable <em>on disk</em> shows all four still holding the stock pointers:
+      the redirect exists only in the loaded image. So without the mod running there is no redirect,
+      and a file stranded by a crash is simply never read. Previously a stranded file kept the
+      enlarged font applied <em>permanently</em>, even after uninstalling.</li>
+      <li><b>The uninstaller had never looked at the game's folder</b> — every path it knew was in
+      the player's Documents tree, while the font went into the game install. Crash, then uninstall,
+      stranded a file forever with nothing left on the system that knew it existed.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>What the episode is actually about</h2>
+  <p class="sub">Three separate failures, and only the first was a bug in the ordinary sense.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="hd"><span class="chip c-def">The documentation lied</span><b>A promise nothing checked</b></div>
+      <p>The shipped instructions said the game folder was left clean after a normal exit. It was
+      not: every clean shutdown left a 23&nbsp;KB file there, permanently, under a name carrying none
+      of the mod's own marking. The behaviour and the promise had drifted apart, and
+      <b>nothing in the regression net looked at that folder</b> — every gate inspected the mod's own
+      tree, which was never where the damage landed.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">The wrong conclusion</span><b>Measuring one thing, concluding about another</b></div>
+      <p>"The game probes two fixed paths" was measured and correct. "Therefore the filename is
+      fixed" was neither — it was an inference that happened to sound like the measurement. Repeating
+      it when questioned made it worse: the second answer added confidence without adding evidence.
+      The user asked three times and was right all three.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">The fix that broke it</span><b>A marker that made the file unrecognisable</b></div>
+      <p>Stamping the font with an identifying header was a reasonable half-measure — until it made
+      the file fail the mod's own byte-identity ownership test, which ran <em>before</em> the check
+      that had been updated. The shutdown then saved the mod's own file as "the player's original"
+      and restored it, leaving two files where there had been one. Caught the same session, by
+      measuring the folder rather than trusting the log.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">The general lesson</span><b>Owning the name removed the mechanism</b></div>
+      <p>Every one of those failures lived in the machinery for sharing a file with the player.
+      Under the mod's own filename there is nothing to share: anything found there is the mod's
+      <em>by construction</em>, so the backup-and-restore dance is deleted rather than fixed. The
+      best outcome of a bug hunt is not a more careful mechanism — it is one that no longer needs to
+      be careful.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">New gate</span><b>Someone is finally watching that folder</b></div>
+      <p>It identifies the mod's files by content hash and by marker rather than by name, leaves a
+      third party's font alone, skips rather than lying when the game is running, and
+      <b>refuses rather than passing</b> when it cannot find the sources it needs to recognise
+      anything. It failed on the real leftover before the fix and passed after.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Shipped · v4.7.0</span><b>And the installer went with it</b></div>
+      <p>The bundle no longer ships an install script. Installing is copying two folders and two
+      files, which the README states in five lines — and the script had been blamed for creating the
+      very file it never touched, costing a full investigation before the real cause was found.
+      Checked before removing it that nobody is stranded: the DLL performs its own legacy-layout
+      migration at boot, which is what the installer duplicated.</p>
     </div>
   </div>
 </section>
