@@ -19357,3 +19357,58 @@ not support a null; checking the arming first is the cure, and it worked.
 `RemoveViewObject`, so the expected result is an ABSENCE that cannot be misread
 as "no change". It also settles row-04 for free: if the trail vanishes with the
 arrows they are one visual; if it survives, they are two.
+
+
+---
+
+## 2026-08-31 - round 3 phase 2 did not run: the key was in the wrong section
+
+The player drove a full U-Drive-It mission for nothing. `BalloonViewKill` was
+armed, but written into `[Probe]` when the DLL reads it from `[UiSpike]` only.
+`GetPrivateProfileStringW` is section-scoped, so the key was not a wrong value -
+**it was no value**, indistinguishable from "the player never set it". The kill
+never armed and the arrows drew normally.
+
+My error, in the arming I wrote, after verifying the *other* key's gate against
+the source in the same breath. **I checked that `ViewListRepeat` stands alone
+and did not check which section its neighbour is read from.**
+
+### ⛔ THIS PROJECT HAD ALREADY NAMED THIS EXACT FAILURE
+
+Six lines above the read sits a comment from a previous occurrence:
+
+> *"every lever ALWAYS logs its resolved value - this read used to be silent,
+> the exact shape that produced the CsiCountPlate wrong-section null."*
+
+The cure was applied to `ViewListRepeat`, which logs its resolved value, and
+**not** to `BalloonViewKill` in the very next statement, which logged nothing.
+The law was written down, applied to one line, and skipped on the line beneath
+it - so the second occurrence was silent for exactly the reason the first one
+had been.
+
+### Both halves now
+
+1. **The value is logged**, per the house law it was already exempt from.
+2. **A wrong-section placement announces itself.** When the lever reads 0, the
+   DLL now looks for the same key under `[Probe]`, `[Logging]`, `[Scaling]`,
+   `[Disaster]` and `[SubFlyout]`, and if it finds one says so by name:
+
+       BalloonViewKill is set to "A9D974" under [Probe], but this lever is
+       read from [UiSpike] ONLY - so it is OFF. Move the line into [UiSpike].
+
+   A silent read is cured by a log line. A silent **miss** is only cured by
+   going to look where the value actually is.
+
+### What the session did establish, and it is not nothing
+
+⭐ **There was no dotted trail on screen while the arrows drew normally.** The
+kill never fired, so this was an ordinary drive with row-08's arrows present -
+and the player reports no separate trail of dots, adding *"I don't think there's
+supposed to be one."*
+
+That is direct evidence for the attribution pass's leading hypothesis: **rows 04
+and 08 are one visual**, and "a trail of small round dots" is row-08's
+0.4-alpha arrow decal described from a zoomed-out screenshot. Recorded as
+provisional - it wants one confirmation that the arrows themselves were visible
+during that session, since "no trail" means something quite different if
+nothing was drawing at all.

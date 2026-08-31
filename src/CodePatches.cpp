@@ -9608,6 +9608,48 @@ namespace CodePatches
 			GetPrivateProfileStringW(L"UiSpike", L"BalloonViewKill", L"0",
 				kb, 32, ini);
 			gViewKill = static_cast<int>(wcstoul(kb, nullptr, 16));
+			// House law, applied here at last: this key was the one lever in
+			// the block that did NOT log its resolved value, and the comment
+			// six lines above already records that silence causing a
+			// wrong-section null once before. It caused a second one on
+			// 2026-08-31 - the key was written into [Probe] instead of
+			// [UiSpike], the DLL never saw it, the kill never armed, and the
+			// player drove a whole mission for nothing. A lever that reads a
+			// default silently is indistinguishable from a lever that is off.
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: BalloonViewKill resolved to 0x%08X (read from "
+				"[UiSpike] as hex; 0 = OFF). Nonzero removes the view object "
+				"whose vtable VA matches, via the renderer's own "
+				"RemoveViewObject.", static_cast<unsigned>(gViewKill));
+			// ⛔ AND SAY SO WHEN THE VALUE IS IN THE WRONG SECTION.
+			// GetPrivateProfileStringW is section-scoped, so a key written
+			// under the wrong header is not a wrong value - it is NO value,
+			// silently indistinguishable from "the user did not set it". The
+			// cure for a silent read is a log line; the cure for a silent
+			// MISS is to go and look where it actually is.
+			if (gViewKill == 0)
+			{
+				static const wchar_t* const kOtherSections[] =
+					{ L"Probe", L"Logging", L"Scaling", L"Disaster",
+					  L"SubFlyout" };
+				for (int i = 0; i < 5; ++i)
+				{
+					wchar_t probe[32] = {};
+					GetPrivateProfileStringW(kOtherSections[i],
+						L"BalloonViewKill", L"", probe, 32, ini);
+					if (probe[0] != L'\0')
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"CodePatches: \u26a0 BalloonViewKill is set to "
+							"\"%ls\" under [%ls], but this lever is read from "
+							"[UiSpike] ONLY - so it is OFF. Move the line into "
+							"the [UiSpike] section. A key under the wrong "
+							"header is not a wrong value, it is NO value.",
+							probe, kOtherSections[i]);
+						break;
+					}
+				}
+			}
 		}
 		const uintptr_t base =
 			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
