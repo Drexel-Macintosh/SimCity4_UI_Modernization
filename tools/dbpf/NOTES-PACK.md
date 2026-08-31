@@ -76,7 +76,7 @@ This matches `SimCity_1.dat` exactly: its header says count=60440, size=1208800,
   > The DIR record's stride is **16 bytes** — four uint32: Type, Group, Instance,
   > decompressed size. 782,080 / 16 = 48,880 exactly; 12 does not divide it. Anything that
   > walks this table at stride 12 misaligns after the first record and can report a
-  > compressed entry as "not listed" (`decode_exemplar.py` and `decode_s3d_plate.py` both
+  > compressed entry as "not listed" (`row15-probe/decode_exemplar.py` and `decode_s3d_plate.py` both
   > do this — see below). Positive control for the stride: at 16, **all 48,880 entries
   > resolve to a record that really exists in the index and every one declares a size
   > larger than its own on-disk size**; at 12, 48,879 of 65,173 name records that do not
