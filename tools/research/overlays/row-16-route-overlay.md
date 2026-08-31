@@ -213,3 +213,72 @@ created per route query via `0x4D82C0`.
   null; positive control: it resolves known ids).
 - `0x46CDxx` px→world caller cluster — a fourth pixel-fixed billboard system
   nobody has looked at (candidate for census rows 8/15).
+
+
+---
+
+## MEASURED 2026-08-31 — the drawer is a dedicated `cISC4ViewObject3D`
+
+Status: **UNKNOWN → DOCUMENTED.** Three independent offline lenses converged on
+one chain from bytes; the prediction was written into `SC4UIScale.ini` *before*
+the run; every element of it hit.
+
+### The chain
+
+```
+pick handler   0x004D4D70   tool vtable 0x00A90A88 slot +0x40
+  gated at     0x004D4F19   cmp [esi+0x8C],1        <- route mode only
+→ 0x004CAC50   pick action; RemoveViewObject's any prior trace first
+→ 0x004CA460   builder: new(0x2C), ctor 0x007DDD50, vtable 0x00ABB648,
+                 stored at [tool+0x9C]
+  0x004CA54D   AddViewObject(obj, layer=5, key=0x3E8)
+THE DRAWER =   0x007DD9B0   vtable 0x00ABB648 slot +0x0C
+```
+
+The path result lives **inside the drawable**: a list of 0x44-byte strand nodes
+at `[drawable+0x14]` / `[drawable+0x18]`, filled per network tile by
+`0x004C5E20` through BeginStrand `0x007DDC50` and AddPoint `0x007DDB30`. Draw
+walks that list and calls `0x007DD410` once per strand.
+
+### Prediction versus measurement
+
+Armed with **zero new code** — the `AddViewObject` detour (#188 VIEWOBJ,
+`CodePatches.cpp:9392`) was already shipped; only `[Probe] ViewListRepeat=240`
+was set.
+
+| # | predicted | measured | |
+|---|---|---|---|
+| 1 | `vt=0x00ABB648` | `vt=0x00ABB648` | HIT |
+| 2 | layer 5 | `a2=5` | HIT |
+| 3 | `key=0x3E8` | `a3=0x000003E8` | HIT |
+| 4 | absent at load, appears at the PICK | regs #1..#11 are load-time HUD classes, **none** is 0x00ABB648; #12 and #13 are the two clicks | HIT |
+| 5 | second pick replaces the first | same slot `layer5[6]`, obj `41A9A454` → `467EA854` | HIT |
+
+Positive control: `ViewListRepeat resolved to 240 (raw 240; read from [Probe])`
+and `VIEWLIST GRAND TOTAL 14` on all three dumps — the enumerator ran, so an
+absence would have meant something.
+
+### Bonus fields, read live off the registration dump
+
+* `[obj+0x04] = 0x00ABB630` — confirms **on screen** what ctor `0x007DDD50`'s
+  bytes claimed.
+* `[obj+0x10] = 0x40000000` = **float 2.0** — the scale lever's live value,
+  matching the six inline per-zoom immediates `{2,2,2,2,1.4,1.2}` @`0x004CA4A2`.
+
+**OPEN, recorded as an observation and not a claim:** `[obj+0x0C]` differed
+between the two picks — `0x00000001` on the road, `0x44AA2C01` on the building.
+The latter reads as float 1361.375, but the former does not read as a sane
+float, so the field is **not identified**.
+
+### What this refutes
+
+Three attributions have now died on this row, and the write-up keeps all three
+because each was held with confidence at the time:
+
+1. **Named effect / EFFECTFILTER** — refuted from bytes against a 1,148-name
+   EFFDIR dump with 13/13 recall including the DAT-only `cloudfx_expensive_slave`.
+2. **The signpost-occupant module** — refuted; `cSC4SignpostOccupant` belongs to
+   the Sign Tool, pinned through the game's own `kCommandID_SignTool` table.
+3. **A per-network-tile occupant HIGHLIGHT flag** — the last standing
+   hypothesis, explicitly speculative, now dead: the dots are a registered
+   drawable, not a flag on occupants.

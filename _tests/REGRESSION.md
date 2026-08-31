@@ -19947,3 +19947,64 @@ aspect ratio, arrows by the tight unimodal width band.
 LAW EARNED - **AN INSTRUCTION THE TOOL PHYSICALLY CANNOT SATISFY IS A DEFECT IN
 THE INSTRUCTION.** Ask what the measurement needs, not what feels safest to
 demand.
+
+## 2026-08-31 - ROW 16 CLOSED: the route trace is a dedicated cISC4ViewObject3D
+
+**The overlay census is complete.** All nine rows are now DOCUMENTED, CLOSED,
+MEASURED or ATTRIBUTED; none is left PARTIAL or UNKNOWN.
+
+Row 16 closed on a pre-stated prediction with **zero new code** - the
+AddViewObject detour (#188 VIEWOBJ, `CodePatches.cpp:9392`) was already shipped,
+so only `[Probe] ViewListRepeat=240` was armed.
+
+```
+pick handler   0x004D4D70   tool vtable 0x00A90A88 slot +0x40
+  gated at     0x004D4F19   cmp [esi+0x8C],1        <- route mode only
+-> 0x004CAC50  pick action; RemoveViewObject's any prior trace first
+-> 0x004CA460  builder: new(0x2C), ctor 0x007DDD50, vtable 0x00ABB648
+   0x004CA54D  AddViewObject(obj, layer=5, key=0x3E8)
+THE DRAWER =   0x007DD9B0   vtable 0x00ABB648 slot +0x0C
+```
+
+| # | predicted | measured | |
+|---|---|---|---|
+| 1 | vt=0x00ABB648 | vt=0x00ABB648 | HIT |
+| 2 | layer 5 | a2=5 | HIT |
+| 3 | key=0x3E8 | a3=0x000003E8 | HIT |
+| 4 | absent at load, appears at PICK | regs #1..#11 all load-time HUD classes, NONE is 0x00ABB648; #12/#13 are the two clicks | HIT |
+| 5 | second pick replaces the first | same slot layer5[6], obj 41A9A454 -> 467EA854 | HIT |
+
+Positive control: the key logged `resolved to 240 (raw 240; read from [Probe])`
+and GRAND TOTAL read 14 on all three dumps.
+
+### THREE attributions have now died on this one row
+
+Kept in the write-up, all three, because each was held with confidence:
+
+1. **Named effect / EFFECTFILTER** - refuted from bytes against a 1,148-name
+   EFFDIR dump, 13/13 recall including the DAT-only `cloudfx_expensive_slave`.
+2. **The signpost-occupant module** - refuted; `cSC4SignpostOccupant` is the
+   SIGN TOOL, pinned through the game's own `kCommandID_SignTool` table. The
+   sizing chain this page quoted for row 16 was the sign's, not the route's.
+3. **A per-network-tile occupant HIGHLIGHT flag** - the last standing
+   hypothesis, explicitly speculative, now dead.
+
+LAW EARNED - **CONVERGENCE ACROSS INDEPENDENT LENSES IS WORTH MORE THAN DEPTH
+IN ONE.** Three offline agents attacked from different directions (walk the
+vtable / follow the click / follow the view-object registration) and landed on
+the same chain with non-overlapping evidence. The vtable lens independently
+found that NO slot of the tool's own vtable is draw-shaped - which is the same
+fact as "the drawer is a separate registered object", arrived at from the
+opposite side. That is corroboration between genuinely different failure modes,
+not two blind instruments agreeing.
+
+### Bonus: the scaling lever was measured, not inferred
+
+`[obj+0x10] = 0x40000000` = float **2.0**, read live off the registration dump,
+matching the six inline per-zoom immediates `{2,2,2,2,1.4,1.2}` @`0x004CA4A2`.
+Written only by `0x008B6DE0`. NOT patched - no defect has been reported against
+the route trace at any tier, and this row was a census question, not a bug.
+
+`[obj+0x0C]` differed between the two picks (0x00000001 road / 0x44AA2C01
+building). The latter reads as float 1361.375; the former does not read as a
+sane float. **Field not identified** - recorded as an observation, not a claim.
