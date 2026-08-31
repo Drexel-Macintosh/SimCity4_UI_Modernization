@@ -19412,3 +19412,60 @@ and 08 are one visual**, and "a trail of small round dots" is row-08's
 provisional - it wants one confirmation that the arrows themselves were visible
 during that session, since "no trail" means something quite different if
 nothing was drawing at all.
+
+
+---
+
+## 2026-08-31 - round 3 CLOSED: two rows, one kill, no patch needed
+
+### The sequence, with nothing inferred
+
+    11:42:48.233  BalloonViewKill resolved to 0x00A9D974      lever armed
+    11:42:57.894  VIEWOBJ  ...                                drawer registers
+    11:42:59.332  VIEWLIST layer5[6] ... A9D974               seen in the list
+    11:42:59.332  VIEWKILL removed obj=39C11614 -> 1          removed, success
+
+Then **absent from all 250 later dumps**, while **112 of those still carried
+other view objects**. That second number is the control that matters: it
+separates *the drawer is gone* from *the instrument stopped*, and without it
+the absence would prove nothing.
+
+**On screen, user-confirmed: the arrows are gone and the destination pin
+remains.** The pin is a different object we never touched - a blast-radius
+control that came free with the experiment, showing the kill removed one
+drawer rather than the drive-mode UI.
+
+### ⭐ ROW 04 CLOSED WITHOUT ITS OWN SESSION, AND NOT THE WAY ANYONE EXPECTED
+
+The row describes "a trail of small round dots along the road". It does not
+exist as a distinct visual, and two sessions in opposite states prove it:
+
+| Arrows | Dotted trail reported |
+|---|---|
+| present (kill not armed) | **none** - *"I don't think there's supposed to be one"* |
+| killed | **none** - *"there are no arrows just the destination pin"* |
+
+If the trail were a separate drawable it would have survived the kill. If it
+were merely the arrows seen from far away it would have vanished with them.
+**It was never on screen in either state**, so the row's subject is a
+description artefact - the offline pass's leading hypothesis, settled by
+observation instead of argument.
+
+⚠ Worth stating plainly: this is a row closed by proving its *premise* wrong,
+not by finding its mechanism. Nine rows were opened from screenshots and
+recollection, and at least one of them described something that was never
+there. A census built from descriptions carries that risk in every row.
+
+### The verdict for both
+
+**Nothing to patch.** The arrows are painted in world space on the road
+surface, so they scale with the camera and are correct at every tier and every
+UI factor by construction - the same answer row-23's zots got, reached again by
+a different route.
+
+### The cost, honestly
+
+Three play sessions for this round, one of which I wasted by writing the kill
+key into the wrong ini section. The two that counted produced a confirmed
+channel, a closed row that needed no session of its own, and a blast-radius
+control nobody planned.
