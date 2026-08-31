@@ -18884,3 +18884,51 @@ Other observations banked: `#helicopter_takeoff` carries a `#` sigil (the plan
 records no sigil on these names) and returns `ok=0`, as does `helipad` - two
 spawn requests the engine declines, worth knowing before any of them is read
 as a failure of ours.
+
+
+---
+
+## 2026-08-30 - round 3: the terraform circle is NOT a named effect (true null, with the control)
+
+Unfounded city - the reachability condition the first three sessions all
+failed. God flyout confirmed open at 08:41:22; terrain brushes moved over
+ground for ~60s across five census windows.
+
+**Total census: 10 lines, 4 distinct names.** `region_global`,
+`atmospheric_effects`, `water_effects`, `cloudfx_expensive_slave`. Every one
+ambient. No terrain / brush / mountain / valley / level / smooth name of any
+shape.
+
+### ⭐ THE POSITIVE CONTROL IS INTERNAL TO THE SAME RUN
+
+This is the part that makes it a measurement rather than a shrug. The hook
+logged `cloudfx_expensive_slave` **in every one of the five windows**,
+including the ones after the god flyout opened, and spent **10 of a 400
+budget**. The instrument was awake, unsaturated, and demonstrably logging
+spawns during exactly the period the brush was on screen.
+
+Compare the three earlier rounds, none of which could have said that: round 1
+had the branch switched off, round 1b had the budget exhausted 88 seconds
+before the tools came out, and round 2 ran in a founded city where the brush
+could not exist. **Four sessions, and only the last one could support a null.**
+
+### The verdict
+
+**The terrain-brush circle does not spawn through `CreateEffectByName`.** The
+row's attribution to the effects manager is REFUTED - while that same
+attribution stands *confirmed* for rows 11, 12 and 13a from the same probe, so
+this is a precise correction rather than a collapse of the model.
+
+EFFECTFILTER cannot reach this circle, and no further work on that probe will.
+A future attempt starts from the terrain/renderer draw path instead.
+
+### What the whole arc cost, and what it bought
+
+Four play sessions. The first three measured my own instrument: a dead branch,
+an exhausted budget, and an unreachable target. Each failure looked like a
+finding at the time, which is the entire reason the round-3 control matters.
+
+Bought: rows 11, 12 and 13a confirmed live with exact return addresses, a third
+undocumented spawn path in row 11, a wrong call-site attribution caught and
+corrected in row 13a, and row 14 closed as a true null that redirects future
+work instead of consuming it.
