@@ -57,13 +57,42 @@ This matches `SimCity_1.dat` exactly: its header says count=60440, size=1208800,
 
 ## Quirks / findings
 
-- **Compression directory (DIR, TGI E86B1EEE/E86B1EEE/286B1F03): ABSENT, and must stay
-  absent.** The DIR record exists only to flag which entries are QFS-compressed. All our
-  entries are uncompressed, so no DIR is written; the packer actively refuses to pack a
-  file named with the DIR TGI. Notably, `SimCity_1.dat` itself contains **no** DIR entry,
-  and its Type 0x856DDBAC (PNG) payloads are stored as plain uncompressed PNG
-  (`89 50 4E 47…` right at the index offset) — so "uncompressed, no DIR" is exactly how
-  the game ships its own UI art.
+- **Compression directory (DIR): absent from what WE write, because we write nothing
+  compressed.** The DIR record exists only to flag which entries are QFS-compressed. All
+  our entries are uncompressed, so no DIR is written; the packer refuses to pack a file
+  named with the DIR TGI.
+
+  > **CORRECTION (2026-08-31).** This bullet previously claimed that `SimCity_1.dat`
+  > "contains **no** DIR entry" and that its PNG payloads are all stored uncompressed, and
+  > concluded that "uncompressed, no DIR" is how the game ships its own UI art. **All three
+  > statements are false.** Measured against the retail archive:
+  >
+  > | claim | measured |
+  > |---|---|
+  > | SimCity_1.dat has no DIR | it has one, at TGI **{0xE86B1EEF, 0xE86B1EEF, 0x286B1F03}**, offset 142,598,197, 782,080 bytes |
+  > | — | **48,880 of its 60,440 records (80.9%) are QFS-compressed** |
+  > | its PNGs are all plain PNG | 2,280 PNG (0x856DDBAC) records, of which **188 are listed as compressed** |
+  >
+  > The DIR record's stride is **16 bytes** — four uint32: Type, Group, Instance,
+  > decompressed size. 782,080 / 16 = 48,880 exactly; 12 does not divide it. Anything that
+  > walks this table at stride 12 misaligns after the first record and can report a
+  > compressed entry as "not listed" (`decode_exemplar.py` and `decode_s3d_plate.py` both
+  > do this — see below). Positive control for the stride: at 16, **all 48,880 entries
+  > resolve to a record that really exists in the index and every one declares a size
+  > larger than its own on-disk size**; at 12, 48,879 of 65,173 name records that do not
+  > exist. `row15-probe/dbpfcore.py: read_dir()` walks it correctly and asserts the stride.
+  >
+  > **What survives:** the packer's actual behaviour is still correct. An archive with no
+  > compressed entries legitimately needs no DIR, so "we write all-uncompressed and emit no
+  > DIR" remains right — it just is not what SC4 itself does, and must not be justified by
+  > saying so.
+  >
+  > **What does not survive:** `DbpfPack.cs` line 44 guards on
+  > `DirType = DirGroup = 0xE86B1EEE`. The real type SC4 uses is **0xE86B1EEF** (…EF, not
+  > …EE). The guard at line 108 therefore does **not** catch a genuine DIR record handed to
+  > the packer; a real DIR file would be packed straight through as an ordinary payload.
+  > The comment at lines 28–29 carries the same wrong TGI. Not fixed here — changing the
+  > constant means rebuilding `DbpfPack.exe`, which is a separate decision.
 - **Date fields**: retail file has real unix timestamps (0x3F4C65AE ≈ Aug 2003). We write
   current unix time to both. SC4 is not known to read them; they are informational.
 - **Holes**: hole count/offset/size all zero; we never create holes (fresh sequential

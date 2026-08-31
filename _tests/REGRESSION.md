@@ -19558,3 +19558,73 @@ strip is pixel-fixed (scaling it is correct) or world-anchored (scaling it is
 wrong), and that is answerable in seconds on screen: **zoom in and out and see
 whether the signpost holds its pixel size or grows.** The same one-frame test
 that settled the zots.
+
+
+---
+
+## 2026-08-31 - the signpost IS over-scaled: measured 3.5x against a 2x UI
+
+The player said "I think it's currently showing 4x instead of 2x" and offered
+screenshots. They were right, and the screenshots settle it where two rounds of
+disassembly did not.
+
+### The measurement
+
+Both captures 2400x1600, same city, same sign, same zoom (confirmed: the
+terrain block occupies the same extent in both). The plate isolated as a
+CONNECTED COMPONENT on its own sampled colour (74, 86, 146) - an earlier
+attempt thresholded on brightness and measured the dock icons, and a second
+took a bounding box over every matching pixel and spanned the whole window.
+
+| | width | height | pixels |
+|---|---|---|---|
+| 1x | 59 | 16 | 740 |
+| 2x | 223 | 54 | 9,537 |
+| **ratio** | **3.78** | **3.38** | **3.59** |
+
+**The UI in the same two frames scales exactly 2.00x** (dock icons 100 vs 50 px)
+- an independent ruler inside the very same images, so this is not a comparison
+across two differently-configured runs.
+
+**The sign scales ~3.5x where the UI scales 2x.** The shortfall from a clean
+4.00 is within the error of a 16-pixel-tall subject: one pixel of edge
+uncertainty at 1x moves the ratio by 6%.
+
+### ⭐ WHAT THIS DOES AND DOES NOT OVERTURN
+
+The adversarial pass returned NOT_DOUBLE_SCALED, and **it was right about the
+mechanism it examined**: `[singleton+0x150]` genuinely is not fed by the
+MARKERZOOM table, that table genuinely has one reader, and the two patched
+paths genuinely have disjoint callers. All of that survives.
+
+What it could not see is that **a second multiplier exists outside the code
+path it was asked about**. The verdict answered "is this ONE product
+double-multiplied" - correctly, no - while the question that mattered was "is
+the visible result 2x". Those are different questions, and the byte chain could
+not have answered the second on its own.
+
+⚠ **A clean negative on the mechanism you asked about is not a negative on the
+symptom.** Three agents and 134 tool calls produced a correct answer to a
+question narrower than the user's complaint.
+
+### The leading hypothesis for the second multiplier
+
+The plate carries TEXT, and this mod scales the font as well. If the plate
+sizes itself from its text extent, then a 2x font inside a 2x plate constant is
+multiplicative, not additive - which lands near 4x. The patch site's own
+neighbourhood mentions no text, so this would be a cross-system interaction the
+signpost decode was never going to reveal.
+
+### The corroborating behavioural difference, from the player
+
+    at 1x the sign does not change size as you zoom
+    at 2x it shrinks when you zoom in
+
+A pure scale changes size, never zoom BEHAVIOUR. Two systems interacting, one
+of which is zoom-dependent, does exactly this. Untested as a mechanism, but it
+is the second independent sign that more than one thing is acting.
+
+### Status
+
+NO NUMBER CHANGED. The symptom is now measured rather than argued, which is the
+part that was missing.
