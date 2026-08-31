@@ -4554,6 +4554,41 @@ namespace CodePatches
 		char gCensusSeen[kCensusSeenMax][kCensusNameMax] = {};
 		int  gCensusSeenCount = 0;
 
+		// ---- CENSUS WINDOWS ------------------------------------------------
+		// ⛔ FIRST-SIGHT-ONLY MAKES A NAME THAT FIRES AT CITY LOAD INVISIBLE
+		// FOR THE REST OF THE SESSION. Round 1c recorded local_grid and
+		// local_tile_outline and attributed both to the zone/road drag - but if
+		// either ALSO fires under a terrain brush, that second firing was never
+		// logged, because the name had already been seen. The attribution was a
+		// guess dressed as a measurement, and it left the terraform row unable to
+		// be settled in either direction.
+		//
+		// A WINDOW RESETS THE SEEN SET, so each window is its own census. Names
+		// then cluster by WHEN they fired, and an action performed alone inside
+		// one window is attributable to that action rather than to how its name
+		// happens to be spelled. 0 = never reset (round 1c behaviour, default).
+		int   gCensusWindowMs = 0;      // [Probe] CensusWindowSeconds * 1000
+		DWORD gCensusWindowStart = 0;
+		int   gCensusWindowIndex = 0;
+
+		void CensusWindowTick()
+		{
+			if (gCensusWindowMs <= 0) { return; }
+			const DWORD now = GetTickCount();
+			if (gCensusWindowStart == 0) { gCensusWindowStart = now; return; }
+			if (now - gCensusWindowStart < static_cast<DWORD>(gCensusWindowMs))
+			{
+				return;
+			}
+			gCensusWindowStart = now;
+			++gCensusWindowIndex;
+			gCensusSeenCount = 0;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: CENSUSWINDOW %d opened (seen set cleared; every "
+				"name may log once more). Names below belong to whatever was on "
+				"screen during THIS window.", gCensusWindowIndex);
+		}
+
 		// true = this name has not been logged before (and is now recorded).
 		bool CensusFirstSight(const char* name)
 		{
@@ -4663,6 +4698,10 @@ namespace CodePatches
 				L"Probe", L"EffectCensus", 40, ini));
 			if (gEffectCensus < 0) { gEffectCensus = 0; }
 
+			gCensusWindowMs = static_cast<int>(GetPrivateProfileIntW(
+				L"Probe", L"CensusWindowSeconds", 0, ini)) * 1000;
+			if (gCensusWindowMs < 0) { gCensusWindowMs = 0; }
+
 			wchar_t raw[512] = {};
 			GetPrivateProfileStringW(L"UiSpike", L"EffectKill", L"",
 				raw, 512, ini);
@@ -4696,6 +4735,14 @@ namespace CodePatches
 				"EffectKill resolved to %d prefix(es) (read from [UiSpike]; "
 				"0 = OFF, the shipped default).",
 				gEffectCensus, gEffectKillCount);
+
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: CensusWindowSeconds resolved to %d (read from "
+				"[Probe]; 0 = OFF, one census for the whole session - a name "
+				"that fires at city load is then invisible for the rest of "
+				"it. N clears the seen set every N seconds so names can be "
+				"attributed to WHAT WAS ON SCREEN in that window).",
+				gCensusWindowMs / 1000);
 
 			// ⛔ THE CENSUS BUDGET AND THE BRANCH THAT SPENDS IT ARE TWO
 			// DIFFERENT KEYS, AND RAISING ONLY THE BUDGET MEASURES NOTHING.
@@ -8418,6 +8465,9 @@ namespace CodePatches
 			if (gBubbleStack && name)
 			{
 				const bool band = (rv >= 0x490000 && rv < 0x4B0000);
+				// Before any census test, so a window boundary is honoured
+				// even when this spawn is the one that opens the window.
+				CensusWindowTick();
 				if (band && gBubbleBandLogs < 16)
 				{
 					++gBubbleBandLogs;
