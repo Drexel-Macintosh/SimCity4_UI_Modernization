@@ -172,6 +172,16 @@ __pycache__/
 !/tools/dbpf/*.cs
 !/tools/dbpf/*.py
 !/tools/dbpf/*.md
+# row15-probe: the SCRIPTS ship (an exemplar decoder with four controls, the
+# 20-variant S3D family module, the builder), but NOT its output. That folder
+# also holds a built .dat and 43 extracted binary payloads, which are
+# game-derived and must never be tracked - the same rule every other dbpf
+# sibling dir is under. Added 2026-08-31, when the link gate caught a doc
+# citing a script that did not ship.
+!/tools/dbpf/row15-probe/
+/tools/dbpf/row15-probe/*
+!/tools/dbpf/row15-probe/*.py
+!/tools/dbpf/row15-probe/*.md
 
 # policy (d) globally: this repo carries NO images. Art comes from the
 # game install; screenshots are session state. No exceptions.
