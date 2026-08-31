@@ -19832,3 +19832,49 @@ goes stale silently the moment the directory changes; discovery cannot.
 Replacing the `ARCHIVES` constant with a function left its call site still
 naming the constant - a `NameError` on every run. Caught by parsing and then
 running the tool rather than by reading the diff.
+
+## 2026-08-31 - Row 15 probe, BASELINE PASS banked (arrows measurable, two README defects found)
+
+Baseline shots taken with the probe NOT installed, at 2x (confirmed by hash:
+`z_SC4UIScale_DialogStatic.dat` == `.2x.uipay`, and by the log's own sweep
+ratios 500->1000 / 833->1666). Banked in `_tests/row15/baseline-arrows.json`:
+
+| shot | median arrow | count | role B (uniform x3) predicts |
+|---|---|---|---|
+| Z5 | w=38 h=16 area=294 | 11 | w~114 |
+| Z3 | w=11 h=4 area=21 | 8 | w~33 |
+
+**The measuring script failed clean on its first run and the count-based
+positive control did not catch it.** On the Z3 shot it reported "4 arrows found"
+with a confident median of w=13 h=26, and all four were impostors: two were the
+amber PAUSE BUTTON, one a lit window, one the orange asterisk in a Claude
+permission toast that happened to be on screen. Only reading the coordinates
+exposed it. A fifth impostor appeared after the chrome exclusions went in - the
+amber PAUSED BORDER SC4 draws around the whole frame, a 2392x1596 blob that
+passed the colour test and was being reported as the widest arrow.
+
+Cures, both in `_tests/row15/measure_arrows.py`: named chrome exclusion zones,
+and an extent cap (a world sprite cannot span a quarter of the frame). The
+control is no longer "did I find any" but "did I find any IN THE WORLD".
+
+### Two defects in the probe README, both exposed by actually running the pass
+
+1. **Step 4 sent the reader to the region view.** The player: "establish city
+   only happens once you're in a city." Correct - the dialog opens on ARRIVAL
+   in an unestablished tile, not from the region view. Rewritten.
+
+2. **"Restore the same camera" was an unachievable instruction.** SC4 has no
+   camera save/restore, and the player said so. It was also unnecessary, and
+   the reason is already measured in this project: the pixels-per-tile table at
+   `0x00ABACE0` is `{8,16,32,73,146}`, one fixed scale per zoom level. Zoom is
+   quantised to five steps, rotation to four positions, pan is a pure
+   translation - so **at the same zoom the world-to-screen scale is identical
+   wherever the camera was panned.** Pan is free; zoom must match; rotation
+   matters only for role C, which is anisotropic by design precisely so it can
+   be told apart from role B's uniform x3. Both arrow frames also carry their
+   own in-frame ruler (road width, crosswalk stripes, pylons), the same method
+   that measured the signpost regression.
+
+   LAW EARNED: an instruction the tool physically cannot satisfy is a defect in
+   the instruction, not a shortfall in the run. Ask what the measurement needs,
+   not what feels safest to demand.

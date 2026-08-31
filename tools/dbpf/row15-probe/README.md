@@ -39,10 +39,34 @@ with the probe **not** installed:
 | 1 | Screenshot the arrow at **max zoom (Z5)**, then at **Z3**, noting the camera rotation. Do not move the camera afterwards. | Gives a size reference at two of the five zoom models. |
 | 2 | Open the cheat box and enter **`TastyZots`** (or leave a lot unpowered). Screenshot a no-power zot balloon at a **fixed zoom you write down**. | The zot is the probe's positive control. Its baseline must be at the same zoom as the reading. |
 | 3 | Screenshot the **news-ticker strip** across the bottom of the city HUD. | Baseline for canary K2. |
-| 4 | From the region view, click any **unestablished** tile so the **"Establish City"** dialog opens. Screenshot its buttons. Cancel out. | Baseline for canary K1. Harmless. |
+| 4 | **Enter** an unestablished tile - double-click it from the region view so the game loads into it. The **"Establish City"** dialog opens on arrival. Screenshot its buttons, then Cancel out. | Baseline for canary K1. Harmless. |
 
-Then install, restart SC4, load the **same city**, restore the **same camera**,
-and re-take all four shots. Read them side by side.
+Then install, restart SC4, load the **same city**, return to the **same zoom
+level**, and re-take the shots. Read them side by side.
+
+### The camera does not need to be restored, and cannot be
+
+An earlier version of this file asked the player to "restore the same camera".
+SC4 has no camera save/restore, so that was an unachievable instruction, and it
+was also an unnecessary one. The reason is measured rather than assumed:
+
+> the game's pixels-per-tile table at `0x00ABACE0` is `{8,16,32,73,146}` - one
+> fixed scale per zoom level. Zoom is quantised to five steps and rotation to
+> four positions; pan is a pure translation. **At the same zoom level the
+> world-to-screen scale is identical wherever the camera was panned.**
+
+So of the three camera axes:
+
+| axis | matters? | why |
+|---|---|---|
+| **pan** | no | pure translation, scale is untouched |
+| **zoom** | **YES** | the one axis that changes world-to-screen scale |
+| rotation | only for role C | role C is anisotropic, so its signature depends on which world axis faces the viewer. Roles A and B are uniform and rotation-blind. Read the rotation off the screenshot rather than trying to reproduce it |
+
+Both arrow frames also contain their own ruler - road width, crosswalk stripes,
+pylon spacing - so the arrow is measured against unchanged scenery in the same
+frame rather than against an absolute pixel count from another session. That is
+the same in-frame-ruler method that measured the signpost regression.
 
 ---
 

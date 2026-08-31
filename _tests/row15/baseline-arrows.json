@@ -1,0 +1,19 @@
+{
+  "z5": {
+    "median_w": 38,
+    "median_h": 16,
+    "median_area": 294,
+    "count": 11,
+    "file": "Arrows Zoom 5.jpg",
+    "min_px": 60
+  },
+  "z3": {
+    "median_w": 11,
+    "median_h": 4,
+    "median_area": 21,
+    "count": 8,
+    "file": "Arrows Zoom 3.jpg",
+    "min_px": 20
+  },
+  "_note": "Baseline pass, probe NOT installed. Compare by RATIO only; pan is free (fixed scale per zoom level, table 0x00ABACE0), zoom must match."
+}
