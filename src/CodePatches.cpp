@@ -4531,6 +4531,50 @@ namespace CodePatches
 		int   gBubbleAllLogs = 0;    // mode >= 3: unfiltered spawn census
 		int   gBubbleBandLogs = 0;   // offer-band (0x49xxxx-0x4Axxxx) spawns
 
+		// ---- CENSUS DISTINCTNESS ------------------------------------------
+		// ⛔ THE CENSUS BUDGET MUST BE SPENT ON DISTINCT NAMES, NOT SPAWNS.
+		// Round 1b (2026-08-30) ran the census correctly with a budget of 400
+		// and still learned nothing: 381 of the 401 lines were industrial
+		// smoke. The budget was exhausted 88 seconds before the player picked
+		// up a tool, so the names being hunted could not have been recorded no
+		// matter how the session was played.
+		//
+		// Raising the number does not fix that - ambient smoke is CONTINUOUS
+		// and will eat any budget, so a bigger cap just moves the exhaustion
+		// later. What was actually wanted all along is one line per distinct
+		// name: the same session then costs 14 lines instead of 401, and the
+		// budget bounds the INTERESTING set rather than the noisy one.
+		//
+		// Fixed capacity, no allocation on the spawn path. A name that does
+		// not fit is logged rather than dropped - an over-long name is still
+		// evidence, and silently skipping it would rebuild the same blindness
+		// this comment exists to record.
+		const int kCensusSeenMax = 192;
+		const int kCensusNameMax = 48;
+		char gCensusSeen[kCensusSeenMax][kCensusNameMax] = {};
+		int  gCensusSeenCount = 0;
+
+		// true = this name has not been logged before (and is now recorded).
+		bool CensusFirstSight(const char* name)
+		{
+			if (!name || !*name) { return false; }
+			for (int i = 0; i < gCensusSeenCount; ++i)
+			{
+				if (_stricmp(gCensusSeen[i], name) == 0) { return false; }
+			}
+			if (gCensusSeenCount < kCensusSeenMax)
+			{
+				int n = 0;
+				for (; name[n] && n < kCensusNameMax - 1; ++n)
+				{
+					gCensusSeen[gCensusSeenCount][n] = name[n];
+				}
+				gCensusSeen[gCensusSeenCount][n] = '\0';
+				++gCensusSeenCount;
+			}
+			return true;
+		}
+
 		// ---- EFFECTFILTER (overlay plan, probe 1) -------------------------
 		// FOUR research rows collapse onto this ONE already-shipped detour:
 		// the service-radius circles (PlopMode_*), the lot direction arrow
@@ -8381,11 +8425,13 @@ namespace CodePatches
 						"CodePatches: BUBBLEBAND %s ret=0x%08X ok=%u.",
 						name, rv, r & 0xFF);
 				}
-				else if (!band && gBubbleAllLogs < gEffectCensus)
+				else if (!band && gBubbleAllLogs < gEffectCensus
+					&& CensusFirstSight(name))
 				{
 					++gBubbleAllLogs;
 					Logger::Get().WriteLine(LogLevel::Info,
-						"CodePatches: BUBBLEALL %s ret=0x%08X ok=%u.",
+						"CodePatches: BUBBLEALL %s ret=0x%08X ok=%u "
+						"(first sight; repeats are not logged).",
 						name, rv, r & 0xFF);
 				}
 			}
