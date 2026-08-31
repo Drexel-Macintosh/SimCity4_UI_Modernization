@@ -18932,3 +18932,81 @@ Bought: rows 11, 12 and 13a confirmed live with exact return addresses, a third
 undocumented spawn path in row 11, a wrong call-site attribution caught and
 corrected in row 13a, and row 14 closed as a true null that redirects future
 work instead of consuming it.
+
+
+---
+
+## 2026-08-30 - the tile-outline caller decoded, and it corrects the correction
+
+Offline workflow, adversarially verified. `ret=0x004DA784` is now named, and the
+answer refutes something I had recorded that same day *as a measurement*.
+
+### The attribution, and it is airtight
+
+`0x004DA784` returns from `call dword ptr [edx+0x1C]` at `0x004DA781`, inside
+`0x004DA6C0` - which is **slot 3 of vtable `0x00A92CA8`**. Whole-file dword
+censuses, each with a stated positive control, give a single chain: that vtable
+has one constructor (`0x004DAE80`), which has one caller inside factory
+`0x007E6DA0`, whose **13 callers are all zone commands** - the three residential
+densities, three commercial, agricultural, two industrial, landfill and dezone,
+with the names read out of the game's own id/name table rather than guessed.
+
+**`0x004DA784` is the zone / dezone tool's view-input control.**
+
+### ⛔ AND IT CORRECTS MY ROUND-2 ENTRY, WHICH I WROTE AS MEASURED
+
+That entry said `local_tile_outline` at `ret=0x00662279` "**IS** the drag
+(measured inside the drag window)". The disassembly says otherwise: **both**
+known sites are `Init` methods behind two guards - a `[this+4]` init-once flag
+and a `[this+0x94] == 0` lazy-create - so each fires **at most once per control
+object**.
+
+What the census window actually recorded was the **tool activation** that
+preceded the drag. The window told me *when* the name fired; I inferred *what
+the player was doing* and inferred wrong.
+
+⚠ That is the **same error class** as the name-based pairing this entry had
+just replaced, one round later and with better evidence. A window narrows the
+question from "which name" to "which moment" - it does not answer "which
+action", and only the code does.
+
+### ⭐ AND ONE RETURN ADDRESS HAS FOUR OWNERS
+
+`local_grid` is not a per-tool effect at all. It is spawned by a **shared
+helper** `0x005FB340`, whose spawn returns to `ret=0x005FB357` - the exact
+address the census logged - and whose four callers are the plop/placement class
+`0x004C16C6`, the zone control `0x004DA706`, the intersection tool `0x00660CE9`
+and the network tool `0x00662244`.
+
+**One return address, four possible owners.** No census built on return
+addresses can distinguish them, which retires "`local_grid` means dragging"
+outright and means a plop-tool pickup also produces it - a counter-window
+this project's own probe plan had predicted would come back clean.
+
+### For any future round
+
+* A third site exists: the intersection tool's spawn returns to
+  `ret=0x00660D1E`. Add it to the expected set or it reads as an unexplained
+  fourth producer.
+* The detour does **not** need a register to identify the caller: `arg2` of the
+  spawn *is* `this+0x94`, so `this = arg2 - 0x94`, and the zone index sits at
+  `[this+0x3C]`. That distinguishes the thirteen zone commands from each other
+  without any new instrument.
+* The effect is **driven, not respawned**: a per-update block at `0x004DBEE0`
+  builds a world-space transform snapped to cell centres via
+  `floor(x/[this+0x6C]) * [this+0x6C] + [this+0x6C] * 0.5`. Scaling work belongs
+  on `[this+0x6C]` (sourced from `[0x00B43CF4]` vt+0x18) - one owner, one path,
+  never on the spawn.
+* The message id `0x277A9364` the control subscribes to is **named in the
+  game's own table** at `0x00B08628`: `kSC4MessageToggleTerrainGridDisplay`.
+  A lane had recommended treating it as unnamed; the verifier found the name.
+
+### What the verifier refuted, in its own findings
+
+Three claims were struck, and the pattern is worth keeping: one was a
+confidence label (the vtable link is *inference* - `[0x00B43D1C]` is filled at
+runtime by `0x00601CE1`, and nothing static ties it to `0x00A9F264`; the
+conclusion stands only because the live detour captured those return addresses);
+one was a wrong "treat it as unnamed" recommendation; one was a claim that
+`this` was not recoverable at the call site, refuted from the bytes -
+`esi` holds `this` throughout.

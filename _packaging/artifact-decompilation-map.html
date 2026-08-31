@@ -1,0 +1,825 @@
+<title>SC4 UI Decompilation Map</title>
+<style>
+  /* ── tokens: light is the base set; both dark paths redefine only these ── */
+  :root{
+    --ground:#E9ECEF;        /* cool paper, blue-biased neutral */
+    --surface:#FFFFFF;
+    --surface-2:#F3F5F8;
+    --ink:#171B22;
+    --ink-2:#4C5566;
+    --ink-3:#78828F;
+    --rule:#D3D9E1;
+    --rule-2:#E4E8ED;
+    --accent:#2F5B96;        /* SC4 dock slate-blue */
+    --accent-soft:#E2EAF5;
+    --ok:#1F6F5C;   --ok-bg:#DFF0EA;
+    --unk:#8A5A00;  --unk-bg:#FBEDD6;
+    --imp:#5D5674;  --imp-bg:#E9E6F0;
+    --def:#96363C;  --def-bg:#F8E2E3;
+    --shadow:0 1px 2px rgba(23,27,34,.06),0 4px 14px rgba(23,27,34,.05);
+    --mono:ui-monospace,"Cascadia Mono","SF Mono",Menlo,Consolas,monospace;
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --serif:ui-serif,Georgia,"Iowan Old Style","Times New Roman",serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --ground:#0F1217; --surface:#171B22; --surface-2:#1D222B;
+      --ink:#E6EAF0; --ink-2:#A7B0BE; --ink-3:#7A8494;
+      --rule:#2A313C; --rule-2:#232932;
+      --accent:#7FA9E4; --accent-soft:#1C2836;
+      --ok:#63C6AA;  --ok-bg:#142C27;
+      --unk:#D9A353; --unk-bg:#332616;
+      --imp:#A79BC4; --imp-bg:#232032;
+      --def:#DE8188; --def-bg:#33191C;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ground:#0F1217; --surface:#171B22; --surface-2:#1D222B;
+    --ink:#E6EAF0; --ink-2:#A7B0BE; --ink-3:#7A8494;
+    --rule:#2A313C; --rule-2:#232932;
+    --accent:#7FA9E4; --accent-soft:#1C2836;
+    --ok:#63C6AA;  --ok-bg:#142C27;
+    --unk:#D9A353; --unk-bg:#332616;
+    --imp:#A79BC4; --imp-bg:#232032;
+    --def:#DE8188; --def-bg:#33191C;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 96px}
+
+  /* ── masthead ── */
+  header.mast{
+    display:flex;flex-direction:column;gap:18px;
+    padding-bottom:28px;margin-bottom:40px;border-bottom:2px solid var(--ink);
+  }
+  .eyebrow{
+    font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  h1{
+    font-family:var(--serif);font-weight:600;font-size:clamp(34px,5.2vw,54px);
+    line-height:1.08;letter-spacing:-.015em;margin:0;text-wrap:balance;
+  }
+  .standfirst{
+    font-family:var(--serif);font-size:clamp(17px,2.1vw,20px);line-height:1.5;
+    color:var(--ink-2);max-width:62ch;margin:0;
+  }
+
+  /* ── stat strip ── */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+    background:var(--rule);border:1px solid var(--rule);margin-bottom:44px}
+  .stat{background:var(--surface);padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+  .stat b{font-family:var(--mono);font-size:27px;font-weight:600;line-height:1;
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+  .stat span{font-size:12px;color:var(--ink-3);letter-spacing:.02em}
+  .stat.is-ok b{color:var(--ok)} .stat.is-unk b{color:var(--unk)}
+  .stat.is-imp b{color:var(--imp)} .stat.is-def b{color:var(--def)}
+
+  /* ── sections ── */
+  section{margin-bottom:52px}
+  h2{
+    font-family:var(--serif);font-size:26px;font-weight:600;letter-spacing:-.01em;
+    margin:0 0 6px;text-wrap:balance;
+  }
+  .sub{color:var(--ink-2);font-size:14.5px;margin:0 0 22px;max-width:68ch}
+  h3{font-family:var(--sans);font-size:14px;font-weight:650;letter-spacing:.01em;
+    margin:26px 0 10px;color:var(--ink)}
+  p{max-width:68ch}
+
+  /* ── chips ── */
+  .chip{display:inline-block;font-family:var(--mono);font-size:10.5px;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:2px;
+    white-space:nowrap}
+  .c-ok{background:var(--ok-bg);color:var(--ok)}
+  .c-unk{background:var(--unk-bg);color:var(--unk)}
+  .c-imp{background:var(--imp-bg);color:var(--imp)}
+  .c-def{background:var(--def-bg);color:var(--def)}
+  .c-live{background:var(--accent-soft);color:var(--accent)}
+
+  /* ── ranked target table ── */
+  .scroll{overflow-x:auto;border:1px solid var(--rule);background:var(--surface);
+    box-shadow:var(--shadow)}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+  thead th{
+    text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-3);font-weight:600;
+    padding:11px 14px;border-bottom:1px solid var(--rule);background:var(--surface-2);
+    white-space:nowrap;
+  }
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--rule-2);vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  .rank{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--ink-3);
+    font-size:13px;width:1%}
+  .tgt{font-weight:600;display:block;margin-bottom:2px}
+  .tgt-note{color:var(--ink-2);font-size:13px;display:block;max-width:46ch}
+  .score{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;
+    width:1%;white-space:nowrap}
+  .bar{display:block;height:3px;background:var(--accent);margin-top:5px;border-radius:2px;opacity:.85}
+  .cost{font-size:13px;color:var(--ink-2);max-width:26ch}
+  tr.top td{background:var(--accent-soft)}
+
+  /* ── the remaining-set board ── */
+  .board{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
+    box-shadow:var(--shadow)}
+  .lane{background:var(--surface)}
+  .lane-hd{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    padding:11px 18px;background:var(--surface-2);border-bottom:1px solid var(--rule)}
+  .lane-hd b{font-size:14px}
+  .lane-hd .n{font-family:var(--mono);font-size:11px;color:var(--ink-3);
+    margin-left:auto;font-variant-numeric:tabular-nums}
+  .item{display:grid;grid-template-columns:auto 1fr;gap:0 14px;
+    padding:13px 18px;border-bottom:1px solid var(--rule-2)}
+  .lane .item:last-child{border-bottom:none}
+  .item .id{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--ink-3);
+    font-variant-numeric:tabular-nums;padding-top:1px}
+  .item .what{font-weight:600;font-size:14px;margin-bottom:3px}
+  .item .how{font-size:13px;color:var(--ink-2);max-width:72ch}
+  .item .how em{color:var(--ink);font-style:normal;font-weight:600}
+  tr.done .tgt{text-decoration:line-through;text-decoration-thickness:1px;
+    text-decoration-color:var(--ink-3);color:var(--ink-2)}
+  tr.done td{background:var(--surface-2)}
+
+  /* ── the pick ── */
+  .pick{background:var(--surface);border:1px solid var(--rule);border-left:3px solid var(--accent);
+    padding:22px 24px;box-shadow:var(--shadow)}
+  .pick h3{margin-top:0}
+  .pick ul{margin:12px 0 0;padding-left:18px}
+  .pick li{margin-bottom:7px;max-width:66ch}
+
+  /* ── plain lists of findings ── */
+  .cards{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule)}
+  .card{background:var(--surface);padding:15px 18px}
+  .card .hd{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:5px}
+  .card .hd b{font-size:14.5px}
+  .card p{margin:0;font-size:13.5px;color:var(--ink-2);max-width:70ch}
+
+  code,.va{font-family:var(--mono);font-size:.9em;background:var(--surface-2);
+    padding:1px 5px;border-radius:2px;color:var(--ink);white-space:nowrap}
+
+  .caveat{background:var(--unk-bg);border:1px solid var(--rule);padding:18px 20px;
+    display:flex;flex-direction:column;gap:8px}
+  .caveat b{color:var(--unk);font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase}
+  .caveat p{margin:0;font-size:14px;color:var(--ink-2)}
+
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);
+    font-size:12.5px;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:6px 18px}
+  footer span{font-family:var(--mono)}
+  @media (max-width:640px){.wrap{padding:32px 16px 64px}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <div class="eyebrow">SimCity 4 Deluxe 1.1.641 · survey 18 Aug 2026 · updated 30 Aug 2026</div>
+  <h1>SC4 UI Decompilation Map</h1>
+  <p class="standfirst">What the SimCity&nbsp;4 interface has given up so far, what it is still holding,
+  and which door to try next. Four independent survey passes over the SC4UIScale
+  research corpus, deduplicated and ranked — now largely emptied, with the
+  engine reference published as a section of the repository. The newest entries
+  come from a different kind of work: <em>watching the game run</em>, which
+  confirmed three in-world overlays, refuted a fourth, and caught a shipped
+  patch family that had never once applied.</p>
+</header>
+
+<div class="stats">
+  <div class="stat is-ok"><b>40+</b><span>subsystems documented to a mechanism</span></div>
+  <div class="stat is-ok"><b>27</b><span>targets closed since the survey</span></div>
+  <div class="stat is-ok"><b>3</b><span>overlays confirmed live, on screen</span></div>
+  <div class="stat is-imp"><b>10</b><span>closed as impossible or refuted, with proof</span></div>
+  <div class="stat is-def"><b>60</b><span>claims refuted by verification</span></div>
+</div>
+
+<section>
+  <h2>What is left</h2>
+  <p class="sub">The whole remaining surface, in one place, grouped by <em>what is actually blocking
+  it</em> rather than by score. Updated for the 2026-08-24 evening: the four launch-blocked items all
+  resolved in one session — <b>what remains is one open mechanism (#16's single surviving hairline)
+  and one scope decision (#29)</b>. No amount of further disassembly moves either.</p>
+
+  <div class="board">
+
+    <div class="lane">
+      <div class="lane-hd"><span class="chip c-ok">Landed — all five closed</span>
+        <b>The last offline lanes</b>
+        <span class="n">0 remaining</span></div>
+      <div class="item"><span class="id">#04</span><span>
+        <span class="what">The DX7 draw-call census — offline half done, and the case for the launch got stronger</span>
+        <span class="how">The driver's method table is resolved and the draw entry points are named.
+        The surprise: the <em>static</em> caller census is a controlled zero. Every call arrives through
+        a slot that every COM-shaped interface in the executable shares — thousands of sites — so no
+        static filter can exist. That makes the live hook <em>the only instrument</em> rather than a
+        confirmation of offline work. Also: the driver's whole 2D blit family is unimplemented stubs,
+        so every pixel in this build is a drawn primitive.</span></span></div>
+      <div class="item"><span class="id">#10</span><span>
+        <span class="what">Computed window ids — closed, with the arithmetic explicitly marked soft</span>
+        <span class="how">The row's own framing was wrong: the census matched a slot without checking
+        what kind of object it belonged to, so many "SetID sites" were never SetID at all. All three
+        id runs seen live turned out to come from a single builder. The verifier could not reproduce
+        the exact splits, so the row now says <em>mechanism confirmed, counts unproven</em> rather than
+        quoting numbers that would harden into fact.</span></span></div>
+      <div class="item"><span class="id">#19</span><span>
+        <span class="what">Drag preview — closed, and the question had two subjects glued together</span>
+        <span class="how">The two prescribed addresses are text strings, not geometry — and one was
+        off by a byte, so the prescribed probe could only ever have failed. The footprint tiles and the
+        network drag preview are <em>unrelated systems</em>; the drag preview's name is assembled at
+        runtime from a data field, never appearing as a literal, which is exactly why scanning for
+        constants could not have found it. Everything is world-anchored: nothing to patch.</span></span></div>
+      <div class="item"><span class="id">#25</span><span>
+        <span class="what">Highlight tint — closed; there was no table to find</span>
+        <span class="how">It isn't static data at all, which is why looking for a table never worked:
+        the colours are built at runtime into a vector of eleven entries and indexed by mode. The full
+        palette is now recovered — query hover is dark green, demolish dark red. Two facts the register
+        had were wrong and both would have burned a session, including a message id that names an
+        entirely different event.</span></span></div>
+      <div class="item"><span class="id">#26</span><span>
+        <span class="what">Signpost kinds — resolved, and it caught a bug in our own probe</span>
+        <span class="how">The builder is <em>not</em> dead code, and the kinds table's size is proven by
+        the game's own loop bound rather than by counting entries. The real dispatch is a separate
+        jump table on a different field than we thought — which means two of our shipped probes have
+        been logging the wrong field and calling it "kind". Fixed and rebuilt.</span></span></div>
+    </div>
+
+    <div class="lane">
+      <div class="lane-hd"><span class="chip c-ok">The 2026-08-24 evening — all four resolved</span>
+        <b>Three closed by measurement, one captured with its scope halved</b>
+        <span class="n">1 question left open</span></div>
+      <div class="item"><span class="id">#22 · #23</span><span>
+        <span class="what">Data-view tint — closed: it is not a view object at all</span>
+        <span class="how"><span class="chip c-ok">Closed by the colour capture</span> The counting plan
+        died first (every view produced the same population), so the discriminator became the overlay's
+        colour field — and across a full cycle of every data view it <em>never moved once</em>. The
+        lazily-created overlay is a one-shot with constructor-constant state, unrelated to tinting.
+        The tint lives in the terrain/material path; no per-view drawable exists to attribute.</span></span></div>
+      <div class="item"><span class="id">#24</span><span>
+        <span class="what">Purple text — closed: the state no longer exists to explain</span>
+        <span class="how"><span class="chip c-ok">Does not reproduce</span> The runtime-only condition
+        was recreated exactly — the static package quarantined by a rename its own sync cannot see,
+        plus a one-id exclusion lever — and the dialog runtime-scaled to the doubled size with
+        <em>every text its normal colour</em>. The new font-GUID probe logged 500 style bindings:
+        the predicted fallback was stored zero times. Something shipped since July cured it; the
+        old engine law is refuted and annotated, and the probe is banked in case purple returns.</span></span></div>
+      <div class="item"><span class="id">#04</span><span>
+        <span class="what">The draw-call census — closed, and it validated itself against ground truth</span>
+        <span class="how"><span class="chip c-ok">Live census captured</span> The census independently
+        re-found the emergency-pin and dispatch-view draw sites the pin arc had already proven — the
+        strongest possible control that its attributions are real — and named the new ones: the
+        dominant in-world fan drawer and a quad-batch family. Four instrument defects were burned out
+        on the way (wrong frame-rate assumption, plumbing-level attribution, a marker that latched the
+        boot regime, a counter zeroed before its own log line); each is now a logged, self-diagnosing
+        outcome and a REGRESSION.md law. Repeatable in any future session with one ini key.</span></span></div>
+      <div class="item"><span class="id">#16</span><span>
+        <span class="what">The 1.5× hairlines — captured, and the observable has shrunk by half</span>
+        <span class="how"><span class="chip c-unk">Mechanism still open — the board's one question</span>
+        The owed capture is delivered: at 1.5× exactly <em>one</em> thin line remains, bottom-right of
+        the mayor's-hat button — and the advisor portraits, half of the original report, are now
+        clean. Absent at 2× (the control). Some intervening release partially cured this without
+        anyone noticing. Next step, if wanted: instrumented art on that button's sheet, its own plan.</span></span></div>
+      <div class="item"><span class="id">grade</span><span>
+        <span class="what">Zots and the dispatch indicators — both witnessed, both confirmed</span>
+        <span class="how"><span class="chip c-ok">Closed on screen</span> Zots grow with the camera
+        across a zoom pair, confirming they are world-anchored and need no fix at any scale. ⭐ The
+        same two frames delivered a <em>better control than the one asked for</em>: the dispatch
+        balloons hold the same pixel size while the zots grow, so one image pair proves world-anchored
+        for one family and pixel-fixed for the other, each serving as the other's control. And the
+        dispatch pins do carry numbers — at both scales — so a suspected regression was tested against
+        its control and did not reproduce.</span></span></div>
+    </div>
+
+    <div class="lane">
+      <div class="lane-hd"><span class="chip c-imp">Open-ended</span>
+        <b>Not blocked — just genuinely large</b>
+        <span class="n">1 target</span></div>
+      <div class="item"><span class="id">#29</span><span>
+        <span class="what">The <code>.UI</code> deserializer's completion path</span>
+        <span class="how">The highest ceiling on the board and the least tractable thing on it: no
+        bounded probe closes this, and it has never been costed because nobody has needed it badly
+        enough. It is the one item here that is a project rather than a question.</span></span></div>
+    </div>
+
+  </div>
+</section>
+
+<section>
+  <h2>The finding that matters most</h2>
+  <p class="sub">Target #11 was costed at "find the selector, build one test archive." The selector
+  turned out not to be a lookup at all.</p>
+  <div class="pick">
+    <h3>The per-resolution <code>.UI</code> group is <em>computed</em>, every time a script loads</h3>
+    <p>The project had one data point here — the stock 800×600 override set living under group
+    <code>0x08000600</code> — and read it as a special case Maxis hard-coded. It isn't. The loader
+    service resolves the group at <code>0x94B210</code> on <em>every</em> script load: read the main
+    window's width and height, <code>sprintf</code> them through <code>"0x%.4u%.4u"</code>, parse that
+    string back as hex, write the result into the group slot, and probe it. On a miss it silently
+    restores the caller's group.</p>
+    <p>Because <code>%.4u</code> is decimal and the result is re-read as hex, the rule is literally
+    <b>decimal digits re-interpreted as hex nibbles</b> — and 800×600 → <code>0x08000600</code> falls
+    straight out of the formula, which is the built-in positive control that it was derived right.</p>
+    <ul>
+      <li><b>Arbitrary resolutions are first-class.</b> A archive carrying scripts under
+      <code>0x24001600</code> is picked up automatically at 2400×1600 and ignored everywhere else.
+      Per-resolution layouts are shippable with <em>zero</em> runtime rewriting — a real architectural
+      alternative to tier packages plus a scaling pass.</li>
+      <li><b>Recorded, deliberately not acted on.</b> That is a design decision about what the mod
+      should be, not a defect to fix, and it belongs to whoever makes it — not to a sweep.</li>
+      <li><b>The trap is the graceful part.</b> The fallback is per-instance and silent: a
+      resolution-specific script that is missing, or misfiled by a single digit, degrades to the
+      default layout with no log line and no error.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>Since the survey</h2>
+  <p class="sub">All recorded in <code>research/UNKNOWNS-AND-NEXT-TARGETS.md</code>
+  — the register this page mirrors.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Shipped · v4.6.0</span><b>The engine reference is now a published section</b></div>
+      <p>The corpus this page maps stopped being an internal pile and became part of the repository:
+      a front-door status document, the SDK-style engine reference behind it, and the laws distilled
+      from real defects. The <code>_incoming/</code> drafts — 430&nbsp;KB of unverified agent output
+      that had sat in a public tree with a warning only in its folder README — were
+      <b>adjudicated and retired</b>, 121 claims at a time, with the survivors folded into canon and
+      the rest deleted rather than left to be mistaken for reference. They are not to be restored.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Found by reading a log</span><b>A patch family that had never once applied</b></div>
+      <p>The user said a launch looked fine. The log disagreed: two appliers were writing the
+      <em>same</em> constant, and the second refused because the first had already changed it. The
+      refusal was not the defect — the verifying loop is all-or-nothing and bails on the first
+      mismatch, and this constant was second of five. <b>So none of the five was ever written, on any
+      boot, at any scale, for as long as both shipped.</b> The proof is an absence: the family's
+      success line appears zero times in a 446-line log.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">The sharper half</span><b>The two rules were never the same rule</b></div>
+      <p>One applier wrote a raw product, the other a rounded one. They agree at 2× and 3× by
+      arithmetic accident and diverge at 1.5× — where the raw value is <em>the exact number this
+      project had already A/B-proved makes a readout vanish</em>, with the rounding recorded as the
+      cure in the table's own comment. The redundant writer was writing the known-bad value first and
+      then blocking the known cure. The user runs at 2×, which is precisely why nothing ever looked
+      wrong.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Gate</span><b>A check that asks what registration cannot</b></div>
+      <p>Both of that day's defects had one shape: an address typed as a bare literal inside a
+      function, where the anti-rot sweep — which can only notice a family somebody <em>named</em> —
+      was structurally blind. Nobody forgot to register the second one; there was nothing to register.
+      The new check asks instead whether every address we <b>write to</b> resolves through a name at
+      all, and reads the larger source file the gate had never opened. Tuning it was the work: 16
+      hits, 14 false, three measured refinements to 2 — a check that cries wolf gets ignored.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Method</span><b>The gate was made to fail before the code was fixed</b></div>
+      <p>The collision above was invisible for two independent reasons, and <b>fixing either alone
+      leaves the gate green</b> — measured, not assumed. So the order was: widen the check, name the
+      hidden writer, watch it go <em>red</em> on the real address, and only then delete the redundant
+      code and watch it go green. A gate change that goes straight to green teaches nobody that it
+      works.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Ported too late</span><b>A gate that crashed instead of running</b></div>
+      <p>An arming check died before its first assertion under one common invocation form, while
+      working perfectly under the one written into the runbook — correct for the person who wrote the
+      command, a stack trace for anything automating it. The cure was <em>already written down in a
+      sibling file in the same folder</em>, where the same trap had once silently written output to
+      the wrong directory. Found once, documented, applied to exactly one script.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Shipped · v4.5.9</span><b>Two mods handled, one gate caught the packaging</b></div>
+      <p>Three third-party mods were handled by three different correct mechanisms — one of them
+      "measure it and do nothing", which is a result. The release bundle's manifest gate then refused
+      the build: six new files existed on disk and in no download. They would have worked on this
+      machine and been absent for every other user.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Shipped · v4.1.0</span><b>The emergency-pin fix — measured into existence</b></div>
+      <p>The deployment digit on the fire-dispatch pins sat on the helmet at 2x. Five patches aimed by
+      disassembly missed; the fix came from <em>measuring the game's own draw submissions</em> at both
+      tiers — the subtraction named two stock constants (the digit's box height and its seat) that never
+      rode the tier while the balloon did. Adversarially verified 8/8, user-confirmed on screen, and
+      released with a second fix (stacked balloons no longer overlap each other) plus the census
+      instrumentation that found them. Three laws minted along the way, headed by: <em>measure the
+      quads, not the theory.</em></p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Sweep · 6 rows</span><b>Five more closed, one refuted outright</b></div>
+      <p><b>#13</b> settled a long-running puzzle: <code>gutters=</code> is one attribute name with
+      <em>three</em> different field shapes depending on the class — which is exactly why no general
+      rule ever fit it. Its sibling <code>tipoffsets=</code> turns out to be <b>inert on stock art</b>
+      (its only consumer gates on a flag bit that defaults clear). <b>#12</b> recovered the
+      <code>cISC4ViewObject3D</code> interface — 5 slots, Draw and Pick — as a usable header, plus the
+      renderer's pass order. <b>#9</b> named both unknown art families. <b>#18</b> was <b>refuted</b>:
+      the "TagKind sprite size constant" does not exist, because tags bind a null model and draw
+      nothing at all.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Mis-framed, then closed</span><b>The "opaque window factory" was the font registry</b></div>
+      <p>Target #5 had 220 unexplained call edges and was slated for a live hook. It isn't a window
+      factory at all — it's the engine's font-style registry, the same singleton another row of this
+      register already described. Its interface id hands back a <em>different</em> sub-object, so every
+      slot number anyone had reasoned about pointed into the wrong table. Once that was fixed, 58% of
+      those "unknown" edges turned out to be a single method, and the owner count reconciled exactly:
+      33 functions call it, 6 throw the result away, leaving the 27 the row had claimed.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Lower tier</span><b>Cursors closed structurally; the loading screen already scales</b></div>
+      <p>SC4 ships <em>no cursor resources</em> and the install has no cursor files, so cursor art is a
+      filesystem path and no cursor resource can exist — both live paths end in an OS-sized Windows
+      cursor, and the one path the game builds itself is hard-capped at 32×32 by single-byte
+      dimensions. There is no lever, and that is a complete answer. Meanwhile the city loading screen
+      turns out to size itself from the window at construction and to ship its backdrop at <b>three
+      resolutions</b>, picking one at runtime from the app's own size tier.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">23 Aug sweep</span><b>Seven targets closed outright, four part-closed</b></div>
+      <p>#01 GZWinBtn vertical axis, #02 the winflag bit map (11/13 measured), #06 the pick-whitelist
+      ids, #07 the ScaleDim drift (real: 122/392 heights), #15 the sibling per-zoom float tables,
+      #20 the MySim head bubble, #21 <code>cIGZWin</code> slots 95–97 (non-polymorphic, proven over
+      111 vtables). Partial: #09 PNG consumers (residual measured at 1,297, not ~1,850), #14, #17
+      (2 of 3 windows identified), #28 S3D (chunk chain decoded).</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Closed 23 Aug</span><b>Zots — decoded end-to-end, zero claims refuted</b></div>
+      <p>The five-lens workflow landed and every address-level claim survived independent adversarial
+      re-derivation. Zots are <em>city props</em>: four condition updaters (plus the landfill simulator's
+      hand-inlined NoCar) funnel into <code>AddZot 0x6C98C0</code> — kind priority NoPower&nbsp;&gt;&nbsp;NoWater&nbsp;&gt;
+      NoCar&nbsp;&gt;&nbsp;NoWork — then <code>cSC4PropManager::AddLotProp</code> at building-top&nbsp;+3.0&nbsp;m. Sized by
+      <b>S3D vertex metres</b> (80 models, 5 zooms × 4 rotations); world-anchored with zero px→world
+      callers, so they are <b>correct at every tier by construction</b> — no cure needed. Exactly four
+      zots ship. Census row 23 + <code>overlays/row-23-zots.md</code>.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Shipped</span><b>v4.0.41 public · disaster flyout rebuilt · repo hygiene</b></div>
+      <p>The Create Disasters flyout's scaling was rebuilt from scratch on one invariant (live buffer =
+      stock&nbsp;1x&nbsp;×&nbsp;f), the legacy path deleted, and GitHub release v4.0.41 cut. A four-scan
+      reference-mapped audit then removed 103 verified-dead files from the public tree.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-unk">New leads</span><b>The SC4D Encyclopaedia `.UI` article, vetted</b></div>
+      <p>Community doc banked as a leads file: the resolution-as-GID digit encoding makes #11's test
+      archive derivable (2400×1600 → GID <code>0x24001600</code>); two winflag attribute names our
+      measured map lacks; stated semantics for <code>gutters=</code>/<code>textoffsets=</code>. Its
+      <code>area=</code> format claim is measurably wrong — corner form is proven.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>The ranked targets</h2>
+  <p class="sub">Score = value to a modder (1–5) × tractability (1–5). Struck rows are closed since
+  the survey, with the answer in place of the question.</p>
+
+  <div class="scroll">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Target</th><th>Score</th><th>What it costs</th></tr>
+    </thead>
+    <tbody>
+      <tr class="done">
+        <td class="rank">01</td>
+        <td><span class="tgt">Does <code>GZWinBtn</code> stretch a state cell vertically?</span>
+            <span class="tgt-note"><span class="chip c-ok">Closed 23 Aug</span> No — the state cell's
+            height is copied from the image's own per-state rect, SOURCE-sized like the width. There is
+            no vertical stretch to chase. <code>SC4-UI-ENGINE.md</code> §2.7.</span></td>
+        <td class="score">—</td>
+        <td class="cost">One static disassembly, as predicted.</td>
+      </tr>
+      <tr class="done">
+        <td class="rank">02</td>
+        <td><span class="tgt"><code>winflag_*</code> name→bit map</span>
+            <span class="tgt-note"><span class="chip c-ok">Closed 23 Aug</span> 11 of 13 bits measured
+            (real slots <code>vt+0x10C</code>/<code>0x110</code> — the vendor header is one virtual short).
+            <code>SC4-UI-ENGINE.md</code> §3.1a.</span></td>
+        <td class="score">—</td>
+        <td class="cost">Disassembled GetFlag/SetFlag sites.</td>
+      </tr>
+      <tr class="done">
+        <td class="rank">03</td>
+        <td><span class="tgt">Zots — the no-power / no-water / no-job discs</span>
+            <span class="tgt-note"><span class="chip c-ok">Closed 23 Aug</span> World-anchored city props,
+            sized by S3D vertex metres — correct at every tier by construction, click-transparent to the
+            ray-pick. Full chain: census row 23 + <code>overlays/row-23-zots.md</code>. One zoom-pair
+            screenshot still owed for the DOCUMENTED grade.</span></td>
+        <td class="score">—</td>
+        <td class="cost">Sweep + 5-lens decode, fully offline.</td>
+      </tr>
+      <tr>
+        <td class="rank">04</td>
+        <td><span class="tgt">The DX7 GDriver draw-call census</span>
+            <span class="tgt-note">Highest leverage on the list: would name every in-world drawer in one
+            capture. The register names it next after the Zot attack.</span></td>
+        <td class="score">15<span class="bar" style="width:75%"></span></td>
+        <td class="cost">Log-only naked hook + one launch.</td>
+      </tr>
+      <tr>
+        <td class="rank">05</td>
+        <td><span class="tgt">The <code>0xC2C2EB0F</code> window factory's output</span>
+            <span class="tgt-note">220 call edges, 27 in the live-UI band; structurally invisible to every offline tool.</span></td>
+        <td class="score">15<span class="bar" style="width:75%"></span></td>
+        <td class="cost">Live hook + one session.</td>
+      </tr>
+      <tr class="done">
+        <td class="rank">06</td>
+        <td><span class="tgt">The five automata family ids in the pick whitelist</span>
+            <span class="tgt-note"><span class="chip c-ok">Closed 23 Aug</span> All five resolved offline;
+            <code>0xA823821E</code> alone branches into the signpost re-check.
+            <code>SC4-WORLD-OVERLAYS.md</code> §2.4.</span></td>
+        <td class="score">—</td>
+        <td class="cost">One compare chain, as predicted.</td>
+      </tr>
+      <tr class="done">
+        <td class="rank">08</td>
+        <td><span class="tgt">The other six dispatch-indicator categories</span>
+            <span class="tgt-note"><span class="chip c-ok">Decoded 24 Aug</span> All seven named but one
+            (a dormant category with no producer in the image): fire pin, police pin, MySim head bubble,
+            CSI, the U-Drive-It driving bubble, and the player-vehicle plumb bob. Eyes-on only remains.</span></td>
+        <td class="score">—</td>
+        <td class="cost">Jump table read, fully offline.</td>
+      </tr>
+      <tr class="done">
+        <td class="rank">09</td>
+        <td><span class="tgt">PNGs bound by no <code>.UI</code> reference</span>
+            <span class="tgt-note"><span class="chip c-ok">Closed 24 Aug</span> Both unknown families
+            named — one is the City Situation reward pictures, declared by name in Lua rather than in
+            any binary. 30 stray ids remain unbound, all gap-members of consumed runs.</span></td>
+        <td class="score">—</td>
+        <td class="cost">imm32 sweep + a Lua trace.</td>
+      </tr>
+      <tr class="done">
+        <td class="rank">11</td>
+        <td><span class="tgt">Resolution-as-GID for arbitrary resolutions</span>
+            <span class="tgt-note"><span class="chip c-ok">Closed 24 Aug</span> <b>Computed, not looked
+            up</b> — see the section above. Per-resolution layouts are shippable with zero runtime
+            rewriting; the test archive was never needed.</span></td>
+        <td class="score">—</td>
+        <td class="cost">One function read. No launch.</td>
+      </tr>
+      <tr class="done">
+        <td class="rank">12</td>
+        <td><span class="tgt">Reconstruct <code>cISC4ViewObject3D</code></span>
+            <span class="tgt-note"><span class="chip c-ok">Closed 24 Aug</span> Five slots: the two
+            unknowns are Draw and Pick. Written up as a usable header, with the renderer's four pass
+            lists and frame order decoded alongside.</span></td>
+        <td class="score">—</td>
+        <td class="cost">Vtable intersection, as costed.</td>
+      </tr>
+      <tr class="done">
+        <td class="rank">28</td>
+        <td><span class="tgt">The S3D model format</span>
+            <span class="tgt-note"><span class="chip c-unk">Part-closed</span> Chunk chain
+            <code>3DMD→HEAD→VERT→INDX→PRIM→MATS→ANIM→PROP→REGP</code> hand-decoded from the ConnectArrow
+            plate (336 bytes decompressed — the "244" was the on-disk QFS size). Several numeric fields
+            still unread; no general reader yet.</span></td>
+        <td class="score">—</td>
+        <td class="cost">One plate decoded; reader unwritten.</td>
+      </tr>
+      <tr>
+        <td class="rank">29</td>
+        <td><span class="tgt">The <code>.UI</code> deserializer's completion path</span>
+            <span class="tgt-note">Highest ceiling on the board, and the least tractable.</span></td>
+        <td class="score">5<span class="bar" style="width:25%"></span></td>
+        <td class="cost">Open-ended.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>What is being attacked now</h2>
+  <p class="sub">Everything this section used to list as owed or launch-blocked has landed. The work
+  moved from reading the binary to <em>watching it run</em> — and the instruments turned out to need
+  more debugging than the game did.</p>
+  <div class="pick">
+    <h3>Live overlay attribution: three confirmed, one refuted, five to go</h3>
+    <p>A hook on the engine's named-effect spawn was run against real play sessions with a windowed
+    census. It settled four of the nine in-world overlay rows — three of them <b>confirmed on screen
+    with exact return addresses</b>, and one <b>refuted outright</b>, which is the more valuable
+    result because it redirects future work instead of consuming it.</p>
+    <ul>
+      <li><b>Confirmed, and the static decode was right to the byte.</b> The service-radius circle,
+      the lot direction arrow and the drag grid all spawn as named effects. Two return addresses had
+      been predicted from disassembly months earlier and both were hit exactly. The census also found
+      a <em>third</em> spawn path in the radius family that no decode had named.</li>
+      <li><b>Refuted: the terrain-brush circle is not a named effect at all.</b> Measured in an
+      unfounded city with brushes actively in use across five census windows: every name logged was
+      ambient. That row's documented attribution is wrong, while the same attribution stands confirmed
+      for its three neighbours — a precise correction rather than a collapse.</li>
+      <li><b>Five rows remain</b>, and two offline lanes are running against them now: the neighbour
+      connection plates, the commute trace, both U-Drive-It route visuals, and the query/demolish
+      hover glow.</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>When the instrument is the thing that is broken</h2>
+  <p class="sub">Four play sessions produced one measurement. The first three measured the probe
+  itself — and each failure arrived <em>looking exactly like a finding</em>, which is the whole
+  reason the last one's control matters.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Round 1</span><b>A budget raised on a branch that never ran</b></div>
+      <p>The census logging budget was raised and a session played: <b>zero</b> tool-cursor names.
+      That zero was worthless. The census sits behind a <em>second</em> switch — a mode flag left at
+      its default — so the branch never executed. Two keys had always controlled one instrument and
+      nothing said so. Worse, the proof that the hook worked was already banked in the captures folder
+      from twelve days earlier; checking the arming against that control was free and I did it after
+      spending the session rather than before.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Round 1b</span><b>Armed correctly, and still blind</b></div>
+      <p>Mode correct, 401 lines logged — and <b>381 of them industrial smoke</b>. The budget was
+      exhausted 88 seconds before the player picked up a tool. Nothing about how that session was
+      played could have captured the target. The fix was not a bigger number: ambient effects are
+      continuous and eat any budget. The budget had to bound <em>distinct names</em>, which turns the
+      same session into 14 lines instead of 401.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Round 2</span><b>An absence that was never about the instrument</b></div>
+      <p>The user identified what three rounds of tuning had missed: god-mode terraforming requires an
+      <em>unfounded</em> city, and every session so far ran in a founded one. The brush could not have
+      been on screen. My reasoning about that row had argued from instrument headroom — true, and
+      entirely beside the point. <b>Before tuning an instrument to explain an absence, ask whether the
+      thing could have happened at all.</b></p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Round 3</span><b>The one that could support a null</b></div>
+      <p>Unfounded city, brushes used for a minute across five windows, ten census lines, all ambient.
+      What makes it a measurement rather than a shrug is that <b>the positive control is internal to
+      the same run</b>: the hook logged a cloud spawn in every one of the five windows, including
+      those with the brush on screen, using ten of a four-hundred budget. Awake, unsaturated, and
+      logging — and it saw no terrain effect.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Caught within one session</span><b>A shared name is not a shared call site</b></div>
+      <p>An earlier unwindowed round recorded one effect name and paired it with a neighbour as "the
+      drag pair". The windowed run showed the drag actually uses <em>the same name from a different
+      caller</em>; the first address belongs to some other consumer entirely and is still unnamed.
+      That pairing was inferred from a name in a session with no way to tell <em>when</em> anything
+      fired, and it survived one write-up before the next round contradicted it.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">The standing lesson</span><b>The regression net now covers the instruments</b></div>
+      <p>Each of these failures reported success. The distinct-name rule was <b>proven offline against
+      the real capture</b> — replaying the failing session's own name sequence — before another play
+      session was requested, and that replay is now a permanent test. A broken instrument is not a
+      quiet failure mode; it is a confident one.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What verification actually caught</h2>
+  <p class="sub">Every lane was paired with an adversarial verifier told to refute it and to treat any
+  claim it could not re-derive as unproven. That pass rejected <b>16 claims</b> across five lanes —
+  including one I had already written into the docs.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="hd"><span class="chip c-def">My error</span><b>A correction that made a doc worse</b></div>
+      <p>A lane reported that one size constant was shared by six indicator categories. I believed it,
+      and "corrected" a long-standing note that had attributed the constant to a single category. The
+      verifier refuted the lane; a hand check of every write to that field settled it. The original note
+      was <b>right</b>, my correction was <b>backwards</b>, and the blast radius of touching that
+      instruction is one visual, not six. Reverted, with the full derivation now in place so it cannot
+      be re-widened.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">The dominant failure</span><b>Off-by-one-function attribution</b></div>
+      <p>The single most common refutation, by a wide margin: "site X lives in function F" where F is
+      the function <em>before</em> the real one. Functions in this binary are small and adjacent, so
+      landing one boundary early is the default mistake — and it silently reassigns behaviour to the
+      wrong owner. Nine refutations were this shape. The rule now: never claim an enclosing function
+      without proving both its padding-preceded entry and its terminating return.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Under-counting</span><b>A too-narrow byte filter reads as absence</b></div>
+      <p>My own first sweep for writes to a field found three where there are four, because the pattern
+      I matched covered one register encoding and the missing write used another. A search that is
+      narrower than the thing it is searching for returns a clean, confident, wrong answer. Exhaustive
+      sweeps now enumerate every store form and every register encoding.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Also caught</span><b>Two claims of novelty that weren't</b></div>
+      <p>A lane announced it had found a window's creation site "previously unknown" — the repo had
+      already documented it in two places. Another corrected a doc line that needed no correcting.
+      Novelty claims are cheap to make and cheap to check; check them.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Already answered</span><b>An open question the source had closed months ago</b></div>
+      <p>#27, the "unknown flyout with no script", is a <b>dead branch</b>: the code asks the loader for
+      a script Maxis never shipped, so nothing can resolve — and the opener it uses is one we already
+      hook. All of that was sitting in a source comment, with its own positive control, since the
+      release that hooked that opener. The register listed it as open anyway and a research lane was
+      spent rediscovering it. Re-derived independently at wider reach (zero hits across 1,303 script
+      bodies and 279 archives, against controls that do hit), which is how the duplication surfaced.
+      Search your own source before opening a lane.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Instrument trap</span><b>A scan that reported zero because it looked in the wrong place</b></div>
+      <p>My first pass reported <em>zero</em> plugin archives — because the user's Documents folder is
+      cloud-redirected, so the conventional home-relative path doesn't exist. A scan of nothing returns
+      a clean zero that is indistinguishable from a real absence. Caught it because "no plugin declares
+      this" was too convenient an answer. The project's shipped tooling already resolves this correctly;
+      only my throwaway script didn't. Both traps are now written into the promoted instrument.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Closed as impossible</h2>
+  <p class="sub">Recorded with the proof and the positive control, so nobody spends a week rediscovering the wall.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="hd"><span class="chip c-imp">Boundary</span><b>Renderer-drawn UI, within the window model</b></div>
+      <p>With the buffer-blit hook armed, every destination is panel-sized and not one is screen-sized — the buffer class never composites to the screen. The city loading screen has no script in the 339-file corpus and never appears in the tree: 100% code-painted.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-imp">9 builds</span><b>Reading the composited frame in-process</b></div>
+      <p>The container paints into the shared screen buffer, which is GPU-only. <code>Lock()</code> succeeds, every pixel reads black, stride returns 0. Objective pixel measurement must come from an external capture.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-imp">Two controls</span><b>Effect-directory override from a plugin</b></div>
+      <p>The manager fetches the resource <em>once</em> at COM init behind a one-shot flag, and the resolver is first-provider-wins. Proven inert from both plugin trees by control launches carrying an unmissable 3× scale.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-imp">Measured</span><b>The buffer blit cannot stretch</b></div>
+      <p>No scaling operations in the blit or its delegate; a 2538×6102 destination rect changed nothing on screen. 2× is reached by a bigger buffer or a code upscale — never by enlarging the destination.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-imp">197 fns</span><b>Region rotation</b></div>
+      <p>Zero references to rotate/angle/yaw across 197 decompiled region functions, against a positive control. Tiles are baked at save time.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-imp">Structural</span><b>Sub-flyout items via the window tree</b></div>
+      <p>The visible menu items are blits into the container's paint buffer, not child windows. No tree sweep reaches one at any depth.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Publication blockers — where they stand</h2>
+  <p class="sub">The survey found six places where the notes contradicted themselves. Two are now
+  verified fixed; the rest have not been re-audited since.</p>
+  <div class="cards">
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Fixed · verified 23 Aug</span><b>The census row that held three states</b></div>
+      <p>The offer-balloon row in the overlay census has been reconciled — the "eyes-on pending" and
+      "every named system eliminated" states are gone from the file; the CSI resolution stands alone.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-ok">Fixed · verified 23 Aug</span><b>The version history's refuted attribution</b></div>
+      <p>The v3.0.7 "real balloon builder" entry now carries a loud SUPERSEDED banner, and v3.0.38
+      documents the actual CSI mechanism with the confirming capture quoted.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Unre-audited</span><b>The nine-slice divisor's third address</b></div>
+      <p>Most of the spread was already resolved in the ledger; whether the surviving gap (what divides
+      for a bitmap window with edge images enabled) has since been closed has not been re-checked.</p>
+    </div>
+    <div class="card">
+      <div class="hd"><span class="chip c-def">Unre-audited</span><b>Two defects with contradictory verdicts</b></div>
+      <p>One read OPEN and CLOSED in the same entry-point document; another had three verdicts in one
+      ledger. Not re-audited since the survey.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What this survey could not see</h2>
+  <div class="caveat">
+    <b>Read this before trusting a number above</b>
+    <p><b>The survey itself was a documentation pass, not a re-verification</b> — but the 23 Aug sweep
+    that closed rows above DID disassemble: every closure marked here cites byte-verified evidence in
+    the register.</p>
+    <p><b>The unknown list is a lower bound, by the census's own admission.</b> Of the five visuals it
+    named with no row at all, one (zots) is now closed as census row 23; the in-world data-view tint,
+    underground and pipe views, traffic density, and network drag preview still have no row.</p>
+    <p><b>Two creation channels remain structurally invisible to every offline tool in the repo</b>,
+    so no census built on them can be complete: the singleton window factory with 220 call edges, and
+    the 89 of 162 id-assignment sites that pass a computed value. Both have a lane running now. The
+    third — the unattributed images — is down to 30 stray ids from a starting estimate of ~1,850.</p>
+    <p><b>The passes disagreed about the grading bar.</b> Several rows graded "documented" here would
+    be "partial" under the project's own stricter law — mechanism named, never seen running. Any
+    published reference should state which bar it uses rather than silently choosing.</p>
+  </div>
+</section>
+
+<footer>
+  <span>SC4UIScale</span>
+  <span>survey 2026-08-18 · live-verified 2026-08-24 · overlay census 2026-08-30</span>
+  <span>4 passes · 35 raw → 28 deduplicated → 1 open (#29 scope) · overlays 4 of 9 settled</span>
+  <span>addresses at image base 0x00400000</span>
+</footer>
+
+</div>
+
