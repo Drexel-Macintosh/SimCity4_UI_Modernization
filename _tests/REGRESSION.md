@@ -19314,3 +19314,46 @@ party's font is never touched, and anything unproven is reported and left.
 Game folder measured afterwards: **empty of anything of ours, cleaned by the
 DLL itself** with no manual step. the dist-install round-trip test still passes on the
 extended uninstaller.
+
+
+---
+
+## 2026-08-31 - round 3 phase 1: the drive-mode arrow drawer, confirmed on a real mission
+
+A U-Drive-It offer appeared in the player's own game, which is what this round
+had been waiting for - the `udriveit` cheat was explicitly ruled out because
+creating the mission object is not the registration, so a null taken that way
+would have been uninterpretable.
+
+**The static byte chain predicted three attributes. All three measured exactly:**
+
+    VIEWLIST layer5[6] obj=37895E14 vt=0x00A9D974 key=0x000003E8
+
+and the `AddViewObject` detour caught the registration itself, at 11:30:40.141:
+
+    VIEWOBJ #12 obj=37895E14 vt=0x00A9D974 a2=5 a3=0x000003E8
+
+### Both controls passed, and they are what make this a measurement
+
+* **Instrument awake.** All four known HUD view-object classes appear in the
+  same run - `0xAB4480` x30, `0xAB39D0` x60, `0xAB42F8` x15, `0xAB4624` x15 -
+  so the enumeration ran and was nowhere near saturated.
+* **Discrimination.** **Seventeen VIEWLIST dumps ran before drive mode started
+  and not one carried `0xA9D974`.** It appears in every dump afterwards. A
+  probe showing the class in both would have been matching on something else,
+  and that is exactly the failure this control exists to catch.
+
+### ⭐ THE GATE VERIFICATION THAT PRECEDED IT
+
+`ViewListRepeat` was armed **alone**, and that was checked against the shipped
+source before the session rather than taken from the plan. An earlier draft of
+this round asserted the key needed `spikeScaleAll` as well - wrong, and wrong
+in the direction that breaks the control run, since tier logic forces
+`ScaleAll` to 0 at stock tier. The source records the removal and its reason.
+Three play sessions were burned earlier in this project on rounds that could
+not support a null; checking the arming first is the cure, and it worked.
+
+**Phase 2 pending:** `BalloonViewKill = A9D974` drives the renderer's own
+`RemoveViewObject`, so the expected result is an ABSENCE that cannot be misread
+as "no change". It also settles row-04 for free: if the trail vanishes with the
+arrows they are one visual; if it survives, they are two.
