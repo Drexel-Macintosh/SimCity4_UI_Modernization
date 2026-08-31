@@ -262,8 +262,7 @@ absence would have meant something.
 
 * `[obj+0x04] = 0x00ABB630` — confirms **on screen** what ctor `0x007DDD50`'s
   bytes claimed.
-* `[obj+0x10] = 0x40000000` = **float 2.0** — the scale lever's live value,
-  matching the six inline per-zoom immediates `{2,2,2,2,1.4,1.2}` @`0x004CA4A2`.
+* `[obj+0x10] = 0x40000000` = **float 2.0** — the scale lever's live value. ⛔ DO NOT READ THIS AS CONFIRMING THE PER-ZOOM TABLE: ctor 0x007DDD50 WRITES 2.0f AS THE DEFAULT at 0x007DDD76 (mov [esi+0x10],0x40000000), so an observed 2.0 cannot tell 'a per-zoom immediate was applied' from 'the default was never overwritten'. It discriminates nothing. An earlier version of this note said the value 'matched' the immediates {2,2,2,2,1.4,1.2}, which was an overclaim. To actually discriminate, read [obj+0x10] at a CLOSE zoom where the table would supply 1.4 or 1.2.
 
 **OPEN, recorded as an observation and not a claim:** `[obj+0x0C]` differed
 between the two picks — `0x00000001` on the road, `0x44AA2C01` on the building.
@@ -282,3 +281,39 @@ because each was held with confidence at the time:
 3. **A per-network-tile occupant HIGHLIGHT flag** — the last standing
    hypothesis, explicitly speculative, now dead: the dots are a registered
    drawable, not a flag on occupants.
+
+
+### Follow-up, same day (offline)
+
+* **The dash cadence IS the scale.** `0x007DD0D0` subdivides each path segment
+  by comparing its length against `[drawable+0x10] * 4.5` — the double `4.5`
+  lives at `0x00ABB628`.
+* **The dots are geometry, not sprites.** `Draw` is `bool Draw(void* device)`
+  (ret 4); `0x007DD410` emits a 24-byte-vertex triangle strip, width from
+  `[item+0x38]`, texture optional from `[item+0x34]`.
+* **The builder has more than one caller.** Init `0x004C57A0` subscribes six
+  message ids with target `this+0x28`; the decisive one is `0x69247DC7` =
+  `kMsgTrafficMapChanged`, read from the game's **own** id→name table in
+  `.data` (`0x00B08018` / `0x00B0801C`). So `0x004CA460` is reachable from the
+  data-changed message as well as from the pick.
+
+### The art census refutes one more carried claim
+
+The ten 8×8 tiles that init `0x005F73A0` preloads from table `0x00AA5214` were
+carried as candidate route-dot art. They are **not**: they are the query
+signpost's nine-slice frame plus its pole and foundation —
+`8b4a6560_signupperleftcorner` through `8b4a6567_signfoundation`, a closed set
+of exactly eight with nothing else in `0x8B4A65xx`.
+
+That census is worth trusting for a specific reason. The previous one saw only
+the 2.3% of records carrying a plaintext name; this one QFS-decompressed **all
+36,388** (89.9% were compressed) and found that FSH records carry an embedded
+artist name in an attachment block with code `0x70`. **Four of those eight
+signpost tiles are compressed, so their names are recoverable only through
+decompression** — a sweep that finds them is demonstrably able to see
+compressed art. Ten planted controls were recovered 10/10 in the same run.
+
+The route-art null is therefore a real null: across all 36,388 decompressed
+records, `route|trip|commut|traffic|trace|destinat|origin|congest|path|dot`
+yields exactly one genuine name, `14315E30_fire_dispatch_enroute` (a CSI
+dispatch icon). Which agrees with the drawer being geometry.

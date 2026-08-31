@@ -208,3 +208,11 @@ __pycache__/
 # Working restore points taken before a risky layout change. Real installs,
 # not repo content - they carry game-derived art and per-machine settings.
 /_tests/restore-point-*/
+
+# tools/dbpf/art-census: OUR scripts are tracked, the EA-derived extract is not.
+# Same shape as the row15-probe allowlist above - /tools/dbpf/* swallows the
+# whole subfolder, so the directory has to be re-admitted before its contents.
+!/tools/dbpf/art-census/
+/tools/dbpf/art-census/*
+!/tools/dbpf/art-census/*.py
+!/tools/dbpf/art-census/*.md

@@ -20008,3 +20008,69 @@ the route trace at any tier, and this row was a census question, not a bug.
 `[obj+0x0C]` differed between the two picks (0x00000001 road / 0x44AA2C01
 building). The latter reads as float 1361.375; the former does not read as a
 sane float. **Field not identified** - recorded as an observation, not a claim.
+
+## 2026-08-31 - row 16 follow-up: an OVERCLAIM of mine corrected, and the FSH census de-blinded
+
+### The overclaim
+
+I wrote that the live `[obj+0x10] = 2.0` **matched** the six inline per-zoom
+immediates `{2,2,2,2,1.4,1.2}` @`0x004CA4A2`, presenting it as corroboration.
+It is not. Ctor `0x007DDD50` **writes 2.0f as the default** at `0x007DDD76`
+(`mov [esi+0x10],0x40000000`), so an observed 2.0 cannot separate "a per-zoom
+immediate was applied" from "the default was never overwritten". It
+discriminates nothing. Corrected in all three places that carried it.
+
+To actually discriminate: read `[obj+0x10]` at a CLOSE zoom, where the table
+would supply 1.4 or 1.2 rather than 2.0.
+
+LAW EARNED - **A VALUE THAT AGREES WITH BOTH HYPOTHESES IS NOT EVIDENCE FOR
+EITHER.** Before quoting a measurement as confirmation, ask what value would
+have REFUTED the claim. If no reachable value would have, the measurement is
+decoration.
+
+### Genuinely new, same day (offline)
+
+* **Dash cadence IS the scale**: `0x007DD0D0` subdivides each path segment by
+  comparing its length against `[drawable+0x10] * 4.5`, the double 4.5 at
+  `0x00ABB628`.
+* **The dots are geometry, not sprites**: `Draw` is `bool Draw(void* device)`;
+  `0x007DD410` emits a 24-byte-vertex triangle strip, width from `[item+0x38]`,
+  texture optional from `[item+0x34]`.
+* **The builder has a second caller**: Init `0x004C57A0` subscribes six message
+  ids with target `this+0x28`; the decisive one is `0x69247DC7` =
+  `kMsgTrafficMapChanged`, read from the game's OWN id->name table in `.data`
+  (`0x00B08018`/`0x00B0801C`). So `0x004CA460` is reachable from the
+  data-changed message as well as from the pick.
+
+### The FSH census is no longer a structural null
+
+The overlay plan recorded the art census over group `0x1ABE787D` as a
+STRUCTURAL NULL: it byte-scanned for plaintext names, found 835 of 36,388, and
+proved nothing - 89.9% of the records are QFS-compressed and were invisible to
+it. Re-run with decompression, **all 36,388 parsed, 0 unparsable**, and FSH
+records turn out to carry an embedded artist name in an attachment block with
+code `0x70` - a channel the old census could not see at all.
+
+Two results:
+
+1. **REFUTES a carried row-16 claim.** The ten 8x8 tiles that init `0x005F73A0`
+   preloads from table `0x00AA5214` are NOT route dots. They are the query
+   SIGNPOST's nine-slice frame plus pole and foundation
+   (`8b4a6560_signupperleftcorner` .. `8b4a6567_signfoundation`), a closed set
+   of exactly 8 with nothing else in `0x8B4A65xx`.
+2. **A route-art null that is worth something.** Across all 36,388 decompressed
+   records the sweep yields exactly one genuine route-ish name,
+   `14315E30_fire_dispatch_enroute` (a CSI icon). Which AGREES with the drawer
+   being a triangle strip.
+
+What makes that null real: four of those eight signpost tiles are compressed,
+so their names are recoverable ONLY through decompression - a sweep that finds
+them is demonstrably able to see compressed art. Ten planted controls recovered
+10/10, printing `ALL CONTROLS PASS` before any result was reported. **Two
+earlier versions of the sweep were discarded as REFUSALS, not nulls** (the first
+tokenized the space-joined CSV column as one run; the second required tokens to
+start with a letter). That is the distinction this project keeps paying to
+relearn, applied correctly for once.
+
+Scripts tracked at `tools/dbpf/art-census/` with the control documented in its
+README; the bulk extract is gitignored - our tools ship, EA's data does not.
