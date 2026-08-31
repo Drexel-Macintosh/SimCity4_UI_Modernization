@@ -271,3 +271,87 @@ schema proven across other S3Ds.
 ## 8. Census row replacement (§3)
 
 | 15 | neighbor-connection arrows at city edges | marker occupant from exemplar `{6534284A, C977C536, 29F10000}` "UI8x1x3_ConnectArrow" — OccupantSize {8,3,1} m + own S3D `{5AD0E817, BADB57F1, 29F10000}` + LTEXT "Neighbor Connection"; sole creator `push 0x29F10000` at 0x6D4A66 (fn 0x6D4860, +15.5f cases {3,7,0xB}); drawn via the renderer direct-read iid 0xE4FDA3D4 (QI 0x6CE260 → this+4). NOT effects / signpost quad / marker strip (`tools\research\overlays\row-15-neighbor-connection-arrows.md`) | n-a presumed (world-anchored, metres) — eyes-on/probe owed | PARTIAL |
+
+
+---
+
+## MEASURED 2026-08-31 — the plate is sized by its S3D VERTICES, not by OccupantSize
+
+Status: **PARTIAL → DOCUMENTED.** A stated prediction was matched by measurement.
+
+### What was asked
+
+The `zzzz_SC4UIScale_ROW15_PROBE.dat` shipped three differently-shaped
+distortions in one archive so that one screenshot pass could tell them apart:
+
+| role | edit | asks |
+|---|---|---|
+| **B** | all 20 arrow S3D records, every vertex position float32 × **3.0** (uniform) | is the plate sized by its **own model vertices**? |
+| **C** | exemplar OccupantSize `{8,3,1}` → **`{8,24,1}`** (×8 on ONE axis) | is it sized **creation-side**, from the occupant footprint? |
+| **E** | a second 20-record S3D family × 3.0 | *control.* does an S3D we authored, from Plugins, reach the model renderer **at all**? |
+| **K1/K2** | button face → green, news-ticker strip → orange | *controls.* did the DAT load, and did it win subfolder precedence? |
+
+Roles B and C were deliberately given **different shapes** — uniform ×3 versus
+anisotropic ×8 — rather than the uniform ×3 the rebuild brief originally
+specified for both. Two uniform ×3 overrides shipped together would have
+produced one observation, "the arrow is three times bigger", with two causes and
+two different conclusions.
+
+### What was measured
+
+**K2 fired.** The news-ticker strip rendered solid orange. The DAT loaded *and*
+won subfolder precedence — the failure mode most likely to sink the run
+silently, excluded up front.
+
+**The zoom had to be recovered before anything could be read.** SC4 has no
+camera save/restore, so the two passes are differently framed. Four independent
+lenses — a shear-corrected luminance cross-section of the elevated highway
+deck, a normalised-cross-correlation scale search on two separate buildings,
+sub-pixel curb-to-curb road width, and a by-eye landmark comparison including
+terrain tile-seam pitch — all returned **0.498–0.500**. The seam-pitch number is
+the strongest single datum because px/tile is the quantity the question is
+defined on: **72.5 px baseline against 36.4 px probe**, exactly 146 and 73.
+So the probe frames sit **one zoom step further out** (Z4), despite being
+filed as "Z5". The filename was wrong; the pixels were not.
+
+Normalising each frame to its own tile pitch removes the correction entirely:
+
+| object | baseline | probe | world-unit growth |
+|---|---|---|---|
+| arrow width | 46.5 px / 146 = 0.318 tile | 69.5 px / 73 = 0.952 tile | **×2.99** |
+| arrow height | 19 / 146 = 0.130 tile | 29 / 73 = 0.397 tile | **×3.05** |
+| zot ring (role E) | 175 px | 263 px, at ÷2 zoom | **×3.00** |
+
+### The verdict
+
+* **Role B fired.** Predicted ×3.0 uniform; measured ×2.99 wide, ×3.05 tall,
+  aspect preserved to under 1% (2.42 → 2.41). **The arrow plate is sized by its
+  own S3D model vertices.**
+* **Role C did not fire.** OccupantSize `{8,3,1}` → `{8,24,1}` is ×8 on a single
+  component, which in SC4's dimetric projection would render as a gross
+  single-axis elongation whichever component it is. The observed aspect change
+  is 0.4%. **OccupantSize does not feed the plate's rendered geometry.**
+* **Role E fired** (×3.00 on the zots). An S3D authored by us and loaded from
+  Plugins does reach the model renderer, so the role-C negative is a *real*
+  negative and not a delivery failure. That is what the control was for.
+
+### The correction this forces
+
+This page previously read "**The name encodes the size**, and the size is
+exemplar data for this family". The first half survives — the exemplar does
+carry OccupantSize `{8,3,1}` at bytes 0x58/0x5C/0x60 and the marker factory does
+read property `0x27812810` at `0x4A25D3`; both are still measured facts. **The
+second half does not.** The property is read, but it does not determine the
+rendered plate. Whatever consumes it — footprint, collision, placement — is not
+the renderer, and is not yet identified.
+
+Note what these frames cannot separate: "C loaded and is inert for size" from
+"C did not load". They do not need to, because B alone accounts for the whole
+observation, and K2 proves the archive was read. Written down rather than
+papered over.
+
+### Consequence for the tier call
+
+The size is world-unit geometry in a model we can rewrite, with **no pixel
+immediate and no zoom table on the path**. Anything that wants these arrows
+larger scales the S3D, not a constant.

@@ -19878,3 +19878,72 @@ control is no longer "did I find any" but "did I find any IN THE WORLD".
    LAW EARNED: an instruction the tool physically cannot satisfy is a defect in
    the instruction, not a shortfall in the run. Ask what the measurement needs,
    not what feels safest to demand.
+
+## 2026-08-31 - ROW 15 CLOSED: the connection arrow is sized by its S3D VERTICES, not by OccupantSize
+
+Probe pass run against the banked baseline. **PARTIAL -> DOCUMENTED**, on the
+strict bar: a stated prediction was matched by measurement.
+
+| role | predicted | measured | fired? |
+|---|---|---|---|
+| B - all 20 arrow S3D, vertices x3.0 uniform | x3.0 both axes | **x2.99 w, x3.05 h**, aspect 2.42 -> 2.41 | **YES** |
+| C - OccupantSize {8,3,1} -> {8,24,1}, x8 one axis | gross single-axis stretch | aspect change **0.4%** | **NO** |
+| E - control S3D family x3.0 | x3.0 | **x3.00** on the zot rings | **YES** |
+| K2 - ticker strip -> solid orange | visible | player: "newsticker has an incorrect orange box" | **YES** |
+
+**The claim this refutes.** `SC4-WORLD-OVERLAYS.md` row 15 read "*The name
+encodes the size, and the size is exemplar data for this family*". The first
+half stands - the exemplar does carry OccupantSize at bytes 0x58/0x5C/0x60 and
+the factory does read property `0x27812810` at `0x4A25D3`. The second half is
+now refuted on screen: the property is read, but it does not determine the
+rendered plate. Both the page and the row write-up corrected.
+
+Role E is what makes that a REAL negative. Without it, "C changed nothing" and
+"our DAT never reached the renderer" are the same pixels. E grew x3.00, so the
+delivery path is proven and the C null is a fact about C.
+
+### The zoom had to be recovered before ANY of it could be read
+
+The player pointed out, correctly, that SC4 has no camera save/restore - so
+"restore the same camera" was an instruction the tool cannot satisfy. It was
+also unnecessary: `0x00ABACE0` = {8,16,32,73,146} fixes one scale per zoom
+level, so pan is free. But the probe shots turned out to be **one zoom step
+out** and were filed as "Z5". Four independent lenses (highway-deck luminance
+cross-section; NCC scale search on two buildings; sub-pixel curb-to-curb road
+width; by-eye landmarks incl. terrain seam pitch) all returned **0.498-0.500**.
+Seam pitch measured 72.5 px vs 36.4 px = exactly 146 and 73 px/tile.
+
+Normalising each frame to its own tile pitch removes the correction from the
+arithmetic entirely, which is the form the number should have been in from the
+start.
+
+### THREE broken instruments on the way, none of which announced itself
+
+1. **The arrow detector "found" 4 arrows on the Z3 baseline and every one was an
+   impostor** - two were the amber pause button, one a lit window, one the
+   orange asterisk in a Claude permission toast. The count-based positive
+   control passed. Only the coordinates exposed it.
+2. **A fifth impostor appeared after that fix**: SC4's own full-frame amber
+   PAUSED BORDER, a 2392x1596 blob reported as the widest arrow on screen.
+   Cured with an extent cap - a world sprite cannot span a quarter of the frame.
+3. **The first "red pylon" ruler was tracking the ARROWS.** Its threshold
+   (`r-g>=45, g<110`) admits the arrows' shadowed amber rim, so the correction
+   factor and the thing being corrected were the same pixels. It returned a
+   confident **1.854** that was pure circularity.
+
+LAW EARNED - **A RULER MADE OF THE OBJECT UNDER TEST MEASURES NOTHING.** Before
+using any normaliser, prove it cannot see the thing being normalised: dump the
+mean colour of what it actually locked onto, and check the SIGN - here,
+contamination could only have dragged the ruler ABOVE 1.0, which is exactly
+where the broken one sat, while all four good lenses sat at 0.5.
+
+LAW EARNED - **A MEDIAN OVER A CHANGED POPULATION IS NOT A MEASUREMENT.** Arrow
+blobs went 11 -> 23 and zot rings 16 -> 26 between passes, because half the zoom
+puts ~4x the world area in frame. Both raw medians moved the WRONG WAY (arrows
+1.11x, zots 0.79x) and both would have been read as nulls. The like-for-like
+comparison is the well-formed cluster, isolated by shape - single zot rings by
+aspect ratio, arrows by the tight unimodal width band.
+
+LAW EARNED - **AN INSTRUCTION THE TOOL PHYSICALLY CANNOT SATISFY IS A DEFECT IN
+THE INSTRUCTION.** Ask what the measurement needs, not what feels safest to
+demand.

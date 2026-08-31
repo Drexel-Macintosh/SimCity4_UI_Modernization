@@ -1,0 +1,73 @@
+{
+  "pass": "probe installed",
+  "date": "2026-08-31",
+  "tier": "2x (confirmed: DialogStatic.dat hash == .2x.uipay)",
+  "canaries": {
+    "K2_news_ticker": {
+      "fired": true,
+      "observation": "ticker strip behind 'Librarians Fed Up: Books Begone' is solid ORANGE",
+      "proves": "the DAT loaded AND won subfolder precedence"
+    },
+    "K1_button_face": {
+      "fired": null,
+      "observation": "not shot this pass - the Establish City dialog only opens on entering an unestablished tile, and the player was in an established city"
+    }
+  },
+  "role_E_zots": {
+    "baseline_single_rings_px": [
+      160,
+      172,
+      174,
+      175,
+      175,
+      175,
+      176,
+      176,
+      176
+    ],
+    "baseline_median": 175,
+    "probe_single_rings_px": [
+      226,
+      262,
+      264,
+      368
+    ],
+    "probe_median": 263,
+    "raw_growth": 1.5,
+    "note": "single rings isolated by aspect ratio (square within 10 percent); merged overlapping clusters excluded. The 26 and 28 px blobs in the probe set are false positives, not zots."
+  },
+  "role_B_arrows": {
+    "baseline_wellformed": "46x19",
+    "probe_wellformed": "70x29",
+    "raw_growth_w": 1.52,
+    "raw_growth_h": 1.53,
+    "uniform": true,
+    "note": "medians over the FULL blob population are NOT comparable - the count went 11 -> 23 as fainter arrows cleared the detection floor and dragged the median down. The well-formed cluster is the like-for-like comparison."
+  },
+  "role_C_anisotropy": {
+    "fired": false,
+    "observation": "growth is uniform (w 1.52, h 1.53). role C would have stretched ONE axis by 8x and is plainly absent."
+  },
+  "the_1_50_coincidence": "Two INDEPENDENT override families, measured in two INDEPENDENTLY FRAMED screenshot pairs, both land on raw 1.50. Both were authored as x3.0. A single common explanation covers both: the probe-pass shots sit one zoom step further out than the baseline shots, and 3.0 / 2.0 = 1.50. The alternative - that both families coincidentally grew by exactly half their authored factor - requires two coincidences and a mechanism nobody has proposed.",
+  "zoom_recovery": {
+    "ratio": 0.5,
+    "probe_frames_are": "Z4 (73 px/tile), NOT the Z5 the filenames claim",
+    "lenses": {
+      "highway_deck_cross_section": 0.498,
+      "ncc_two_buildings": 0.5,
+      "road_width_subpixel": 0.5,
+      "visual_landmarks_and_terrain_seam_pitch": 0.502
+    },
+    "strongest_datum": "terrain tile-seam pitch 72.5 px baseline vs 36.4 px probe = exactly 146 and 73 px/tile, which is the quantity the question is literally defined on",
+    "controls": "lens 1 resampled its own baseline to 0.5x Lanczos and recovered 0.4997 against a 0.5000 ground truth, proving it can resolve a one-step change rather than always saying 0.5; lenses 2 and 4 measured screen-space HUD chrome and got 1.0000. Amber exclusion was measured not assumed in all four (arrow pixels r-b = +57..+94, every landmark r-b = -16..-36, opposite side of neutral)."
+  },
+  "verdict": {
+    "role_B": "FIRED - x2.99 wide, x3.05 tall in world units, aspect preserved to under 1%. The arrow plate is sized by its own S3D model vertices.",
+    "role_C": "DID NOT FIRE - aspect change 0.4% where x8 on one axis would be unmistakable. OccupantSize does not feed the rendered geometry.",
+    "role_E": "FIRED - x3.00 on the zots. S3D overrides authored by us reach the model renderer.",
+    "K2": "FIRED - DAT loaded and won subfolder precedence.",
+    "K1": "not observed this pass (dialog only opens on entering an unestablished tile)",
+    "status": "row 15 DOCUMENTED",
+    "surviving_alternative": "A contrived C-derived ~2.75 (33/12, the ratio of summed OccupantSize components) sits about 3 sigma from the width measurement rather than 12. Rejected on that plus the fact that an axis-blind sum formula would still be expected to leave some anisotropic signature, but a single max-zoom frame containing an arrow AND open ground would close it at >10 sigma by measuring the arrow in TILES inside one image."
+  }
+}
