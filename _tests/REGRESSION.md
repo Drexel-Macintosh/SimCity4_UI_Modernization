@@ -18757,3 +18757,87 @@ nobody has tested.
 **Trap signature:** CHECK C firing on a NEW address means someone typed a patch
 target inline. The fix is a `k`-name, not an exclusion - and the anti-rot sweep
 will then ask what kind of thing it is, which is the second half of the answer.
+
+
+---
+
+## 2026-08-30 - overlay census round 1: three rows confirmed, and two broken instruments on the way
+
+**Three play sessions. The first two measured my own instrument.**
+
+### Round 1 - a budget raised on a branch that never ran
+
+`EffectCensus=400` armed, session played, **zero** tool-cursor names. Worthless:
+the census sits inside `if (gBubbleStack && name)` and `gBubbleStack` is
+`(mode >= 3)`, while `MissionBubbleFx` sat at its default 2. Two keys have
+always controlled one instrument and nothing said so.
+
+⭐ **The positive control was already banked and I had not checked the arming
+against it.** `SC4UIScale-2026-08-18-154435.log` shows this same hook logging
+`Lot_Direction_Arrow`, `local_grid`, `building_footprint_ok`. The hook worked;
+the branch was off. NULL IS NOT EVIDENCE means checking the instrument *before*
+spending someone's session, not after.
+
+**Cure:** the DLL now logs a warning when the budget is raised above stock
+while the mode leaves the branch dead.
+
+### Round 1b - armed correctly, and still could not see
+
+Mode 3, no warning, 401 lines - and **381 of them industrial smoke**. Budget
+exhausted at 08:22:11; the session ran to 08:23:39. **The last 88 seconds, when
+the tools were held, had no logging left.** The names being hunted could not
+have been recorded however that session was played.
+
+⭐ **A BUDGET SPENT PER-SPAWN CANNOT MEASURE A RARE EVENT.** Ambient effects are
+continuous; a bigger cap only moves the exhaustion later. The budget must bound
+**distinct names**, which is what was wanted all along - the same session then
+costs 14 lines instead of 401.
+
+**Cure:** `CensusFirstSight` - fixed capacity, no allocation on the spawn path,
+case-insensitive; an over-long name is logged rather than dropped, because an
+over-long name is still evidence. Proven offline against round 1b's real
+sequence before asking for another session (`_tests/Test-CensusDistinct.py`):
+401 -> 14 lines, smoke 381 -> 7, 386 of budget left free.
+
+### Round 1c - the measurement
+
+45 lines, 44 distinct names, 355 of budget unused.
+
+**⭐ THE STATIC DECODE WAS RIGHT TO THE BYTE.** Both predicted return addresses
+confirmed:
+
+| Effect | ret | predicted |
+|---|---|---|
+| `PlopMode_Police_Inactive` | `0x004C1713` | RET 0x4C1713 - held-tool preview |
+| `PlopMode_Police_Existing` | `0x007D2018` | RET 0x7D2018 - existing buildings |
+
+**And the census found a path the decode did not have:**
+`PlopMode_Police_Plop` at `ret=0x004C1F56` - a third variant, the commit/place
+path, distinct from both. Row 11 is a THREE-path family.
+
+**Row 12 CONFIRMED:** `Lot_Direction_Arrow` at `ret=0x004C2A91`.
+
+**Row 13a CONFIRMED, and it is a PAIR:** `local_grid` at `ret=0x005FB357` and
+`local_tile_outline` at `ret=0x004DA784` - **different subsystems**, so a
+kill or scale aimed at one leaves the other untouched. Row 13b (the persistent
+wash over zoned land) did not appear and stays unattributed.
+
+**Row 14 NOT CAPTURED, and deliberately NOT recorded as a null.** No
+terrain-brush name of any shape appeared, and the instrument demonstrably had
+room (45/400). But the god terraform flyout being open is not the same as a
+brush being held over terrain, and that is unconfirmed. Either the brush was
+not held, or the circle does not spawn through this hook - and this session
+cannot separate those. Per CONFIRM UNCERTAINTY JOINTLY, ask before concluding.
+
+### What the round also handed over for free
+
+`building_footprint_ok` / `building_footprint_notok` share ONE site
+(`ret=0x004C285F`), so the ok/notok distinction is a name argument rather than
+a branch - useful if either is ever targeted.
+
+**Acceptance:** `python _tests\Test-CensusDistinct.py` -> ALL PASS. It replays
+round 1b's real sequence and asserts the DLL implements what it simulates.
+
+⚠ **The standing lesson:** this instrument failed twice in ways that looked
+like findings. A broken instrument reports success, so the regression net must
+cover the instruments, not only the features.
