@@ -19469,3 +19469,92 @@ Three play sessions for this round, one of which I wasted by writing the kill
 key into the wrong ini section. The two that counted produced a confirmed
 channel, a closed row that needed no session of its own, and a blast-radius
 control nobody planned.
+
+
+---
+
+## 2026-08-31 - "the signpost looks way too big": NOT a double-scale, and my hypothesis was wrong
+
+User report after placing a city sign at the 2x tier. My hypothesis: we patch
+BOTH ends of a product - the pushed constant (44 -> 88) and the per-zoom table
+(`{0.5,0.75,1,1.5,2}` -> `{1,1.5,2,3,4}`) - so the signpost draws at 4x. It was
+plausible, it fit the standing SCALE IS EXACTLY THE FACTOR law, and it is
+**wrong**. Refuted before a single number was changed.
+
+### Why it is not a double-scale
+
+The drawn size is `pushedConst x [singleton+0x150]`, and **`[singleton+0x150]`
+is not fed by the table we doubled.** Outside its constructor it has exactly
+one writer:
+
+    0x007F85C1  89 8E 50 01 00 00   mov [esi+0x150], ecx
+    0x007F85B3  8B 8B 34 01 00 00   mov ecx, [ebx+0x134]     <- the source
+
+and `[pView+0x134]` derives from a **different** per-zoom table - the integer
+pixels-per-tile array at `0x00ABACE0` = `{8,16,32,73,146}` combined with the
+angle table at `0x00ABCFC4`. No operand anywhere in that chain names
+`0x00AA523C`.
+
+The MARKERZOOM table has exactly **one** reader, `0x005F6064`, which stores to
+a stack local and never reaches `+0x150`. Its apparent second reference at
+`0x005F74AB` is a **loop end bound** (`mov ebx,0xAA5214` … `add ebx,4` …
+`cmp ebx,0xAA523C`) walking the ten-dword id array that ENDS where the table
+begins - a consumer count of two that is really one.
+
+### ⭐ AND A BIGGER REFUTATION: WE MAY NOT BE PATCHING THE PLAYER'S SIGNPOST AT ALL
+
+The adversarial pass rejected its own trace agents' framing: `0x005F20A0` is
+**not** the builder behind the sign the player places. The two paths share only
+the helper `0x007F6690`, and the identification was the assumed-family error -
+proven three independent ways, cleanest being the GZCOM registration pairs.
+
+**Our own source had already recorded this**, in the ARTFETCH note:
+
+> *"the trap that made SPQUAD/SPTEX read zero: those sat on 0x5F20A0/0x5F1610,
+> two functions this path never calls."*
+
+So a previous investigation had discovered the same thing, written it down in a
+comment about a different probe, and the SIGNPOST patch went on being described
+as the sign's size lever anyway. ⚠ **A fact recorded in a comment about
+instrument A does not reach the person reasoning about patch B.**
+
+### The trap that would have produced a false YES
+
+A **different class** (the view/camera object) also has a `+0x150` field, and it
+is written in a function that *also* reads the singleton global
+(`0x007CDAD9`, fn `0x007CDAA0`). Confusing the two objects yields exactly the
+double-scale verdict I expected to find. The census had to be intersected
+against each class's distinctive field block to keep them apart.
+
+### ⭐ METHOD FINDING, and it invalidates a technique used all session
+
+**Linear disassembly seeded from `tools/uimap/funcs.json` desynchronises across
+embedded jump tables**, producing both false positives and misses. Worked
+example: at `0x005F62A2` a linear pass renders
+`C5 89 86 50 01 00  lds ecx, [ecx+0x15086]`, while the byte-anchored decode
+gives the real `0x005F62A3  89 86 50 01 00 00  mov [esi+0x150], eax`. The
+funcs.json-seeded census reported **150** writes; the alignment-independent one
+reports **128**, with different membership.
+
+Any census in this project that walked instructions forward from a function
+start may carry the same error.
+
+### What is actually true, and what is still open
+
+* The signpost patch applies exactly **2.00x linear**, once, and cannot
+  compound - it verifies both stock bit patterns before writing either.
+* **2x linear is 4x in AREA**, which is the likeliest source of the wording
+  "way too big" for a visual that is behaving exactly as designed.
+* The MARKERZOOM table's sole reader `0x005F6064` sits inside `0x005F5FB0` -
+  **the very function that logged 16 SPSTRIP calls when the player placed the
+  sign**. So the table, not the 44/150 constants, is the lever on the visual
+  they saw.
+
+### ⛔ NO NUMBER CHANGED. The next step is a measurement, not an edit.
+
+Changing a scale constant now would be the "pin cancelling an unknown
+multiplier" error the standing law names. The open question is whether the
+strip is pixel-fixed (scaling it is correct) or world-anchored (scaling it is
+wrong), and that is answerable in seconds on screen: **zoom in and out and see
+whether the signpost holds its pixel size or grows.** The same one-frame test
+that settled the zots.
