@@ -6428,9 +6428,28 @@ namespace CodePatches
 		// sole-consumer PROVEN). The renderer pick tests the very verts
 		// this builder writes, so scaling the table grows the click target
 		// with the visual. Dispatch markers share the builder and co-scale
-		// (desired). The 44px lollipop path patched above is this system's
-		// DORMANT twin (SPPROBE measured zero calls) - left patched,
-		// harmless.
+		// (desired).
+		//
+		// ⛔ THE SENTENCE THAT USED TO END THIS PARAGRAPH WAS FALSE ON BOTH
+		// HALVES, and it cost most of a day. It read: "The 44px lollipop path
+		// patched above is this system's DORMANT twin (SPPROBE measured zero
+		// calls) - left patched, harmless."
+		//   * NOT DORMANT. 0x005F20A0 is live - four SPQUAD calls across three
+		//     captures, kind=1, and the patched 88.0f reads back from the live
+		//     code page.
+		//   * NOT THIS SYSTEM'S TWIN. It belongs to a DIFFERENT class - 0x1CC
+		//     bytes, clsid 0x49B6D69B, ctor 0x005F1730 - which the Sign tool
+		//     never creates. It is a correct 2x on a pixel-fixed marker family
+		//     that has never had eyes on it.
+		// The zero SPQUAD in the 2026-08-31 round-4 capture is a TRUE null with
+		// a positive control (the probe armed, and fired four times in other
+		// runs), which is the strongest single piece of live evidence that a
+		// placed sign does not touch 0x005F20A0 at all.
+		//
+		// So when a player reports the SIGN being wrongly sized, this table is
+		// the lever to reason about and the 44/150 constants are not. Reading
+		// it the other way is what sent an investigation into the wrong
+		// function for a day.
 		const uintptr_t kMarkerZoomTableVa = 0xAA523C;
 		const uint32_t kStockMarkerZoom[5] =
 			{ 0x3F000000, 0x3F400000, 0x3F800000, 0x3FC00000, 0x40000000 };
@@ -7916,8 +7935,16 @@ namespace CodePatches
 		// never changed - they simply use different instances.
 		//
 		// Hooking the shared FETCH rather than the composer avoids the trap
-		// that made SPQUAD/SPTEX read zero: those sat on 0x5F20A0/0x5F1610,
-		// two functions this path never calls. Read-only; logs the caller so
+		// that made SPQUAD/SPTEX read zero: those sat on 0x5F20A0/0x5F1610.
+		// ⚠ NARROWED 2026-08-31: "two functions this path never calls" is
+		// right about the SIGN and topologically impossible as a general
+		// claim - 0x5F12D0 has exactly one caller (0x005F16E4, inside
+		// 0x5F1610), which has exactly one caller (0x005F20E8, inside
+		// 0x5F20A0). The true statement is that 0x5F12D0 never ran because
+		// [this+0x74] was always kind 1 and only kind 4 routes there through
+		// the jump table at 0x005F1708. That is a KIND gate, not a liveness
+		// gate, and the difference matters: the first reading says the code is
+		// dead, the second says we were never in the branch. Read-only; logs the caller so
 		// frame vs icon is unambiguous.
 		void* gArtFetchTramp = nullptr;
 		int gArtFetchLogs = 0;

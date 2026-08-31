@@ -19628,3 +19628,85 @@ is the second independent sign that more than one thing is acting.
 
 NO NUMBER CHANGED. The symptom is now measured rather than argued, which is the
 part that was missing.
+
+
+---
+
+## 2026-08-31 - the signpost patch is live, correct, and on the wrong object
+
+Adjudicated verdict on the player's "way too big": **WE_ARE_NOT_THE_LEVER.**
+
+### What the decode established, and it is complete
+
+`0x005F20A0` builds a four-vertex quad in WORLD space from the two patched
+constants, where `K = [zoomSingleton+0x150]` is **world units per pixel**:
+
+    on-screen width  = 2W / K = (44 * K) / K = 44 px, at EVERY zoom
+    on-screen height = (R/K) * cos(theta) = 150 px, at EVERY zoom
+
+Both `pixels-per-tile` and the unknown `[pView+0xF0]` cancel algebraically. The
+world size varies **24x** across the five zooms precisely so the screen size
+does not vary at all, and the builder's `1/cos(theta)` is the exact
+pre-compensation for the projection's foreshortening at each zoom's pitch. `K`
+being world-per-pixel is proven at an independent site with nothing to do with
+signposts: `0x007AC1A0` takes integer viewport dimensions, multiplies by
+`[+0x150]`, and produces world-space frustum offsets.
+
+So the constants are PIXEL sizes and our 2x on them is **arithmetically
+correct**.
+
+### ⛔ AND IT IS APPLIED TO A CLASS THE SIGN TOOL NEVER CREATES
+
+`0x005F20A0` belongs to a 0x1CC-byte class, clsid `0x49B6D69B`, ctor
+`0x005F1730`. The Sign tool does not create it. Our patch is a **correct 2x on
+a pixel-fixed marker family nobody has ever put eyes on**, and it is not what
+the player is looking at.
+
+The strongest evidence is live and was already in hand: the round-4 capture's
+**zero SPQUAD is a TRUE null with a positive control** - the probe armed that
+session, and the same probe fired four times in other runs.
+
+### ⭐ TWO COMMENTS OF OURS WERE FALSE, AND THEY COST A DAY
+
+    "The 44px lollipop path patched above is this system's DORMANT twin
+     (SPPROBE measured zero calls) - left patched, harmless."
+
+Wrong on **both** halves. Not dormant - four SPQUAD calls across three
+captures, and the patched 88.0f reads back from the live code page. Not this
+system's twin - a different class entirely. Reading it as written is exactly
+what sent a full day's investigation into the wrong function.
+
+    "two functions this path never calls"
+
+Right about the sign, **topologically impossible** as a general claim:
+`0x5F12D0` has exactly one caller, which has exactly one caller, which is
+`0x005F20A0`. The true statement is that `0x5F12D0` never ran because the kind
+field was always 1 and only kind 4 routes there. **A KIND gate, not a liveness
+gate** - the first reading says the code is dead, the second says we were never
+in the branch, and only one of those is true.
+
+Both corrected in place. Comments only; no byte of behaviour changed.
+
+### Where the sign actually comes from, and what is still unexplained
+
+MARKERZOOM's sole reader sits inside `0x005F5FB0` - the function that logged
+**16 SPSTRIP calls when the player placed the sign**. That is the live lever.
+But doubling that table alone predicts 2x, and the screenshots measure **~3.5x
+against a UI measured at exactly 2.00x in the same frames**. A second
+multiplier exists that no decode has yet named.
+
+### The A/B that settles it, armed
+
+`MissionBubbleFx=1` disables **every** marker scale patch at once - SIGNPOST,
+PINDIGIT and MARKERZOOM all ride `mode >= 2` - while the rest of the UI stays
+at 2x. One screenshot at the same camera:
+
+* sign ~2x with them off -> the second multiplier is doing the whole job, and
+  MARKERZOOM is the redundant one to drop;
+* sign ~1x with them off -> MARKERZOOM was carrying the correct 2x and the
+  excess comes from somewhere else entirely.
+
+⚠ **STILL NOT FIXED.** The player asked directly whether it was fixed and the
+answer is no. What has changed is that the wrong lever is now eliminated by
+measurement rather than suspected, and the next step costs one launch instead
+of another day of disassembly.
