@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+**Fixed: signposts and city markers were drawn about twice as large as they
+should be.** A per-zoom table was being scaled by the tier factor on top of an
+enlargement that was already correct, so a signpost measured 3.78x its stock
+size where the rest of the interface measures exactly 2.00x. Confirmed by
+measuring the same sign in three screenshots - stock, scaled, and with the
+patch disabled - against the UI in the same frames as a ruler.
+
+The dispatch markers share that code, and were checked on screen before the
+change rather than after: they look correct without it too, so this removes an
+enlargement neither visual needed. If some other in-world marker now looks too
+small, `[UiSpike] MarkerZoomScale=1` restores the old behaviour without a
+rebuild.
+
+This is in the repository but not in a release. The v4.7.0 download still has
+the old behaviour; build from source, or wait for the next release.
+
 ## 4.7.0 (2026-08-31) - the mod stops touching your FontStyle.ini
 
 **This release exists because a player found a file of ours in their SimCity 4
