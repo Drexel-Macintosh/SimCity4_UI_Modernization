@@ -19771,3 +19771,64 @@ sign is enlarged by construction and never needed help from this table, while a
 dispatch pin carries no text and apparently does not need it either. **Not
 proven, and the fix does not depend on it.** Recorded so the next person knows
 which door to open first, not as a finding.
+
+
+---
+
+## 2026-08-31 - three tooling defects, each verified before and after
+
+Found by the row15-probe authoring pass, in our own `tools/dbpf`. All three
+were verified independently before being touched - the reports were an agent's,
+and a shipped tool is not changed on someone else's say-so.
+
+### The shared fact both DIR defects rest on
+
+Measured directly against retail `SimCity_1.dat`:
+
+* `{0xE86B1EEF, 0xE86B1EEF, 0x286B1F03}` is **PRESENT** (offset 142,598,197,
+  size 782,080). `{0xE86B1EEE, ...}` is **ABSENT**.
+* The record's stride is **16**, not 12. `782080 % 12 = 4`, so twelve does not
+  even divide it. At 16 the walk yields 48,880 records and **every one names a
+  TGI that exists in the archive index**, zero failures - the positive control,
+  since only the right stride makes every record resolve.
+
+### 1. DbpfPack.cs guarded on a TGI that does not exist
+
+`DirType = DirGroup = 0xE86B1EEE`, one less than the real value, so its refusal
+could never fire. **Demonstrated before and after** on the same input - a file
+named as a DIR record:
+
+    previous exe : "packed 1 file(s) ... no DIR record"      <- packed it
+    rebuilt exe  : "ERROR: refusing to pack a compression
+                    directory (DIR) entry"                    <- refused it
+
+⛔ **A guard that cannot fire is not a guard**, and this one had been quietly
+inert since it was written. `DbpfPack.exe` rebuilt with
+`csc /optimize+`; the binary now carries `0xE86B1EEF` five times and
+`0xE86B1EEE` zero times, the exact inverse of the old one.
+
+### 2. decode_s3d_plate.py read 16 bytes at 12-byte offsets
+
+`for k in range(dsize // 12): unpack_from("<IIII", blob, k * 12)` - every
+record overlapped the next by four bytes. **Its published answer was right
+anyway**, found at one misaligned offset by coincidence. Now walks at 16 and
+asserts the size divides, refusing rather than guessing if the layout is ever
+not what it assumes. Re-run: DIR entry 336, QFS-decompressed length 336, match
+True - the same answer, now by a method that earns it.
+
+### 3. who_owns_tgi.py could only see seven of nine archives
+
+A hand-written list, blind to `Intro.dat` and `Sound.dat` - the latter holding
+1,680 LTEXT records. So "not found in the game archives" was never quite the
+claim it appeared to be. Now discovers them the way `find_tgi.py` already did,
+and **prints the count** so a reader can see the denominator: 9 discovered.
+
+⚠ **This is the written-down-inventory failure again**, the same shape as the
+nine-archive lesson already in this ledger. A list of a directory's contents
+goes stale silently the moment the directory changes; discovery cannot.
+
+### A near-miss of my own
+
+Replacing the `ARCHIVES` constant with a function left its call site still
+naming the constant - a `NameError` on every run. Caught by parsing and then
+running the tool rather than by reading the diff.

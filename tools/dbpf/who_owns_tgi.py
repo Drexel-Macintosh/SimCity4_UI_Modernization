@@ -36,8 +36,23 @@ from sc4paths import plugins_dir     # noqa: E402
 # else the OneDrive-redirected or plain %USERPROFILE% variant. See
 # tools/sc4paths.py for why a literal path here was a bug, not a shortcut.
 PLUG = plugins_dir(require=True)
-ARCHIVES = ["SimCity_1.dat", "SimCity_2.dat", "SimCity_3.dat", "SimCity_4.dat",
-            "SimCity_5.dat", "EP1.dat", "SimCityLocale.DAT"]
+# ⛔ THIS USED TO BE A HAND-WRITTEN LIST OF SEVEN, and it was blind to two of
+# the nine archives the install actually ships - Intro.dat and Sound.dat, the
+# latter holding 1,680 LTEXT records. A "not found in the game archives" answer
+# from this tool was therefore never quite the claim it appeared to be.
+#
+# find_tgi.py already discovers archives instead of listing them; so does the
+# row15-probe core. Same approach here: a written-down inventory of a directory
+# fails silently the moment the directory changes, which is exactly the failure
+# this project has recorded against a nine-archive set before.
+def discover_archives(game_dir):
+    """Every DBPF archive in the install root, case-insensitively, sorted."""
+    import glob
+    seen = {}
+    for pat in ("*.dat", "*.DAT", "*.Dat"):
+        for p in glob.glob(os.path.join(game_dir, pat)):
+            seen[os.path.basename(p).lower()] = os.path.basename(p)
+    return [seen[k] for k in sorted(seen)]
 PLUGIN_EXTS = (".dat", ".sc4lot", ".sc4desc", ".sc4model")
 
 
@@ -90,8 +105,10 @@ def main():
     want_g = int(a.group, 16) if a.group else None
     hits = []
 
+    archives = discover_archives(GAME)
     print("=== GAME ARCHIVES (load FIRST - lowest priority) ===")
-    for name in ARCHIVES:
+    print("    %d archive(s) discovered in %s" % (len(archives), GAME))
+    for name in archives:
         p = os.path.join(GAME, name)
         if os.path.exists(p):
             scan(p, name, want_i, want_g, hits)

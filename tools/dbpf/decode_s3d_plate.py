@@ -62,8 +62,23 @@ def find_dir_uncompressed_size(path, t, g, i):
             with open(path, "rb") as f:
                 f.seek(doff)
                 blob = f.read(dsize)
-            for k in range(dsize // 12):
-                et, eg, ei, esize = struct.unpack_from("<IIII", blob, k * 12)
+            # ⛔ DIR RECORDS ARE 16 BYTES, NOT 12. This loop used to step by
+            # 12 while unpacking 16 ("<IIII"), so every record overlapped the
+            # next by four bytes and the walk was reading garbage that happened
+            # to contain the right answer at one misaligned offset.
+            #
+            # MEASURED on retail SimCity_1.dat: the DIR record is 782,080 bytes.
+            # 782080 % 12 = 4, so twelve does not even divide it - the old loop
+            # could never have consumed the record cleanly. At 16 it yields
+            # 48,880 records and EVERY ONE names a TGI that exists in the
+            # archive index (0 failures). That is the positive control: the
+            # right stride makes every record resolve; a wrong one cannot.
+            assert dsize % 16 == 0, (
+                "DIR size %d is not a multiple of 16 - the record layout is "
+                "not what this reader assumes; refusing rather than guessing"
+                % dsize)
+            for k in range(dsize // 16):
+                et, eg, ei, esize = struct.unpack_from("<IIII", blob, k * 16)
                 if (et, eg, ei) == (t, g, i):
                     return esize
             return None

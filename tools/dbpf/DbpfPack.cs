@@ -40,8 +40,15 @@ static class DbpfPack
     const uint IndexMinor = 0;
     const int HeaderSize = 96;
     const int IndexEntrySize = 20;
-    // Compression directory TGI (must NOT appear in an all-uncompressed archive)
-    const uint DirType = 0xE86B1EEE, DirGroup = 0xE86B1EEE, DirInstance = 0x286B1F03;
+    // Compression directory TGI (must NOT appear in an all-uncompressed archive).
+    //
+    // CORRECTED 2026-08-31: this read 0xE86B1EEE, one less than SC4's real DIR
+    // type, so the refusal below could never fire - there is no such record in
+    // any shipped archive to catch. MEASURED against the retail SimCity_1.dat:
+    // {0xE86B1EEF, 0xE86B1EEF, 0x286B1F03} is PRESENT (offset 142598197, size
+    // 782080); {0xE86B1EEE, ...} is ABSENT. A guard that cannot fire is not a
+    // guard, and this one had been quietly inert since it was written.
+    const uint DirType = 0xE86B1EEF, DirGroup = 0xE86B1EEF, DirInstance = 0x286B1F03;
 
     struct Entry
     {
