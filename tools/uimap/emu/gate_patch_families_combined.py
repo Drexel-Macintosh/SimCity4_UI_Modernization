@@ -126,6 +126,12 @@ WIDTHS = {
     # defect, not by this gate, which is the point. `68 imm32` push, opcode +
     # 4 imm bytes verified and written, same shape as kIntroVidSites above.
     "kPinDigitSites":            (5, "68 imm32 (push 14.0f box / 9.0f seat)"),
+    # FONTNAME, 2026-08-31. FOUR operands, two per probe site: the game builds
+    # its font path as a [begin,end) byte range, so begin and end must be
+    # repointed together or the concat computes a length across unrelated
+    # memory. Registered as four 5-byte push spans; the applier verifies all
+    # four before writing any, which is what makes a half-patch unreachable.
+    "kFontNameSites":            (5, "68 imm32 (push begin/end of the font filename)"),
     # kStackShiftSite lived here for one hour on 2026-08-30, as the POSITIVE
     # CONTROL for widening CHECK A to see data-vs-data collisions: registering
     # it made this gate FAIL on 0x00A88260 against kCsiConsts, which is the

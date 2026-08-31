@@ -1,3 +1,4 @@
+#include "CodePatches.h"
 #include "ScaleTier.h"
 #include "Logger.h"
 
@@ -1918,8 +1919,23 @@ namespace
 			return;
 		}
 
+		// THE LIVE FILENAME FOLLOWS THE REDIRECT, and only the redirect.
+		// CodePatches::ApplyFontNameRedirect repoints the game's own font-path
+		// builder at our filename; when it lands we write THAT name and never
+		// touch the stock FontStyle.ini at all. When it REFUSES we fall back to
+		// the stock name, because a font under a name nothing reads is worse
+		// than a font in the shared file - and the fallback keeps every
+		// preservation guarantee below intact.
+		wchar_t ourName[64];
+		{
+			const char* a = CodePatches::FontNameRedirected()
+				? CodePatches::OurFontFileName() : "FontStyle.ini";
+			int n = 0;
+			for (; a[n] && n < 63; ++n) { ourName[n] = static_cast<wchar_t>(a[n]); }
+			ourName[n] = L'\0';
+		}
 		wchar_t live[MAX_PATH];
-		swprintf_s(live, L"%sFontStyle.ini", liveDir);
+		swprintf_s(live, L"%s%ls", liveDir, ourName);
 
 		// ============ USER FONT PRESERVATION (v2.68.0, #115) ============
 		// FontStyle.ini is NOT ours. Other SC4 font mods ship one, and the
@@ -2020,7 +2036,7 @@ namespace
 			if (FileExists(live))
 			{
 				wchar_t aside[MAX_PATH];
-				swprintf_s(aside, L"%sFontStyle.ini%s", liveDir, kDisabledSuffix);
+				swprintf_s(aside, L"%s%ls%s", liveDir, ourName, kDisabledSuffix);
 				// A STALE STASH MADE THE STOCK TIER KEEP ITS SCALED FONT.
 				// MoveFileExW with no flags REFUSES when the destination
 				// exists (err 183), and the destination survives every

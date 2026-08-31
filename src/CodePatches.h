@@ -352,6 +352,17 @@ namespace CodePatches
 	// overrideScale: 0 = follow the tier factor; > 1 = explicit multiplier
 	// (ini MissionBubbleScale, the no-rebuild tuning knob).
 	void InstallMissionBubbleScale(float factor, int mode, float overrideScale);
+
+	// FONTNAME: point the game's own font-path builder at our filename so the
+	// stock FontStyle.ini is never touched. MUST run before the game builds that
+	// path. Verifies all four imm32 operands before writing any.
+	void ApplyFontNameRedirect();
+	// True only once the redirect actually landed. ScaleTier writes the
+	// redirected name ONLY then, so a refusal cannot strand a font under a name
+	// nothing reads.
+	bool FontNameRedirected();
+	// The filename the redirect installs, so exactly one place defines it.
+	const char* OurFontFileName();
 	// INSTALLED != EXECUTED (law 47): how many instances were actually
 	// SCALED. Equals "no mission_selection spawn ran" only in mode 2 with
 	// every spawn pristine: mode 1 (log-only) always reads 0, and a

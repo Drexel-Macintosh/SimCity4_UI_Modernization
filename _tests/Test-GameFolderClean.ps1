@@ -82,6 +82,10 @@ if ($ourHashes.Count -eq 0) {
 # --- 1. nothing of ours may rest in the game's Plugins folder --------------
 $suspects = @()
 $suspects += Get-ChildItem $plug -Filter 'FontStyle*' -File -ErrorAction SilentlyContinue
+# From 2026-08-31 the DLL redirects the game's own font probe to OUR
+# filename, so this is the name that should appear while playing - and the
+# name that must NOT be resting here afterwards.
+$suspects += Get-ChildItem $plug -Filter 'z_SC4UIScale_FontStyle*' -File -ErrorAction SilentlyContinue
 $suspects += Get-ChildItem $plug -Filter 'z_SC4UIScale_*' -File -ErrorAction SilentlyContinue
 $suspects += Get-ChildItem $plug -Filter 'SC4UIScale*' -File -ErrorAction SilentlyContinue
 

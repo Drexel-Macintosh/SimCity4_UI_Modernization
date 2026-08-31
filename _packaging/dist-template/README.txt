@@ -97,11 +97,17 @@ sc4pac-installed DLL mod uses: the .dll at the root, its data in a folder.)
 csv - into 010-SC4UIScale\ by itself on the first launch. Your SC4UIScale.ini
 stays at the root, which is where the mod reads it from v4.5.0 on.)
 
-THE FONT IN THE GAME'S OWN FOLDER. The game reads a loose font file from two
-fixed places and nowhere else - it does not look inside mod folders - so the
-only way an enlarged font can apply at all is for the mod to put one at
-<SimCity 4 install>\Plugins\FontStyle.ini while it runs. It removes that file
-again when the game shuts down normally, leaving nothing behind.
+THE FONT IN THE GAME'S OWN FOLDER - AND WE NO LONGER TOUCH YOURS. The game
+reads a loose font file from two fixed places and nowhere else, and it does not
+look inside mod folders. Older versions of this mod therefore had to write the
+game's own FontStyle.ini, back up anything you already had, and put it back on
+exit.
+
+It no longer does. The mod now retargets the game's own font lookup at a file
+named z_SC4UIScale_FontStyle.ini, so YOUR FontStyle.ini is never read, never
+overwritten, never backed up and never restored by us. Ours is removed when the
+game shuts down normally, and it carries our name, so if a crash ever strands
+one you can see at a glance whose it is.
 
   CORRECTED IN THIS RELEASE. Earlier versions RENAMED that file on exit
   instead of removing it, so a clean shutdown left a 23 KB

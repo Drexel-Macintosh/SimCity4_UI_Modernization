@@ -635,6 +635,12 @@ public:
 					"Static layers: selecting the x%.2f package (art dats + "
 					"FontStyle) - same factor the runtime geometry uses.",
 					settings.spikeScaleFactor);
+				// FONTNAME MUST BE ARMED BEFORE THE FONT IS WRITTEN, because
+				// SyncStaticLayers decides the filename from whether this
+				// landed. It is also the whole reason the stock FontStyle.ini
+				// is now left alone: with the game reading our own filename we
+				// never overwrite, back up or restore the player's file.
+				CodePatches::ApplyFontNameRedirect();
 				ScaleTier::SyncStaticLayers(settings.spikeScaleFactor);
 			}
 

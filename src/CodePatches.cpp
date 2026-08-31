@@ -6245,6 +6245,98 @@ namespace CodePatches
 		// families: `68 imm32` push, verify-before-write on the opcode and the
 		// exact stock float bits (14.0f box, 9.0f seat), one VirtualProtect span.
 		// The gate could not have told anyone it existed.
+		// ======================================================================
+		// FONTNAME - make the game look for OUR filename, not the stock one.
+		//
+		// I told the user twice this was impossible. It is not, and the encoding
+		// says so plainly. The game builds its font path at two sites inside
+		// 0x0044D810, each as a [begin,end) byte range appended to a directory:
+		//
+		//     0x0044DC98  68 D5 6D A8 00   push 0x00A86DD5   ; end
+		//     0x0044DC9D  68 C8 6D A8 00   push 0x00A86DC8   ; begin
+		//     0x0044DCD1  68 D5 6D A8 00   push 0x00A86DD5   ; end
+		//     0x0044DCD6  68 C8 6D A8 00   push 0x00A86DC8   ; begin
+		//
+		// 0xA86DD5 - 0xA86DC8 = 13 = strlen("FontStyle.ini"), and neither address
+		// is referenced anywhere else in .text (2 refs each, both here). Four imm32
+		// operands decide the whole filename, and pointing them at a string of our
+		// own is the same push-imm32 patch a dozen families here already perform.
+		//
+		// WHY THIS MATTERS MORE THAN TIDINESS. While we wrote the STOCK name we had
+		// to overwrite whatever the player had, preserve it as .user-original, and
+		// put it back on exit - and each of those steps was a chance to get it
+		// wrong. It got it wrong twice in two days: once leaving 23 KB in Program
+		// Files forever, once mistaking our OWN stamped file for the player's and
+		// "restoring" it. With our own filename the stock file is never read,
+		// overwritten, backed up or restored, and anything we strand carries our
+		// name. The failure class disappears instead of being handled.
+		const uintptr_t kFontNameSites[4] =
+			{ 0x0044DC98, 0x0044DC9D, 0x0044DCD1, 0x0044DCD6 };
+		const uint32_t kFontNameStockBegin = 0x00A86DC8;
+		const uint32_t kFontNameStockEnd   = 0x00A86DD5;
+
+		// The game keeps only the POINTER, so this must outlive the call. A
+		// module-scope constant in our own DLL does, for the whole process.
+		const char kOurFontFileName[] = "z_SC4UIScale_FontStyle.ini";
+
+		bool gFontNameRedirected = false;
+
+		void ApplyFontNameRedirectImpl()
+		{
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			// VERIFY ALL FOUR BEFORE WRITING ANY. A half-redirected pair hands the
+			// concat a begin from one string and an end from another - a length
+			// computed across unrelated memory.
+			for (int i = 0; i < 4; ++i)
+			{
+				const uint8_t* q = reinterpret_cast<const uint8_t*>(
+					kFontNameSites[i] + base - kImageBase);
+				uint32_t cur = 0;
+				memcpy(&cur, q + 1, 4);
+				const uint32_t want = (i == 0 || i == 2)
+					? kFontNameStockEnd : kFontNameStockBegin;
+				if (q[0] != 0x68 || cur != want)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: FONTNAME site 0x%08X reads %02X %08X, expected "
+						"68 %08X - REFUSED (nothing written); the game keeps looking "
+						"for the stock FontStyle.ini.",
+						static_cast<uint32_t>(kFontNameSites[i]), q[0], cur, want);
+					return;
+				}
+			}
+			const uint32_t b = static_cast<uint32_t>(
+				reinterpret_cast<uintptr_t>(&kOurFontFileName[0]));
+			const uint32_t e = static_cast<uint32_t>(
+				reinterpret_cast<uintptr_t>(
+					&kOurFontFileName[sizeof(kOurFontFileName) - 1]));
+			for (int i = 0; i < 4; ++i)
+			{
+				uint8_t* q = reinterpret_cast<uint8_t*>(
+					kFontNameSites[i] + base - kImageBase);
+				DWORD old = 0;
+				if (!VirtualProtect(q, 5, PAGE_EXECUTE_READWRITE, &old))
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"CodePatches: FONTNAME VirtualProtect failed at 0x%08X.",
+						static_cast<uint32_t>(kFontNameSites[i]));
+					return;
+				}
+				const uint32_t v = (i == 0 || i == 2) ? e : b;
+				memcpy(q + 1, &v, 4);
+				VirtualProtect(q, 5, old, &old);
+				FlushInstructionCache(GetCurrentProcess(), q, 5);
+			}
+			gFontNameRedirected = true;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: FONTNAME redirected - the game now looks for \"%hs\" "
+				"(%u bytes) at BOTH probe paths. The stock FontStyle.ini is never "
+				"read, overwritten, backed up or restored by us.",
+				kOurFontFileName,
+				static_cast<unsigned>(sizeof(kOurFontFileName) - 1));
+		}
+
 		const uintptr_t kPinDigitSites[2] = { 0x005F1EEC, 0x005F1EFC };
 
 		void ApplyPinDigitScale(float want)
@@ -9193,6 +9285,15 @@ namespace CodePatches
 	// rest of the #188 probes, but the DIRECTOR CONSTRUCTOR needs to arm this
 	// one - it is the only probe that must beat app init.
 	void InstallArtFetchProbe() { InstallArtFetchProbeImpl(); }
+
+	// FONTNAME forwarders. The impl sits in the anonymous namespace with the
+	// other byte patches, but this one is armed from the director BEFORE the
+	// font path is built, and ScaleTier must be able to ask whether it landed -
+	// writing the redirected name when it did NOT would strand a font under a
+	// name nothing reads.
+	void ApplyFontNameRedirect() { ApplyFontNameRedirectImpl(); }
+	bool FontNameRedirected() { return gFontNameRedirected; }
+	const char* OurFontFileName() { return kOurFontFileName; }
 
 	// ---- #188 VIEWOBJ: the LAST drawing channel in the game --------------
 	// Eight subsystems are now closed with controls that fired: windows, PNG
