@@ -1,5 +1,74 @@
 # Changelog
 
+## 4.7.0 (2026-08-31) - the mod stops touching your FontStyle.ini
+
+**This release exists because a player found a file of ours in their SimCity 4
+folder that we had promised was not there.** They were right, the promise was
+wrong, and fixing it properly meant changing how the font works rather than
+tidying up after it.
+
+### Your own font file is no longer touched at all
+
+SimCity 4 reads a loose font file from two fixed places and looks in no mod
+folder, so every previous version had to write the game's own
+`FontStyle.ini` - overwriting whatever you had there, keeping a backup, and
+putting it back on exit. Three steps, each a chance to get it wrong.
+
+The mod now **retargets the game's own font lookup** at a file called
+`z_SC4UIScale_FontStyle.ini`. Your `FontStyle.ini` is never read, never
+overwritten, never backed up and never restored by us. If you use another font
+mod, the two no longer contend for the same file.
+
+### What that fixes, concretely
+
+- **Nothing is left in your game folder after a normal exit.** Older versions
+  renamed their font on shutdown instead of removing it, leaving a 23 KB
+  `FontStyle.ini.x1-disabled` in `SimCity 4 Deluxe\Plugins` **permanently** -
+  while the README claimed the folder was left clean. If you have installed an
+  older version, delete that file; this one also removes it for you.
+- **A crash is no longer expensive.** The retarget is applied in memory only -
+  the game executable is never modified - so a file stranded by a crash is
+  simply never read. Previously a stranded `FontStyle.ini` kept the enlarged
+  font applied **forever**, even after uninstalling the mod.
+- **Uninstall now cleans the game folder too.** It never used to look there at
+  all, which is exactly where the mod put its font. It removes only what it can
+  prove is ours and reports anything it cannot.
+- **Our font file says whose it is.** It carries a header naming the mod and
+  stating it is safe to delete, so anything ever stranded identifies itself.
+
+### Also fixed: a patch family that had never once applied
+
+Two internal patches were writing the same constant. The second checked before
+writing, found it changed, and correctly declined - but that check covers five
+constants as a group, so **none of the five was ever written, on any launch, at
+any scale**, for as long as both shipped. Found by reading a log on a launch a
+player described as fine.
+
+The two also rounded differently, agreeing at 2x and 3x by arithmetic accident
+and diverging at 1.5x - where the redundant one wrote the exact value this
+project had already proved makes a readout vanish, and then blocked the fix.
+
+### The bundle no longer ships an installer
+
+Installing this mod is copying two folders and two files into `Plugins`, which
+the README states in five lines. The script that did it for you is gone: it was
+blamed for creating a `FontStyle.ini` it had never touched, and answering that
+took a full investigation before the real cause - the DLL - was found. A script
+worth less than the questions it raises is worth removing.
+
+The README now covers every case the script handled, including the one it
+never did: a font file left in your **game** folder if SimCity 4 crashed.
+Upgrading from an old layout still happens automatically, but the DLL does it
+on first launch - it never needed the installer.
+
+### Under the hood
+
+Nine in-world overlays that were documented only from static analysis now have
+a measured status: three confirmed on screen with exact addresses, one refuted
+outright, five attributed offline. Three gates were added or repointed,
+including one for the game folder that nothing had ever watched - each shown
+failing before it was allowed to pass.
+
 ## 4.6.0 (2026-08-30) - the engine documentation becomes a section
 
 **Nothing about your game changes.** The art packages are untouched and there
@@ -267,7 +336,7 @@ installed. If you do not, nothing about your game changes from 4.5.7.
   CAM, the 36-style mod, save-warning and their kin keep beating our
   stock-derived copies exactly as they did at the root (that losing is the
   compatibility mechanism).
-- Both the dev deploy and the release `Install.ps1` auto-migrate old
+- Both the dev deploy and the release the bundled installer auto-migrate old
   root-layout installs: the font snapshot and state files move into the new
   folder, stale root packages are removed, and the user's ini is preserved
   on upgrade (new). `Test-DatIntegrity` goes red on any root leftover

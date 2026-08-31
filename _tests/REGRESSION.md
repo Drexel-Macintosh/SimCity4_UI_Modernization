@@ -17228,7 +17228,7 @@ gates. MEASURED on the live install: **53 of our 68 installed files sit under
 a name no manifest would ever contain** - 78%. Not one of the other 38
 packages in that tree renames anything.
 
-Our own `Install.ps1 -Uninstall` survives this only because it sweeps
+Our own the bundled installer's uninstall mode survives this only because it sweeps
 `z_SC4UIScale_*` by WILDCARD; proven this session by renaming three armed dats
 behind the installer's back and watching the round-trip still leave zero
 orphans. sc4pac has no such wildcard, so the same three files would be
@@ -17516,7 +17516,7 @@ the roster is now complete and the matcher checks the call that exists.
 
 ### 4. The public zip path had zero coverage, and all three of its defects lived there
 
-`Install.ps1 -Uninstall` swept `z_SC4UIScale_*` RECURSIVELY over all of
+the bundled installer's uninstall mode swept `z_SC4UIScale_*` RECURSIVELY over all of
 Plugins (would strip a coexisting sc4pac package folder bare); the migrate
 list still moved the root ini INTO `010-SC4UIScale\` (recreating the exact
 ping-pong the deploy script's comment warns about, one release after it was
@@ -17525,7 +17525,7 @@ fixed); and a keep-your-ini branch guarded a file the bundle stopped shipping.
 106 files, rows naming deleted files. And NOTHING in the repo built the
 release zip at all: the yaml's 85 hashes came from the bundle directory while
 `url:` pointed at a hand-made zip nobody compared against them.
-Now: `Test-DistInstall.ps1` round-trips the installer over a fresh tree, a
+Now: the dist-install round-trip test round-trips the installer over a fresh tree, a
 v4.4.x layout and a seeded sc4pac tree (with a positive control proving the
 sweep ran); Build-Dist writes the manifest after conversion AND cuts the zip
 itself; Test-DatIntegrity re-verifies the manifest independently.
@@ -19127,7 +19127,7 @@ instructions. Reproduced on this machine in one measurement:
 
 The downloaded v4.5.9 bundle contains only the three tier sources and the empty
 `z_SC4UIScale_FontStyle.ini` placeholder - **no live-named file** - and
-`Install.ps1` copies only what the bundle holds. The #182 packaging rename was
+the bundled installer copies only what the bundle holds. The #182 packaging rename was
 correctly applied. **The runtime never got it.**
 
 ### ⭐ THE ENGINE FACT THAT SETTLES THE WHOLE DESIGN
@@ -19298,7 +19298,7 @@ knowledge of the game's install folder at all**, which is precisely where the
 mod puts its font. So the sequence "crash, then remove the mod" stranded a file
 of ours permanently, with nothing left on the system that knew it was there.
 
-`Install.ps1 -Uninstall` now sweeps the game folder too, removing **only what
+the bundled installer's uninstall mode now sweeps the game folder too, removing **only what
 it can prove is ours**: our own filename, or a stock-named leftover from a
 pre-redirect version that still carries our generated-file header. A third
 party's font is never touched, and anything unproven is reported and left.
@@ -19312,5 +19312,5 @@ party's font is never touched, and anything unproven is reported and left.
               (it was under our own redirected filename)
 
 Game folder measured afterwards: **empty of anything of ours, cleaned by the
-DLL itself** with no manual step. `Test-DistInstall` still passes on the
+DLL itself** with no manual step. the dist-install round-trip test still passes on the
 extended uninstaller.

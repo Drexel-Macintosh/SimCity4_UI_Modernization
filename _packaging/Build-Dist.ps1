@@ -326,7 +326,15 @@ $copied++
 # README + installer, version-stamped from the code so the bundle can never
 # claim a version the DLL does not carry.
 $tpl = Join-Path $proj "_packaging\dist-template"
-foreach ($f in @("README.txt", "Install.ps1")) {
+# THE BUNDLE NO LONGER SHIPS AN INSTALLER (2026-08-31, user decision).
+# Installing this mod is "copy two folders and two files into Plugins", which
+# the README states in five lines. A script that does that is not worth the
+# questions it raises: the one we shipped was blamed for creating a
+# FontStyle.ini it had never touched, and answering that took a full
+# investigation before the real cause - the DLL - was found. The README is now
+# the only install path, and it covers the uninstall cases the script handled,
+# including the game-folder leftover after a crash.
+foreach ($f in @("README.txt")) {
     $text = Get-Content (Join-Path $tpl $f) -Raw
     $text = $text -replace "@VERSION@", $version
     if ($text -match "@VERSION@") { throw "unsubstituted token left in $f" }

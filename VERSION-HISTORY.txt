@@ -1,3 +1,109 @@
+SC4UIScale 4.7.0 (2026-08-31) - the mod stops touching the player's FontStyle.ini
+================================================================================
+
+TRIGGER: a player reported a file of ours resting in
+  C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Plugins
+while the shipped README promised "after a clean exit there is nothing there to
+delete". Reproduced in one measurement: FontStyle.ini.x1-disabled, 23,016 bytes.
+
+THE INSTALLER WAS INNOCENT, and checking that first mattered. The v4.5.9 bundle
+holds only the three tier sources and the empty z_SC4UIScale_FontStyle.ini
+placeholder; Install.ps1 copies only what the bundle holds. The #182 packaging
+rename had been applied correctly. THE RUNTIME NEVER GOT IT.
+
+WHAT I GOT WRONG, TWICE, AND THE USER GOT RIGHT THREE TIMES.
+Asked why the file could not simply use a different name, I answered that the
+game probes two FIXED PATHS - true - and concluded the FILENAME was therefore
+fixed. Those are different claims. The filename is four imm32 operands:
+
+    0x0044DC98  68 D5 6D A8 00   push 0x00A86DD5   ; end
+    0x0044DC9D  68 C8 6D A8 00   push 0x00A86DC8   ; begin
+    0x0044DCD1  68 D5 6D A8 00   push 0x00A86DD5   ; end
+    0x0044DCD6  68 C8 6D A8 00   push 0x00A86DC8   ; begin
+
+0xA86DD5 - 0xA86DC8 = 13 = strlen("FontStyle.ini"), and neither address is
+referenced anywhere else in .text. Repointing them is the same push-imm32 patch
+a dozen families in CodePatches.cpp already perform. I measured one thing and
+concluded about another, then repeated it instead of re-checking.
+
+FONTNAME (new): all four operands repointed at z_SC4UIScale_FontStyle.ini, at
+both probe paths. All four are verified before any is written - a half-redirect
+would hand the concatenation a begin from one string and an end from another, a
+length computed across unrelated memory. On refusal ScaleTier falls back to the
+stock name, so a failed patch cannot strand a font under a name nothing reads.
+Armed before SyncStaticLayers, which is what decides the filename.
+
+CONSEQUENCES, each measured:
+ * The player's FontStyle.ini is never read, overwritten, backed up or restored.
+   The whole .user-original mechanism becomes UNNECESSARY rather than carefully
+   handled - and it had misfired twice in two days, once mistaking our own
+   stamped file for the player's and "restoring" it.
+ * Stock tier now DELETES our font instead of renaming it to .x1-disabled. The
+   old path left 23 KB in Program Files after every clean exit, forever.
+ * A crash is now cheap. The redirect lives in the LOADED IMAGE ONLY - verified
+   by reading all four operands back out of the exe on disk, where they still
+   hold the stock pointers. Without our DLL there is no redirect, so a stranded
+   copy is inert. Previously a stranded FontStyle.ini kept the enlarged font
+   applied forever, even after uninstalling.
+ * Install.ps1 -Uninstall now sweeps the game folder, which it had never looked
+   at - removing only what it can PROVE is ours (our filename, or a stock-named
+   leftover carrying our generated-file header) and reporting anything else.
+ * The font we write carries a header naming the mod and saying it is safe to
+   delete. It also improves our own ownership test, which was byte-identity
+   against a tier source and would stop recognising anything the moment a
+   source was regenerated.
+
+NEW GATE: _tests/Test-GameFolderClean.ps1. Nothing in the regression net had
+ever looked at the game's install folder - every gate inspects the Documents
+tree, which is ours. It identifies our files by hash and by marker rather than
+by name, leaves a player's own font alone, skips rather than lying when the
+game is running, and REFUSES rather than passing when it cannot find the tier
+sources it needs to recognise anything. Positive control: it failed on the real
+leftover before the fix and passed after.
+
+ALSO IN THIS RELEASE
+--------------------
+A PATCH FAMILY THAT HAD NEVER APPLIED. ApplyStackShift and ApplyCsiScale both
+wrote 0x00A88260. StackShift ran first; CsiScale verified before writing, found
+86 where it expected the stock 43, and correctly refused - but its verify loop
+is all-or-nothing with an early return, and that constant is entry 2 of 5. So
+NONE of the five CSI constants was ever written, on any boot, at any factor,
+for as long as both shipped. The proof is an absence: the family's success line
+appears zero times in a 446-line log. The two also rounded differently - raw
+product versus RoundHalfUp - agreeing at 2x and 3x by accident and diverging at
+1.5x, where the redundant writer wrote the 64.5 this project had already
+A/B-proved makes the deployment count vanish, and then blocked the cure.
+Not claimed: any on-screen consequence. The project's own #188 note records
+that scaling these constants once landed and moved nothing - they are the
+hit/clip box, not the drawn quad.
+
+CHECK C (new, gate_patch_families_combined.py). Both of that day's defects had
+one shape: an exe address typed as a bare literal inside a function, invisible
+to an anti-rot sweep that can only notice a family somebody NAMED. The new
+check asks instead whether every address we WRITE TO resolves through a name at
+all, and reads src/UiSpike.cpp, which this gate had never opened. Tuning it was
+the work: 16 hits, 14 false, three measured refinements to 2 - a check that
+cries wolf gets ignored.
+
+OVERLAY CENSUS. All nine in-world overlay rows now carry a status for the first
+time. Three confirmed live with exact return addresses (service radius, lot
+direction arrow, drag grid), one refuted on screen with an internal positive
+control (the terrain-brush circle is not a named effect), five attributed
+offline - four of them closed on that channel by a file already in the
+repository, with 13/13 recall on the live-confirmed set. Row 10's query and
+demolish glow was confirmed by a pre-registered colour swap.
+
+Four play sessions went into that, and three of them measured the instrument
+rather than the game: a dead branch, a budget exhausted 88 seconds before the
+tools came out, and an unreachable target. Each failure looked like a finding
+at the time, which is why the regression net now covers the instruments too.
+
+Verify-Arming.ps1 could not run under -File at all: $PSScriptRoot is empty
+during parameter binding in Windows PowerShell 5.1, and the restore-point
+default was computed there. Correct for the person who wrote the runbook line,
+a stack trace for anything automating it. The cure was already written down in
+a sibling file in the same folder.
+
 2026-08-30  v4.6.0    THE ENGINE DOCUMENTATION BECOMES A SECTION
                       (documentation + gates only; the DLL and every package
                       are byte-identical to v4.5.9)

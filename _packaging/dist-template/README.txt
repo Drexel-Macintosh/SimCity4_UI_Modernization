@@ -47,7 +47,6 @@ never published; the public release history starts at v4.0.0.
 There is no configuration step. The mod measures the resolution the game
 actually renders at and picks a scale factor (1.5x, 2x or 3x) by itself.
 
-   Or run  Install.ps1  from this folder and it does step 2 for you.
 
 
 -------------------------------------------------------------------------------
@@ -78,13 +77,24 @@ a failure; the log says so explicitly.
   UNINSTALL
 -------------------------------------------------------------------------------
 
-Run  .\Install.ps1 -Uninstall  , or delete four things by hand from
-Documents\SimCity 4\Plugins\ :
+Delete four things from Documents\SimCity 4\Plugins\ :
 
     010-SC4UIScale\               (the whole folder)
     zzz-SC4UIScale\               (the whole folder)
     SC4UIScale.dll                (loose at the root)
     SC4UIScale.ini                (loose at the root - your settings)
+
+ONE MORE PLACE, AND ONLY IF THE GAME EVER CRASHED. While the game runs, the
+mod keeps its font in the SimCity 4 install folder and removes it on a normal
+exit. If the game crashed on its last run that removal never happened, so check:
+
+    <SimCity 4 install>\Plugins\z_SC4UIScale_FontStyle.ini
+
+Delete it if it is there. It is ours - the name is used by nothing else - and
+it is harmless either way: the mod redirects the game's font lookup at run time
+only, so with the mod gone the game does not read that file at all. Older
+versions (before 4.7.0) instead left a file called FontStyle.ini.x1-disabled in
+that same folder; delete that too if you see it.
 
 That is everything. The DLL and the ini are the only files this mod keeps at
 the Plugins root: the game loads DLLs from the top level and nowhere else, and

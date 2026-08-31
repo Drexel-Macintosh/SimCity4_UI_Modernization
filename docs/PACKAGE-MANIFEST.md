@@ -344,7 +344,10 @@ poll for `SimCity 4.exe` to exit, then copy.
 **The release bundle is built, not assembled by hand:** run
 `_packaging\Build-Dist.ps1` and it produces `dist\SC4UIScale-v<version>\`
 with a `Plugins\` tree you copy straight in, plus `README.txt`,
-`Install.ps1`, `LICENSE.txt`, `THIRD-PARTY-NOTICES.md` and `SHA256SUMS.txt`.
+`LICENSE.txt`, `THIRD-PARTY-NOTICES.md` and `SHA256SUMS.txt`. **No installer
+script ships from 4.7.0** - installing is copying two folders and two files,
+which the README states in five lines, and the script we used to ship was
+blamed for creating a file it had never touched.
 It derives its file list **by parsing `_tests\Deploy-OnGameClose.ps1`**
 rather than keeping a second copy of "what a working install contains": one
 manifest, one failure mode.

@@ -41,9 +41,9 @@ no-mod install.
 
 ## Install
 
-1. Download a bundle from [Releases](../../releases), unzip it, and run
-   `.\Install.ps1`. Or copy its `Plugins\` tree into
-   `Documents\SimCity 4\Plugins` by hand - it is two folders and one file:
+1. Download a bundle from [Releases](../../releases), unzip it, and copy
+   its `Plugins\` tree into `Documents\SimCity 4\Plugins` - it is two
+   folders and one file:
 
    ```
    Documents\SimCity 4\Plugins\
@@ -60,7 +60,7 @@ no-mod install.
 
    The DLL has to sit at the root: SimCity 4's dat scan is recursive but its
    **DLL loader is top-level only**. Everything else lives in the folders, so
-   uninstalling is deleting those three things (or `.\Install.ps1 -Uninstall`).
+   uninstalling is deleting those three things.
    Upgrading from before v4.4.0 moves your old root files - settings included
    - into `010-SC4UIScale\` on the first launch.
 2. Launch the game. AutoScale picks the tier the current resolution can
