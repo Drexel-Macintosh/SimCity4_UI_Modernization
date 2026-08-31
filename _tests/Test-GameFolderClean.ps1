@@ -91,6 +91,17 @@ foreach ($f in $suspects) {
         $warn += "$($f.Name) - the player's preserved original, correctly left alone"
         continue
     }
+    # OUR MARKER FIRST. From 2026-08-31 the DLL stamps the font it writes with
+    # a ';' header naming the mod, precisely so a copy stranded by a crash says
+    # whose it is. That beats byte-identity, which stops recognising anything
+    # the moment a tier source is regenerated.
+    $head = ''
+    try { $head = (Get-Content $f.FullName -TotalCount 3 -ErrorAction Stop) -join "`n" } catch { }
+    if ($head -match 'SC4UIScale:') {
+        $fail += ("{0} carries OUR OWN generated-file header and is resting in the GAME folder ({1:N0} bytes)" -f `
+                  $f.Name, $f.Length)
+        continue
+    }
     $h = (Get-FileHash $f.FullName -Algorithm SHA256).Hash
     if ($ourHashes.ContainsKey($h)) {
         $fail += ("{0} is byte-identical to our own {1} ({2:N0} bytes) and is resting in the GAME folder" -f `
