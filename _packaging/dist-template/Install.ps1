@@ -108,6 +108,53 @@ if ($Uninstall) {
             }
         }
     }
+    # ---- THE GAME'S OWN FOLDER, which nothing used to clean --------------
+    # The mod puts its font in the SimCity 4 install folder while the game runs
+    # and removes it on a normal shutdown. IF THE GAME CRASHED, that removal
+    # never happened and the file is still there - and uninstalling the mod
+    # would strand it permanently, because until now this uninstaller only ever
+    # looked at your Documents Plugins folder.
+    #
+    # A stranded copy is harmless (the mod redirects the game's font lookup at
+    # RUN TIME, in memory only - the game executable on disk is never modified,
+    # so with the mod gone the game does not read our file at all). It is still
+    # ours, and leaving 23 KB of ours in someone's game folder after they asked
+    # us to uninstall is not acceptable.
+    #
+    # ONLY files we can PROVE are ours are removed: our own filename, or a
+    # stock-named leftover from a pre-redirect version that still carries our
+    # generated-file header. A third party's font is never touched.
+    $gameDir = $env:SC4_GAME_DIR
+    if (-not $gameDir) {
+        $gameDir = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe"
+    }
+    $gamePlug = Join-Path $gameDir "Plugins"
+    if (Test-Path $gamePlug) {
+        foreach ($cand in @("z_SC4UIScale_FontStyle.ini",
+                            "z_SC4UIScale_FontStyle.ini.x1-disabled",
+                            "FontStyle.ini",
+                            "FontStyle.ini.x1-disabled")) {
+            $t = Join-Path $gamePlug $cand
+            if (-not (Test-Path $t)) { continue }
+            $ours = $cand.StartsWith("z_SC4UIScale_")
+            if (-not $ours) {
+                # A stock-named file is only ours if it says so.
+                $head = ""
+                try { $head = (Get-Content $t -TotalCount 3 -ErrorAction Stop) -join "`n" } catch { }
+                $ours = ($head -match "SC4UIScale:")
+            }
+            if ($ours) {
+                if ($PSCmdlet.ShouldProcess($t, "remove our file from the game folder")) {
+                    Remove-Item $t -Force
+                }
+                Write-Output "  removed from the GAME folder: $cand"
+                $removed++
+            } else {
+                Write-Output "  left alone (not ours): $t"
+            }
+        }
+    }
+
     foreach ($dirName in @("010-SC4UIScale", "zzz-SC4UIScale")) {
         # Only remove a folder that is now EMPTY - anything left (the
         # preserved FontStyle.ini.user-original above all) stays visible for

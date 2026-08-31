@@ -19256,3 +19256,61 @@ eyeballed).
 is strong - the file's own header is dozens of comment lines - but no session
 has run with a stamped font, so the font applying at 2x is UNCONFIRMED. That is
 the one thing this entry does not claim, and the next launch settles it.
+
+
+---
+
+## 2026-08-31 - what a crash costs now, and the uninstall path that never looked
+
+**User's question, answered by measurement rather than by reasoning:** what
+happens on a crash versus a normal quit - do we catch it?
+
+**No, we do not catch a crash.** The cleanup lives in `RevertFontOnShutdown`,
+reached only from the director's normal shutdown sequence. Kill the process and
+it never runs, and the font file stays.
+
+### ⭐ BUT THE RENAME CHANGED WHAT A CRASH *COSTS*
+
+The redirect is applied to the **loaded image only** - verified by reading the
+four operands out of the exe **on disk**, where all four still hold the stock
+pointers (`68 D5 6D A8 00` / `68 C8 6D A8 00`). The executable is never
+modified.
+
+So without our DLL running there is no redirect, and the game looks for
+`FontStyle.ini` - a name we no longer write.
+
+| | crash strands | consequence |
+|---|---|---|
+| **Before** | `FontStyle.ini` | the game reads it natively: **the enlarged font persists forever**, even after the mod is uninstalled. The README had to tell players to delete it by hand. |
+| **Now** | `z_SC4UIScale_FontStyle.ini` | **inert.** Nothing reads it without our DLL doing the redirect. |
+
+A crash now costs a stray 23 KB file that does nothing, instead of a
+permanently altered game.
+
+### Self-healing, and the one case that was NOT
+
+A crash-stranded file is overwritten at the next boot and deleted at the next
+clean exit, so an ordinary crash heals itself within one normal session.
+
+**The case that did not heal: crash, then uninstall.** The shipped uninstaller
+only ever looked at the player's Documents Plugins folder - it had **no
+knowledge of the game's install folder at all**, which is precisely where the
+mod puts its font. So the sequence "crash, then remove the mod" stranded a file
+of ours permanently, with nothing left on the system that knew it was there.
+
+`Install.ps1 -Uninstall` now sweeps the game folder too, removing **only what
+it can prove is ours**: our own filename, or a stock-named leftover from a
+pre-redirect version that still carries our generated-file header. A third
+party's font is never touched, and anything unproven is reported and left.
+
+### Full cycle, measured end to end this session
+
+    10:57:53  FONTNAME redirected - the game now looks for
+              "z_SC4UIScale_FontStyle.ini" at BOTH probe paths
+    10:57:53  FontStyle-15x.ini -> ...\z_SC4UIScale_FontStyle.ini
+    10:58:35  ...\z_SC4UIScale_FontStyle.ini DELETED at stock tier
+              (it was under our own redirected filename)
+
+Game folder measured afterwards: **empty of anything of ours, cleaned by the
+DLL itself** with no manual step. `Test-DistInstall` still passes on the
+extended uninstaller.
