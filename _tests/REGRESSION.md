@@ -19010,3 +19010,105 @@ conclusion stands only because the live detour captured those return addresses);
 one was a wrong "treat it as unnamed" recommendation; one was a claim that
 `this` was not recoverable at the call site, refuted from the bytes -
 `esi` holds `this` throughout.
+
+
+---
+
+## 2026-08-30 - the five remaining overlay rows, attributed offline
+
+Second offline workflow, seven agents, adversarially adjudicated. **All nine
+overlay census rows now carry a status** for the first time.
+
+### ⭐ ROUND 0: one file already in the repo closed the same question for five rows
+
+Every lane independently derived an exe-string null, and **every one of them
+was insufficient** - `cloudfx_expensive_slave`, a name the live census
+confirmed, is byte-provably absent from all 7,876,608 exe bytes. Effect names
+can be **DAT-supplied**, so an exe-only scan can never refute a content-driven
+spawn.
+
+The loophole was closed with `tools/research/udriveit/effdir-dump.txt`, which
+had been sitting in the repo the whole time: 1148 parent effect names,
+**positive control 13 of 13 recall including the DAT-only member the exe scan
+misses**. Negative sweep over the same 1148: `connect|neighbo|border|edge` →
+`tugropeconnection` only; `route|commut|traffic|trip|path|trace` → **zero**;
+`dot` → `tornadoui_dots` only; `brush|terraform|circle|ring` → **zero**.
+
+**NAMED_EFFECT is refuted for rows 15, 16, 04, 08 and 10**, across both the
+exe-literal and DAT channels, and row 14's live refutation is independently
+corroborated. `EFFECTFILTER` can never reach any of them. **Zero play sessions.**
+Scope limit: the shipped EFFDIR only - a plugin could add a name.
+
+### The rows
+
+* **row-15, neighbour-connection arrows — a PROP OCCUPANT, and probably needs
+  no fix at all.** Exemplar `0x29F10000` occurs exactly once in the image;
+  the owner answers GZCLSID `0xC990C0A4` = `cSC4NeighborsSimulator`, the record
+  class is `cSC4NeighborConnection`, and the plate's geometry is **S3D vertex
+  metres** (`29F10000_ConnectArrow_Ui8x1x3_Z1S` ships). No screen-space
+  constant, no per-zoom table. **World-anchored, i.e. correct at every tier by
+  construction — the same verdict as row-23 zots, reached by a different
+  route.** Only constant applied is a `+15.5f` height nudge gated on a selector
+  in `{3,7,0xB}`, with `9` suppressing the arrow; **what that selector
+  enumerates is NOT proven.**
+* **row-08, U-Drive-It guidance arrows — the strongest of the five**, byte chain
+  reproduced link-for-link by the verifier. Registers as a view object with
+  vtable `0xA9D974`. **Killable with an already-shipped lever and no new code**
+  (`BalloonViewKill`), through the renderer's own `RemoveViewObject` - no
+  geometry written, and the expected result is an absence that cannot be
+  misread as "no change".
+* **row-04, the "route dots"** — most likely **not a separate visual at all**;
+  the leading reading is that it is row-08's 0.4-alpha decal seen zoomed out.
+  Rides row-08's kill for free. **Do not spend a session on it.**
+* **row-10, query/demolish glow** — a per-occupant tint **index**, not a
+  drawable; `SetHighlight` = `vt+0x44` = `0x005E90E0`. Cheapest round in the
+  set: one existing ini key, one launch, no code change.
+* **row-16, the commute trace — UNKNOWN, and the row's own prior attribution
+  was WRONG.** It named the signpost-occupant module; that module is the **SIGN
+  TOOL** (`kCommandID_SignTool = 0x0B980581`, read from the game's own tables).
+  The real Route Query tool is now pinned (`0x6A935CF4`), corroborated from a
+  second direction by the Trip Types legend ids its OnActivate pushes. No
+  drawer is named; the best remaining hypothesis is explicitly SPECULATIVE.
+
+### ⚠ TWO EXPERIMENT-BREAKING CORRECTIONS, caught before any session was spent
+
+1. **The gate claim was wrong in the direction that breaks the control run.**
+   A lane said `ViewListRepeat` needs `spikeScaleAll`. The shipped gate makes it
+   stand **alone** - and the `ScaleAll` conjunct was deliberately removed
+   earlier the same day because tier logic forces it to 0 at stock tier, i.e. it
+   armed nothing in **the one configuration a 1× control run needs**.
+2. **The `udriveit` cheat is not equivalent to entering drive mode.** Creating
+   the singleton is not the registration; registration lives in an `Init` the
+   cheat path never calls directly. **A null taken on the cheat path would have
+   been uninterpretable** - the exact failure this project has already spent
+   three sessions on.
+
+### Three repo defects the pass found and this session fixed
+
+1. A **refuted message id** still stood at `research/UNKNOWNS-AND-NEXT-TARGETS.md`
+   line 87 - `0xA2D1C5B9`, which is `kSC4MessageOrdinanceAvailable`, a different
+   event. The correct `0xE6E85114` was already recorded **at line 136 of the
+   same file**. Corrected there and in the row-10 file; the two other citations
+   were left because they already name it *as* the refuted one.
+2. Rows 16 and 04 carried **provably wrong** `attributed_to` text and empty
+   statuses. Both replaced.
+3. A note cited `src/CodePatches.cpp:5741-5765` as SPSTRIP. **That range is the
+   CSIAIM float-aim writer**; SPSTRIP is ~6331-6505. Corrected, with the reason
+   recorded - anchor on the symbol, not the number.
+
+### ⭐ WHAT THE ADVERSARIAL PASS CAUGHT IN ITS OWN LANES
+
+Eighteen overclaims, and the shape is worth keeping. The most common was a
+**confidence label**, not a fact: `PROVEN_FROM_BYTES` stamped on a link that was
+inference (a runtime-filled pointer whose vtable nothing static pins), on a row
+whose own findings said the subject was UNRESOLVED, and on a table whose count
+and contents appeared nowhere in that row's evidence. Also caught: a liveness
+control that was **asserted and never measured**, an occlusion test that
+measures depth state rather than channel and **cannot distinguish its own two
+outcomes**, and several string addresses cited **one byte before the string
+start** - the push operand rather than the literal, the exact
+instruction-vs-operand distinction this project keeps re-learning.
+
+A DAT-side art census was also attempted and is a **structural null**: of 36,388
+FSH entries, only 2.3% carry a plaintext name; the rest are QFS-compressed and
+invisible to a byte scan. It proves nothing, and says so.

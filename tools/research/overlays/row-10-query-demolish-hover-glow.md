@@ -47,7 +47,7 @@ The flag's state machine lives in the occupant itself: `0x80D580`
 (vtable slot .rdata `0xABEAE8`, module 0x80Dxxx = the concrete occupant
 class) — reads current state, self-resolves the placeable/render object
 (`vt+0x50` at `0x80D58E`), applies to it, and posts
-**kSC4MessageOccupantHighlightChange = GUID `0xA2D1C5B9`** (string .rdata
+**kSC4MessageOccupantHighlightChange = GUID `0xE6E85114`** (string .rdata
 `0xA8AE74`, name→guid pair .data `0xB0871C`; message object alloc 0x2C +
 GUID push at `0x80D600` — the ONLY code ref to that GUID in the exe).
 Reading `0x80D580` as `cSC4Occupant::SetHighlight` is PLAUSIBLE, not
