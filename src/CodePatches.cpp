@@ -4652,6 +4652,28 @@ namespace CodePatches
 				"EffectKill resolved to %d prefix(es) (read from [UiSpike]; "
 				"0 = OFF, the shipped default).",
 				gEffectCensus, gEffectKillCount);
+
+			// ⛔ THE CENSUS BUDGET AND THE BRANCH THAT SPENDS IT ARE TWO
+			// DIFFERENT KEYS, AND RAISING ONLY THE BUDGET MEASURES NOTHING.
+			// The BUBBLEALL census lives inside `if (gBubbleStack && name)`,
+			// and gBubbleStack is `(mode >= 3)` - so with MissionBubbleFx at
+			// its default 2, EffectCensus can be set to anything at all and
+			// the branch never executes. Round 1 of the overlay census was
+			// run exactly that way on 2026-08-30: budget 400, mode 2, zero
+			// tool-cursor names. That zero said nothing about the game and
+			// everything about the instrument, and it cost a play session.
+			// A raised budget on a dead branch now announces itself.
+			const int fxMode = static_cast<int>(GetPrivateProfileIntW(
+				L"UiSpike", L"MissionBubbleFx", 2, ini));
+			if (gEffectCensus > 40 && fxMode < 3)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: ⚠ EffectCensus=%d BUT MissionBubbleFx=%d - "
+					"THE CENSUS BRANCH IS GATED ON mode >= 3 AND WILL NOT RUN. "
+					"Any absence of names below is a BROKEN INSTRUMENT, not a "
+					"measurement. Set [UiSpike] MissionBubbleFx=3.",
+					gEffectCensus, fxMode);
+			}
 			for (int i = 0; i < gEffectKillCount; ++i)
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
