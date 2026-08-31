@@ -18841,3 +18841,46 @@ round 1b's real sequence and asserts the DLL implements what it simulates.
 ⚠ **The standing lesson:** this instrument failed twice in ways that looked
 like findings. A broken instrument reports success, so the regression net must
 cover the instruments, not only the features.
+
+
+---
+
+## 2026-08-30 - round 2, windowed: the window caught a wrong attribution within one session
+
+`CensusWindowSeconds=20`. Six windows, 59 names, and clean separation:
+
+| Windows | On screen | Names |
+|---|---|---|
+| 1-3 | idle baseline | ambient only - smoke, helicopters, seagulls, clouds |
+| 4-5 | road / zone drag | `local_grid` `0x005FB357`, `local_tile_outline` `0x00662279`, `road_construction_dust` `0x0060595F` |
+| 5-6 | police tool held | `PlopMode_Police_Existing` `0x007D2018`, `PlopMode_Police_Inactive` `0x004C1713`, `building_footprint_ok`/`_notok` `0x004C285F`, `Lot_Direction_Arrow` `0x004C2A91` |
+
+### ⭐ A SHARED EFFECT NAME IS NOT A SHARED CALL SITE
+
+The round-1c entry recorded `local_tile_outline` at `ret=0x004DA784` and paired
+it with `local_grid` as "the drag pair". **The windowed run shows the drag
+actually uses `local_tile_outline` at `ret=0x00662279`.** Same name, different
+caller. `0x004DA784` is some other consumer and is still unattributed.
+
+That pairing was never measured - it was inferred from the name in a session
+with no way to tell *when* anything fired, and it survived one write-up before
+the next round contradicted it. **The correction cost nothing only because the
+window arrived one session later.**
+
+### The terraform row was never an instrument problem
+
+The user identified the real cause: **god-mode terraforming requires an
+UNFOUNDED city**, and every census session so far ran in a founded one. The
+brush circle could not have been on screen at all.
+
+⚠ **This retrospectively voids the round-1c reasoning about row 14.** That
+entry argued from instrument headroom - "45 of 400 used, so a spawn WOULD have
+been recorded" - which is true and completely beside the point. The binding
+constraint was REACHABILITY, not budget, and no amount of budget or window
+tuning would ever have helped. **Before tuning an instrument to explain an
+absence, ask whether the thing could have happened at all.**
+
+Other observations banked: `#helicopter_takeoff` carries a `#` sigil (the plan
+records no sigil on these names) and returns `ok=0`, as does `helipad` - two
+spawn requests the engine declines, worth knowing before any of them is read
+as a failure of ours.
