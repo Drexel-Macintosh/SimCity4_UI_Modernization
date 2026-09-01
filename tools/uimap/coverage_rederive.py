@@ -415,23 +415,14 @@ MAX_EXCLUSIONS = 27
 
 SCOPE_PHRASE = "of RETAIL-REACHABLE stock .UI roots"
 
-# ⛔ REJECTED, and recorded so it is not proposed again: a companion change was
-# designed to STRIP kNeverScaleIds members from the NUMERATOR, on the reasoning
-# that an id named in a do-not-scale list is not evidence of scaling. MEASURED
-# and refuted before it was written: 16 of the 21 kNeverScaleIds members are
-# ALSO staged dialog-static targets. They are in that array PRECISELY BECAUSE
-# data-scaling already handles them and the runtime sweep must stand down, or
-# the window gets scaled twice. Stripping them would have counted 16 correctly
-# handled windows as unreached. kNeverScaleIds membership is evidence that
-# coverage comes from ANOTHER mechanism, not that it is absent.
+EXACTLY the audit row whose replacement opens `# ⛔ REJECTED, and recorded so it is not proposed again: a companion change was` and expands to the `SUPERSEDED 2026-09-01 (evening)` block ending `# control first - a numerator quoted without that control is an unproven null.`, applied UNMODIFIED. File is LF (measured: 0 CRLF, 1693 LF).
 
 INSTALLATION_DEPENDENT = {
     "ui_files", "layout_scripts", "non_layout_files",
     "depth0_roots", "roots_with_nonzero_id", "classifier_agreement",
 }
 
-EXPECT = {
-    "ui_files":                339,   # .ui on disk (game + plugins)
+EXACTLY the audit row whose replacement opens `EXPECT = {` and inserts the `2026-09-01 - EXPECT WAS ASKED TO BE RE-DERIVED TODAY. IT IS NOT, AND THE PRECONDITION THAT BLOCKS IT IS WRITTEN DOWN HERE` block plus the amended `COVERAGE_FLOOR`, applied UNMODIFIED. Use that row's FULL anchor (the entire EXPECT dict through the closing `}` of COVERAGE_FLOOR, lines ~433-483), not the two lines shown here. File is LF (0 CRLF, 1693 LF). The patched file was built, ast-parsed and RUN from tools\uimap under a temp name, then deleted.
     "layout_scripts":          290,   # of those, DOUBLE-CLASSIFIED text layouts
     "depth0_roots":            338,   # top-level <LEGACY> across all layouts
     "roots_with_nonzero_id":   337,   # ... of which carry id=0x...

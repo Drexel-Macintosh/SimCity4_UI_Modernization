@@ -105,11 +105,7 @@ EDGE-DERIVED extent from its absolute origin 185:
 
     R(185+351, 1.5) - R(185, 1.5)  =  804 - 278  =  526
 
-So the shipped 1.5x sheet is 527 tall and its window is 526 - the sheet's last
-row is never drawn. That is the same SHAPE as #160 (art exceeds window, 1.5x
-only) arriving by a different route, and it is what T5 reports below. It is a
-STATIC PREDICTION, not a sighting: nothing on screen has disagreed yet, and the
-house rule is that a static defect is a hypothesis until it does.
+EXACTLY the audit row for this file, applied UNMODIFIED (its replacement opens `So the shipped 1.5x sheet is 527 tall and its window is 526 - the sheet's last` and carries the `[SUPERSEDED 2026-09-01, AND KEPT]` note plus `THE FULL T5 CENSUS - SEVEN, NOT ONE`). ⚠ THIS FILE IS CRLF (measured this run: 531 CRLF, 0 bare LF) — preserve CRLF. Anchor verified pure-ASCII and unique.
 
     python gate_tiled_seam.py [--top N] [--pre160] [--all] [-v]
 

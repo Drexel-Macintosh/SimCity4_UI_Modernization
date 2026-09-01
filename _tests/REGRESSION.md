@@ -20751,3 +20751,61 @@ sprite size is the code constant at `0xAB7E10` = 128.0, the effect is cosmetic,
 and the sweep has no path that would ever touch it. There is nothing to cover
 and nothing to exclude. **100% is not honestly reachable on D2, and the reason
 belongs in the table rather than in a footnote.**
+
+## 2026-09-01 — the SDK update, and the workflow correctly REFUSED my instruction
+
+I told 33 agents "vendor headers are OURS and may be edited". **They refused,
+and they were right.**
+
+`vendor/gzcom-dll` is a pinned git **submodule**: `.gitmodules` points it at
+`nsgomez/gzcom-dll`, the parent repo commits only a gitlink
+(`160000 commit 08c529bc2edd…`), and `git status --porcelain` inside it is
+EMPTY — all 288 headers byte-pristine upstream. Verified myself before accepting
+the refusal. Two independent consequences:
+
+1. a header edit is **never captured by a parent commit** — only the SHA is;
+2. the cold-clone test re-fetches `08c529bc` and the edit **silently vanishes**.
+
+That second one is this project's own northstar failure — *presence is not
+execution* — in its purest form. Not one of the 26 proposed edits touched
+`vendor/`; every header correction was routed into `tools/research/SDK-GAPS.md`
+instead.
+
+LAW EARNED — **A VENDORED SUBMODULE IS READ-ONLY, AND THE REASON IS THE COLD
+CLONE.** Before editing anything under a path a parent repo tracks as a gitlink,
+ask what a fresh clone would contain. The answer is upstream's bytes, not yours.
+
+### What the SDK knows that it did not this morning
+
+* **`cISC4ViewObject3D` is forward-declared and never defined** in all 288
+  headers. Its shape is now measured: 5 slots, `Draw` at `+0x0C`, `Pick` at
+  `+0x10`, `bool Draw(void*)`, registered via `AddViewObject(obj, layer, key)`
+  at layer 5 key `0x3E8`. Recorded with the caveat that **`Draw` and `Pick` are
+  OUR names** — the arity and order are measured, the names are not.
+* **The SDK has no command-id table at all.** Five headers mention command ids
+  and all five are parameter names. `kCommandID_TrafficQueryTool = 0x6A935CF4`
+  and `kCommandID_OpenSnapshotDialog = 0x6A935E4B` are now recorded as ours,
+  reconstructed from the exe's registry strings.
+* **`kMsgTrafficMapChanged = 0x69247DC7`** recorded, from the game's own
+  id→name table.
+* **`0x89e1567c`**, the generic `IGZWinGen` container clsid our whole dialog
+  toolchain keys on, is ABSENT from `GZCLSIDDefs.h` — with a positive control
+  proving the search was sound (the same grep found `0xCA5D3294` and
+  `0xAB72FBB3`).
+
+### A SEARCH TRAP that would have produced a false null
+
+`GZMSGIDDefs.h` stores ids as **signed decimals** in a `uint32_t` table (e.g.
+`-1414770972`). **A text search of that header for a hex id always misses.** Any
+"not in the SDK" conclusion drawn from a hex grep of that file is unfounded.
+Recorded in SDK-GAPS.md beside the id.
+
+### No model-database regeneration, and that was checked not assumed
+
+The emulator's derived inputs are the four role lists under `tools/upscale/`.
+Not one edit changes a role CLASSIFICATION — the per-axis nine-slice correction
+changes what the *cell* is, not which sheets are nine-slice. `nine-slice.txt`
+still loads 30 and `tiled.txt` still 10, and the shipped `cell-strips.txt` was
+verified **byte-identical to a fresh derivation this session** (both 9,780
+bytes, 210 entries, `diff` clean). Gates re-run after the edits: families gate,
+crosscheck and dead-links all exit 0.

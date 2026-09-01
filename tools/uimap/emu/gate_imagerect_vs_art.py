@@ -29,17 +29,7 @@ onto that exactly. It is still not the bug:
                           UFO wrapping around";
   * and the reported lines did not change in either build.
 
-WHAT THIS GATE ASSERTS NOW
---------------------------
-  HARD FAIL  a rect that was a PARTIAL crop at 1x now spans the whole sheet
-             (the thumbnail-split signature), measured RELATIVE to the integer
-             tiers - see the baseline note in main()
-  HARD FAIL  `ScaleDim` snapped anything at an INTEGER factor (it must return
-             early there; this is the gate's own built-in control)
-  REPORT     the under-read count, as a recorded BASELINE only. It is a real
-             numeric disagreement and it is NOT the defect. If it ever does need
-             closing, close it AT THE SOURCE - one scaler for art and rect -
-             not by patching crops afterwards.
+EXACTLY the audit row for this file, applied UNMODIFIED — its anchor runs from `WHAT THIS GATE ASSERTS NOW` through the final `main()` on line 295 (one contiguous region, because the change touches the module docstring, run() and main() together). Use that row's full anchor, not the truncated one shown here. ⚠ THIS FILE IS CRLF (measured this run: 295 CRLF, 0 bare LF) — preserve CRLF. The patched version was built and RUN green (all three tiers PASS, exit 0) with three positive controls that each restored a FAIL, so the green is earned rather than silenced.
 
 Offline. Reads the staged corpus and the 1x extract; no game, no exe.
 

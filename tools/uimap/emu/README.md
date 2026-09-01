@@ -135,7 +135,7 @@ python -c "import emu_layout as E;\
 | How wide will a given **string** render at a given point size? | `emu_text_extent.py` | **Strong, with a stated ±3.8 px residual** — measured out of rendered pixels, not queried from a font |
 | Where does a **label factory** (`sub_779660`) put a control? | `emu_layout.py` | **Real machine code under Unicorn** for the align branches; anything downstream of `measure()` is a hypothesis, and `--selftest` says which is which |
 | **What does a static dialog actually LOOK like** at 1× vs a tier? | `render_dialog.py` | **The first pixel instrument here.** Composites the shipped `.UI` + shipped art the way the engine does — parent-relative areas resolved to absolute, `imagerect` slices at native size, window clip, state 0 for button strips, magenta as transparent — then diffs against the 1× render upscaled NEAREST. **A clean result is NOT proof the screen is clean** (no text, no runtime draws, no edge/tiled blits); a dirty result names an uncovered pixel and where. It earned its keep by producing a *negative*: the region bubble's reported "white lines" are absent from its static composition at every tier, which ruled out the whole art-and-geometry hypothesis in one run |
-| Which art sheets are **provably state strips**? | `upscale\find_cell_strips.py` | **Derived from the `.UI` that BINDS each sheet**, not guessed: 193 of 2206. Feeds `Upscale2x --cell-strips`, which samples those per state so one state's ink cannot bleed into the next cell. Scoping the same transform by `CellUnit`'s guess instead moved 1186 sheets and displaced an advisor aperture |
+| Which art sheets are **provably state strips**? | `upscale\find_cell_strips.py` | **Derived from the `.UI` that BINDS each sheet**, not guessed: **210 of 2206** — MEASURED 2026-09-01 by RUNNING `find_cell_strips.py` (342 scripts read; it prints `PROVEN state strips : 210`), not re-typed from a transcript. Supersedes the retired **193**, which predates the 2026-08-18 regeneration of `cell-strips.txt`. The 2206 denominator is unchanged and was re-counted the same day: 2206 of the 2281 files in `dbpf\extracted\SimCity_1` carry the PNG magic signature, the rest being JPEG/FSH/BMP behind a `.png` name. Feeds `Upscale2x --cell-strips`, which samples those per state so one state's ink cannot bleed into the next cell. Scoping the same transform by `CellUnit`'s guess instead moved 1186 sheets and displaced an advisor aperture |
 | Will a **mod's own bitmap** still fill its row after scaling — bitmap, `imagerect` crop **and** window all considered? | `gate_tp_bmp_fit.py` | **Decisive, after being wrong twice** — read its header. Its negative control is the script extracted back out of the DEPLOYED dat (48 findings) |
 | Does `CodePatches.cpp` patch anything the model has never seen? | `..\crosscheck.py` | **Strong but narrower than it looks** — see the gap list below |
 | Will a **sub-flyout** land where the DLL thinks? | `emu_subplace_model.py` | **Decisive** — validated against the game's own `sub_79AD00` |
@@ -383,12 +383,33 @@ the control that matters:
   S1 rounding is exact vs Fraction oracle           40004 checks
   S2 llround differs only at negative halves         2500 disagreements
   S3 INTEGER-TIER CONTROL: every rule a no-op       96908 checks
-  S4 offset-parity law + 3 measured fixtures          519 checks
+  S4 offset-parity law + 3 measured #152 fixtures     519 checks
   S5 worked examples quoted in REGRESSION.md           11 checks
-  S6 role lists: 193 strip  30 nine  10 tiled 121 no-snap
+  S6 role lists: 210 strip  30 nine  10 tiled 233 no-snap
   S7 tiled seam algebra + positive control           5970 checks
   S8 source tripwires on UiSpike.cpp + Upscale2x.cs     9 checks
 ```
+
+**Transcript RE-RECORDED 2026-09-01** from a live `--selftest` (MEASURED). The
+146040 total and six of the eight lines reproduce byte-exact; two moved, and
+both are kept here rather than silently overwritten:
+
+* **S6 SUPERSEDED:** `193 strip  30 nine  10 tiled 121 no-snap` → `210 strip
+  30 nine  10 tiled 233 no-snap`. Nothing in `scale_rules.py` changed — the
+  four lists it loads did. They are the **STALE-CACHE INPUT** the `Roles`
+  docstring names as such, and `Roles.stamps()` exists to expose exactly this:
+  `cell-strips.txt` was regenerated 2026-08-18 14:39 and `no-snap.txt`
+  2026-08-19 12:33, both AFTER the retired transcript was pasted.
+  `nine-slice.txt` and `tiled.txt` still load 30 and 10.
+* **S4 SUPERSEDED:** the label gained its issue tag — `+ 3 measured fixtures` →
+  `+ 3 measured #152 fixtures` (`scale_rules.py:597`). The count 519 never
+  moved; only the printed text did, which is why no gate could catch it and why
+  an audit reading the counts alone called this line clean.
+
+The strip count is **re-derived, never re-typed**: `find_cell_strips.py` run to
+a scratch `--out` (its own F9 warning — it writes a sibling next to `--out`,
+so never point it at the shipped file to read a number) prints
+`PROVEN state strips : 210`.
 
 S8 is the point of the file: a **text tripwire** on the nine expressions in
 `src\UiSpike.cpp` and `Upscale2x.cs` this module claims to mirror. It cannot

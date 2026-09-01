@@ -24,14 +24,7 @@ ROLES, because coverage means a different thing for each (law 86):
 
   blttype=tiled          the engine repeats the source across the dest, so any
                          art covers any window.                      SKIPPED
-  blttype=edge / 9-slice cell = W/3 and the three spans are [0,c] [c,W-c]
-                         [W-c,W], which tile any width exactly.      SKIPPED
-  GZWinBtn state strip   the sheet holds N states side by side; ONE state must
-                         cover the window, so artW/N >= winW and artH >= winH.
-  everything else        dst-follows-src (law 83): the engine draws the source
-                         at the window's origin at its OWN size and never reads
-                         the window's size. art < window is an UNCOVERED BAND -
-                         the hairline.
+EXACTLY the audit row whose replacement opens `  blttype=edge / 9-slice PER AXIS: cell = (W/3, H/3), and the spans are`, applied UNMODIFIED. ⚠ THIS FILE IS CRLF (measured this run: 283 CRLF, 0 bare LF) — write the replacement with CRLF or the file ends up with mixed endings. The docstring is r"""-quoted; do not un-raw it, the `tools\upscale\...` path in the new note depends on it.
 
 CONTROLS, and they are the whole experiment:
 

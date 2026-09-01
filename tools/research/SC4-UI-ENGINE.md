@@ -75,13 +75,9 @@ costs a day:
 — the third is the only one where **under-sized art TILES rather than
 shrinking**, so its art must be compared against the **window**, not the source.
 
-**No element of the shipped UI is known to sit outside the boundary**,
-and two elements once believed to be outside it are on the inside. Both are
-worth recording, because each was put outside on a structural null.
+EXACTLY the audit row whose replacement opens `**⛔ SUPERSEDED 2026-09-01 — kept verbatim, because it is the exact shape of\nclaim this section warns against:**`, applied UNMODIFIED. Anchor verified unique (line 78-80); disjoint from edits 5, 13, 14 and 18, which also touch §0.
 
-**The paused screen-edge border IS a window** — `cSC4WinAlertBorder`, id
-`0x6A5E44B6`, vtable `0x00AB5B48`, born full-screen and *never flipping
-visibility*, which is precisely why a visibility probe cannot fire on it. Its
+EXACTLY the audit row whose replacement opens `**The paused screen-edge border IS a window** — `cSC4WinAlertBorder`,\n**clsid `0xCA5D3294`**, id`, applied UNMODIFIED. Use that row's FULL anchor (the whole paragraph, lines 82-91, ending `See §4.6c.`), not the three lines shown here. Anchor is disjoint from edits 5, 6, 13 and 14, which also touch §0. Its
 art exists in the shipped dats as three 120x120 sheets, `0x14315E60/61/62`,
 and staging all three scales it. Note on the two 9-slice blitters:
 `0x008D8800` serves **`GZWinBMP`'s `edgeimage=yes` path and `GZWinBtn`'s** and
@@ -117,22 +113,7 @@ shown, and whether it has ever shown it.
 > 360x156, 340x148, 323x156, 317x148, 280x148 — and **not one is
 > screen-sized**.
 
-So anything that spans the whole screen, or that paints over the 3D view
-without owning a window, is being drawn in the **render / present path**, which
-this project has never decoded and for which none of its instruments are
-scoped. Two consequences:
-
-1. **A blit-level hook on the UI buffer class can never see it** — a zero from
-   such a detector is structural, not evidence (`METHOD.md`, "a null is not
-   evidence until the instrument is proven able to see").
-2. **The only foothold would be the graphics API** — everything visible must
-   pass through the DirectDraw primary surface. That is a new subsystem, it
-   runs through dgVoodoo, and it should be gated off by default and log-only.
-
-**Triage rule, before spending a session:** if an element (a) never appears as
-a window in a full-depth dump, (b) has no art in any dat, and (c) spans or
-overlays the 3D view — stop. It is outside this SDK. Write down the negatives
-and move on.
+EXACTLY the audit row whose replacement opens `So anything that spans the whole screen, or that paints over the 3D view\nwithout owning a window, is **not** thereby out of reach.` and ends `...Dropping (d) is exactly what kept the route trace mis-attributed across three successive owners (CARRIED — `overlays/row-16-route-overlay.md`).`, applied UNMODIFIED. NOTE FOR THE APPLIER: a second audit row (the "TWO GATES" rewrite, anchored on the four-line triage rule alone) is a DUPLICATE FINDING of this one and must NOT be applied — this replacement already carries gate (d) and the route-trace worked example. Two further rows anchored on the same triage-rule lines are re-anchored as edits 13 and 14 below.
 
 ---
 
@@ -147,7 +128,7 @@ a window descends from decides how it can be fixed at all**:
 | Window id | Role | Class / evidence |
 |---|---|---|
 | `0x6104489A` | `WinSC4App` — the app frame, first child of the main window | walked at `README.md` → architecture; `kGZWin_WinSC4App` in `UiSpike.cpp` |
-| `0x9A47B417` | The 3D city view. **Host of every in-city HUD panel, toolbar, flyout and sub-flyout.** | clsid `0x9A47B417` = `cSC4View3DWin` (registry, `DYNAMIC-CONTROLS.md` Q1); QI'd as `cISC4View3DWin` |
+EXACTLY the audit row whose replacement opens `| `0x9A47B417` | The 3D city view. **Host of every in-city HUD panel, toolbar, flyout and sub-flyout — AND, on a SECOND and entirely separate list...`, applied UNMODIFIED. Use that row's FULL anchor (the three table rows plus the following blockquote, lines 150-161, verified to occur exactly once), not the single row shown here.
 | `0xEA659793` | Region-screen host, 13 children (legend, region panel, button clusters, compass, hidden flyouts) | boot tree dump; `kGZWin_RegionScreen` comment in `UiSpike.cpp` |
 | `0xAA32BCE6` | The **Data Views fold-out panel** (compact bar + expanded pages + list flyout + a `0x0000AAAA` marker). The `kGZWin_MenuContainer` name it carries in `UiSpike.cpp` is a misnomer. | 8-child tree dump of the live panel |
 
@@ -718,9 +699,7 @@ or without any patch. **Any sizing policy must select only exact multiples.**
 | 2x, large tile | 256 | 512 | `-1` | x2 |
 | 2x, medium tile | 128 | 512 | `-2` | x4 |
 | **2x, small tile** | **64** | **512** | **`-3`** | **none — see §2.4.6** |
-| 1.5x / 3x | 64/128/256 | 384 / 768 | *inexact* | overruns |
-
-#### 2.4.3 The recompute `0x7A7840` MARKS; it does not PAINT
+EXACTLY the audit row whose replacement opens `| 1.5x / 3x | 64/128/256 | 384 / 768 | *inexact* | overruns |` and adds `> ⚠ **THE `zoom` ABOVE IS THE MINIMAP'S, AND ONLY THE MINIMAP'S.**` followed by `#### 2.4.2a THE 3D CITY VIEW'S SCALE — a five-entry TABLE, not a derivation`, applied UNMODIFIED.
 
 This is the single most useful fact in the section: it is what makes a
 jump-on-open symptom look like someone else's bug. `0x7A7840` — the
@@ -1517,7 +1496,7 @@ copies scaled anyway so shared-art refs stay consistent.
 
 ---
 
-## 4. Art binding — the four paths a pixel takes to the screen
+EXACTLY the audit row whose replacement opens `## 4. Art binding — the FIVE paths a pixel takes to the screen`, applied UNMODIFIED. Use that row's FULL anchor (the heading plus the store-census paragraph plus the twin-groups law, verified unique), not the heading alone. Verified by dry run: §4.0 / 4.1 / 4.2 / 4.3 / 4.4 / 4.5 / 4.6 / 4.6b / 4.6c ordering is preserved, so every existing §4.x cross-reference in the file still resolves.
 
 The store: **2,280 image resources** (type `0x856DDBAC`) in `SimCity_1.dat`
 across 10 groups. *(Reworded 2026-08-30 — this line said "2,280 PNGs".
@@ -1848,7 +1827,7 @@ still come out even.** Which divide that is depends entirely on what the sheet
 | ROLE | What the engine does | Sizing rule for a scaled sheet | Derived from |
 |---|---|---|---|
 | **N-state strip** (buttons, ItemIcons, checkboxes) | `cell = imageWidth / N`, state selected by index. Cut **HORIZONTALLY ONLY** | ⚠ **THIS CELL DESCRIBES PRE-#171 / PRE-#177 BEHAVIOUR AND BOTH HALVES HAVE BEEN OVERTAKEN BY THE CODE IT CITES. Re-measure before acting on it.** **Width, as the tool works today:** `ScaleDim` (`tools\upscale\Upscale2x.cs`, grep `private static int ScaleDim`) takes a **cell-first** branch BEFORE `CellUnit` is ever consulted — grep `CELL-FIRST STRIP SIZING` (#171/#165) and the guard `if (stripAxis && sStripStates > 1 && v % sStripStates == 0)`, which returns `sStripStates * R(v/sStripStates, f)` and never falls through to the snap. `sStripStates` arrives per file from `cell-strips.txt`, so **N DOES drive the width snap for every listed strip**. The code's own worked examples contradict the historical text: Zoom Out 84px/4 states is `4 * R(21*1.5) = 128`, cell **32** — EXACT, not 132/cell 33; the 8-state radiocheck 136px is `8 * R(17*1.5) = 208`, cell **26** — EXACT, so the corpus's two 8-state strips (`1abe787d 14416245` and `46a006b0 14416315` in `cell-strips.txt` — grep the TGI, not a line number) ARE now snapped to a multiple of N. `CellUnit` (grep `private static int CellUnit`) is still the LCM of whichever of `kCellCounts = {3,4}` divide the 1x dimension and still never sees N — it now governs only the sheets the cell-first branch does not claim. **Height, as the tool works today:** exact when `sNoHeightSnap` is set (grep `private static bool sNoHeightSnap`), which `--height-exact-group` and `--height-exact-strips` set. **The corpus rebuild now passes `--height-exact-strips` twice** — grep `--height-exact-strips` in `upscale\Rebuild-Corpus.ps1`: the #177 derived list, then the #185 hand-authored slab list, which the parser appends. The historical claims that the rebuild "passes neither", that heights "ARE cell-snapped", and that passing the flag is "a forbidden cure" are therefore all overtaken, and the `gate_btn_undercover.py --tier 15x` figures once quoted here (`{(0,1):1, (1,0):1, (0,2):347, (0,6):3}`) predate both flags — do not requote them without a fresh run. Only **ItemIcons** take the exact height via `--height-exact-group 6A386D26` in the ItemIcon builders. | `upscale\find_cell_strips.py` — reads **the `.UI` that BINDS each sheet**. 193 of 2206. ⚠ The note that stood here — that the derived list reaches the per-state SAMPLER and `--height-exact-strips` **only**, and "never reaches `CellUnit`, so N does not drive the width snap" — is **half true and half overtaken**: it still never reaches `CellUnit`, but since #171 it reaches `ScaleDim`'s cell-first branch through `sStripStates`, which is precisely N driving the width. The sampler is `BuildSampleMap` (grep `private static int[] BuildSampleMap`), fed `sStripStates` from `UpscaleNearest` |
-| **9-slice frame** (`blttype=edge`, `edgeimage=yes`) | `cell = (img->Width()/3, img->Height()/3)`; corners unstretched, edges stretch only *along* the run. **Note on the drawer:** `0x00794100` does not serve this row — it is `cSC4WinAlertBorder`'s own slot-88 draw, a code-created full-screen window that appears in **no `.UI` script at all**, so it can never own a role derived *from* the `.UI` corpus. The drawer for this row is the widget's own slot-88 draw: **`GZWinBMP` → `0x009BC325`** (EDGE branch, entered on flag bit 8 of the holder at `[this+0xD8]` via its `vt[10]`), **`GZWinBtn` → `0x009B05E0`** (its draw's nine-slice branch). **Note: each of the three drawers performs the `/3` ITSELF and hands an already-cut cell to a blitter that contains no divide** — `0x008D9550` for the alert border (one caller image-wide), `0x008D8800` for `GZWinBMP` and `GZWinBtn`. The arithmetic in this row: `0x009BC325` divides the *source rect*, which for a sheet with no `imagerect` **is** the image's natural rect. | snap to a multiple of **3, and 3 alone** | `upscale\find_nine_slice.py` |
+| **9-slice frame** (`blttype=edge`, `edgeimage=yes`) | `cell = (img->Width()/3, img->Height()/3)`; corners unstretched, edges stretch only *along* the run. **Note on the drawer:** `0x00794100` does not serve this row — it is `cSC4WinAlertBorder`'s own slot-88 draw, a code-created full-screen window that appears in **no `.UI` script at all**, so it can never own a role derived *from* the `.UI` corpus. The drawer for this row is the widget's own slot-88 draw: **`GZWinBMP` → `0x009BC325`** (EDGE branch, entered on flag bit 8 of the holder at `[this+0xD8]` via its `vt[10]`), **`GZWinBtn` → `0x009B05E0`** (its draw's nine-slice branch). **Note: each of the three drawers performs the `/3` ITSELF and hands an already-cut cell to a blitter that contains no divide** — `0x008D9550` for the alert border (one caller image-wide), `0x008D8800` for `GZWinBMP` and `GZWinBtn`. The arithmetic in this row: `0x009BC325` divides the *source rect*, which for a sheet with no `imagerect` **is** the image's natural rect. EXACTLY the audit row whose replacement opens `| **Law: THE NINE-SLICE CELL IS TWO NUMBERS, ONE PER AXIS.**`, applied UNMODIFIED. Anchor verified unique (grep -c = 1, line 1851, table's last two cells).
 | **Tiled background** (`blttype=tiled`) | src-follows-dst: the source is **repeated** across the destination. No divide at all | **Law: snap NOTHING.** Its only contract is with its WINDOW, and the window scales by a plain round | `no-snap.txt` is generated by **`upscale\find_no_snap.py`** — the generated file says so on its own header line, `Generated by tools\upscale\find_no_snap.py` — and its scope is `blttype=tiled` **OR** a sheet a `.UI` binds 1:1 to a window of exactly its 1x size, in either case only if no `.UI` ever draws it as a `GZWinBtn` state or a 9-slice and it is absent from `cell-strips.txt`/`nine-slice.txt` (grep `Qualifies here if` in `find_no_snap.py`: the module docstring states all four conditions). It held **121 entries** when this row was written and holds **233** today, so recount it (`grep -vc "^#" no-snap.txt`) rather than quoting either figure. This is the file the corpus rebuild binds to `--no-snap`; the exe parses only `--cell-strips`/`--nine-slice`/`--no-snap` (grep each flag string in `Upscale2x.cs` — one `string.Equals` arm each) |
 
 **Law: DERIVED LISTS, NEVER HAND-LISTS.** Every one of those three lists is
@@ -2057,7 +2036,7 @@ re-lay* moves them anyway, data pre-scale cannot win — patch the re-lay
 
 ---
 
-### 4.8 The three "role unknown" code-created windows (register #17) — Photo Album / recorded-animation export cluster
+EXACTLY the audit row whose replacement opens `### 4.8 The three "role unknown" code-created windows (register #17) — an image-file browser, a RecordedAnimations browser, and the Snapshot capture frame`, applied UNMODIFIED. Its anchor is the ENTIRE §4.8 block, lines 2060-2159, from the `### 4.8` heading through `...89 of 162 `SetID` sites are non-literal.` — verified this run to occur exactly once. NOTE FOR THE APPLIER: two other audit rows propose edits whose anchors are STRICT SUBSETS of this one (the `**`0x85202C0E` (register-cited vt `0xAB9980`, `sub_7BC350`) — PARTIAL.**` block at 2111-2159, and the `own `OnCreate` (vtable slot 4, `0x7B7A80`...` paragraph at 2137-2146). Both are SUPERSEDED by this whole-section replacement and must NOT be applied; what they carry that this one does not is folded in by edit 12.
 
 Static disasm (`tools\research\disasm_at.py`, `SimCity 4.exe` 1.1.641.0 Steam,
 ImageBase `0x400000`), byte-verified against the shipped exe. Two of the three
@@ -2157,6 +2136,51 @@ target window (or dump `[this]` of the window returned by the property-`
 in-game) — a static `.text`/`.rdata`/`.data` sweep cannot see a
 non-literal (computed/hashed) id, and register unknown #10 already notes
 89 of 162 `SetID` sites are non-literal.
+
+⛔ **TWO CORRECTIONS TO THE PARAGRAPH ABOVE, added 2026-09-01. It is KEPT
+because it is still right that the `0xAB9980` window has no id on record; it is
+wrong about the arithmetic it quotes, and it omits the control that turns the
+`0x85202C0E` closure from "not re-derived" into REFUTED.**
+
+**(a) THE REFUTATION CONTROL — `0xAB9980` cannot stamp `0x85202C0E`, and that
+is a positive finding, not an empty search.** MEASURED 2026-09-01: `0xAB9980`
+is a real class with its own two constructor bodies, `0x7B6870` (stamp at
+`0x7B6878`) and `0x7B68F0` (stamp at `0x7B68F9`), each also installing the
+secondary vptrs `0x00AB9950` into `[this+0xD8]` and `0x00AB9910` into
+`[this+0xFC]`; those two sites are the ONLY references to `0x00AB9980` in the
+image. Its own slot-4 `OnCreate` is `0x007B6940`, and that function contains
+**no `SetID` call at all**. Meanwhile `0x00AB9BF8` also has exactly two
+references image-wide — ctor `0x7B748B` and dtor `0x7B7913` (the dtor also
+installs `cRZString` vtable `0x00A80810` into `[this+0xF8]`). One class, one
+ctor, one dtor; the object is `0x10C` bytes (`push 0x10C` at `0x7B7567`, ctor
+call at `0x7B757A`, `ChildAdd` `+0x38` at `0x7B7591`). The same sweep that came
+back empty for `0xAB9980` returned both sites for `0x00AB9BF8`, so the null is
+instrumented, not blind.
+
+**Slot `+0x100` really is `SetID`, checked rather than assumed.** Both classes
+hold `0x0099BE5C` there verbatim, and its body is
+`8B 44 24 04 89 41 10 C2 04 00` = `mov eax,[esp+4]; mov [ecx+0x10],eax; ret 4`
+— a one-argument setter. (`+0xFC` = `0x0099BE66` = `mov eax,[ecx+0x10]; ret`
+is the zero-arg getter; this is the overload-reversal trap already corrected
+2026-08-24 in §3's slot table.) Independent positive control: the
+`SetID(0xA802B4EB)` of the RecordedAnimations window documented above uses the
+same slot — `0x7F094B push 0xA802B4EB; 0x7F0952 call dword ptr [edx+0x100]`.
+
+⚠ **One sentence in the retired text was simply wrong, and it is the sentence
+that produced the old PARTIAL verdict.** It said both `0x85202C0E` sites "are
+`GetChildWindowFromID`-style lookups". Only `0x7B753B` is a lookup
+(`call [eax+0x8C]`, on the PARENT — the get-or-create probing for this very
+window). `0x7B7AA7` is the STAMP, on `this`. Reading a stamp as a lookup is how
+an id that IS assigned statically comes to look as though it never is.
+
+**(b) THE STATISTIC IS STALE — do not requote "89 of 162".** Register unknown
+#10 CLOSED 2026-08-24 and byte-corrected that shape to **~109 real `SetID`
+sites = 73 literal + ~36 computed**: the `call [reg+0x100]` sweep that produced
+162 had no receiver check, and `+0x100` is only `SetID` on a WINDOW vtable.
+CARRIED from `research/UNKNOWNS-AND-NEXT-TARGETS.md` row 10 — which warns that
+its own arithmetic is soft, so re-derive before quoting either number. The
+sentence above is kept verbatim only so this correction has something to point
+at.
 
 ---
 
@@ -3070,7 +3094,7 @@ then subsystems.
 
 | VA | What | Used for |
 |---|---|---|
-| `0xB08F78` | **`{clsid → class-name}` registry**, `.data`, 648 entries, 8-byte stride `[clsid][char* name]`; name pool ~`0xA89000` | naming every custom clsid seen in `.UI` |
+EXACTLY the audit row whose replacement opens `| `0xB07FD8`–`0xB09410` | **the game's own `{id → name}` table**, `.data` —`, applied UNMODIFIED. Anchor verified unique (line 3073).
 | `0xB16FA0` | standard clsid/iid/descriptor table, 12-byte stride | GZWinBtn/BMP descriptors |
 | `0x4662B0` | window-class registration (`push <factory>; push <clsid>; mov ecx,esi; call 0x90E133`) | finding factories |
 | `0x90E133` | the registration callee | — |
@@ -3270,11 +3294,7 @@ and only when the spin has been MEASURED. **The obvious repair —
 `0x0099EA6B`, not the expected `0x0099E2BD`, `ChildDelete` is `+0x44`, and its
 helper calls `mgr->IsWindowValid`, i.e. reads the freed bucket array. That is
 the general shape: **on this path, every route that goes through the engine
-goes through the object that is already dead.**
-
----
-
-## 9. Predicting an unseen panel — the checklist
+EXACTLY the audit row whose replacement opens `goes through the object that is already dead.**` and adds `### 8.8 The ROUTE-TRACE overlay — the whole chain, and the one worked example of "outside the boundary, still reachable"` plus `#### 8.8.1 The VA table`, applied UNMODIFIED. Anchor verified unique (line 3273).
 
 1. **Parentage.** Under `0x9A47B417` → runtime + art. Under the main window →
    static `.UI`. Both → 4x bug. (§1.2)

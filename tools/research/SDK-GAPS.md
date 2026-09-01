@@ -11,9 +11,7 @@ what the SDK omits, the known addresses and ids, and how the gap is worked
 around. The full derivations live in `SC4-UI-ENGINE.md`; this file is the gap
 index.
 
-**Standing rule.** Where the headers and the binary disagree, the binary wins.
-Index vtable slots by number, never by header name (§1), and check a hook's
-argument count from its `ret` immediate before installing it (§1.4).
+EXACTLY the audit row whose replacement opens `**Standing rule.** Where the headers and the binary disagree, the binary wins.` and adds `**⛔ STANDING RULE 2 — `vendor\gzcom-dll\` IS READ-ONLY. Added 2026-09-01.**`, applied UNMODIFIED. Anchor verified unique (line 14).
 
 ---
 
@@ -1141,9 +1139,7 @@ through both, and against the wrong sibling it reads as six slots richer than
 it is. (6) Find the
 ctor by searching `.text` for the vtable VA (two hits: ctor and deleting
 dtor); the ctor's `mov [reg+N], <vt>` must equal the factory's `add eax, N`.
-(7) Cross-check the name against `GZCLSIDDefs.h`, which carries names the
-exe table does not (`kcSC4WinText`, `kcSC4WinAlertBorder`, `kcSC4WinAuraBar`).
-The standing warning governs: the right class is not the right window.
+EXACTLY the audit row whose replacement opens `(7) Cross-check the name against **the exe's own class registry** — a table`, applied UNMODIFIED. Anchor verified unique (line 1144).
 
 ---
 
@@ -1478,6 +1474,75 @@ matter to scaling follows.
   tooltip. Created through helper `sub_441B50` with parent = 0 (`push 0` @
   `0x441B6B`), so the loader's NULL-parent default decides where they land;
   the size is the load-bearing half.
-- **The 36 child ids under the Ordinances dialog are one family:** 12
-  `0x12C+k`, 12 `0x2F4+k`, 4 `0x551+k`, Accept/Cancel, `0x0ABCE000/1` and the
-  popup's four outer/inner ids — a child-window population, not 36 roots.
+EXACTLY the audit row whose replacement adds `## 13. `cISC4ViewObject3D` — the interface with no header`, applied UNMODIFIED (it already numbers itself 13 and its subsections 13.1-13.6, which is correct: §12 is currently the last section and this bullet is the last line of the file). ⚠ FOUR audit rows share this anchor and all four wanted to be §13. This is the only one that keeps its number; the other three are re-anchored and renumbered as edits 21, 22 and 23.
+
+---
+
+## Identifiers the vendored SDK does not carry (2026-09-01)
+
+⛔ **NONE OF THESE MAY BE ADDED TO `vendor/gzcom-dll`.** That tree is a pinned
+git **submodule** — `.gitmodules` points it at `nsgomez/gzcom-dll`, the parent
+repository commits only a gitlink (`160000 commit 08c529bc…`), and
+`git status --porcelain` inside it is empty, i.e. all 288 headers are
+byte-pristine upstream. Two independent consequences, either one decisive:
+
+1. a header edit is **never captured by a parent commit** — only the SHA is;
+2. the cold-clone test re-fetches `08c529bc` from upstream and the edit
+   **silently vanishes** — this project's own *presence is not execution*
+   failure, in its purest form.
+
+So every identifier below lives here, in our tree, and is marked as **ours** —
+reconstructed from the executable's own registry strings. They are **not SDK
+symbols**, and grepping `GZMSGIDDefs.h` or `GZCLSIDDefs.h` for them will
+correctly find nothing.
+
+### Command ids — the SDK has no command-id table at all
+
+Only five headers mention command ids and all five are *parameter names*
+(`cIGZCommandDispatcher.h:34`, `cISC4View3DWin.h:57`, and three others), never a
+table. The `kMiscCommand_*` / `kToolCommand_*` block inside `GZMSGIDDefs.h` is a
+message-id class doing double duty and contains neither of these.
+
+| name (ours) | value | evidence |
+|---|---|---|
+| `kCommandID_TrafficQueryTool` | `0x6A935CF4` | factory branch `0x007F26B5`; ctor `0x004C4590` takes route mode as arg 1; primary vtable `0x00A90A88`, 30 slots, **no draw-shaped slot**; `Init` `0x004C57A0` gates `[this+0x8C]==1`; pick handler is vtable `+0x40` = `0x004D4D70` |
+| `kCommandID_OpenSnapshotDialog` | `0x6A935E4B` | named in the game's own registry at `.data 0xB09308`; also reached by the city-dock camera button `0x8A1DA655` on two byte-verified routes |
+
+### Message id
+
+`kMsgTrafficMapChanged` = **`0x69247DC7`**. MEASURED from the executable's own
+id→name table at `.data 0x00B08018` / `0x00B0801C`. Subscribed by the route
+query tool's `Init` (`0x004C57A0`) with target `this+0x28`; it is the decisive
+one of the six ids that Init registers.
+
+⚠ **A SEARCH TRAP worth recording.** `GZMSGIDDefs.h` stores its ids as **signed
+decimals** in a `uint32_t` table (e.g. `-1414770972`), so a text search of that
+header for a hex id will *always* miss — a null there says nothing about whether
+the id is present. Convert before concluding absence.
+
+### Class ids
+
+| clsid | class | note |
+|---|---|---|
+| `0xC9B84E10` | `cSTETerrainView3D` | IS in `GZCLSIDDefs.h:294`, written `0x0C9B84E10` with a cosmetic leading zero. Owns the `{1,2,4,8,16}` ladder at `.rdata 0xAB4330` |
+| `0x89e1567c` | generic legacy `IGZWinGen` container | **ABSENT** from `GZCLSIDDefs.h`. Declared by `<LEGACY clsid=0x89e1567c iid=IGZWinGen>` at the root of the query panels, the region bubbles and the Move In My Sim marker; our dialog tooling keys on it (`UiSpike.cpp:5410`, `build_dialog_static.py:1073`). Positive control that the search was sound: the same grep DID find `0xCA5D3294` and `0xAB72FBB3` in that file |
+
+### `cISC4ViewObject3D` — forward-declared only, shape now measured
+
+The interface is **forward-declared and never defined** anywhere in the 288-file
+SDK (`cISC43DRender.h:32`, `cISC4DispatchManager.h:30`). Measured shape:
+
+```
+5 slots  { QueryInterface, AddRef, Release, Draw @ +0x0C, Pick @ +0x10 }
+```
+
+with `bool Draw(void* device)` measured on the route-trace drawable
+(`0x007DD9B0`, vtable `0x00ABB648`), registered through
+`cISC43DRender::AddViewObject(obj, layer, key)` at `0x004CA54D` with
+**layer = 5, key = `0x3E8`**.
+
+⚠ **`Draw` and `Pick` are OUR names, inferred from behaviour** — the slots carry
+no symbols. The *arity and order* are measured; the *names* are not. If C++ code
+needs the type, add a project-local header under `src/` and say in its comment
+that it is a reconstruction. Upstreaming to `nsgomez/gzcom-dll` is the only
+route by which it could ever legitimately appear under `vendor/`.
