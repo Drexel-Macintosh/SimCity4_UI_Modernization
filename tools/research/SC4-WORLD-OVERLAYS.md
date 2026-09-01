@@ -367,8 +367,30 @@ still reaches only the marker-strip builder:
   `0x751C80`, indexed by the **global** zoom/level var `[0xB4C70C]` (not a
   per-object field) and gated by a per-object level cache
   (`[ecx+0x14]` vs `[0xB0D700]`) plus a 4-way jump table at `0x751EB8` keyed
-  on `[ecx+0x18]`. New address — no other doc in this repo names function
-  `0x751C80`; module/subsystem unidentified (shape suggests an LOD/mip
+  on `[ecx+0x18]`. **OWNER IDENTIFIED 2026-08-31: `cSTETerrainView3D`**, SC4's 3D terrain/water
+  view object, GZCLSID `0xC9B84E10` (`GZCLSIDDefs.h:294`). Function
+  `0x751C80` is the terrain/water mesh **texture-coordinate regenerator**.
+  Three independent lines, and the decisive one is NOT the QueryInterface
+  compare: (a) the `GetGZCLSID` stub at `0x007523E0` (`mov eax,0xC9B84E10;
+  ret`) sits in the `cIGZSerializable` vtable `0x00AB43E8`, installed by the
+  same ctor body (`0x00756815`) that installs the slot-0 QI `0x752730` — a
+  class-id accessor read by the SAVE system is a different failure mode from
+  a QI branch; (b) a GZCOM `GetClass` at `0x00749578` puts `0xC9B84E10` in
+  the **clsid** slot and the already-banked `0x6771477D`
+  (`GZIID_cISTETerrainView`) in the **iid** slot, killing the reading that
+  `0xC9B84E10` is merely another interface id; (c) the `this+0x0C` vtable
+  runs 22 slots, exactly matching `cISTETerrainView.h` (3 `cIGZUnknown` + 19
+  own).
+
+  ⛔ **IT TOUCHES NOTHING THIS MOD SCALES**, and that null carries a live
+  positive control. A sweep of every 4-byte window of `.text` for values
+  landing in the terrain `.rdata` window `0xAB3EA0-0xAB45D0` finds 233
+  referrers, **all** in `0x74xxxx`/`0x75xxxx`, and **ZERO** anywhere in the
+  UI band `0x5B0000-0x680000`. Control: the same scanner in the same pass
+  finds 5,175 `.text` references from that UI band into `.rdata` generally,
+  so the absence is real and not a blind instrument.
+
+  ⛔ The earlier reading — *"shape suggests an LOD/mip
   scale-by-zoom helper, unconfirmed).
 - **`{8, 16, 32, 73, 146}` (int32)** exists as FOUR byte-identical copies:
   `0xAA2B3C`, `0xAB8BCC`, `0xABACE0`, `0xABD668`. `0xABACE0` is the known

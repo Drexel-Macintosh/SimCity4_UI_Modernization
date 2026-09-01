@@ -133,7 +133,7 @@ base `cGZWin`, the router, `cSC4WinAlertBorder`, `cSC4WinAuraBar`).
 | **DOCUMENTED** (clsid/vtable/ctor/Draw all present, doc claims byte-verification) | **9** | `GZWinBMP`, `GZWinText`, `GZWinBtn`, `cSC4WinGenTransparent`, `cSC4WinText`, `cSC4WinRCI`, `cSC4WinTrendBar`, `cSC4WinAlertBorder`, `cSC4WinAuraBar` |
 | **PARTIAL** (mechanism known, a named piece missing) | **5** | `cSC4WinAdviceList` (guard is id-keyed — "STRUCTURAL WEAKNESS, noted not fixed", `:342`), `cSC4WinMiniMap` (the zoom −3 hole), flyout strip, the second buffer class `0x00ADB418` ("can take a renderer path under dgVoodoo", `SC4-UI-ENGINE.md:526`), `cSC4WinMapView` (`0x00AB8150` disambiguated as *not* its window vtable, `SDK-GAPS.md:736-739`) |
 | **THIN / STUB** (attribute-level only, no ctor or Draw decoded) | **4** | `GZWinTextEdit`, `GZWinSpinner`, `GZWinGrid`, `GZWinFlatRect` |
-| **UNNAMED but measured** | **2** | the gauge class `0xCBCBF1E0` (`SDK-GAPS.md:740-742` has factory `0x00466220`, Plot `0x00762830`, ctor `0x007628E0`, iid `0x0BCBF1DF` — but the reference's own catalogue row `:344` still carries no factory, ctor, vtable or Plot VA and is symptom-level) — **see drift D-4**; and the clip-viewport subclass at vt `0x00ADCB38` (`SDK-GAPS.md:732-735`) |
+| **UNNAMED but measured** | **2** | the gauge class `0xCBCBF1E0` — **now fully identified in BOTH files (MEASURED 2026-08-31)**: `SDK-GAPS.md` §8.1 *and* `SC4-UI-ENGINE.md` §2's own `0xCBCBF1E0` catalogue row each carry outer vt `0x00AB4900`, window vt `0x00AB46A0` at `obj+4`, factory `0x00466220` (returns base+4), the slot-88 painter `0x00762830`, ctor `0x007628E0`, custom iid `0x0BCBF1DF` and the `0x108`-byte size. ⚠ *Superseded 2026-08-31, kept: this cell read "(`SDK-GAPS.md:740-742` has factory `0x00466220`, Plot `0x00762830`, ctor `0x007628E0`, iid `0x0BCBF1DF` — but the reference's own catalogue row `:344` still carries no factory, ctor, vtable or Plot VA and is symptom-level)". The row WAS updated, and both line numbers had drifted (`SC4-UI-ENGINE.md:344`→`:373`, `SDK-GAPS.md:740-742`→`:1003-1005`) — which is why the anchors above are sections and row ids, not line numbers.* — **see drift D-4 (CLOSED)**. Still open: both files name `0x00762830` **`Plot`**, but it sits at **slot 88 = `GZPaint`** — **see drift D-4a**. And the clip-viewport subclass at vt `0x00ADCB38` (`SDK-GAPS.md` §8.1) |
 
 ⚠ **The class population is printed two ways.** `SDK-GAPS.md:808-809` said "12 of
 the **115** classes"; `SDK-GAPS.md:73-76` says "all **111** window-class
@@ -187,10 +187,16 @@ for, returning a perfectly circular 1.854. None announced itself. Any number on
 this page that came from a detector deserves the question *what would this
 instrument have reported if it were broken?*
 
-**One item on the overlays side is genuinely unowned:** `.rdata 0xAB4330` =
-`{1.0,2.0,4.0,8.0,16.0}`, sole consumer `0x751CB5`, indexed by global
-`[0xB4C70C]`, jump table `0x751EB8` — "module/subsystem unidentified"
-(`SC4-WORLD-OVERLAYS.md:368`).
+**The last genuinely unowned overlays item is now OWNED (2026-08-31).**
+`.rdata 0xAB4330` = `{1.0,2.0,4.0,8.0,16.0}`, consumer `0x751CB5` in
+function `0x751C80`, belongs to **`cSTETerrainView3D`** (GZCLSID
+`0xC9B84E10`) — the terrain/water mesh texture-coordinate regenerator. It
+**touches nothing this mod scales**: zero `.text` references into the
+terrain `.rdata` window from anywhere in the UI band, against a control of
+5,175 UI-band `.rdata` references found by the same scanner in the same
+pass. Superseded reading kept for the record: "module/subsystem
+unidentified — shape suggests an LOD/mip scale-by-zoom helper". See
+`SC4-WORLD-OVERLAYS.md` for the three independent identification lines.
 
 ---
 

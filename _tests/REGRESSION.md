@@ -14245,6 +14245,58 @@ Later dated passage wins - this one.
 
 ## #162 CLOSED — SYMPTOM NOT REPRODUCING, mechanism never established (2026-08-18)
 
+> ⛔ **SUPERSEDED 2026-09-01 — THIS CLOSURE IS OVERTURNED. #162 IS OPEN.**
+>
+> This entry declares itself "#162's FINAL VERDICT AND IT WINS". It is not, by
+> this file's own rule that the later dated passage wins. Six days later, in
+> THIS FILE, `## 2026-08-24 (late) — the #16 instrumented-art arc: sheet NAMED,
+> cure NOT established` records "Three cures shipped and NONE moved the visible
+> symptom (user-verified, three launches)" and "the row's verdict stays NOT
+> ESTABLISHED". Corroborated by `PROBES-NEEDED.md` 9.12 (PROBE C, 2026-08-24
+> evening: "exactly ONE thin line remains, bottom-right of the mayor's-hat
+> button"; the advisor portraits are CLEAN) and by
+> `UNKNOWNS-AND-NEXT-TARGETS.md` B row 16 and D.1.
+>
+> **CURRENT VERDICT: OPEN — PARTIALLY CURED, MECHANISM NOT ESTABLISHED, last
+> direct observation 2026-08-24 and therefore STALE.** Half the original
+> 2026-08-15 observable (the seven advisor-portrait breaks) is gone; one
+> hairline is not.
+>
+> **WHY THIS SURVIVED THREE ADJUDICATION PASSES — and the trap is still armed
+> for other defects in this file.** The later work is filed under the UNKNOWNS
+> register number **#16**, and its 30 lines contain **zero `#162` tokens**. So
+> `grep -n '#162' REGRESSION.md` returns 47 hits whose LAST is inside THIS
+> entry: a ledger-scoped grep terminates here and never reaches the newer
+> verdict. This entry hung SUPERSEDED markers on all eight earlier passages and
+> received none itself, for exactly that reason. **A defect that is discussed
+> under two different numbers cannot be adjudicated by grepping either one.**
+>
+> **THIS CLOSURE'S EVIDENCE IS ALSO STRUCTURALLY WEAK.** It closed on "I haven't
+> seen any, this is fixed", while D.1 establishes #162 as **1.5x-ONLY** and the
+> stated control is "weeks of 2x play". A non-observation at a tier where the
+> defect CANNOT MANIFEST is not a null. The observation tier is never stated.
+>
+> **ELIMINATED BY MEASUREMENT 2026-09-01, so nobody re-walks it:** the
+> mayor's-hat button `0xC988BC79` **cannot be the drawer**. Design 60x46 — both
+> extents EVEN — so `R(aL+60,1.5) - R(aL,1.5) = 90` at EVERY origin; it is a
+> leaf, so #148 sizes it 90x69; the banked gcap measures it at exactly
+> `(153,1337)-(243,1406)` = 90x69; and the shipped 1.5x sheet
+> `{46a006b0,14015555}` is 360x69, four states, cell 90x69 — an EXACT COVER.
+> The button is structurally incapable of a 1.5x size residue.
+>
+> **THE BANKED 2026-08-24 CAPTURE IS A STRUCTURAL NULL FOR THE NAMED SHEET.**
+> The 08-24 arc named `{46a006b0,14015546}` as the culprit. In
+> `2026-08-24-162hunt.log` the panel that draws it, `0x69E40A1F`, is `vis=0` at
+> 21:06:09.121 and only becomes visible at 21:06:13.237 — but GPUCAP latched at
+> 21:06:07.554 and recorded its 2 frames FOUR SECONDS BEFORE the panel appeared.
+> The capture could never have seen the sheet it was taken to investigate.
+> Re-running that probe requires the panel to be VISIBLE before the latch.
+>
+> See `## 2026-09-01 — #162 re-adjudicated` at the end of this file for the
+> full pass, including the arithmetic framing that was killed and the nine
+> hypotheses that must not be retried.
+
+
 ⭐ **THIS IS #162's FINAL VERDICT AND IT WINS.** Every earlier #162 passage in
 this file now carries a marker pointing here: the 2026-08-15 `ScaleRound`
 cause claim, "CLOSED (pending eyes-on)", "REOPENED IMMEDIATELY", "MECHANISM
@@ -20074,3 +20126,100 @@ relearn, applied correctly for once.
 
 Scripts tracked at `tools/dbpf/art-census/` with the control documented in its
 README; the bulk extract is gitignored - our tools ship, EA's data does not.
+
+## 2026-09-01 — #162 re-adjudicated, and `.rdata 0xAB4330` is no longer unowned
+
+Two long-standing unknowns attacked offline by five independent lenses, with
+every non-inferred claim handed to an adversarial verifier told to REFUTE it.
+**Nine claims were killed, including two of my own framings.**
+
+### `.rdata 0xAB4330` — OWNED. It was the last genuinely unowned overlays item.
+
+Owner is **`cSTETerrainView3D`**, GZCLSID `0xC9B84E10`; function `0x751C80` is
+the terrain/water mesh texture-coordinate regenerator. Three independent lines,
+and the decisive one is deliberately NOT the QueryInterface compare:
+
+1. `GetGZCLSID` stub `0x007523E0` (`mov eax,0xC9B84E10; ret`) sits in the
+   `cIGZSerializable` vtable `0x00AB43E8`, installed by the same ctor body
+   (`0x00756815`) that installs the slot-0 QI. A class-id accessor read by the
+   SAVE system is a genuinely different failure mode from a QI branch.
+2. GZCOM `GetClass` at `0x00749578` puts `0xC9B84E10` in the **clsid** slot and
+   the banked `0x6771477D` in the **iid** slot — killing the reading that
+   `0xC9B84E10` is merely another interface id.
+3. The `this+0x0C` vtable is 22 slots, matching `cISTETerrainView.h` exactly
+   (3 `cIGZUnknown` + 19 own).
+
+**It touches nothing this mod scales**, and that null has a live control: zero
+`.text` references into the terrain `.rdata` window from anywhere in the UI band
+`0x5B0000-0x680000`, against **5,175** UI-band `.rdata` references found by the
+same scanner in the same pass.
+
+The verifier also **demoted** part of the original evidence, correctly: the
+".rdata locality" argument (nearby strings `cSTETerrain`, `ApplyTerrainBrush`,
+`SetSeaLevel`) is NON-DISCRIMINATING — those are the script bindings of
+`cSTETerrain`, a *different* class in the same translation unit, and they read
+identically under both hypotheses. Only the CLSID evidence separates them. That
+is the value-agreeing-with-both-hypotheses law applied to our own reasoning.
+
+### #162 — STILL UNOWNED, but the search space collapsed and my framing died
+
+**No ninth mechanism is being filed.** Eight are already dead; a ninth needs to
+be better-evidenced than confident.
+
+**MY ARITHMETIC FRAMING WAS WRONG AND IS NOW DEAD.** I proposed that
+`dW = -1 IFF l AND w are both odd` makes `f=3/2` special. The theorem is true
+and governs almost nothing we ship: the shipped rules round in the parent's
+**ABSOLUTE** frame (#161, `UiSpike.cpp:19722`), and both #167 and #148 are
+LENGTH-derived, so leaves and strip buttons are origin-independent by
+construction. Census over `tools/selective-safe/stage` (89 `.ui` files, 2,920
+window nodes): **2,583 are leaves**; of 337 containers only **21** carry a
+nonzero 1.5x residue at design origins; **eleven of those 21 are in a panel the
+user reports CLEAN**, and the single one in the affected dashboard **goes to
+zero at the live origin**.
+
+**THE MAYOR'S-HAT BUTTON IS POSITIVELY EXCLUDED.** `0xC988BC79` is design 60x46
+— both extents EVEN — so `R(aL+60,1.5) - R(aL,1.5) = 90` at every origin. It is
+a leaf, #148 sizes it 90x69, the banked gcap measures exactly 90x69, and the
+shipped 1.5x sheet is 360x69 in four states, cell 90x69. Exact cover. The
+button is structurally incapable of a 1.5x size residue.
+
+**THE HIGHEST-VALUE FINDING: THE BANKED CAPTURE NEVER SAW THE SHEET IT WAS
+TAKEN FOR.** The 08-24 arc named `{46a006b0,14015546}`. In
+`2026-08-24-162hunt.log` the panel that draws it (`0x69E40A1F`) is `vis=0` at
+21:06:09.121 and only becomes visible at 21:06:13.237 — but GPUCAP latched at
+21:06:07.554 and took its 2 frames **four seconds earlier**. Seven days of
+"we have a capture" rested on an instrument that could not see the target.
+
+LAW EARNED — **A BANKED CAPTURE IS AN INSTRUMENT AND INHERITS THE NULL RULE.**
+Before treating an existing capture as evidence, prove the target was VISIBLE
+during the capture window. Timestamps in the log settle it in one grep.
+
+### The ledger contradiction (publication blocker E-6) is adjudicated
+
+ONE verdict: **#162 is OPEN — partially cured, mechanism not established, last
+direct observation 2026-08-24 and therefore stale.** The 2026-08-18 entry that
+declares itself "#162's FINAL VERDICT AND IT WINS" is overturned by the
+ledger's own later-passage-wins rule, and a banner now sits at its head.
+
+**Why it survived three adjudication passes — a FILING fault, not a reasoning
+fault.** The later work is filed under UNKNOWNS register number **#16** and
+contains **zero `#162` tokens**, so `grep -n '#162'` returns 47 hits whose LAST
+is inside the superseded closure. Anyone grepping the ledger terminates there.
+
+LAW EARNED — **A DEFECT DISCUSSED UNDER TWO NUMBERS CANNOT BE ADJUDICATED BY
+GREPPING EITHER ONE.** When work migrates to a different register id,
+cross-stamp both, or the older thread silently wins every future search.
+
+Its evidence was weak in a second way worth naming: it closed on "haven't seen
+it lately" while §D.1 establishes #162 as **1.5x-ONLY**, with a stated control
+of "weeks of 2x play". **A non-observation at a tier where the defect cannot
+manifest is not a null.**
+
+### Nine claims killed this pass — do not retry
+
+Recorded in full in the workflow output; the load-bearing ones: the single-writer
+claim for `[0x00B4C70C]` (there are two — `0x7574E7` live, and `0x75C507` writing
+a **5** sentinel that is OUT OF RANGE for a 5-entry table); the "matched
+1.5x-vs-2x control" reading of the gcap pair; the left-tool-column GZWinBMP
+hairline; the dropped-column-235 theory; and the 353-vs-352 plate mismatch (the
+overhanging column is entirely magenta key colour).
