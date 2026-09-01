@@ -64,13 +64,36 @@ regression suite that holds them in place is in `_tests/`.
   size it are patched and verified applied; the presentation rect is decided
   downstream of those numbers, so the video keeps its stock size at every
   tier.
-- **Coverage denominators.** Of 298 script-declared UI roots, 288 are covered
+- **Coverage denominators.** ~~Of 298 script-declared UI roots, 288 are covered
   (96.6%); of 17 code-created named windows, 11 (64.7%); combined 299 of 315,
-  94.9%. Windows that are visible but unnameable are deliberately left out of
+  94.9%.~~ ⛔ **ALL THREE SUPERSEDED 2026-09-01.** D1 (96.6%) is *retired*, not
+  re-measured. `tools/uimap/coverage-matrix.md` §4 had carried a 2026-08-16
+  instruction to re-derive "10 root slots / 9 distinct ids" before quoting
+  either D1 figure, and that instruction was executed on 2026-09-01 for the
+  first time. All nine gaps had closed — but only six genuinely. The other three
+  (`0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1`) were being counted as covered
+  *without being covered*: they sit in `kOwnsBackgroundSheet` in
+  `src/UiSpike.cpp`, a DERIVED array they qualify for on art data alone while
+  the windows are never created. A numerator that admits windows which never
+  render cannot be published, so 96.6% — and the combined 94.9% built on top of
+  it — are withdrawn rather than restated. D2 was re-measured the same day and
+  is **13 of 17 code-created named windows = 76.5%**, not 11/17 = 64.7%
+  (`_tests/REGRESSION.md`, "2026-09-01 — D2 re-measured"; the D1 re-derivation
+  under "2026-09-01 — D1 re-derived"). The live figures are stated only by
+  `tools/uimap/coverage_rederive.py`, the one tool permitted to state a
+  coverage figure: a run on 2026-09-01 prints **93 of 117 distinct stock `.UI`
+  root ids reached = 79.5%** over all roots, and, after removing the 27 roots
+  the retail game cannot instantiate — Maxis's Lot Editor, a Lua debugger, an
+  exemplar editor, three singletons, Simulator Control and three dead design
+  variants, each printed every run with its own mechanism and ceilinged at
+  `MAX_EXCLUSIONS = 27` — **90/90 = 100% of RETAIL-REACHABLE stock `.UI`
+  roots.** That scope phrase is part of the number, not decoration: "100% of
+  the UI" would be false while the unbounded code-created channel remains
+  untouched by any of this. Windows that are visible but unnameable are deliberately left out of
   the percentage: three creation channels — a singleton factory, computed
   window ids, and art bound by no script — are structurally invisible to any
   offline census. These are the survey's own denominators; the canonical
-  headline is 86 of 117 distinct root ids = 73.5% ⛔ SUPERSEDED 2026-09-01: this is no longer the canonical headline. The metric counted only ONE of the mod's delivery mechanisms - a literal in `UiSpike.cpp` - and missed the staged dialog path entirely, undercounting by seven player-facing dialogs that ship PRE-SCALED. Counting both mechanisms gives **93/117 = 79.5%**, and removing the 24 roots the retail game cannot instantiate (Maxis's Lot Editor, Lua debugger and exemplar tooling, each excluded with a named mechanism and a positive control) gives **93/93 = 100% of RETAIL-REACHABLE stock .UI roots**. That scope phrase is part of the number: "100% of the UI" would be false while the unbounded code-created channel exists.
+  headline is 86 of 117 distinct root ids = 73.5% ⛔ SUPERSEDED 2026-09-01: this is no longer the canonical headline. The metric counted only ONE of the mod's delivery mechanisms - a literal in `UiSpike.cpp` - and missed the staged dialog path entirely, undercounting by seven player-facing dialogs that ship PRE-SCALED. Counting both mechanisms gives **93/117 = 79.5%**, and removing the roots the retail game cannot instantiate (Maxis's Lot Editor, Lua debugger and exemplar tooling, each excluded with a named mechanism and a positive control) gave **93/93 = 100% of RETAIL-REACHABLE stock .UI roots** ⛔ SUPERSEDED 2026-09-01 (later the same day): the exclusion list grew 24 → 27 when the standing instruction in `tools/uimap/coverage-matrix.md` §4 — "re-derive '10 root slots / 9 distinct ids' before quoting either" — was executed for the first time. Three unshipped Move In My Sim marker variants (`0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1`) were being counted as COVERED without being covered: all three sit in `kOwnsBackgroundSheet` in `src/UiSpike.cpp`, a DERIVED array they qualify for on art data alone, while the windows are never created. Excluding them costs the NUMERATOR three as well as the denominator, so the current figure is **90/90 = 100% of RETAIL-REACHABLE stock .UI roots** (117 total − 27 unreachable = 90, printed by `tools/uimap/coverage_rederive.py`, the only tool permitted to state a coverage figure). The ratio is unchanged, which is the point: an exclusion that costs the numerator cannot have been motivated by wanting a better number. That scope phrase is part of the number: "100% of the UI" would be false while the unbounded code-created channel exists.
   (`tools/uimap/coverage-matrix.md`).
 - **Font line height comes from rendered captures.** The fonts are a format no
   offline tool can read, so line height is measured at 1x and 2x from captures

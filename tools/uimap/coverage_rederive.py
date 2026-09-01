@@ -207,22 +207,63 @@ RE_LEGACY = re.compile(r"<LEGACY\b")
 # distinct_nonzero_root_ids and the named floor are corpus-INVARIANT here:
 # all three held exactly (118/118, 117/117, floor 83 -> measured 86) across
 # those 754 extra files, because plugins re-instantiate the game's existing
-# root ids rather than introducing new ones. So 86/117 = 73.5% stands on
-# checks that PASSED, even in a run whose banner says otherwise.
+# root ids rather than introducing new ones. Those three checks PASSED in this
+# run, so the coverage section is still supported by its own inputs even when
+# the banner says FAIL. That part of this note is unchanged and still holds.
+#
+# WHAT THEY SUPPORT CHANGED THE SAME DAY. SUPERSEDED 2026-09-01: this block
+# originally closed "So 86/117 = 73.5% stands on checks that PASSED". The
+# invariance argument was sound; the figure it was defending was not. 86 counts
+# ONE delivery mechanism of four - root ids named in UiSpike.cpp - and was being
+# presented as the whole picture, so 86/117 = 73.5% is RETIRED as a headline.
+# It is kept here because a reader who saw it quoted must be able to find out
+# what it measured and why it stopped being the answer.
+#
+# CURRENT, and both printed by this same run rather than computed by hand:
+#   90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots
+#           (denominator 117 total - 27 retail-unreachable = 90; every excluded
+#           row is printed with its class and reason on every run)
+#   93/117 = 79.5% over ALL roots, kept so the exclusions stay auditable
+#           (86 named in UiSpike.cpp + 7 reached only via the staged dialog path)
+# NEVER quote either without its scope phrase. "100% of the UI" is FALSE: the
+# code-created channel is outside this denominator entirely, and no number in
+# this file bounds it.
 # ---------------------------------------------------------------------------
 # RETAIL-UNREACHABLE ROOTS - removed from the DENOMINATOR, with proof.
 #
-# ADDED 2026-09-01. These 23 roots are Maxis authoring and debug tooling that
+# ADDED 2026-09-01. These 27 roots are Maxis authoring and debug tooling that
 # ships in the .UI corpus but that the RETAIL GAME CANNOT INSTANTIATE. A window
 # the shipped game cannot open is not part of the interface this mod scales, so
-# it does not belong in the denominator.
+# it does not belong in the denominator. The figure this list feeds is scoped
+# "of RETAIL-REACHABLE stock .UI roots" - see SCOPE_PHRASE below. That phrase is
+# part of the number; this list says nothing whatever about "the UI" at large.
+#
+# SUPERSEDED 2026-09-01: this header read "These 23 roots", and the paragraph
+# below it read "twenty-three separate rationalisations". 23 was true when the
+# header was written and was retired the same day by two ceiling raises the
+# header was never moved with: 23 -> 24 when CLASS 5 (0x8A10BA95, Simulator
+# Control) was added, then 24 -> 27 when the D1 re-derivation added the three
+# CLASS 6 dead-variant roots. Both raises are already on the record at the
+# ceiling below, which reads MAX_EXCLUSIONS = 27 - so the block's own two
+# statements of its size disagreed by four.
+#
+# MEASURED 2026-09-01 by an AST count of this dict rather than by eye: 27 keys,
+# all distinct, no duplicate ids. By reason tag - debugger 5, lot-editor 11,
+# exemplar-editor 4, phantom 1, unsweepable 1, dev-twin 1, unnameable 1,
+# dead-variant 3 = 27, matching MAX_EXCLUSIONS exactly.
+#
+# IF THIS HEADER AND THE TABLE EVER DISAGREE AGAIN, THE TABLE IS AUTHORITATIVE,
+# and the disagreement is a defect in the one block whose stated job is keeping
+# the exclusions auditable. Re-derive by counting the dict's keys. Do not hand-
+# count, and do not trust a prose count that no longer matches the ceiling.
 #
 # THE BAR FOR THIS LIST, and it is deliberately high: a root leaves only with a
 # NAMED MECHANISM that makes creation impossible, a POSITIVE CONTROL showing the
 # instrument could have found a caller, and the single reading that would put it
 # back. "No caller found" and "it looks like a dev tool" are NOT proofs and do
-# not qualify. Every entry below is class-level - one mechanism closing many
-# roots - rather than twenty-three separate rationalisations.
+# not qualify. Every entry below is class-level - six numbered classes carrying
+# eight reason tags, one mechanism closing many roots - rather than 27 separate
+# rationalisations.
 #
 # ⛔ THIS LIST ONLY EVER SHRINKS THE DENOMINATOR, so it is exactly the shape
 # that can be abused to manufacture a coverage number. Three guards:
@@ -283,7 +324,12 @@ EXCLUDED_ROOTS = {
     0xEACA96DD: ("unsweepable", "main-window child; both sweep call sites enumerate children of the 3D VIEW"),
     0xCB40CFDC: ("dev-twin", "dev-build twin of the shipping Label Tool"),
 
-    # CLASS 5 - the last one, and it clears a HIGHER bar than the other 23.
+    # CLASS 5 - clears a HIGHER bar than the 23 that preceded it.
+    # SUPERSEDED 2026-09-01 (same day): this read "the last one". CLASS 6 was
+    # appended below it hours later, so "the last" is a live claim about the
+    # present structure and is false. "the other 23" is kept as written: that
+    # is history, accurate for the moment this entry was added, and it matches
+    # the ceiling ledger's own "RAISED 23 -> 24" wording. There are now 27.
     # The debugger class proved a compiled-out ENTRY POINT; the ids themselves
     # are present in the image. For this one NOTHING IN THE RETAIL BUILD CAN
     # EVEN NAME THE SCRIPT, on three channels each with its own control:
@@ -1188,10 +1234,36 @@ def main():
     print("      somewhere in src\\UiSpike.cpp. It does NOT include the")
     print("      dialog-static staged path, and it does NOT exclude dev-editor or")
     print("      third-party plugin roots.")
-    print("    * THEREFORE this ratio is NOT comparable to coverage-matrix.md's")
-    print("      96.6% (288/298), which uses a different numerator AND a")
+    print("    * THEREFORE this ratio is NOT comparable to the figures in")
+    print("      coverage-matrix.md, which use a different numerator AND a")
     print("      different denominator. Quoting one as a check on the other is")
     print("      the exact error #99 was filed for.")
+    print("    * SUPERSEDED 2026-09-01. This bullet used to name that doc's")
+    print("      D1 '96.6% (288/298)' as the thing not to compare against.")
+    print("      That figure is RETIRED now, not merely uncomparable. The")
+    print("      2026-08-16 instruction in coverage-matrix.md section 4")
+    print("      ('GENUINELY UNMAPPED - 10 root slots, 9 distinct ids') to")
+    print("      re-derive that count before quoting it was executed for the")
+    print("      first time on 2026-09-01, and all nine gaps had closed - six")
+    print("      genuinely, THREE only on paper. Those three sit in")
+    print("      kOwnsBackgroundSheet (grep it in src/UiSpike.cpp), a DERIVED")
+    print("      array they qualify for on the art data alone while the")
+    print("      WINDOWS ARE NEVER CREATED - counted covered without being")
+    print("      covered, so 288/298 was true by luck. Kept as history; never")
+    print("      re-quote it as a live figure.")
+    print("    * CURRENT figures, and the scope phrase is PART of the number.")
+    print("      The authoritative copies are computed and printed further")
+    print("      down this same run; if they disagree with these, THOSE win:")
+    print("        90/90 = 100.0% " + SCOPE_PHRASE)
+    print("          117 distinct nonzero root ids - 27 proven retail-")
+    print("          unreachable, each removed with a named mechanism, an")
+    print("          empirical positive control, and the reading that puts it")
+    print("          back (ceiling MAX_EXCLUSIONS = 27, enforced above).")
+    print("        93/117 = 79.5% over ALL roots, exclusions included, kept")
+    print("          so the 27 removals stay auditable.")
+    print("      '100% of the UI' is FALSE and must never be written: the")
+    print("      code-created channel is untouched by any of this and has no")
+    print("      closed denominator, so it has no coverage figure at all.")
     print()
 
     if not cpp:
@@ -1337,6 +1409,7 @@ def main():
                 print("      A stale exclusion is dead weight that can only ever")
                 print("      flatter a future run - remove it or explain it.")
             reachable = set(distinct_nonzero) - present
+            _hdr = {}
             r_named = named & reachable
             r_comb = combined & reachable
             print()
@@ -1367,14 +1440,38 @@ def main():
             print("    no previously-quoted number silently moves.")
             print()
 
-        print("  CANONICAL COVERAGE: %d/%d DISTINCT root ids named = %.1f%%"
-              % (len(cov_distinct), len(distinct_nonzero),
-                 100.0 * len(cov_distinct) / max(1, len(distinct_nonzero))))
+        # ⛔ THIS PRINT IS NO LONGER THE HEADLINE, CORRECTED 2026-09-01.
+        #
+        # It used to be followed by "This is THE figure", and because this
+        # script is the ONLY thing permitted to state a coverage number, that
+        # line was the source of every stale quotation in the repository. Docs
+        # quoting 73.5% were quoting this tool correctly. Fixing the docs
+        # without fixing this print would have re-minted the retired figure on
+        # the next run.
+        print("  SINGLE-MECHANISM COVERAGE: %d/%d DISTINCT root ids named in"
+              % (len(cov_distinct), len(distinct_nonzero)))
+        print("  UiSpike.cpp = %.1f%%"
+              % (100.0 * len(cov_distinct) / max(1, len(distinct_nonzero))))
+        print("  " + "-" * 66)
+        print("  ** SUPERSEDED ** - this counts ONE of the mod's FOUR delivery")
+        print("     mechanisms. It misses the staged dialog path (7 player")
+        print("     dialogs that ship PRE-SCALED), art-plus-structural-skip,")
+        print("     and host/child coverage. Kept printed so no previously")
+        print("     quoted number vanishes without explanation.")
+        print()
         print("  " + "=" * 66)
-        print("  This is THE figure. Quote no other without naming its scope.")
-        print("  NOT comparable to coverage-matrix.md's 96.6% (288/298, D1) or")
-        print("  94.9% (299/315, D1+D2) - those count script-declared shipping")
-        print("  roots, a different denominator. Never do arithmetic across them.")
+        print("  THE FIGURE TO QUOTE is the RETAIL-REACHABLE line above:")
+        print("  %d/%d = %.1f%% %s"
+              % (len(r_comb), len(reachable),
+                 100.0 * len(r_comb) / max(1, len(reachable)), SCOPE_PHRASE))
+        print("  Quote it WITH that scope phrase. \"100% of the UI\" is FALSE")
+        print("  while the unbounded code-created channel exists.")
+        print("  " + "=" * 66)
+        print("  coverage-matrix.md's 96.6% (288/298, D1) and 94.9% (299/315,")
+        print("  D1+D2) are RETIRED as of 2026-09-01: D1 was re-derived and all")
+        print("  nine of its gaps had closed, three of them counted as covered")
+        print("  without being covered. Do not quote either, and never do")
+        print("  arithmetic across denominators.")
 
         print()
         print("  --- roots with NO id named anywhere in UiSpike.cpp ---")

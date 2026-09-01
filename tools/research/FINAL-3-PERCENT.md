@@ -57,30 +57,61 @@ someone else edits the file.*
 
 ### The headline falls, by 1.7 points
 
-> ### **94.9% — 299 of 315 named shipping windows carry a scaling mechanism.**
-> (was 96.6% = 288/298, which counted only the *scriptable* UI)
+> ### ~~**94.9% — 299 of 315 named shipping windows carry a scaling mechanism.**~~
+> ~~(was 96.6% = 288/298, which counted only the *scriptable* UI)~~
+> ~~**Scope: D1 + D2 only, measured 2026-08-03, not re-measured since. NOT the canonical headline.**~~
 >
-> **Scope: D1 + D2 only, measured 2026-08-03, not re-measured since. NOT the canonical headline.**
+> ⛔ **RETIRED 2026-09-01 — not demoted, RETIRED. The 2026-08-03 wording is kept above, struck, as the record of what was believed and quoted for a month.**
+>
+> **The reason, not merely the date.** The caveat carried above claimed *"not re-measured since"*. That stopped being true on 2026-09-01, when both halves of `299 = 288 + 11` were re-derived and **both moved**:
+>
+> * **D2 is `13/17 = 76.5%`, not `11/17 = 64.7%`.** `0x00000043` (Restore-Toolbars) gained a shipped cure in v4.5.3, and `0xEA659793` (region screen) was a **grading artefact** — it is the sweep WALK ROOT, and its two structural twins were already graded COVERED for that same reason. ⚠ The first re-measure *also* read 11/17 and nearly reported "no change" — two windows had gained coverage while two long-covered ones dropped out of the **predicate**, not out of coverage. **A count that did not move is not evidence that nothing moved — compare MEMBERSHIP, not totals.** Record: `_tests\REGRESSION.md`, grep `## 2026-09-01 — D2 re-measured: 13/17`.
+> * **D1's `288/298` was inflated, not just stale.** `coverage-matrix.md` §4 had carried a 2026-08-16 instruction to *"re-derive '10 root slots / 9 distinct ids' before quoting either"*; it was executed for the first time on 2026-09-01. All nine gaps had closed — six genuinely, and **three (`0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1`) were being counted COVERED without being covered**: they sit in `kOwnsBackgroundSheet` (grep `static const uint32_t kOwnsBackgroundSheet[] = {` in `src\UiSpike.cpp` — one hit), a DERIVED array they qualify for on art data alone while the windows are never created. Record: `_tests\REGRESSION.md`, grep `## 2026-09-01 — D1 re-derived: all nine gaps were already closed`.
+>
+> **Do not quote `94.9% / 299/315` or `96.6% / 288/298`, and never do arithmetic with them.** Every one of the five numbers behind them moved on the same day.
+>
+> **CURRENT — printed by `python tools\uimap\coverage_rederive.py`, the ONLY tool permitted to state a coverage figure. Run 2026-09-01; each row quotes the tool's own line.**
+>
+> | figure | scope — **the scope phrase is PART OF THE NUMBER** | provenance |
+> |---|---|---|
+> | **90/90 = 100%** | **of RETAIL-REACHABLE stock `.UI` roots** — `117 total - 27 unreachable = 90` | `==> 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots` |
+> | 93/117 = 79.5% | the same numerator over ALL roots, kept so the 27 exclusions stay auditable | `COMBINED: 93/117 DISTINCT root ids reached = 79.5%` |
+> | 86/117 = 73.5% | ids named in `UiSpike.cpp` ONLY — one delivery mechanism of four | still measured, now printed under `SUPERSEDED HEADLINE - retired 2026-09-01, still measured:` |
+> | 13/17 = 76.5% | **D2 only** — code-created NAMED shipping windows | *not* a tool figure; the `REGRESSION.md` entry cited above |
+>
+> ⛔ **"100% of the UI" is FALSE and must never be written here.** The words *retail-reachable stock `.UI` roots* are load-bearing: the unbounded code-created channel (**D3** — §1.2 and §1.4) is untouched by any of this, and four of D2's seventeen still carry no scaling mechanism (one a reasoned leave-alone, three genuine player-reachable work).
 
 > # ⚠ SCOPE BANNER — ADDED 2026-08-31 — THE NUMBER ABOVE IS NOT THE CANONICAL HEADLINE
 >
-> ### The canonical repo headline is **73.5% — 86 of 117 distinct root ids named in `UiSpike.cpp`**. ⛔ SUPERSEDED 2026-09-01: this is no longer the canonical headline. The metric counted only ONE of the mod's delivery mechanisms - a literal in `UiSpike.cpp` - and missed the staged dialog path entirely, undercounting by seven player-facing dialogs that ship PRE-SCALED. Counting both mechanisms gives **93/117 = 79.5%**, and removing the 24 roots the retail game cannot instantiate (Maxis's Lot Editor, Lua debugger and exemplar tooling, each excluded with a named mechanism and a positive control) gives **93/93 = 100% of RETAIL-REACHABLE stock .UI roots**. That scope phrase is part of the number: "100% of the UI" would be false while the unbounded code-created channel exists.
+> ### The canonical repo headline is **73.5% — 86 of 117 distinct root ids named in `UiSpike.cpp`**. ⛔ SUPERSEDED 2026-09-01: this is no longer the canonical headline. The metric counted only ONE of the mod's delivery mechanisms - a literal in `UiSpike.cpp` - and missed the staged dialog path entirely, undercounting by seven player-facing dialogs that ship PRE-SCALED. Counting both mechanisms gives **93/117 = 79.5%**, and removing the roots the retail game cannot instantiate (each excluded with a named mechanism and a positive control) gave ~~**93/93 = 100%**, on a **24**-row exclusion set~~ ⛔ **SUPERSEDED LATER THE SAME DAY, 2026-09-01, and it was wrong in BOTH terms.** That 24-row set removed only roots already outside the numerator, which is why it printed 93/93 with the numerator untouched. The re-derived set is **27** rows, and the three it adds — the dead *Move In My Sim* marker design variants `0x6BFAC122` / `0x8BFAC13E` / `0xCBFACAE1` — were each named once in `src\UiSpike.cpp` and so sat INSIDE the numerator: they qualify for `kOwnsBackgroundSheet`, a DERIVED array, on art data alone while the windows are never created. Excluding them moves numerator and denominator together, 93/93 → **90/90 = 100% of RETAIL-REACHABLE stock .UI roots**. MEASURED 2026-09-01 by `python tools\uimap\coverage_rederive.py` — the only tool permitted to state a coverage figure — which prints the whole exclusion table every run, then `denominator  117 total - 27 unreachable = 90 retail-reachable`, `numerator    90 reached by either mechanism`, `==> 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots`. The 27 break down as lot-editor 11, debugger 5, exemplar-editor 4, dead-variant 3, and four singletons (dev-twin, phantom, `0x8A10BA95` Simulator Control, unsweepable). **93/117 = 79.5% over ALL roots** is kept alongside so those 27 stay auditable. That scope phrase is part of the number: "100% of the UI" would be false while the unbounded code-created channel exists.
 >
 > **MEASURED 2026-08-31.** `python tools\uimap\coverage_rederive.py` printed `CANONICAL COVERAGE: 86/117 DISTINCT root ids named = 73.5%`, above `[OK ] distinct root ids named    floor 83   measured 86`. It agrees with the banner in `tools\uimap\coverage-matrix.md`, which also states that `coverage_rederive.py` "is now the ONLY tool allowed to state a coverage figure". **This document is not that tool**, and every figure below it is an offline census reading, not a tool output.
 >
-> **The 94.9% is NOT withdrawn and is NOT wrong — it is a different denominator.** ~~It is "the headline".~~ Superseded *as a headline* 2026-08-31, because this file was promoted out of `tools\research\_incoming\` into the curated set on 2026-08-30, and a curated file whose §1 opens on a bare percentage is quotable in isolation by a reader who never reaches §1.5. `docs\DECOMPILATION-STATUS.md` item **D-2** already adjudicates these figures as "not wrong for their scope but … **not the canonical headline**".
+> ~~**The 94.9% is NOT withdrawn and is NOT wrong — it is a different denominator.**~~ ⛔ **WITHDRAWN 2026-09-01 — that sentence was true when it was written on 2026-08-31 and is false today.** `299/315 = 94.9%` (D1+D2) is **RETIRED**, and so is the `288/298 = 96.6%` (D1) it is built on. The scope argument was never the problem; both halves were re-derived on 2026-09-01 and both moved.
+>
+> * **D2 moved, so the 299 numerator is arithmetically dead.** Re-measured 2026-09-01 to **13/17 = 76.5%**, up from the `11/17 = 64.7%` this file still publishes below: `0x00000043` (Restore-Toolbars) was cured in v4.5.3, and `0xEA659793` (region screen) was a grading artefact — its two structural twins `0x9A47B417` and `0x6104489A` were already graded COVERED for the same reason. Record: `_tests\REGRESSION.md` § **`2026-09-01 — D2 re-measured: 13/17, and coverage flows through FOUR mechanisms`**. ⚠ The count nearly failed to move at all — two windows gained coverage while two long-covered ones dropped out of the *predicate*, cancelling exactly.
+> * **D1 was retired, not restated.** `coverage-matrix.md` §4 has carried a 2026-08-16 instruction to re-derive "10 root slots / 9 distinct ids" before quoting either figure; it was executed for the **first** time on **2026-09-01**. All nine gaps had closed — six genuinely, and **three (`0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1`) were being counted COVERED without being covered.** They sit in `kOwnsBackgroundSheet`, a DERIVED array they qualify for on the art data alone, while the windows are never created. A numerator inflated in that direction cannot be re-scoped into correctness, so no replacement D1 figure was published. Record: `_tests\REGRESSION.md` § **`2026-09-01 — D1 re-derived: all nine gaps were already closed, and three were fake coverage`**. ⚠ Both D-figures are census readings recorded in `REGRESSION.md`; `coverage_rederive.py` does not compute D1 or D2 and refuses comparison against them.
+>
+> **The current figure, from the only tool permitted to state one.** `python tools\uimap\coverage_rederive.py`, run **2026-09-01**, prints `denominator  117 total - 27 unreachable = 90 retail-reachable` and `==> 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots`, with `COMBINED: 93/117 DISTINCT root ids reached = 79.5%` kept beside it so the 27 exclusions stay auditable. **That scope phrase is part of the number — "100% of the UI" is FALSE**, because the unbounded code-created channel of §1.2 is untouched by any of this.
+>
+> **The 2026-08-31 record of the earlier supersession is kept below, unchanged:** ~~It is "the headline".~~ Superseded *as a headline* 2026-08-31, because this file was promoted out of `tools\research\_incoming\` into the curated set on 2026-08-30, and a curated file whose §1 opens on a bare percentage is quotable in isolation by a reader who never reaches §1.5. `docs\DECOMPILATION-STATUS.md` item **D-2** already adjudicates these figures as "not wrong for their scope but … **not the canonical headline**".
 >
 > | figure | the scope it is correct for | status |
 > |---|---|---|
-> | **93/93 = 100%** | Root ids the RETAIL GAME CAN OPEN, reached by either mechanism | ⬅ **CANONICAL from 2026-09-01** — quote only with the words *retail-reachable stock .UI roots* |
-> | 93/117 = 79.5% | The same numerator over every root, including 24 the shipped game cannot instantiate | Kept so the exclusions stay auditable |
-> | 86/117 = 73.5% | DISTINCT root ids named in `UiSpike.cpp` only | ⛔ SUPERSEDED — counted one delivery mechanism of two, undercounting by seven pre-scaled dialogs |
-> | 288/298 = 96.6% | **D1 only** — script-declared shipping roots | correct *for D1*; a 2026-08-03 reading |
-> | 299/315 = 94.9% | **D1 + D2** — D1 plus the 17 code-created *named* windows | correct *for D1+D2*; a 2026-08-03 reading |
+> | **90/90 = 100%** | Root ids the RETAIL GAME CAN OPEN, reached by either mechanism. The words *of RETAIL-REACHABLE stock .UI roots* are part of the number — "100% of the UI" is FALSE while the unbounded code-created channel exists | ⬅ **CANONICAL from 2026-09-01.** MEASURED this run: `python tools\uimap\coverage_rederive.py` prints `==> 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots` and `COMBINED: 93/117 DISTINCT root ids reached = 79.5%`. Its distinct-id checks read `[OK ] distinct root ids expected 118 measured 118`; the run's six FAILs are all the corpus-size class on a machine with plugins installed, and the headline does not rest on them |
+> | 93/93 = 100% | The same retail-reachable scope, computed while the exclusion list still held 24 roots | ⛔ **SUPERSEDED 2026-09-01, later the same day** — the D1 re-derivation raised the exclusion ceiling 24 → 27 (`MAX_EXCLUSIONS = 27` in `tools\uimap\coverage_rederive.py`; `EXCLUDED_ROOTS` holds 27 entries, verified by counting them, not by reading the comment). The three ids added — `0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1`, the dead Move In My Sim marker variants — were being counted as COVERED **without being covered**: they sit in `kOwnsBackgroundSheet`, a DERIVED array they qualify for on the art data alone while the windows are never created. So the NUMERATOR falls by three alongside the denominator, recorded in `_tests\REGRESSION.md` under "The exclusion that costs the numerator". The ratio never moved — both operands were wrong, and a reader quoting "93/93" would be citing a denominator that no longer exists |
+> | 93/117 = 79.5% | The same numerator over every root, including the ~~24~~ **27** the shipped game cannot instantiate | Kept so the exclusions stay auditable. ⛔ **This cell read "24" until 2026-09-01 — retired because 24 is a different quantity:** it is the count of roots *no mechanism reaches* (117 − 93), whereas **27** roots are removed from the denominator; the two differ because three of the excluded roots ARE reached and are excluded anyway. **MEASURED 2026-09-01:** `python tools\uimap\coverage_rederive.py` printed `denominator  117 total - 27 unreachable = 90 retail-reachable` under its own heading `RETAIL-UNREACHABLE ROOTS REMOVED FROM THE DENOMINATOR`, which enumerates all 27 in eight named mechanism groups — `[lot-editor]` 11, `[debugger]` 5, `[exemplar-editor]` 4, `[dead-variant]` 3, and one each of `[dev-twin]`, `[phantom]`, `[unnameable]`, `[unsweepable]`. **The ratio in this row is unchanged and current:** the same run printed `COMBINED: 93/117 DISTINCT root ids reached = 79.5%` — scope, in the tool's own words, *all distinct stock `.UI` root ids reached by either mechanism*. ⚠ That run exits FAIL on six CORPUS-SIZE checks (plugins are installed here: 1093 `.ui` files measured vs 339 expected); the two distinct-id checks this row rests on read `[OK ] distinct root ids expected 118 measured 118` and `[OK ] distinct root ids named floor 83 measured 86`. |
+> | 86/117 = 73.5% | DISTINCT root ids named in `UiSpike.cpp` only | ⛔ SUPERSEDED — counted one delivery mechanism of ~~two~~ **four**, undercounting by seven pre-scaled dialogs. **Corrected 2026-09-01:** "of two" was itself an undercount, written before the D2 re-measure enumerated the delivery mechanisms as an id literal in `UiSpike.cpp`, a staged dialog-static target, shipped ART plus a deliberate structural skip, and coverage held through a host/child relationship rather than the root id (`_tests\REGRESSION.md`, "2026-09-01 — D2 re-measured: 13/17, and coverage flows through FOUR mechanisms"). The tool still measures and prints this figure, now labelled `SUPERSEDED HEADLINE - retired 2026-09-01, still measured:` |
+> | 288/298 = 96.6% | **D1 only** — script-declared shipping roots | ⛔ **SUPERSEDED 2026-09-01.** ~~correct *for D1*~~ — the "a 2026-08-03 reading" half stands as history; the *status* half does not. `coverage-matrix.md` §4 ("GENUINELY UNMAPPED — 10 root slots, 9 distinct ids") carried a 2026-08-16 instruction to re-derive that count before quoting either headline; it was executed for the first time on **2026-09-01**, and **all nine gaps behind the 298−288 had left the list** — but not all of them honestly. Four closed on real mechanisms (`0x0A41C7B2`/`B3`, `0x27DF05BE`/`BF` are in `kNeverScaleIds`, with world-anchored handling in `src\UiSpike.cpp`); two resolved as retail-unreachable (`0x6BB92BCB` phantom, `0xEACA96DD` unsweepable); and **three — `0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1` — were being counted covered without being covered.** Their whole claim to coverage is membership in `kOwnsBackgroundSheet`, a **DERIVED** array whose own comment defines it as every root-depth node carrying `image=` + `blttype=tiled` — **art data alone, while those windows are never created.** MEASURED 2026-09-01: each of the three appears **exactly once** in `UiSpike.cpp` and that one occurrence *is* the array entry (positive control, same channel: `0x27DF05BE` returns 10 hits, `0x0A41C7B2` returns 4 — the grep is not blind). **An id in a derived list is evidence about the DATA, not about whether anything renders**, so the numerator cannot be repaired by folding the closures in, and D1 is **retired rather than re-stated**. **No replacement D1 figure exists and none may be hand-computed:** `coverage_rederive.py` does not compute D1, and it prints that its figures are "NOT comparable" to 288/298 — never do arithmetic across the two denominators. **Current, from that tool on 2026-09-01: `90/90 = 100.0%` *of RETAIL-REACHABLE stock .UI roots* (117 − 27 excluded, each with a named mechanism and a positive control), and `93/117 = 79.5%` over all roots.** Quote neither without its scope phrase. |
+> | 299/315 = 94.9% | **D1 + D2** — D1 plus the 17 code-created *named* windows | ⛔ **SUPERSEDED 2026-09-01 — kept as history, but no longer "correct": BOTH of its inputs moved on 2026-09-01.** D2 was re-measured from 11 to **13 of 17 = 76.5%** (`0x00000043` Restore-Toolbars, cured in v4.5.3; `0xEA659793` region screen, a grading artefact — it is the sweep WALK ROOT and its structural twins `0x9A47B417` / `0x6104489A` were already graded COVERED for that same reason). And `coverage-matrix.md` §4's 2026-08-16 instruction to "re-derive '10 root slots / 9 distinct ids' before quoting either" was executed for the first time: **all nine D1 gaps had closed** — six genuinely, and three (`0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1`) were being counted COVERED *without being covered*, qualifying for the DERIVED `kOwnsBackgroundSheet` array in `src\UiSpike.cpp` on art data alone while the windows are never created. Records, both verified 2026-09-01: `_tests\REGRESSION.md`, entries "2026-09-01 — D2 re-measured: 13/17, and coverage flows through FOUR mechanisms" and "2026-09-01 — D1 re-derived: all nine gaps were already closed, and three were fake coverage". |
 >
-> ⚠ **Those two rows are CARRIED, not current.** `coverage-matrix.md`'s four-views table labels the D1 and D1+D2 rows "**NOT re-measured 2026-08-16**" while all three tool-derived views drifted UP in that pass (the canonical view among them, 79 → 86). Nobody has re-derived 96.6% or 94.9% since 2026-08-03, so the direction of their drift is unknown, not assumed small.
+> ⚠ **The 94.9% COMPOSITE has still not been re-derived, and this file must not compute one.** Its numerator and denominator moved on different days under different rules; only `tools\uimap\coverage_rederive.py` is permitted to state a coverage figure, and it prints that its ratios are "NOT comparable to coverage-matrix.md's D1/D2 percentages — those count script-declared shipping roots, a different denominator. Never do arithmetic across them." The ⚠ note below is therefore still right that nobody has re-derived 94.9%; what changed today is that **its inputs** were.
 >
-> ⚠ Neither figure counts windows we can see but cannot name (**D3**). §1.2 and §1.4 state why that residual is unbounded. §1.5 already forbids quoting 96.6% bare; this banner exists because §1.5 sits ~160 lines *underneath* the blockquote it governs.
+> **Quote the tool's figure instead, and never without its scope.** `coverage_rederive.py`, 2026-09-01: **`90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots`** — 117 total roots minus the 27 the retail game cannot instantiate (`MAX_EXCLUSIONS = 27`; every excluded row printed each run with its mechanism — the Lot Editor, the Lua debugger, an exemplar editor, three dead Move In My Sim design variants, Simulator Control and three singletons). Over **every** root, including those 27: **`93/117 = 79.5%`**, kept so the exclusions stay auditable. The scope phrase is part of the number — **"100% of the UI" is false**, because the code-created channel is unbounded (§1.4).
+>
+> ⚠ **Those two rows are CARRIED, not current.** `coverage-matrix.md`'s four-views table labels the D1 and D1+D2 rows "**NOT re-measured 2026-08-16**" while all three tool-derived views drifted UP in that pass (the canonical view among them, 79 → 86). ~~Nobody has re-derived 96.6% or 94.9% since 2026-08-03, so the direction of their drift is unknown, not assumed small.~~ ⛔ **SUPERSEDED 2026-09-01 — true the day it was written, FALSE now: both were re-derived, and both are retired as live figures.** **D2 first:** it is **13/17 = 76.5%**, not 11/17 = 64.7% — `0x00000043` gained a shipped cure in v4.5.3, and `0xEA659793` was a grading artefact, the sweep WALK ROOT, graded UNCOVERED while its two structural twins were graded COVERED for that same reason (`_tests\REGRESSION.md` § **`2026-09-01 — D2 re-measured: 13/17, and coverage flows through FOUR mechanisms`**). **D1 second:** the 2026-08-16 instruction in `coverage-matrix.md` §4 to "re-derive '10 root slots / 9 distinct ids' before quoting either" was **executed for the first time**, and **all nine gaps had closed** — six genuinely, and **three had been counted COVERED without being covered** (`0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1`, which qualify for `kOwnsBackgroundSheet` — a DERIVED array — on art data alone, while the windows are never created) (`_tests\REGRESSION.md` § **`2026-09-01 — D1 re-derived: all nine gaps were already closed, and three were fake coverage`**). So **299/315 no longer describes either of its terms**, and the reason to retire these two rows is no longer "unknown drift" — it is that the denominators moved underneath them. **The live figures, from the only tool allowed to state one:** `python tools\uimap\coverage_rederive.py`, re-run 2026-09-01, prints `==> 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots` (`denominator 117 total - 27 unreachable = 90`; `MAX_EXCLUSIONS = 27`, with every excluded row printed on every run beside its mechanism, because "a denominator that shrinks silently is the same defect as a numerator that grows silently") and `COMBINED: 93/117 DISTINCT root ids reached = 79.5%`, kept so those exclusions stay auditable. ⚠ **Honesty note on that run:** its OVERALL was **FAIL**, on six checks that are all CORPUS-SIZE (`.ui files on disk 1093 = game 330 + plugins 763`, against an EXPECT of 339 taken on a stock set). The check these two figures actually rest on passed — `[OK ] distinct nonzero root ids expected 117 measured 117` — which is the tool's own stated condition for the headline still standing. **Quote neither figure without its scope phrase**; "100% of the UI" stays false while §1.2's unbounded code-created channel exists.
+>
+> ⚠ Neither figure counts windows we can see but cannot name (**D3**). §1.2 and §1.4 state why that residual is unbounded. §1.5 already forbids quoting 96.6% bare; this banner exists because §1.5 sits ~160 lines *underneath* the blockquote it governs. ⛔ **SUPERSEDED 2026-09-01 — §1.5 is no longer a sufficient safeguard, because 96.6% (288/298, D1) is now RETIRED, not merely scope-limited.** §1.5's replacement sentence still reads "96.6% of the *scriptable* UI", which treats the figure as quotable once a scope word is bolted on. It is not, because the figure was also **wrong when it was written**. `tools\uimap\coverage-matrix.md` §4 has carried since 2026-08-16 the instruction *Re-derive "10 root slots / 9 distinct ids" … before quoting either*. It was executed for the first time on 2026-09-01, and **all nine of 288/298's gaps had closed — six genuinely, and three were being counted as covered without being covered.** Positive control, measured 2026-09-01: `src\UiSpike.cpp` grep `static const uint32_t kOwnsBackgroundSheet[] = {` returns **exactly one** hit, and that array holds `0x6BFAC122`, `0x8BFAC13E` and `0xCBFACAE1` — the three ids `coverage_rederive.py` prints under `[dead-variant]` as *never created*. The array's own comment says the set is *"DERIVED, not hand-written"*: every root-depth node carrying `image=` **and** `blttype=tiled`. So those three qualify on **art data alone** while no window is ever built — and a dead root sitting in a derived array is still a `0x........` literal in `UiSpike.cpp`, which is exactly what the numerator counted. **Quote instead — and only with the scope words attached — what `python tools\uimap\coverage_rederive.py` printed: `==> 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots`, above `denominator  117 total - 27 unreachable = 90 retail-reachable`; and `COMBINED: 93/117 DISTINCT root ids reached = 79.5%` with the unreachable roots left in, kept so the exclusions stay auditable.** *Retail-reachable stock .UI roots* is part of the number, not decoration: "100% of the UI" stays false while the code-created channel of §1.2/§1.4 is unbounded — that clause of this bullet is unaffected and still stands.
 
 The denominator grew by the 17 code-created windows we can now name. The numerator grew
 by 11 of them. Both movements are itemised below and both are auditable.
@@ -88,7 +119,68 @@ by 11 of them. Both movements are itemised below and both are auditable.
 ### Three denominators, kept separate — do not merge them
 
 The census's own recommendation #3 was to keep a second denominator distinct from the
-first. That is right, and this report holds to it.
+first. That is right, and this report holds to it. ⛔ **The principle stands; the three
+specific figures it carried are all RETIRED as of 2026-09-01 — see immediately below.**
+
+> ### ⛔ SUPERSEDED 2026-09-01 — DO NOT QUOTE THE BLOCK BELOW. Its `(the honest headline)` label made it the most quotable line in this file, and both of its inputs were re-derived today, and both moved.
+>
+> **D2: 11/17 = 64.7% → 13/17 = 76.5%.** The 2026-08-03 reading had never been checked;
+> it was re-measured 2026-09-01. `0x00000043` (Restore-Toolbars) gained a shipped cure in
+> v4.5.3, and `0xEA659793` (region screen) was a **grading artefact** — it is the sweep
+> WALK ROOT, and its two structural twins `0x9A47B417` and `0x6104489A` were already
+> graded COVERED for exactly that reason. VERIFIED: `_tests\REGRESSION.md` §
+> **`2026-09-01 — D2 re-measured: 13/17, and coverage flows through FOUR mechanisms`**.
+> ⚠ **Provenance is part of this one.** That is a MEMBERSHIP re-measure, **not** a
+> `coverage_rederive.py` output — the tool computes no D2 figure at all. Quote 13/17 only
+> with that attribution. The same record notes the first pass also read 11/17 and nearly
+> reported "no change": two windows moved *into* coverage while two long-covered ones fell
+> out of the **predicate**, not out of coverage. A count that did not move is not evidence
+> that nothing moved.
+>
+> **D1: 288/298 = 96.6% is RETIRED, not merely stale.** Its uncovered list exists nowhere
+> in this file — only in `coverage-matrix.md` § **`4. GENUINELY UNMAPPED — 10 root slots,
+> 9 distinct ids`**, which has carried a 2026-08-16 instruction to re-derive
+> "10 root slots / 9 distinct ids" before quoting either. It was executed for the first
+> time on 2026-09-01 and **all nine gaps had closed** — six genuinely, and **three were
+> being counted COVERED without being covered**: `0x6BFAC122`, `0x8BFAC13E` and
+> `0xCBFACAE1` sit in `kOwnsBackgroundSheet`, a DERIVED array they qualify for on art data
+> alone, **while the windows are never created**. VERIFIED: `_tests\REGRESSION.md` §
+> **`2026-09-01 — D1 re-derived: all nine gaps were already closed, and three were fake coverage`**.
+>
+> **299/315 = 94.9% falls with them.** It is D1 + D2 by construction and cannot outlive
+> either input.
+>
+> **What to quote instead — and the scope phrase is PART of the number.**
+> `python tools\uimap\coverage_rederive.py`, RUN 2026-09-01, printed:
+>
+> ```
+>     denominator  117 total - 27 unreachable = 90 retail-reachable
+>     numerator    90 reached by either mechanism
+>     ==> 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots
+>
+>   COVERAGE BY EITHER MECHANISM (added 2026-09-01)
+>     COMBINED: 93/117 DISTINCT root ids reached = 79.5%
+> ```
+>
+> **90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots** is the current headline.
+> **93/117 = 79.5% over ALL roots** is kept beside it so the 27 exclusions stay auditable
+> — `MAX_EXCLUSIONS = 27` in the tool, and every excluded row prints, with its mechanism,
+> on every run.
+> ⚠ **"100% of the UI" is FALSE and must never be written.** The unbounded code-created
+> channel of §1.2 is untouched by any of this; the scope words are not decoration.
+>
+> ⚠ **Two traps for a reader who lands here.** (1) The tool still MEASURES and prints
+> `86/117 = 73.5%`, now under the label `SUPERSEDED HEADLINE - retired 2026-09-01, still
+> measured:` — it counts ONE delivery mechanism, and the 2026-09-01 D2 record establishes
+> there are **four** (an id literal, a staged dialog-static target, shipped art plus a
+> deliberate structural skip, and coverage of a host/child relationship). (2) The scope
+> banner above once said **93/93 = 100%**; the tool says **90/90 = 100.0%**. Neither is a
+> typo and the ratio is unchanged: the 2026-09-01 D1 re-derivation raised `MAX_EXCLUSIONS`
+> 24 → 27, and because those three had been counted COVERED the numerator fell by three
+> alongside the denominator. **Prefer the tool's 90/90** — a ceiling raise that costs the
+> numerator is the only kind that cannot be motivated by wanting a better number.
+>
+> **Kept verbatim below, superseded, so the 2026-08-03 reading stays auditable:**
 
 ```
 D1  script-declared shipping ROOTS         298     covered 288    96.6%
@@ -99,9 +191,26 @@ D2  code-created NAMED shipping windows     17     covered  11    64.7%
 D3  windows we can SEE but cannot NAME     — not a percentage, see §1.4 —
 ```
 
-**D1 is unchanged and still correct for its scope.** 288/298. The ladder
-(330 depth-0 `<LEGACY>` roots − 8 third-party plugin − 24 caption-verified dev-editor)
-was independently recounted 2026-08-03 and stands. Corpus recount today: **330 `.ui`
+⚠ **D3 is the one line in that block that is NOT superseded.** It was never a percentage,
+and §1.2 / §1.4 still bound it exactly as written.
+
+⛔ **SUPERSEDED 2026-09-01 — D1 IS RETIRED AS A LIVE FIGURE. The sentence that stood here read: "D1 is unchanged and still correct for its scope." 288/298 = 96.6%.** It is kept, not deleted. It was written on 2026-08-03 and was true then; *why* it stopped being true is the finding.
+
+> **The reason it fell — and it is not that the number drifted.** `tools\uimap\coverage-matrix.md` § **`4. GENUINELY UNMAPPED — 10 root slots, 9 distinct ids`** had carried since 2026-08-16 the standing instruction *"Re-derive '10 root slots / 9 distinct ids' … before quoting either."* That instruction was executed for the **first** time on **2026-09-01**, and **all nine of D1's distinct gap ids had closed.** The ten-slot gap list that 288/298 is arithmetic over is empty, so the figure no longer describes a state of the world.
+>
+> **Measured 2026-09-01** with the only tool permitted to state a coverage figure, `python tools\uimap\coverage_rederive.py`:
+>
+> - **Four are named in `src\UiSpike.cpp` today** — `0x0A41C7B2` / `0x0A41C7B3` (grep `0x0A41C7B2, // Disaster Tools button container`) and `0x27DF05BE` / `0x27DF05BF` (grep `0x27DF05BE, // #191 Move In My Sim marker`).
+> - **Five are removed from the denominator**, each printed under the tool's own **`RETAIL-UNREACHABLE ROOTS REMOVED FROM THE DENOMINATOR`** block with a named mechanism: `0x6BFAC122` / `0x8BFAC13E` / `0xCBFACAE1` `[dead-variant]` — *"Move In My Sim marker design variant … never created"*; `0x6BB92BCB` `[phantom]` — *"Trip Types legend - runtime promotes the children and discards this root"*; `0xEACA96DD` `[unsweepable]` — *"main-window child; both sweep call sites enumerate children of the 3D VIEW"*.
+> - **Positive control for that null:** none of the nine appears in the tool's *"roots with NO id named anywhere in `UiSpike.cpp`"* list — and that list demonstrably **can** fire, printing rows such as `0xEACA96DD  I-6aca9687  94x185  2 nodes` in the same run. An empty result here is a measured null, not a silent one.
+>
+> **The sharpest half of the finding: three of those five were being scored COVERED without being covered.** `0x6BFAC122`, `0x8BFAC13E` and `0xCBFACAE1` all sit in `kOwnsBackgroundSheet` (grep `static const uint32_t kOwnsBackgroundSheet[] = {`), an array whose own in-source comment reads *"The set is DERIVED, not hand-written: it is every ROOT-depth node in the .UI corpus that carries an `image=` AND `blttype=tiled`"*. They qualify on **art data alone**, while the windows are never created. **Membership in a derived array is not evidence that a window exists** — that is what a "named ⇒ covered" test cannot see, and it is what inflated D1's numerator.
+>
+> **The current figure, with its scope, straight from the tool:** `denominator  117 total - 27 unreachable = 90 retail-reachable` → **`90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots`**, published alongside **`COMBINED: 93/117 DISTINCT root ids reached = 79.5%`**, which is kept over *every* root so the 27 exclusions stay auditable. **The scope phrase is part of the number.** "100% of the UI" would be false while the unbounded code-created channel of §1.2 exists.
+>
+> ⚠ **288/298 can now only be quoted, never re-derived.** `coverage_rederive.py` computes no D1 figure at all; it prints only that its own ratios are "NOT comparable" to it. Do not present it as current, and do no arithmetic across it and the figures above.
+
+**The 2026-08-03 ladder is kept unchanged as a dated record**, because its derivation was sound on the day: 330 depth-0 `<LEGACY>` roots − 8 third-party plugin − 24 caption-verified dev-editor = 298, independently recounted 2026-08-03. Corpus recount today: **330 `.ui`
 files parsed, 1408 distinct `id=` values** (the input report said 1409 over a 331+9 file
 set — a ±1 file-set difference, not a disagreement of substance).
 
@@ -248,8 +357,41 @@ So the honest characterisation of the residual, in three sentences:
 
 ### 1.5 Sentences that must not be written again
 
-- ~~"96.6% of the UI is covered."~~ → "96.6% of the *scriptable* UI; 94.9% once the
-  code-created windows we can name are counted; unbounded above."
+- ~~"96.6% of the UI is covered."~~ ⛔ **— and also ~~"96.6% of the *scriptable* UI; 94.9%
+  once the code-created windows we can name are counted; unbounded above."~~ The
+  replacement sentence this bullet used to PRESCRIBE is itself retired, 2026-09-01.** Both
+  halves are kept, struck rather than deleted, because this is a style rule: it did not
+  merely record 96.6% / 94.9%, it instructed the reader to write them, and a rule list that
+  mints a retired figure propagates it into documents that do not exist yet.
+  **Why they were retired — the D1 ratio did not lose to a better denominator, it
+  dissolved.** `tools\uimap\coverage-matrix.md` §4 has carried a 2026-08-16 instruction to
+  *"Re-derive '10 root slots / 9 distinct ids' … before quoting either"*. Executed for the
+  first time on 2026-09-01, every one of D1's nine gaps had closed — six genuinely
+  **[not reproduced here]**, and three only on paper: `0x6BFAC122`, `0x8BFAC13E` and
+  `0xCBFACAE1` are credited by nothing but membership in `kOwnsBackgroundSheet` (grep
+  `static const uint32_t kOwnsBackgroundSheet[] = {` in `src\UiSpike.cpp` — **one hit**),
+  a set whose own comment states it is *"DERIVED, not hand-written … every ROOT-depth node
+  in the .UI corpus that carries an `image=` AND `blttype=tiled`"*. That is art data alone.
+  The same three ids are printed by `coverage_rederive.py` under `[dead-variant]` as
+  *"never created"* — **MEASURED 2026-09-01**. A window qualifying for a derived array on
+  art it never draws is covered on paper and absent on screen, so 288/298 counted a
+  numerator it did not have.
+  → **Write instead: "100% of RETAIL-REACHABLE stock .UI roots — 90/90; 79.5% (93/117)
+  over every root, including the 27 the shipped game cannot instantiate; unbounded
+  above."** The scope phrase is part of the number, and the ceiling is not optional:
+  **"100% of the UI" is false, and is itself a sentence that must not be written again**,
+  because the code-created channel of §1.2 is bounded by nothing in this repo.
+  **MEASURED 2026-09-01 — `python tools\uimap\coverage_rederive.py`**, which
+  `coverage-matrix.md`'s banner designates *"the ONLY tool allowed to state a coverage
+  figure"*, printed verbatim: `denominator  117 total - 27 unreachable = 90
+  retail-reachable`; `==> 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots`;
+  `COMBINED: 93/117 DISTINCT root ids reached = 79.5%`. Every percentage in this bullet is
+  that tool's output — **none was computed in this document**, which is not that tool.
+  ⚠ Positive control on that run, stated rather than hidden: its corpus-size checks
+  **FAIL** (`ui files on disk expected 339, measured 1093`) because plugins are installed;
+  the DISTINCT-ID checks these figures rest on read `[OK ]`, which is the tool's own
+  documented condition for the headline still standing. Re-run it before quoting; do not
+  quote these numbers from here if that condition has changed.
 - ~~"295/314 = 93.9%, a floor not a correction."~~ → It was neither. Two of its inputs
   were wrong (§5.1, §5.2) and nothing in this repo bounds the three channels in §1.2.
 - ~~"Covered" as a synonym for "works."~~ → `0x6BB92BCB` is covered by no mechanism and is
