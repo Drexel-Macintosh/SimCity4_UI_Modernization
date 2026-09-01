@@ -94,6 +94,10 @@ def main():
     distinct = load_distinct(os.path.join(base, '_work', 'item_icons_distinct.txt'))
     if TAG:
         preview_dir = os.path.join(root, 'tools', 'upscale', 'preview-%s' % TAG, 'SimCity_1')
+        if os.environ.get('SC4UI_UPSCALE_DIR'):
+            # lab A/B override (tools/research/sharp15/build_variant_tree.py)
+            preview_dir = os.environ['SC4UI_UPSCALE_DIR']
+            print('*** preview_dir OVERRIDE (SC4UI_UPSCALE_DIR): %s' % preview_dir)
         stage_dir = os.path.join(base, 'stage-%s' % TAG)
         refmap = os.path.join(root, 'tools', 'selective-safe', 'refmap-%s.csv' % TAG)
         pkg_dir = os.path.join(root, 'tools', 'packages', TAG)

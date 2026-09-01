@@ -101,6 +101,10 @@ def main():
     print("Scale factor: %g  (tag %r)" % (FACTOR, TAG or "(none, 2x verify-only)"))
     if TAG:
         preview_dir = os.path.join(ROOT, 'tools', 'upscale', 'preview-%s' % TAG, 'SimCity_1')
+        if os.environ.get('SC4UI_UPSCALE_DIR'):
+            # lab A/B override (tools/research/sharp15/build_variant_tree.py)
+            preview_dir = os.environ['SC4UI_UPSCALE_DIR']
+            print('*** preview_dir OVERRIDE (SC4UI_UPSCALE_DIR): %s' % preview_dir)
         stage = os.path.join(WORK, 'pack-sub-%s' % TAG)
         pkg_dir = os.path.join(ROOT, 'tools', 'packages', TAG)
         out_dat = os.path.join(pkg_dir, 'z_SC4UIScale_ItemIconsSub-%s.dat' % TAG)

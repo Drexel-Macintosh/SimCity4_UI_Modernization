@@ -100,6 +100,11 @@ def scale_len(v):
 
 if TAG:
     UPSCALE_DIR = os.path.join(TOOLS, "upscale", "preview-%s" % TAG, "SimCity_1")
+    if os.environ.get("SC4UI_UPSCALE_DIR"):
+        # lab A/B override (tools/research/sharp15/build_variant_tree.py): a
+        # variant preview tree with the shipped tree's names and dimensions
+        UPSCALE_DIR = os.environ["SC4UI_UPSCALE_DIR"]
+        print("*** UPSCALE_DIR OVERRIDE (SC4UI_UPSCALE_DIR): %s" % UPSCALE_DIR)
     PKG_DIR = os.path.join(TOOLS, "packages", TAG)
     STAGE = os.path.join(OUT_DIR, "stage-%s" % TAG)
     OUT_DAT = os.path.join(PKG_DIR, "z_SC4UIScale_SelectiveArt-%s.dat" % TAG)

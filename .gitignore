@@ -204,6 +204,20 @@ __pycache__/
 # the measurements are reproducible from it, the art is not ours to carry.
 /tools/research/sharp15/*
 !/tools/research/sharp15/make_even_strips.py
+# 2026-09-01 edge-quality arc: the INSTRUMENTS and the candidate definitions
+# are ours and are load-bearing - _tests/Test-15xEdgeQuality.py imports
+# metrics.py + stroke_width.py, the C# port of the winner is parity-gated
+# against x3_candidates.py, and tier_panel.py is how the tiers are compared
+# on the same sheet. Their OUTPUTS (panels, variant trees, CSVs) stay ignored.
+!/tools/research/sharp15/metrics.py
+!/tools/research/sharp15/stroke_width.py
+!/tools/research/sharp15/resamplers.py
+!/tools/research/sharp15/x3_candidates.py
+!/tools/research/sharp15/theorem_check.py
+!/tools/research/sharp15/bench.py
+!/tools/research/sharp15/tier_panel.py
+!/tools/research/sharp15/build_variant_tree.py
+!/tools/research/sharp15/build_variant_packages.ps1
 
 # Working restore points taken before a risky layout change. Real installs,
 # not repo content - they carry game-derived art and per-machine settings.

@@ -148,6 +148,10 @@ def scale_len(v):
 
 if TAG:
     UPSCALE_DIR = os.path.join(TOOLS, "upscale", "preview-%s" % TAG, "SimCity_1")
+    if os.environ.get("SC4UI_UPSCALE_DIR"):
+        # lab A/B override (tools/research/sharp15/build_variant_tree.py)
+        UPSCALE_DIR = os.environ["SC4UI_UPSCALE_DIR"]
+        print("*** UPSCALE_DIR OVERRIDE (SC4UI_UPSCALE_DIR): %s" % UPSCALE_DIR)
     REFMAP_CSV = os.path.join(TOOLS, "selective-safe", "refmap-%s.csv" % TAG)
     PKG_DIR = os.path.join(TOOLS, "packages", TAG)
     STAGE = os.path.join(OUT_DIR, "stage-%s" % TAG)
