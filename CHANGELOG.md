@@ -1,6 +1,7 @@
 # Changelog
 
-## Unreleased
+## 4.7.1 (2026-09-01) - signposts are the right size, and a long documentation audit
+
 
 **Fixed: signposts and city markers were drawn about twice as large as they
 should be.** A per-zoom table was being scaled by the tier factor on top of an
@@ -15,8 +16,28 @@ enlargement neither visual needed. If some other in-world marker now looks too
 small, `[UiSpike] MarkerZoomScale=1` restores the old behaviour without a
 rebuild.
 
-This is in the repository but not in a release. The v4.7.0 download still has
-the old behaviour; build from source, or wait for the next release.
+### Also in this release - the engine documentation was audited, and it was wrong in places
+
+No behaviour changes below this line; all of it is the reference material the
+project publishes about SimCity 4's UI. It is listed because several entries
+CORRECT things this repository previously stated as fact.
+
+- **The neighbour-connection arrow is sized by its own 3D model vertices**, not
+  by the `OccupantSize` property its exemplar carries. Proven live with a probe
+  DAT that scaled each candidate differently so one screenshot could tell them
+  apart. This *refutes* a claim the docs made plainly.
+- **The traffic/commute route trace is a dedicated view object** the query tool
+  builds and registers with the renderer. Three earlier attributions for it are
+  now dead, including one this repository had published.
+- **The last unidentified overlay constant is identified** - it belongs to the
+  terrain view, and touches nothing this mod scales.
+- **A defect closure was overturned.** #162 (a thin line at 1.5x) had been
+  marked closed with "final verdict"; a later entry in the same file contradicts
+  it, and the older one was winning every search because the newer work was
+  filed under a different number.
+- Three publication blockers were found already resolved but never struck, and
+  a scheduled test session was cancelled because the gesture it prescribed
+  could not have shown the thing it was meant to observe.
 
 ## 4.7.0 (2026-08-31) - the mod stops touching your FontStyle.ini
 

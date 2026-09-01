@@ -1,3 +1,65 @@
+SC4UIScale 4.7.1 (2026-09-01) - signposts are the right size
+================================================================================
+
+THE FIX: signposts and in-world markers drew about twice as large as they
+should. A per-zoom table was being scaled by the tier factor ON TOP OF an
+enlargement that was already correct, so a signpost measured 3.78x its stock
+size where the rest of the interface measured exactly 2.00x.
+
+HOW IT WAS MEASURED, because every disassembly pass before the screenshots
+predicted a clean 2x and every one of them was wrong. The second multiplier
+lives outside the code path any of them was reading. Three player screenshots -
+stock, scaled, and with the patch disabled - with the sign isolated as a
+connected component in each and the UI used as an in-frame ruler:
+
+    sign width   1x                    =  59 px
+                 2x                    = 223 px   -> 3.78x
+                 2x, this patch OFF    = 112 px   -> 1.90x, correct
+
+    so the table ALONE contributed 1.99x (223/112) on top of a correct 2x.
+
+BLAST RADIUS, CHECKED BEFORE SHIPPING RATHER THAN AFTER. The same table also
+scales the dispatch markers, which was the reason it was applied at all. With
+the patch off the player confirmed the dispatch pin "looks good", so those did
+not need it either. That was the one question that could have turned this into
+a trade of one bug for another, and it was asked first.
+
+Kept as an ini key rather than deleted - the builder may draw families nobody
+has looked at yet, and re-enabling must not need a rebuild:
+
+    [UiSpike] MarkerZoomScale=1     restores the pre-4.7.1 behaviour
+
+THE REST OF THIS RELEASE IS DOCUMENTATION, and it is listed because several
+entries CORRECT things this repository previously published as fact:
+
+  * The neighbour-connection arrow is sized by its own S3D model vertices, NOT
+    by the OccupantSize its exemplar carries. Proven live with a probe DAT that
+    distorted each candidate differently - one uniform x3, one anisotropic x8 -
+    so a single screenshot could tell them apart. Measured x2.99 wide / x3.05
+    tall against a predicted 3.0, with the anisotropic candidate leaving a 0.4%
+    aspect change, i.e. absent. This REFUTES a plain claim in our own docs.
+  * The traffic/commute route trace is a dedicated cISC4ViewObject3D that the
+    query tool builds and registers at layer 5 key 0x3E8; the drawer is
+    0x007DD9B0. THREE earlier attributions died, one of them ours in print.
+  * The last unidentified overlay constant, .rdata 0xAB4330, belongs to
+    cSTETerrainView3D and touches nothing this mod scales - a null with a live
+    positive control (5,175 UI-band .rdata references found by the same scanner
+    that found zero into the terrain window).
+  * Defect #162's "final verdict" closure is OVERTURNED. A later entry in the
+    same file contradicts it, and the older one was winning every search because
+    the newer work was filed under a different register number and contains no
+    #162 token at all.
+  * Three publication blockers were already resolved and never struck; one of
+    them still prescribed a live session for a question byte proof had settled.
+  * A scheduled eyes-on run was CANCELLED: the gesture it prescribed could never
+    have displayed the thing it was meant to observe, so its null would have
+    been booked as evidence.
+
+NOTHING ELSE CHANGED ON SCREEN. The art packages are untouched and were not
+rebuilt; the only compiled change besides the marker gate is added return-address
+detail in a diagnostic log line.
+
+
 SC4UIScale 4.7.0 (2026-08-31) - the mod stops touching the player's FontStyle.ini
 ================================================================================
 

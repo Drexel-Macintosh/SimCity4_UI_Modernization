@@ -48,7 +48,11 @@ letter. Neither was a null; both were broken instruments.
 
     python tools/dbpf/art-census/fsh_census.py
 
-Takes roughly 13 minutes and writes `named-art-1ABE787D.csv`. That output is
+Takes roughly 13 minutes and writes a named-art CSV (filename "named-art"
+plus the group id) beside the
+script. That file is NOT in the repository and there is deliberately no link
+to it here - a reference a cloner cannot open is a dead link, and this gate
+(`_packaging/Test-NoDeadLinks.py --repo`) caught exactly that. The output is
 **gitignored on purpose**: it is bulk EA-derived data, it is regenerable by
 anyone who owns the game, and this repository vendors its own tools rather than
 extracted game content. The scripts are ours; the data is EA's.
