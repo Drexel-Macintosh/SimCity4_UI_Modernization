@@ -1,8 +1,8 @@
 # ###########################################################################
 # GENERATED FILE - do not hand-edit; your edit is lost on the next build.
 #   generator : tools/sc4pac/gen_channel.py
-#   bundle    : SC4UIScale-v4.7.0
-#   generated : 2026-08-31T15:17:19Z
+#   bundle    : SC4UIScale-v4.7.1
+#   generated : 2026-09-01T12:33:27Z
 # The prose below is carried verbatim from the hand-written version of this
 # file. The generator refuses to write output that drops any of it.
 # ###########################################################################
@@ -116,7 +116,7 @@
 # examined, 3/3 controls fired, ZERO CAM keys changed hands.
 group: "a-drexel"
 name: "sc4-ui-scale"
-version: "4.7.0"
+version: "4.7.1"
 subfolder: "050-load-first"
 dependencies:
 - "config:sc4-edition-windows-digital"
@@ -128,7 +128,7 @@ assets:
   # It ALSO needs the checksum for a second, measured reason: a file
   # listed only under `include:` was NOT INSTALLED AT ALL.
   - include: "/Plugins/SC4UIScale.dll"
-    sha256: "bcfcf85448e9708afbfa1cdfab608cd307792be58ae32c28f0171bf639c6594a"
+    sha256: "8929db5e944b397b9ce6e42ef52492794516a15ce5762f9b92846c7d18b70f5b"
   # Shipped by --ship-asset-inis. NOTE: no `isIni: true` - that lands the
   # file at the Plugins root renamed `_sc4pacnew.ini` and never activates
   # it. This keeps it in the package folder, where the DLL reads it.
@@ -161,7 +161,7 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_DialogStatic.3x.uipay"
     sha256: "a3c238e46ee08c97978c0588501c788783d5b3680feef072063566ae9e2a44bd"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_DialogStatic.off.uipay"
-    sha256: "d185bee362290c5c95b17ad34779d3d78560856cfc3306b3a701dd4a61c59be3"
+    sha256: "6f245108c87de3d7555f3a19e835a19033baec991be26b36138e3b82b17360c2"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.15x.uipay"
     sha256: "aa81a1c7f001ef612890cec024bcc33f5be332dfe4c4c2ccc569c8d58378ec87"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.2x.uipay"
@@ -169,7 +169,7 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.3x.uipay"
     sha256: "4714374b6da5d2a0f2b229ef7c861dc8c423f2b6765dc923ead23150ddebfc72"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.off.uipay"
-    sha256: "4445054113b2617bbba0d5033d1356e6a3e50bea6dc20ed7483b407953c31734"
+    sha256: "b92fa971e7aa5eaba2d099cb4466e9aef51559e514c5cf42ea79745e0a174822"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.15x.uipay"
     sha256: "b4903da7ababd6db4fbdbf6d011ea2d21b43cc0a9176a415417b7c2016dd5f57"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.2x.uipay"
@@ -177,9 +177,9 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.3x.uipay"
     sha256: "73209d2e64c4f0adbc644c499eb299bc1c29b20792c86a7e7db24f1cb539ec98"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.off.uipay"
-    sha256: "8c211f2af2d1cb9d5c44526c7b4c2f6be09f451e63e48a214f87a4da7d592495"
+    sha256: "0a3a8de0dc7063b421fb2e3b2edbdeb9fa853bc67f2333478ee4e981db7d90a1"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_WebText.off.uipay"
-    sha256: "672967a53110bdb56efdab99f7229e007066b28c66c681520898f1f7994b2abd"
+    sha256: "9a044f45e213edecef65029eecd037bc646a75535d3732e89bbd8698bbe6df9f"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_WebText.on.uipay"
     sha256: "2c98fcf374151117ac24ed0c7ef3b287cb34fd40c0a0c15ff316db752ce11767"
   include:
@@ -219,7 +219,7 @@ info:
 # examined, 3/3 controls fired, ZERO CAM keys changed hands.
 group: "a-drexel"
 name: "sc4-ui-scale-mod-overrides"
-version: "4.7.0"
+version: "4.7.1"
 subfolder: "900-overrides"
 dependencies:
 - "a-drexel:sc4-ui-scale"
@@ -244,7 +244,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CamUI.3x.uipay"
     sha256: "31867ed40954822a317b0d655b8e0b79a5bfee67b0996f4b66134d85272a0cad"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CamUI.off.uipay"
-    sha256: "80fa8eef87b7ed67bed67ad533644a586d7eded80c9a2c504fe3eb32e344287d"
+    sha256: "ca0f74919277153dec1c728a05713913bd22b1f7d41dc6c2559773dde4663f61"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.15x.uipay"
     sha256: "dd3ddb81f9a605c67078e93548a26727aaa469ebd211f2b0ff681b6a2a49ae9b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.2x.uipay"
@@ -252,7 +252,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.3x.uipay"
     sha256: "eea37c6549f05c1ab352a9c4b059eecf181c4d4f14441aa06fe4585afcfab043"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.off.uipay"
-    sha256: "3dd1d039a3ea78764edf1026a6983d7a456766657384159f4704c7eccdef0f0e"
+    sha256: "29944fe5a7642fec2eabf844344695811dc963b53b1cb1257da346f99ef841d4"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.15x.uipay"
     sha256: "02948c1c943389727fb44b6844224acc8b9eb3e259c13389afda78e9eb093b47"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.2x.uipay"
@@ -260,7 +260,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.3x.uipay"
     sha256: "10371223ae3ddab19b94b5d2e885ebb6b6e30fdd49492f531fe1c17572279adb"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.off.uipay"
-    sha256: "b84e9f57979850c9e7d18e0b1bb5950727aa2e923332a2c835106e8a43ffd0f0"
+    sha256: "65aee9cef4641094ddcaccd42c955c98cceca4e699f136afba23fa43e3670eee"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.15x.uipay"
     sha256: "7e0f7ddf00f8469cbb9fb3336fa19a5058b9a475c342b7d2ec774bad78fe1508"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.2x.uipay"
@@ -268,7 +268,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.3x.uipay"
     sha256: "ca3635ea69c8e165a013c242efb27a086a7f8d134dca82e8c773ab1e02642646"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.off.uipay"
-    sha256: "ff72f437525582e99c75cf37ad706d74cd9f473065e27bbff6fda12026edb172"
+    sha256: "c739a40a32cd7fdb2480a31efdb6405758e0fd846d25fab12ae0b4d59ccdc2d1"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RaiseUI.15x.uipay"
     sha256: "123ce0123c93e8682272d4d66d9ac39f86df621fd043f3a297d8b7c90b350d25"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RaiseUI.2x.uipay"
@@ -276,7 +276,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RaiseUI.3x.uipay"
     sha256: "03b080c2ad4354a3d550d9833e7d9d232e1492a3c4696522e57c453d3ecdef83"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RaiseUI.off.uipay"
-    sha256: "74ec59d18b89f54f35c5c7752ec4d8b661b7c6b44dbbcf8d4874382f1433caec"
+    sha256: "62a312608b11f77cd684156ee3383115cc5d88fc0dcf55487861517d0e6b2613"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RegionCensusUI.15x.uipay"
     sha256: "e753ab926891d74f7d77e4476929cc5c4bd0e606c27caa3c585d5276212cfe24"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RegionCensusUI.2x.uipay"
@@ -284,7 +284,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RegionCensusUI.3x.uipay"
     sha256: "5d650b1dc84f1c3aa0882475a762a8d64a4251d6b72c673270a898a3f73376a9"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RegionCensusUI.off.uipay"
-    sha256: "7987b1e2e0b68685b4866cd5865d8479328e337cc6d22b851aff7802b2ff5cb8"
+    sha256: "a7ccbf3ee275108b8a56b48fa7d703cc37d96906660fd49ba61d703297c4ce1a"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.15x.uipay"
     sha256: "40e3dd1ae385b5e08384ce86d5c47d60358c035c8a2bfd7a7746cd26a62af257"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.2x.uipay"
@@ -292,11 +292,11 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.3x.uipay"
     sha256: "78a86b9bb42c8f9d22cf2286f3781f4e871dcd8a3d58ef75ba4dbe2bd34f780b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.off.uipay"
-    sha256: "b7e510e2ea919cb2478a43922f1caa516d8c7e9f5c8a9668b9dc92ce74585aa4"
+    sha256: "2d2eba46855a6eb46c46d2e8be2bd85c3f6f319874aef8e9075c9c0bb11fc668"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SelectorUI.1x.uipay"
     sha256: "1bd7a470b923d31a3b6ed98b50a949dfd3fb687848e4d33e3e6c8c88ecd84973"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SelectorUI.off.uipay"
-    sha256: "c1d4d1047b7a03d1c097bc4545ee001b079f2a6513b032986e753afe77fd7bf6"
+    sha256: "b09720d6c8be6e77af28f619b93007b2772ee8c082d4b615f0bcf87b550831b1"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.15x.uipay"
     sha256: "3680771a44582fc1fc81241c36bd7b1afa7d9fc38a6efbc9750b1633b276426f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.2x.uipay"
@@ -304,7 +304,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.3x.uipay"
     sha256: "8faf5ef874fc550f1fa0d7c86f80b366851404ef00808b3192e222fc9fa368f3"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.off.uipay"
-    sha256: "03723898791f25167801ef02a0dfa4f4761a0c58eed18f0a39810c4ded8bd268"
+    sha256: "b8ba9d2174f3f615d7acee2c4ee44e4062b8b30e53bcc66438ecac75c1cad821"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.15x.uipay"
     sha256: "3159d8fa33a4f69105ccee63f123e4364fa94505b77c0e23e4e757d6a19346ce"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.2x.uipay"
@@ -312,7 +312,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.3x.uipay"
     sha256: "ae11bbc82536297525e165728ac6348dbb4b2883e50d0331a8bfd815fb1a7398"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.off.uipay"
-    sha256: "6d08395ef9ec6187c3f007ba829364fa40a539c3a022172eb71a0fe02cda0046"
+    sha256: "7bc6268f2504d6ab668a9da8ccf809bcc1f967e87298c70f0046222b18a2cb74"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.15x.uipay"
     sha256: "1fc4beb55894f9ed7790ef9d36f7519aa9064a0b3a1ff84a934fecc629172177"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.2x.uipay"
@@ -320,7 +320,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.3x.uipay"
     sha256: "5df6d65053b3583c1757feec51b7cb4ea1a38571d47ad18cd5fd918d83262f40"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.off.uipay"
-    sha256: "7048d593d1e718d0394624380cc03429d2029614d2d4c27c94457d88eb22a39f"
+    sha256: "75edf48db76b80e588e9b8c56de3687dcff724db7629077a47e0fc3b1f95eeff"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.15x.uipay"
     sha256: "5991c73f70931249b57344de6739c2472b53a58c607ca5c1dc1a1a22612a22b1"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.2x.uipay"
@@ -328,7 +328,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.3x.uipay"
     sha256: "14193c4ad83d84b635be5fc1a131419b42317c6a43a540aff62ee7a8b6bcfc2f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.off.uipay"
-    sha256: "c2fbc2ff51025062beff64681e6c328cedf34e9c915bcf50882721f7fa61a8a3"
+    sha256: "a4161d1f1d2d5d614edbcfc1834e37f4f1521ab7ca30509077ee0d6a1b2e5662"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.15x.uipay"
     sha256: "a7707263517d4df9be0f5edc5a749002f8096f3b36c95467129aa3b200d084a9"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.2x.uipay"
@@ -336,7 +336,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.3x.uipay"
     sha256: "caa08b2b5e63f860607d5365ce8b8c6acbf3ac2bd4983471524f8649d96f72bc"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.off.uipay"
-    sha256: "f57aa85c595737bc5ab02b5572aafdf03c6ca03c5f2a31a7a0211f0c9629182d"
+    sha256: "2a163aa637b856718eecf03e95136c5b4dddadf1d3f584061c30290913e20b78"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.15x.uipay"
     sha256: "502ce4f2f49061167acbe885fc5f1b3c1ecde2cd6918868f22a6bec058b87088"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.2x.uipay"
@@ -344,7 +344,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.3x.uipay"
     sha256: "5ce37b4bf4ae011f55ff8a649d8fd90bb598d5eef8b748864e70fdb14e2b37a0"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.off.uipay"
-    sha256: "246eec78b770327b300dc47d4fd8c15c20ec9da255944d63c778ac5d4c84c1f5"
+    sha256: "0d6849339b1434d71367d6ae9a231a581ff33f9c3677b5c9c0bde19761705bd7"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.15x.uipay"
     sha256: "2b1e7a4346f9e06877487ed9db41d7dc57cf995103051ef8bc455964042fe001"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.2x.uipay"
@@ -352,7 +352,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.3x.uipay"
     sha256: "e2b7aa75d137e3000de72ec416bdd1c51610e319fe8c78fd8017e96e46c2f15a"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.off.uipay"
-    sha256: "52376388d71a8c968c51525680f3d50375bc74c3b0384071a68fe9bc5acb0c28"
+    sha256: "33e3acb0bffa9fa68096a7be0b5f1a77a8b20798c29822b7d70fef9aa85468ad"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.15x.uipay"
     sha256: "ade0be0891cca8578de161df8b2b821eba686272b28b508b2a94f3099ef35eb8"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.2x.uipay"
@@ -360,7 +360,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.3x.uipay"
     sha256: "06f3490037d604aab51fa0004aa43a493956739feeb5b64ae91650cbab93502f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.off.uipay"
-    sha256: "93289d5c098cd7768b46caa08afff57a957f112c715a630fb52f671e91c87d69"
+    sha256: "be125ecd52d63237976c9e4f13b4696565baeb10fd4479392aca80f53ce6676f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonPauseOff.15x.uipay"
     sha256: "4c482cc4b246485e1ba783e0c65970da4cb1cb13258346c46b0afdf4af25a38d"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonPauseOff.2x.uipay"
@@ -368,7 +368,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonPauseOff.3x.uipay"
     sha256: "63bb8e525db2f7bf72807fc2c3483131c07718053f85a0a8d61eda9bc3269bf6"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonPauseOff.off.uipay"
-    sha256: "f50ea720be637d7792257db95f3c9c73f15c36fc2cfdc54bf53367570cdc1292"
+    sha256: "8f4d687b81e09698ec107042389f38d815eab52b6531d5c37cf0a3fab7346bf0"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonRaiseUI.15x.uipay"
     sha256: "1140699ed8656e219dd1f1e310804971d992ae00c9191b478974aff6d43de532"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonRaiseUI.2x.uipay"
@@ -376,7 +376,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonRaiseUI.3x.uipay"
     sha256: "1a662c1ecab28720b12ab87d300b5d09551d7fbf4bb1e34b51b2c2ea0393520c"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonRaiseUI.off.uipay"
-    sha256: "de0207f7574b47123a2aab9b131ca7da7de05f71f91e5bc30dbe8bedadd60399"
+    sha256: "4a3d007111511203c396de6f0afa7cbf588d66878028b10d500c1207be74dc4d"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.15x.uipay"
     sha256: "16a182e6a53363824909f9da50ab6fc596d7d56ee969de94dbeb2d9ba634ffca"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.2x.uipay"
@@ -384,7 +384,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.3x.uipay"
     sha256: "7ea002b9c2692056e7469508aed8cfe90a550c93185a9511240812914db27fea"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.off.uipay"
-    sha256: "b74e647cb69329e4c6d30bedd1a7285b96d871b245389fc4f153d107357521e3"
+    sha256: "416214b92293dbf7d39c33065bfe66f073b6c5cb2ca8beafd959ad79fdb70248"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.15x.uipay"
     sha256: "a2f6c794c405223392cd0019454d9ed6d6ae2de06da0f5ac347284e820919182"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.2x.uipay"
@@ -392,7 +392,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.3x.uipay"
     sha256: "fd33506897dea8bee59bd4fdbbe1515b2b2ae8bdac6453f8b4560b36df33504b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.off.uipay"
-    sha256: "1d8bb6ba40b27eb28170a0900c5a325217d42a0d90b6df7111e50778bbd95df5"
+    sha256: "7c7e3881d8dd0de09d4b7e9f5512ef7b7cac0e949c8e473355c53d46eabe455d"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.15x.uipay"
     sha256: "9e0ace5806751fea5ae34b65bd29f5c22ec8a5fab25f79b465bdd8ea2543c193"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.2x.uipay"
@@ -400,7 +400,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.3x.uipay"
     sha256: "3705d7fedff6f61e3f0e7410d074c512685ee54aa541f7227b834d0c8bd188df"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.off.uipay"
-    sha256: "ff4d1dd792515490c862eb985ebe3241252a9da1810b11cede4c25f881ce68ff"
+    sha256: "b2287026776b81297116a3901b83c444f61b75ee316cb954ca247fd7b34764d9"
   include:
   # Built FROM other mods' own artwork, so these must WIN - hence the last
   # canonical subfolder. Gated AT RUNTIME on each mod's files by exact name
@@ -430,12 +430,12 @@ info:
 
 # THE ASSET. One zip serves both packages.
 assetId: "a-drexel-sc4-ui-scale"
-version: "4.7.0"
+version: "4.7.1"
 # The RELEASE publish time from the GitHub API, not a file mtime. sc4pac uses
 # this to decide whether a cached asset is stale, so it has to move when the
 # asset does.
-lastModified: "2026-08-31T15:16:24Z"
-url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.7.0/SC4UIScale-v4.7.0.zip"
+lastModified: "2026-09-01T12:09:39Z"
+url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.7.1/SC4UIScale-v4.7.1.zip"
 # No `nonPersistentUrl`: docs/metadata.md scopes that field to a SECOND
 # host's page (e.g. url on GitHub, nonPersistentUrl on Simtropolis) and the
 # update checkers only consume STEX/SC4E links. GitHub is our only host, so
