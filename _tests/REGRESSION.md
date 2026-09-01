@@ -20678,3 +20678,76 @@ counted as COVERED, so the numerator falls by three alongside the denominator:
 is the only kind that cannot be motivated by wanting a better number.
 
 Selftest still rejects all 4 injected defects.
+
+## 2026-09-01 — the three "export windows": one was the SNAPSHOT FRAME, one was DEV-ONLY, one was already covered
+
+`FINAL-3-PERCENT.md` called these "the only genuine D2 work left" and
+"player-reachable through Photo Album and recorded animations". **All three
+descriptions were wrong**, and acting on them would probably have broken
+something that works.
+
+### `0x85202C0E` is the SNAPSHOT / CAMERA MODE capture frame
+
+Not an "export-resolution preset picker". Opened by the camera button
+`0x8A1DA655` on the city dock, on two byte-verified routes, and by the command
+the game's own registry names `kCommandID_OpenSnapshotDialog` (`0x6A935E4B`).
+Its own LTEXTs decode to "Click or press enter to take snapshot", "Press escape
+to cancel", "Press the spacebar to change size".
+
+**SCALING IT WOULD HAVE BEEN THE DEFECT.** Its width and height ARE the export
+resolution in real pixels — enlarging the window enlarges the photo the player
+takes. It was already skipped, but only INCIDENTALLY: it opens full-screen
+(measured live at `(0,0 2400x1600)` on a 2400x1600 view) so the >=90% guard at
+`:12010` continued past it. **That geometry is not fixed** — the spacebar cycles
+presets from 160x120 up, and at a small preset it drops under the guard and the
+sweep would be free to double it. Now in `kNeverScaleIds`, so the exclusion is
+enforced rather than an accident of the default.
+
+BLAST RADIUS, checked against the one law that could have made it wrong:
+`UiSpike.cpp:5879` records a regression this project shipped **three times** —
+"a skip list skips the FUNCTION, not the line", because the child walk lives
+inside `ScalePanelRoot`. It does not bite here, and that was verified rather
+than assumed: the entire 1,050-byte OnCreate contains no `call [reg+0x38]`, so
+**the window has no children**. At the shipped default preset, behaviour is
+bit-identical to before.
+
+### Two carried facts REFUTED
+
+* **The vtable pairing.** Three docs recorded `0x85202C0E <-> 0xAB9980`. The
+  ctor stamps `0x00AB9BF8` at `0x7B748B` and the live log prints
+  `vt=00AB9BF8`.
+* **"Never in any retained log."** It is in
+  `_tests/captures/SC4UIScale-2026-08-19-121243.log:8829` —
+  `VWKID 0 id=0x85202C0E vt=00AB9BF8 (0,0 2400x1600)` — and five seconds later
+  the Photo Album root opens from the adjacent button. It had been sitting in a
+  capture in this repo the whole time.
+
+### `0x9AEDEF7C` is DEV-ONLY, and chasing it was the real hazard
+
+No player gesture reaches it. Its modal chain runs through the app object's
+`vt+0x1B0`, which is **SHARED with the working "Terrain Load/Save Location"
+modal at `0x00455060`**. The likely product of "fixing" this row was a coverage
+win that broke a window that works. **Killing the work item is worth more than
+the 0.4 points the exclusion would have moved.**
+
+It is NOT being added to `EXCLUDED_ROOTS` — that dict subtracts from the `.UI`
+ROOT denominator and this is a D2 window, a different denominator. Putting it
+there would have been a category error.
+
+### The free ratio win was DECLINED
+
+Excluding `0x9AEDEF7C` from D2 would raise the ratio without lowering the
+numerator — and this repo's own standard, set this morning, is that **a ceiling
+raise that costs the numerator is the only kind that cannot be motivated by
+wanting a better number.** This one fails that test, so it is relabelled
+"UNCOVERED — DEV-ONLY, correctly so" and left in the denominator. The work item
+dies either way; only the ratio differs, and the value survives when the number
+is removed.
+
+### D2 tops out at 93.8%, not 100%
+
+`0x6A0AF41D` (region cloud particle emitter) is a deliberate leave-alone: its
+sprite size is the code constant at `0xAB7E10` = 128.0, the effect is cosmetic,
+and the sweep has no path that would ever touch it. There is nothing to cover
+and nothing to exclude. **100% is not honestly reachable on D2, and the reason
+belongs in the table rather than in a footnote.**

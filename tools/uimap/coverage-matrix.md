@@ -372,7 +372,37 @@ by construction, all measured 2026-08-03 from `tools\uimap\_work\edges.json`:
 | `0x00000043` | Restore-Toolbars button | **UNCOVERED — quantified defect** | **10 px clip at birth, 20 px after our own sweep** (2x art `42x38` at the code-fixed `(12, viewH−28)`) |
 | `0xEA659793` | region screen | UNCOVERED | region pass is whitelist-only |
 | `0x6A0AF41D` | region **cloud particle emitter** | UNCOVERED — correctly | sprite size is the code constant `float @0xAB7E10 = 128.0`; cosmetic; **leave alone** |
-| `0x85202C0E`, `0xA802B4EB`, `0x9AEDEF7C` | ? | ROLE UNKNOWN | never in any retained log |
+| `0x85202C0E
+
+> ⛔ **CORRECTED 2026-09-01 — ALL THREE CLAIMS IN THIS ROW-SET ARE WRONG.**
+> The three windows were called "the only genuine D2 work left" and
+> "player-reachable through Photo Album and recorded animations". Measured:
+>
+> * **`0x85202C0E` is not an export-resolution preset picker.** It is the
+>   **SNAPSHOT / CAMERA MODE capture frame**, opened by the camera button
+>   `0x8A1DA655` on the city dock and by the command the game's own registry
+>   names `kCommandID_OpenSnapshotDialog` (`0x6A935E4B`). Its own LTEXTs read
+>   "Click or press enter to take snapshot", "Press escape to cancel",
+>   "Press the spacebar to change size".
+> * **Its vtable is `0x00AB9BF8`, not `0xAB9980`.** The ctor stamps AB9BF8 at
+>   `0x7B748B` and the live log prints `vt=00AB9BF8`.
+> * **"Never in any retained log" is false.** It is in
+>   `_tests/captures/SC4UIScale-2026-08-19-121243.log:8829` —
+>   `VWKID 0 id=0x85202C0E vt=00AB9BF8 (0,0 2400x1600)` — and five seconds
+>   later the Photo Album root opens from the button beside it.
+> * **SCALING IT WOULD BE THE DEFECT.** Its width and height ARE the export
+>   resolution in real pixels. It is now in `kNeverScaleIds` so the exclusion
+>   is enforced rather than an accident of the full-screen default.
+> * **`0x9AEDEF7C` is DEV-ONLY.** No player gesture reaches it, and its modal
+>   chain is SHARED with a working dialog — so acting on this row would most
+>   likely have broken something that works.
+> * **`0xA802B4EB` was ALREADY COVERED** by host/child geometry, no code
+>   needed. Graded COVERED — STRUCTURAL, UNOBSERVED.
+>
+> **D2 tops out at 15/16 = 93.8%, not 100%**: `0x6A0AF41D` is a deliberate
+> leave-alone whose sprite size is the code constant at `0xAB7E10` = 128.0,
+> so there is nothing to cover and nothing to exclude.
+`, `0xA802B4EB`, `0x9AEDEF7C` | ? | ROLE UNKNOWN | never in any retained log |
 
 ### 0.3 §5's PROVEN-UNREACHABLE table is WRONG in two of three rows
 

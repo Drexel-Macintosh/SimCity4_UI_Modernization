@@ -5468,6 +5468,43 @@ namespace
 		            //   control is already right once art is 2x (law 2);
 		            //   doubling this frame can only break it. Twin pair
 		            //   I-0a41be3e / I-0a41be3f, both 62x49.
+		0x85202C0E, // THE SNAPSHOT / CAMERA MODE CAPTURE FRAME. Added
+		            // 2026-09-01. SCALING THIS WINDOW IS THE DEFECT, not a
+		            // gap: it is the 1:1 frame the game uses to define what
+		            // gets captured, so its width and height ARE the export
+		            // resolution in real pixels. Enlarging it would enlarge
+		            // the picture the player takes.
+		            //
+		            // It was already skipped, but only INCIDENTALLY - it opens
+		            // full-screen (measured live at (0,0 2400x1600) on a
+		            // 2400x1600 view) and the sweep's >=90%-of-screen guard at
+		            // :12010 continued past it. That is coverage by geometry,
+		            // and the geometry is not fixed: its own OnCreate builds
+		            // presets from 160x120 up, and the player can cycle them
+		            // with the spacebar (the window's own LTEXT says "Press
+		            // the spacebar to change size"). At a small preset it
+		            // drops under the 90% guard and the sweep would be free to
+		            // double it. This entry makes the exclusion ENFORCED
+		            // rather than a side effect of the current default.
+		            //
+		            // BLAST RADIUS CHECKED, and against the one law that could
+		            // have made this wrong. :5879 records a regression this
+		            // project shipped THREE TIMES - "a skip list skips the
+		            // FUNCTION, not the line", because the child walk lives
+		            // inside ScalePanelRoot. It does not bite here: the whole
+		            // 1,050-byte OnCreate sub_7B7A80 contains no
+		            // `call [reg+0x38]`, so THE WINDOW HAS NO CHILDREN. Its
+		            // three instruction strings are one string member at
+		            // [this+0xFC], painted by the class's own Plot 0x7B6B30.
+		            // There is no child walk to lose. At the shipped default
+		            // preset behaviour is bit-identical to today.
+		            //
+		            // Reached by the camera button 0x8A1DA655 on the city dock,
+		            // two byte-verified routes, and by the command the game's
+		            // own registry names kCommandID_OpenSnapshotDialog
+		            // (0x6A935E4B). Its class vtable is 0x00AB9BF8 - NOT the
+		            // 0xAB9980 three docs recorded; the ctor stamps AB9BF8 at
+		            // 0x7B748B and the live log agrees.
 		0x27DF05BE, // #191 Move In My Sim marker, green twin - born
 		            // correct from the data-scaled I-6a9455c9
 		0x27DF05BF, // 46x97 tiled plaque (I-6a9455c9), backing image
