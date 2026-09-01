@@ -5472,12 +5472,42 @@ namespace
 		            // correct from the data-scaled I-6a9455c9
 		0x27DF05BF, // 46x97 tiled plaque (I-6a9455c9), backing image
 		            // {46a006b0,13f15214} + a 36x41 icon inset at (5,5).
-		            // ONLY the ...BF twin. 0x27DF05BE is NOT here on
-		            // purpose: that id is ALSO the root of the Obliterate
-		            // City confirm (I-2a41436c), which we already ship
-		            // DATA-SCALED via build_dialog_static.py:280. One id,
-		            // two different windows - listing BE would reach the
-		            // wrong one (law: match the family THEN check the host).
+		            //
+		            // CORRECTED 2026-09-01. This comment used to read "ONLY
+		            // the ...BF twin. 0x27DF05BE is NOT here on purpose" -
+		            // while 0x27DF05BE sits four lines ABOVE it, listed.
+		            // The comment described a state the array had left, and
+		            // it was actively dangerous: it told the next reader
+		            // that a listed line should not be there, inviting its
+		            // deletion.
+		            //
+		            // The entry is CORRECT and the old reasoning inverted
+		            // the conclusion. Read the array name literally - "never
+		            // scaled BY THE SWEEP". Both windows behind this id are
+		            // DATA-SCALED: the Move In My Sim marker is "born
+		            // correct from the data-scaled I-6a9455c9", and the
+		            // Obliterate City confirm (I-2a41436c) ships data-scaled
+		            // via build_dialog_static.py:280. A data-scaled window
+		            // is precisely the case that needs the sweep to stand
+		            // down, or it gets scaled twice. "One id, two windows"
+		            // is true, but here both want the SAME treatment, so
+		            // reaching both is the desired outcome, not the hazard.
+		            //
+		            // MEASURED 2026-09-01: the user confirmed the Move In My
+		            // Sim marker renders correctly at the 2x tier with this
+		            // entry present - #191 has NOT re-opened.
+		            //
+		            // ONE CONSUMER REMAINS UNTESTED, stated rather than
+		            // assumed: nobody has opened the OBLITERATE CITY CONFIRM
+		            // at 2x since this entry landed. The argument above says
+		            // it should be fine, but that is inference. Also note
+		            // what the marker observation does NOT settle: a correct
+		            // marker WITH the entry present is consistent both with
+		            // "the entry is load-bearing" and with "the entry is
+		            // inert", so it does not decide that question. Deciding
+		            // it needs an A/B build with the id removed, which is
+		            // not worth shipping a risky build to answer - the live
+		            // configuration is correct either way.
 		// NOTE (2026-07-23): the god-mode tool UI (toolbar 0xC991EDA8 +
 		// flyouts) is NOT excluded - northstar is EVERYTHING SCALES. The
 		// toolbar scales cleanly (bottom-left column); the flyouts scale but

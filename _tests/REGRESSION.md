@@ -20374,3 +20374,77 @@ from a width-only cell to a per-axis `(srcW/3, srcH/3)`.
    and correct.
 
 Families gate re-run after the edit: exit 0.
+
+## 2026-09-01 — #191 confirmed not re-opened, a deletion trap removed, and my third correction
+
+### #191: the user measured it. The marker is correct.
+
+User at the 2x tier, this session: the Move In My Sim marker "looks good, no
+issue". **#191 has NOT silently re-opened**, which was the actual risk and is
+now closed by observation.
+
+What that observation does NOT settle, stated rather than glossed: a correct
+marker WITH `0x27DF05BE` present in `kNeverScaleIds` is consistent BOTH with
+"the entry is load-bearing" and with "the entry is inert". It does not decide
+that question. Deciding it needs an A/B build with the id removed, and that is
+not worth shipping a risky build for — the live configuration is correct either
+way. (The value-agreeing-with-both-hypotheses law, applied to a result I wanted
+to be conclusive.)
+
+One consumer remains untested and is now recorded in the source: nobody has
+opened the OBLITERATE CITY CONFIRM at 2x since the entry landed. Both windows
+behind this id are data-scaled, so it should be fine, but that is inference.
+
+### A comment was actively inviting someone to delete a working line
+
+`src/UiSpike.cpp:5475` read "**ONLY the ...BF twin. 0x27DF05BE is NOT here on
+purpose**" — while `0x27DF05BE` sits four lines ABOVE it, listed. The comment
+described a state the array had left, and its reasoning inverted the
+conclusion: it argued the id must stay out because the Obliterate City confirm
+"we already ship DATA-SCALED", when data-scaled is precisely the case that needs
+the sweep to stand down or the window gets scaled twice. Read the array name
+literally — "never scaled BY THE SWEEP". Both windows want the same treatment,
+so reaching both is the desired outcome, not the hazard.
+
+Corrected, with the old text quoted rather than deleted.
+
+LAW EARNED — **A STALE COMMENT NEXT TO CORRECT CODE IS WORSE THAN NO COMMENT.**
+It does not merely fail to help; it instructs the next reader to break working
+code, and it carries the authority of sitting right beside the line.
+
+### ⛔ MY THIRD CORRECTION THIS SESSION: 73.5% IS supported
+
+I told the user "73.5% is a number the instrument itself forbids quoting". That
+was wrong. I read the tool's blanket banner and did not read WHICH checks failed.
+All six divergences are file/root COUNTS. Every check the coverage figure rests
+on PASSED:
+
+```
+[OK ] distinct root ids            expected 118  measured 118
+[OK ] distinct nonzero root ids    expected 117  measured 117
+[OK ] distinct root ids named      floor 83  measured 86  (IMPROVED)
+```
+
+A genuinely interesting fact fell out: **763 extra plugin `.ui` files added ZERO
+new distinct root ids.** Plugins re-instantiate the game's existing roots rather
+than introducing new ones — which is why the denominator held across a corpus
+that tripled.
+
+### The gate's diagnosis is fixed; the gate is not weakened
+
+The six count expectations are pinned to the runner's PLUGIN FOLDER, so they can
+never pass on another machine — a "hard expectation" that varies with what mods
+someone installed. Rather than restructure a gate that exists because it once
+printed a wrong number, the CHECKS AND THE EXIT CODE ARE UNTOUCHED and only the
+DIAGNOSIS changed:
+
+* the six are named `INSTALLATION_DEPENDENT`, and a divergence in that class now
+  prints "your plugin set differs from the baseline; re-derive, NOT a parser
+  regression";
+* when EVERY divergence is in that class, the banner says so and points the
+  reader at the distinct-id checks before discarding the figure — "this banner
+  is deliberately blunt, and blunt is not the same as precise".
+
+VERIFIED after the change: run exits **1** on divergence (unchanged), and
+`--selftest` still rejects **all 4** injected defects, so #99's protection is
+intact.
