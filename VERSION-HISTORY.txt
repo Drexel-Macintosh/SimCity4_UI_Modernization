@@ -1,3 +1,69 @@
+SC4UIScale 4.7.2 (2026-09-01) - the snapshot frame is left alone on purpose
+================================================================================
+
+ONE LINE OF BEHAVIOUR: 0x85202C0E joins kNeverScaleIds.
+
+WHAT IT IS, and the documentation had it wrong. Three places recorded this as an
+"export-resolution preset picker" with vtable 0xAB9980 that had "never appeared
+in any retained log". It is the SNAPSHOT / CAMERA MODE CAPTURE FRAME:
+
+  reached by   the city-dock camera button 0x8A1DA655, two byte-verified routes
+  and by       kCommandID_OpenSnapshotDialog 0x6A935E4B, named in the game's
+               own registry at .data 0xB09308
+  its vtable   0x00AB9BF8, stamped by the ctor at 0x7B748B - NOT 0xAB9980
+  its own text "Click or press enter to take snapshot" / "Press escape to
+               cancel" / "Press the spacebar to change size"
+
+WHY SCALING IT WOULD BE THE DEFECT: the window's width and height ARE the export
+resolution in real pixels. Enlarging it enlarges the photo the player takes.
+
+WHY IT WAS NOT ALREADY SAFE. It was skipped, but INCIDENTALLY - it opens
+full-screen, measured live at (0,0 2400x1600) on a 2400x1600 view, so the
+>=90%-of-screen guard at UiSpike.cpp:12010 continued past it. That geometry is
+not fixed: its OnCreate builds presets from 160x120 upward and the spacebar
+cycles them. At a small preset it falls under the guard and the sweep would be
+free to double it. This entry makes the exclusion ENFORCED.
+
+BLAST RADIUS, checked against the one law that could have made this wrong.
+UiSpike.cpp:5879 records a regression this project shipped THREE TIMES: "a skip
+list skips the FUNCTION, not the line", because the child walk lives inside
+ScalePanelRoot. Verified rather than assumed - the entire 1,050-byte OnCreate
+sub_7B7A80 contains no `call [reg+0x38]`, so THE WINDOW HAS NO CHILDREN and
+there is no child walk to lose. Its three instruction strings are one string
+member at [this+0xFC], painted by the class's own Plot 0x7B6B30. At the shipped
+default preset, behaviour is bit-identical to v4.7.1.
+
+"NEVER IN ANY RETAINED LOG" WAS FALSE. It is in this repository, and had been
+since August:
+
+  _tests/captures/SC4UIScale-2026-08-19-121243.log:8829
+  [12:12:29.256] UiSpike: VWKID  0 id=0x85202C0E vt=00AB9BF8 (0,0 2400x1600)
+
+Five seconds later the same log shows the Photo Album root opening from the
+button beside it on the dock.
+
+THE REST OF THIS RELEASE IS DOCUMENTATION, and it corrects published claims:
+
+  * The coverage figure this project publishes counted ONE of the mod's FOUR
+    delivery mechanisms, undercounting by seven player-facing dialogs that ship
+    PRE-SCALED. The tool itself was printing the superseded figure as "THE
+    figure", so every doc quoting it was quoting the tool correctly.
+  * D1 was re-derived for the first time since 2026-08-03 - the instruction to
+    do so had been sitting in coverage-matrix.md section 4 since 2026-08-16. All
+    nine of its gaps had closed, and THREE were counted as covered without being
+    covered: they sit in a DERIVED array they qualify for on art data alone,
+    while the windows are never created.
+  * 27 root ids left the coverage denominator, each with a named mechanism, an
+    empirical positive control, and the reading that would put it back. They are
+    Maxis's Lot Editor, a Lua debugger, an exemplar editor and dead design
+    variants - tooling the retail game cannot open.
+  * A window listed as remaining work (0x9AEDEF7C) is DEV-ONLY and its modal
+    chain is SHARED with a working dialog, so acting on that row would most
+    likely have broken something that works.
+
+NO ART CHANGED. The packages are untouched and were not rebuilt.
+
+
 SC4UIScale 4.7.1 (2026-09-01) - signposts are the right size
 ================================================================================
 

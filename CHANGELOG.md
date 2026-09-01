@@ -1,5 +1,40 @@
 # Changelog
 
+## 4.7.2 (2026-09-01) - the snapshot frame is left alone on purpose
+
+**One line of behaviour: the Camera Mode capture frame will never be scaled.**
+
+When you click the camera button on the city dock, SimCity 4 opens a capture
+frame - the window whose size *is* the resolution of the photo you are about to
+take. Its own on-screen text says "Press the spacebar to change size".
+
+Scaling that window would have enlarged your photos. It was already being
+skipped, but only by accident: it opens full-screen, and the mod already steps
+past anything covering nearly the whole screen. Cycle the size down with the
+spacebar and that accident stops applying.
+
+This release makes the exclusion deliberate, so it holds at every preset.
+
+Nothing else on screen changes. The window ships no art of its own and has no
+child windows, so at the default full-screen preset this release behaves exactly
+as v4.7.1 did.
+
+### Also: a documentation audit that corrected several published facts
+
+No behaviour attached to any of these. They are listed because each one
+CORRECTS something this project had stated as fact.
+
+- **The capture frame was documented as an "export-resolution preset picker"
+  that had "never been seen in any log".** Both wrong - it is the snapshot
+  frame, and it was sitting in a capture in this repository from 19 August.
+  Its class vtable was also recorded incorrectly in three places.
+- **The coverage figure the project publishes was counting one of four ways the
+  mod delivers scaling**, and undercounting by seven player-facing dialogs that
+  already ship pre-scaled.
+- **A window listed as "work still to do" turned out to be unreachable**, and
+  its internals are shared with a dialog that works - so doing that work would
+  most likely have broken something.
+
 ## 4.7.1 (2026-09-01) - signposts are the right size, and a long documentation audit
 
 
