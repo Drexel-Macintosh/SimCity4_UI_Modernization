@@ -282,12 +282,52 @@ EXCLUDED_ROOTS = {
     0x6BB92BCB: ("phantom", "Trip Types legend - runtime promotes the children and discards this root"),
     0xEACA96DD: ("unsweepable", "main-window child; both sweep call sites enumerate children of the 3D VIEW"),
     0xCB40CFDC: ("dev-twin", "dev-build twin of the shipping Label Tool"),
+
+    # CLASS 5 - the last one, and it clears a HIGHER bar than the other 23.
+    # The debugger class proved a compiled-out ENTRY POINT; the ids themselves
+    # are present in the image. For this one NOTHING IN THE RETAIL BUILD CAN
+    # EVEN NAME THE SCRIPT, on three channels each with its own control:
+    #
+    #   1. THE EXECUTABLE. Root 0x8A10BA95, script instance 0x8A10B4F5 and both
+    #      its controls: ZERO little-endian dword hits. CONTROL at the same
+    #      granularity - the Photo Album script instance 0x4A8CC5EA, which the
+    #      game demonstrably opens, appears exactly ONCE on that same channel;
+    #      0x00000043 appears 81 times. (The ASCII, UTF-16 and big-endian
+    #      channels return zero for the CONTROLS too, so they are structurally
+    #      unused and their zeros here are NOT evidence - stated so nobody
+    #      counts them as four channels when only one is live.)
+    #
+    #   2. THE OTHER .UI SCRIPTS. Zero of 330 reference it. CONTROL: the corpus
+    #      contains exactly one genuine cross-reference (6bc61f19 -> cbc3c2b9)
+    #      and the same scan found it, so the channel is not structurally blind.
+    #      An earlier version of this check had NO control, returned zero, and
+    #      was correctly discarded as meaningless.
+    #
+    #   3. ALL NINE GAME ARCHIVES, 111,430 records with 88,537 QFS-DECOMPRESSED
+    #      so the scan is not blind to compressed data. Exactly ONE hit, and it
+    #      is the COMPRESSION DIRECTORY listing the script's own TGI - the entry
+    #      that records the file's existence, not a caller. CONTROL: Photo Album
+    #      returns TWO hits, its own directory self-listing AND a genuine
+    #      reference in SimCity_3.dat at {0x7AB50E44, 0x1ABE787D, 0x08360120}.
+    #      So the sweep demonstrably distinguishes a self-listing from a real
+    #      reference, and it found no reference to this script.
+    #
+    # REFUTED BY: any dword hit in the exe; any .UI referencing 8a10b4f5; any
+    # archive record other than the DIR containing it; or a live window-tree
+    # dump containing 0x8A10BA95.
+    0x8A10BA95: ("unnameable", "Simulator Control - nothing in the retail build can name the script"),
 }
 
 # Growing the exclusion list past this FAILS the run. Without an
 # opposite-polarity ceiling this mechanism is a one-way ratchet, and the next
 # person to want a rounder number would only have to add a line.
-MAX_EXCLUSIONS = 23
+# RAISED 23 -> 24 on 2026-09-01, and the reason is recorded because moving a
+# ceiling is exactly what the ceiling exists to make hard. The 24th entry
+# (0x8A10BA95) clears a HIGHER bar than the 23 that preceded it: three channels,
+# each with its own positive control, including an archive sweep whose control
+# distinguishes a self-listing from a real reference. Raising this number
+# without that standard of proof is the abuse this guard is here to stop.
+MAX_EXCLUSIONS = 24
 
 SCOPE_PHRASE = "of RETAIL-REACHABLE stock .UI roots"
 

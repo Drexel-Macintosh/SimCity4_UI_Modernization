@@ -20509,3 +20509,57 @@ from an instrument I have not proven can see the thing is not evidence.
 
 So it stays in the denominator. Excluding it on weaker evidence than its
 neighbours is the exact ratchet the ceiling was built to prevent.
+
+## 2026-09-01 — 100% of retail-reachable stock .UI roots, and what that sentence means
+
+`93/93 = 100.0% of RETAIL-REACHABLE stock .UI roots.` The scope phrase is part
+of the number and the tool prints it. **"100% of the UI" would be false** — the
+unbounded code-created channel is untouched by this and always will be.
+
+### The last exclusion clears a HIGHER bar than the 23 before it
+
+The debugger class proved a compiled-out ENTRY POINT; its ids are present in the
+image. For `0x8A10BA95` (Simulator Control) **nothing in the retail build can
+even name the script** — three channels, each with its own control:
+
+| channel | target | control | verdict |
+|---|---|---|---|
+| exe, LE dword | 0 on all three ids | Photo Album script instance = 1, Restore-Toolbars = 81 | no code can name it |
+| other .UI scripts | 0 of 330 | the corpus has exactly one real cross-reference and the scan found it | nothing opens it as a child |
+| 9 archives, 111,430 records, **88,537 QFS-decompressed** | 1 hit, and it is the COMPRESSION DIRECTORY listing its own TGI | Photo Album returns 2 — its own DIR entry AND a real reference in SimCity_3.dat | no caller in game data |
+
+The archive control is the one that makes this a proof rather than a shrug: it
+demonstrates the sweep **distinguishes a self-listing from a real reference**,
+because on the control it found both.
+
+### THREE OF MY OWN INSTRUMENTS FAILED ON THE WAY, AND THE CONTROLS CAUGHT ALL THREE
+
+1. **The .UI cross-reference scan returned zero with no control.** I nearly
+   banked it. Building the control empirically showed the channel IS usable
+   (one genuine cross-reference exists in the corpus, `6bc61f19 -> cbc3c2b9`),
+   which is what turned a meaningless zero into evidence.
+2. **The ASCII / UTF-16 / big-endian exe channels all returned zero** — and so
+   did their CONTROLS. Structurally unused channels. Counting them would have
+   dressed one piece of evidence up as four.
+3. **The first archive sweep crashed** on an API I had guessed rather than read
+   (`payload()` returns `(bytes, was_qfs, listed)`, and already decompresses).
+
+LAW EARNED — **BUILD THE CONTROL EMPIRICALLY, NOT BY ASSUMPTION.** A control you
+reason your way to can be as blind as the measurement. Derive it from the data:
+find a case where the thing you are looking for demonstrably EXISTS, and check
+your instrument sees that one first.
+
+### The ceiling moved, and that is recorded
+
+`MAX_EXCLUSIONS` went 23 -> 24. Raising a ceiling is precisely what the ceiling
+exists to make hard, so the bump carries its justification in the source: the
+24th entry clears a higher bar than the 23 before it. Anyone raising it again
+without that standard of proof is doing the thing this guard was built to stop.
+
+### The honest summary
+
+Reaching 100% took ONE window scaled and TWENTY-FOUR windows proven unreachable.
+The headline finding is not a coverage win — it is that **a fifth of the metric's
+denominator was Maxis authoring and debug tooling the retail game cannot open**,
+and that the remaining gap in this project is the unbounded code-created channel,
+which no amount of naming will ever close.
