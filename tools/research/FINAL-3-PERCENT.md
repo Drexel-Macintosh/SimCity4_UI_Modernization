@@ -64,7 +64,7 @@ someone else edits the file.*
 
 > # ⚠ SCOPE BANNER — ADDED 2026-08-31 — THE NUMBER ABOVE IS NOT THE CANONICAL HEADLINE
 >
-> ### The canonical repo headline is **73.5% — 86 of 117 distinct root ids named in `UiSpike.cpp`**.
+> ### The canonical repo headline is **73.5% — 86 of 117 distinct root ids named in `UiSpike.cpp`**. ⛔ SUPERSEDED 2026-09-01: this is no longer the canonical headline. The metric counted only ONE of the mod's delivery mechanisms - a literal in `UiSpike.cpp` - and missed the staged dialog path entirely, undercounting by seven player-facing dialogs that ship PRE-SCALED. Counting both mechanisms gives **93/117 = 79.5%**, and removing the 24 roots the retail game cannot instantiate (Maxis's Lot Editor, Lua debugger and exemplar tooling, each excluded with a named mechanism and a positive control) gives **93/93 = 100% of RETAIL-REACHABLE stock .UI roots**. That scope phrase is part of the number: "100% of the UI" would be false while the unbounded code-created channel exists.
 >
 > **MEASURED 2026-08-31.** `python tools\uimap\coverage_rederive.py` printed `CANONICAL COVERAGE: 86/117 DISTINCT root ids named = 73.5%`, above `[OK ] distinct root ids named    floor 83   measured 86`. It agrees with the banner in `tools\uimap\coverage-matrix.md`, which also states that `coverage_rederive.py` "is now the ONLY tool allowed to state a coverage figure". **This document is not that tool**, and every figure below it is an offline census reading, not a tool output.
 >
@@ -72,7 +72,9 @@ someone else edits the file.*
 >
 > | figure | the scope it is correct for | status |
 > |---|---|---|
-> | **86/117 = 73.5%** | DISTINCT root ids named in `UiSpike.cpp` | ⬅ **CANONICAL** — re-run and confirmed 2026-08-31 |
+> | **93/93 = 100%** | Root ids the RETAIL GAME CAN OPEN, reached by either mechanism | ⬅ **CANONICAL from 2026-09-01** — quote only with the words *retail-reachable stock .UI roots* |
+> | 93/117 = 79.5% | The same numerator over every root, including 24 the shipped game cannot instantiate | Kept so the exclusions stay auditable |
+> | 86/117 = 73.5% | DISTINCT root ids named in `UiSpike.cpp` only | ⛔ SUPERSEDED — counted one delivery mechanism of two, undercounting by seven pre-scaled dialogs |
 > | 288/298 = 96.6% | **D1 only** — script-declared shipping roots | correct *for D1*; a 2026-08-03 reading |
 > | 299/315 = 94.9% | **D1 + D2** — D1 plus the 17 code-created *named* windows | correct *for D1+D2*; a 2026-08-03 reading |
 >

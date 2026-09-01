@@ -70,7 +70,7 @@ regression suite that holds them in place is in `_tests/`.
   the percentage: three creation channels — a singleton factory, computed
   window ids, and art bound by no script — are structurally invisible to any
   offline census. These are the survey's own denominators; the canonical
-  headline is 86 of 117 distinct root ids = 73.5%
+  headline is 86 of 117 distinct root ids = 73.5% ⛔ SUPERSEDED 2026-09-01: this is no longer the canonical headline. The metric counted only ONE of the mod's delivery mechanisms - a literal in `UiSpike.cpp` - and missed the staged dialog path entirely, undercounting by seven player-facing dialogs that ship PRE-SCALED. Counting both mechanisms gives **93/117 = 79.5%**, and removing the 24 roots the retail game cannot instantiate (Maxis's Lot Editor, Lua debugger and exemplar tooling, each excluded with a named mechanism and a positive control) gives **93/93 = 100% of RETAIL-REACHABLE stock .UI roots**. That scope phrase is part of the number: "100% of the UI" would be false while the unbounded code-created channel exists.
   (`tools/uimap/coverage-matrix.md`).
 - **Font line height comes from rendered captures.** The fonts are a format no
   offline tool can read, so line height is measured at 1x and 2x from captures

@@ -478,7 +478,7 @@ confirmed member**, and the file must say so rather than name a cured window.
 `UNKNOWNS-AND-NEXT-TARGETS.md` §A.5 states "D1 = 298 script-declared roots, 288
 covered (96.6%); D2 = 17 code-created named windows, 11 covered (64.7%);
 combined 299/315 = 94.9%". MEASURED: `tools\uimap\coverage-matrix.md:16` makes
-the canonical headline **86/117 distinct root ids = 73.5%**, re-measured
+the canonical headline **86/117 distinct root ids = 73.5%**, re-measured ⛔ SUPERSEDED 2026-09-01: this is no longer the canonical headline. The metric counted only ONE of the mod's delivery mechanisms - a literal in `UiSpike.cpp` - and missed the staged dialog path entirely, undercounting by seven player-facing dialogs that ship PRE-SCALED. Counting both mechanisms gives **93/117 = 79.5%**, and removing the 24 roots the retail game cannot instantiate (Maxis's Lot Editor, Lua debugger and exemplar tooling, each excluded with a named mechanism and a positive control) gives **93/93 = 100% of RETAIL-REACHABLE stock .UI roots**. That scope phrase is part of the number: "100% of the UI" would be false while the unbounded code-created channel exists.
 2026-08-16, and `:50-56` explicitly lists 94.9% among the looser views that were
 being "quoted interchangeably, which is exactly how #99 hid for weeks". The
 same file states `coverage_rederive.py` "is now the ONLY tool allowed to state a
