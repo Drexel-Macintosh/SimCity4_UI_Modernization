@@ -20625,3 +20625,56 @@ which carries a 2026-08-16 amendment instructing "re-derive '10 root slots /
 9 distinct ids' before quoting either" — **and that instruction has still never
 been executed.** Re-deriving it is the prerequisite for any D1 claim, and
 quoting 288/298 before that is quoting a figure whose own source says not to.
+
+## 2026-09-01 — D1 re-derived: all nine gaps were already closed, and three were fake coverage
+
+`coverage-matrix.md` §4 has carried a 2026-08-16 instruction to "re-derive
+'10 root slots / 9 distinct ids' before quoting either". **It had never been
+executed.** Run today.
+
+| id | 2026-08-03 | today |
+|---|---|---|
+| `0x6BB92BCB` | unmapped | EXCLUDED — phantom, proven today |
+| `0xEACA96DD` | unmapped | EXCLUDED — proven unreachable today |
+| `0x27DF05BE` / `BF` | unmapped | `kNeverScaleIds` + data-scaled; the marker was **user-confirmed on screen today** |
+| `0x0A41C7B2` / `B3` | unmapped | closed in **v2.65.0**, which §4's own amendment already recorded |
+| `0x6BFAC122`, `0x8BFAC13E`, `0xCBFACAE1` | unmapped | **were being counted COVERED, and should not have been** |
+
+So D1 has been publishing 288/298 = 96.6% for a month while its gaps closed
+underneath, against a file that told readers not to quote it.
+
+### The three that were counted as covered without being covered
+
+All three sit in `kOwnsBackgroundSheet`, a DERIVED array they qualify for on the
+art data alone. The array is not wrong — they do own a background sheet — but
+**the windows are never created**, so the membership certifies nothing about
+scaling.
+
+LAW EARNED — **AN ID IN A DERIVED LIST IS EVIDENCE ABOUT THE DATA, NOT ABOUT
+WHETHER ANYTHING RENDERS.** A derived array is correct by construction and
+therefore never fails a review; what it cannot tell you is whether its members
+exist at runtime.
+
+Proven non-instantiable on the same three channels as `0x8A10BA95`: zero in the
+exe for all three roots and both script instances (controls 81 and 1); zero
+genuine cross-references; and in nine archives, zero for the roots with both
+SCRIPTS returning exactly one hit that is the compression DIRECTORY listing
+their own TGI — against a control where the Photo Album script returns two, its
+DIR entry AND a real reference.
+
+### A trap that caught three of my own passes
+
+`0x8BFAC13E` is the **second depth-0 root of BOTH** variant scripts. A
+first-id-in-file classifier therefore misreads a script's own root as a foreign
+reference. I hit this three separate times today. It is also precisely why §4
+reads "10 root slots, **9 distinct** ids" — the tenth slot is that shared root
+appearing twice.
+
+### The exclusion that costs the numerator
+
+`MAX_EXCLUSIONS` 24 -> 27. Unlike every previous entry, these three were being
+counted as COVERED, so the numerator falls by three alongside the denominator:
+**90/90 = 100%**, unchanged as a ratio. A ceiling raise that costs the numerator
+is the only kind that cannot be motivated by wanting a better number.
+
+Selftest still rejects all 4 injected defects.

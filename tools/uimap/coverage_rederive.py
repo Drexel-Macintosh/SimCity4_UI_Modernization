@@ -316,6 +316,40 @@ EXCLUDED_ROOTS = {
     # archive record other than the DIR containing it; or a live window-tree
     # dump containing 0x8A10BA95.
     0x8A10BA95: ("unnameable", "Simulator Control - nothing in the retail build can name the script"),
+
+    # CLASS 6 - three unshipped design variants of the Move In My Sim placement
+    # marker, added 2026-09-01 during the D1 re-derivation. These are the ONLY
+    # entries in this table that were being counted as COVERED, so excluding
+    # them takes 3 off the NUMERATOR as well as the denominator. The ratio does
+    # not improve; the number stops being true by luck.
+    #
+    # WHY THEY LOOKED COVERED: all three sit in kOwnsBackgroundSheet, a DERIVED
+    # array they qualify for on the art data alone. The array is correct - they
+    # do own a background sheet - but the WINDOWS ARE NEVER CREATED, so the
+    # membership certifies nothing about scaling. An id in a derived list is
+    # evidence about the DATA, not about whether anything renders.
+    #
+    # PROVEN NON-INSTANTIABLE on the same three channels as 0x8A10BA95:
+    #   exe LE dword    0 for all three roots AND both script instances
+    #                   (0x0BFAC164, 0xABFAC197), against 0x00000043 = 81 and
+    #                   the Photo Album script = 1.
+    #   other .UI       0 genuine cross-references. NOTE the trap that caught
+    #                   three of my own passes: 0x8BFAC13E is the SECOND
+    #                   depth-0 root of BOTH scripts, so a first-id classifier
+    #                   misreads a script's own root as a foreign reference.
+    #                   That second-root fact is also why coverage-matrix
+    #                   section 4 reads "10 root slots, 9 distinct ids".
+    #   9 archives      0 hits for all three roots. Both SCRIPTS return exactly
+    #                   one hit and it is the compression DIRECTORY listing
+    #                   their own TGI. CONTROL: the Photo Album script returns
+    #                   TWO - its DIR entry AND a real reference - so the sweep
+    #                   demonstrably separates a self-listing from a caller.
+    #
+    # REFUTED BY: any exe hit; any third script naming one; any archive record
+    # other than the DIR; or a live tree dump containing any of the three.
+    0x6BFAC122: ("dead-variant", "Move In My Sim marker design variant A - never created"),
+    0x8BFAC13E: ("dead-variant", "shared second root of both variant scripts - never created"),
+    0xCBFACAE1: ("dead-variant", "Move In My Sim marker design variant B - never created"),
 }
 
 # Growing the exclusion list past this FAILS the run. Without an
@@ -327,7 +361,11 @@ EXCLUDED_ROOTS = {
 # each with its own positive control, including an archive sweep whose control
 # distinguishes a self-listing from a real reference. Raising this number
 # without that standard of proof is the abuse this guard is here to stop.
-MAX_EXCLUSIONS = 24
+# 24 -> 27 on 2026-09-01 (D1 re-derivation). Unlike every previous entry, these
+# three were being counted as COVERED, so this raise makes the NUMERATOR fall by
+# three as well. A ceiling raise that costs the numerator is the only kind that
+# cannot be motivated by wanting a better ratio.
+MAX_EXCLUSIONS = 27
 
 SCOPE_PHRASE = "of RETAIL-REACHABLE stock .UI roots"
 
