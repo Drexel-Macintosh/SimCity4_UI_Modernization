@@ -190,6 +190,18 @@ tree-scaling them at runtime fights the game's own per-frame layout. They are sc
 statically instead, by `tools\dialog-static\build_dialog_static.py` into
 `z_SC4UIScale_DialogStatic`, which serves eleven region-screen dialogs and popups.
 
+> **SUPERSEDED 2026-08-31 — two corrections, both MEASURED. The sentence above is KEPT because it records what this corpus believed; both halves of it are now wrong.**
+>
+> **(1) THE COUNT IS STALE.** "Eleven" has not been true for a long time. The builder's own generated report — `tools\dialog-static\REPORT.md`, written by `build_dialog_static.py` on its 2026-08-30 run — says **164**, and the staged corpus agrees through an independent failure mode: `tools\dialog-static\stage\` holds **164** `T-0x00000000_G-0x96a006b0_I-*.ui` files (counted on disk; the other 102 staged files are art). The PACKED entry figure is **265**, CARRIED from `docs\PACKAGE-MANIFEST.md` and deliberately not re-derived here. **Do not quote "eleven" at any tier.**
+>
+> **(2) `build_dialog_static.py` IS NOT THE ONLY BUILDER THAT WRITES A STATICALLY-EDITED DIALOG.** `tools\dialog-static\build_selector_1x.py` builds `z_SC4UIScale_SelectorUI-1x.dat`: exactly ONE script — Graphic Options, `I-8a7e052f` — at **stock geometry**, carrying only the injected scale-selector nodes. It exists because the stock tier stashes every art package (correct — 1x must look unmodded), but the selector lives in DATA, so stashing everything would remove the one control that lets a player leave 1x and **make the stock tier a one-way door**.
+>
+> It is *not* a second copy of the injection template: it imports `build_dialog_static.inject_res_readout()` (`build_dialog_static.py:681`) as the ONE owner of the injected nodes and **hard-fails** rather than guessing a replacement anchor — if that call returns 0 it exits with `FATAL: nothing injected. inject_res_readout is the ONE owner of these nodes`. Idempotence inside that shared owner is keyed on **`SEL_COMBO_ID`** (`= "0x5ca1e004"`, guard at `:694`), **not** on the retired #192 readout label. A guard that names a retired node is not idempotent, it is off; that is why the key moved. Before packing it also asserts that its **nine** injected nodes (`0x5ca1e003`–`0x5ca1e00b`) sit at the AUTHORED STOCK rects and that the finished `.dat` carries exactly one entry.
+>
+> **WHY THIS CORRECTION WAS NEEDED — lead with the dead end.** `build_selector_1x` is named by **zero** markdown files in the repo. Positive control: `grep -rn build_selector_1x --include=*.md` returns 0 hits while the same grep for `build_dialog_static` returns 95 files — the search can see builders, so the null is real. The only live references are `_tests\Deploy-OnGameClose.ps1:422`/`:451`, an archive entry, and the script's own docstring; `docs\BUILDING.md` §"4. build the packages" lists four `python tools\…` lines and this is not one of them. **A builder absent from every build list is a builder nobody re-runs — and this one is the sole provider of the control that keeps 1x from being a one-way door.**
+>
+> ⚠ **OPEN:** nothing here confirms the 1x selector renders. The assertions prove the package was BUILT correctly, not that it is CONFIRMED ON SCREEN.
+
 ### Load Region dialog — `T-00000000_G-96a006b0_I-8a5ab1cc.ui` (root id 0x4a5ba0e7)
 
 **Geometry is fully `area=`-driven, which is what makes the static 2x edit work.**
@@ -238,3 +250,71 @@ architecture, child map and the Mayor Rating bar decode: `SDK-GAPS.md` §10 and 
   isolated clone IID.
 - **City-info bubble: static .UI (dialog-static), not code-drawn** — two scripts under
   one window id, served at 2x, out of the runtime sweep's reach by construction.
+
+---
+
+## Q3 — The scale selector inside Graphic Options (`0x2A57CB82`)
+
+> **ADJUDICATED 2026-08-31 — offline source + shipped-data pass, no live run.** The engine-side facts of the selector rewrite existed only as comments in `src\UiSpike.cpp` and `tools\dialog-static\build_dialog_static.py`; no reference doc carried them. This is the reference copy. **LEAD WITH WHAT IS DEAD.** Two earlier claims are superseded and KEPT in Q3.2 (the `#192` readout labels `0x5CA1E000`/`0x5CA1E001`, and the custom-resolution radio `0x5CA1E002`). One claim is left OPEN in Q3.5. **MEASURED** = read this pass out of the file cited; **CARRIED** = quoted from a source comment whose instrument could not be re-run offline; **INFERRED** = derived, with the derivation shown.
+
+### Q3.1 The host dialog, as the game ships it — MEASURED
+
+From `tools\uiscripts\extracted\T-00000000_G-96a006b0_I-8a7e052f.ui`, confirmed the sole declaring script by `python tools\sdk\lookup.py 0x2A57CB82`.
+
+| id | what | stock `area=` 1x | note |
+|---|---|---|---|
+| `0x2A57CB82` | Graphic Options root, `GZWinGen` | `(3,0,725,558)` → 722x558 | symbol `kSelDlgId` |
+| `0x2A57CB83` | **the game's OWN restart notice** | `(192,200,492,328)` → 300x128 | `winflag_visible=no` — born hidden, a CHILD of the root |
+| `0x2A57CB84` | the settings panel | `(88,85,583,520)` | `gutters=(247,201)`, decoded in `SDK-GAPS.md` |
+| `0xEA57DA59` / `0x6A57DA48` / `0xEA5E99D9` | Accept / Cancel / Default Settings | `(0,0,158,30)` / `(160,0,318,30)` / `(320,0,478,30)` | |
+| `0xEA57DA6F` | the notice's **own** Accept | `(0,0,150,30)` | a FOURTH button, easily mistaken for the dialog's |
+
+All four button ids grep as one block in `src\UiSpike.cpp` under `gSelBtns`.
+
+⚠ **NO STOCK TEXT NODE IN THIS DIALOG IS ADDRESSABLE.** MEASURED: the script holds **27** `clsid=GZWinText` nodes; **20** carry the same id `0xCA57DA80` and the other **7** carry no `id=` at all. `GetChildWindowFromIDRecursive` returns the LAST match, so a lookup by id can reach one of the twenty and none of the seven. **That is why the map below has to exist:** the code half cannot talk to this dialog until the static builder gives a node a unique id.
+
+### Q3.2 The injected node map — data half `build_dialog_static.py`, code half `UiSpike.cpp`
+
+Nodes are injected at **script load time**, before `parse_ui` and before the doubling pass (`inject_res_readout`, anchored on the stock `caption="Software"` line and FATAL if that anchor moves rather than guessing). They therefore take the tier factor with every sibling and need no scaling rule of their own. **Captions are deliberately EMPTY in data; the DLL fills them** — a failed lookup shows blank space rather than a stale or invented number.
+
+| id | node | builder symbol | DLL symbol | 1x rect |
+|---|---|---|---|---|
+| `0x5CA1E003` | "Scale" caption | `SEL_LABEL_ID` | `kSelLabelId` | `(267,313,439,334)` |
+| `0x5CA1E004` | scale combo, 5 rows | `SEL_COMBO_ID` | `kSelComboId` | `(293,333,457,354)` |
+| `0x5CA1E005` | 1px frame, scale combo | `SEL_BORDER_ID` | — | `(292,332,458,355)` |
+| `0x5CA1E006` | Resolution combo | `SEL_RES_COMBO_ID` | `kSelResComboId` | `(30,333,247,354)` |
+| `0x5CA1E007` | "Window Mode" caption | `SEL_MODE_LABEL_ID` | `kSelModeLabelId` | `(4,255,246,276)` |
+| `0x5CA1E008` | Window Mode combo | `SEL_MODE_COMBO_ID` | `kSelModeComboId` | `(30,275,247,296)` |
+| `0x5CA1E009` | 1px frame, Resolution | `SEL_RES_BORDER_ID` | — | `(29,332,248,355)` |
+| `0x5CA1E00A` | 1px frame, Window Mode | `SEL_MODE_BORDER_ID` | — | `(29,274,248,297)` |
+| `0x5CA1E00B` | "Resolution" caption | `SEL_RES_LABEL_ID` | `kSelResLabelId` | `(4,313,246,334)` |
+
+Those nine rects are the assertion table in `build_selector_1x.py`, which exists to prove the 1x build left the nodes at their authored stock rects. Plus **four stock rows made addressable, not created** — re-identified by caption, which *is* unique where their ids are not (`RES_LABEL_IDS`): `0x5CA1E010` `800x600`, `0x5CA1E011` `1024x768`, `0x5CA1E012` `1280x1024`, `0x5CA1E013` `1600x1200`. **All four ship `winflag_visible=no`**, and why is geometric, not editorial: `0x5CA1E006` occupies `(30,333,247,354)` — **byte-identical to `0x5CA1E013`** — and `0x5CA1E00B` overlaps the `1280x1024` band.
+
+**Positive control on the whole table:** every one of the nine injected nodes is *exactly* double in the staged script — `0x5CA1E003` → `(534,626,878,668)`, `0x5CA1E006` → `(60,666,494,708)` — nine of nine, no rounding drift. Independently, the four re-identified stock rows halve back to the 1x bands the `#192` ledger entry measured by eye.
+
+**One DATA-side edit no doc carried.** MEASURED by diffing stock against `stage\`: **Cancel `0x6A57DA48` and Default Settings `0xEA5E99D9` ship `winflag_enabled=no`; Accept `0xEA57DA59` stays `yes`** — stock ships all three enabled. The disabling is a *data* edit. That is the premise `SelOnClose` states in code: **a close IS the commit.**
+
+Scale combo → ini (MEASURED from `kSelFactors`/`kSelLabels`): row 0 `Auto` → `AutoScale=1`; rows 1..4 `1x`/`1.5x`/`2x`/`3x` → `AutoScale=0` + `ScaleFactor`.
+
+#### SUPERSEDED, KEPT — the `#192` readout labels and the custom-resolution radio
+
+`_tests\REGRESSION.md` § `#192 res/scale readout — DATA HALF IN` records two injected labels `0x5CA1E000`/`0x5CA1E001` "verified unused across the whole .UI corpus". **True when written, and it stays in the ledger. It no longer describes the shipping build** — superseded 2026-08-19 through v3.14.3: the combo BECAME the readout (its closed row renders as e.g. `1.5x @ 2400x1600`), and `0x5CA1E002` was retired as generation-1 furniture once the close-time commit owned the ini and the stock four shipped hidden.
+
+⚠ **DEAD-SYMBOL FINDING, MEASURED — new, and it belongs at the head of any future work here.** `src\UiSpike.cpp` still declares `kSelReadoutId = 0x5CA1E000` and still calls `SelSetCaption(gfxDlg, kSelReadoutId, l1)` inside `SelApplyStatics`; the builder still declares `RES_READOUT_IDS`. **Neither id is emitted by any builder or present in any shipped script.** Controls: `grep -o 'id=0x5ca1e0[0-9a-f]*'` over all five stage dirs returns `E003..E00B` and `E010..E013`, nothing lower; a repo-wide `*.ui` grep for `5ca1e000` outside `_archive\` returns **zero files**. The lookup is a guaranteed miss and `SelSetCaption` returns early on the null, so this is **inert, not a defect on screen** — but it is a live symbol naming a node that does not exist.
+
+### Q3.3 The game's own restart notice `0x2A57CB83` — MEASURED
+
+Stock, not ours: `winflag_visible=no`, holding one `GZWinBMP` → `GZWinText` beginning "Resolution, UI translucency, color quality and rendering mode changes will not take effect…", plus its own Accept `0xEA57DA6F`. **We never show it** — that information lives in the combo captions instead, because a popup at the moment of *change* appears before the player has agreed to anything. So a rise of this window is always the GAME's doing. `SelNoticeTick` watches `IsVisible()`, logs each edge, and arms a **10s net** on a rise, hiding the window itself if the game's Accept handler has not. Its design premise, kept verbatim because it is why this is a timeout and not a message decode: *a timeout cannot be wrong about what a message means.*
+
+### Q3.4 The three window modes — NAMED, not positional — MEASURED
+
+`kModeBorderless = 0`, `kModeFullscreen = 1`, `kModeWindowed = 2`, captions from `kSelModeLabels[]`. Alphabetical by construction, and **the raw 0/1/2 appear nowhere** — the names are the contract. **Borderless** (recommended): a window covering the screen, **no display-mode change**, so nothing needs restoring on exit and alt-tab is instant; the game's ini documents `WindowWidth`/`Height` as IGNORED here, so the control offers a **single row**. **Fullscreen**: exclusive, **changes the display mode**. **Windowed**: a plain window at the chosen size.
+
+**THE SETTING IS SPLIT ACROSS TWO FILES IN TWO FOLDERS, AND EITHER HALF ALONE DOES NOTHING.** `SC4GraphicsOptions.ini`'s `WindowMode` is overridden by `dgVoodoo.conf`'s `FullScreenMode`; a player who edits only the documented one gets no effect and no explanation. One control writing **both** is the only way that setting is ever correct. `SC4GraphicsOptions.ini` → the **Plugins root** (`SelGfxIniPath`); on read, both `Borderless` and `BorderlessFullScreen` map to `kModeBorderless` and anything unrecognised falls back to `kModeFullscreen`. `dgVoodoo.conf` → **beside the exe**, not beside the DLL (`SelDgVoodooPath`); written `true` **only for Fullscreen** — asking the wrapper for exclusive under borderless or windowed is precisely what makes a "windowed" setting come up fullscreen anyway. `SelOnClose` writes the **pair or neither**.
+
+⚠ **`SC4GraphicsOptions.ini` IS NOT OURS.** It belongs to `SC4GraphicsOptions.dll`, a community plugin; dgVoodoo is a third component again. On an install without that DLL nobody reads `WindowMode`, so its presence is a **visit fact** (`SelGraphicsDllPresent`) and both controls **hide** when it is absent. The scale selector is unaffected: it writes `SC4UIScale.ini`, which we own. Why the stock resolution list is not simply restored (CARRIED from the builder's rationale): SC4 is a DirectX 7 game, D3D7 caps at 2048x2048, and the stock list tops out at `1600x1200`, which reaches 1.5x and no further — restoring it would hand the player four choices, three of which turn the mod off.
+
+### Q3.5 OPEN — the one claim this offline pass cannot settle
+
+**CLAIM (CARRIED, not measured here):** *"the game never rewrites `SC4GraphicsOptions.ini` on Accept — 3 Accepts, 3 'no write ever seen'."* Its only home is the `NO RADIO BESIDE THE SCALE COMBO` comment in `build_dialog_static.py`. The instrument that produced it — the gfx-ini-stamp Accept detector — was stripped in v3.14 along with the SELHIT/SELMSG/SELCAL traces, and its log lines are not in `_tests\REGRESSION.md`; three samples is also a thin base for a "never". It is the **load-bearing premise** under two shipped decisions: that our close-time commit *owns* that file, and that the retired radio's mutual-exclusion dance was therefore dead. If the third-party DLL does write on Accept under some condition, its commit and ours race.

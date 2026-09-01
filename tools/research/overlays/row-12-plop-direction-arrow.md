@@ -1,4 +1,4 @@
-# Row 12 — plop direction arrow on a held lot — ATTRIBUTED (PARTIAL, static)
+# Row 12 — plop direction arrow on a held lot
 
 > **CURRENT GRADE: MEASURED** — confirmed live 2026-08-30.
 >
@@ -8,6 +8,35 @@
 > (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
 > the line above is the one that counts. See the MEASURED section at the
 > end of this file for what changed and how it was proven.
+>
+> **2026-08-31 — H1 corrected; documentation only, no finding changed.** Until
+> today the title line read:
+> `# Row 12 — plop direction arrow on a held lot — ATTRIBUTED (PARTIAL, static)`
+> That suffix was the 2026-08-17 static grade, already superseded by the
+> MEASURED line above — but this banner only claims the dated header *below* is
+> superseded, so the H1 sat outside its reach, and an H1 is what a directory
+> listing, a search hit and every link to this file show. The stale grade was
+> therefore the only grade a reader saw without opening the file. The suffix is
+> **dropped** rather than restamped, because the front door defines the grade's
+> home as this banner and not the title, and because row 12 was the last row
+> file in this folder still carrying a grade in its H1.
+>
+> **Where the MEASURED proof is, pending the promised end section.** The
+> "MEASURED section at the end of this file" was never written — this file still
+> ends at `## Live probe`. (Positive control: the same heading scan finds the
+> five sections that do exist; row 11's banner carries the same dangling
+> pointer, so this is shared boilerplate, not a row-12 slip.) Until it is
+> written, the proof is this. **MEASURED**, byte-read from the shipped exe
+> (`…\SimCity 4 Deluxe\Apps\SimCity 4.exe`, ImageBase `0x400000` from the PE
+> optional header): `.rdata` **0xA90903** reads `@Lot_Direction_Arrow`;
+> **0x4C2A86** is `57 68 04 09 A9 00` (`push edi` / `push 0xA90904`);
+> **0x4C2A8E** is `FF 52 1C` (`call [edx+0x1C]`, three bytes) so the return
+> address is **0x004C2A91**; vtable **0xA9F264** slot `+0x1C` = **0x5939B0**
+> (`CreateEffectByName`) and slot `+0x0C` = **0x594A30**; the angle double at
+> **0xA908F8** = `-1.570795`. Evidence-chain items 1, 2, 3 and 5 below
+> re-verify byte-exact. **CARRIED**, the live half: the 2026-08-30 round-1c
+> distinct-name census logged `Lot_Direction_Arrow` at `ret=0x004C2A91`
+> (`_tests\REGRESSION.md`, "2026-08-30 - overlay census round 1").
 
 **Date:** 2026-08-17 · **Exe:** SimCity 4.exe 1.1.641.0 Steam x86, ImageBase 0x400000
 **Verdict:** **Effects manager (§2.1) + EFFDIR (§2.2).** The held-lot direction

@@ -31,6 +31,26 @@ after** those reports were written. Verified drift:
 its own small law: *a file:line citation is an instrument, and it decays the moment
 someone else edits the file.*
 
+> **ADJUDICATED 2026-08-31 (v4.7.0) — THE CORRECTION TABLE ABOVE, THE ONE THAT MINTED THIS REPO'S CITATION-ROT LAW, HAS ITSELF ROTTED — and it had been presenting itself as the authoritative corrected list.** Its `actually (v2.55.0)` column was measured against a `src\UiSpike.cpp` whose highest cited line was 12,587; **today that file is 21,831 lines** and all seven of those numbers land on unrelated code. The 2026-08-03 table is kept above, not deleted — **the fact that it rotted is the strongest possible evidence that its own law was right.** The `text anchor (grep this)` column below is the durable half; the line number is a courtesy that will be wrong again.
+>
+> **Current locations — MEASURED 2026-08-31 against `src\UiSpike.cpp` @ v4.7.0:**
+>
+> | what it is | text anchor (grep this) | line today | 2026-08-03 said |
+> |---|---|---|---|
+> | ≥90% sweep guard, in `UiSpike::ScalePanelsUnder` (fn `:11698`) | `Skip full-screen overlay layers`, guard on the next line | **`:11980`** | `:7630` |
+> | same guard in `UiSpike::ScaleMenuFlyouts` (fn `:19347`) | `full-screen layer, not a flyout`, guard two lines above | **`:19423`** | `:12587` |
+> | `kBmpxDialogRoots[]` | `static const uint32_t kBmpxDialogRoots[] = {` | **`:18264`** | `:12182` |
+> | `kNeverScaleIds[]` opening brace | `const uint32_t kNeverScaleIds[] = {` | **`:5376`** | `:3117` |
+> | `0x4A35B0F2` tutorial-page entry | `0x4A35B0F2, // tutorial page` | **`:5445`** | `:3186` |
+> | single-find in `HookRuntimeBmpsUnder` (fn `:10621`) | `GetChildWindowFromIDRecursive(ids[k])` | **`:10628`** | `:7015` |
+> | `0xAA921F4F` `kCityDialogIds` row (array `:17016`) | `{ 0xAA921F4F, 330,` | **`:17077`** | `:11172` |
+>
+> **Per-row positive control.** Each of the nine grep patterns returns **exactly one** hit. Every symbol the 2026-08-03 table named still exists — **the numbers rotted, the symbols did not, which is the whole point.** Two rows also pointed at the wrong granularity and are sharpened: the `HookRuntimeBmpsUnder` row describes the *single-find call*, not the function header; the `kCityDialogIds` row describes the *entry*, not the array declaration.
+>
+> ⚠ **One drift that is NOT a line number — §2's three-site claim is now FALSE. OPEN.** §2 says the ≥90% guard "exists at `:12587` and `:5122`" — three sites. Measured: `grep -c ">= screenW \* 9 / 10"` returns **2**. `UiSpike::ScaleOnShow` (`:8685`) carries **no** ≥90% guard today; it gates on `IsNeverScaleId(id)` and `w <= 0 || h <= 0` only. **Do not quote §2's three-site claim, nor its "at exactly 100%×100% it is unconditionally skipped" for any path other than those two.** Whether the third site was removed or restructured is offline-answerable from git history but was not re-derived; left OPEN rather than guessed. **Do not count `:8120` as the third site** — it is the `EDGE` census probe and its test is *inverted* (`if (ww < sw * 9 / 10 || wh < sh * 9 / 10) { continue; }` **keeps** full-screen windows). It is an instrument, not the guard.
+>
+> **The rest of this file carries the same rot and was NOT re-measured** — §1.1's `:12008–12060` / `:11769` / `:11900` / `:11816–11945` / `:11207`, §3.2's `:11201` / `:11207`, §3.3's `:3117`, §4.0a's `:12182` / `:7015` / `:11816`, §2's `:7630`. Read every one as *a symbol name with a decorative number attached*: keep the symbol, discard the integer.
+
 ---
 
 ## 1. THE HONEST NUMBER
@@ -39,6 +59,26 @@ someone else edits the file.*
 
 > ### **94.9% — 299 of 315 named shipping windows carry a scaling mechanism.**
 > (was 96.6% = 288/298, which counted only the *scriptable* UI)
+>
+> **Scope: D1 + D2 only, measured 2026-08-03, not re-measured since. NOT the canonical headline.**
+
+> # ⚠ SCOPE BANNER — ADDED 2026-08-31 — THE NUMBER ABOVE IS NOT THE CANONICAL HEADLINE
+>
+> ### The canonical repo headline is **73.5% — 86 of 117 distinct root ids named in `UiSpike.cpp`**.
+>
+> **MEASURED 2026-08-31.** `python tools\uimap\coverage_rederive.py` printed `CANONICAL COVERAGE: 86/117 DISTINCT root ids named = 73.5%`, above `[OK ] distinct root ids named    floor 83   measured 86`. It agrees with the banner in `tools\uimap\coverage-matrix.md`, which also states that `coverage_rederive.py` "is now the ONLY tool allowed to state a coverage figure". **This document is not that tool**, and every figure below it is an offline census reading, not a tool output.
+>
+> **The 94.9% is NOT withdrawn and is NOT wrong — it is a different denominator.** ~~It is "the headline".~~ Superseded *as a headline* 2026-08-31, because this file was promoted out of `tools\research\_incoming\` into the curated set on 2026-08-30, and a curated file whose §1 opens on a bare percentage is quotable in isolation by a reader who never reaches §1.5. `docs\DECOMPILATION-STATUS.md` item **D-2** already adjudicates these figures as "not wrong for their scope but … **not the canonical headline**".
+>
+> | figure | the scope it is correct for | status |
+> |---|---|---|
+> | **86/117 = 73.5%** | DISTINCT root ids named in `UiSpike.cpp` | ⬅ **CANONICAL** — re-run and confirmed 2026-08-31 |
+> | 288/298 = 96.6% | **D1 only** — script-declared shipping roots | correct *for D1*; a 2026-08-03 reading |
+> | 299/315 = 94.9% | **D1 + D2** — D1 plus the 17 code-created *named* windows | correct *for D1+D2*; a 2026-08-03 reading |
+>
+> ⚠ **Those two rows are CARRIED, not current.** `coverage-matrix.md`'s four-views table labels the D1 and D1+D2 rows "**NOT re-measured 2026-08-16**" while all three tool-derived views drifted UP in that pass (the canonical view among them, 79 → 86). Nobody has re-derived 96.6% or 94.9% since 2026-08-03, so the direction of their drift is unknown, not assumed small.
+>
+> ⚠ Neither figure counts windows we can see but cannot name (**D3**). §1.2 and §1.4 state why that residual is unbounded. §1.5 already forbids quoting 96.6% bare; this banner exists because §1.5 sits ~160 lines *underneath* the blockquote it governs.
 
 The denominator grew by the 17 code-created windows we can now name. The numerator grew
 by 11 of them. Both movements are itemised below and both are auditable.
@@ -224,6 +264,14 @@ and user-confirmed on **2026-07-31 as task #59, shipped in v2.37.2**.
 
 Confirmed in-repo this session at `_tests\REGRESSION.md:3487-3489`,
 `VERSION-HISTORY.txt:2573-2574` and `tools\selective-safe\build_selective_safe.py:356-357`.
+
+⚠ **CITATION AUDIT 2026-08-31 — the CLAIM stands; its CITATIONS had rotted.** The identity, the task number and the release above are still correct. Only the pointers were dead. `VERSION-HISTORY.txt` was split at the 4.0 release and is now **1,212 lines**, so `:2573` cannot resolve; `_tests\REGRESSION.md` has grown to **20,076 lines** and `:3487-3489` now carries "THE TWO BREAKAGES I SHIPPED"; `build_selective_safe.py:356-357` now carries the FontStyle-GUID parser. ⚠ **Do NOT redirect `:2573` to `_archive\VERSION-HISTORY-pre-4.0.txt:2573`** — that line is the 256 MB / `IMAGE_FILE_LARGE_ADDRESS_AWARE` replay-budget note, unrelated. Read and rejected 2026-08-31.
+
+**Confirmed in-repo, re-verified 2026-08-31 — symbol anchors, not line numbers:** `_tests\REGRESSION.md` § **`PAUSE / ALERT BORDER (v2.37.2, 2026-07-31, task #59) — FIXED, ONE ART ENTRY`** (clsid `0xCA5D3294`, name string `0x00A895FC`, vtable `0x00AB5B48`, slot-88 draw `0x00794100`, `UpdateAlertBorder 0x007E8A90`, gate `kDisplayAlertBorders`) — MEASURED. `_archive\VERSION-HISTORY-pre-4.0.txt` § **`v2.37.2 2026-07-31 ** PAUSE BORDER (task #59) - ONE ART ENTRY, UN-SKIPPED **`** — the release entry, and the only surviving copy — CARRIED. `tools\selective-safe\build_selective_safe.py` — grep **`0x14315E61`**: the GOLD sheet appears twice, in the state comment and in the staged-art tuple — MEASURED.
+
+⚠ **THE OTHER THREE DEAD PATHS IN THIS FILE, led with so a reader meets them before following one.** `tools\research\_incoming\` was **CLOSED 2026-08-30**; it now holds only `README.md` and `modec-captures\`, so **every `_incoming\*` citation in this document is unresolvable at its written path.** §5.8's `crossfire-04.md:56` and `:11` are dead paths but the **argument is unaffected** — both quotes were inlined here on 2026-08-30, and the inlining was re-checked faithful this run (the one-shot BOOT tree dump of 71 windows, v2.6.0-split / ScaleAll=0 / 800x600; and the `{0 dots:53, 1:91, 2:30, 3:1}` histogram, zero 4-dot labels, 4721 log lines). §5.8's `sdkgaps-02.md:13` is **dead and was never annotated** — but the refutation it pointed at is LIVE and in-tree: `tools\research\_checkpoints\codecreated-noncity.md` line 6, `⛔ REFUTED (2026-08-03 12:00, coverage-matrix.md §0.3)`, striking the "`0x2BA6BB97` … 0 children" claim in place; canonical restatement in `tools\research\SDK-GAPS.md` (grep `The city-select bubble` / `0x0A551C50`). §5.8's `REGRESSION.md:3568-3577`, cited in the same sentence, is **also stale** — those lines now carry the CAM `.UI` replacement table; the quoted law lives in § **`REGION BUBBLE MAYOR RATING BAR (v2.37.1, 2026-07-31, task #72) — FIXED`**: "Two blind instruments agreeing is worth exactly as much as one."
+
+**Provenance note on the retired drafts.** They were re-read only as a positive control on the 2026-08-30 inlining, from a byte copy that survives at `_archive\SNAPSHOT-2026-08-14-pre-release-doc-pass\tools\research\_incoming\`. That copy is **not authority**; `_incoming\README.md`'s standing order not to restore the drafts is unchanged. It is recorded only because that README reads as though the drafts are gone outright, and in fact a second copy survives.
 
 | fact | address | source |
 |---|---|---|

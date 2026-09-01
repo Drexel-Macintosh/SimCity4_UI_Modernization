@@ -86,25 +86,83 @@ def find_art(dirs, gid, iid):
     return None
 
 
-def nine_slice(im, dw, dh, cell):
-    """The engine's 9-slice, mirrored: corners 1:1, edges and centre stretched.
+def nine_slice(im, dw, dh, cell=None):
+    r"""The engine's 9-slice, mirrored: corners 1:1, edges and centre stretched.
 
-    `cell` IS A SINGLE NUMBER AND IT COMES FROM THE WIDTH: `img->Width()/3`
+    THE CELL IS TWO NUMBERS, ONE PER AXIS - `(srcW/3, srcH/3)`. Every drawer on
+    this path forms the two quotients separately.
+
+    SUPERSEDED 2026-08-31 - kept, per annotate-never-rewrite. This read:
+    "`cell` IS A SINGLE NUMBER AND IT COMES FROM THE WIDTH: `img->Width()/3`
     (NineSlice at VA `0x00794100`, one caller). It is applied to BOTH axes, so a
     non-square source does NOT get a proportional vertical band - that is the
-    engine's behaviour, not an approximation here. This is the same integer
-    divide that produced #143's 1.5x-only white seams.
+    engine's behaviour, not an approximation here." BOTH HALVES ARE WRONG, and
+    the code implemented the wrong half:
+
+      * WRONG DRAWER. `0x00794100` is `cSC4WinAlertBorder`'s own slot-88 draw.
+        That window is created in code and appears in NO `.UI` script: grep its
+        clsid `ca5d3294` over `tools\uiscripts\extracted` - 0 hits in 331 files,
+        while the same grep sees 2066 `clsid=GZWinBtn` and 845 `clsid=GZWinBMP`,
+        so the null has its positive control. This function only renders nodes
+        `is_edge()` picked out of a PARSED SCRIPT, so the alert border can never
+        be one. The drawers that can are `GZWinBMP 0x009BC325` (EDGE branch) and
+        `GZWinBtn 0x009B05E0`.
+      * WRONG ARITHMETIC - on all three drawers. MEASURED 2026-08-31 from the
+        shipped exe (`Apps\SimCity 4.exe`, ImageBase 0x00400000):
+        `GZWinBMP` EDGE branch (entered at `0x009BC411` off the `jne` at
+        `0x009BC3B7`): `idiv ecx` at `0x009BC418` on `[ebp-8]`, again at
+        `0x009BC423` on `[ebp-4]`, off ONE shared `push 3; pop ecx`; cell rect
+        handed to `0x008D8800` is `(l, t, r/3, b/3)`. `GZWinBtn`: `idiv esi` at
+        `0x009B05E9`, `idiv ebx` at `0x009B0602`; its cell is `((r-l)/3,(b-t)/3)`
+        based at `(l,t)` - a DIFFERENT expression, do not carry one to the other.
+        Even `0x00794100` is per-axis: two `0xAAAAAAAB` magic-multiply `/3` at
+        `0x0079414D` and `0x00794161`. Corpus agrees: `SC4-UI-ENGINE.md` 4.6c,
+        `BLIT-BEHAVIOUR.md` drawer table, `_tests\REGRESSION.md` "RESOLVED
+        2026-08-18 - three addresses, three different JOBS".
+
+    BLAST RADIUS OF THE OLD BEHAVIOUR, measured against the 30 sheets in
+    `tools\upscale\nine-slice.txt`: 9 of 30 are non-square. `{46a006b0,4c0f0d31}`
+    193x46: engine `(64,15)`, old `(23,23)` - the single number was additionally
+    clamped by `im.height // 2`, which coupled the axes and crushed the
+    HORIZONTAL cell too. `{46a006b0,144161f1}` 360x144: engine `(120,48)`, old
+    `(72,72)`. `{1abe787d,8c0e0f2d}` 411x371: engine `(137,123)`, old
+    `(137,137)`. The 21 SQUARE sheets come out byte-identical, so an earlier
+    CLEAN result on a square-only dialog still stands.
+
+    STILL OPEN: whether the `imagerect` a script DECLARES is the rect in
+    `[this+0xE8]` at draw time (`SDK-GAPS.md` 2.1). The caller crops to
+    `imagerect` BEFORE calling here, so an `edgeimage` node with a declared rect
+    renders `((r-l)/3,(b-t)/3)`, matching NEITHER reading. Left alone
+    DELIBERATELY - switching blind trades one wrong render for another.
+
+    `cell` takes `(cx, cy)`, or `None` to derive `(W/3, H/3)`. A bare int is the
+    legacy scalar form and is read as the HORIZONTAL cell ONLY.
+
+    NEAREST for every stretch: an interpolating resize would invent colours the
+    source lacks and turn this instrument into a generator of the exact artefact
+    it exists to find (#143, the magenta-key rule). The `/3` here is the same
+    integer divide that produced #143's 1.5x-only white seams.
 
     NEAREST for every stretch: an interpolating resize would invent colours the
     source lacks and turn this instrument into a generator of the exact artefact
     it exists to find (#143, the magenta-key rule).
     """
-    cell = max(1, min(cell, im.width // 2, im.height // 2, dw // 2, dh // 2))
+    if cell is None:
+        cx, cy = im.width // 3, im.height // 3
+    elif isinstance(cell, (tuple, list)):
+        cx, cy = cell
+    else:
+        cx, cy = int(cell), im.height // 3   # legacy scalar: HORIZONTAL only
+    # The clamps are an EMULATOR GUARD against a negative middle band, not
+    # engine behaviour - and they are PER AXIS. The old shared clamp let a
+    # short sheet shrink the horizontal cell (193x46 -> 23 instead of 64).
+    cx = max(1, min(cx, im.width // 2, dw // 2))
+    cy = max(1, min(cy, im.height // 2, dh // 2))
     out = Image.new("RGBA", (dw, dh), (0, 0, 0, 0))
-    sx = [0, cell, im.width - cell, im.width]
-    sy = [0, cell, im.height - cell, im.height]
-    dx = [0, cell, dw - cell, dw]
-    dy = [0, cell, dh - cell, dh]
+    sx = [0, cx, im.width - cx, im.width]
+    sy = [0, cy, im.height - cy, im.height]
+    dx = [0, cx, dw - cx, dw]
+    dy = [0, cy, dh - cy, dh]
     for i in range(3):
         for j in range(3):
             sw, sh = sx[i + 1] - sx[i], sy[j + 1] - sy[j]

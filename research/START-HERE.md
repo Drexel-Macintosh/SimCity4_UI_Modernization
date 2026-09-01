@@ -14,12 +14,47 @@ version that stamps the running DLL's log header, and `VERSION-HISTORY.txt:1`
 is the newest ledger entry. When any document disagrees with the macro, the
 macro is the one that is running.
 
-**This file's own content stops at 2026-08-19**, and several arcs postdate it
-— a Graphics Options selector rewrite, a v3.14 flyout state-machine rewrite,
-and an open sub-flyout arm-alignment defect (short-count strips like Sports
-Grounds and Plazas). For anything after that date read
-[UNKNOWNS-AND-NEXT-TARGETS.md](UNKNOWNS-AND-NEXT-TARGETS.md) §D.1, then
-[../CHANGELOG.md](../CHANGELOG.md) and `VERSION-HISTORY.txt`. (The dated
+**This file's own content stops at 2026-08-19**, and several arcs postdate it.
+Go to their symbols, not to a date-ordered ledger:
+
+- **The Graphics Options scale-selector rewrite (v3.14).** Banner
+  `IN-GAME SCALE SELECTOR (v3.14 STATE MACHINE)` and entry point
+  `UiSpike::ServiceScaleSelector` in `src\UiSpike.cpp` (declared in
+  `src\UiSpike.h`, driven from the timer in `src\SC4UIScaleDllDirector.cpp`);
+  the four parts are `SelState`, `SelDerive`, `SelApply`, `SelOnClose`. The
+  architecture is a law:
+  [laws/feedback-state-machine-derive-diff-commit.md](laws/feedback-state-machine-derive-diff-commit.md),
+  with the first-open freeze in
+  [laws/feedback-selector-freeze-named-by-instrument.md](laws/feedback-selector-freeze-named-by-instrument.md).
+  Gates: `_tests\Test-SelectorDerive.py`, `_tests\Test-SelectorContract.py`.
+- **The sub-flyout bottom-anchor / arm-alignment arc** (short-count strips like
+  Sports Grounds and Plazas). `SubPlaceDetour`, `SubPlaceTop`, `SubPlaceTopMb`
+  in `src\UiSpike.cpp`; written up in
+  [laws/project-sc4-flyout-bottom-anchor.md](laws/project-sc4-flyout-bottom-anchor.md)
+  and registered in
+  [UNKNOWNS-AND-NEXT-TARGETS.md](UNKNOWNS-AND-NEXT-TARGETS.md) §D.1.
+  ⚠ Its grade is contested and needs a live look: §D.1 says OPEN at v4.0.35;
+  the law file says the root-cause fix is in and offline-verified but never
+  live-tested. Do not quote either as settled.
+
+⚠ **Corrected 2026-08-31 — the superseded text is kept on purpose.** This
+paragraph read: *"— a Graphics Options selector rewrite, a v3.14 flyout
+state-machine rewrite, and an open sub-flyout arm-alignment defect (short-count
+strips like Sports Grounds and Plazas). For anything after that date read
+UNKNOWNS-AND-NEXT-TARGETS.md §D.1, then ../CHANGELOG.md and
+VERSION-HISTORY.txt."* Two measured faults. (1) **The "v3.14 flyout state-machine
+rewrite" never existed.** `grep -rn "STATE MACHINE" src\` returns one hit
+repo-wide and it is the *selector*; all 17 `v3.1x` commits are Graphic Options
+selector work (`895efe6 v3.14.0 - the selector rewrite`). One arc was written up
+as two, and the invented one took the version number. (2) **Both ledgers it
+routed you to are structurally incapable of holding that arc**: `CHANGELOG.md`'s
+oldest heading is `## 4.0.0`, and `VERSION-HISTORY.txt` says in its own closing
+paragraph that entries for v1.0.0 through v3.14.4 are not kept in it. A reader
+who followed the old route found nothing and had no way to learn why. For
+pre-4.0 arcs the git log genuinely is the only ledger
+(`git log --oneline --all | grep -E "^[0-9a-f]+ v3\.1[0-9]"`), but it is the last
+resort — the symbols above are the anchor. (MEASURED 2026-08-31: every symbol,
+file and law named above greps to at least one hit in the file it cites.) (The dated
 `HANDOFF-*.md` files this paragraph used to send you to were retired
 2026-08-06; the ledger and the register carry what they held.)
 
@@ -295,7 +330,7 @@ order:
 |---|---|
 | What version is actually running? | `src\SC4UIScaleDllDirector.cpp`'s `UISCALE_VERSION_STR`, cross-checked against the running DLL's own log header — never a number written in prose here |
 | What changed and when? | `VERSION-HISTORY.txt:1` (newest entry first) |
-| What is open right now, and what was just tried? | `UNKNOWNS-AND-NEXT-TARGETS.md` (the open register), then `git log` — the repo root carries no session-state files by design |
+| What is open right now, and what was just tried? | `UNKNOWNS-AND-NEXT-TARGETS.md` §D (the open register), then the law files in `research/laws/` — every closed arc has one and a law names its symbols. `git log` is the LAST resort, not the first: it is the only ledger for pre-4.0 arcs (`CHANGELOG.md` starts at `## 4.0.0`; `VERSION-HISTORY.txt` drops v1.0.0–v3.14.4 by design), and for everything since, a symbol anchor exists. The repo root carries no session-state files by design. |
 | What tier / mode is the live install in? | `_tests\Set-Tier.ps1 -Status` and `_tests\Set-StockCompare.ps1 -Status` — not `Test-DatIntegrity.ps1`, which checks built artifacts, not the active tier |
 | What is a known open defect? | `UNKNOWNS-AND-NEXT-TARGETS.md` §D (open defects, known mechanism) and §B (ranked unknowns) |
 | What was tried and refuted? | `_tests\REGRESSION.md` — search it, do not read it front to back |

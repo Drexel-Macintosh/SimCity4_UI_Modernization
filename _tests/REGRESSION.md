@@ -20306,3 +20306,71 @@ OPEN, and the highest-value item left on this row: reconcile `EXPECT` against
 the game+plugins corpus and re-freeze, or scope the tool back to game-only and
 say which number means what. Until then no coverage percentage in this repo
 should be quoted without that caveat attached.
+
+## 2026-09-01 — documentation debt swept: 36 edits, and three publication blockers were already closed
+
+31 agents surveyed the corpus, re-verified every "current truth" against source
+before writing, and returned 37 edits. 36 applied cleanly; one anchor had
+already been changed by this same day's work.
+
+### Publication blockers E-1, E-2 and E-3 were CLOSED and still listed OPEN
+
+All three were resolved days ago and never struck from the register, so the
+"open blockers" list has been overstating itself. E-3 is the sharpest: it
+prescribed a LIVE LAUNCH to settle whether census row 5 and
+`CITY-SITUATION-INDICATORS.md` §1 could both be right — and the question had
+already been settled OFFLINE by byte proof (`cmp ecx, 4` @`0x0046DD6C`, and the
+eight ±32.0f immediates at `0x0046EABD..0x0046EB6F` shown NOT category-guarded).
+A launch was on the books for a question the bytes had answered.
+
+### The most valuable single finding: a null wearing a control as cover
+
+Drift row **D-9** ("the ranking table is short two rows") was **FALSE THE DAY IT
+WAS COMMITTED**. Rows 22 and 23 existed as one MERGED struck row five days
+earlier (`bbfb418` 2026-08-24 vs `9d328f3` 2026-08-29, ancestry confirmed). Its
+stated positive control could not match a merged cell, so the control could
+never have fired — it was an un-evidenced null with a control attached for
+credibility.
+
+LAW EARNED — **A POSITIVE CONTROL THAT ONLY EXERCISES THE EXPECTED SHAPE IS NOT
+A CONTROL.** If the data can legitimately take a form the control cannot match
+(a merged cell, a compressed record, a renamed symbol), the control proves
+nothing about its absence. State the shapes the control CANNOT see.
+
+### The Graphics Options selector: the front door was half wrong
+
+It graded the selector PARTIAL with "not folded back into any reference",
+implying nothing was written down. The METHOD half is fully documented — three
+law files (`feedback-state-machine-derive-diff-commit.md`,
+`feedback-selector-freeze-named-by-instrument.md`,
+`feedback-liveness-guard-stored-window-pointers.md`) and two gates
+(`Test-SelectorDerive.py`, `Test-SelectorContract.py`). Only the ENGINE side was
+missing: the injected node ids (`0x5CA1E000`..`E00B`, notice popup `0x2A57CB83`)
+existed solely in source comments, and `build_selector_1x.py` was referenced by
+ZERO markdown files. Now published, and the selector finally has a TRIAGE row —
+"the selector is missing from Graphic Options at 1x" has shipped as a defect
+TWICE and was recorded only in source comments and the ledger.
+
+### ⛔ MY OWN VERIFICATION OF THE ONE CODE EDIT WAS BROKEN — TWICE
+
+The single non-docs edit changed `nine_slice()` in `tools/uimap/emu/render_dialog.py`
+from a width-only cell to a per-axis `(srcW/3, srcH/3)`.
+
+1. **It broke the module outright.** The replacement docstring contains Windows
+   paths (`tools\uiscripts\extracted`, `Apps\SimCity 4.exe`) inside a non-raw
+   string; `\u` is an invalid Python escape and the file would not parse. Cured
+   by making that one docstring raw — no text changed.
+2. **My A/B test compared the new code against itself.** I produced the
+   "old behaviour" by calling the NEW function with a scalar `cell`, but its
+   legacy path is `cx, cy = int(cell), im.height // 3` — it honours the scalar
+   for X and applies the NEW rule to Y. Six sheets showed zero difference, and
+   that zero was guaranteed by construction. **A ruler made of the object under
+   test, for the third time in one day.**
+
+   Redone against the real pre-edit file (`git show HEAD:...`): square 60x60
+   IDENTICAL (the claimed no-op safety property holds), and all five non-square
+   sheets DIFFER — 90x60, 120x60, **193x46**, 150x90, 240x120. The 193x46 case
+   is the one the code comment names (cell 23 instead of 64). The change is real
+   and correct.
+
+Families gate re-run after the edit: exit 0.
