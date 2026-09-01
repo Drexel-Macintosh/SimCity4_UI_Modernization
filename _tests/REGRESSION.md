@@ -20563,3 +20563,65 @@ The headline finding is not a coverage win — it is that **a fifth of the metri
 denominator was Maxis authoring and debug tooling the retail game cannot open**,
 and that the remaining gap in this project is the unbounded code-created channel,
 which no amount of naming will ever close.
+
+## 2026-09-01 — D2 re-measured: 13/17, and coverage flows through FOUR mechanisms
+
+D1 and D2 were measured 2026-08-03 and the file says "not re-measured since".
+D2 re-measured today.
+
+### D2 is 13/17 = 76.5%, not 11/17 = 64.7%
+
+| id | window | 2026-08-03 | today |
+|---|---|---|---|
+| `0x00000043` | Restore-Toolbars | UNCOVERED, 10px clip | **COVERED** — cure shipped v4.5.3 (2026-08-30), `kRestoreToolbarsOriginSite = 0x7EE15A` |
+| `0xEA659793` | region screen | UNCOVERED | **COVERED** — named `kGZWin_RegionScreen` and used as the sweep WALK ROOT. It was a grading artefact: its two structural twins `0x9A47B417` and `0x6104489A` are both graded COVERED with the same reason |
+
+### ⛔ THE COUNT WAS RIGHT BY COINCIDENCE — TWO MOVED IN, TWO FELL OUT OF VIEW
+
+My first re-measure also read 11/17, and I nearly reported "no change". The
+membership had changed underneath: two gained coverage while two long-covered
+windows dropped out of my PREDICATE, not out of coverage.
+
+* `0x6A5E44B6` (`cSC4WinAlertBorder`) — covered by shipped ART at three tiers
+  (`carbon-art-up`, `-15x`, `-3x`) plus a DELIBERATE structural skip, the
+  >=90%-of-screen guard live at `UiSpike.cpp:12010` and `:19453`. No id literal
+  is involved, so an id-literal predicate cannot see it.
+* `0x2BA6BB97` (`cSC4WinRegionView`) — covered through its two staged bubble
+  scripts, whose ROOT is `0x0a551c50`. Extracting each staged script's first id
+  was never going to find it.
+
+### The finding: FOUR delivery mechanisms, and no single predicate sees them all
+
+  1. an id literal in code — the runtime sweep or a byte patch;
+  2. a staged dialog-static target — pre-scaled data;
+  3. shipped ART at every tier plus a deliberate structural skip;
+  4. coverage of a HOST or CHILD relationship rather than of the root id.
+
+This is why every attempt today to "fix" the coverage metric by one rule traded
+one misclassification for another — adding the staged path found seven
+undercounted dialogs, and stripping `kNeverScaleIds` would have dropped sixteen
+correctly handled ones.
+
+LAW EARNED — **A COUNT THAT DID NOT MOVE IS NOT EVIDENCE THAT NOTHING MOVED.**
+Compare MEMBERSHIP, not totals. Two changes in opposite directions cancel
+exactly, and the cancellation is invisible in the number that gets quoted.
+
+### D2's remaining four, and what each needs
+
+* `0x6A0AF41D` region cloud emitter — a reasoned LEAVE-ALONE, not a gap. Sprite
+  size is a code constant; the row has said "UNCOVERED and correctly so" since
+  the survey.
+* `0x85202C0E` export-resolution preset picker, `0xA802B4EB` RecordedAnimations
+  browser, `0x9AEDEF7C` image-file browser — roles all identified 2026-08-23,
+  but none has a scaling mechanism. **These are the only genuine D2 work left**,
+  and unlike the 24 excluded roots they ARE player-reachable, through Photo
+  Album and recorded animations. Scaling them would be visible.
+
+### D1 NOT re-measured, and why that is not a shrug
+
+D1's uncovered members are not enumerated in `FINAL-3-PERCENT.md` at all — the
+file says so itself. The list exists only in `coverage-matrix.md` section 4,
+which carries a 2026-08-16 amendment instructing "re-derive '10 root slots /
+9 distinct ids' before quoting either" — **and that instruction has still never
+been executed.** Re-deriving it is the prerequisite for any D1 claim, and
+quoting 288/298 before that is quoting a figure whose own source says not to.
