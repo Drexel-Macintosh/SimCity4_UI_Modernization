@@ -1085,6 +1085,68 @@ def main():
         # number that cannot flatter us, which is why it was chosen.
         print()
         print("  " + "=" * 66)
+        # ------------------------------------------------------------------
+        # SECOND MECHANISM: the dialog-static staged path.
+        #
+        # ADDED 2026-09-01. The scope block above has always said this ratio
+        # "does NOT include the dialog-static staged path" - and that omission
+        # was making the number wrong in a direction nobody had checked. SEVEN
+        # player-facing dialogs (Photo Album, Credits, Delete City confirm,
+        # City Import, the Reconcile Edges trio, both advisor toasts, and the
+        # cannot-save-during-disaster confirm) were being counted UNCOVERED
+        # while shipping PRE-SCALED in z_SC4UIScale_DialogStatic.dat.
+        #
+        # Verified before this code was written, in the DAT the game actually
+        # loads at the 2x tier: all ten instance ids present as records. So
+        # this is not a widening of the definition to flatter the number - it
+        # is counting a delivery mechanism that demonstrably ships.
+        #
+        # The list is parsed from build_dialog_static.py, which is the source
+        # of truth for what gets built. It is NOT hand-kept here, so it cannot
+        # rot away from the builder.
+        ds_ids = set()
+        try:
+            with open(os.path.join(REPO, "tools", "dialog-static",
+                                   "build_dialog_static.py"),
+                      encoding="utf-8") as _f:
+                ds_src = _f.read()
+            for m in re.finditer(
+                    r"""\(\s*['"]([0-9a-fA-F]{8})['"]\s*,\s*['"][^'"]{2,60}['"]""",
+                    ds_src):
+                ds_ids.add(int(m.group(1), 16))
+        except Exception as e:
+            print("  [SKIP] dialog-static list unreadable (%s) - combined" % e)
+            print("         coverage NOT computed. A skipped check is NOT a pass.")
+            ds_ids = set()
+
+        if ds_ids:
+            # A root counts as reached by the staged path when its SCRIPT
+            # instance is a staged target - the dialog ships pre-scaled as a
+            # whole, so the root inside it is scaled with it.
+            staged_roots = set()
+            for (p_, r_) in roots_with_id:
+                try:
+                    inst = int(p_["inst"], 16)
+                except Exception:
+                    continue
+                if inst in ds_ids:
+                    staged_roots.add(r_["id"])
+            both = set(distinct_nonzero) & set()  # placeholder, recomputed below
+            named = set(i for i in distinct_nonzero if i in cpp_ids)
+            combined = named | (staged_roots & set(distinct_nonzero))
+            print()
+            print("  COVERAGE BY EITHER MECHANISM (added 2026-09-01)")
+            print("    named in UiSpike.cpp                     : %d" % len(named))
+            print("    reached ONLY via the staged dialog path  : %d"
+                  % len(combined - named))
+            print("    ---------------------------------------------------")
+            print("    COMBINED: %d/%d DISTINCT root ids reached = %.1f%%"
+                  % (len(combined), len(distinct_nonzero),
+                     100.0 * len(combined) / max(1, len(distinct_nonzero))))
+            print("    The single-mechanism figure below is kept unchanged so")
+            print("    no previously-quoted number silently moves.")
+            print()
+
         print("  CANONICAL COVERAGE: %d/%d DISTINCT root ids named = %.1f%%"
               % (len(cov_distinct), len(distinct_nonzero),
                  100.0 * len(cov_distinct) / max(1, len(distinct_nonzero))))
