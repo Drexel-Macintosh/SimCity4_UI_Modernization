@@ -20223,3 +20223,86 @@ a **5** sentinel that is OUT OF RANGE for a 5-entry table); the "matched
 1.5x-vs-2x control" reading of the gcap pair; the left-tool-column GZWinBMP
 hairline; the dropped-column-235 theory; and the 353-vs-352 plate mismatch (the
 overhanging column is entirely magenta key colour).
+
+## 2026-09-01 — the "16-window residual" is 15, and 10 of them were already closed
+
+Eight agents re-derived the coverage residual from the repo instead of trusting
+the carried headline. The headline was wrong in three separate ways.
+
+### It was a UNIT ERROR: 15 distinct ids, not 16 windows
+
+`FINAL-3-PERCENT.md:188` read "The named residual is 16 windows (3 uncovered +
+3 role-unknown in D2, 10 uncovered roots in D1)" — adding a SLOT count to an ID
+count. Its own source, `coverage-matrix.md` §4, is titled "10 root slots, **9
+distinct ids**": slots nine and ten are the same id, because `0x8BFAC13E` is the
+second depth-0 root of BOTH `I-0bfac164` and `I-abfac197`. 3 + 3 + 9 = **15**.
+
+Worse, `FINAL-3-PERCENT.md` never enumerates its own D1 ten — §1.1 tables the D2
+seventeen, and the D1 list exists only in `coverage-matrix.md` §4, which carries
+a 2026-08-16 amendment instructing "Re-derive before quoting either". That
+instruction had never been executed. **The two documents were load-bearing on
+each other and neither held the list.**
+
+### 10 of the 15 were already closed, and one register row contradicted a shipped cure
+
+`#43` (Restore-Toolbars button) still read "**Neither half of the prescribed
+cure is in `src` today — verified this session**". Both halves shipped in
+**v4.5.3 on 2026-08-30**, and that register text was still being committed on
+**2026-08-31, the day after**. Verified in src today:
+`kRestoreToolbarsOriginSite = 0x7EE15A` with `RestoreToolbarsOriginPatched()`
+(`CodePatches.cpp:2889-2948`) and the inline stand-down at `UiSpike.cpp:11916`.
+
+The row's own search would have stayed false even after the cure landed: it
+looked for `0x00000043` in `kNeverScaleIds`, but the stand-down is deliberately
+INLINE and gated on the byte patch being live, so the sweep only stands down
+when the origin patch actually applied. Corrected, with the superseded
+prescription kept.
+
+LAW EARNED — **A "VERIFIED THIS SESSION" ABSENCE ROTS FASTER THAN A CLAIM.** A
+recorded negative is a measurement with a timestamp, and it silently inverts the
+moment the cure ships. When a register row prescribes a cure, the row must be
+re-checked when that cure lands, or it becomes a confident lie about the code.
+
+### A scheduled eyes-on run was CANCELLED before it wasted a session
+
+`FINAL-3-PERCENT.md:978` step 6 prescribed "query a residential building that
+has occupants; open the occupant chip" to observe `0x6BFAC122` / `0x8BFAC13E` /
+`0xCBFACAE1`. The label is wrong: those are 46x108 unshipped design variants of
+the **Move In My Sim placement marker** (same clsid `0x89e1567c`, same tiled
+sheet `{46a006b0,13f15214}`, same 36x41 portrait). Querying a building can never
+show a placement marker, so the gesture cannot reach the target and its null
+would have meant nothing — the exact trap this document warns about elsewhere.
+
+### ⛔ MY OWN CLAIM WAS WRONG: coverage_rederive.py exits 1, not 0
+
+An adjudicator reported that the tool prints its FAIL banner and returns EXIT=0
+— task #99's failure mode alive again — and **I repeated that to the user before
+checking it.** It is false. The tool ends `return 0 if not fails else 1` and
+measures **exit 1** correctly. Both the agent and I had read `$?` after a pipe,
+so we measured `tail`'s exit code, not Python's.
+
+LAW EARNED — **`$?` AFTER A PIPE IS THE LAST COMMAND'S EXIT CODE.** Never
+measure a program's exit status through `| tail` / `| grep` / `| head`. Redirect
+to a file and check `$?`, or use `PIPESTATUS`. A gate wrongly declared broken
+costs the same as a broken gate wrongly declared fine.
+
+### What the tool is ACTUALLY saying, and it matters
+
+`coverage_rederive.py` is healthy and is refusing to be quoted:
+
+```
+CANONICAL COVERAGE: 86/117 DISTINCT root ids named = 73.5%
+OVERALL: FAIL - 6 hard expectation(s) diverged
+DO NOT quote any number from this run
+```
+
+The divergence is a SCOPE change, not a parser regression: `.ui files on disk :
+1093 (game 330 + plugins 763)` against an `EXPECT` of 339 frozen when the tool
+scanned game files only. **So 73.5% is a figure the instrument itself forbids
+quoting, including where this project has quoted it** — the denominator now
+includes the player's plugin tree and the baseline was never re-frozen.
+
+OPEN, and the highest-value item left on this row: reconcile `EXPECT` against
+the game+plugins corpus and re-freeze, or scope the tool back to game-only and
+say which number means what. Until then no coverage percentage in this repo
+should be quoted without that caveat attached.

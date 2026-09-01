@@ -185,8 +185,18 @@ Two anonymous classes I identified this session prove it, and they also close tw
 
 So the honest characterisation of the residual, in three sentences:
 
-1. **The named residual is 16 windows** (3 uncovered + 3 role-unknown in D2, 10 uncovered
-   roots in D1) — small, enumerated, and every one has a next step in §3 or §4.
+1. ⛔ **CORRECTED 2026-09-01: the named residual is 15 DISTINCT IDS, not 16 windows.**
+   The original sentence read "The named residual is 16 windows (3 uncovered + 3
+   role-unknown in D2, 10 uncovered roots in D1)" and it added a SLOT count to an ID
+   count. Its own source, `coverage-matrix.md` §4, is titled "GENUINELY UNMAPPED — 10
+   root slots, 9 distinct ids": the ninth and tenth slots are the SAME id, because
+   `0x8BFAC13E` is the second depth-0 root of BOTH `I-0bfac164` and `I-abfac197`. So
+   3 + 3 + 9 = **15**. Note also that this file never enumerates its own D1 ten — §1.1
+   itemises the D2 seventeen in a table, but the D1 list exists only in
+   `coverage-matrix.md` §4, which carries a 2026-08-16 amendment instructing
+   "Re-derive '10 root slots / 9 distinct ids' before quoting either". That
+   instruction had never been executed until 2026-09-01. **10 of the 15 are closed**
+   as of that date (3 uncovered + 3 role-unknown in D2 — small, enumerated, and every one has a next step in §3 or §4.
 2. **The unnamed residual is large in count and low in risk**, because it is overwhelmingly
    *anonymous children inside covered parents*, which the recursive sweep reaches without
    ever knowing their ids.
@@ -975,7 +985,7 @@ been settled above; nothing below is a question the disassembler could have answ
 | 3 | **Click the Hide-Toolbars button, then the Restore-Toolbars button.** | `0x00000043` | **R2.** Confirms 42×38 at (12,1572) → 10 px clip at birth, and whether the next sweep tick re-doubles it to 84×76 at (24,1544) → 20 px. Also confirms the button still hit-tests. |
 | 4 | **Open Data Views. Switch to the Map View page. Scroll it.** | `00004200`, `42B7C35` | **§3.4 + §5.7.** Supplies the *first real* live geometry for the scrollbar family and shows whether `centerLeaves` ever wins the order race (buttons stuck at 24×25 = it did). |
 | 5 | **Budget → Ordinances. Click an ordinance NAME to open its description popup.** | `0423278`, `ABCE00`, `MWKID  0\.` | **§5.3 + §5.8.** Re-measures the 32 child rects at v2.55.0 and settles whether the `2640x36` rows from the v2.27.3 log still exist. Also confirms the popup pin holds at `round(125·f)`. |
-| 6 | **Query a residential building that has occupants; open the occupant chip. Then repeat on a commercial and an industrial building.** | `27DF05B`, `6BFAC122`, `8BFAC13E`, `CBFACAE1`, `EA9457B` | **R3 + R4.** The chip's live rect settles Mode A vs Mode C on the spot (46×97 = Mode A as predicted; 92×194 = the premise is wrong and R3 must not ship). The three building types are the only way `0x6BFAC122`/`0xCBFACAE1` can be sighted; **if they never appear across all three, they stay uncured with a measured null on two independent instruments.** |
+| 6 | ⛔ **CANCELLED 2026-09-01 — THIS RUN WOULD RETURN A FALSE NULL AND BOOK IT AS EVIDENCE.** The label is wrong: `0x6BFAC122` / `0x8BFAC13E` / `0xCBFACAE1` are not occupant chips. They are 46x108 unshipped design variants of the **Move In My Sim placement marker** — same clsid `0x89e1567c`, same tiled sheet `{46a006b0,13f15214}`, same 36x41 portrait `{1abe787d,ea32f100}`. Querying a building can never show a placement marker, so the gesture cannot reach the target and a null from it would mean nothing. This is the exact trap this document warns about elsewhere. ~~Query a residential building that has occupants; open the occupant chip. Then repeat on a commercial and an industrial building.~~ | `27DF05B`, `6BFAC122`, `8BFAC13E`, `CBFACAE1`, `EA9457B` | **R3 + R4.** The chip's live rect settles Mode A vs Mode C on the spot (46×97 = Mode A as predicted; 92×194 = the premise is wrong and R3 must not ship). The three building types are the only way `0x6BFAC122`/`0xCBFACAE1` can be sighted; **if they never appear across all three, they stay uncured with a measured null on two independent instruments.** |
 | 7 | **Start a tutorial and advance until a pointer overlay appears.** | `0A41C7B2`, `0A41C7B3`, `4A35B0F2` | **R1.** Live rect + whether the overlay is parented to the main window (settles `sub_441B50`'s NULL-parent default) + whether the tutorial re-positions it against the 2x toolbar. |
 | 8 | **Trigger the advisor grid popup.** | `EACA96DD`, `144161C0` | **R5.** First sighting of whatever `sub_79C800` builds. If it never appears, R5 stays blocked — which is the correct outcome. |
 | 9 | **Exit to the region screen. Click a city tile so the bubble opens. Then move the mouse off it.** | `RGKID 11`, `0A551C50`, `4A553000` | **§5.1 regression guard.** Confirms the 12 children are still there and still 2x at v2.55.0, and — with `DumpTree` at full depth — answers the one narrow question §5.8 leaves open: **are the map tile labels windows?** |
