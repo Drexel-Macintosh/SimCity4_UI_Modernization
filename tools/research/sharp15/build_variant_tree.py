@@ -16,6 +16,8 @@ The derived lists are honoured exactly as Rebuild-Corpus.ps1 would:
   even-strips.txt        KEPT AS SHIPPED (the tick-ladder even reduce; round 1)
   no-smooth.txt          KEPT AS SHIPPED (a builder measures their pixel edges)
   keyed, MinKeyRun < 3   KEPT AS SHIPPED (the fine-key refusal, Upscale2x.cs:1396)
+  thumbnails.txt         KEPT AS SHIPPED (item-icon bindings: a rendered picture
+                         wants hard pixels - the user's round-1 verdict, 2026-09-01)
 Everything else takes the candidate. A manifest of what took what is written
 beside the tree.
 
@@ -109,11 +111,12 @@ def main(argv):
     tiled = load_list("tiled.txt")
     even = load_list("even-strips.txt")
     nosmooth = load_list("no-smooth.txt")
+    thumbs = load_list("thumbnails.txt")
     names = sorted(n for n in os.listdir(SHIPPED) if NAME_RE.match(n))
     manifest = {"candidate": cand, "date": time.strftime("%Y-%m-%d %H:%M"),
                 "kept_shipped": {}, "took": {}, "counts": {}}
-    counts = {"cand": 0, "even": 0, "nosmooth": 0, "finekey": 0, "keyed_skipped": 0,
-              "missing_src": 0, "cells": 0, "nine": 0, "tiled": 0}
+    counts = {"cand": 0, "even": 0, "nosmooth": 0, "thumb": 0, "finekey": 0,
+              "keyed_skipped": 0, "missing_src": 0, "cells": 0, "nine": 0, "tiled": 0}
     t0 = time.time()
     for i, n in enumerate(names):
         if limit and i >= limit:
@@ -139,6 +142,9 @@ def main(argv):
             continue
         if tgi in nosmooth:
             keep("nosmooth")
+            continue
+        if tgi in thumbs:
+            keep("thumb")
             continue
         a = np.array(Image.open(sp).convert("RGBA"))
         mkr = min_key_run(a)

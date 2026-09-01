@@ -252,6 +252,74 @@ def _claim(X, src, ow, oh, policy, return_mask=False):
     return out, copy
 
 
+# ---------------------------------------------------------------- 2026-09-01 evening
+# The user's first in-game verdict on thin_h: "It all looks a lot better. Maybe
+# the thumbnails still don't look as sharp though." Thumbnails are photoreal,
+# so the hybrid hands almost every block of them to the area average - the
+# softest reasonable magnification kernel (a 2:1 box over a x3 replicate is a
+# 2-tap mean at every half-phase pixel). An INTERPOLATING kernel with negative
+# lobes reconstructs a sharper continuous image for that class. Same key rule
+# as _box2: key taps carry zero weight, >= half key weight re-emits exact key.
+
+def _taps_1d(n_src, n_out, f, kernel):
+    """Source indices (n_out, K) and weights (n_out, K) for output pixel centres
+    mapped onto source coordinates by the factor map: sx = (o + .5)/f - .5."""
+    o = np.arange(n_out)
+    sx = (o + 0.5) / f - 0.5
+    base = np.floor(sx).astype(np.int64)
+    if kernel == "catrom":
+        offs = np.arange(-1, 3)          # 4 taps
+    else:                                # lanczos3
+        offs = np.arange(-2, 4)          # 6 taps
+    idx = base[:, None] + offs[None, :]
+    t = sx[:, None] - idx                # distance from each tap
+    if kernel == "catrom":
+        a = -0.5
+        at = np.abs(t)
+        w = np.where(at < 1, (a + 2) * at**3 - (a + 3) * at**2 + 1,
+             np.where(at < 2, a * at**3 - 5 * a * at**2 + 8 * a * at - 4 * a, 0.0))
+    else:
+        at = np.abs(t)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            w = np.where(at < 3, np.sinc(at) * np.sinc(at / 3.0), 0.0)
+    w = w / w.sum(1, keepdims=True)
+    idx = np.clip(idx, 0, n_src - 1)     # edge clamp (per-cell callers pass a cell)
+    return idx, w
+
+
+def _interp(a, ow, oh, kernel):
+    """Key-aware separable interpolation of an RGBA cell to (ow, oh) at f=1.5."""
+    h, w = a.shape[:2]
+    ix, wx = _taps_1d(w, ow, 1.5, kernel)
+    iy, wy = _taps_1d(h, oh, 1.5, kernel)
+    src = a.astype(np.float64)
+    key = ((a[..., 0] == 255) & (a[..., 1] == 0) & (a[..., 2] == 255)).astype(np.float64)
+    nonkey = 1.0 - key
+    Kx, Ky = ix.shape[1], iy.shape[1]
+    acc = np.zeros((oh, ow, 4))
+    wsum = np.zeros((oh, ow))
+    kw = np.zeros((oh, ow))
+    for i in range(Ky):
+        rows = iy[:, i]
+        wyi = wy[:, i][:, None]
+        for j in range(Kx):
+            cols = ix[:, j]
+            wij = wyi * wx[:, j][None, :]              # oh, ow
+            g = src[rows][:, cols]                     # oh, ow, 4
+            nk = nonkey[rows][:, cols]                 # oh, ow
+            acc += g * (wij * nk)[..., None]
+            wsum += wij * nk
+            kw += wij * key[rows][:, cols]
+    keyout = kw >= 0.5
+    safe = np.where(np.abs(wsum) < 1e-6, 1.0, wsum)
+    out = np.clip(np.rint(acc / safe[..., None]), 0, 255).astype(np.uint8)
+    out[keyout] = KEY
+    out[wsum <= 1e-6] = KEY                            # nothing but key under the taps
+    acc_on_key = (out[..., 0] == 255) & (out[..., 1] == 0) & (out[..., 2] == 255) & ~keyout & (wsum > 1e-6)
+    out[..., 1][acc_on_key] = 1
+    return out
+
+
 def _per_cell(a, ow, oh, states_x, states_y, fn):
     """Run fn(cell, cell_ow, cell_oh) per state cell so a cell can never see
     its neighbour (#169). Falls back to whole-sheet when the counts do not
@@ -285,11 +353,18 @@ def _make(reconstruct, mode):
             X = scale3x(cell, tol, pad) if reconstruct else _x3_replicate(cell)
             if mode == "box":
                 return _box2(X, cw, ch)
-            if mode.endswith("_h"):
-                # HYBRID: copy where the edge is straight, average elsewhere
-                cp, mask = _claim(X, cell, cw, ch, mode[:-2], return_mask=True)
-                bx = _box2(X, cw, ch)
-                return np.where(mask[..., None], cp, bx)
+            if mode.endswith("_h") or mode.endswith("_hc") or mode.endswith("_hl"):
+                # HYBRID: copy where the edge is straight; elsewhere the box
+                # average (_h), Catmull-Rom (_hc) or Lanczos3 (_hl)
+                policy, suffix = mode.rsplit("_", 1)
+                cp, mask = _claim(X, cell, cw, ch, policy, return_mask=True)
+                if suffix == "h":
+                    soft = _box2(X, cw, ch)
+                else:
+                    soft = _interp(cell, cw, ch, "catrom" if suffix == "hc" else "lanczos")
+                return np.where(mask[..., None], cp, soft)
+            if mode in ("catrom", "lanczos"):
+                return _interp(cell, cw, ch, mode)
             return _claim(X, cell, cw, ch, mode)
         return _per_cell(a, ow, oh, states_x, states_y, one)
     cand.__name__ = ("scale3x_" if reconstruct else "") + mode
@@ -301,6 +376,10 @@ bold = _make(False, "bold")
 box = _make(False, "box")            # == area-average on the factor map
 thin_h = _make(False, "thin_h")      # hybrid: straight edges copy (thin), curves average
 bold_h = _make(False, "bold_h")      # hybrid: straight edges copy (bold), curves average
+thin_hc = _make(False, "thin_hc")    # hybrid: straight edges copy (thin), curves Catmull-Rom
+thin_hl = _make(False, "thin_hl")    # hybrid: straight edges copy (thin), curves Lanczos3
+catrom = _make(False, "catrom")      # whole-sheet Catmull-Rom (the #175 kernel), key-aware
+lanczos = _make(False, "lanczos")    # whole-sheet Lanczos3, key-aware
 scale3x_thin = _make(True, "thin")
 scale3x_bold = _make(True, "bold")
 scale3x_box = _make(True, "box")
@@ -329,6 +408,10 @@ CANDIDATES = {
     'bold':         bold,
     'thin_h':       thin_h,
     'bold_h':       bold_h,
+    'thin_hc':      thin_hc,
+    'thin_hl':      thin_hl,
+    'catrom':       catrom,
+    'lanczos':      lanczos,
     'scale3x_box':  scale3x_box,
     'scale3x_thin': scale3x_thin,
     'scale3x_bold': scale3x_bold,
