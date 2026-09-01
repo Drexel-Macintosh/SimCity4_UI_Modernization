@@ -20448,3 +20448,64 @@ DIAGNOSIS changed:
 VERIFIED after the change: run exits **1** on divergence (unchanged), and
 `--selftest` still rejects **all 4** injected defects, so #99's protection is
 intact.
+
+## 2026-09-01 — the push to 100%: 98.9%, and the honest route was denominator correction
+
+The user asked for 100% after being told the trade-offs, so this went ahead. 26
+agents adjudicated all 24 unreached roots. **Not one came back safe to stage** —
+12 DEAD_EXCLUDE, 12 STAGE_RISKY, zero clean.
+
+### The finding, and it is worse-sounding than "we scaled 24 more windows"
+
+**Roughly a fifth of the metric's denominator is Maxis authoring and debug
+tooling the retail game cannot open.** 23 of the 24 are the Lot Editor (11), a
+Lua debugger (5), an exemplar/cohort editor (4), and three singletons. The
+honest route to 100% is almost entirely denominator correction, not new scaling.
+
+The debugger class is the model proof: `ShowScriptConsole 0x008AF010` builds the
+console only when its bool arg is non-zero, and has **exactly one control
+transfer in the whole 7,876,608-byte image** — `push 0; call` at `0x008B453C`,
+passing zero — with zero absolute-dword references, so it is in no vtable.
+Nothing in retail passes true, so the console never exists, so its buttons never
+fire, so four more panes are never created. CONTROL: the same scanner returns
+909 callers for `0x008793EC`, so a result of 1 is a real 1.
+
+### ⛔ THE PLAN'S NUMERATOR FIX WAS REFUTED BEFORE IT WAS WRITTEN
+
+It proposed stripping `kNeverScaleIds` members from the numerator, reasoning
+that an id in a do-not-scale list is not evidence of scaling. **MEASURED: 16 of
+the 21 members are ALSO staged dialog-static targets.** They are in that array
+*precisely because* data-scaling handles them and the sweep must stand down or
+the window scales twice. The fix would have counted 16 correctly-handled windows
+as unreached.
+
+LAW EARNED — **A DO-NOT-SCALE LIST IS EVIDENCE OF COVERAGE, NOT ITS ABSENCE.**
+When a system has several delivery mechanisms, a register that disables one of
+them is usually there because another owns the case. Read the array's own
+contract before inferring from its name.
+
+### Result: 93/94 = 98.9% of retail-reachable stock .UI roots
+
+Guards shipped with the exclusion table, because a list that only ever shrinks a
+denominator is exactly the shape that manufactures a coverage number:
+
+* every excluded row PRINTS with its class and reason on every run;
+* `MAX_EXCLUSIONS = 23` is a hard ceiling — growing the list FAILS the run;
+* a STALE exclusion (an id not in the corpus) is reported as dead weight;
+* the scope phrase prints with the number, because "100% of retail-reachable
+  stock .UI roots" and "100% of the UI" are different claims;
+* the roots still unreached are NAMED so nobody has to hunt.
+
+### The last window, and why it is not excluded
+
+`0x8A10BA95` (Simulator Control) is the only root between 98.9% and 100%. Its
+root id, its script instance id and both its own controls are ALL absent from
+the retail exe, against positive controls at 81/5/2 hits with the ASCII channel
+proven live. But that is an ABSENCE, not the named mechanism the other 23 have,
+and **my attempt to rule out the cross-script path failed its own control** — a
+scan for other `.UI` files referencing it returned zero, and so did the control,
+because scripts express parenting inline rather than by cross-file id. A null
+from an instrument I have not proven can see the thing is not evidence.
+
+So it stays in the denominator. Excluding it on weaker evidence than its
+neighbours is the exact ratchet the ceiling was built to prevent.

@@ -209,6 +209,98 @@ RE_LEGACY = re.compile(r"<LEGACY\b")
 # those 754 extra files, because plugins re-instantiate the game's existing
 # root ids rather than introducing new ones. So 86/117 = 73.5% stands on
 # checks that PASSED, even in a run whose banner says otherwise.
+# ---------------------------------------------------------------------------
+# RETAIL-UNREACHABLE ROOTS - removed from the DENOMINATOR, with proof.
+#
+# ADDED 2026-09-01. These 23 roots are Maxis authoring and debug tooling that
+# ships in the .UI corpus but that the RETAIL GAME CANNOT INSTANTIATE. A window
+# the shipped game cannot open is not part of the interface this mod scales, so
+# it does not belong in the denominator.
+#
+# THE BAR FOR THIS LIST, and it is deliberately high: a root leaves only with a
+# NAMED MECHANISM that makes creation impossible, a POSITIVE CONTROL showing the
+# instrument could have found a caller, and the single reading that would put it
+# back. "No caller found" and "it looks like a dev tool" are NOT proofs and do
+# not qualify. Every entry below is class-level - one mechanism closing many
+# roots - rather than twenty-three separate rationalisations.
+#
+# ⛔ THIS LIST ONLY EVER SHRINKS THE DENOMINATOR, so it is exactly the shape
+# that can be abused to manufacture a coverage number. Three guards:
+#   1. every excluded row is PRINTED with its class and reason on every run;
+#   2. MAX_EXCLUSIONS below is a hard ceiling - growing this list past it FAILS
+#      the run rather than quietly improving the ratio;
+#   3. the tool prints the SCOPE PHRASE with the number, because
+#      "100% of retail-reachable stock .UI roots" and "100% of the UI" are
+#      different claims and only the first would be true.
+EXCLUDED_ROOTS = {
+    # CLASS 1 - the GZ/Lua script debugger. ShowScriptConsole 0x008AF010 builds
+    # the console only when its bool arg is non-zero, and has EXACTLY ONE
+    # control transfer in the whole 7,876,608-byte image: `push 0; call` at
+    # 0x008B453C, passing zero. Zero absolute-dword references, so it is in no
+    # vtable and no dispatch table. Nothing in retail passes true, so the
+    # console never exists, so its buttons never fire, so the four panes it
+    # opens are never created. CONTROL: the same xref scanner returns 909
+    # callers for 0x008793EC and ~380 for 0x0090E133, so a result of 1 is a
+    # real 1. REFUTED BY: any second caller, a non-zero argument at 0x008B453C,
+    # any absolute-dword reference to 0x008AF010, or a live tree dump
+    # containing any of these five ids.
+    0x0BA2B02B: ("debugger", "Script Console - the entry point is compiled out"),
+    0xCBA7FFBD: ("debugger", "Script View - opened only by the console"),
+    0x2BD64135: ("debugger", "Call Stack - opened only by Script View"),
+    0x8BD941F4: ("debugger", "Variables - opened only by Script View"),
+    0x0BD94245: ("debugger", "Breakpoints - opened only by Script View"),
+
+    # CLASS 2 - the Lot Editor. Every one is created from inside a method of
+    # cSC4WinLotConfigurationEditor or cSC4WinNetworkLotEditor, reachable only
+    # through vtable slots of 0x00A8D888 / 0x00A8EF94. Those editors are opened
+    # only by 0x00486D30 and 0x0049ACD0, whose only callers are the choosers'
+    # own DoMessage handlers - a closed cycle with no entry from retail play.
+    0x097CEFB0: ("lot-editor", "Select Prop Families"),
+    0x09AAD25F: ("lot-editor", "Lot Configurations - network chooser"),
+    0x491C91F9: ("lot-editor", "Lot Configurations - chooser"),
+    0x49D55C68: ("lot-editor", "Set Compatibilities - network lot editor"),
+    0x6987B3F8: ("lot-editor", "Select Lot Textures"),
+    0x89264BF9: ("lot-editor", "Select Building Families"),
+    0x89264BFA: ("lot-editor", "Select Flora Families"),
+    0xA9264C0E: ("lot-editor", "Select Foundation or Retaining Wall"),
+    0xC9235387: ("lot-editor", "Lot Configuration Editor canvas"),
+    0xC9264B91: ("lot-editor", "Select Lot Texture"),
+    0xE9264B49: ("lot-editor", "Set Compatibilties - lot config editor"),
+
+    # CLASS 3 - the exemplar / cohort resource editor, same closed-cycle shape.
+    0x299BA0FC: ("exemplar-editor", "Assigned Cohort / exemplar viewer"),
+    0x89AEE795: ("exemplar-editor", "SAVE ALL / CANCEL"),
+    0x89C066B0: ("exemplar-editor", "Configure Columns"),
+    0xC9C6C9C9: ("exemplar-editor", "View Selected Exemplar"),
+
+    # CLASS 4 - three singletons, each with its own mechanism.
+    # 0x6BB92BCB is the strongest exclusion in the list and rests on a POSITIVE
+    # mechanism rather than a failed search: the runtime promotes this script
+    # root's CHILDREN and discards the root itself, so the id never exists at
+    # runtime. Live control: 1087 and 958 sightings of its children against
+    # ZERO of the root.
+    0x6BB92BCB: ("phantom", "Trip Types legend - runtime promotes the children and discards this root"),
+    0xEACA96DD: ("unsweepable", "main-window child; both sweep call sites enumerate children of the 3D VIEW"),
+    0xCB40CFDC: ("dev-twin", "dev-build twin of the shipping Label Tool"),
+}
+
+# Growing the exclusion list past this FAILS the run. Without an
+# opposite-polarity ceiling this mechanism is a one-way ratchet, and the next
+# person to want a rounder number would only have to add a line.
+MAX_EXCLUSIONS = 23
+
+SCOPE_PHRASE = "of RETAIL-REACHABLE stock .UI roots"
+
+# ⛔ REJECTED, and recorded so it is not proposed again: a companion change was
+# designed to STRIP kNeverScaleIds members from the NUMERATOR, on the reasoning
+# that an id named in a do-not-scale list is not evidence of scaling. MEASURED
+# and refuted before it was written: 16 of the 21 kNeverScaleIds members are
+# ALSO staged dialog-static targets. They are in that array PRECISELY BECAUSE
+# data-scaling already handles them and the runtime sweep must stand down, or
+# the window gets scaled twice. Stripping them would have counted 16 correctly
+# handled windows as unreached. kNeverScaleIds membership is evidence that
+# coverage comes from ANOTHER mechanism, not that it is absent.
+
 INSTALLATION_DEPENDENT = {
     "ui_files", "layout_scripts", "non_layout_files",
     "depth0_roots", "roots_with_nonzero_id", "classifier_agreement",
@@ -1135,6 +1227,56 @@ def main():
             named = set(i for i in distinct_nonzero if i in cpp_ids)
             combined = named | (staged_roots & set(distinct_nonzero))
             print()
+            # ---- retail-reachable denominator ----------------------------
+            if len(EXCLUDED_ROOTS) > MAX_EXCLUSIONS:
+                print("  [FAIL] EXCLUSION CEILING: %d entries, ceiling %d."
+                      % (len(EXCLUDED_ROOTS), MAX_EXCLUSIONS))
+                print("         The exclusion list only ever shrinks the")
+                print("         denominator. Growing it past the ceiling fails")
+                print("         the run rather than quietly improving the ratio.")
+                fails.append(("exclusion ceiling", MAX_EXCLUSIONS,
+                              len(EXCLUDED_ROOTS)))
+            present = {i for i in EXCLUDED_ROOTS if i in distinct_nonzero}
+            stale = set(EXCLUDED_ROOTS) - present
+            print()
+            print("  RETAIL-UNREACHABLE ROOTS REMOVED FROM THE DENOMINATOR")
+            print("    Every row printed every run. A denominator that shrinks")
+            print("    silently is the same defect as a numerator that grows")
+            print("    silently.")
+            by_class = {}
+            for i in sorted(present):
+                cls, why = EXCLUDED_ROOTS[i]
+                by_class.setdefault(cls, []).append((i, why))
+            for cls in sorted(by_class):
+                print("    [%s]" % cls)
+                for i, why in by_class[cls]:
+                    print("      0x%08X  %s" % (i, why))
+            if stale:
+                print("    [STALE] %d excluded id(s) are not in the corpus at all"
+                      % len(stale))
+                for i in sorted(stale):
+                    print("      0x%08X  %s" % (i, EXCLUDED_ROOTS[i][1]))
+                print("      A stale exclusion is dead weight that can only ever")
+                print("      flatter a future run - remove it or explain it.")
+            reachable = set(distinct_nonzero) - present
+            r_named = named & reachable
+            r_comb = combined & reachable
+            print()
+            print("    denominator  %d total - %d unreachable = %d retail-reachable"
+                  % (len(distinct_nonzero), len(present), len(reachable)))
+            print("    numerator    %d reached by either mechanism" % len(r_comb))
+            print("    ==> %d/%d = %.1f%% %s"
+                  % (len(r_comb), len(reachable),
+                     100.0 * len(r_comb) / max(1, len(reachable)), SCOPE_PHRASE))
+            missing = sorted(reachable - r_comb)
+            if missing:
+                print("    STILL UNREACHED, and named so nobody has to hunt:")
+                for i in missing:
+                    print("      0x%08X" % i)
+            else:
+                print("    Nothing left unreached on this denominator.")
+            print()
+
             print("  COVERAGE BY EITHER MECHANISM (added 2026-09-01)")
             print("    named in UiSpike.cpp                     : %d" % len(named))
             print("    reached ONLY via the staged dialog path  : %d"
