@@ -1,5 +1,14 @@
 # Row 12 — plop direction arrow on a held lot — ATTRIBUTED (PARTIAL, static)
 
+> **CURRENT GRADE: MEASURED** — confirmed live 2026-08-30.
+>
+> ⛔ **The dated header below is the ORIGINAL session's grade and is
+> superseded.** It is kept rather than rewritten because this project
+> annotates history instead of editing it — but the front door
+> (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
+> the line above is the one that counts. See the MEASURED section at the
+> end of this file for what changed and how it was proven.
+
 **Date:** 2026-08-17 · **Exe:** SimCity 4.exe 1.1.641.0 Steam x86, ImageBase 0x400000
 **Verdict:** **Effects manager (§2.1) + EFFDIR (§2.2).** The held-lot direction
 arrow is a named Swarm effect, `"Lot_Direction_Arrow"`, spawned by the Lot Plop

@@ -1,5 +1,14 @@
 # Row 14 — god-mode terraform brush ring (in-world cursor circle)
 
+> **CURRENT GRADE: TRUE NULL** — 2026-08-30 round 3 - the attribution was REFUTED and the negative stands.
+>
+> ⛔ **The dated header below is the ORIGINAL session's grade and is
+> superseded.** It is kept rather than rewritten because this project
+> annotates history instead of editing it — but the front door
+> (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
+> the line above is the one that counts. See the MEASURED section at the
+> end of this file for what changed and how it was proven.
+
 **Session 2026-08-17, static attribution pass. Grade: PARTIAL (no live capture
 was possible — read-only session, game never launched). Every claim below is
 byte-read from the shipped exe / a durable extract in this session; nothing is

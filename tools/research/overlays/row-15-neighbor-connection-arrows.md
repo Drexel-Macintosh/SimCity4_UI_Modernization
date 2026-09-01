@@ -1,5 +1,14 @@
 # Row 15 — neighbor-connection arrows at city edges
 
+> **CURRENT GRADE: DOCUMENTED** — 2026-08-31 live - sized by its own S3D model vertices; the exemplar OccupantSize route was REFUTED.
+>
+> ⛔ **The dated header below is the ORIGINAL session's grade and is
+> superseded.** It is kept rather than rewritten because this project
+> annotates history instead of editing it — but the front door
+> (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
+> the line above is the one that counts. See the MEASURED section at the
+> end of this file for what changed and how it was proven.
+
 **Date:** 2026-08-17 · **Grade: PARTIAL** (static disassembly + data attribution;
 no screen or live-capture proof — the doc's evidence law forbids DOCUMENTED).
 **Verdict: a marker OCCUPANT built from the `UI8x1x3_ConnectArrow` exemplar —

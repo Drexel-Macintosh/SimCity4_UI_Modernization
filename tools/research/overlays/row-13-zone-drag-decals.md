@@ -1,5 +1,14 @@
 # Row 13 — zone drag rectangle + zone color decals (2026-08-17)
 
+> **CURRENT GRADE: MEASURED + DECODED** — 2026-08-30; see the row body for which half is attributed.
+>
+> ⛔ **The dated header below is the ORIGINAL session's grade and is
+> superseded.** It is kept rather than rewritten because this project
+> annotates history instead of editing it — but the front door
+> (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
+> the line above is the one that counts. See the MEASURED section at the
+> end of this file for what changed and how it was proven.
+
 **VERDICT (PARTIAL — static disassembly, no live capture yet):**
 the persistent **zone color decals are drawn by the LOT-DISPLAY cell-quad
 builder `0x6CC970`** — a code-generated, cell-indexed overlay owned by the

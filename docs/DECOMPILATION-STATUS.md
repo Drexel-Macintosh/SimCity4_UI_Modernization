@@ -46,9 +46,13 @@ this page was built and the game was not launched for it.
 **DOCUMENTED** only when a measurement matched a *prediction* — the mechanism
 was named, it predicted a behaviour, and the behaviour was then observed. A
 mechanism named from static disassembly and never seen running is **PARTIAL**,
-however confident the reasoning. This is the strict bar; a looser one ("a
-concrete anchor that predicts behaviour") would promote roughly eight of the
-in-world census rows, and those rows are deliberately left PARTIAL here.
+however confident the reasoning. This is the strict bar.
+
+**UPDATED 2026-08-31 — the in-world overlay census is COMPLETE.** An earlier
+version of this paragraph said a looser bar "would promote roughly eight of the
+in-world census rows, and those rows are deliberately left PARTIAL here". Those
+eight have since been closed on the *strict* bar, by measurement rather than by
+relaxing the standard — see the census status below.
 
 **The null rule applies here too.** Where a search came back empty, the
 positive control that proves the search could have seen a hit is stated beside
@@ -153,12 +157,35 @@ maps as follows (INFERRED mapping, the file does not draw it):
 | `n-a` — world-anchored or zoom-ramped, a lever would be a defect | **15** | 4, 6, 7, 8, 10–15, 17–19, 22, 23 |
 
 **Depth is uneven and the row files say so.** MEASURED
-(`ls tools\research\overlays\` + first-4-lines grade scan): 10 of 23 rows have
-a dedicated file; **exactly one declares itself DOCUMENTED** (row 23, zots,
-live-confirmed 2026-08-24, "40+ claims, zero refuted"); **eight declare
-themselves PARTIAL** (rows 8, 10, 11, 12, 13, 14, 15, 16 — static disassembly,
-never screen-proven); row 4 declares no grade. Rows 1 and 5 are covered by
-`CITY-SITUATION-INDICATORS.md` instead.
+(`ls tools\research\overlays\` + grade scan of the `CURRENT GRADE` line each row file now carries under its title): 10 of 23 rows have
+a dedicated file. **The census is now COMPLETE — every row that was PARTIAL
+or UNKNOWN has been closed on the strict bar.** The eight this page used to
+list as "static disassembly, never screen-proven" (8, 10, 11, 12, 13, 14, 15,
+16) are done, and three of them killed a standing attribution rather than
+confirming one:
+
+| row | outcome |
+|---|---|
+| 4, 8 | CLOSED — confirmed on screen; row 4 is not a separate visual, row 8 needs no patch |
+| 10, 11, 12 | MEASURED, confirmed live |
+| 13 | MEASURED + DECODED |
+| 14 | **TRUE NULL** — the attribution was REFUTED, and the negative is written down |
+| 15 | **DOCUMENTED** — the connection arrow is sized by its own S3D model vertices. The exemplar `OccupantSize` route was **refuted** (×8 on one axis left a 0.4% aspect change), correcting this repo’s own claim that "the size is exemplar data for this family" |
+| 16 | **DOCUMENTED** — the route trace is a dedicated `cISC4ViewObject3D` (drawer `0x007DD9B0`, vtable `0x00ABB648`, layer 5 key `0x3E8`). **Three** attributions died here: named effect, the signpost-occupant module, and a per-tile occupant highlight flag |
+
+Rows 15 and 16 were each closed against a prediction written down *before* the
+run — row 16’s into `SC4UIScale.ini` itself, so it could not be reinterpreted
+afterwards. Row 23 (zots) remains DOCUMENTED from 2026-08-24.
+Rows 1 and 5 are covered by `CITY-SITUATION-INDICATORS.md` instead.
+
+**A caution earned closing these rows.** Three separate measuring instruments
+failed *clean* during row 15 — each returned a confident, plausible number while
+measuring the wrong thing: a detector whose "arrows" were the pause button and a
+permission toast; SC4’s own full-frame paused border reported as the widest
+arrow; and a normaliser that had locked onto the very object it was correcting
+for, returning a perfectly circular 1.854. None announced itself. Any number on
+this page that came from a detector deserves the question *what would this
+instrument have reported if it were broken?*
 
 **One item on the overlays side is genuinely unowned:** `.rdata 0xAB4330` =
 `{1.0,2.0,4.0,8.0,16.0}`, sole consumer `0x751CB5`, indexed by global

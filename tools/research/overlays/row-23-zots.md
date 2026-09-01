@@ -1,5 +1,7 @@
 # Row 23 — zot warning discs (no-power / no-water / no-road / no-job balloons over buildings)
 
+> **CURRENT GRADE: DOCUMENTED** — live-confirmed 2026-08-24, "40+ claims, zero refuted". Unchanged since; stamped here only so every row file in this folder carries its grade in the same place.
+
 **Date:** 2026-08-23, live-confirmed 2026-08-24 · **Grade: DOCUMENTED** (every VA below was derived once and then
 independently re-derived by an adversarial second pass — 40+ claims, zero refuted —
 and the §5 live zoom pair has now confirmed the prediction on screen) · **Verdict: world-anchored prop occupants — correct at every tier by

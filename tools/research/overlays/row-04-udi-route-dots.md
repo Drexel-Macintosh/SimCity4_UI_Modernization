@@ -1,5 +1,14 @@
 # Row 4 — UDI route dots: THE SIZE SOURCE (byte-walk, 2026-08-17)
 
+> **CURRENT GRADE: CLOSED** — confirmed on screen 2026-08-31 - it is NOT a separate visual.
+>
+> ⛔ **The dated header below is the ORIGINAL session's grade and is
+> superseded.** It is kept rather than rewritten because this project
+> annotates history instead of editing it — but the front door
+> (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
+> the line above is the one that counts. See the MEASURED section at the
+> end of this file for what changed and how it was proven.
+
 **Task scope.** Row 4 of `SC4-WORLD-OVERLAYS.md` §3: the sizing of the UDI
 route dots was UNKNOWN after the `0xAA523C` supersession. This file is the
 byte-walk from the doc's claimed subsystem VA (`0x5F7400`) to the actual size

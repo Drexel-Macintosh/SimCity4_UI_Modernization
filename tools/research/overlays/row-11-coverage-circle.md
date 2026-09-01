@@ -1,5 +1,14 @@
 # Row 11 — coverage-radius circle while placing civic buildings
 
+> **CURRENT GRADE: MEASURED** — confirmed live 2026-08-30.
+>
+> ⛔ **The dated header below is the ORIGINAL session's grade and is
+> superseded.** It is kept rather than rewritten because this project
+> annotates history instead of editing it — but the front door
+> (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
+> the line above is the one that counts. See the MEASURED section at the
+> end of this file for what changed and how it was proven.
+
 **Session 2026-08-17. Attribution: EFFECTS MANAGER (§2.1). Grade: PARTIAL
 (static disassembly + EFFDIR data; no live capture of a `PlopMode` spawn yet
 — see LIVE PROBE). All VAs are static ImageBase 0x400000 VAs, bytes read from

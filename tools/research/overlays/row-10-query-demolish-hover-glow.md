@@ -1,5 +1,14 @@
 # Row 10 — building/lot selection glow on query & demolish hover
 
+> **CURRENT GRADE: ATTRIBUTED** — RENDERER_DRAW, per-occupant tint, 2026-08-30.
+>
+> ⛔ **The dated header below is the ORIGINAL session's grade and is
+> superseded.** It is kept rather than rewritten because this project
+> annotates history instead of editing it — but the front door
+> (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
+> the line above is the one that counts. See the MEASURED section at the
+> end of this file for what changed and how it was proven.
+
 **Session 2026-08-17. Grade: PARTIAL (static disassembly only — no screen or
 live-capture proof yet). Every VA below read from the shipped exe this
 session** (`SimCity 4.exe` 1.1.641 Steam, ImageBase 0x400000, LAA-flipped /

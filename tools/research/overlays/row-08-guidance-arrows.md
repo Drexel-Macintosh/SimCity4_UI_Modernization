@@ -1,5 +1,14 @@
 # Row 8 — orange/green mission guidance arrows (UDI drive mode)
 
+> **CURRENT GRADE: CLOSED** — confirmed on screen 2026-08-31; no patch needed.
+>
+> ⛔ **The dated header below is the ORIGINAL session's grade and is
+> superseded.** It is kept rather than rewritten because this project
+> annotates history instead of editing it — but the front door
+> (`docs/DECOMPILATION-STATUS.md`) grade-scans the top of this file, so
+> the line above is the one that counts. See the MEASURED section at the
+> end of this file for what changed and how it was proven.
+
 **Session 2026-08-17, subagent attribution pass. Grade: PARTIAL (static
 disassembly + data decode; nothing here is screen-proven yet — the minted
 law says only a live capture or eyes-on promotes this to DOCUMENTED).**
