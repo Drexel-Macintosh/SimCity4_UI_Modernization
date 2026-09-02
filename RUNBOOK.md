@@ -80,8 +80,14 @@ Then rebuild the scaled corpus for the tiers you want:
 tools\upscale\Rebuild-Corpus.ps1 -Factor 1.5,2,3
 ```
 
-This also regenerates the **derived lists** (`cell-strips.txt`, `no-smooth.txt`,
-`height-exact-*.txt`, `nine-slice.txt`). Those lists are *derivations, never
+This does **not** regenerate the **derived lists** (`cell-strips.txt`,
+`no-smooth.txt`, `height-exact-*.txt`, `nine-slice.txt`, `even-strips.txt`,
+`thumbnails.txt`) — it only *preflights* them: every list must be present and
+non-empty or the script throws before invoking the exe (`-DryRun` prints the
+exact command line without spending a rebuild). Regenerate them with their
+own scripts (`tools\upscale\find_cell_strips.py` and the other `find_*.py`,
+`make_no_smooth.py`, `tools\research\sharp15\make_even_strips.py`,
+`tools\upscale\find_thumbnails.py`). Those lists are *derivations, never
 hand-maintained inventories* — a hand list rots silently and the project has
 been burned by exactly that. If a script demands a list and it is missing or
 empty, it throws rather than proceeding, and that is intentional.
@@ -167,6 +173,9 @@ python _tests\Test-PackageGating.py          # SyncDat sites vs dep rows, both d
 python _tests\Test-ShippingIniKeys.py        # every seeded/reference ini key is READ by Settings.cpp
 python tools\uimap\emu\gate_btn_undercover.py
 python tools\upscale\gate_key_integrity.py <corpus> --factor <f>
+python _tests\Test-15xEdgeQuality.py                    # 1.5x stroke evenness vs the committed baseline; 2x/3x must read 0 (exit 2 = instrument fault)
+python tools\upscale\gate_hybrid_parity.py <csharp_tree> <reference_tree>   # the C# --hybrid == the Python reference, byte for byte, 2206/2206
+python tools\upscale\find_thumbnails.py                # re-derive thumbnails.txt from the item-icon packages (~485 TGIs); Rebuild-Corpus refuses without it
 python tools\uimap\emu\gate_patch_families_combined.py   # no two patch families collide; every site table registered
 python tools\uimap\crosscheck.py                         # the offline model still reproduces the patch list
 python _packaging\Test-NoDeadLinks.py --repo             # every path a tracked doc names is a path a reader can open
