@@ -169,7 +169,7 @@ a 3-of-4 majority copies; a tie that continues along the edge in the
 neighbouring block (a straight edge) takes the edge-claim copy at one
 consistent stroke width; every other block (staircase step, curve, picture)
 takes the key-aware 2:1 area average. The transparency MASK is nearest's:
-where nearest says key the pixel is exact `0xFFFF00FF`; where nearest says
+where nearest says key the pixel is nearest's pixel verbatim (colour and alpha); where nearest says
 colour but the average landed on the key by coverage, the pixel takes the
 key-excluded average of its block. Dispatch order inside the exe: integer
 factor (refused, FATAL if it ever fires), even-strips, no-smooth, thumbnails,
@@ -186,7 +186,7 @@ Evidence, all green at release:
   policy for odd) with 0 invented colours; nearest gives 1|2 / 3 / 4|5 / 6
   (phase-dependent), the box average invents many.
 - **Port parity** - `gate_hybrid_parity.py <csharp_tree> <reference_tree>`:
-  **2206 of 2206** sheets byte-equal against the Python reference
+  **2206 of 2206** sheets pixel-equal (decoded RGBA) against the Python reference
   (`tools\research\sharp15\x3_candidates.py` thin_h), dimensions included.
   The lab result the user judged transfers to the shipped file only because
   the port is provably the same function. Even-strips / no-smooth /
@@ -211,7 +211,7 @@ Evidence, all green at release:
   | cv1 (1px strokes) | 0.319 | 0.232 | 0 |
   | cv2 | 0.022 | 0.133 | 0 |
   | cv3 | 0.109 | 0.095 | 0 |
-  | invented px | 1,270,876 | 6,391,698 | 0 |
+  | invented px | 1,270,876 | 6,197,630 | 0 |
   | soft_frac | 0.419 | 0.564 | 0 |
   | edge_w | 1.179 | 1.370 | 1.001 |
 
@@ -226,8 +226,16 @@ Be exact about what was judged on screen: launch 2 ran the round-1 tree with
 the thumbnail sheets returned to shipped bytes. Two reference changes landed
 after launch 2 (the straight-tie test no longer wraps at a cell edge; the
 nearest-key-mask rule) and were verified by the gates above, not by a third
-launch; their scope is the first/last block row or column of a cell and those
-9 keyed sheets (SelectiveArt: 159 PNGs differ by 2-20 px each vs the round-2
-dats; DialogStatic: 10 differ by 4-20 px). Third-party lanes (CamUI, NAM
+launch; measured with alpha included: SelectiveArt 696 entries - 95 byte-identical, 442
+pixel-identical, 159 differ by 4,985 colour pixels in total, 4,034 of them on
+ONE keyed sheet ({46a006b0,1441630f}, hand-reverted to nearest in launch 2 and
+now taking the hybrid under the key rule), the other 158 by at most 96 px each
+on the first/last block row or column of a cell, plus 945 alpha-only pixels,
+none of them a colour-key pixel; DialogStatic 266 entries - 165 byte-identical,
+91 pixel-identical, 10 differ (36 colour, 91 alpha-only pixels). No entry added
+or removed.
+The review round that followed (four confirmed findings, all fixed before the
+bundle was cut) is recorded in REGRESSION.md #203; gate_hybrid_parity.py
+--synthetic (per-state cells, bold) PASS. Third-party lanes (CamUI, NAM
 icons, Web Button, Carbon skin art) still take nearest at 1.5x - not on the
 screen the user judged, so not wired.

@@ -50,7 +50,8 @@ internal static class Upscale2x
     private static readonly HashSet<ulong> sThumbnails = new HashSet<ulong>();
     private static bool sThumbThis = false;
     private static int sHybridDone = 0, sHybridSkippedInteger = 0, sHybridSkippedEven = 0,
-                       sHybridSkippedMeasured = 0, sHybridSkippedThumb = 0, sHybridSkippedFineKey = 0;
+                       sHybridSkippedMeasured = 0, sHybridSkippedThumb = 0, sHybridSkippedFineKey = 0,
+                       sHybridSkippedFactor = 0;
 
     // #157: TGIs PROVEN to be 9-slice frames and never state strips, from
     // find_nine_slice.py. Empty unless --nine-slice is passed, so the default
@@ -729,6 +730,10 @@ internal static class Upscale2x
                     if (sHybrid && !hq && !smoothThis)
                     {
                         if (factor == Math.Floor(factor)) { sHybridSkippedInteger++; }
+                        // The x3-grid block map is DEFINED for 3/2 only (output pixel =
+                        // two x3 cells). The Python reference raises at any other
+                        // fractional factor; the port refuses and counts (review 2026-09-01).
+                        else if (Math.Abs(factor - 1.5) > 1e-9) { sHybridSkippedFactor++; }
                         else if (sEvenThis) { sHybridSkippedEven++; }
                         else if (sNoSmoothThis) { sHybridSkippedMeasured++; }
                         else if (sThumbThis) { sHybridSkippedThumb++; }
@@ -759,7 +764,9 @@ internal static class Upscale2x
 
         Console.WriteLine("Factor      : " + factor.ToString(CultureInfo.InvariantCulture) +
                           (normalizeNames ? "  (names normalized to canonical 0x form)" : ""));
-        Console.WriteLine("Mode        : " + (hq ? "high-quality (HighQualityBicubic)" : "nearest-neighbor (default)"));
+        Console.WriteLine("Mode        : " + (hq ? "high-quality (HighQualityBicubic)"
+                                              : (sHybrid && sHybridDone > 0 ? "straight-edge hybrid (" + (sHybridBold ? "bold" : "thin") + ") where eligible, nearest elsewhere"
+                                                                             : "nearest-neighbor (default)")));
         if (sSmoothUnkeyed)
         {
             // REPORT THE REFUSALS, NOT JUST THE WORK. A pass that prints only
@@ -792,7 +799,12 @@ internal static class Upscale2x
                 + (sHybridBold ? "bold" : "thin") + "); refused: "
                 + sHybridSkippedEven + " even-strips, " + sHybridSkippedMeasured + " edges measured downstream, "
                 + sHybridSkippedThumb + " thumbnails (item-icon bindings), " + sHybridSkippedFineKey + " fine key (1-2px), "
-                + sHybridSkippedInteger + " integer factor");
+                + sHybridSkippedInteger + " integer factor, " + sHybridSkippedFactor + " fractional factor other than 1.5");
+            if (sHybridSkippedFactor > 0)
+            {
+                Console.WriteLine("  WARN      --hybrid is defined for factor 1.5 only; " + sHybridSkippedFactor
+                    + " sheet(s) took nearest at factor " + factor);
+            }
             // THE MANDATORY INTEGER CONTROL (law 95): at 2x/3x nearest is an
             // exact block replicate and the packages must hash-match. The
             // dispatch refuses itself there; if it ever fires, fail the build.
@@ -1919,7 +1931,10 @@ internal static class Upscale2x
                 int ny = Math.Min((int)(oy / 1.5), ch - 1);
                 int nx = Math.Min((int)(ox / 1.5), cw - 1);
                 int nn = s[ny][nx];
-                if (IsKey(nn)) { val = unchecked((int)0xFFFF00FF); }
+                // verbatim - colour AND alpha. A constant 0xFFFF00FF here flipped
+                // alpha on ~200k key pixels whose 1x alpha is 0 (review 2026-09-01);
+                // nearest, and therefore the 2x/3x tiers, keep that alpha.
+                if (IsKey(nn)) { val = nn; }
                 else if (IsKey(val))
                 {
                     // the average landed on the key by coverage: key-excluded

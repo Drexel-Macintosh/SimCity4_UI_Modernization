@@ -148,6 +148,9 @@ def scale_len(v):
 
 if TAG:
     UPSCALE_DIR = os.path.join(TOOLS, "upscale", "preview-%s" % TAG, "SimCity_1")
+    if os.environ.get("SC4UI_UPSCALE_DIR") and os.environ.get("SC4UI_UPSCALE_DIR_ACK") != "lab":
+        raise SystemExit("SC4UI_UPSCALE_DIR is set but SC4UI_UPSCALE_DIR_ACK=lab is not: a leaked lab "
+                         "override would ship a variant tree as the release corpus (review 2026-09-01)")
     if os.environ.get("SC4UI_UPSCALE_DIR"):
         # lab A/B override (tools/research/sharp15/build_variant_tree.py)
         UPSCALE_DIR = os.environ["SC4UI_UPSCALE_DIR"]

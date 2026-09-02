@@ -1634,10 +1634,14 @@ all looks a lot better", "Thumbnails are sharp"). Be exact about what the user
 saw: launch 2 ran the round-1 tree with the thumbnail sheets returned to
 shipped bytes, and the two rule changes that landed after it (the straight-tie
 test no longer wrapping at a cell edge; the nearest-key-mask rule replacing 9
-hand reverts) were verified by gates — parity 2206 of 2206 sheets byte-equal,
+hand reverts) were verified by gates — parity 2206 of 2206 sheets pixel-equal,
 key integrity, the edge-quality report — not by a third launch, with their
-scope bounded to the first/last block row or column of a cell and to those 9
-keyed sheets. The corollary is the shipping rule: a resampler change the user
+scope bounded to the first/last block row or column of a cell (2,597 px over
+438 sheets, measured) and to those 9 keyed sheets (4,034 colour px on one of
+them). The review that followed found the rule's first form had also rewritten
+alpha on ~30k key pixels per package - measured alpha-blind, so unseen - and it
+was fixed before the bundle was cut: the sibling lesson, a compare that ignores
+a channel is blind to that channel. The corollary is the shipping rule: a resampler change the user
 has not seen does not ship. The third-party lanes (CamUI, NAM icons, Web
 Button, Carbon skin art) were left on nearest at 1.5x deliberately, because
 none of them was on the screen the user judged.

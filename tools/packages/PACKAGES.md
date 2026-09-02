@@ -55,7 +55,7 @@ with only pixel dimensions and layout coordinates differing.
 
 | File | Entries | Size (bytes) | Notes |
 |---|---|---|---|
-| `z_SC4UIScale_SelectiveArt-15x.dat` | 696 | 17,589,104 | city-HUD selective art + edited scaled `.UI`; v4.8.0 (#203 straight-edge hybrid) — was 13,411,333 at v4.7.2, see below |
+| `z_SC4UIScale_SelectiveArt-15x.dat` | 696 | 17,589,383 | city-HUD selective art + edited scaled `.UI`; v4.8.0 (#203 straight-edge hybrid) — was 13,411,333 at v4.7.2, see below |
 | `z_SC4UIScale_DialogStatic-15x.dat` | 266 | 2,912,173 | region-screen + city dialogs, statically scaled; v4.8.0 — was 2,655,005 at v4.7.2 |
 | `z_SC4UIScale_ItemIcons-15x.dat` | 356 | 4,712,509 | menu/picker item icons (per tier since v2.24.0); byte-identical v4.7.2 → v4.8.0 |
 | `z_SC4UIScale_ItemIconsSub-15x.dat` | 130 | 1,410,334 | submenus-mod + other-plugin icons → `zzz-SC4UIScale\`; byte-identical v4.7.2 → v4.8.0 |
@@ -285,7 +285,7 @@ stays a crisp copy at one width; curves get the anti-aliasing a vector UI
 renders at 150%. MEASURED on the shipped 1.5x corpus, v4.7.2 → v4.8.0
 (`_tests\Test-15xEdgeQuality.py`, integer tiers as its positive control):
 stroke-width CV per source width cv1 0.319 → 0.232, cv3 0.109 → 0.095, swc
-0.2997 → 0.2237; invented pixels 1,270,876 → 6,391,698 (blends at curves —
+0.2997 → 0.2237; invented pixels 1,270,876 → 6,197,630 (blends at curves —
 the price); soft_frac 0.419 → 0.564. The cv2 rise (0.022 → 0.133) is largely
 the metric reading the exact-colour core of a 2px run whose one edge blended.
 
@@ -305,7 +305,7 @@ alpha and a literal magenta `0xFF00FF` COLOUR KEY (the blit paths in
 `UiSpike.cpp` colour-key magenta explicitly, and `derive_subring.py` depends
 on the ring sprite's magenta hole). Under the hybrid the transparency MASK is
 nearest's prediction and only the colour inside it is the hybrid's: where
-nearest says key the pixel is exact `0xFFFF00FF`; where nearest says colour
+nearest says key the pixel is nearest's pixel verbatim (colour and alpha); where nearest says colour
 but the average landed on the key by coverage, the pixel takes the
 key-excluded average of its block. `gate_key_integrity.py` PASSes at 1.5 / 2
 / 3 with zero exemptions added; `key_near` 10,251 and `key_moved` 2,059 are
@@ -320,13 +320,13 @@ exe for a deliberate side-by-side only.
 **The port is the same function, proven not argued.** The user judged
 packages built by the Python reference (`research\sharp15\x3_candidates.py`
 `thin_h`, via `build_variant_tree.py`); what ships is the C# `UpscaleHybrid`.
-`upscale\gate_hybrid_parity.py` holds them byte-equal — 2206 of 2206 sheets,
+`upscale\gate_hybrid_parity.py` holds them pixel-equal (decoded RGBA; the PNG bytes differ by encoder) — 2206 of 2206 sheets,
 dimensions included — and its reference tree keeps the even-strips /
 no-smooth / thumbnails / fine-key sheets as the shipped bytes, so rows 2–5
 are a free regression control for the dispatch.
 
 **Package growth is PNG bytes, not pixels.** `SelectiveArt-15x` 13,411,333 →
-17,589,104 B and `DialogStatic-15x` 2,655,005 → 2,912,173 B at v4.8.0 (2x
+17,589,383 B and `DialogStatic-15x` 2,655,005 → 2,912,173 B at v4.8.0 (2x
 SelectiveArt is 11,885,116 B, 3x 16,168,796 B): blended curves compress worse
 than a 2,1,2,1 copy pattern, and the exe's GDI+ encoder is not an optimising
 one — the SAME pixels packed by PIL in the round-2 packages were 14,807,918 B.
@@ -417,7 +417,7 @@ from this file.
   reduce and BEFORE nearest; refuses integer factors (FATAL if it fires at
   one — 2x/3x stay byte-identical), even-strips, no-smooth, thumbnails and
   fine-key (1–2 px) sheets, each counted in the run summary. Held
-  byte-identical to the Python reference (`research\sharp15\x3_candidates.py`
+  pixel-identical to the Python reference (`research\sharp15\x3_candidates.py`
   `thin_h`) by `upscale\gate_hybrid_parity.py <csharp_tree> <reference_tree>`
   — 2206 of 2206 sheets, dimensions included; `--selftest` proves the gate
   can fail; exit 0 parity / 1 mismatch / 2 inputs missing.

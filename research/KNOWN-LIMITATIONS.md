@@ -56,7 +56,7 @@ regression suite that holds them in place is in `_tests/`.
   the 2:1 area average — so what remains on screen is the blended curve, the
   same anti-aliasing a vector UI renders at 150%. MEASURED on the shipped
   1.5x corpus, v4.7.2 → v4.8.0: stroke-width consistency 0.2997 → 0.2237
-  (cv1 0.319 → 0.232); invented colours 1,270,876 → 6,391,698 px and
+  (cv1 0.319 → 0.232); invented colours 1,270,876 → 6,197,630 px and
   soft_frac 0.419 → 0.564 — those two rises are the price, paid at curves
   only. Lot and building thumbnails (the 485 TGIs the ItemIcons and
   ItemIconsSub packages carry, all group `6a386d26`) keep the ragged-but-hard
@@ -67,15 +67,18 @@ regression suite that holds them in place is in `_tests/`.
   launch-verified.** The user's two launches judged the round-1 tree (round 2
   with the thumbnail sheets returned to shipped bytes). Two changes to the
   reference landed after launch 2 and were held by the gates — hybrid parity
-  2206 of 2206 sheets byte-equal, key integrity PASS at 1.5/2/3 with no
+  2206 of 2206 sheets pixel-equal (decoded RGBA), key integrity PASS at 1.5/2/3 with no
   exemptions added, the edge-quality report — not by a third launch: the
   straight-tie test no longer wraps at a cell edge (it had handed a first-row
   block the last row as its neighbour), and the nearest-key-mask rule
   replaced nine hand-reverted keyed sheets. Their scope is bounded to the
   first and last block row or column of a cell and to those nine sheets;
   pixel-level compare of the shipped dats against the round-2 dats the user
-  saw: SelectiveArt 159 of 696 PNGs differ by 2-20 px each, DialogStatic 10 of
-  266 differ by 4-20 px, no entry added or removed. If a 1.5x cell border or a
+  saw, alpha included: SelectiveArt 159 of 696 PNGs differ by 4,985 colour
+  pixels in total (4,034 on one keyed sheet that now takes the hybrid instead
+  of its launch-2 hand revert; the rest at most 96 px each) and 945 alpha-only
+  pixels, none on a colour-key pixel; DialogStatic 10 of 266 differ (36 colour,
+  91 alpha-only); no entry added or removed. If a 1.5x cell border or a
   keyed sheet looks wrong, this is the first place to look.
 
 ## Performance and lifecycle

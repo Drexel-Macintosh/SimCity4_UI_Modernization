@@ -94,6 +94,8 @@ def main():
     distinct = load_distinct(os.path.join(base, '_work', 'item_icons_distinct.txt'))
     if TAG:
         preview_dir = os.path.join(root, 'tools', 'upscale', 'preview-%s' % TAG, 'SimCity_1')
+        if os.environ.get('SC4UI_UPSCALE_DIR') and os.environ.get('SC4UI_UPSCALE_DIR_ACK') != 'lab':
+            raise SystemExit('SC4UI_UPSCALE_DIR is set but SC4UI_UPSCALE_DIR_ACK=lab is not (review 2026-09-01)')
         if os.environ.get('SC4UI_UPSCALE_DIR'):
             # lab A/B override (tools/research/sharp15/build_variant_tree.py)
             preview_dir = os.environ['SC4UI_UPSCALE_DIR']

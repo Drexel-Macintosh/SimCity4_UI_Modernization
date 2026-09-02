@@ -7,7 +7,7 @@
   "edge_w": 1.3697471552555243,
   "key_moved": 2059,
   "key_near": 10251,
-  "manuf": 6391698,
+  "manuf": 6197630,
   "n_1": 25179926,
   "n_2": 1087188,
   "n_3": 498699,
@@ -687,7 +687,7 @@
    "h": 65,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 732,
+   "manuf": 109,
    "w": 716
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x13e14f80.png": {
@@ -883,7 +883,7 @@
    "h": 74,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 3661,
+   "manuf": 997,
    "w": 300
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x13f1524d.png": {
@@ -981,7 +981,7 @@
    "h": 74,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 3661,
+   "manuf": 997,
    "w": 300
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x13f1525f.png": {
@@ -2213,14 +2213,14 @@
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 4750,
+   "manuf": 862,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416191.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5072,
+   "manuf": 860,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416192.png": {
@@ -2381,91 +2381,91 @@
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416201.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416202.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416203.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416204.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416205.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416206.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416207.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416208.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5168,
+   "manuf": 956,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416209.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x1441620a.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5168,
+   "manuf": 956,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x1441620b.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x1441620c.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x1441620e.png": {
@@ -3368,7 +3368,7 @@
    "h": 62,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 31897,
+   "manuf": 2146,
    "w": 1731
   },
   "T-0x856ddbac_G-0x1abe787d_I-0x14416310.png": {
@@ -6182,7 +6182,7 @@
    "h": 65,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 737,
+   "manuf": 114,
    "w": 714
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x13e14f80.png": {
@@ -7792,14 +7792,14 @@
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 4750,
+   "manuf": 862,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416191.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5072,
+   "manuf": 860,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416192.png": {
@@ -7967,91 +7967,91 @@
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416201.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416202.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416203.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416204.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416205.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416206.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416207.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416208.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5168,
+   "manuf": 956,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416209.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x1441620a.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5168,
+   "manuf": 956,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x1441620b.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x1441620c.png": {
    "h": 135,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5164,
+   "manuf": 952,
    "w": 135
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x1441620e.png": {
@@ -8541,7 +8541,7 @@
    "h": 57,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 5138,
+   "manuf": 2858,
    "w": 360
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416272.png": {
@@ -8954,7 +8954,7 @@
    "h": 62,
    "key_moved": 0,
    "key_near": 0,
-   "manuf": 31897,
+   "manuf": 2146,
    "w": 1731
   },
   "T-0x856ddbac_G-0x46a006b0_I-0x14416310.png": {

@@ -39,6 +39,15 @@ $base  = Join-Path $vars 'baseline'
 
 if ($Restore) {
     if (-not (Test-Path $base)) { throw "no baseline parked at $base" }
+    # review 2026-09-01: a parked baseline is only a restore point for the
+    # corpus it was parked FROM. If the corpus has been rebuilt since (any
+    # preview PNG newer than the park), restoring would regress the shipped
+    # packages to an older release. Refuse; delete the park deliberately.
+    $parked = (Get-ChildItem $base -Filter '*.dat' | Sort-Object LastWriteTime | Select-Object -First 1).LastWriteTime
+    $corpus = (Get-ChildItem (Join-Path $repo 'tools\upscale\preview-15x\SimCity_1') -Filter '*.png' | Sort-Object LastWriteTime -Descending | Select-Object -First 1).LastWriteTime
+    if ($corpus -gt $parked) {
+        throw ("parked baseline ({0}) predates the current corpus ({1}) - it is not a restore point any more. Delete {2} deliberately if you mean it." -f $parked, $corpus, $base)
+    }
     Get-ChildItem $base -Filter '*.dat' | ForEach-Object {
         Copy-Item $_.FullName (Join-Path $pkg15 $_.Name) -Force
         Write-Host ("restored {0}" -f $_.Name)
@@ -61,7 +70,9 @@ if (-not (Test-Path $base)) {
 }
 
 $env:SC4UI_UPSCALE_DIR = $tree
+$env:SC4UI_UPSCALE_DIR_ACK = 'lab'     # the builders refuse the override without it
 Write-Host ("SC4UI_UPSCALE_DIR = {0}  ({1} sheets)" -f $tree, $n)
+try {
 $steps = @(
     @('tools\selective-safe\build_selective_safe.py', '--factor', '1.5'),
     @('tools\dialog-static\build_dialog_static.py',   '--factor', '1.5'),
@@ -79,7 +90,12 @@ foreach ($s in $steps) {
     $ErrorActionPreference = 'Stop'
     if ($code -ne 0) { throw ("builder failed: {0} (exit {1})" -f $s[0], $code) }
 }
-Remove-Item Env:SC4UI_UPSCALE_DIR
+} finally {
+    # review 2026-09-01: a failed builder used to leave the override armed in
+    # this shell, where the next release build would consume it silently
+    Remove-Item Env:SC4UI_UPSCALE_DIR -ErrorAction SilentlyContinue
+    Remove-Item Env:SC4UI_UPSCALE_DIR_ACK -ErrorAction SilentlyContinue
+}
 
 $out = Join-Path $vars $Variant
 New-Item -ItemType Directory -Force $out | Out-Null

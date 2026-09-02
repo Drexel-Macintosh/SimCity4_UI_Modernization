@@ -12,7 +12,8 @@ the scope of the whole game). Only pixel content changes.
 The derived lists are honoured exactly as Rebuild-Corpus.ps1 would:
   cell-strips.txt        per-STATE processing (a cell never sees its neighbour)
   nine-slice.txt         3x3 cells (corner/edge/centre never bleed)
-  tiled.txt              wrap padding (seam continuity across the wrap edge)
+  tiled.txt              wrap padding - consumed only by the Scale3x candidates;
+                         a no-op for thin_h/bold_h (they never look past a block)
   even-strips.txt        KEPT AS SHIPPED (the tick-ladder even reduce; round 1)
   no-smooth.txt          KEPT AS SHIPPED (a builder measures their pixel edges)
   keyed, MinKeyRun < 3   KEPT AS SHIPPED (the fine-key refusal, Upscale2x.cs:1396)

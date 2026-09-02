@@ -55,8 +55,8 @@ instead of the jaggies.
 THE KEY SET IS NEAREST'S KEY SET (shipping rule; it replaced 9 hand reverts).
 The colour key is the engine's transparency and R2 holds the exact-key set to
 the nearest prediction. The transparency MASK is nearest's; only the colour
-inside it is the hybrid's. Where nearest says key the pixel is exact
-0xFFFF00FF; where nearest says colour but the average landed on the key by
+inside it is the hybrid's. Where nearest says key the pixel is nearest's pixel verbatim (colour and
+alpha); where nearest says colour but the average landed on the key by
 coverage, the pixel takes the key-excluded average of its block.
 gate_key_integrity: PASS at 1.5/2/3 with zero exemptions added; key_near
 10,251 -> 10,251 and key_moved 2,059 -> 2,059, unchanged from v4.7.2
@@ -81,7 +81,7 @@ THE PORT IS THE SAME FUNCTION, PROVEN NOT ARGUED. Upscale2x.cs UpscaleHybrid
 (--hybrid thin, --thumbnails thumbnails.txt; dispatched after the even reduce
 and before nearest; an integer factor is refused with a FATAL) against the
 Python reference x3_candidates.py thin_h: gate_hybrid_parity.py, 2206 of 2206
-sheets byte-equal, dimensions included. 2x and 3x: 0 of 2206 sheets changed
+sheets pixel-equal (decoded RGBA; the PNG containers differ by encoder), dimensions included. 2x and 3x: 0 of 2206 sheets changed
 (sha1 of every preview PNG against the pre-rebuild manifest); the exe's own
 summary at those factors reads "hybrid: 0 sheet(s) ... 2206 integer factor".
 
@@ -106,9 +106,39 @@ edge-quality report), not by a third launch:
   * the nearest-key-mask rule above replaced the 9 hand reverts - scope: those
     9 keyed sheets.
 Pixel-level compare of the shipped dats against the round-2 dats the user
-judged: SelectiveArt 696 entries - 95 byte-identical, 442 pixel-identical, 159
-PNGs differ by 2-20 px each; DialogStatic 266 entries - 165 byte-identical, 91
-pixel-identical, 10 differ by 4-20 px. No entry added or removed.
+judged, measured with alpha included: SelectiveArt 696 entries - 95 byte-identical, 442
+pixel-identical, 159 differ by 4,985 colour pixels in total, 4,034 of them on
+ONE keyed sheet ({46a006b0,1441630f}, hand-reverted to nearest in launch 2 and
+now taking the hybrid under the key rule), the other 158 by at most 96 px each
+on the first/last block row or column of a cell, plus 945 alpha-only pixels,
+none of them a colour-key pixel; DialogStatic 266 entries - 165 byte-identical,
+91 pixel-identical, 10 differ (36 colour, 91 alpha-only pixels). No entry added
+or removed.
+
+THE ADVERSARIAL REVIEW ROUND (56 agents, 4 lenses x 2 refuters per finding),
+four findings survived and changed the shipped bytes or the claims:
+  * the first form of the key rule wrote a constant 0xFFFF00FF and so flipped
+    ALPHA on ~30k colour-key pixels per package whose 1x alpha is 0 (nearest
+    and the 2x/3x tiers preserve it) - invisible to the engine, which keys on
+    colour, but never on screen and understated by an alpha-blind compare.
+    Shipped form: the mask copies nearest's pixel VERBATIM. Alpha-aware
+    compare afterwards: 0 alpha differences on key pixels.
+  * the C# hybrid had no "1.5 only" refusal (the x3-grid map is defined for
+    3/2; the Python reference raises elsewhere) - it now refuses and counts.
+  * "byte parity" was pixel parity (decoded RGBA; the PNG containers differ by
+    encoder); "nearest's key set" is nearest's factor-map key set per cell.
+  * the lab package script leaked its SC4UI_UPSCALE_DIR override on a failed
+    build and its -Restore would have regressed to v4.7.2; the builders now
+    refuse the override without SC4UI_UPSCALE_DIR_ACK=lab, the script cleans up
+    in a finally and -Restore refuses a park older than the corpus.
+Also added on the review's coverage finding: gate_hybrid_parity.py --synthetic
+exercises the per-STATE cell branch and --hybrid bold, which the corpus never
+does (every cell-strip sheet is refused by the even-strips rule): PASS.
+Refuted (with the reason recorded in the workflow journal): the integer FATAL
+being "a tautology" (it is belt-and-braces, like the cell-first FATAL), the
+Carbon lanes "drifting" (deliberate, documented), the alpha flip being a
+defect on screen (the engine masks alpha off the key test) - fixed anyway
+because the 2x/3x convention is the source alpha.
 
 LEFT ON THE OLD POLICY, DELIBERATELY: the third-party lanes (CamUI, NAM icons,
 Web Button, Carbon skin art) still run the exe with their own flag sets and
@@ -125,7 +155,7 @@ refreshed to v4.8.0 as a deliberate act:
 
     v4.7.2   swc 0.2997  cv1 0.319  cv2 0.022  cv3 0.109
     v4.8.0   swc 0.2237  cv1 0.232  cv2 0.133  cv3 0.095
-             invented px 1,270,876 -> 6,391,698 (blends at curves - the price)
+             invented px 1,270,876 -> 6,197,630 (blends at curves - the price)
              soft_frac 0.419 -> 0.564   edge_w 1.179 -> 1.370
 
 The cv2 rise is largely the metric reading the exact-colour core of a 2px run
@@ -133,7 +163,7 @@ whose one edge blended; swc_ink is the fair number for a blender and was not
 made a gate.
 
 SHIPPED BYTES (tools/packages/15x, v4.7.2 -> v4.8.0):
-    SelectiveArt-15x   13,411,333 -> 17,589,104 B
+    SelectiveArt-15x   13,411,333 -> 17,589,383 B
     DialogStatic-15x    2,655,005 ->  2,912,173 B
     ItemIcons-15x       4,712,509 ->  4,712,509 B   (byte-identical)
     ItemIconsSub-15x    1,410,334 ->  1,410,334 B   (byte-identical)

@@ -345,9 +345,18 @@ def _nn_key_mask(out, cell, cw, ch):
     by coverage - 9 of 466 keyed sheets moved key pixels in round 1 and were
     hand-reverted. A hand list is not a rule; this is: the transparency mask
     is nearest's, the COLOUR inside it is the hybrid's. Where nearest says key
-    the pixel is exact key; where nearest says colour but the hybrid produced
-    key (a box block the key owned by half), the pixel takes the key-excluded
-    average of its block instead - never the key, never a near-key."""
+    the pixel IS nearest's pixel, verbatim - colour AND alpha (review 2026-09-01:
+    writing a constant 0xFFFF00FF flipped alpha on ~200k key pixels whose 1x
+    alpha is 0, which nearest and the 2x/3x tiers preserve); where nearest says
+    colour but the hybrid produced key (a box block the key owned by half), the
+    pixel takes the key-excluded average of its block instead - never the key,
+    never a near-key.
+
+    "Nearest" here is the FACTOR map floor(o/1.5) inside the cell being
+    processed; UpscaleNearest's per-state ratio map can differ by a pixel at a
+    cell boundary on a cell-strip sheet, but every cell-strip sheet is refused
+    by the even-strips rule before the hybrid runs, and gate_key_integrity R2
+    (which models the shipped nearest) passes on the built tree."""
     h, w = cell.shape[:2]
     sx = np.minimum((np.arange(cw) / 1.5).astype(np.int64), w - 1)
     sy = np.minimum((np.arange(ch) / 1.5).astype(np.int64), h - 1)
@@ -355,7 +364,7 @@ def _nn_key_mask(out, cell, cw, ch):
     nn_key = (nn[..., 0] == 255) & (nn[..., 1] == 0) & (nn[..., 2] == 255)
     out = out.copy()
     out_key = (out[..., 0] == 255) & (out[..., 1] == 0) & (out[..., 2] == 255)
-    out[nn_key] = KEY
+    out[nn_key] = nn[nn_key]
     fix = out_key & ~nn_key
     if fix.any():
         # key-excluded average of the block; if the block is ALL key (cannot

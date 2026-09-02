@@ -20871,9 +20871,10 @@ its positive control, exit 2 = instrument fault):
     stroke-width consistency (CV of output run lengths per source width 1..4),
     shipped 1.5x corpus, v4.7.2 baseline:
         swc 0.2997  cv1 0.319  cv2 0.022  cv3 0.109   (2x/3x: all exactly 0)
-    shipped v4.8.0 corpus (parity-identical to the reference the user judged):
+    shipped v4.8.0 corpus (pixel-identical to the CURRENT Python reference; the
+    judged tree predates two rule changes - see below):
         swc 0.2237  cv1 0.232  cv2 0.133  cv3 0.095
-        invented px 1,270,876 -> 6,391,698 (blends at curves - the price)
+        invented px 1,270,876 -> 6,197,630 (blends at curves - the price)
         soft_frac 0.419 -> 0.564   edge_w 1.179 -> 1.370
         key_near 10,251 -> 10,251 (unchanged)   key_moved 2,059 -> 2,059 (unchanged)
     The cv2 rise is largely the metric reading the exact-colour core of a
@@ -20913,7 +20914,7 @@ sharp."
 THE KEY SET IS NEAREST'S KEY SET (shipping rule, replaces the 9 hand reverts):
 the colour key is the engine's transparency and R2 holds the exact-key set to
 the nearest prediction. The transparency MASK is nearest's; only the colour
-inside it is the hybrid's. Where nearest says key the pixel is exact 0xFFFF00FF;
+inside it is the hybrid's. Where nearest says key the pixel is nearest's pixel verbatim (colour and alpha);
 where nearest says colour but the average landed on the key by coverage, the
 pixel takes the key-excluded average of its block. gate_key_integrity: PASS at
 1.5/2/3 with zero exemptions added; key_near and key_moved unchanged from
@@ -20922,15 +20923,43 @@ v4.7.2 corpus-wide.
 THE PORT IS THE SAME FUNCTION, PROVEN NOT ARGUED. Upscale2x.cs UpscaleHybrid
 (--hybrid thin, --thumbnails thumbnails.txt, dispatch after the even reduce and
 before nearest, integer-factor refusal with a FATAL) vs the Python reference
-x3_candidates.py thin_h: gate_hybrid_parity.py, 2206 of 2206 sheets byte-equal,
+x3_candidates.py thin_h: gate_hybrid_parity.py, 2206 of 2206 sheets pixel-equal (decoded RGBA),
 dimensions included. BE EXACT ABOUT WHAT THE USER SAW: launch 2 ran the round-1
 tree with the thumbnail sheets returned to shipped bytes. Two changes to the
 reference landed AFTER launch 2 and were verified by the gates above (parity,
 key integrity, the edge-quality report), not by a third launch: the straight-tie
 test no longer wraps at a cell edge (np.roll had handed a first-row block the
 last row as its neighbour), and the nearest-key-mask rule replaced the 9 hand
-reverts. Their scope is bounded to the first/last block row or column of a
-cell and to those 9 keyed sheets.
+reverts. Their scope, MEASURED (the review below measured it; an earlier
+draft of this entry said "2-20 px each", which was alpha-blind and wrong by
+three orders of magnitude on one sheet): the wrap fix moves 2,597 px over 438
+sheets, every one on the first/last block row or column of a cell; the key rule
+changes colour on exactly the 9 formerly hand-reverted sheets.
+
+THE ADVERSARIAL REVIEW ROUND (56 agents, 4 lenses x 2 refuters per finding),
+four findings survived and changed the shipped bytes or the claims:
+  * the first form of the key rule wrote a constant 0xFFFF00FF and so flipped
+    ALPHA on ~30k colour-key pixels per package whose 1x alpha is 0 (nearest
+    and the 2x/3x tiers preserve it) - invisible to the engine, which keys on
+    colour, but never on screen and understated by an alpha-blind compare.
+    Shipped form: the mask copies nearest's pixel VERBATIM. Alpha-aware
+    compare afterwards: 0 alpha differences on key pixels.
+  * the C# hybrid had no "1.5 only" refusal (the x3-grid map is defined for
+    3/2; the Python reference raises elsewhere) - it now refuses and counts.
+  * "byte parity" was pixel parity (decoded RGBA; the PNG containers differ by
+    encoder); "nearest's key set" is nearest's factor-map key set per cell.
+  * the lab package script leaked its SC4UI_UPSCALE_DIR override on a failed
+    build and its -Restore would have regressed to v4.7.2; the builders now
+    refuse the override without SC4UI_UPSCALE_DIR_ACK=lab, the script cleans up
+    in a finally and -Restore refuses a park older than the corpus.
+Also added on the review's coverage finding: gate_hybrid_parity.py --synthetic
+exercises the per-STATE cell branch and --hybrid bold, which the corpus never
+does (every cell-strip sheet is refused by the even-strips rule): PASS.
+Refuted (with the reason recorded in the workflow journal): the integer FATAL
+being "a tautology" (it is belt-and-braces, like the cell-first FATAL), the
+Carbon lanes "drifting" (deliberate, documented), the alpha flip being a
+defect on screen (the engine masks alpha off the key test) - fixed anyway
+because the 2x/3x convention is the source alpha.
 
 LEFT ON THE OLD POLICY, DELIBERATELY: the third-party lanes (CamUI, NAM icons,
 Web Button, Carbon skin art) still run the exe with their own flag sets and
@@ -20950,18 +20979,22 @@ LAWS (the numbered file gets both):
   OUTCOME IN FRONT OF THE USER, IN-GAME, BEFORE SHIPPING ANY.
 
 RESULT (shipped bytes, tools/packages/15x, v4.7.2 -> v4.8.0):
-    SelectiveArt-15x   13,411,333 -> 17,589,104 B   DialogStatic-15x  2,655,005 -> 2,912,173 B
+    SelectiveArt-15x   13,411,333 -> 17,589,383 B   DialogStatic-15x  2,655,005 -> 2,912,173 B
     ItemIcons-15x       4,712,509 -> 4,712,509 B    ItemIconsSub-15x  1,410,334 -> 1,410,334 B
     (2x SelectiveArt 11,885,116 B, 3x 16,168,796 B.) The growth is PNG bytes,
     not pixels: blended curves compress worse than a 2,1,2,1 copy pattern, and
     the exe's GDI+ encoder is not an optimising one - the SAME pixels packed by
     PIL in the round-2 packages were 14,807,918 B. Pixel-level compare of the
-    shipped dats against the round-2 dats the user judged: SelectiveArt 696
-    entries - 95 byte-identical, 442 pixel-identical, 159 PNGs differ by 2-20
-    px each (the two post-launch rule changes above, bounded as stated);
-    DialogStatic 266 entries - 165 byte-identical, 91 pixel-identical, 10 differ
-    by 4-20 px. No entry added or removed. The two icon packages are
-    byte-identical to v4.7.2.
+    shipped dats against the round-2 dats the user judged
+    (compare_packages_pixels.py), measured with alpha included: SelectiveArt 696 entries - 95 byte-identical, 442
+    pixel-identical, 159 differ by 4,985 colour pixels in total, 4,034 of them on
+    ONE keyed sheet ({46a006b0,1441630f}, hand-reverted to nearest in launch 2 and
+    now taking the hybrid under the key rule), the other 158 by at most 96 px each
+    on the first/last block row or column of a cell, plus 945 alpha-only pixels,
+    none of them a colour-key pixel; DialogStatic 266 entries - 165 byte-identical,
+    91 pixel-identical, 10 differ (36 colour, 91 alpha-only pixels). No entry added
+    or removed.
+    The two icon packages are byte-identical to v4.7.2.
 
 Verification assets (all green at release): theorem_check.py (synthetic widths
 table), _tests/Test-15xEdgeQuality.py (baseline refreshed to v4.8.0 as a

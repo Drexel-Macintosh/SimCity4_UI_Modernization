@@ -216,7 +216,7 @@ foreach ($f in $Factor) {
     # edge-claim rule), and takes the key-aware average only at curves,
     # diagonals and anti-aliased pictures. Judged on screen 2026-09-01: "It all
     # looks a lot better." Ported from tools/research/sharp15/x3_candidates.py
-    # thin_h and held byte-identical to it by gate_hybrid_parity.py.
+    # thin_h and held pixel-identical to it by gate_hybrid_parity.py.
     # Precedence inside the exe: integer factor (refused - 2x/3x stay
     # byte-identical, FATAL otherwise), even-strips (keep their even reduce),
     # no-smooth, thumbnails, fine key (1-2px), then the hybrid.

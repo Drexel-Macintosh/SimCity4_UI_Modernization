@@ -31,13 +31,19 @@ On screen, in two launches, on the same install. Launch 1: "It all looks a lot
 better. Maybe the thumbnails still don't look as sharp though." Launch 2, with
 the thumbnail sheets returned to their previous bytes: "Thumbnails are sharp."
 Two small refinements to the rule landed after the second launch and were
-verified by the build's own gates (byte-for-byte parity between the reference
+verified by the build's own gates (pixel-for-pixel parity (decoded RGBA - the PNG containers differ by encoder) between the reference
 and the shipping tool on 2206 of 2206 sheets, colour-key integrity at 1.5, 2
-and 3, the edge-quality report) rather than by a third launch. Their reach is
-bounded: the first or last block row or column of a cell, and nine colour-keyed
-sheets. Against the packages judged in launch 2, 159 of 696 SelectiveArt
-entries and 10 of 266 DialogStatic entries differ, by 2-20 pixels each; no
-entry was added or removed.
+and 3, the edge-quality report) rather than by a third launch, and then
+re-checked by an adversarial review, which found that the first form of the
+key rule had rewritten alpha on colour-key pixels; the shipped form copies the
+plain-copy pixel verbatim. Against the packages judged in launch 2, measured
+with alpha included: 159 of 696 SelectiveArt entries differ - 4,985 colour
+pixels in total, 4,034 of them on one colour-keyed sheet that had been
+hand-reverted to the plain copy in launch 2 and now takes the hybrid under the
+rule; the other 158 differ by at most 96 pixels each, all on the first or last
+block row or column of a cell; 945 alpha-only differences, none on a
+colour-key pixel. 10 of 266 DialogStatic entries differ (36 colour and 91
+alpha-only pixels). No entry was added or removed.
 
 ### Why a plain copy could never be even at 1.5x
 
@@ -56,7 +62,7 @@ takes the average.
 
 ### Package size
 
-`SelectiveArt-15x` 13,411,333 -> 17,589,104 bytes; `DialogStatic-15x`
+`SelectiveArt-15x` 13,411,333 -> 17,589,383 bytes; `DialogStatic-15x`
 2,655,005 -> 2,912,173 bytes; `ItemIcons-15x` and `ItemIconsSub-15x` unchanged
 (4,712,509 and 1,410,334 bytes). The growth is PNG bytes, not pixels: blended
 curves compress worse than a 2, 1, 2, 1 copy pattern, and the build tool's
