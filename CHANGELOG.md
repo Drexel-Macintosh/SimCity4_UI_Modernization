@@ -1,5 +1,88 @@
 # Changelog
 
+## 4.8.0 (2026-09-01) - 1.5x edges are drawn at one width; 2x and 3x are untouched
+
+**One line of behaviour: at the 1.5x preset the interface art is built by a
+new rule - straight edges copied crisp at a single width, curves anti-aliased,
+thumbnails left as they were. At 2x and 3x not one sheet changed.**
+
+### What you see at 1.5x
+
+- **Straight edges are one width.** Frame borders, bevels, button rims and
+  separators come out crisp, and the same stroke is the same width wherever it
+  sits. Before, a 1px stroke came out 1px in some places and 2px in others
+  (measured on one advisor frame: 106 runs at 1px against 110 at 2px, where 2x
+  and 3x are uniform), which read as ragged, unevenly stair-stepped edges
+  everywhere.
+- **Curves, diagonals and pictures are anti-aliased**, the way a vector
+  interface renders at 150%. The old rule copied pixels there too and produced
+  visible jaggies on anti-aliased buttons.
+- **Thumbnails are unchanged and sharp.** Lot and building item icons and the
+  submenu icon sets keep the hard-pixel copy; the two icon packages are
+  byte-identical to v4.7.2. A rendered picture wants hard pixels, and the
+  2x/3x block copy is the reference for "sharp".
+- **2x and 3x: 0 of 2206 sheets changed**, checked by hashing every sheet
+  against the previous build. The tool refuses to apply the new rule at a
+  whole-number factor at all.
+
+### How it was judged
+
+On screen, in two launches, on the same install. Launch 1: "It all looks a lot
+better. Maybe the thumbnails still don't look as sharp though." Launch 2, with
+the thumbnail sheets returned to their previous bytes: "Thumbnails are sharp."
+Two small refinements to the rule landed after the second launch and were
+verified by the build's own gates (byte-for-byte parity between the reference
+and the shipping tool on 2206 of 2206 sheets, colour-key integrity at 1.5, 2
+and 3, the edge-quality report) rather than by a third launch. Their reach is
+bounded: the first or last block row or column of a cell, and nine colour-keyed
+sheets. Against the packages judged in launch 2, 159 of 696 SelectiveArt
+entries and 10 of 266 DialogStatic entries differ, by 2-20 pixels each; no
+entry was added or removed.
+
+### Why a plain copy could never be even at 1.5x
+
+At 1.5x every two source pixels have to become three, so a copy doubles one
+column and keeps the next: 2, 1, 2, 1. A stroke w pixels wide wants 1.5 x w
+pixels, which is a whole number only when w is even. So a 1px stroke lands as
+1 or 2 depending on where it starts, a 2px stroke always lands as 3, a 3px as 4
+or 5. Any copy rule that is consistent for odd widths is inconsistent for even
+ones, and the other way round. The earlier alternative, averaging everything
+(the default until v4.3.0, #200), made the widths even by blending every edge,
+which read as soft. Both had been rejected on screen. The new rule decides
+block by block: a block that is mostly one colour copies; a tie that continues
+along a straight edge takes one consistent side of it (1px stays 1, 2px becomes
+3, 4px becomes 6); everything else - a staircase step, a curve, a picture -
+takes the average.
+
+### Package size
+
+`SelectiveArt-15x` 13,411,333 -> 17,589,104 bytes; `DialogStatic-15x`
+2,655,005 -> 2,912,173 bytes; `ItemIcons-15x` and `ItemIconsSub-15x` unchanged
+(4,712,509 and 1,410,334 bytes). The growth is PNG bytes, not pixels: blended
+curves compress worse than a 2, 1, 2, 1 copy pattern, and the build tool's
+encoder is not an optimising one - the same pixels packed by another encoder
+came to 14,807,918 bytes. For comparison the 2x `SelectiveArt` package is
+11,885,116 bytes and the 3x one 16,168,796 bytes.
+
+### Deliberately unchanged
+
+- **Third-party art lanes** - CamUI, NAM icons, the web button and Carbon skin
+  art - still take the plain copy at 1.5x. None of them was on the screen that
+  was judged (the Carbon skin is not installed on the judging machine), and a
+  resampler change nobody has looked at does not ship. They will be wired when
+  they can be seen.
+- **Tick ladders** (the `even-strips` sheets) keep the averaging they have had
+  since v4.3.0.
+- **Sheets whose pixel edges are measured by a later build step** (advisor
+  frames among them, the `no-smooth` list) keep the copy; a blended edge would
+  make that measurement stop early.
+- **Fine-key sheets** - colour-keyed art whose transparent runs are only 1-2
+  pixels wide - keep the copy, as they have under every resampler.
+- **The transparency mask is still the copy's mask.** Where the old rule said
+  "transparent", the pixel is exactly the key colour; only the colour inside
+  the mask is new. The key-integrity gate passes at 1.5, 2 and 3 with no
+  exemptions added.
+
 ## 4.7.2 (2026-09-01) - the snapshot frame is left alone on purpose
 
 **One line of behaviour: the Camera Mode capture frame will never be scaled.**

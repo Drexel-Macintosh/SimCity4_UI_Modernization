@@ -44,6 +44,13 @@ internal static class Upscale2x
     private static bool sEvenStripsActive = false;
     private static bool sEvenThis = false;
     private static int sSmoothSkippedUnstructured = 0;
+    // v4.8.0 STRAIGHT-EDGE HYBRID (--hybrid thin|bold) and its exclusion list
+    // (--thumbnails: item-icon bindings keep nearest). See UpscaleHybrid.
+    private static bool sHybrid = false, sHybridBold = false;
+    private static readonly HashSet<ulong> sThumbnails = new HashSet<ulong>();
+    private static bool sThumbThis = false;
+    private static int sHybridDone = 0, sHybridSkippedInteger = 0, sHybridSkippedEven = 0,
+                       sHybridSkippedMeasured = 0, sHybridSkippedThumb = 0, sHybridSkippedFineKey = 0;
 
     // #157: TGIs PROVEN to be 9-slice frames and never state strips, from
     // find_nine_slice.py. Empty unless --nine-slice is passed, so the default
@@ -202,6 +209,50 @@ internal static class Upscale2x
                 Console.Error.WriteLine("even-strips: " + sEvenStrips.Count
                     + " sheet(s) keep the even reduce; every other sheet takes "
                     + "nearest at a fractional factor (#200)");
+                ai++;
+            }
+            else if (string.Equals(a, "--hybrid", StringComparison.OrdinalIgnoreCase))
+            {
+                // v4.8.0. The straight-edge hybrid for fractional factors: copy
+                // where the source edge is straight (consistent stroke width
+                // by the edge-claim rule), key-aware area average elsewhere.
+                // User-picked on screen 2026-09-01 over nearest (ragged) and
+                // the average (soft). Argument: thin | bold (the odd-width
+                // policy; thin shipped). See UpscaleHybrid.
+                if (ai + 1 >= args.Length) { Console.Error.WriteLine("--hybrid requires thin|bold"); return Usage(); }
+                string hm = args[ai + 1].ToLowerInvariant();
+                if (hm != "thin" && hm != "bold") { Console.Error.WriteLine("--hybrid requires thin|bold"); return Usage(); }
+                sHybrid = true; sHybridBold = hm == "bold";
+                ai++;
+            }
+            else if (string.Equals(a, "--thumbnails", StringComparison.OrdinalIgnoreCase))
+            {
+                // v4.8.0. A DERIVED LIST (find_thumbnails.py: every PNG the
+                // item-icon packages carry, i.e. the engine's item-icon
+                // bindings). These keep NEAREST under --hybrid: a rendered
+                // picture wants hard pixels, and no pixel predicate separates
+                // it from a glossy button - the binding does. User verdict
+                // 2026-09-01: chrome "a lot better", thumbnails "not as sharp"
+                // under the AA branch, "sharp" once returned to the copy path.
+                if (ai + 1 >= args.Length || !File.Exists(args[ai + 1]))
+                {
+                    Console.Error.WriteLine("--thumbnails requires a readable file (tools/upscale/thumbnails.txt)");
+                    return Usage();
+                }
+                foreach (string ln in File.ReadAllLines(args[ai + 1]))
+                {
+                    string s4 = ln.Trim();
+                    if (s4.Length == 0 || s4.StartsWith("#")) { continue; }
+                    string[] pp4 = s4.Split(new[] { ' ', (char)9 }, StringSplitOptions.RemoveEmptyEntries);
+                    uint g4, i4;
+                    if (pp4.Length >= 2
+                        && uint.TryParse(pp4[0].Replace("0x", ""), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out g4)
+                        && uint.TryParse(pp4[1].Replace("0x", ""), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out i4))
+                    {
+                        sThumbnails.Add(((ulong)g4 << 32) | i4);
+                    }
+                }
+                Console.Error.WriteLine("thumbnails: " + sThumbnails.Count + " item-icon sheet(s) keep nearest under --hybrid");
                 ai++;
             }
             else if (string.Equals(a, "--cell-strips", StringComparison.OrdinalIgnoreCase))
@@ -491,6 +542,18 @@ internal static class Upscale2x
                     sEvenThis = sEvenStrips.Contains(ekey);
                 }
             }
+            // v4.8.0 per-file, same reset discipline.
+            sThumbThis = false;
+            if (sThumbnails.Count > 0)
+            {
+                Match thm = TgiNameRe.Match(Path.GetFileName(rel));
+                if (thm.Success)
+                {
+                    ulong tkey2 = ((ulong)Convert.ToUInt32(thm.Groups[2].Value, 16) << 32)
+                                  | Convert.ToUInt32(thm.Groups[3].Value, 16);
+                    sThumbThis = sThumbnails.Contains(tkey2);
+                }
+            }
             // Same per-file reset discipline as sNoHeightSnap below: one
             // matching file must never leak its mode onto the next.
             // #160, same per-file reset discipline as the flags around it.
@@ -657,12 +720,29 @@ internal static class Upscale2x
                         else { smoothThis = true; sSmoothed++; }
                     }
                     if (smoothThis && sSupersample) { sSupersampled++; }
+                    // v4.8.0 hybrid dispatch - AFTER the even reduce has had
+                    // its say (a tick ladder keeps its even path), BEFORE
+                    // nearest. Every refusal is counted; the order is the
+                    // reference builder's (build_variant_tree.py): integer,
+                    // even-strips, no-smooth, thumbnails, fine key, hybrid.
+                    bool hybridThis = false;
+                    if (sHybrid && !hq && !smoothThis)
+                    {
+                        if (factor == Math.Floor(factor)) { sHybridSkippedInteger++; }
+                        else if (sEvenThis) { sHybridSkippedEven++; }
+                        else if (sNoSmoothThis) { sHybridSkippedMeasured++; }
+                        else if (sThumbThis) { sHybridSkippedThumb++; }
+                        else if (HasExactColorKey(src) && MinKeyRun(src) < 3) { sHybridSkippedFineKey++; }
+                        else { hybridThis = true; sHybridDone++; }
+                    }
                     using (Bitmap dst = hq ? UpscaleHq(src, factor)
                                            : (smoothThis
                                                 ? (sSupersample
                                                      ? UpscaleSupersample(src, factor, keyedThis)
                                                      : UpscaleSmoothUnkeyed(src, factor, keyedThis))
-                                                : UpscaleNearest(src, factor)))
+                                                : (hybridThis
+                                                     ? UpscaleHybrid(src, factor, sHybridBold)
+                                                     : UpscaleNearest(src, factor))))
                     using (var outMs = new MemoryStream())
                     {
                         dst.Save(outMs, ImageFormat.Png);
@@ -704,6 +784,24 @@ internal static class Upscale2x
             Console.WriteLine("smooth-keyed  : " + sSmoothedKeyed + " KEYED sheet(s) resampled with the key excluded; "
                 + sSmoothSkippedFineKey + " refused (key is 1-2px STRUCTURE, not a region - nearest preserves it better)"
                 + (sSmoothKeyed ? "" : "  [--smooth-keyed not passed; keyed sheets stay NEAREST]"));
+        }
+        if (sHybrid)
+        {
+            // Law 54: name the resampler that actually ran, and every refusal.
+            Console.WriteLine("hybrid      : " + sHybridDone + " sheet(s) took the STRAIGHT-EDGE HYBRID ("
+                + (sHybridBold ? "bold" : "thin") + "); refused: "
+                + sHybridSkippedEven + " even-strips, " + sHybridSkippedMeasured + " edges measured downstream, "
+                + sHybridSkippedThumb + " thumbnails (item-icon bindings), " + sHybridSkippedFineKey + " fine key (1-2px), "
+                + sHybridSkippedInteger + " integer factor");
+            // THE MANDATORY INTEGER CONTROL (law 95): at 2x/3x nearest is an
+            // exact block replicate and the packages must hash-match. The
+            // dispatch refuses itself there; if it ever fires, fail the build.
+            if (factor == Math.Floor(factor) && sHybridDone != 0)
+            {
+                Console.WriteLine("FATAL: the hybrid fired " + sHybridDone + " time(s) at integer factor " + factor
+                    + ". It must refuse itself there (2x/3x are byte-identical replicates).");
+                return 1;
+            }
         }
         // #171/#165 CELL-FIRST. Reported at EVERY factor, including the integer
         // tiers where the correct answer is a hard zero - see the assertion.
@@ -751,6 +849,9 @@ internal static class Upscale2x
         Console.Error.WriteLine("                    at 1.5 it duplicates rows 2,1,2,1 and streaks photos.");
         Console.Error.WriteLine("  --hq / --nearest force the choice either way (both honour --factor).");
         Console.Error.WriteLine("  --normalize-names = rewrite SC4 T-/G-/I- filenames to canonical 0x form.");
+        Console.Error.WriteLine("  --hybrid thin|bold  = v4.8.0 fractional-factor resampler: straight edges copy at one");
+        Console.Error.WriteLine("                      consistent width, curves/pictures take the key-aware average.");
+        Console.Error.WriteLine("  --thumbnails <file> = item-icon sheets (find_thumbnails.py) that keep nearest under --hybrid.");
         Console.Error.WriteLine("  --height-exact-group <hex> = for that TGI GROUP, snap the WIDTH to the cell");
         Console.Error.WriteLine("                      divide but take the HEIGHT exactly. Horizontal 4-state");
         Console.Error.WriteLine("                      strips have no vertical divide. Repeatable.");
@@ -1548,6 +1649,312 @@ internal static class Upscale2x
         }
         finally { dst.UnlockBits(dd); }
         return dst;
+    }
+
+    // =====================================================================
+    // THE STRAIGHT-EDGE HYBRID (v4.8.0, 2026-09-01) - the 1.5x resampler the
+    // user picked on screen. Port of tools/research/sharp15/x3_candidates.py
+    // `thin_h` (and `bold_h`), parity-gated byte-for-byte against it by
+    // tools/upscale/gate_hybrid_parity.py over the whole corpus.
+    //
+    // WHY. At 3/2 a copy can never be even: nearest doubles every other
+    // source pixel, so a 1px stroke renders 1px or 2px by the parity of its
+    // origin - the "ragged, uneven, everywhere" the user reported. The area
+    // average (#200's former default) is even but soft on every straight
+    // edge. This does both jobs where each is right:
+    //   * a block with a 3-of-4 majority colour copies it;
+    //   * a 2+2 tie ACROSS A STRAIGHT SOURCE EDGE (the same tie continues in
+    //     the neighbouring block along the edge) is decided by the EDGE-CLAIM
+    //     rule, copy-only and consistent for every stroke width <= 4: a
+    //     salient even-width run takes exactly its left/top tie (net 1.5w,
+    //     exact), a salient odd-width run's single tie goes by the policy
+    //     (thin: gives it away, bold: takes it), everything else absorbs;
+    //   * every other block - a staircase step of a diagonal, a curve, an
+    //     anti-aliased picture - takes the key-aware 2:1 area average.
+    // Straight chrome stays a crisp copy at one width; curves get the AA a
+    // vector UI would render at 150%. User verdict, in-game, 2026-09-01:
+    // "It all looks a lot better." Thumbnails (item-icon bindings) were then
+    // judged "not as sharp" under the AA branch and keep nearest via
+    // --thumbnails (a binding-derived list: no pixel predicate separates a
+    // glossy button from a rendered building - both are anti-aliased art).
+    //
+    // THE KEY SET IS NEAREST'S KEY SET. The colour key is the engine's
+    // transparency and gate_key_integrity R2 holds the exact-key set to the
+    // nearest prediction. So the transparency MASK here is nearest's and only
+    // the colour inside it is the hybrid's: where nearest says key the pixel
+    // is exact 0xFFFF00FF; where nearest says colour but the average landed
+    // on the key (a block the key owned by half) the pixel takes the
+    // key-excluded average of its block instead. Never a near-key (#143).
+    //
+    // PER CELL, ALWAYS (#169): state strips by --cell-strips on X, 9-slice
+    // sheets 3x3, so a block can never see the neighbouring state.
+    // FACTOR MAP, not the size ratio (#151): output (oy,ox) is the 2x2 block
+    // of x3 cells [2oy,2oy+2) x [2ox,2ox+2), clamped at the cell's end.
+    // DIMENSIONS DO NOT CHANGE (law 66): ScaleDim decides them exactly as
+    // for nearest. FRACTIONAL FACTORS ONLY: refused at an integer factor
+    // (counted, and FATAL if it ever fires there).
+    private const int kSalientLuma1000 = 48 * 1000;   // metrics.py's strong step, x1000 integer
+    private const int kLongRun = 5;                    // a run this wide absorbs a +-1 unseen
+
+    private static void RunMapsX(int[][] s, int h, int w, int[][] len, bool[][] sal)
+    {
+        for (int y = 0; y < h; y++)
+        {
+            int[] row = s[y];
+            int x = 0;
+            while (x < w)
+            {
+                int start = x;
+                int px = row[x];
+                while (x < w && row[x] == px) x++;
+                int end = x;                       // exclusive
+                int L = end - start;
+                long lum = Luma1000(px);
+                bool hasL = start > 0, hasR = end < w;
+                bool salient = false;
+                if (hasL && hasR)
+                {
+                    long ll = Luma1000(row[start - 1]);
+                    long rl = Luma1000(row[end]);
+                    salient = Math.Abs(lum - ll) >= kSalientLuma1000 && Math.Abs(lum - rl) >= kSalientLuma1000;
+                }
+                for (int k = start; k < end; k++) { len[y][k] = L; sal[y][k] = salient; }
+            }
+        }
+    }
+
+    private static long Luma1000(int px)
+    {
+        int r = (px >> 16) & 0xFF, g = (px >> 8) & 0xFF, b = px & 0xFF;
+        return 299L * r + 587L * g + 114L * b;
+    }
+
+    private static bool IsKey(int px) { return (px & 0x00FFFFFF) == 0x00FF00FF; }
+
+    // The claim rule on one tie. P = left/top run (this tie is its right/bottom
+    // edge), Q = right/bottom run (this tie is its left/top edge). Returns
+    // true to give the block to Q, false to give it to P (nearest = P's cell).
+    private static bool ClaimGoesToQ(int wP, int wQ, bool salP, bool salQ, bool bold)
+    {
+        bool cP = salP && wP < kLongRun;
+        bool cQ = salQ && wQ < kLongRun;
+        bool evenP = (wP % 2) == 0, evenQ = (wQ % 2) == 0;
+        // 1. structural: a salient even run takes its LEFT/TOP tie (Q here)
+        if (cQ && evenQ) return true;
+        bool pOdd = cP && !evenP, qOdd = cQ && !evenQ;
+        // 2. odd claimants under the policy
+        if (bold)
+        {
+            if (pOdd && !qOdd) return false;
+            if (qOdd && !pOdd) return true;
+            if (pOdd && qOdd) return false;        // both -> nearest (P)
+        }
+        else
+        {
+            if (pOdd && !qOdd) return true;        // P refuses, Q absorbs
+            if (qOdd && !pOdd) return false;       // Q refuses, P absorbs
+            if (pOdd && qOdd) return false;        // both refuse -> nearest
+        }
+        // 3. P is a salient even run: this is its RIGHT tie, it does not claim
+        if (cP && evenP) return true;
+        // 4. neither side claims -> nearest sample (P)
+        return false;
+    }
+
+    private static Bitmap UpscaleHybrid(Bitmap src, double factor, bool bold)
+    {
+        int w = src.Width, h = src.Height;
+        int ow = ScaleDim(w, factor, true);
+        int oh = sNoHeightSnap ? (int)Math.Floor(h * factor + 0.5) : ScaleDim(h, factor);
+        var s0 = new int[h][];
+        BitmapData sd = src.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+        try
+        {
+            for (int y = 0; y < h; y++)
+            {
+                s0[y] = new int[w];
+                Marshal.Copy(Ofs(sd.Scan0, (long)y * sd.Stride), s0[y], 0, w);
+            }
+        }
+        finally { src.UnlockBits(sd); }
+
+        // cells: 9-slice sheets 3x3 (each axis on its own, as the reference's
+        // _per_cell does), else state strips on X (derived list); whole sheet
+        // otherwise. A count that does not divide both source and output on an
+        // axis leaves that axis whole.
+        int sx = 1, sy = 1;
+        if (sNineSliceOnly)
+        {
+            if (w % 3 == 0 && ow % 3 == 0) sx = 3;
+            if (h % 3 == 0 && oh % 3 == 0) sy = 3;
+        }
+        else if (sStripStates > 1 && w % sStripStates == 0 && ow % sStripStates == 0) sx = sStripStates;
+        var outPx = new int[oh][];
+        for (int y = 0; y < oh; y++) outPx[y] = new int[ow];
+        int bs = w / sx, bo = ow / sx, hs = h / sy, ho = oh / sy;
+        for (int cj = 0; cj < sy; cj++)
+        {
+            for (int ci = 0; ci < sx; ci++)
+            {
+                HybridCell(s0, cj * hs, ci * bs, hs, bs, outPx, cj * ho, ci * bo, ho, bo, bold);
+            }
+        }
+        var dst = new Bitmap(ow, oh, PixelFormat.Format32bppArgb);
+        BitmapData dd = dst.LockBits(new Rectangle(0, 0, ow, oh), ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
+        try
+        {
+            for (int oy = 0; oy < oh; oy++)
+                Marshal.Copy(outPx[oy], 0, Ofs(dd.Scan0, (long)oy * dd.Stride), ow);
+        }
+        finally { dst.UnlockBits(dd); }
+        return dst;
+    }
+
+    private static void HybridCell(int[][] s0, int cy0, int cx0, int ch, int cw,
+                                   int[][] outPx, int oy0, int ox0, int ohc, int owc, bool bold)
+    {
+        // the cell as its own image (a cell never sees its neighbour, #169)
+        var s = new int[ch][];
+        for (int y = 0; y < ch; y++)
+        {
+            s[y] = new int[cw];
+            Array.Copy(s0[cy0 + y], cx0, s[y], 0, cw);
+        }
+        // run maps: horizontal (rows) and vertical (columns)
+        var lenX = new int[ch][]; var salX = new bool[ch][];
+        for (int y = 0; y < ch; y++) { lenX[y] = new int[cw]; salX[y] = new bool[cw]; }
+        RunMapsX(s, ch, cw, lenX, salX);
+        var sT = new int[cw][];
+        for (int x = 0; x < cw; x++) { sT[x] = new int[ch]; for (int y = 0; y < ch; y++) sT[x][y] = s[y][x]; }
+        var lenT = new int[cw][]; var salT = new bool[cw][];
+        for (int x = 0; x < cw; x++) { lenT[x] = new int[ch]; salT[x] = new bool[ch]; }
+        RunMapsX(sT, cw, ch, lenT, salT);
+        int H3 = 3 * ch, W3 = 3 * cw;
+
+        // pass 1: classify every block
+        var pick = new int[ohc][];      // 0=c00 1=c01 2=c10 3=c11 (copy decision)
+        var maj = new bool[ohc][];
+        var xtie = new bool[ohc][];
+        var ytie = new bool[ohc][];
+        var c00 = new int[ohc][]; var c01 = new int[ohc][]; var c10 = new int[ohc][]; var c11 = new int[ohc][];
+        for (int oy = 0; oy < ohc; oy++)
+        {
+            pick[oy] = new int[owc]; maj[oy] = new bool[owc]; xtie[oy] = new bool[owc]; ytie[oy] = new bool[owc];
+            c00[oy] = new int[owc]; c01[oy] = new int[owc]; c10[oy] = new int[owc]; c11[oy] = new int[owc];
+            int r0 = Math.Min(2 * oy, H3 - 1) / 3;
+            int r1 = Math.Min(2 * oy + 1, H3 - 1) / 3;
+            for (int ox = 0; ox < owc; ox++)
+            {
+                int q0 = Math.Min(2 * ox, W3 - 1) / 3;
+                int q1 = Math.Min(2 * ox + 1, W3 - 1) / 3;
+                int a = s[r0][q0], b = s[r0][q1], c = s[r1][q0], d = s[r1][q1];
+                c00[oy][ox] = a; c01[oy][ox] = b; c10[oy][ox] = c; c11[oy][ox] = d;
+                // strict majority (3 or 4 equal): the LAST k with >= 3 equals wins,
+                // exactly as the reference's loop over k assigns pick[same>=3]=k
+                int p = 0; bool isMaj = false;
+                int[] cells = { a, b, c, d };
+                for (int k = 0; k < 4; k++)
+                {
+                    int same = 0;
+                    for (int j = 0; j < 4; j++) if (cells[j] == cells[k]) same++;
+                    if (same >= 3) { p = k; isMaj = true; }
+                }
+                maj[oy][ox] = isMaj;
+                if (!isMaj)
+                {
+                    bool xt = (a == c) && (b == d) && (a != b) && (q1 == q0 + 1);
+                    bool yt = (a == b) && (c == d) && (a != c) && (r1 == r0 + 1);
+                    if (xt)
+                    {
+                        bool toQ = ClaimGoesToQ(lenX[r0][q0], lenX[r0][q1], salX[r0][q0], salX[r0][q1], bold);
+                        p = toQ ? 1 : 0;
+                    }
+                    else if (yt)
+                    {
+                        bool toQ = ClaimGoesToQ(lenT[q0][r0], lenT[q0][r1], salT[q0][r0], salT[q0][r1], bold);
+                        p = toQ ? 2 : 0;
+                    }
+                    xtie[oy][ox] = xt; ytie[oy][ox] = yt;
+                }
+                pick[oy][ox] = p;
+            }
+        }
+        // pass 2: straight-tie test (same tie in the neighbouring block along the
+        // edge; no neighbour beyond the cell edge), then emit
+        for (int oy = 0; oy < ohc; oy++)
+        {
+            int r0 = Math.Min(2 * oy, H3 - 1) / 3;
+            int q0row = 0;
+            for (int ox = 0; ox < owc; ox++)
+            {
+                bool copy = maj[oy][ox];
+                if (!copy && xtie[oy][ox])
+                {
+                    bool up = oy > 0 && xtie[oy - 1][ox] && c00[oy - 1][ox] == c00[oy][ox] && c01[oy - 1][ox] == c01[oy][ox];
+                    bool dn = oy + 1 < ohc && xtie[oy + 1][ox] && c00[oy + 1][ox] == c00[oy][ox] && c01[oy + 1][ox] == c01[oy][ox];
+                    copy = up || dn;
+                }
+                else if (!copy && ytie[oy][ox])
+                {
+                    bool lf = ox > 0 && ytie[oy][ox - 1] && c00[oy][ox - 1] == c00[oy][ox] && c10[oy][ox - 1] == c10[oy][ox];
+                    bool rt = ox + 1 < owc && ytie[oy][ox + 1] && c00[oy][ox + 1] == c00[oy][ox] && c10[oy][ox + 1] == c10[oy][ox];
+                    copy = lf || rt;
+                }
+                int val;
+                if (copy)
+                {
+                    switch (pick[oy][ox])
+                    {
+                        case 1: val = c01[oy][ox]; break;
+                        case 2: val = c10[oy][ox]; break;
+                        case 3: val = c11[oy][ox]; break;
+                        default: val = c00[oy][ox]; break;
+                    }
+                }
+                else
+                {
+                    val = BoxKeyAware(c00[oy][ox], c01[oy][ox], c10[oy][ox], c11[oy][ox], true);
+                }
+                // THE KEY SET IS NEAREST'S: nearest samples source (floor(oy/1.5), floor(ox/1.5))
+                int ny = Math.Min((int)(oy / 1.5), ch - 1);
+                int nx = Math.Min((int)(ox / 1.5), cw - 1);
+                int nn = s[ny][nx];
+                if (IsKey(nn)) { val = unchecked((int)0xFFFF00FF); }
+                else if (IsKey(val))
+                {
+                    // the average landed on the key by coverage: key-excluded
+                    // average of the block; the block cannot be all key because
+                    // nearest sampled a non-key cell of it, but guard anyway
+                    int alt = BoxKeyAware(c00[oy][ox], c01[oy][ox], c10[oy][ox], c11[oy][ox], false);
+                    val = IsKey(alt) ? nn : alt;
+                }
+                outPx[oy0 + oy][ox0 + ox] = val;
+                q0row++;
+            }
+        }
+    }
+
+    // Key-aware 2:1 box of one block (the four x3 cells): key cells carry zero
+    // weight; with keyRule, a block the key owns by half or more re-emits the
+    // exact key. Without keyRule (the nearest-mask repair) the key-excluded
+    // average is returned regardless of coverage. Integer division, then the
+    // G=1 nudge if the average itself lands on the key.
+    private static int BoxKeyAware(int a, int b, int c, int d, bool keyRule)
+    {
+        int[] cells = { a, b, c, d };
+        long sa = 0, sr = 0, sg = 0, sb = 0; int n = 0, keyN = 0;
+        for (int k = 0; k < 4; k++)
+        {
+            int px = cells[k];
+            if (IsKey(px)) { keyN++; continue; }
+            sa += (px >> 24) & 0xFF; sr += (px >> 16) & 0xFF; sg += (px >> 8) & 0xFF; sb += px & 0xFF;
+            n++;
+        }
+        if (keyRule && keyN * 2 >= 4) return unchecked((int)0xFFFF00FF);
+        if (n == 0) return unchecked((int)0xFFFF00FF);
+        int oa = (int)(sa / n), orr = (int)(sr / n), og = (int)(sg / n), ob = (int)(sb / n);
+        if (orr == 0xFF && og == 0x00 && ob == 0xFF) og = 1;
+        return (oa << 24) | (orr << 16) | (og << 8) | ob;
     }
 
     private static Bitmap UpscaleSmoothUnkeyed(Bitmap src, double factor, bool keyed = false)

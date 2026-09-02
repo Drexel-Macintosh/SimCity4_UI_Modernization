@@ -35,6 +35,48 @@ regression suite that holds them in place is in `_tests/`.
   and diverge only at the fractional tier. The affected packages rarely place
   adjacent buttons on one toolbar row, which is where a 2 px difference would
   show.
+- **Third-party and Carbon-skin art still takes the ragged 1.5x copy.** At
+  1.5x the stock corpus is resampled by the v4.8.0 straight-edge hybrid, but
+  the third-party lanes — CamUI, the NAM icons, the Web Button and the
+  ZCarbon\* skin art — still run the builder with their own flag sets and take
+  nearest, so a stroke in that art renders 1 px or 2 px by the parity of its
+  origin while the stock chrome beside it renders one width. The hybrid was
+  judged on the stock corpus only: none of those lanes was on the screen the
+  user judged, and the Carbon skin is not installed on the test machine. A
+  resampler change nobody has looked at does not ship; the lanes are wired
+  when they can be seen. Runtime-synthesised third-party icons
+  (`ScaleTier.cpp` `ResampleCells`) are outside the corpus altogether.
+- **1.5x curves are blended, not copied — the residual of the hybrid.** At
+  3/2 a run of w source pixels wants 1.5w output pixels, an integer only for
+  even w: a copy rule cannot be even, so nearest renders some strokes 1 px and
+  some 2 px (#200's default, rejected on screen as ragged), and an average
+  cannot be crisp on a straight edge (the pre-#200 default, rejected on screen
+  as soft). The hybrid decides per block — a straight edge takes an exact copy
+  at one width, every other block (a staircase step, an arc, a picture) takes
+  the 2:1 area average — so what remains on screen is the blended curve, the
+  same anti-aliasing a vector UI renders at 150%. MEASURED on the shipped
+  1.5x corpus, v4.7.2 → v4.8.0: stroke-width consistency 0.2997 → 0.2237
+  (cv1 0.319 → 0.232); invented colours 1,270,876 → 6,391,698 px and
+  soft_frac 0.419 → 0.564 — those two rises are the price, paid at curves
+  only. Lot and building thumbnails (the 485 TGIs the ItemIcons and
+  ItemIconsSub packages carry, all group `6a386d26`) keep the ragged-but-hard
+  nearest copy by the user's choice — a rendered picture wants hard pixels,
+  and the two icon packages are byte-identical to v4.7.2. 2x and 3x are
+  untouched: 0 of 2206 sheets changed. Ledger #203 in `_tests/REGRESSION.md`.
+- **Two post-launch 1.5x rule changes were gate-verified, not
+  launch-verified.** The user's two launches judged the round-1 tree (round 2
+  with the thumbnail sheets returned to shipped bytes). Two changes to the
+  reference landed after launch 2 and were held by the gates — hybrid parity
+  2206 of 2206 sheets byte-equal, key integrity PASS at 1.5/2/3 with no
+  exemptions added, the edge-quality report — not by a third launch: the
+  straight-tie test no longer wraps at a cell edge (it had handed a first-row
+  block the last row as its neighbour), and the nearest-key-mask rule
+  replaced nine hand-reverted keyed sheets. Their scope is bounded to the
+  first and last block row or column of a cell and to those nine sheets;
+  pixel-level compare of the shipped dats against the round-2 dats the user
+  saw: SelectiveArt 159 of 696 PNGs differ by 2-20 px each, DialogStatic 10 of
+  266 differ by 4-20 px, no entry added or removed. If a 1.5x cell border or a
+  keyed sheet looks wrong, this is the first place to look.
 
 ## Performance and lifecycle
 

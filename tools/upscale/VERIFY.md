@@ -156,3 +156,78 @@ here as fixture names, not as links.
     powershell -NoProfile -ExecutionPolicy Bypass -File .\Build.ps1
     powershell -NoProfile -ExecutionPolicy Bypass -File .\Make-TestPngs.ps1
     powershell -NoProfile -ExecutionPolicy Bypass -File .\Verify-Upscale.ps1
+
+## 2026-09-01 - v4.8.0 straight-edge hybrid (`--hybrid thin --thumbnails`)
+
+Full write-up: `_tests\REGRESSION.md` #203. At f=1.5 a copy cannot be even:
+source columns get multiplicity 2,1,2,1, so a 1px stroke renders 1px or 2px by
+the parity of its origin (advisor sheet 14015571, measured 2026-08-16: column
+runs 1px x106 / 2px x110; 2x is 2px x216, 3x 3px x216, uniform). #200 had
+already flipped the 1.5x default from the area average ("soft") to nearest, so
+both horns were rejected on screen. `UpscaleHybrid` decides per 2x2 tie block:
+a 3-of-4 majority copies; a tie that continues along the edge in the
+neighbouring block (a straight edge) takes the edge-claim copy at one
+consistent stroke width; every other block (staircase step, curve, picture)
+takes the key-aware 2:1 area average. The transparency MASK is nearest's:
+where nearest says key the pixel is exact `0xFFFF00FF`; where nearest says
+colour but the average landed on the key by coverage, the pixel takes the
+key-excluded average of its block. Dispatch order inside the exe: integer
+factor (refused, FATAL if it ever fires), even-strips, no-smooth, thumbnails,
+fine key (1-2px), then the hybrid. `thumbnails.txt` is DERIVED
+(`find_thumbnails.py`: the 485 TGIs the ItemIcons + ItemIconsSub packages
+carry, all group 6a386d26) and keeps nearest - user round 2: "Thumbnails are
+sharp."
+
+Evidence, all green at release:
+
+- **Odd/even theorem** - `tools\research\sharp15\theorem_check.py` PASS. On
+  synthetic strokes at every phase the edge-claim copy rule gives 1/3/4/6
+  output px for source widths 1/2/3/4 (net 1.5w exact for even widths, thin
+  policy for odd) with 0 invented colours; nearest gives 1|2 / 3 / 4|5 / 6
+  (phase-dependent), the box average invents many.
+- **Port parity** - `gate_hybrid_parity.py <csharp_tree> <reference_tree>`:
+  **2206 of 2206** sheets byte-equal against the Python reference
+  (`tools\research\sharp15\x3_candidates.py` thin_h), dimensions included.
+  The lab result the user judged transfers to the shipped file only because
+  the port is provably the same function. Even-strips / no-smooth /
+  thumbnails / fine-key sheets are shipped bytes in the reference tree, so on
+  those the gate is C# nearest against itself - a free dispatch control.
+- **Integer control (law 95)** - 2x and 3x: **0 changed of 2206** sheets each
+  (sha1 of every preview PNG against the pre-rebuild manifest). The exe's own
+  summary at those factors reads `hybrid: 0 sheet(s) ... 2206 integer factor`;
+  the dispatch refuses itself at an integer factor and the build FATALs if it
+  ever fires there.
+- **Colour key** - `gate_key_integrity.py` PASS at 1.5, 2 and 3 with zero
+  exemptions added. `key_near` 10,251 -> 10,251 and `key_moved` 2,059 -> 2,059,
+  unchanged from the v4.7.2 corpus. The nearest-key-mask rule replaced the 9
+  hand-reverted keyed sheets of launch round 1.
+- **Edge quality** - `_tests\Test-15xEdgeQuality.py` (integer tiers as its
+  positive control, exit 2 = instrument fault; `--selftest` proves it can go
+  red), shipped 1.5x corpus, v4.7.2 -> v4.8.0:
+
+  | metric | v4.7.2 (nearest) | v4.8.0 (hybrid) | 2x / 3x control |
+  |---|---|---|---|
+  | swc (stroke-width consistency) | 0.2997 | 0.2237 | 0 |
+  | cv1 (1px strokes) | 0.319 | 0.232 | 0 |
+  | cv2 | 0.022 | 0.133 | 0 |
+  | cv3 | 0.109 | 0.095 | 0 |
+  | invented px | 1,270,876 | 6,391,698 | 0 |
+  | soft_frac | 0.419 | 0.564 | 0 |
+  | edge_w | 1.179 | 1.370 | 1.001 |
+
+  The cv2 rise is largely the metric reading the exact-colour core of a 2px
+  run whose one edge blended; the invented pixels are the blends at curves,
+  the price of the AA branch. The baseline
+  (`_tests\golden\15x-edge-quality-baseline.json`) was refreshed to v4.8.0
+  as a deliberate act.
+- Also run: `Test-DatIntegrity`, `Test-Builders -Factor 1.5`.
+
+Be exact about what was judged on screen: launch 2 ran the round-1 tree with
+the thumbnail sheets returned to shipped bytes. Two reference changes landed
+after launch 2 (the straight-tie test no longer wraps at a cell edge; the
+nearest-key-mask rule) and were verified by the gates above, not by a third
+launch; their scope is the first/last block row or column of a cell and those
+9 keyed sheets (SelectiveArt: 159 PNGs differ by 2-20 px each vs the round-2
+dats; DialogStatic: 10 differ by 4-20 px). Third-party lanes (CamUI, NAM
+icons, Web Button, Carbon skin art) still take nearest at 1.5x - not on the
+screen the user judged, so not wired.

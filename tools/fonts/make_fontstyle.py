@@ -11,13 +11,18 @@ aliases, directories, comments, whitespace and CRLF line endings are preserved
 byte-for-byte -- exactly the transform that produced the shipped 2x
 FontStyle.candidate.ini (sizes * 2).
 
-Scaling rule: round-half-up  ->  new = floor(size * factor + 0.5).
-  factor 2  -> size*2   (bit-identical to FontStyle.candidate.ini; self-checked)
-  factor 3  -> size*3
-  factor 1.5-> round-half-up; the six odd 1x sizes (11,13,15,17,19,21) land on
-              .5 and round UP (17,20,23,26,29,32). Half-up (not Python banker's
-              round) is used so it matches the geometry scaling in the DAT
-              builders, which use the same floor(v*factor+0.5) rule.
+Scaling rule (scale_size): the guard tests the TIER factor, never the
+squeezed product (#163).
+  integer factor  -> new = floor(size * factor * squeeze + 0.5)  (round-half-up)
+     factor 2  -> size*2   (bit-identical to FontStyle.candidate.ini; self-checked)
+     factor 3  -> size*3
+  non-integer     -> new = floor(size * factor * squeeze)        (FLOOR)
+     factor 1.5-> the six odd 1x sizes (11,13,15,17,19,21) land on .5 and
+              round DOWN (16,19,22,25,28,31). The DAT builders scale every
+              area= rect by EXACTLY f, so a font may never exceed the box's
+              own factor; rounding half-up overshot it on every odd size and
+              clipped long labels at 1.5x (2026-08-06). See scale_size() for
+              the measurements and the #142 / #163 history.
 
 Usage: make_fontstyle.py <factor> <out.ini>
        make_fontstyle.py --selfcheck      (verify factor 2 == candidate.ini)

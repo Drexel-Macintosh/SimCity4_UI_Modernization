@@ -20809,3 +20809,162 @@ still loads 30 and `tiled.txt` still 10, and the shipped `cell-strips.txt` was
 verified **byte-identical to a fresh derivation this session** (both 9,780
 bytes, 210 entries, `diff` clean). Gates re-run after the edits: families gate,
 crosscheck and dead-links all exit 0.
+
+
+## 2026-09-01 (#203) — 1.5x WAS RAGGED BECAUSE A COPY CANNOT BE EVEN AT 3/2: THE STRAIGHT-EDGE HYBRID  [CLOSED — CONFIRMED ON SCREEN 2026-09-01, two launches: "It all looks a lot better" (round 1), "Thumbnails are sharp" (round 2). Shipped v4.8.0.]
+
+USER: "We need a plan to improve the sharpness of 1.5x versus 2x and 3x - it's
+clear that it's still just not as smooth all around." Asked what the defect
+looks like, the user picked ONLY "ragged / uneven edges - some strokes 1px,
+some 2px, stair-steps of different sizes, nothing smeared", everywhere. Not
+text, not seams.
+
+THAT IS THE NEAREST SIGNATURE AT 3/2, AND IT IS ARITHMETIC. At f=1.5 source
+columns get multiplicity 2,1,2,1, so a 1px stroke renders 1px or 2px by the
+parity of its origin (measured on advisor sheet 14015571 on 2026-08-16: column
+runs 1px x106 / 2px x110; 2x is 2px x216, 3x 3px x216, uniform). #200 (v4.3.0)
+had flipped the 1.5x default from the area average (user: "soft") to nearest.
+BOTH HORNS HAD NOW BEEN REJECTED ON SCREEN. The runtime is innocent and cannot
+help: Blt clips and never stretches, the DX7 driver's whole 2D blit family is
+stubbed, every UI pixel is a textured quad drawn 1:1 at the art's own size,
+dgVoodoo is Filtering=appdriven / Resolution=unforced, and the DLL sets no
+render state (the only 1.5x-only DLL stretch is kFillSlack, <=2 px on runtime
+portraits). The fix lives in the art pipeline, exactly where #200 lived.
+
+THE ODD/EVEN THEOREM (theorem_check.py prints it on synthetic strokes at every
+phase). A run of width w wants 1.5w pixels - an integer only for even w:
+
+    rule                          1px        2px       3px        4px    invented
+    nearest (copy, phase-fixed)   1|2        3         4|5        6      0
+    naive tie -> longer run       1          2|3       4          5|6    0
+    area average / box            1+half     3(+halves) 4+half    6      many
+    EDGE-CLAIM rule (copy)        1 (thin)   3         4 (thin)   6      0
+
+A copy rule consistent for odd widths is inconsistent for even ones and vice
+versa - which is why the 2026-08 lab's even_nearest moved nothing (26.1% ->
+26.2% uneven). The EDGE-CLAIM rule is consistent for both: at a 2+2 tie block
+across a source edge, a salient even-width run (contrasts with BOTH neighbours
+by >= 48 luma, < 5 px) at half-offset owns two tie blocks and takes exactly its
+left/top one (net 1.5w, exact); a salient odd-width run owns exactly one tie
+block and the policy decides it (thin: gives it away, bold: takes it); a long
+run or a gradient step absorbs. First version keyed on run length alone and
+found no absorber inside a bevel gradient, where every run is 1px, so it fell
+back to nearest on exactly the strokes the user sees - the contrast test is
+what made it work on real chrome.
+
+BUT A COPY RULE CANNOT HELP A CURVE. On the real 9-slice frame {1abe787d,
+144161e4} plain thin/bold left cv1 at 0.35/0.32 (nearest 0.33): every tie on a
+diagonal or an arc is an isolated staircase step, and the rule falls back to
+nearest there by design. On an anti-aliased button they produced visible
+jaggies. THE HYBRID resolves it per block, no derived list needed for the
+split: a block with a 3-of-4 majority copies; a tie that CONTINUES in the
+neighbouring block along the edge (a straight edge) takes the edge-claim copy;
+every other block - a staircase step, a curve, a picture - takes the key-aware
+2:1 area average. Straight chrome stays a crisp copy at one width; curves get
+the AA a vector UI renders at 150%. On the frame: cv1 0.33 -> 0.16 with a third
+of the box's invented colours; on the AA button it collapses to the smooth box
+result instead of the jaggies.
+
+WHAT THE INSTRUMENTS SAID BEFORE ANYONE LAUNCHED (all in tools/research/sharp15
+and, as of this entry, _tests/Test-15xEdgeQuality.py with the integer tiers as
+its positive control, exit 2 = instrument fault):
+    stroke-width consistency (CV of output run lengths per source width 1..4),
+    shipped 1.5x corpus, v4.7.2 baseline:
+        swc 0.2997  cv1 0.319  cv2 0.022  cv3 0.109   (2x/3x: all exactly 0)
+    shipped v4.8.0 corpus (parity-identical to the reference the user judged):
+        swc 0.2237  cv1 0.232  cv2 0.133  cv3 0.095
+        invented px 1,270,876 -> 6,391,698 (blends at curves - the price)
+        soft_frac 0.419 -> 0.564   edge_w 1.179 -> 1.370
+        key_near 10,251 -> 10,251 (unchanged)   key_moved 2,059 -> 2,059 (unchanged)
+    The cv2 rise is largely the metric reading the exact-colour core of a
+    2px run whose one edge blended; swc_ink is the fair number for a blender
+    and was not made a gate. 2x and 3x: 0 of 2206 sheets changed (sha1 of every
+    preview PNG against the pre-rebuild manifest); the exe's own summary at
+    those factors reads "hybrid: 0 sheet(s) ... 2206 integer factor".
+
+WHOLE-IMAGE, SAME-SHEET COMPARISON (user's mid-turn ask: "Not just the edges.
+The entire images should be compared"): tier_panel.py lays out the same sheet
+as 1x / 1.5x shipped / candidates / 2x / 3x, every pane NEAREST-magnified to a
+common 6x-of-1x size so only quality differs. That is how the candidates were
+chosen and what the user was shown before the first launch.
+
+THE IN-GAME A/B, without a C# port: build_variant_tree.py writes a preview-tree
+variant from the Python candidate with the SHIPPED tree's names and dimensions
+(law 66), the four preview-tree consumers accept SC4UI_UPSCALE_DIR, and the
+packages went through Deploy-OnGameClose / Set-Tier -Tier 1.5 / Test-DatIntegrity
+like any build. Launch 1 (thin_h everywhere but even-strips, no-smooth,
+fine-key sheets and 9 keyed sheets the key gate's R2 flagged, hand-reverted):
+"It all looks a lot better. Maybe the thumbnails still don't look as sharp
+though."
+
+WHY NO PIXEL PREDICATE SEPARATES A THUMBNAIL FROM A BUTTON (ramp_census.py,
+stroke_census.py, 2204 sheets): the glossy mode buttons the hybrid improved
+read ramp_frac 0.74-0.99 and stroke density 0.05-0.08; the lot thumbnails
+0.47-0.86 and 0.08. Both are anti-aliased art. What differs is what the
+picture DEPICTS - a binding fact. So thumbnails.txt is DERIVED from the
+binding: every PNG the ItemIcons + ItemIconsSub packages carry (485 TGIs, all
+group 6a386d26 - the exemplars' item-icon references and the submenu icon
+sets). Those keep nearest: a rendered picture wants hard pixels, and the 2x/3x
+block copy is the user's reference for "sharp". Catmull-Rom and Lanczos were
+measured for the soft branch and rejected: at 3/2 neither is sharper than the
+box on photoreal art (edge_w 1.66 either way). Launch 2: "Thumbnails are
+sharp."
+
+THE KEY SET IS NEAREST'S KEY SET (shipping rule, replaces the 9 hand reverts):
+the colour key is the engine's transparency and R2 holds the exact-key set to
+the nearest prediction. The transparency MASK is nearest's; only the colour
+inside it is the hybrid's. Where nearest says key the pixel is exact 0xFFFF00FF;
+where nearest says colour but the average landed on the key by coverage, the
+pixel takes the key-excluded average of its block. gate_key_integrity: PASS at
+1.5/2/3 with zero exemptions added; key_near and key_moved unchanged from
+v4.7.2 corpus-wide.
+
+THE PORT IS THE SAME FUNCTION, PROVEN NOT ARGUED. Upscale2x.cs UpscaleHybrid
+(--hybrid thin, --thumbnails thumbnails.txt, dispatch after the even reduce and
+before nearest, integer-factor refusal with a FATAL) vs the Python reference
+x3_candidates.py thin_h: gate_hybrid_parity.py, 2206 of 2206 sheets byte-equal,
+dimensions included. BE EXACT ABOUT WHAT THE USER SAW: launch 2 ran the round-1
+tree with the thumbnail sheets returned to shipped bytes. Two changes to the
+reference landed AFTER launch 2 and were verified by the gates above (parity,
+key integrity, the edge-quality report), not by a third launch: the straight-tie
+test no longer wraps at a cell edge (np.roll had handed a first-row block the
+last row as its neighbour), and the nearest-key-mask rule replaced the 9 hand
+reverts. Their scope is bounded to the first/last block row or column of a
+cell and to those 9 keyed sheets.
+
+LEFT ON THE OLD POLICY, DELIBERATELY: the third-party lanes (CamUI, NAM icons,
+Web Button, Carbon skin art) still run the exe with their own flag sets and
+take nearest at 1.5x - none of them was on the screen the user judged (the
+Carbon skin is not installed here), and a resampler change the user has not
+seen does not ship. Wire them when they can be looked at. Runtime-synthesised
+third-party icons (ScaleTier.cpp ResampleCells) are outside the corpus.
+
+LAWS (the numbered file gets both):
+- A RULE CONSISTENT FOR ODD STROKE WIDTHS IS INCONSISTENT FOR EVEN ONES AT 3/2,
+  and a copy rule cannot help a curve - decide per BLOCK (straight edge: copy;
+  everything else: average), not per sheet and not per corpus.
+- WHEN NO PIXEL PREDICATE SEPARATES TWO CLASSES THE USER'S EYES SEPARATE, THE
+  CLASS IS A BINDING FACT - derive it from what the engine binds the art AS,
+  never from a threshold on the art.
+- WHEN BOTH HORNS OF A TRADE-OFF HAVE BEEN REJECTED ON SCREEN, PUT EVERY EVEN
+  OUTCOME IN FRONT OF THE USER, IN-GAME, BEFORE SHIPPING ANY.
+
+RESULT (shipped bytes, tools/packages/15x, v4.7.2 -> v4.8.0):
+    SelectiveArt-15x   13,411,333 -> 17,589,104 B   DialogStatic-15x  2,655,005 -> 2,912,173 B
+    ItemIcons-15x       4,712,509 -> 4,712,509 B    ItemIconsSub-15x  1,410,334 -> 1,410,334 B
+    (2x SelectiveArt 11,885,116 B, 3x 16,168,796 B.) The growth is PNG bytes,
+    not pixels: blended curves compress worse than a 2,1,2,1 copy pattern, and
+    the exe's GDI+ encoder is not an optimising one - the SAME pixels packed by
+    PIL in the round-2 packages were 14,807,918 B. Pixel-level compare of the
+    shipped dats against the round-2 dats the user judged: SelectiveArt 696
+    entries - 95 byte-identical, 442 pixel-identical, 159 PNGs differ by 2-20
+    px each (the two post-launch rule changes above, bounded as stated);
+    DialogStatic 266 entries - 165 byte-identical, 91 pixel-identical, 10 differ
+    by 4-20 px. No entry added or removed. The two icon packages are
+    byte-identical to v4.7.2.
+
+Verification assets (all green at release): theorem_check.py (synthetic widths
+table), _tests/Test-15xEdgeQuality.py (baseline refreshed to v4.8.0 as a
+deliberate act, selftest red-capable), gate_hybrid_parity.py (2206/2206),
+gate_key_integrity.py at 1.5/2/3, the 2x/3x sha1 identity manifest,
+Test-DatIntegrity, Test-Builders -Factor 1.5.

@@ -62,7 +62,10 @@ def _run_maps(p, rgba):
     lens = np.bincount(ids)
     starts = np.flatnonzero(flat_start)
     ends = starts + lens
-    lum = (rgba[..., :3].astype(np.float64) @ LUMA).ravel()
+    # INTEGER luma x1000 so the >= 48 test is bit-exact between this reference
+    # and the C# port (a float dot product may differ by an ulp at 48.0)
+    c = rgba.astype(np.int64)
+    lum = (299 * c[..., 0] + 587 * c[..., 1] + 114 * c[..., 2]).ravel()
     run_lum = lum[starts]
     scol = starts % w
     ecol = ends - (starts - scol)          # end column (exclusive) within the row
@@ -70,7 +73,7 @@ def _run_maps(p, rgba):
     has_r = ecol < w
     ll = np.where(has_l, lum[np.maximum(starts - 1, 0)], run_lum)
     rl = np.where(has_r, lum[np.minimum(ends, lum.size - 1)], run_lum)
-    sal = has_l & has_r & (np.abs(run_lum - ll) >= SALIENT_LUMA) & (np.abs(run_lum - rl) >= SALIENT_LUMA)
+    sal = has_l & has_r & (np.abs(run_lum - ll) >= SALIENT_LUMA * 1000) & (np.abs(run_lum - rl) >= SALIENT_LUMA * 1000)
     return lens[ids].reshape(h, w), sal[ids].reshape(h, w)
 
 
@@ -245,8 +248,21 @@ def _claim(X, src, ow, oh, policy, return_mask=False):
         same = sum((pc[..., j] == pc[..., k]).astype(np.int64) for j in range(4))
         maj |= same >= 3
     def straight(tie, axis):
-        up = np.roll(tie, 1, axis=axis) & np.roll(c00, 1, axis=axis).__eq__(c00)             & (np.roll(c01 if axis == 0 else c10, 1, axis=axis) == (c01 if axis == 0 else c10))
-        dn = np.roll(tie, -1, axis=axis) & (np.roll(c00, -1, axis=axis) == c00)             & (np.roll(c01 if axis == 0 else c10, -1, axis=axis) == (c01 if axis == 0 else c10))
+        # the neighbouring block along the edge, NO wrap at the cell edge (a
+        # first-row block has no block above it; np.roll would hand it the
+        # last row - the C# port has no such neighbour either)
+        other = c01 if axis == 0 else c10
+        def shifted(arr, d):
+            out = np.zeros_like(arr)
+            if axis == 0:
+                if d > 0: out[d:] = arr[:-d]
+                else: out[:d] = arr[-d:]
+            else:
+                if d > 0: out[:, d:] = arr[:, :-d]
+                else: out[:, :d] = arr[:, -d:]
+            return out
+        up = shifted(tie, 1) & (shifted(c00, 1) == c00) & (shifted(other, 1) == other)
+        dn = shifted(tie, -1) & (shifted(c00, -1) == c00) & (shifted(other, -1) == other)
         return tie & (up | dn)
     copy = maj | straight(xtie, 0) | straight(ytie, 1)
     return out, copy
@@ -320,6 +336,44 @@ def _interp(a, ow, oh, kernel):
     return out
 
 
+def _nn_key_mask(out, cell, cw, ch):
+    """THE KEY SET IS NEAREST'S KEY SET, always (2026-09-01, shipping rule).
+
+    The colour key is the engine's transparency, and gate_key_integrity's R2
+    holds the exact-key set to the nearest prediction. The hybrid's claim rule
+    moves an edge by a pixel where a stroke abuts the key, and the box re-keys
+    by coverage - 9 of 466 keyed sheets moved key pixels in round 1 and were
+    hand-reverted. A hand list is not a rule; this is: the transparency mask
+    is nearest's, the COLOUR inside it is the hybrid's. Where nearest says key
+    the pixel is exact key; where nearest says colour but the hybrid produced
+    key (a box block the key owned by half), the pixel takes the key-excluded
+    average of its block instead - never the key, never a near-key."""
+    h, w = cell.shape[:2]
+    sx = np.minimum((np.arange(cw) / 1.5).astype(np.int64), w - 1)
+    sy = np.minimum((np.arange(ch) / 1.5).astype(np.int64), h - 1)
+    nn = cell[sy][:, sx]
+    nn_key = (nn[..., 0] == 255) & (nn[..., 1] == 0) & (nn[..., 2] == 255)
+    out = out.copy()
+    out_key = (out[..., 0] == 255) & (out[..., 1] == 0) & (out[..., 2] == 255)
+    out[nn_key] = KEY
+    fix = out_key & ~nn_key
+    if fix.any():
+        # key-excluded average of the block; if the block is ALL key (cannot
+        # be, nearest sampled a non-key cell of it) fall back to the nn pixel
+        X = _x3_replicate(cell)
+        cells = _block_cells(X, cw, ch).astype(np.int64)
+        key = (cells[..., 0] == 255) & (cells[..., 1] == 0) & (cells[..., 2] == 255)
+        wgt = (~key).astype(np.int64)
+        s = (cells * wgt[..., None]).sum(2)
+        n = np.maximum(wgt.sum(-1), 1)
+        avg = (s // n[..., None]).astype(np.uint8)
+        avg_key = (avg[..., 0] == 255) & (avg[..., 1] == 0) & (avg[..., 2] == 255)
+        avg[..., 1][avg_key] = 1
+        out[fix] = avg[fix]
+        out[fix & (wgt.sum(-1) == 0)] = nn[fix & (wgt.sum(-1) == 0)]
+    return out
+
+
 def _per_cell(a, ow, oh, states_x, states_y, fn):
     """Run fn(cell, cell_ow, cell_oh) per state cell so a cell can never see
     its neighbour (#169). Falls back to whole-sheet when the counts do not
@@ -362,7 +416,8 @@ def _make(reconstruct, mode):
                     soft = _box2(X, cw, ch)
                 else:
                     soft = _interp(cell, cw, ch, "catrom" if suffix == "hc" else "lanczos")
-                return np.where(mask[..., None], cp, soft)
+                out = np.where(mask[..., None], cp, soft)
+                return _nn_key_mask(out, cell, cw, ch)
             if mode in ("catrom", "lanczos"):
                 return _interp(cell, cw, ch, mode)
             return _claim(X, cell, cw, ch, mode)

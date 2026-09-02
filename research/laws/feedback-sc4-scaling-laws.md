@@ -1567,3 +1567,77 @@ values only works if those values are still meaningful when the defect is presen
 if the broken state is exactly the one that corrupts the input, the repair reads
 garbage and reports success. Test every self-reading repair against the broken
 state, not only against the healthy one.
+
+### 115. A rule consistent for odd stroke widths is inconsistent for even ones at 3/2 — decide per block, never per sheet
+
+At f=1.5 a source run of width w wants 1.5w output pixels, which is an integer
+only for even w. Nearest gives source columns multiplicity 2,1,2,1, so a 1px
+stroke renders 1px or 2px by the parity of its origin — measured on advisor
+sheet 14015571: column runs 1px x106 / 2px x110, where 2x is 2px x216 and 3x is
+3px x216, uniform. That is the "ragged / uneven edges" the user named, and it
+is arithmetic: a copy rule consistent for odd widths is inconsistent for even
+ones and vice versa, which is why the 2026-08 lab's `even_nearest` moved
+nothing (26.1% -> 26.2% uneven). The runtime is innocent — every UI pixel is a
+textured quad drawn 1:1 at the art's own size, Blt clips and never stretches —
+so the fix lives in the art pipeline. A rule that is consistent for both
+parities on a straight edge (the edge-claim copy) still cannot help a curve:
+every tie on a diagonal or an arc is an isolated staircase step, and on an
+anti-aliased button the fallback to nearest produced visible jaggies. The
+policy therefore has to be decided **per block**, not per sheet and not per
+corpus: a block with a 3-of-4 majority copies; a tie that continues in the
+neighbouring block along the edge takes the edge-claim copy; every other block
+(a staircase step, a curve, a picture) takes the key-aware 2:1 area average.
+Straight chrome stays a crisp copy at one width; curves get the AA a vector UI
+renders at 150%. On the 9-slice frame cv1 0.33 -> 0.16; over the shipped
+corpus cv1 0.319 -> 0.232 and swc 0.2997 -> 0.2237, with 2x and 3x unchanged
+(0 of 2206 sheets, sha1). Both horns of the old trade-off had been rejected on
+screen — the area average as "soft" (#200), nearest as "ragged" (#203) — and
+neither horn was ever going to win, because the defect was in the parity, not
+in the choice between them.
+
+### 116. When no pixel predicate separates two classes the user's eyes separate, the class is a binding fact
+
+After the hybrid reached the screen the user said the thumbnails still did not
+look as sharp. A ramp census and a stroke census over 2204 sheets (lab instruments
+under `tools\research\sharp15\`, not shipped)
+found no threshold that separates them: the glossy mode buttons the hybrid
+improved read ramp_frac 0.74-0.99 and stroke density 0.05-0.08; the lot
+thumbnails 0.47-0.86 and 0.08. Both are anti-aliased art. What differs is what
+the picture **depicts**, and the engine already knows that by how it binds the
+art. So `thumbnails.txt` is derived from the binding — every PNG the ItemIcons
++ ItemIconsSub packages carry (485 TGIs, all group 6a386d26) — and those keep
+nearest, because a rendered picture wants hard pixels and the 2x/3x block copy
+is the user's reference for "sharp". Catmull-Rom and Lanczos were measured for
+the soft branch and rejected: at 3/2 neither is sharper than the box on
+photoreal art (edge_w 1.66 either way). Launch 2: "Thumbnails are sharp."
+Derive a class from what the engine binds the art AS, never from a threshold
+on the art — a threshold tuned to separate two populations that overlap will
+misfile members of both, and the misfiled ones are the ones the user sees
+(#203).
+
+### 117. When both horns of a trade-off have been rejected on screen, put every even outcome in front of the user in-game before shipping any
+
+#200 flipped the 1.5x default from the area average ("soft") to nearest; #203
+opened with nearest rejected as "ragged". Once both horns are rejected no
+instrument can pick the winner, because the instruments were built to score
+the horns. Two things earned the release. First, a whole-image, same-sheet
+comparison — `tier_panel.py` lays out the same sheet as 1x / 1.5x shipped /
+candidates / 2x / 3x, every pane nearest-magnified to a common 6x-of-1x size so
+only quality differs — which is what the user asked for mid-turn ("Not just the
+edges. The entire images should be compared") and what chose the candidates.
+Second, an in-game A/B without a C# port: `build_variant_tree.py` writes a
+preview-tree variant from the Python candidate with the shipped tree's names
+and dimensions (law 66), the four preview-tree consumers accept
+`SC4UI_UPSCALE_DIR`, and the packages went through Deploy-OnGameClose /
+Set-Tier / Test-DatIntegrity like any build. Two launches, two verdicts ("It
+all looks a lot better", "Thumbnails are sharp"). Be exact about what the user
+saw: launch 2 ran the round-1 tree with the thumbnail sheets returned to
+shipped bytes, and the two rule changes that landed after it (the straight-tie
+test no longer wrapping at a cell edge; the nearest-key-mask rule replacing 9
+hand reverts) were verified by gates — parity 2206 of 2206 sheets byte-equal,
+key integrity, the edge-quality report — not by a third launch, with their
+scope bounded to the first/last block row or column of a cell and to those 9
+keyed sheets. The corollary is the shipping rule: a resampler change the user
+has not seen does not ship. The third-party lanes (CamUI, NAM icons, Web
+Button, Carbon skin art) were left on nearest at 1.5x deliberately, because
+none of them was on the screen the user judged.

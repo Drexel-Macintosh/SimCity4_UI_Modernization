@@ -208,6 +208,29 @@ foreach ($f in $Factor) {
     if (Test-Path $evenList) { $argv += @('--even-strips', $evenList) }
     else { throw "even-strips.txt missing - run tools/research/sharp15/make_even_strips.py" }
 
+    # v4.8.0 (2026-09-01): THE STRAIGHT-EDGE HYBRID. At 3/2 a copy can never
+    # be even (nearest doubles every other source pixel - the "ragged, uneven,
+    # everywhere" the user reported) and the average is soft on every straight
+    # edge (#200's former default, rejected as "soft"). --hybrid copies where
+    # the source edge is STRAIGHT, at one consistent stroke width (the
+    # edge-claim rule), and takes the key-aware average only at curves,
+    # diagonals and anti-aliased pictures. Judged on screen 2026-09-01: "It all
+    # looks a lot better." Ported from tools/research/sharp15/x3_candidates.py
+    # thin_h and held byte-identical to it by gate_hybrid_parity.py.
+    # Precedence inside the exe: integer factor (refused - 2x/3x stay
+    # byte-identical, FATAL otherwise), even-strips (keep their even reduce),
+    # no-smooth, thumbnails, fine key (1-2px), then the hybrid.
+    # --thumbnails is DERIVED (find_thumbnails.py: the item-icon bindings the
+    # two icon packages carry). Those keep nearest: the user judged the
+    # thumbnails "not as sharp" under the AA branch and "sharp" back on the
+    # copy path - a rendered picture wants hard pixels, and no pixel predicate
+    # separates it from a glossy button (ramp_census.py, stroke_census.py).
+    $thumbList = Join-Path $PSScriptRoot 'thumbnails.txt'
+    if (-not (Test-Path $thumbList)) { throw "thumbnails.txt missing - run tools/upscale/find_thumbnails.py" }
+    $nThumb = @(Get-Content $thumbList | Where-Object { $_.Trim() -and $_ -notmatch '^\s*#' }).Count
+    if ($nThumb -lt 300) { throw ("thumbnails.txt has only {0} entries (expect ~485) - refusing" -f $nThumb) }
+    $argv += @('--hybrid', 'thin', '--thumbnails', $thumbList)
+
     # Computed before the DryRun exit so the dry run can print the post-steps
     # with the real path (F13).
     $ladderDir = Join-Path $PSScriptRoot (Join-Path $outFor[$f] 'SimCity_1')

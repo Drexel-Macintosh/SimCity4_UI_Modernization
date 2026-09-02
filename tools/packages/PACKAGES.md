@@ -55,10 +55,10 @@ with only pixel dimensions and layout coordinates differing.
 
 | File | Entries | Size (bytes) | Notes |
 |---|---|---|---|
-| `z_SC4UIScale_SelectiveArt-15x.dat` | 696 | 17,525,384 | city-HUD selective art + edited scaled `.UI` |
-| `z_SC4UIScale_DialogStatic-15x.dat` | 265 | 2,901,409 | region-screen + city dialogs, statically scaled |
-| `z_SC4UIScale_ItemIcons-15x.dat` | 356 | 9,404,836 | menu/picker item icons (per tier since v2.24.0) |
-| `z_SC4UIScale_ItemIconsSub-15x.dat` | 130 | 1,415,076 | submenus-mod + other-plugin icons → `zzz-SC4UIScale\` |
+| `z_SC4UIScale_SelectiveArt-15x.dat` | 696 | 17,589,104 | city-HUD selective art + edited scaled `.UI`; v4.8.0 (#203 straight-edge hybrid) — was 13,411,333 at v4.7.2, see below |
+| `z_SC4UIScale_DialogStatic-15x.dat` | 266 | 2,912,173 | region-screen + city dialogs, statically scaled; v4.8.0 — was 2,655,005 at v4.7.2 |
+| `z_SC4UIScale_ItemIcons-15x.dat` | 356 | 4,712,509 | menu/picker item icons (per tier since v2.24.0); byte-identical v4.7.2 → v4.8.0 |
+| `z_SC4UIScale_ItemIconsSub-15x.dat` | 130 | 1,410,334 | submenus-mod + other-plugin icons → `zzz-SC4UIScale\`; byte-identical v4.7.2 → v4.8.0 |
 | `z_SC4UIScale_ThirdPartyUI-15x.dat` | 2 | 72,566 | MoreBuildingStyles override → `zzz-`, gated |
 | `z_SC4UIScale_WarriorUI-15x.dat` | 4 | 33,161 | warrior god-terraforming override → `zzz-`, gated |
 | `z_SC4UIScale_SaveWarningUI-15x.dat` | 2 | 8,204 | cyclone-boom save-warning override → `zzz-`, gated |
@@ -242,35 +242,102 @@ Integer factors are untouched and their output remains byte-identical
 (re-proven 2206/2206). Builders need no change: `clamp_rect_to_art` reads
 the real PNG header and clamps `imagerect` to the art that exists.
 
-## 1.5x resampling — nearest-neighbour, deliberately
+## 1.5x resampling — a per-sheet policy chain, straight-edge hybrid by default (v4.8.0, #203)
 
-The upscaler uses **nearest-neighbor for every factor, including 1.5**:
+**Integer factors (2, 3) are nearest-neighbour, an exact N×N block copy, and
+every rule below is a no-op there** — the `--hybrid` dispatch refuses an
+integer factor and the exe FATALs if it ever fires at one. Re-proven at
+v4.8.0: 0 of 2206 sheets changed at 2x and 3x (sha1 of every preview PNG
+against the pre-rebuild manifest; the run summary reads
+`hybrid: 0 sheet(s) ... 2206 integer factor`).
 
-- **No colorkey / alpha bleed — proven, not eyeballed.** Every output pixel
-  is an exact copy of a source pixel, so no interpolated colors are
-  introduced: the set of distinct ARGB values in each 1.5x (and 3x) output is
-  *identical* to the 1x source (0 new colors). NN preserves alpha
-  byte-for-byte, so there is categorically no edge fringe/halo. SC4 uses BOTH
-  alpha and a literal magenta `0xFF00FF` COLOUR KEY (the blit paths in
-  `UiSpike.cpp` color-key magenta explicitly, and `derive_subring.py` depends
-  on the ring sprite's magenta hole) — the 0-new-colors property is exactly
-  what protects the key. **Never make `--hq` automatic**: interpolation moves
-  exact key pixels off `0xFF00FF`, the key test misses them, and the key
-  colour draws — the Mayor Rating bar and the news-reader borders turned
-  pink within one launch when this was tried.
-- **Least-soft option.** NN performs zero blending, so it is the least-soft
-  resampler possible; there is no added softness at 1.5x.
-- **Residual artifact = pixel-grid unevenness, not softness.** At 1.5x each
-  source pixel becomes either 1 or 2 output pixels per axis (a regular 2:1
-  stipple), visible as slightly chunky stair-stepping on curved/diagonal
-  edges. The soft anti-aliasing already baked into the source art is
-  preserved (blockily), so curves read a touch chunkier than the crisp
-  integer factors but show **no blur and no new colors**. Validated by eye on
-  a magnified 1.5x sample (the 180×180 window-chrome 9-slice corner over a
-  checkerboard): edges crisp, alpha boundary clean, no halo.
-- A softer `--hq` bicubic path exists in the upscaler (and honours
-  `--factor`) but is **not** used for these packages — bicubic would blend
-  across the alpha edge and reintroduce fringe risk.
+**At 1.5 no single resampler survived the screen.** A copy cannot be even at
+3/2: source columns get multiplicity 2,1,2,1, so a 1px stroke renders 1px or
+2px by the parity of its origin (measured on the advisor sheet: 1px runs ×106
+/ 2px runs ×110, where 2x and 3x are uniform). The area average that #200
+(v4.3.0) had removed as the default was "soft"; the nearest it put in its
+place was "ragged / uneven edges" (#203). Both horns were rejected on screen,
+so the shipped policy is decided **per sheet, then per block**, in this
+order — the order is `Upscale2x.cs`'s dispatch, and `Rebuild-Corpus.ps1` is
+the only place the stock corpus's flag set lives (the third-party lanes
+carry their own, see below):
+
+| # | sheet class | flag / list (derivation) | 1.5x resampler |
+|---|---|---|---|
+| 1 | any sheet, integer factor | — | nearest (exact block copy; the hybrid refuses) |
+| 2 | tick ladders and N-state strips | `--even-strips even-strips.txt` (`research\sharp15\make_even_strips.py`: the 89 measured tick ladders ∪ `cell-strips.txt`) | `--supersample`: lossless ×3 then area reduce — even by construction (GH5), kept only where ticks exist (#200) |
+| 3 | sheets a builder MEASURES pixel-by-pixel (advisor frames, `seat_faces_on_apertures`) | `--no-smooth no-smooth.txt` (`make_no_smooth.py` from `ADVISOR_FACE_SEATS`, #175) | nearest |
+| 4 | item-icon thumbnails (lot / building pictures) | `--thumbnails thumbnails.txt` (`find_thumbnails.py`: every PNG the ItemIcons + ItemIconsSub packages carry, 485 TGIs, all group `6a386d26`) | nearest |
+| 5 | sheets whose colour key is 1–2 px STRUCTURE (`HasExactColorKey && MinKeyRun < 3`, #175) | built into the exe, no list | nearest |
+| 6 | everything else | `--hybrid thin` | straight-edge hybrid (`UpscaleHybrid`) |
+
+The refusal counters for rows 1–5 are printed in the run summary
+(`hybrid: N sheet(s) ... integer factor / even-strips / measured /
+thumbnails / fine key`), so a refusal can never be mistaken for coverage.
+
+**What the hybrid does (row 6).** Per 2×2 output block: a block with a
+3-of-4 majority copies; a tie that CONTINUES in the neighbouring block along
+the edge (a straight edge) takes the edge-claim copy, so a salient stroke
+renders at one consistent width (`thin` gives an odd-width stroke's tie block
+away, `bold` takes it; `thin` shipped); every other block — a staircase step,
+a curve, a picture — takes the key-aware 2:1 area average. Straight chrome
+stays a crisp copy at one width; curves get the anti-aliasing a vector UI
+renders at 150%. MEASURED on the shipped 1.5x corpus, v4.7.2 → v4.8.0
+(`_tests\Test-15xEdgeQuality.py`, integer tiers as its positive control):
+stroke-width CV per source width cv1 0.319 → 0.232, cv3 0.109 → 0.095, swc
+0.2997 → 0.2237; invented pixels 1,270,876 → 6,391,698 (blends at curves —
+the price); soft_frac 0.419 → 0.564. The cv2 rise (0.022 → 0.133) is largely
+the metric reading the exact-colour core of a 2px run whose one edge blended.
+
+**Why thumbnails are a binding fact, not a pixel fact (row 4).** Round 1 on
+screen: "It all looks a lot better. Maybe the thumbnails still don't look as
+sharp though." No pixel predicate separates a lot thumbnail from a glossy
+mode button (the ramp and stroke censuses over 2204 sheets - lab
+instruments under `research\sharp15\`, not shipped: ramp_frac
+0.74–0.99 vs 0.47–0.86, stroke density 0.05–0.08 vs 0.08 — both are
+anti-aliased art). What differs is what the picture DEPICTS, so the class is
+derived from what the engine binds the art as. Catmull-Rom and Lanczos were
+measured for the soft branch and rejected (edge_w 1.66 either way, no sharper
+than the box on photoreal art). Round 2: "Thumbnails are sharp."
+
+**The colour key is still nearest's — proven, not eyeballed.** SC4 uses BOTH
+alpha and a literal magenta `0xFF00FF` COLOUR KEY (the blit paths in
+`UiSpike.cpp` colour-key magenta explicitly, and `derive_subring.py` depends
+on the ring sprite's magenta hole). Under the hybrid the transparency MASK is
+nearest's prediction and only the colour inside it is the hybrid's: where
+nearest says key the pixel is exact `0xFFFF00FF`; where nearest says colour
+but the average landed on the key by coverage, the pixel takes the
+key-excluded average of its block. `gate_key_integrity.py` PASSes at 1.5 / 2
+/ 3 with zero exemptions added; `key_near` 10,251 and `key_moved` 2,059 are
+unchanged from v4.7.2 corpus-wide. **Never make `--hq` automatic**:
+`Graphics.DrawImage` interpolation moves exact key pixels off `0xFF00FF`, the
+key test misses them, and the key colour draws — the Mayor Rating bar and the
+news-reader borders turned pink within one launch when this was tried, and
+#175's `--smooth-keyed` painted a pink block behind Options for the mirror
+reason (a legitimate key result nudged to `FF01FF`). `--hq` remains in the
+exe for a deliberate side-by-side only.
+
+**The port is the same function, proven not argued.** The user judged
+packages built by the Python reference (`research\sharp15\x3_candidates.py`
+`thin_h`, via `build_variant_tree.py`); what ships is the C# `UpscaleHybrid`.
+`upscale\gate_hybrid_parity.py` holds them byte-equal — 2206 of 2206 sheets,
+dimensions included — and its reference tree keeps the even-strips /
+no-smooth / thumbnails / fine-key sheets as the shipped bytes, so rows 2–5
+are a free regression control for the dispatch.
+
+**Package growth is PNG bytes, not pixels.** `SelectiveArt-15x` 13,411,333 →
+17,589,104 B and `DialogStatic-15x` 2,655,005 → 2,912,173 B at v4.8.0 (2x
+SelectiveArt is 11,885,116 B, 3x 16,168,796 B): blended curves compress worse
+than a 2,1,2,1 copy pattern, and the exe's GDI+ encoder is not an optimising
+one — the SAME pixels packed by PIL in the round-2 packages were 14,807,918 B.
+No entry was added or removed; the two icon packages are byte-identical to
+v4.7.2.
+
+**Left on the old policy, deliberately.** The third-party lanes (CamUI, NAM
+icons, Web Button, Carbon skin art) still run the exe with their own flag
+sets and take nearest at 1.5x — none of them was on the screen the user
+judged, and a resampler change the user has not seen does not ship. Wire them
+when they can be looked at.
 
 ## Exact commands
 
@@ -337,10 +404,32 @@ from this file.
 ## Generator behaviour (all default to N=2 = original behaviour)
 
 - **`upscale\Upscale2x.cs`** — `--factor N` (2/3 integer block-replicate
-  nearest-neighbor; 1.5 fractional NN) and `--normalize-names` (rewrite SC4
-  `T-/G-/I-` filenames to canonical `0x` form). Output dims use
-  `floor(v×N+0.5)`. `--hq` bicubic also honours `--factor`. N=2 output
-  unchanged (byte-verified).
+  nearest-neighbor; 1.5 fractional, resampler chosen per sheet by the policy
+  chain above) and `--normalize-names` (rewrite SC4 `T-/G-/I-` filenames to
+  canonical `0x` form). Output dims use `floor(v×N+0.5)`. `--hq` bicubic
+  also honours `--factor`. N=2 output unchanged (byte-verified).
+- **`upscale\Upscale2x.cs`** — `--hybrid thin|bold` (v4.8.0, #203): the
+  fractional-factor straight-edge hybrid, `UpscaleHybrid`. Straight edges
+  copy at one consistent stroke width by the edge-claim rule (`thin` gives an
+  odd-width stroke's tie block away, `bold` takes it; `thin` ships); curves,
+  diagonals and pictures take the key-aware 2:1 area average, with the
+  transparency mask held to nearest's prediction. Dispatched AFTER the even
+  reduce and BEFORE nearest; refuses integer factors (FATAL if it fires at
+  one — 2x/3x stay byte-identical), even-strips, no-smooth, thumbnails and
+  fine-key (1–2 px) sheets, each counted in the run summary. Held
+  byte-identical to the Python reference (`research\sharp15\x3_candidates.py`
+  `thin_h`) by `upscale\gate_hybrid_parity.py <csharp_tree> <reference_tree>`
+  — 2206 of 2206 sheets, dimensions included; `--selftest` proves the gate
+  can fail; exit 0 parity / 1 mismatch / 2 inputs missing.
+- **`upscale\Upscale2x.cs`** — `--thumbnails <file>`: sheets named in that
+  file keep NEAREST under `--hybrid` — a rendered lot/building picture wants
+  hard pixels, and the 2x/3x block copy is the user's reference for "sharp".
+  DERIVED, never hand-listed: `upscale\find_thumbnails.py` reads the DBPF
+  index of `packages\15x\z_SC4UIScale_ItemIcons-15x.dat` and
+  `ItemIconsSub-15x.dat` directly (any tier carries the same TGIs) and writes
+  `upscale\thumbnails.txt` — 485 TGIs, all group `6a386d26`, the engine's
+  own item-icon bindings at second hand. `Rebuild-Corpus.ps1` refuses to run
+  if the file is missing or holds fewer than 300 entries.
 - **`upscale\Upscale2x.cs`** — `--cell-strips <file>`: sheets named in that
   file are sampled PER STATE, so a snapped sheet's cell boundaries cannot
   drift and let one state's art bleed into the next cell. The file is
