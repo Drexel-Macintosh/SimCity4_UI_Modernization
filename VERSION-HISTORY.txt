@@ -1,3 +1,41 @@
+SC4UIScale 4.9.0-beta1 (2026-09-07) - Beta 1: the boot path, the probes, the trail
+================================================================================
+
+THE THREE QUESTIONS asked before Beta 1, each answered by measurement (the
+ledger's 2026-09-07 sections carry the numbers):
+
+1. 20+ GB PLUGIN FOLDERS - not seamless before this build. The DLL's own
+   constructor, running inside the game's plugin scan, walked the tree ~16
+   times, opened every DBPF, and then fetched, enlarged and HELD every
+   uncovered third-party menu icon (~272 KB each at 3x, one per custom lot;
+   6,619 icons = 1.8 GB of a 4 GB address space). Now ONE walk per root
+   (IconSynth::BootIndex) feeds every consumer; the icon stage is wrap-first
+   (the factory wrap enlarges at first read and is PROVEN in the same launch;
+   the eager loop is a budgeted fallback for a game with no factory); index
+   reads are chunked with no size cap; cloud placeholders are counted, not
+   opened; `boot phases` and `address space` lines name the cost.
+
+2. 1.5x SHARPNESS - "shrink the 2x by 3/4" is the 1.5x area average bit for
+   bit (100.0000% identical on 1.7M pixels), nearest-from-2x is nearest at
+   the other phase, Lanczos-from-2x is rougher than the hybrid on every
+   stroke measure. The one lever left is the fine-key refusal (377 sheets,
+   32% of 1.5x pixels): measured -15% stroke-width CV on those sheets, but
+   the ink measure reads worse and 73 sheets get worse; twelve nine-slice
+   frames with non-integral cells need the sheet-level key mask. Built as a
+   variant for the user's eyes; not shipped without them.
+
+3. LONG SESSIONS - no leak class exists (zero GDI, epoch-cleared maps,
+   wrap-safe ticks, one-shot threads). Four crashes in probe-only code had
+   never been written up; two are the SAME instruction (LogBubbleCallStack:
+   a stack dword passed a hand-written base+0xA20000 bound while SizeOfImage
+   is 0x81E000). ProbeSafe now guards every probe read; Test-ProbeDerefGuards
+   keeps the class out; HEARTBEAT every 5 minutes makes slow growth a slope.
+
+Also: log header dated + hour marker + 64 MB soft cap; PassGuard; UNRECOG
+line; DEV KEYS ACTIVE roll-up; mission-bubble and third-party dialog lanes on
+the corpus resampler rules; New-SyntheticPlugins.py + Test-BootWalk.ps1;
+crash census; README on large plugin folders.
+
 SC4UIScale 4.8.0 (2026-09-01) - 1.5x edges are one width again: the hybrid
 ================================================================================
 

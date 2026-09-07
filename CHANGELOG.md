@@ -1,5 +1,94 @@
 # Changelog
 
+## 4.9.0-beta1 (2026-09-07) - Beta 1: the boot path scales to big plugin folders, probe reads cannot crash, and long sessions leave a trail
+
+**One line of behaviour: the mod boots by walking your Plugins folder once,
+enlarges third-party menu icons only when they are first used instead of
+holding every one of them from startup, refuses to crash on a diagnostic
+read, and writes a resource line to its log every five minutes. At 2x and
+3x the interface art is unchanged; at 1.5x two small lanes join the
+straight-edge rule.**
+
+### Large plugin folders
+
+- **One walk.** The DLL used to traverse the Plugins tree about sixteen times
+  while the game was still scanning plugins - folder discovery, six or seven
+  dependency searches that never stopped early, four unbounded walks for one
+  yes/no about a web-button mod, two for a pause-border remover, and four
+  more that opened every DBPF. Now one long-path-safe walk per Plugins root
+  records every file and every consumer reads that index. The log's
+  `ScaleTier: boot phases` line says what each phase cost and warns past
+  three seconds.
+- **Icons enlarge when first read, and nothing is held.** Every third-party
+  menu icon not covered by the packages used to be fetched, enlarged and kept
+  in memory from startup - about a quarter of a megabyte each at 3x, one per
+  custom lot. The wrap on the game's PNG factory already enlarged such an
+  icon the first time it was read; it is now installed first, proven in the
+  same launch (`WRAP CONTROL ... PASS`), and the startup loop does not run.
+  The old loop survives only for a game without a factory to wrap, under a
+  256 MB budget (`[IconSynth] EagerBudgetMB`), and says how many it left.
+- **Index reads have no size cap.** A DBPF index past 200,000 entries was
+  silently skipped; it is now read in 64 KB chunks bounded by the file size.
+- **Cloud placeholders are not opened.** A plugin folder under OneDrive Files
+  On-Demand holds files that download on first open; the scan counts and
+  names them instead of pulling the folder down.
+- **Two things the log could not say before:** a dependency that exists only
+  deeper than three folders below Plugins (it read as absent), and a
+  top-level folder that sorts after the override folder AND carries entries
+  at our override TGIs (the load-order warning used to run only when the
+  Carbon skin was installed, and only for its folder). Folders that merely
+  sort after ours are not named - they cannot beat us.
+- `IconSynth: address space` names the room left in the 32-bit process and
+  says so when the 4 GB patch is missing. README gains a section on large
+  plugin folders.
+
+### Stability
+
+- **Probe reads cannot crash the game.** Two of the game's own exception
+  reports (2026-08-18, 2026-08-31) fault on the same instruction in a
+  diagnostic stack scan that read past the executable's image; two more
+  executed at heap addresses through an unvalidated vtable. Every
+  speculative read in probe code now goes through one guarded helper
+  (`ProbeSafe`: the image span from the PE header, structured-exception
+  guarded reads, vtable slots called only when both the object and the slot
+  point into the image). A refused read logs and returns. A source gate
+  (`Test-ProbeDerefGuards.py`) keeps that class out.
+- **A heartbeat every five minutes**: private and peak bytes, address space
+  left, handles, GDI and USER objects, the scaler's map sizes, city count,
+  icon counters and log size - so any log from a long session carries a
+  slope. The log header now carries the date, an hour-rollover marker is
+  printed, and a 64 MB soft cap drops verbose logging once, loudly.
+- The re-entrancy latch is held by a scope guard; an anonymous window that
+  classifies as unrecognised is named once per city; every diagnostic key
+  left set in the ini is listed in one `DEV KEYS ACTIVE` line at boot (the
+  shipped ini seeds none, checked by `Test-ShippingIniKeys`); a sprite-size
+  narrowing is range-checked; the vtable page left writable is recorded.
+- All 20 exception reports on the development machine are catalogued
+  (`_tests/CRASH-CENSUS.md`); the release checklist reads that folder first.
+
+### 1.5x
+
+- **"Shrink the 2x art by three quarters" was measured and is not a new
+  resampler**: with an area filter it is bit for bit the 1.5x area average
+  that v4.3.0 replaced; with nearest it is the same copy at the other phase;
+  with Lanczos it is rougher than the shipped hybrid on every stroke measure.
+  Recorded in KNOWN-LIMITATIONS so it is not proposed again.
+- The mission-bubble sheet and the third-party dialog art (CAM, Save
+  Warning, Region Census) now take the same resampler rules as the rest of
+  the 1.5x corpus; they were the last lanes on the old whole-sheet smoothing
+  and on the plain copy. 2x and 3x are byte-identical.
+- The remaining 1.5x lever - the 377 colour-keyed sheets that still take the
+  plain copy - is built as a variant for an on-screen decision and is NOT in
+  this beta's packages unless the release notes say so.
+
+### Tooling
+
+- `_tests/New-SyntheticPlugins.py` writes a synthetic Plugins tree of any
+  size (long paths, big indexes, planted dependency fixtures);
+  `_tests/Test-BootWalk.ps1` compiles the boot walkers standalone against it
+  and records the numbers; `Rebuild-Corpus.ps1` tees the resampler's run
+  summary to a committed file per factor.
+
 ## 4.8.0 (2026-09-01) - 1.5x edges are drawn at one width; 2x and 3x are untouched
 
 **One line of behaviour: at the 1.5x preset the interface art is built by a
