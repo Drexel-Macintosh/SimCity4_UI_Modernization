@@ -21642,3 +21642,111 @@ compiles it without PerfProbe); **a warning that fires on every install is
 noise - gate it on evidence** (the per-TGI census, not the folder name);
 **PROBE READS GO THROUGH ONE HELPER** - the SEH law written on 2026-08-18 had
 been applied to one function and the same crash shipped twice more.
+
+## 2026-09-07 — Beta 1 A1: the 20 GB boot harness and its baseline
+
+WHAT EXISTS NOW. Two scripts, one golden file:
+  _tests\New-SyntheticPlugins.py   writes a synthetic sc4pac-shaped Plugins tree with
+                                   KNOWN ANSWERS (manifest.json) under C:\dev\_scale\Plugins-<N>.
+                                   Refuses OneDrive / Documents\SimCity 4 / the game install;
+                                   deletes only a tree carrying its own marker; reuses a tree
+                                   whose parameters match. DANGER: writes N files.
+  _tests\Test-BootWalk.ps1         lifts FOLDER-DISCOVERY + DEP-WALK + BOOT-WALK (+ BOOT-INDEX
+                                   when present) out of ScaleTier.cpp by sentinel, compiles them
+                                   x86 with Logger/LogLevel/PerfProbe/PluginsRoot(Quiet)/
+                                   InstallPluginsDir stubbed and FindFirstFileW/FindNextFileW/
+                                   CreateFileW wrapped in counters, runs the boot walks against
+                                   the trees and checks EVERY count against the answer key.
+                                   -Source <file|git-ref> picks the code; -Record writes the
+                                   golden; -Mutate proves it can go red.
+  _tests\golden\bootwalk-baseline.json   the pre-rework numbers below (source git:3f2608b,
+                                   the sentinel commit, so the baseline stands still while the
+                                   working tree is rewritten).
+
+    .\_tests\Test-BootWalk.ps1 -Files 1000,10000,50000 -Source 3f2608b -Record -Mutate
+    .\_tests\Test-BootWalk.ps1 -Files 50000            # the working tree, vs the baseline
+
+THE TREE (seed 1, K=8 icons/file, P=200 real PNG strips, L=20 folder chains of 3 x 120-char
+segments, --big-index, NAM at depth 3): our v4.8.0 bundle copied in as "ours" (25 dats, 876
+distinct icon instances), every kThirdPartyDeps filename planted or deliberately not (10 ok,
+scoty_Carbon_Files.dat at pinned+1 bytes, SaveWarning_Disable_Exit_Quit.dat in two folders,
+7 absent), the web-button dat behind a 440-char path, a 200,000-entry big-index.dat, and the
+three load-order fixtures (zzz_after-us\a.dat, ~tilde\b.dat, 900-overrides\c.dat) for A2's
+warning. Every expected count is MEASURED from the written tree, never copied from the plan.
+    N=1,000:  1,127 files /   140 dirs      N=10,000: 10,127 files /   590 dirs
+    N=50,000: 50,127 files / 2,590 dirs     60 entries past MAX_PATH in each; ~180 MB each.
+
+BASELINE — the pre-Beta-1 code (3f2608b), wall-clock ms on the recording machine, trees warm
+(the generator's own verification had just read every file). Counts are exact per seed.
+
+    phase                                              N=1,000   N=10,000    N=50,000
+    discover      ScanForOurDirs, depth 3                 40.1      293.1       825.7
+    walk-ours     Walk + ReadIconTgis on our 25 dats      20.3      105.1       498.2
+    walk-theirs   Walk + ReadIconTgis on every DBPF       83.3    1,894.0    47,914.9
+      of which    AddTgi's LINEAR dedupe scan              9.6    1,053.3    41,805.1
+    diff          uncovered = theirs x ours                2.0       21.3       251.7
+    walk-total    the four walks ScanAndReport runs      105.8    2,020.6    48,665.2
+    readicons     index read only, every DBPF, pass a     44.8      589.5     3,668.2
+    readicons     same, pass b                            44.4      680.2     3,253.5
+    deps-total    18 FindPluginFile depth-4 walks        181.5    2,261.3     7,122.7
+      one of them NetworkAddonMod_Controller.dat         15.6      138.8       443.8
+    BOOT          discover + walks + deps                327.4    4,575.0    56,613.6
+
+    counters      walk-total  finds/nexts/opens     284/3,108/1,026   1,184/23,808/10,026   5,184/115,808/50,026
+                  deps-total  finds/nexts           1,998/18,270      8,748/147,888         38,754/724,122
+                  discover    finds/nexts           630/563           3,855/4,389           18,191/21,376
+
+THE THREE EXPECTED FAILURES — seen at every N, reported as positive controls, never hidden:
+  #1 big index: theirs = key - 8 at every N (7,992 / 79,992 / 399,992 vs 8,000 / 80,000 /
+     400,000) and the uncovered SET equals the key minus exactly the big index's 8 icons (sha1
+     match), so ReadIconTgis's `count < 200000` guard drops a whole file and nothing else.
+  #2 web button past MAX_PATH: FindPluginFile reports ABSENT for a file that is on disk 3
+     dirs below Plugins - and, MEASURED, the bare walk does not fail gracefully: it TERMINATES
+     THE PROCESS, exit 0xC0000409. swprintf_s into FindPluginFile's MAX_PATH `sub` buffer
+     invokes the secure CRT's invalid-parameter path, the DLL installs no handler (x86 /MT /O2,
+     the DLL's own configuration - a 12-line probe reproduced it), and the CRT's default is
+     __fastfail. A Plugins tree with ONE directory path over 259 characters within four levels
+     of the root kills the game in the DLL constructor. NAM's known 283-298-char paths have
+     only not done this because they sit deeper than the depth-4 budget. The harness gets its
+     verdicts by re-running with a counting handler: 360 truncations = 20 chains x 18 needles.
+  #3 NAM at depth 4: ABSENT to the depth-4 walk (control tree A); FindDep over the Beta 1
+     index reports the same verdict PLUS deepestDepth=4 and the path.
+
+TWO MORE THINGS THE INSTRUMENT SAW:
+  * gLongPathsSeen is zeroed once per ScanAndReport and Walk runs over the tree TWICE, so the
+    "%d past MAX_PATH" the DLL logs is DOUBLE the truth (120 logged for 60). Harmless to the
+    scan, wrong as a number; the harness accepts exactly 2x on this code and exactly 1x after.
+  * At 50,000 files the walk is not I/O-bound: 41.8 s of the 48.7 s walk-total is AddTgi's
+    linear "have I seen this instance" scan over a 400,000-entry list (O(n^2)); the actual
+    index reads over the same 50,026 DBPFs cost 3.7 s (readicons-a). The DLL's dedupe is
+    outside the sentinels and was COPIED into the harness driver loop, labelled as such.
+
+CONTROLS the run carries every time: control tree B (NAM at depth 3, no long paths) - 18/18
+dependency verdicts AND match counts agree with the key, no abort; control tree A (NAM at
+depth 4); the mutation control (`if (depth <= 0)` -> `if (depth <= 1)` in the lifted
+FindPluginFile) makes the depth-3 controller vanish and the harness goes RED as required;
+the helper copies the harness carries (kIconType/kIconGroup/IsDbpfName/IsOurPackage/
+Fingerprint sit ABOVE the BOOT-WALK sentinel) are regex-checked against the source text so a
+change there fails the build instead of measuring a different predicate.
+
+THE AFTER LIFT ALREADY WORKS (working tree at 07:4x, N=60): the BOOT-INDEX region compiles
+under the harness; FindDep is identical to FindPluginFile (path, size, matches) on 18/18
+needles on both control trees and 17/18 on the main tree, the one difference being the
+web button past MAX_PATH which the index SEES; the new ReadIconTgis reads the big index
+(theirs = key exactly, sha1 match: expected failure #1 flips to FIXED); AnyNameContains and
+TopLevelFolders agree with the key. Not baselined - that run is the lead's, at 50,000.
+
+CAVEATS, stated because they change what a number means:
+  * The trees are warm. The generator's verification opens every DBPF right after writing
+    it, and on this machine the FIRST open of a freshly written file costs ~10 ms (the
+    real-time scanner: 19.5 s of a 21 s run at N=2,000, cured in the generator by reading
+    in 32 threads). A player's first boot after unpacking 50,000 new files pays that cost in
+    the DLL's walk - ~500 s on this machine - and NO cold number is in the baseline.
+  * The <install>\Plugins root is a two-file stand-in (C:\dev\_scale\InstallPlugins-standin);
+    the four-walk SHAPE is real, the second root's cost is not.
+  * ms are informational; the exact rows are the counters and the icon/needle verdicts.
+
+WHAT TO DO NEXT: run the working tree at 50,000 (`.\_tests\Test-BootWalk.ps1 -Files 50000`)
+and put its INDEX row next to the 56.6 s BOOT row above; fix FindPluginFile's abort or
+retire it behind FindDep; halve the logged past-MAX_PATH count or count once; add the three
+files above plus this section to the commit.

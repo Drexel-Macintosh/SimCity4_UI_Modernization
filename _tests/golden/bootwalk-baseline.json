@@ -1,0 +1,865 @@
+{
+    "what":  "Baseline of the DLL boot walks (Test-BootWalk.ps1) on synthetic Plugins trees. ms are wall-clock on the recording machine and are informational; counts (finds/nexts/opens/icons) are exact and reproducible per seed.",
+    "recorded":  "2026-09-07",
+    "source":  "git:3f2608b",
+    "codeSha1":  {
+                     "FOLDER-DISCOVERY":  "6c4431222d5fe8a16023b677b0d68e59b6746bbd",
+                     "DEP-WALK":  "0ed06de6a3332cd3c3254b1b279ab001ddb272e6",
+                     "BOOT-WALK":  "f87bbd3b90dea7bc27a41110984459b92146b54b"
+                 },
+    "flags":  "cl /nologo /EHsc /W3 /O2 /std:c++20 /DBOOTWALK_HARNESS (x86)",
+    "params":  {
+                   "iconsPerFile":  8,
+                   "pngSubset":  200,
+                   "longPaths":  20,
+                   "bigIndex":  true,
+                   "namDepth":  3,
+                   "seed":  1,
+                   "bundle":  "SC4UIScale-v4.8.0"
+               },
+    "runs":  {
+                 "1000":  {
+                              "tree":  {
+                                           "root":  "C:\\dev\\_scale\\Plugins-1000",
+                                           "thirdPartyDbpf":  1000,
+                                           "oursDbpf":  25,
+                                           "totalFiles":  1127,
+                                           "dirs":  140,
+                                           "longPaths":  60,
+                                           "maxPathLen":  439,
+                                           "junction":  null
+                                       },
+                              "api":  {
+                                          "walkFd":  false,
+                                          "tgiFull":  false,
+                                          "hasIndex":  false
+                                      },
+                              "phases":  [
+                                             {
+                                                 "phase":  "discover",
+                                                 "ms":  40.1,
+                                                 "count":  2,
+                                                 "finds":  630,
+                                                 "nexts":  563,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "walk-ours-root1",
+                                                 "ms":  20.3,
+                                                 "count":  1128,
+                                                 "finds":  141,
+                                                 "nexts":  1550,
+                                                 "opens":  25
+                                             },
+                                             {
+                                                 "phase":  "walk-ours-root2",
+                                                 "ms":  0.1,
+                                                 "count":  2,
+                                                 "finds":  1,
+                                                 "nexts":  4,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "walk-theirs-root1",
+                                                 "ms":  83.3,
+                                                 "count":  1128,
+                                                 "finds":  141,
+                                                 "nexts":  1550,
+                                                 "opens":  1000
+                                             },
+                                             {
+                                                 "phase":  "walk-theirs-root2",
+                                                 "ms":  0.1,
+                                                 "count":  2,
+                                                 "finds":  1,
+                                                 "nexts":  4,
+                                                 "opens":  1
+                                             },
+                                             {
+                                                 "phase":  "addtgi-linear-dedupe",
+                                                 "ms":  9.6,
+                                                 "count":  8872,
+                                                 "finds":  0,
+                                                 "nexts":  0,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "diff-uncovered",
+                                                 "ms":  2,
+                                                 "count":  7968,
+                                                 "finds":  0,
+                                                 "nexts":  0,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "walk-total",
+                                                 "ms":  105.8,
+                                                 "count":  1026,
+                                                 "finds":  284,
+                                                 "nexts":  3108,
+                                                 "opens":  1026
+                                             },
+                                             {
+                                                 "phase":  "readicons-a",
+                                                 "ms":  44.8,
+                                                 "count":  8872,
+                                                 "finds":  0,
+                                                 "nexts":  0,
+                                                 "opens":  1026
+                                             },
+                                             {
+                                                 "phase":  "readicons-b",
+                                                 "ms":  44.4,
+                                                 "count":  8872,
+                                                 "finds":  0,
+                                                 "nexts":  0,
+                                                 "opens":  1026
+                                             },
+                                             {
+                                                 "phase":  "dep:SaveWarning_Disable_Exit_Quit.dat",
+                                                 "ms":  8.3,
+                                                 "count":  2,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:CAM_Extended_Essentials.dat",
+                                                 "ms":  8.8,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:CAM_Intro.dat",
+                                                 "ms":  8.9,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:CoriBoom\u0027s 36 Slot Building Styles UI",
+                                                 "ms":  8.6,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:UI_Compact.dat",
+                                                 "ms":  8.6,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:Mayor_Sign_Menu.dat",
+                                                 "ms":  8.7,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:Raise the UI Mod.dat",
+                                                 "ms":  8.5,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:RegionCensusUI.dat",
+                                                 "ms":  9.7,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:NetworkAddonMod_Controller.dat",
+                                                 "ms":  15.6,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:z_Full Screen - Web Button Improvement Mod",
+                                                 "ms":  12.1,
+                                                 "count":  0,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:scoty_carbon_PNG.dat",
+                                                 "ms":  9.3,
+                                                 "count":  0,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:scoty_Carbon_Files.dat",
+                                                 "ms":  9.2,
+                                                 "count":  1,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:z_scoty_Carbon_RaiseUI.dat",
+                                                 "ms":  8.6,
+                                                 "count":  0,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:w_scoty_Carbon_CB_SaveWarning_optA.dat",
+                                                 "ms":  10.4,
+                                                 "count":  0,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:y_scoty_CAM_Extended_Essentials.dat",
+                                                 "ms":  16.6,
+                                                 "count":  0,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:z_scoty_Carbon_BuildingStyles.dat",
+                                                 "ms":  9.4,
+                                                 "count":  0,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:y_scoty_Carbon_NAM.dat",
+                                                 "ms":  10.6,
+                                                 "count":  0,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "dep:z_scoty_Carbon_GodMod.dat",
+                                                 "ms":  9.1,
+                                                 "count":  0,
+                                                 "finds":  111,
+                                                 "nexts":  1015,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "deps-total",
+                                                 "ms":  181.5,
+                                                 "count":  18,
+                                                 "finds":  1998,
+                                                 "nexts":  18270,
+                                                 "opens":  0
+                                             },
+                                             {
+                                                 "phase":  "crt-truncations",
+                                                 "ms":  0,
+                                                 "count":  360,
+                                                 "finds":  0,
+                                                 "nexts":  0,
+                                                 "opens":  0
+                                             }
+                                         ],
+                              "totals":  {
+                                             "discoverMs":  40.1,
+                                             "walkMs":  105.8,
+                                             "depsMs":  181.5,
+                                             "bootMs":  327.4
+                                         },
+                              "index":  null,
+                              "icons":  {
+                                            "ours":  876,
+                                            "theirs":  7992,
+                                            "uncovered":  7968,
+                                            "longPathsSeen":  120,
+                                            "keyTheirs":  8000,
+                                            "keyUncovered":  7976
+                                        },
+                              "depsAbortedWithoutHandler":  true,
+                              "crtTruncations":  360,
+                              "expectedFailures":  {
+                                                       "bigIndex":  "PRESENT: 8 icons in the 200000-entry index are not counted (ReadIconTgis count\u003c200000 guard)",
+                                                       "webButtonLongPath":  "PRESENT: the web-button dat at 439 chars is invisible to the MAX_PATH walk - and without a CRT handler the walk TERMINATES THE PROCESS (0xC0000409)",
+                                                       "namDepth4":  "PRESENT: NAM controller 4 dirs below Plugins is ABSENT to the depth-4 walk (manifest says present)"
+                                                   }
+                          },
+                 "10000":  {
+                               "tree":  {
+                                            "root":  "C:\\dev\\_scale\\Plugins-10000",
+                                            "thirdPartyDbpf":  10000,
+                                            "oursDbpf":  25,
+                                            "totalFiles":  10127,
+                                            "dirs":  590,
+                                            "longPaths":  60,
+                                            "maxPathLen":  440,
+                                            "junction":  null
+                                        },
+                               "api":  {
+                                           "walkFd":  false,
+                                           "tgiFull":  false,
+                                           "hasIndex":  false
+                                       },
+                               "phases":  [
+                                              {
+                                                  "phase":  "discover",
+                                                  "ms":  293.1,
+                                                  "count":  2,
+                                                  "finds":  3855,
+                                                  "nexts":  4389,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "walk-ours-root1",
+                                                  "ms":  105.1,
+                                                  "count":  10128,
+                                                  "finds":  591,
+                                                  "nexts":  11900,
+                                                  "opens":  25
+                                              },
+                                              {
+                                                  "phase":  "walk-ours-root2",
+                                                  "ms":  0.1,
+                                                  "count":  2,
+                                                  "finds":  1,
+                                                  "nexts":  4,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "walk-theirs-root1",
+                                                  "ms":  1894,
+                                                  "count":  10128,
+                                                  "finds":  591,
+                                                  "nexts":  11900,
+                                                  "opens":  10000
+                                              },
+                                              {
+                                                  "phase":  "walk-theirs-root2",
+                                                  "ms":  0.1,
+                                                  "count":  2,
+                                                  "finds":  1,
+                                                  "nexts":  4,
+                                                  "opens":  1
+                                              },
+                                              {
+                                                  "phase":  "addtgi-linear-dedupe",
+                                                  "ms":  1053.3,
+                                                  "count":  80872,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "diff-uncovered",
+                                                  "ms":  21.3,
+                                                  "count":  79968,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "walk-total",
+                                                  "ms":  2020.6,
+                                                  "count":  10026,
+                                                  "finds":  1184,
+                                                  "nexts":  23808,
+                                                  "opens":  10026
+                                              },
+                                              {
+                                                  "phase":  "readicons-a",
+                                                  "ms":  589.5,
+                                                  "count":  80872,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  10026
+                                              },
+                                              {
+                                                  "phase":  "readicons-b",
+                                                  "ms":  680.2,
+                                                  "count":  80872,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  10026
+                                              },
+                                              {
+                                                  "phase":  "dep:SaveWarning_Disable_Exit_Quit.dat",
+                                                  "ms":  61.4,
+                                                  "count":  2,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:CAM_Extended_Essentials.dat",
+                                                  "ms":  78.4,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:CAM_Intro.dat",
+                                                  "ms":  108.9,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:CoriBoom\u0027s 36 Slot Building Styles UI",
+                                                  "ms":  162.3,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:UI_Compact.dat",
+                                                  "ms":  153,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:Mayor_Sign_Menu.dat",
+                                                  "ms":  160.1,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:Raise the UI Mod.dat",
+                                                  "ms":  194.2,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:RegionCensusUI.dat",
+                                                  "ms":  174.7,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:NetworkAddonMod_Controller.dat",
+                                                  "ms":  138.8,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:z_Full Screen - Web Button Improvement Mod",
+                                                  "ms":  113.9,
+                                                  "count":  0,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:scoty_carbon_PNG.dat",
+                                                  "ms":  70,
+                                                  "count":  0,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:scoty_Carbon_Files.dat",
+                                                  "ms":  75.7,
+                                                  "count":  1,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:z_scoty_Carbon_RaiseUI.dat",
+                                                  "ms":  152.6,
+                                                  "count":  0,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:w_scoty_Carbon_CB_SaveWarning_optA.dat",
+                                                  "ms":  187.2,
+                                                  "count":  0,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:y_scoty_CAM_Extended_Essentials.dat",
+                                                  "ms":  185.7,
+                                                  "count":  0,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:z_scoty_Carbon_BuildingStyles.dat",
+                                                  "ms":  108.1,
+                                                  "count":  0,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:y_scoty_Carbon_NAM.dat",
+                                                  "ms":  73.9,
+                                                  "count":  0,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:z_scoty_Carbon_GodMod.dat",
+                                                  "ms":  61.3,
+                                                  "count":  0,
+                                                  "finds":  486,
+                                                  "nexts":  8216,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "deps-total",
+                                                  "ms":  2261.3,
+                                                  "count":  18,
+                                                  "finds":  8748,
+                                                  "nexts":  147888,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "crt-truncations",
+                                                  "ms":  0,
+                                                  "count":  360,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  0
+                                              }
+                                          ],
+                               "totals":  {
+                                              "discoverMs":  293.1,
+                                              "walkMs":  2020.6,
+                                              "depsMs":  2261.3,
+                                              "bootMs":  4575
+                                          },
+                               "index":  null,
+                               "icons":  {
+                                             "ours":  876,
+                                             "theirs":  79992,
+                                             "uncovered":  79968,
+                                             "longPathsSeen":  120,
+                                             "keyTheirs":  80000,
+                                             "keyUncovered":  79976
+                                         },
+                               "depsAbortedWithoutHandler":  true,
+                               "crtTruncations":  360,
+                               "expectedFailures":  {
+                                                        "bigIndex":  "PRESENT: 8 icons in the 200000-entry index are not counted (ReadIconTgis count\u003c200000 guard)",
+                                                        "webButtonLongPath":  "PRESENT: the web-button dat at 440 chars is invisible to the MAX_PATH walk - and without a CRT handler the walk TERMINATES THE PROCESS (0xC0000409)",
+                                                        "namDepth4":  "PRESENT: NAM controller 4 dirs below Plugins is ABSENT to the depth-4 walk (manifest says present)"
+                                                    }
+                           },
+                 "50000":  {
+                               "tree":  {
+                                            "root":  "C:\\dev\\_scale\\Plugins-50000",
+                                            "thirdPartyDbpf":  50000,
+                                            "oursDbpf":  25,
+                                            "totalFiles":  50127,
+                                            "dirs":  2590,
+                                            "longPaths":  60,
+                                            "maxPathLen":  440,
+                                            "junction":  null
+                                        },
+                               "api":  {
+                                           "walkFd":  false,
+                                           "tgiFull":  false,
+                                           "hasIndex":  false
+                                       },
+                               "phases":  [
+                                              {
+                                                  "phase":  "discover",
+                                                  "ms":  825.7,
+                                                  "count":  2,
+                                                  "finds":  18191,
+                                                  "nexts":  21376,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "walk-ours-root1",
+                                                  "ms":  498.2,
+                                                  "count":  50128,
+                                                  "finds":  2591,
+                                                  "nexts":  57900,
+                                                  "opens":  25
+                                              },
+                                              {
+                                                  "phase":  "walk-ours-root2",
+                                                  "ms":  0,
+                                                  "count":  2,
+                                                  "finds":  1,
+                                                  "nexts":  4,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "walk-theirs-root1",
+                                                  "ms":  47914.9,
+                                                  "count":  50128,
+                                                  "finds":  2591,
+                                                  "nexts":  57900,
+                                                  "opens":  50000
+                                              },
+                                              {
+                                                  "phase":  "walk-theirs-root2",
+                                                  "ms":  0.2,
+                                                  "count":  2,
+                                                  "finds":  1,
+                                                  "nexts":  4,
+                                                  "opens":  1
+                                              },
+                                              {
+                                                  "phase":  "addtgi-linear-dedupe",
+                                                  "ms":  41805.1,
+                                                  "count":  400872,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "diff-uncovered",
+                                                  "ms":  251.7,
+                                                  "count":  399968,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "walk-total",
+                                                  "ms":  48665.2,
+                                                  "count":  50026,
+                                                  "finds":  5184,
+                                                  "nexts":  115808,
+                                                  "opens":  50026
+                                              },
+                                              {
+                                                  "phase":  "readicons-a",
+                                                  "ms":  3668.2,
+                                                  "count":  400872,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  50026
+                                              },
+                                              {
+                                                  "phase":  "readicons-b",
+                                                  "ms":  3253.5,
+                                                  "count":  400872,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  50026
+                                              },
+                                              {
+                                                  "phase":  "dep:SaveWarning_Disable_Exit_Quit.dat",
+                                                  "ms":  268.2,
+                                                  "count":  2,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:CAM_Extended_Essentials.dat",
+                                                  "ms":  261.7,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:CAM_Intro.dat",
+                                                  "ms":  266.5,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:CoriBoom\u0027s 36 Slot Building Styles UI",
+                                                  "ms":  262.5,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:UI_Compact.dat",
+                                                  "ms":  278.4,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:Mayor_Sign_Menu.dat",
+                                                  "ms":  260.6,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:Raise the UI Mod.dat",
+                                                  "ms":  251.3,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:RegionCensusUI.dat",
+                                                  "ms":  379.9,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:NetworkAddonMod_Controller.dat",
+                                                  "ms":  443.8,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:z_Full Screen - Web Button Improvement Mod",
+                                                  "ms":  365.8,
+                                                  "count":  0,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:scoty_carbon_PNG.dat",
+                                                  "ms":  438.2,
+                                                  "count":  0,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:scoty_Carbon_Files.dat",
+                                                  "ms":  524.4,
+                                                  "count":  1,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:z_scoty_Carbon_RaiseUI.dat",
+                                                  "ms":  459.6,
+                                                  "count":  0,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:w_scoty_Carbon_CB_SaveWarning_optA.dat",
+                                                  "ms":  604.1,
+                                                  "count":  0,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:y_scoty_CAM_Extended_Essentials.dat",
+                                                  "ms":  616.1,
+                                                  "count":  0,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:z_scoty_Carbon_BuildingStyles.dat",
+                                                  "ms":  461.3,
+                                                  "count":  0,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:y_scoty_Carbon_NAM.dat",
+                                                  "ms":  573,
+                                                  "count":  0,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "dep:z_scoty_Carbon_GodMod.dat",
+                                                  "ms":  406.7,
+                                                  "count":  0,
+                                                  "finds":  2153,
+                                                  "nexts":  40229,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "deps-total",
+                                                  "ms":  7122.7,
+                                                  "count":  18,
+                                                  "finds":  38754,
+                                                  "nexts":  724122,
+                                                  "opens":  0
+                                              },
+                                              {
+                                                  "phase":  "crt-truncations",
+                                                  "ms":  0,
+                                                  "count":  360,
+                                                  "finds":  0,
+                                                  "nexts":  0,
+                                                  "opens":  0
+                                              }
+                                          ],
+                               "totals":  {
+                                              "discoverMs":  825.7,
+                                              "walkMs":  48665.2,
+                                              "depsMs":  7122.7,
+                                              "bootMs":  56613.6
+                                          },
+                               "index":  null,
+                               "icons":  {
+                                             "ours":  876,
+                                             "theirs":  399992,
+                                             "uncovered":  399968,
+                                             "longPathsSeen":  120,
+                                             "keyTheirs":  400000,
+                                             "keyUncovered":  399976
+                                         },
+                               "depsAbortedWithoutHandler":  true,
+                               "crtTruncations":  360,
+                               "expectedFailures":  {
+                                                        "bigIndex":  "PRESENT: 8 icons in the 200000-entry index are not counted (ReadIconTgis count\u003c200000 guard)",
+                                                        "webButtonLongPath":  "PRESENT: the web-button dat at 440 chars is invisible to the MAX_PATH walk - and without a CRT handler the walk TERMINATES THE PROCESS (0xC0000409)",
+                                                        "namDepth4":  "PRESENT: NAM controller 4 dirs below Plugins is ABSENT to the depth-4 walk (manifest says present)"
+                                                    }
+                           }
+             }
+}
