@@ -23,7 +23,7 @@
 param(
     [Parameter(Mandatory = $true)][string] $Root,
     [switch] $Control,
-    [int] $Seconds = 600,
+    [int] $Seconds = 2400,   # a COLD 50k run took ~19 min to the region screen (2026-09-07); warm runs are minutes
     [string] $Exe = "C:\Program Files (x86)\Steam\steamapps\common\SimCity 4 Deluxe\Apps\SimCity 4.exe"
 )
 $ErrorActionPreference = 'Stop'
