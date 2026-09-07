@@ -1065,6 +1065,7 @@ namespace
 	// the later-sorting one, so a stale duplicate can satisfy a fingerprint
 	// for art the player never sees. The out params still describe the FIRST
 	// match (unchanged decisions); the count only makes the shadow loud.
+	// ==== BEGIN DEP-WALK (lifted verbatim by _tests/Test-BootWalk.ps1) ====
 	bool FindPluginFile(
 		const wchar_t* dir,
 		const wchar_t* name,
@@ -1150,6 +1151,7 @@ namespace
 		FindClose(h);
 		return found;
 	}
+	// ==== END DEP-WALK ====
 
 	// Defined with the ArmOne block below; declared here because the
 	// record-then-commit pair sits above it in the file.
@@ -2283,6 +2285,7 @@ namespace IconSynth
 	// then reports a clean sheet for a folder full of uncovered icons. The
 	// documented cure is the \\?\ prefix plus buffers that can hold it, and
 	// this walk is the exact shape that bug had.
+	// ==== BEGIN BOOT-WALK (lifted verbatim by _tests/Test-BootWalk.ps1) ====
 	const int kLongPath = 1024;
 
 	// How many entries lived past the classic limit. This is the POSITIVE
@@ -2398,6 +2401,7 @@ namespace IconSynth
 		CloseHandle(f);
 		return ok;
 	}
+	// ==== END BOOT-WALK ====
 
 	// ---- THE SCAN ---------------------------------------------------------
 	// Two passes over the SAME file list: ours supplies the covered set, every
