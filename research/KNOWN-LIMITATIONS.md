@@ -95,6 +95,37 @@ regression suite that holds them in place is in `_tests/`.
 
 ## Performance and lifecycle
 
+- **Large plugin folders: the boot walk is now one pass per Plugins root, and
+  what it costs is in the log (Beta 1, 2026-09-07).** Before 4.9.0 the DLL's
+  constructor traversed the Plugins tree about sixteen times, opened every
+  DBPF, and then fetched, enlarged and held every third-party menu icon it had
+  found - a cost proportional to the player's custom-lot count that a 20 GB
+  folder could not pay inside a 32-bit address space. Now: `BootIndex` walks
+  each root once (long paths, junction loops capped), every consumer reads the
+  index, the icon scan opens each DBPF once per pass and reads only its index
+  (chunked, no size cap), and the enlargement is lazy - the factory wrap
+  enlarges an icon at its first read and holds nothing. The log's
+  `ScaleTier: boot phases` line names the cost per phase; `IconSynth: address
+  space` names the room left (and says so if the 4GB patch is missing). The
+  eager loop survives only for a game without a factory to wrap, under
+  `[IconSynth] EagerBudgetMB` (256). Measured against a synthetic tree, not a
+  real 20 GB install - see the ledger's Beta 1 A1 section for the numbers.
+- **Cloud placeholder files are counted, not opened.** A plugin folder under
+  OneDrive Files On-Demand holds files that are not on disk until opened;
+  opening each one from the scan would hydrate the whole folder. Such files
+  are named in the log (first 8) and their icons are unknown to the scan, so
+  `UNCOVERED` is a lower bound when `cloudOnly` is nonzero.
+- **A dependency more than three folders below Plugins reads as absent - and
+  now says so.** The dependency gates search three folders deep (NAM's
+  controller sits exactly there on a stock layout). A player who nests mods
+  one level deeper gets a log line naming the file and its depth instead of a
+  silent `dep ABSENT`; the package stays off until the folder is moved up.
+- **The load-order warning fires on evidence.** Every top-level folder that
+  sorts at or after the override folder under either case folding AND carries
+  entries at TGIs the armed override packages ship is named with the count and
+  the first file. A folder that merely sorts after ours but carries none of
+  those TGIs cannot beat us and is not named.
+
 - **The first city open of a session is slow with large plugin sets (~54 s).**
   Measured against the same session's second city open (9.2 s): 934 MB in
   1.9 M reads, one core saturated, and a 15-second stretch that does zero

@@ -21302,9 +21302,12 @@ release; the release checklist reads that folder first (RUNBOOK §6). The game
 writes these for free and they sat unread — two of our own probe crashes
 (`LogBubbleCallStack`) were never recorded, and `SpGetterLog` had been fixed
 while a *second* unguarded probe kept faulting. New build gate
-**`_tests\Test-ProbeDerefGuards.py`** fails the build on any speculative
-dereference (rebase / raw vptr read / vtable-slot call) outside a `__try`,
-which is the exact shape behind #12/#13/#14/#19.
+**`_tests\Test-ProbeDerefGuards.py`** fails the build on any raw vptr read,
+vtable-slot call or stack peek in probe/detour code (name `Log|Detour|Thunk|
+Probe|Cap|Census|Scan`, `Sp*`, or a body calling `_ReturnAddress()`) outside a
+`__try` or a `ProbeSafe` helper - the exact shape behind #12/#13/#14/#19;
+rebases and fixed-`.data` reads are info only, `// deref-ok: <reason>` waives
+a site into its own visible list. RUNBOOK §5 lists it.
 
 ## 2026-09-07 — Beta 1 A4: the fine-key lift, gate-verified, awaiting the user's eyes
 
@@ -21513,3 +21516,129 @@ sheets: the 21 lifted ones are keyed, 9 of those have integral 1.5x cells and
 a map difference of 0, the 12 129x129 frames have 64 differing map columns
 and 61 displaced key px each; the 9 unlifted are unkeyed) - the guard was the
 absence of a key, not a rule.
+
+---
+
+## 2026-09-07 — BETA 1 ADVERSARIAL PASS (lead's units B1–B4): the boot path, the probe crashes, and the instruments that were missing  [OPEN — awaiting the user's 1.5x fine-key verdict and one long soak session]
+
+**The three questions the user asked before Beta 1**, answered by measurement
+(the four audit agents' own sections sit beside this one: A1 boot harness, A2
+"shrink the 2x", A3 crash census, A4 fine-key variant):
+
+1. *20+ GB plugin folders* — **not seamless before this pass.** The DLL
+   constructor (which runs inside the game's own plugin scan) traversed the
+   Plugins tree ~16 times, opened every DBPF, and at PostAppInit fetched,
+   enlarged and HELD every uncovered third-party menu icon (~272 KB each at
+   3x, proportional to the player's custom-lot count; the ledger's only heavy
+   number, 45,945 files → 6,619 icons, is ~1.8 GB of a 4 GB address space).
+2. *1.5x sharpness* — "shrink the 2x" is provably the already-rejected `box`
+   (A2 measured it: ±1 LSB); the one real lever left is the fine-key refusal
+   (377 sheets, 32% of 1.5x pixels) and it is in the user's hands (A4).
+3. *Long sessions* — no leak class exists (zero GDI, epoch-cleared maps,
+   wrap-safe timers); four crashes in probe-only code were never written up,
+   the same instruction twice; nothing measured slow growth.
+
+### What shipped in the Beta 1 DLL (4.9.0-beta1), commit by commit
+
+**B1 — instruments (`6281797`).** `HEARTBEAT` every 5 min from `TickCheck`
+(private/peak/working-set MB, address space left, handles, GDI/USER objects,
+`scaleMap`/`menuBaseline` sizes, city count, epoch, the fixed-table fill
+levels, icon-synth counters, log KB); the log header carries the DATE and an
+hour-rollover marker (the per-line stamps never did - a session across
+midnight could not be matched to the game's own dated exception reports); a
+64 MB soft cap drops Debug/Trace to Info once, loudly; `PassGuard` (RAII) owns
+`inPass` at both sites; `UNRECOG` line once per id per city when an
+`id==0` window classifies Unrecognized (the "one flyout stuck at 1x after
+hours" shape the code already described at `UiSpike.cpp:16224`); the
+`DEV KEYS ACTIVE` roll-up at boot (every `[Probe]` key + the dev levers in
+`[UiSpike]` at non-default values, LogLevel ≥ 2); the RWX page note; the
+BALLOONFIX int16 range check. `Test-ShippingIniKeys.py` now refuses a seeded or
+shipped dev lever (its table is parsed out of the director source so the two
+cannot drift; positive control included).
+
+**B2 — the probe crashes (`6281797`).** Exception reports 2026-08-18 08:30 and
+2026-08-31 13:08 fault on the SAME bytes (`80 7e fb e8 …` = `cmp byte
+[esi-5],0E8h`) = `LogBubbleCallStack`: every stack dword in
+`[base+0x1000, base+0xA20000)` was dereferenced as code, but the exe's
+SizeOfImage is `0x81E000` - the top 2 MB of that window is unmapped. Both
+runs had `MissionBubbleFx=3` left in the live ini. Now `ProbeSafe`
+(`CodePatches.cpp`, top): the image span READ from the PE header, SEH-guarded
+`ReadPtr`/`ReadBytes`, `SafeVt`/`SafeSlot` that call a vtable slot only when
+both the vptr and the slot point into the image. Re-routed:
+`LogBubbleCallStack`, `SpHoverLog`, `SpTargetLog`, `SpDrawLog`, `PickDetour`,
+`FontGuidDetour`, `InstallVtCap`'s bound, `SpAttachLog`. A refused read logs
+"probe read refused, not a crash" and returns.
+
+**B3a — stage 2 and the index reads (`24297d1`).** The factory wrap
+(`FacReadThunk`, enlarges an uncovered icon in place at its FIRST Read) is
+installed BEFORE the loop and PROVEN in the same launch (`WRAP CONTROL`: a
+`GetPrivateResource` of the first fix-list key must count a hit through the
+wrap); when proven the eager loop does not run and `gHold` stays empty; the
+eager loop survives only as the fallback for a game without a factory to
+wrap, under `[IconSynth] EagerBudgetMB` (256) and an `availVirtual ≥ 512 MB`
+gate, and says how many it left unfixed. `AddTgi` pushes, the sets are
+sorted+unique once per pass, the diff is a merge, `InFixList` bisects.
+`ReadIconTgis` bounds the index by the FILE SIZE (64-bit) and reads it in
+64 KB chunks - the old `count < 200000` guard silently skipped mega-pack
+indexes. Cloud placeholders (`OFFLINE`/`RECALL_ON_*`) are counted and named,
+never opened (a scan must not hydrate a 20 GB folder). `boot phases` and
+`address space` lines (LAA from the PE header; a missing 4GB patch is named).
+`[Probe] IconSynthGcProbe=1` forces a collection and re-fetches;
+`[Probe] IconSynthNoWrap=1` exercises the fallback.
+
+**B3b — one walk (`b404c22`).** `IconSynth::BootIndex`: `Walk()` runs once per
+root (`\\?\`, 1024-wchar buffers, depth-capped at 48) and records every file;
+the dependency gates (`FindDep` - FindPluginFile's exact semantics: Documents
+root, depth ≤ 3, nothing under our folders, first hit in enumeration order,
+every copy counted, size = the first hit), the pause-remover check, the
+web-button check (both roots, memoised) and the icon scan all read the index;
+the index is freed at the end of the constructor. New: a dependency that
+exists only DEEPER than the 3-folder budget is named (it used to read
+ABSENT). The per-TGI conflict census: every entry under the armed override
+folder is collected (ours pass), every foreign DBPF's entries are checked
+against it (theirs pass), and the load-order warning now fires for EVERY
+top-level folder that sorts at/after ours under either case folding AND
+carries our override TGIs - with the count and the first file - instead of
+only when the Carbon skin was found; folders that merely sort after us but
+carry none of our TGIs are not named (a warning that fires on every install
+is noise). `hit` buffers widened to 1024 and the dependency cache moved off
+the 1 MB main-thread stack.
+
+**B4 — the last two 1.5x lanes on the old rules (`398ccfa`).** The
+mission-bubble lane (`build_selective_safe.py`, `--smooth-unkeyed` alone =
+whole-sheet Catmull-Rom at 1.5x, the pre-#200 default) and the third-party
+dialog lane (`build_dialog_static.py`, plain nearest by omission) take the
+corpus flag set. `Rebuild-Corpus.ps1` tees the exe summary to
+`tools/upscale/rebuild-summary-<f>.txt` (the hybrid-lane counts were
+load-bearing evidence that survived only in a gitignored preview tree).
+
+### Gates run on the Beta 1 tree (all green)
+
+`Test-ShippingIniKeys` (+ the new dev-lever check), `Test-PatchSiteBytes`,
+`Test-MutationCountInvariant`, `Test-StockTierContract`,
+`Test-SelectorContract`, `Test-BootStateValidate`, `Test-PackageGating`,
+`Test-FolderDiscovery` (mutation control red as required),
+`Test-ThirdPartyGates` (18 gates), `Test-DatIntegrity` (deployed == built,
+layout PAYLOAD). Deployed to the live tree 07:47 (armed at 3x; the 1.5x
+packages currently hold the A4 fine-key variant for the user's judgement).
+
+### What is NOT yet verified (and how it will be)
+
+- The live-install boot log on the new DLL: `BootIndex: ONE walk per root`,
+  `boot phases … TOTAL`, `WRAP CONTROL … PASS`, `stage 2 done … PRIMARY`,
+  `address space`, `HEARTBEAT #1`, `Dev keys: none active` (the user's ini
+  has `LogLevel=3` and a `[Probe]` section, so the roll-up will name them).
+  The dependency lines must be IDENTICAL to the 2026-09-02 log (`dep ok` ×7,
+  `dep ABSENT` ×12, same paths).
+- The 50k-file synthetic run (A1's tree under `-UserDir:`) with the DLL vs
+  the DLL aside: the plan's thresholds.
+- The fine-key lift on screen at 1.5x (law 117), then the C# change in
+  `Upscale2x.cs` and a full corpus + package rebuild with the B4 lanes.
+- One long soak session for the HEARTBEAT slope.
+
+Laws earned: **a walk that a test lifts standalone must stay Win32-only** (the
+discovery region records its own microseconds because `Test-FolderDiscovery`
+compiles it without PerfProbe); **a warning that fires on every install is
+noise - gate it on evidence** (the per-TGI census, not the folder name);
+**PROBE READS GO THROUGH ONE HELPER** - the SEH law written on 2026-08-18 had
+been applied to one function and the same crash shipped twice more.
