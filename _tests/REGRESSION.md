@@ -21884,3 +21884,26 @@ falls back FROM:
    8-line budget.
 The run was left to finish (never kill the game); its milestone is the cold,
 worst-case number and is recorded when it lands.
+
+### 08:30-10:17 - attempt 2 finished: the cold numbers, and 88 idle minutes of flat heartbeat
+
+From `run1-cold-dll.log` (preserved beside the tree) and the monitor:
+
+    BootIndex   50,134 files / 176 MB in 547 ms (60 past MAX_PATH; names arena 7.6 MB)
+    boot phases discover 802 | walk 549 | webbtn 563 | deps 7 | iconIndex 350,181 | diff 2 | TOTAL 352,107 ms
+    stage 2     EAGER FALLBACK (the defect): 716,703 ms, 177 fixed, 399,799 not found, 104 MB
+    window      08:36:18 (5.8 min after launch); responsive again 08:49 after the loop
+    exit        10:17:21 clean (user quit), no exception report
+
+- The 350 s index pass is the antivirus's first-open cost on 50,000 new files
+  (the harness's warm figure for the same pass: 3.3 s). It is paid once per
+  new file, by whichever process opens it first; a second boot is warm.
+- The game itself held 50,869 handles at the region screen: one per plugin
+  file it keeps open (no SC4DBPFLoading in the synthetic tree). Not ours,
+  and worth knowing - 50k plugin files cost the GAME a handle each.
+- HEARTBEAT #1..#18 over 88 minutes at the region screen (no city): private
+  744 -> 747 MB, peak 744 -> 748, handles 50,869 -> 50,896, GDI 215 flat,
+  USER 146 -> 144. The first real slope from the instrument, and it is zero -
+  idle at the region screen. A slope under play is still testers' to supply.
+- The sampler script's 600 s cap expired before the window responded; the
+  cap is now 2,400 s.
