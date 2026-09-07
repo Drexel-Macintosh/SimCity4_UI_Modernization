@@ -21907,3 +21907,25 @@ From `run1-cold-dll.log` (preserved beside the tree) and the monitor:
   idle at the region screen. A slope under play is still testers' to supply.
 - The sampler script's 600 s cap expired before the window responded; the
   cap is now 2,400 s.
+
+### 10:25 - the 50k in-game test CLOSED AS PASSED on the user's call; the warm DLL-vs-control delta was NOT run
+
+The user waived the two reruns ("it's working fine, revert everything"). What
+the test established, in order of strength:
+1. The reworked boot path runs correctly at 50,000 files in the real game:
+   one walk (547 ms), the index pass over every DBPF, dependency verdicts and
+   the load-order census, all from the index; the 200,000-entry index read.
+2. The eager-fallback defect (double enlargement, 400k fetches) was caught by
+   this run and is fixed and deployed; it cannot recur with a factory present.
+3. 88 idle minutes at the region screen: flat heartbeat (private +3 MB,
+   handles +27, GDI 0, USER -2).
+4. NOT measured: the warm DLL-vs-control milestone delta and peak-memory
+   delta (the plan's two pass/fail rows). The offline harness stands in for
+   it (4.0 s of boot work at 50k, 16x better than before), and the cold run's
+   350 s was the antivirus's first-open cost, paid once per new file by
+   whichever process opens it first.
+Evidence kept: `_tests/captures/bigplugins-dll-cold-50k-20260907.csv` and
+`_tests/captures/SC4UIScale-50k-cold-20260907.log`. The synthetic trees were
+deleted (`C:\dev\_scale`, regenerable by New-SyntheticPlugins.py); the live
+install is at its normal state (fixed DLL, v4.8.0 packages, AutoScale -> 2x,
+Test-DatIntegrity ALL PASS).
