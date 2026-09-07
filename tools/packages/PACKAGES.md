@@ -55,14 +55,14 @@ with only pixel dimensions and layout coordinates differing.
 
 | File | Entries | Size (bytes) | Notes |
 |---|---|---|---|
-| `z_SC4UIScale_SelectiveArt-15x.dat` | 696 | 17,589,383 | city-HUD selective art + edited scaled `.UI`; v4.8.0 (#203 straight-edge hybrid) — was 13,411,333 at v4.7.2, see below |
+| `z_SC4UIScale_SelectiveArt-15x.dat` | 696 | 17,589,344 | city-HUD selective art + edited scaled `.UI`; v4.10.0: the mission-bubble sheet joins the corpus rules (17,589,383 → 17,589,344 B); v4.8.0 (#203 straight-edge hybrid) — was 13,411,333 at v4.7.2, see below |
 | `z_SC4UIScale_DialogStatic-15x.dat` | 266 | 2,912,173 | region-screen + city dialogs, statically scaled; v4.8.0 — was 2,655,005 at v4.7.2 |
 | `z_SC4UIScale_ItemIcons-15x.dat` | 356 | 4,712,509 | menu/picker item icons (per tier since v2.24.0); byte-identical v4.7.2 → v4.8.0 |
 | `z_SC4UIScale_ItemIconsSub-15x.dat` | 130 | 1,410,334 | submenus-mod + other-plugin icons → `zzz-SC4UIScale\`; byte-identical v4.7.2 → v4.8.0 |
 | `z_SC4UIScale_ThirdPartyUI-15x.dat` | 2 | 72,566 | MoreBuildingStyles override → `zzz-`, gated |
 | `z_SC4UIScale_WarriorUI-15x.dat` | 4 | 33,161 | warrior god-terraforming override → `zzz-`, gated |
 | `z_SC4UIScale_SaveWarningUI-15x.dat` | 2 | 8,204 | cyclone-boom save-warning override → `zzz-`, gated |
-| `z_SC4UIScale_CamUI-15x.dat` | 22 | 1,556,558 | CAM's six replaced scripts + three CAM-only dialogs + 13 bitmaps → `zzz-`, gated |
+| `z_SC4UIScale_CamUI-15x.dat` | 22 | 2,667,038 | CAM's six replaced scripts + three CAM-only dialogs + 13 bitmaps → `zzz-`, gated; v4.10.0: its 8 art sheets take the corpus resampler rules at 1.5x (was 1,556,558 B on plain nearest) |
 | `z_SC4UIScale_CsiIcons-15x.dat` | 16 | 323,698 | U-Drive-It offer-balloon icons → `zzz-` |
 | `FontStyle-15x.ini` | 90 styles | 23,016 | `[Font Styles]` sizes = round(1x × 1.5); file range **14..48** |
 
