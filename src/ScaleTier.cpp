@@ -3153,6 +3153,10 @@ namespace IconSynth
 	// registered. Any failure at any step leaves the original registration
 	// untouched, so the worst case is the old broken-but-stable rendering.
 	int  gMade = 0, gMiss = 0, gSkip = 0, gFail = 0;
+	// v4.9.0 Beta 1: the per-icon step lines (Init refused / VERIFY / step
+	// FAILED) are budgeted - the 50k run printed them for every icon.
+	int  gIconStepLog = 0;
+	const int kIconStepLogMax = 8;
 
 	int RoundHalfUp(float v)
 	{
@@ -3291,9 +3295,13 @@ namespace IconSynth
 			src->Uninitialize();
 			ok = src->Init(static_cast<uint32_t>(newW),
 				static_cast<uint32_t>(newH), ct.bufferType, bpp);
-			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth:   in-place Init refused while initialised; after "
-				"Uninitialize it %s.", ok ? "SUCCEEDED" : "still FAILED");
+			if (gIconStepLog < kIconStepLogMax)
+			{
+				gIconStepLog++;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"IconSynth:   in-place Init refused while initialised; after "
+					"Uninitialize it %s.", ok ? "SUCCEEDED" : "still FAILED");
+			}
 		}
 		// Do not trust the return value alone - measure the object.
 		if (ok && (src->Width() != newW || src->Height() != newH))
@@ -3377,13 +3385,17 @@ namespace IconSynth
 			}
 		}
 		const cGZBufferColorType after = src->GetColorType();
-		Logger::Get().WriteLine(LogLevel::Info,
-			"IconSynth:   VERIFY %dx%d -> %dx%d: %d/24 sampled pixels WRONG. "
-			"type %d->%d bpp %u->%u.%s",
-			sw, sh, newW, newH, bad, static_cast<int>(ct.bufferType),
-			static_cast<int>(after.bufferType), bpp, src->GetBitsPerPixel(),
-			bad ? "" : " Readback matches the source exactly, so the pixels we"
-				" wrote are the pixels that are there.");
+		if (bad || gIconStepLog < kIconStepLogMax)
+		{
+			if (!bad) { gIconStepLog++; }
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth:   VERIFY %dx%d -> %dx%d: %d/24 sampled pixels WRONG. "
+				"type %d->%d bpp %u->%u.%s",
+				sw, sh, newW, newH, bad, static_cast<int>(ct.bufferType),
+				static_cast<int>(after.bufferType), bpp, src->GetBitsPerPixel(),
+				bad ? "" : " Readback matches the source exactly, so the pixels we"
+					" wrote are the pixels that are there.");
+		}
 		if (bad)
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -3410,8 +3422,12 @@ namespace IconSynth
 		cIGZBuffer* big = nullptr;
 		if (!gs->CreateBuffer(&big) || !big)
 		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth:   step CreateBuffer FAILED.");
+			if (gIconStepLog < kIconStepLogMax)
+			{
+				gIconStepLog++;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"IconSynth:   step CreateBuffer FAILED.");
+			}
 			return nullptr;
 		}
 
@@ -3422,11 +3438,15 @@ namespace IconSynth
 		if (!big->QueryInterface(GZIID_cIGZPersistResource,
 				reinterpret_cast<void**>(&res)) || !res)
 		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth:   step QueryInterface(cIGZPersistResource) FAILED - "
-				"a plain graphics buffer is not a persistable resource, so it "
-				"can never be REGISTERED under a TGI. The in-place path below "
-				"is the answer, not a bigger hammer here.");
+			if (gIconStepLog < kIconStepLogMax)
+			{
+				gIconStepLog++;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"IconSynth:   step QueryInterface(cIGZPersistResource) FAILED - "
+					"a plain graphics buffer is not a persistable resource, so it "
+					"can never be REGISTERED under a TGI. The in-place path below "
+					"is the answer, not a bigger hammer here.");
+			}
 			big->Release();
 			return nullptr;
 		}
@@ -3435,10 +3455,14 @@ namespace IconSynth
 		if (!big->Init(static_cast<uint32_t>(newW), static_cast<uint32_t>(newH),
 				ct.bufferType, src->GetBitsPerPixel()))
 		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth:   step Init(%d,%d,type %d,%u bpp) FAILED.",
-				newW, newH, static_cast<int>(ct.bufferType),
-				src->GetBitsPerPixel());
+			if (gIconStepLog < kIconStepLogMax)
+			{
+				gIconStepLog++;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"IconSynth:   step Init(%d,%d,type %d,%u bpp) FAILED.",
+					newW, newH, static_cast<int>(ct.bufferType),
+					src->GetBitsPerPixel());
+			}
 			res->Release();
 			big->Release();
 			return nullptr;
@@ -3741,25 +3765,51 @@ namespace IconSynth
 			rm->GetFactoryCount(),
 			noWrap ? " [Probe] IconSynthNoWrap=1: wrap DELIBERATELY not installed" : "");
 		if (haveFac && fac) { InstallFactoryWrap(fac, factor); }
+		// THE EAGER LOOP NEVER RUNS ONCE THE WRAP IS INSTALLED. Measured on the
+		// 50k synthetic tree (2026-09-07 08:30): the control's ONE key was a
+		// garbage payload, "not proven" sent the loop in, and every icon the
+		// loop fetched went through the wrap (enlarged) and was enlarged AGAIN
+		// (352x88 -> 704x176 in the log), 400,000 fetches deep. The control is
+		// advisory: it tries up to 8 keys and reports; the wrap, once
+		// installed, is the mechanism whether or not a probe key decoded.
 		bool wrapProven = false;
 		if (gFacInstance)
 		{
 			const unsigned hitsBefore = gFacHits;
-			const cGZPersistResourceKey wk(kIconType, kIconGroup, gFixList.data[0]);
-			cIGZBuffer* wb = nullptr;
-			const bool got = rm->GetPrivateResource(wk, GZIID_cIGZBuffer,
-				reinterpret_cast<void**>(&wb), 0, nullptr) && wb;
-			wrapProven = got && (gFacHits > hitsBefore);
+			int tried = 0;
+			uint32_t hitKey = 0;
+			int hitW = -1, hitH = -1;
+			for (int k = 0; k < gFixList.n && k < 8 && !wrapProven; k++)
+			{
+				tried++;
+				const cGZPersistResourceKey wk(kIconType, kIconGroup, gFixList.data[k]);
+				cIGZBuffer* wb = nullptr;
+				const bool got = rm->GetPrivateResource(wk, GZIID_cIGZBuffer,
+					reinterpret_cast<void**>(&wb), 0, nullptr) && wb;
+				if (got && gFacHits > hitsBefore)
+				{
+					wrapProven = true;
+					hitKey = gFixList.data[k];
+					hitW = wb->Width();
+					hitH = wb->Height();
+				}
+				if (wb) { wb->Release(); }
+			}
 			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth: stage 2 WRAP CONTROL {%08X}: GetPrivateResource %s "
-				"%dx%d, wrap hits %u -> %u - %s.",
-				gFixList.data[0], got ? "read back" : "FAILED",
-				got ? wb->Width() : -1, got ? wb->Height() : -1,
-				hitsBefore, gFacHits,
-				wrapProven
-					? "PASS: the wrap is PRIMARY (lazy, in place, nothing held)"
-					: "NOT PROVEN (no hit through the wrap): budgeted eager fallback");
-			if (wb) { wb->Release(); }
+				"IconSynth: stage 2 WRAP CONTROL: %d key(s) fetched privately, wrap "
+				"hits %u -> %u - %s%s. The wrap is PRIMARY either way: every "
+				"uncovered icon enlarges at its first read, nothing is fetched or "
+				"held here.",
+				tried, hitsBefore, gFacHits,
+				wrapProven ? "PASS on {" : "INCONCLUSIVE (none of the probed keys "
+					"decoded through the wrap - garbage or absent payloads)",
+				wrapProven ? "" : "");
+			if (wrapProven)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"IconSynth: stage 2 WRAP CONTROL hit {%08X} read back %dx%d.",
+					hitKey, hitW, hitH);
+			}
 		}
 		else
 		{
@@ -3775,7 +3825,15 @@ namespace IconSynth
 		unsigned long long eagerBytes = 0;
 		int leftUnfixed = 0;
 		bool eagerRefused = false;
-		if (!wrapProven && msx.ullAvailVirtual < 512ull * 1024ull * 1024ull)
+		// (2) The no-wrap loop is bounded three ways: bytes, fetch count and
+		// wall time. A fetch that misses costs the manager a cache entry too,
+		// so the count matters even when nothing is enlarged.
+		const int maxFetches = GetPrivateProfileIntW(L"IconSynth", L"EagerMaxFetches", 4096, iniPath);
+		const DWORD maxMs = static_cast<DWORD>(GetPrivateProfileIntW(L"IconSynth", L"EagerMaxMs", 2000, iniPath));
+		int fetches = 0;
+		const DWORD eagerT0 = GetTickCount();
+		const bool eagerAllowed = (gFacInstance == nullptr);
+		if (!eagerAllowed && msx.ullAvailVirtual < 512ull * 1024ull * 1024ull)
 		{
 			eagerRefused = true;
 			leftUnfixed = gFixList.n;
@@ -3816,8 +3874,14 @@ namespace IconSynth
 			}
 		}
 
-		for (int i = 0; !wrapProven && !eagerRefused && i < gFixList.n; i++)
+		for (int i = 0; eagerAllowed && !eagerRefused && i < gFixList.n; i++)
 		{
+			if (fetches >= maxFetches || GetTickCount() - eagerT0 > maxMs)
+			{
+				leftUnfixed = gFixList.n - i;
+				break;
+			}
+			fetches++;
 			const uint32_t inst = gFixList.data[i];
 			const cGZPersistResourceKey key(kIconType, kIconGroup, inst);
 
@@ -3994,27 +4058,27 @@ namespace IconSynth
 		// "registered" was the wrong word once this grew a second path, and a
 		// log line that names the wrong mechanism sends the next reader to the
 		// wrong code (#77). Say FIXED, and say how.
-		if (wrapProven)
+		if (!eagerAllowed)
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth: stage 2 done in %u ms - factory wrap PRIMARY: %d "
-				"uncovered icons enlarge lazily at first Read, nothing fetched "
-				"eagerly, nothing held (v4.9.0 Beta 1; before, every one was "
-				"fetched, enlarged and held here).",
-				GetTickCount() - t0, gFixList.n);
+				"IconSynth: stage 2 done in %u ms - factory wrap PRIMARY (control "
+				"%s): %d uncovered icons enlarge lazily at first Read, nothing "
+				"fetched eagerly, nothing held (v4.9.0 Beta 1; before, every one "
+				"was fetched, enlarged and held here).",
+				GetTickCount() - t0, wrapProven ? "PASS" : "inconclusive",
+				gFixList.n);
 		}
 		else
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth: stage 2 done in %u ms - EAGER FALLBACK (wrap %s): "
-				"fixed=%d notFound=%d skipped=%d failed=%d of %d uncovered under "
-				"a %u MB budget (%u MB used); %d left UNFIXED - those render "
-				"doubled at f=%.2f. Raise [IconSynth] EagerBudgetMB or reduce "
-				"lots. Fixed icons are held by reference so the cache cannot "
-				"drop them back to 1x.",
+				"IconSynth: stage 2 done in %u ms - EAGER FALLBACK (no factory to "
+				"wrap): fixed=%d notFound=%d skipped=%d failed=%d of %d uncovered; "
+				"%d fetches under a %u MB / %d-fetch / %u ms budget (%u MB used); "
+				"%d left UNFIXED - those render doubled at f=%.2f. Fixed icons are "
+				"held by reference so the cache cannot drop them back to 1x.",
 				GetTickCount() - t0,
-				gFacInstance ? "installed, not proven" : "absent",
-				gMade, gMiss, gSkip, gFail, gFixList.n, budgetMb,
+				gMade, gMiss, gSkip, gFail, gFixList.n, fetches, budgetMb,
+				maxFetches, static_cast<unsigned>(maxMs),
 				static_cast<unsigned>(eagerBytes / (1024ull * 1024ull)),
 				leftUnfixed, factor);
 		}

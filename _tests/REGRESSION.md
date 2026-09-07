@@ -21849,3 +21849,38 @@ Plugins (AutoScale reads it) and reports whether Regions and our log appeared
 (the positive control that the user dir was honoured). The instrument
 control was also wrong (it demanded the FIRST sample > 50 MB; the first
 sample is taken 2 s in, at 18 MB) - now any sample > 50 MB.
+
+### 08:30 - the 50k in-game run, attempt 2 (the user dir honoured): MY FALLBACK RAN WITH THE WRAP INSTALLED
+
+The user dir was honoured this time (Regions/Albums created, our log written in
+the synthetic tree). Timeline from that log and the 30 s monitor:
+
+- 08:30:28 the DLL ctor's icon index pass begins (the big 200,000-entry index
+  read in 62 chunks - the new reader works); the pass over 50,000 COLD files
+  took ~5.8 min (CPU 3%, I/O-bound: first open of every file by the elevated
+  process, this machine's antivirus at ~10 ms per first open). The harness's
+  3.3 s was warm-cache; a first boot after installing 50k new files pays the
+  cold cost ONCE.
+- 08:36:18 window up. 08:37:08 stage 2: `WRAP CONTROL {40000008}:
+  GetPrivateResource FAILED -1x-1, wrap hits 0 -> 0 - NOT PROVEN` - the one
+  probe key was a 1-byte garbage payload (the synthetic tree's non-PNG icons),
+  so the wrap was installed but "not proven" and my budgeted eager fallback
+  ran ANYWAY - with the wrap live. Every icon the loop fetched went through the
+  wrap (enlarged 176x44 -> 352x88) and was then enlarged AGAIN by the loop
+  (`VERIFY 352x88 -> 704x176`): double enlargement, 354 VERIFY lines, and the
+  loop's byte budget never bit because misses cost no bytes - it fetched all
+  400,000 keys at ~500/s (13 minutes), private bytes 40 -> 706 MB (the
+  manager's cache filling with 400k fetched objects, exactly the address-space
+  shape the rework exists to prevent).
+
+Three defects, one cause - a fallback that could run beside the mechanism it
+falls back FROM:
+1. The eager loop now runs ONLY when no factory could be wrapped
+   (`eagerAllowed = gFacInstance == nullptr`). The WRAP CONTROL probes up to 8
+   keys and is advisory (PASS / INCONCLUSIVE); the wrap is primary either way.
+2. The no-wrap loop is bounded by fetch COUNT (`[IconSynth] EagerMaxFetches`,
+   4096) and wall time (`EagerMaxMs`, 2000) as well as bytes.
+3. The per-icon step lines (Init refused / VERIFY / step FAILED) share an
+   8-line budget.
+The run was left to finish (never kill the game); its milestone is the cold,
+worst-case number and is recorded when it lands.
