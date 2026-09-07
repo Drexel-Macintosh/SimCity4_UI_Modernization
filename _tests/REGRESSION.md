@@ -21833,3 +21833,19 @@ not a slope. The instrument is in the shipped build and the README asks beta
 testers to attach the log, so the slope will come from their sessions; it is
 recorded here as the one Beta 1 verification that is instrumented but not yet
 measured.
+
+### 08:21 - the 50k in-game run, attempt 1: the game's -UserDir needs the TRAILING BACKSLASH
+
+`Test-BigPlugins-InGame.ps1` launched with `-UserDir:"C:\dev\_scale\UserDir-50000"`
+(no trailing backslash). The game ran (main window at +18.8 s, peak 234 MB),
+loaded NO plugin DLL from any tree (no third-party log in Documents\Plugins
+touched, no log of ours anywhere), wrote nothing under the user dir - and
+left FOUR artefacts beside it: `UserDir-50000HTTPCache`, `UserDir-50000Plugins`,
+`UserDir-50000Regions`, `UserDir-50000SimCity 4.cfg`. The game CONCATENATES its
+sub-paths onto the -UserDir value without a separator; the documented form
+`-UserDir:"D:\SC4\"` carries the backslash for that reason. The script now
+passes `-UserDir:"<Root>\"`, copies SC4GraphicsOptions.ini into the synthetic
+Plugins (AutoScale reads it) and reports whether Regions and our log appeared
+(the positive control that the user dir was honoured). The instrument
+control was also wrong (it demanded the FIRST sample > 50 MB; the first
+sample is taken 2 s in, at 18 MB) - now any sample > 50 MB.
