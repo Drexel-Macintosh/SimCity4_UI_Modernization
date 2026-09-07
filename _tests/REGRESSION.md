@@ -21787,3 +21787,20 @@ Deploy-OnGameClose + Test-DatIntegrity), and Beta 1 ships the 1.5x tier
 exactly as v4.8.0 shipped it. The variant tree and packages stay in
 `tools/upscale/preview-15x-thin_h_fk` / `tools/packages/15x-variants/thin_h_fk`
 for a later 1.5x launch; law 117 stands - it does not ship unseen.
+
+### 08:05 - FIRST LIVE BOOT of 4.9.0-beta1 (the user, at 2x, 2400x1600 borderless)
+
+Read from `010-SC4UIScale/SC4UIScale.log` (4,323 lines, 100 s session, LogLevel=3):
+
+- `BootIndex: ONE walk per root - Documents 473 files / 2.2 GB in 16 ms, install walked too; 0 past MAX_PATH; 48 names KB`
+- `ScaleTier: boot phases - discover 62 ms | walk 16 ms | webbtn 16 ms | deps 0 ms | iconIndex 164 ms | iconDiff 0 ms | TOTAL 259 ms`
+  (discovery's 62 ms = ClassifyDir's 8 FindFirstFile per directory - the plan's optional follow-up; the walk itself is 16 ms)
+- `IconSynth: scanned 478 files / 2.2 GB in 157 ms ... ours=513 theirs=113 UNCOVERED=0` - same counts as 2026-09-02 (110 ms then; the four old walks on 473 files were never the cost on THIS tree - the 50k tree is where they were).
+- The 18 dependency lines are IDENTICAL to the 2026-09-02 log (diff empty): 5 `dep ok` with the same paths, 13 `dep ABSENT`.
+- `HEARTBEAT #1 t=+0min privMB=238 peakPrivMB=238 wsMB=292 availVirtMB=3156 handles=1100 gdi=231 user=150 | scaleMap=0 ...` (LAA confirmed by the 3.1 GB of virtual space).
+- `DEV KEYS ACTIVE (2): [Probe] ViewListRepeat=0, [Logging] LogLevel=3` - the roll-up works; a `[Probe]` key at 0 was listed as "active", which it is not (fixed below).
+- `BootState REPAIR: ScaleFactor 3.00 does not fit 2400x1600 ... Falling back to Auto, which picks 2.00` - the user's display is now 2400x1600 and the manual 3x did not fit; the repair path did its job.
+- `stage 2 - nothing uncovered, no work to do` (UNCOVERED=0 here; the WRAP CONTROL runs only when there is a fix list - the 50k tree has 399,976).
+- No WARN/FAIL/ERROR of ours; clean 3-phase shutdown; no new exception report.
+
+**One defect found by its own instrument:** `ScaleTier: load-order census - 8 top-level folders with DBPFs, 0 sort at/after 'zzz-SC4UIScale', 0 of those carry our override TGIs (0 override TGIs armed)` - ZERO override TGIs armed on a tree with five armed override packages. The census lived at the tail of SyncStaticLayers, which the director runs BEFORE ScanUncoveredIcons - the scan that collects the override TGIs. Gated on a condition that had not happened yet: the neighbour-gate shape, fifth occurrence in this file. Moved to `ScaleTier::LoadOrderCensus(tierActive)`, called by the director right after the scan (says "skipped at the stock tier" instead of printing zeros). Rebuilt 946,688 B, all gates green, redeployed 08:09.

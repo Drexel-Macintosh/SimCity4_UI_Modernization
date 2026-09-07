@@ -240,6 +240,10 @@ namespace ScaleTier
 	// v4.9.0 Beta 1: free the one-walk boot index (names arena) after the
 	// last boot consumer; safe to call any time - the next consumer rebuilds.
 	void ReleaseBootIndex();
+	// v4.9.0 Beta 1: the load-order census - every top-level folder that sorts
+	// after ours AND carries our override TGIs. Call AFTER ScanUncoveredIcons
+	// (that scan collects the TGIs); pass false at the stock tier.
+	void LoadOrderCensus(bool tierActive);
 	// v4.9.0 Beta 1: the icon-synth counters for the heartbeat line -
 	// uncovered icons in the fix list, objects held by reference, factory
 	// wrap reads and hits this session.

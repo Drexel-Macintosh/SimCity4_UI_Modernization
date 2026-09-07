@@ -4879,6 +4879,126 @@ namespace ScaleTier
 		return s_present;
 	}
 
+	// v4.9.0 Beta 1: the load-order census, AFTER the icon scan. It first
+	// lived at the tail of SyncStaticLayers and printed "(0 override TGIs
+	// armed)" on its very first live boot: SyncStaticLayers runs before
+	// ScanUncoveredIcons, which is what collects the override TGIs - the census
+	// was gated on a condition that had not happened yet (this project's
+	// neighbour-gate law, fifth occurrence). The director calls this right
+	// after the scan; at the stock tier the scan does not run and the census
+	// says so instead of printing zeros.
+	bool gCarbonSkinPresent = false;
+	wchar_t gCarbonSkinPath[IconSynth::kLongPath] = {};
+
+	void LoadOrderCensus(bool tierActive)
+	{
+		if (!tierActive)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: load-order census skipped at the stock tier (no override "
+				"package is armed, so nothing can be beaten).");
+			return;
+		}
+		wchar_t pluginsRoot[MAX_PATH];
+		PluginsRoot(pluginsRoot, MAX_PATH);
+		const bool carbonSkinPresent = gCarbonSkinPresent;
+		const wchar_t* carbonSkinPath = gCarbonSkinPath;
+	// v4.9.0 Beta 1 (R5) - THE LOAD-ORDER WARNING, FOR EVERY FOLDER, ON
+	// EVIDENCE. Our overrides win only because our top-level folder sorts
+	// last. Until now the check ran only when the Carbon skin was found
+	// and looked only at the skin's folder; a `zzz_`, `zzzz` or `~` folder
+	// from any other hand install beat us silently. Now every top-level
+	// Documents folder that (a) sorts at/after ours under EITHER case
+	// folding of the game's comparator ('_' 0x5F sits between the upper
+	// and lower case letters, so a name like `z____scoty_mods` sorts
+	// before us upcased and after us lowercased) AND (b) actually CARRIES
+	// entries at TGIs our armed override packages ship (the per-TGI census
+	// the icon scan now takes) is named, with the count. Folders that
+	// merely sort after us but carry none of our TGIs cannot hurt us and
+	// are not named - a warning that fires on every install is noise.
+	{
+		wchar_t ourTop[MAX_PATH] = {};
+		OverrideTopLevel(ourTop, MAX_PATH);
+		auto foldCmp = [](const wchar_t* a, const wchar_t* b, bool upper) -> int {
+			for (;; ++a, ++b)
+			{
+				wchar_t ca = *a, cb = *b;
+				if (upper)
+				{
+					if (ca >= L'a' && ca <= L'z') { ca = ca - 32; }
+					if (cb >= L'a' && cb <= L'z') { cb = cb - 32; }
+				}
+				else
+				{
+					if (ca >= L'A' && ca <= L'Z') { ca = ca + 32; }
+					if (cb >= L'A' && cb <= L'Z') { cb = cb + 32; }
+				}
+				if (ca != cb) { return (ca < cb) ? -1 : 1; }
+				if (ca == 0) { return 0; }
+			}
+		};
+		std::vector<IconSynth::BootIndex::TopFolder> tops;
+		IconSynth::BootIndex::TopLevelFolders(tops);
+		int warned = 0, candidates = 0;
+		for (const IconSynth::BootIndex::TopFolder& tf : tops)
+		{
+			if (ourTop[0] && _wcsicmp(tf.name, ourTop) == 0) { continue; }
+			if (_wcsicmp(tf.name, gOurDirs.earlyLeaf) == 0) { continue; }
+			const int cUp = foldCmp(tf.name, ourTop, true);
+			const int cLo = foldCmp(tf.name, ourTop, false);
+			if (cUp < 0 && cLo < 0) { continue; }
+			candidates++;
+			if (tf.conflicts == 0) { continue; }
+			warned++;
+			if (warned <= 8)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"ScaleTier: WARNING - top-level folder '%ls' (%u DBPF) sorts "
+					"AT/AFTER our override folder '%ls' (upcased cmp %d, lowercased "
+					"cmp %d) AND carries %u entries at TGIs our armed overrides "
+					"ship (first: %ls). Under that ordering its 1x art/layouts "
+					"win over ours at every scale factor. Rename it to sort "
+					"before '%ls'.",
+					tf.name, tf.dbpf, ourTop, cUp, cLo, tf.conflicts,
+					tf.firstConflict, ourTop);
+			}
+		}
+		if (warned > 8)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: WARNING - %d more top-level folders sort after ours "
+				"and carry our override TGIs (first 8 named above).", warned - 8);
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"ScaleTier: load-order census - %u top-level folders with DBPFs, %d "
+			"sort at/after '%ls', %d of those carry our override TGIs "
+			"(%u override TGIs armed).%s",
+			static_cast<unsigned>(tops.size()), candidates, ourTop, warned,
+			static_cast<unsigned>(IconSynth::gOurOverrideTgis.size()),
+			(candidates > 0 && warned == 0)
+				? " None of them can override us - no warning."
+				: "");
+		if (carbonSkinPresent && carbonSkinPath[0])
+		{
+			// The skin-specific advice, kept: the supported folder name.
+			const size_t rootLen = wcslen(pluginsRoot);
+			if (_wcsnicmp(carbonSkinPath, pluginsRoot, rootLen) == 0)
+			{
+				wchar_t folder[MAX_PATH] = {};
+				wcscpy_s(folder, MAX_PATH, carbonSkinPath + rootLen);
+				if (wchar_t* slash = wcschr(folder, L'\\')) { *slash = L'\0'; }
+				if (foldCmp(folder, ourTop, true) >= 0 || foldCmp(folder, ourTop, false) >= 0)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"ScaleTier:   ^ that is the Carbon skin's folder ('%ls'); the "
+						"supported name is zz-scoty-mods, which sorts before ours "
+						"under both foldings.", folder);
+				}
+			}
+		}
+	}
+	}
+
 	void SyncStaticLayers(float factor)
 	{
 		// PACKAGES live beside the DLL in Documents\SimCity 4\Plugins (dats
@@ -5157,100 +5277,11 @@ namespace ScaleTier
 				break;
 			}
 		}
-		// v4.9.0 Beta 1 (R5) - THE LOAD-ORDER WARNING, FOR EVERY FOLDER, ON
-		// EVIDENCE. Our overrides win only because our top-level folder sorts
-		// last. Until now the check ran only when the Carbon skin was found
-		// and looked only at the skin's folder; a `zzz_`, `zzzz` or `~` folder
-		// from any other hand install beat us silently. Now every top-level
-		// Documents folder that (a) sorts at/after ours under EITHER case
-		// folding of the game's comparator ('_' 0x5F sits between the upper
-		// and lower case letters, so a name like `z____scoty_mods` sorts
-		// before us upcased and after us lowercased) AND (b) actually CARRIES
-		// entries at TGIs our armed override packages ship (the per-TGI census
-		// the icon scan now takes) is named, with the count. Folders that
-		// merely sort after us but carry none of our TGIs cannot hurt us and
-		// are not named - a warning that fires on every install is noise.
-		{
-			wchar_t ourTop[MAX_PATH] = {};
-			OverrideTopLevel(ourTop, MAX_PATH);
-			auto foldCmp = [](const wchar_t* a, const wchar_t* b, bool upper) -> int {
-				for (;; ++a, ++b)
-				{
-					wchar_t ca = *a, cb = *b;
-					if (upper)
-					{
-						if (ca >= L'a' && ca <= L'z') { ca = ca - 32; }
-						if (cb >= L'a' && cb <= L'z') { cb = cb - 32; }
-					}
-					else
-					{
-						if (ca >= L'A' && ca <= L'Z') { ca = ca + 32; }
-						if (cb >= L'A' && cb <= L'Z') { cb = cb + 32; }
-					}
-					if (ca != cb) { return (ca < cb) ? -1 : 1; }
-					if (ca == 0) { return 0; }
-				}
-			};
-			std::vector<IconSynth::BootIndex::TopFolder> tops;
-			IconSynth::BootIndex::TopLevelFolders(tops);
-			int warned = 0, candidates = 0;
-			for (const IconSynth::BootIndex::TopFolder& tf : tops)
-			{
-				if (ourTop[0] && _wcsicmp(tf.name, ourTop) == 0) { continue; }
-				if (_wcsicmp(tf.name, gOurDirs.earlyLeaf) == 0) { continue; }
-				const int cUp = foldCmp(tf.name, ourTop, true);
-				const int cLo = foldCmp(tf.name, ourTop, false);
-				if (cUp < 0 && cLo < 0) { continue; }
-				candidates++;
-				if (tf.conflicts == 0) { continue; }
-				warned++;
-				if (warned <= 8)
-				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"ScaleTier: WARNING - top-level folder '%ls' (%u DBPF) sorts "
-						"AT/AFTER our override folder '%ls' (upcased cmp %d, lowercased "
-						"cmp %d) AND carries %u entries at TGIs our armed overrides "
-						"ship (first: %ls). Under that ordering its 1x art/layouts "
-						"win over ours at every scale factor. Rename it to sort "
-						"before '%ls'.",
-						tf.name, tf.dbpf, ourTop, cUp, cLo, tf.conflicts,
-						tf.firstConflict, ourTop);
-				}
-			}
-			if (warned > 8)
-			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"ScaleTier: WARNING - %d more top-level folders sort after ours "
-					"and carry our override TGIs (first 8 named above).", warned - 8);
-			}
-			Logger::Get().WriteLine(LogLevel::Info,
-				"ScaleTier: load-order census - %u top-level folders with DBPFs, %d "
-				"sort at/after '%ls', %d of those carry our override TGIs "
-				"(%u override TGIs armed).%s",
-				static_cast<unsigned>(tops.size()), candidates, ourTop, warned,
-				static_cast<unsigned>(IconSynth::gOurOverrideTgis.size()),
-				(candidates > 0 && warned == 0)
-					? " None of them can override us - no warning."
-					: "");
-			if (carbonSkinPresent && carbonSkinPath[0])
-			{
-				// The skin-specific advice, kept: the supported folder name.
-				const size_t rootLen = wcslen(pluginsRoot);
-				if (_wcsnicmp(carbonSkinPath, pluginsRoot, rootLen) == 0)
-				{
-					wchar_t folder[MAX_PATH] = {};
-					wcscpy_s(folder, MAX_PATH, carbonSkinPath + rootLen);
-					if (wchar_t* slash = wcschr(folder, L'\\')) { *slash = L'\0'; }
-					if (foldCmp(folder, ourTop, true) >= 0 || foldCmp(folder, ourTop, false) >= 0)
-					{
-						Logger::Get().WriteLine(LogLevel::Info,
-							"ScaleTier:   ^ that is the Carbon skin's folder ('%ls'); the "
-							"supported name is zz-scoty-mods, which sorts before ours "
-							"under both foldings.", folder);
-					}
-				}
-			}
-		}
+		// v4.9.0 Beta 1: the load-order census moved to LoadOrderCensus(),
+		// which the director runs AFTER the icon scan has collected the
+		// override TGIs. Only the skin state is recorded here.
+		gCarbonSkinPresent = carbonSkinPresent;
+		wcscpy_s(gCarbonSkinPath, IconSynth::kLongPath, carbonSkinPath);
 		if (carbonSkinPresent)
 		{
 			// Our override folder is NOT named zzz-SC4UIScale under a package

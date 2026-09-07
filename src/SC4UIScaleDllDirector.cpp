@@ -197,6 +197,12 @@ namespace
 			if (*p == L';' || *p == L'#') { continue; }
 			const wchar_t* eq = wcschr(p, L'=');
 			if (!eq) { continue; }
+			{
+				// A probe key at 0 (or empty) is OFF - not "active".
+				wchar_t* endv = nullptr;
+				const double pv = wcstod(eq + 1, &endv);
+				if (eq[1] == 0 || (endv && *endv == 0 && pv == 0.0)) { continue; }
+			}
 			wchar_t key[128] = {};
 			const size_t kl = static_cast<size_t>(eq - p) < 127 ? static_cast<size_t>(eq - p) : 127;
 			wcsncpy_s(key, p, kl);
@@ -791,6 +797,9 @@ public:
 			{
 				ScaleTier::ScanUncoveredIcons(settings.spikeScaleFactor);
 			}
+			// v4.9.0 Beta 1: the load-order census needs the override TGIs the
+			// scan above collected - so it runs here, not inside SyncStaticLayers.
+			ScaleTier::LoadOrderCensus(tierActive);
 
 			// #138 INTRO VIDEO - PATCHED HERE, NOT IN PostAppInit.
 			// The game builds cSC4WinIntroVideoScreen during its own
