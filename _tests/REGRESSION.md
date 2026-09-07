@@ -21804,3 +21804,32 @@ Read from `010-SC4UIScale/SC4UIScale.log` (4,323 lines, 100 s session, LogLevel=
 - No WARN/FAIL/ERROR of ours; clean 3-phase shutdown; no new exception report.
 
 **One defect found by its own instrument:** `ScaleTier: load-order census - 8 top-level folders with DBPFs, 0 sort at/after 'zzz-SC4UIScale', 0 of those carry our override TGIs (0 override TGIs armed)` - ZERO override TGIs armed on a tree with five armed override packages. The census lived at the tail of SyncStaticLayers, which the director runs BEFORE ScanUncoveredIcons - the scan that collects the override TGIs. Gated on a condition that had not happened yet: the neighbour-gate shape, fifth occurrence in this file. Moved to `ScaleTier::LoadOrderCensus(tierActive)`, called by the director right after the scan (says "skipped at the stock tier" instead of printing zeros). Rebuilt 946,688 B, all gates green, redeployed 08:09.
+
+### 08:11-08:17 - the "soak" (the user chose 6.5 minutes over 2 hours) - the instruments work; the slope is still open
+
+Two heartbeats, two city loads, LogLevel=3:
+
+    #1 +0min  priv 237 MB  peak 237  ws 291  availVirt 3176 MB  handles 1077  gdi 230  user 147  scaleMap 0     cities 0
+    #2 +5min  priv 672 MB  peak 702  ws 725  availVirt 2713 MB  handles 1128  gdi 231  user 154  scaleMap 1114  cities 2
+
+- The +435 MB between the samples is two city loads (the game's own city
+  data; 529 windows scaled per city). Handles +51, GDI +1, USER +7 across
+  two city loads - no handle class moving. `scaleMap` holds 1,114 records
+  after two cities (~557 per city, by design never cleared between cities;
+  ~90 KB, not a memory concern - the S3 collision class is the concern, and
+  the UNRECOG line is its instrument).
+- UNRECOG fired twice (ids 0xCA5A415E / 0x6A5A4156, `now 1x18, record orig
+  1x9 scaled 2x18`): windows the game collapsed to 1 px wide, correctly left
+  alone; non-zero ids, so NOT the anonymous-window collision. The line works.
+- Log: 1.7 MB in 6.5 minutes at LogLevel=3 (~17 MB/h; the 64 MB soft cap
+  would fire after ~4 h at this level; the shipping default is LogLevel=1).
+- Load-order census after the fix: `206 override TGIs armed`, 0 folders
+  sort after ours, 0 conflicts. Boot phases TOTAL 161 ms this time.
+- No warnings, clean shutdown, no new exception report.
+
+**What this session cannot say:** whether anything grows over hours. Two
+samples five minutes apart, the second taken right after two city loads, are
+not a slope. The instrument is in the shipped build and the README asks beta
+testers to attach the log, so the slope will come from their sessions; it is
+recorded here as the one Beta 1 verification that is instrumented but not yet
+measured.
