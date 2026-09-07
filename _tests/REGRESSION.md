@@ -21929,3 +21929,28 @@ Evidence kept: `_tests/captures/bigplugins-dll-cold-50k-20260907.csv` and
 deleted (`C:\dev\_scale`, regenerable by New-SyntheticPlugins.py); the live
 install is at its normal state (fixed DLL, v4.8.0 packages, AutoScale -> 2x,
 Test-DatIntegrity ALL PASS).
+
+### 10:25 - RELEASE 4.10.0 (the user: "don't call it a beta, call it v4.10.0")
+
+Renamed everywhere (macro, CHANGELOG, VERSION-HISTORY, comments; the ledger's
+dated section titles keep their working name). The 1.5x packages were REBUILT
+with the B4 builder lanes (`Test-Builders.ps1 -Factor 1.5`: 13/13 builders,
+GATE PASS) and diffed against the deployed v4.8.0 payloads entry by entry:
+
+- SelectiveArt-15x: 696 entries, exactly ONE changed - {856ddbac,46a006b0,094ac89a},
+  the mission bubble (Catmull-Rom -> the corpus rules). VERDICT PASS.
+- CamUI-15x: 22 entries, 8 PNG sheets changed (the third-party art lane,
+  nearest -> the corpus rules): 00237ee7/0ea08a4a, 3e53026e/274ddedd,
+  40ddc72b/e740ca77, 46a006b0/ea7f0eae, bd85e83a/a6122c8d, be484ac7/7aeb8e7d,
+  c3e123bd/cfe4e42f, ca120e98/2d7c4d1b. Package 1,556,558 -> 2,667,038 B
+  (the PNG-encoder/blend growth of #203). VERDICT PASS with that expect list.
+- DialogStatic/ItemIcons/ItemIconsSub/SaveWarningUI/RegionCensusUI/
+  ThirdPartyUI/WarriorUI-15x: byte-identical sizes, no PNG lane touched.
+- 2x and 3x packages: not rebuilt, untouched (timestamps 08-29/08-30).
+- gate_key_integrity --tier 1.5: PASS (2206 scanned, keyed 466).
+
+Law 117 note: the 8 CamUI sheets and the bubble are on-screen at 1.5x only;
+the user tests at 2x now, so they ship gate-verified, not launch-verified,
+exactly as #203's two rule changes did - said here.
+Test-ThirdPartyGates reads "state file stale" until the next boot re-arms
+(files were deployed after the last boot) - expected, clears on launch.

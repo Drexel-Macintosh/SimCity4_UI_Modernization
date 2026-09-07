@@ -1,6 +1,6 @@
 # Region-screen dialogs -- static 1.5x (`z_SC4UIScale_DialogStatic-15x.dat`)
 
-Built 2026-09-01 by `build_dialog_static.py`. STANDALONE package: the game creates each
+Built 2026-09-07 by `build_dialog_static.py`. STANDALONE package: the game creates each
 of the 164 region-screen dialogs/popups already doubled from an edited copy of its
 .UI script and lays out the children itself. No runtime scaling involved; runtime
 docking of the region-dialog roots must stay disabled while testing. The recipe is
@@ -2790,7 +2790,7 @@ IDENTICAL transform as their twins; carbon-gated, shipped from
 `zzz-SC4UIScale\`. The packages above are byte-identical with or
 without `--carbon` - carbon only ADDS these dats.
 
-### ZCarbonCamUI (`z_SC4UIScale_ZCarbonCamUI-15x.dat`, 10 entries, 150134 bytes)
+### ZCarbonCamUI (`z_SC4UIScale_ZCarbonCamUI-15x.dat`, 10 entries, 156824 bytes)
 
 7 carbon script(s):
 
