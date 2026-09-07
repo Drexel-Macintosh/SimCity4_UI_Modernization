@@ -12,6 +12,16 @@ committed baseline.
 WHAT IT MEASURES, per sheet, against the 1x extract:
   swc / cv_L   stroke-width consistency (tools\research\sharp15\stroke_width.py)
                - the number for "some strokes 1px, some 2px"
+  swc_ink      the same grouping on INTEGRATED INK (|luma - local background|
+               over the mapped span, stroke_width.py's ink measure) - the fair
+               number for a blender: a run whose edge blended drops out of swc
+               (counted in `blended`) but keeps its ink. Added 2026-09-07
+               (Beta 1 A4). It has NO zero control: the +1 spill pixel makes
+               per-run ink depend on the neighbour's contrast, so 2x/3x read
+               nonzero by construction (reported there as the metric's floor,
+               not gated). At 1.5x it is gated RELATIVE to the baseline once
+               the baseline records it (--refresh-baseline); an older baseline
+               without it gets the number reported with a NOTE, not gated.
   manuf        invented colours (a pixel the artist never drew)
   soft_frac    strong luma steps that land as a ramp
   edge_w       edge transition width in output pixels
@@ -28,6 +38,8 @@ edge_w=1.000 and dims exactly N*. Any failure there is the INSTRUMENT's
   * manuf == 0 on every sheet the baseline recorded as copy-only, unless the
     sheet is named in a blending list the baseline knows (even-strips.txt)
   * corpus swc, per L, not worse than baseline by more than the noise floor
+  * corpus swc_ink not worse than baseline by the same floor (only when the
+    baseline carries swc_ink; otherwise reported with a NOTE)
   * key_near == 0 everywhere; key_moved == 0 unless baseline recorded it
 
   --selftest          prove the gate can go red (duplicate a column -> swc
@@ -98,7 +110,7 @@ def src_path(name):
 
 def measure(src, out, f):
     r = M.report(out, src, f)
-    sw = SW.sheet_stats(src, out, f)
+    sw = SW.sheet_stats(src, out, f, ink=True)
     d = {"w": int(out.shape[1]), "h": int(out.shape[0]),
          "manuf": int(r["manuf"]), "edges": int(r["edges"]), "soft": int(r["soft"]),
          "peak_sum": float(r["peak_sum"]), "peak_n": int(r["peak_n"]),
@@ -107,6 +119,9 @@ def measure(src, out, f):
     for L in range(1, SW.MAXL + 1):
         d["n_%d" % L] = sw["n_%d" % L]
         d["cv_%d" % L] = sw["cv_%d" % L]
+        d["ink_n_%d" % L] = sw.get("ink_n_%d" % L, 0)
+        d["ink_cv_%d" % L] = sw.get("ink_cv_%d" % L, 0.0)
+    d["swc_ink"] = sw.get("swc_ink", 0.0)
     return d
 
 
@@ -130,6 +145,14 @@ def corpus(rows):
         ntot += n
         acc += n * cv
     out["swc"] = (acc / ntot) if ntot else 0.0
+    # swc_ink pooled the same way: n-weighted per-L ink CV
+    itot, iacc = 0, 0.0
+    for L in range(1, SW.MAXL + 1):
+        n = sum(r.get("ink_n_%d" % L, 0) for r in rows)
+        iacc += sum(r.get("ink_n_%d" % L, 0) * r.get("ink_cv_%d" % L, 0.0) for r in rows)
+        itot += n
+    out["ink_n"] = itot
+    out["swc_ink"] = (iacc / itot) if itot else 0.0
     return out
 
 
@@ -192,12 +215,28 @@ def selftest(names):
     r1 = measure(src, m1, 1.5)
     moved1 = (sum(r1["cv_%d" % L] for L in range(1, 5)) > sum(base["cv_%d" % L] for L in range(1, 5))
               or r1["blended"] > base["blended"])
+    # the duplicated column changes the ink under every span it crosses, so
+    # the ink number must move too (2026-09-07: swc_ink is a column now)
+    moved1_ink = r1["swc_ink"] != base["swc_ink"]
     # mutation 2: paint one interior pixel a colour the artist never drew
     # (a blend that happens to land on an existing colour would not count,
-    # so search for a provably novel one) -> manuf must rise by exactly 1
+    # so search for a provably novel one) -> manuf must rise by exactly 1.
+    # The pixel mutated must itself be a SOURCE colour: on a hybrid sheet
+    # (v4.8.0) the centre pixel is usually a blend, already counted as
+    # manufactured, and repainting it with another novel colour leaves manuf
+    # unchanged - which is how this selftest went red-for-the-wrong-reason
+    # from the v4.8.0 rebuild until 2026-09-07 without anyone noticing.
     m2 = out.copy()
-    y, x = out.shape[0] // 2, out.shape[1] // 2
     palette = set(np.unique(M._pack(src)).tolist())
+    op = M._pack(out)
+    y, x = out.shape[0] // 2, out.shape[1] // 2
+    if int(op[y, x]) not in palette:
+        ys, xs = np.nonzero(np.isin(op, np.array(sorted(palette), np.uint64)))
+        if ys.size == 0:
+            print("SELFTEST: no source-colour pixel to mutate on %s" % n)
+            return False
+        j = ys.size // 2
+        y, x = int(ys[j]), int(xs[j])
     px = out[y, x].astype(int)
     for k in range(1, 64):
         cand = np.array([(px[0] + k) % 256, (px[1] + 2 * k) % 256, (px[2] + 3 * k) % 256, px[3]], np.uint8)
@@ -205,10 +244,10 @@ def selftest(names):
             m2[y, x] = cand
             break
     r2 = measure(src, m2, 1.5)
-    moved2 = r2["manuf"] > base["manuf"]
-    print("SELFTEST on %s: duplicate-column caught=%s  blend-pixel caught=%s"
-          % (n, moved1, moved2))
-    return moved1 and moved2
+    moved2 = r2["manuf"] == base["manuf"] + 1
+    print("SELFTEST on %s: duplicate-column caught=%s (swc/blended) %s (swc_ink)  blend-pixel caught=%s"
+          % (n, moved1, moved1_ink, moved2))
+    return moved1 and moved1_ink and moved2
 
 
 def main(argv):
@@ -240,8 +279,9 @@ def main(argv):
         rows, dt = run_tier(f, names, limit)
         bad = control_check(f, rows)
         c = corpus(list(rows.values()))
-        print("CONTROL %.0fx: %d sheets  manuf %d  soft %.4f  edge_w %.3f  swc %.4f  (%.0fs)"
-              % (f, c["sheets"], c["manuf"], c["soft_frac"], c["edge_w"], c["swc"], dt))
+        print("CONTROL %.0fx: %d sheets  manuf %d  soft %.4f  edge_w %.3f  swc %.4f"
+              "  swc_ink %.4f (floor, not gated)  (%.0fs)"
+              % (f, c["sheets"], c["manuf"], c["soft_frac"], c["edge_w"], c["swc"], c["swc_ink"], dt))
         if bad:
             print("INSTRUMENT FAILURE at %.0fx - a block replicate did not read clean:" % f)
             for n, why in bad[:10]:
@@ -255,9 +295,9 @@ def main(argv):
     rows, dt = run_tier(1.5, names, limit)
     c = corpus(list(rows.values()))
     print("1.5x: %d sheets  manuf %d  soft %.4f  edge_w %.3f  swc %.4f  cv1 %.3f cv2 %.3f cv3 %.3f cv4 %.3f"
-          "  key_near %d key_moved %d  (%.0fs)"
+          "  swc_ink %.4f  key_near %d key_moved %d  (%.0fs)"
           % (c["sheets"], c["manuf"], c["soft_frac"], c["edge_w"], c["swc"],
-             c["cv_1"], c["cv_2"], c["cv_3"], c["cv_4"], c["key_near"], c["key_moved"], dt))
+             c["cv_1"], c["cv_2"], c["cv_3"], c["cv_4"], c["swc_ink"], c["key_near"], c["key_moved"], dt))
     blend_lists = load_list("even-strips.txt")
     if json_out:
         with open(json_out, "w", encoding="utf-8") as fh:
@@ -303,6 +343,13 @@ def main(argv):
         for L in range(1, SW.MAXL + 1):
             if c["cv_%d" % L] > bc["cv_%d" % L] + NOISE["swc"]:
                 fails.append("cv_%d %.4f worse than baseline %.4f" % (L, c["cv_%d" % L], bc["cv_%d" % L]))
+        if "swc_ink" in bc:
+            if c["swc_ink"] > bc["swc_ink"] + NOISE["swc"]:
+                fails.append("corpus swc_ink %.4f worse than baseline %.4f (+%.4f allowed)"
+                             % (c["swc_ink"], bc["swc_ink"], NOISE["swc"]))
+        else:
+            print("NOTE: baseline (%s) records no swc_ink - current %.4f reported, not gated;"
+                  " --refresh-baseline arms the gate" % (base.get("date"), c["swc_ink"]))
     missing = [n for n in bs if n not in rows]
     if missing and not limit:
         fails.append("%d baseline sheets missing from the tree, e.g. %s" % (len(missing), missing[0]))

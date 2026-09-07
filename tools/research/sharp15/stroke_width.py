@@ -129,7 +129,22 @@ def _axis_stats(src_p, out_p, f, maxl=MAXL):
 
 
 def _ink_stats(src, out, f, maxl=MAXL):
-    """Integrated ink per bounded source run, grouped by L, both axes."""
+    """Integrated ink per bounded source run, grouped by L, both axes.
+
+    VECTORISED 2026-09-07 (Beta 1 A4, when swc_ink became a column of
+    _tests/Test-15xEdgeQuality.py): the per-run Python loop was ~25M
+    iterations per tier on the corpus. The arithmetic is the loop's, term for
+    term: span = lum[oy, x0:x1+1], summed. Equal to ROUNDING, not bit-equal:
+    numpy's SIMD reduction associates the <=7-term span sum differently from
+    a column-by-column accumulation (max per-run |diff| 4.6e-13 on inks of
+    order 1e2-1e3, measured on 120 sheet/tier pairs against the loop form
+    before it was retired; pooled swc_ink within 4.4e-16). 13x faster.
+
+    NO ZERO CONTROL: at an integer factor the span still carries the +1 spill
+    pixel (the right/bottom NEIGHBOUR's luma minus the left background), so
+    per-run ink varies with the neighbours' contrast and CV is nonzero on the
+    2x/3x replicates by construction. swc_ink is a RELATIVE number (against a
+    baseline, or between candidates), never a "must read 0" gate."""
     res = {}
     for axis in (0, 1):
         s = src if axis == 0 else np.transpose(src, (1, 0, 2))
@@ -148,11 +163,20 @@ def _ink_stats(src, out, f, maxl=MAXL):
         # (the run is bounded, so it exists)
         bgx = np.maximum(x0 - 1, 0)
         bg = lum[oy, bgx]
-        for i in range(ry.size):
-            span = lum[oy[i], x0[i]:x1[i] + 1]  # +1: the AA half may spill one px
-            ink = float(np.abs(span - bg[i]).sum())
-            res.setdefault(int(rL[i]), []).append(ink)
-    return res
+        # span = lum[oy, x0:x1+1] (+1: the AA half may spill one px), i.e. the
+        # columns x0..min(x1, ow-1) inclusive; accumulate column by column so
+        # the summation order is the loop's
+        last = np.minimum(x1, ow - 1)
+        ink = np.zeros(ry.size, np.float64)
+        for k in range(int((last - x0).max()) + 1):
+            idx = x0 + k
+            valid = idx <= last
+            ink = ink + np.where(valid, np.abs(lum[oy, np.minimum(idx, ow - 1)] - bg), 0.0)
+        for L in range(1, maxl + 1):
+            m = rL == L
+            if m.any():
+                res.setdefault(L, []).append(ink[m])
+    return {L: np.concatenate(v) for L, v in res.items()}
 
 
 def sheet_stats(src, out, factor, maxl=MAXL, ink=False):
@@ -196,6 +220,7 @@ def sheet_stats(src, out, factor, maxl=MAXL, ink=False):
             if v.size >= 2 and v.mean() > 0:
                 cv = float(v.std() / v.mean())
                 out_d["ink_cv_%d" % L] = cv
+                out_d["ink_n_%d" % L] = int(v.size)     # the pooling weight
                 nt += v.size
                 ac += v.size * cv
         out_d["swc_ink"] = (ac / nt) if nt else 0.0
