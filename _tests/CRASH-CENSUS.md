@@ -1,6 +1,6 @@
 # CRASH CENSUS — the game's own exception reports
 
-Source: `C:\Users\JoeLi\OneDrive\Documents\SimCity 4\Exception Reports\`
+Source: `Documents\SimCity 4\Exception Reports\`
 (read the `.txt` reports only; the `.mdmp` minidumps were not opened).
 Census run 2026-09-07 (Beta 1, Unit A3). **20 `.txt` files present, one 0-byte
 (2026-08-30 06:45:43) → 19 non-empty crash records.** Of the 19, **5 are
@@ -166,7 +166,10 @@ is triaged into REGRESSION.md. (This is the standing law "read the game's OWN
 exception report" made into a gate.)
 
 Companion build gate: **`_tests\Test-ProbeDerefGuards.py`** fails the build on
-any speculative dereference (`- base + kImageBase` rebase, raw
-`*reinterpret_cast<void**/void***/uintptr_t*>` vptr read, or `vt[…]`/`dvt[…]`/
-`pv[…]` slot call) that sits outside a `__try` — the exact shape that produced
-#12/#13/#14/#19.
+any raw `*reinterpret_cast<void**/void***/uintptr_t*>` vptr read, `vt[…]`/
+`dvt[…]`/`pv[…]` slot call, or `x[-N] == 0xHH` stack peek inside probe/detour
+code (function name matching `Log|Detour|Thunk|Probe|Cap|Census|Scan`, `Sp*`,
+or any function calling `_ReturnAddress()`) that sits outside a `__try` or a
+`ProbeSafe` helper — the exact shape that produced #12/#13/#14/#19. `- base +
+kImageBase` rebases and fixed-`.data` reads are reported as info only; a
+`// deref-ok: <reason>` waiver keeps a site visible in its own list.
