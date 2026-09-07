@@ -2552,6 +2552,23 @@ def build_mission_bubble_fixed96(src_dir=None, dir_tag=""):
                      "confirmed fix." % lp)
         argv186 += [flag, lp]
     argv186.append("--smooth-unkeyed")
+    # v4.9.0 Beta 1 (2026-09-07): the REST of the corpus flag set. With
+    # --smooth-unkeyed alone this lane was the last sheet on the whole-sheet
+    # Catmull-Rom that #200 removed as the default (48x48 at x1.5: 200 of
+    # 2304 pixels invented). It now takes exactly what Rebuild-Corpus.ps1
+    # passes: the x3 area reduce, the even-strips list, the straight-edge
+    # hybrid and the thumbnail list. Every one refuses itself at an integer
+    # factor, so 2x/3x stay byte-identical; the dims FATAL below still holds.
+    for flag, name in (("--even-strips", "even-strips.txt"),
+                       ("--thumbnails", "thumbnails.txt")):
+        lp = os.path.join(up, name)
+        if not os.path.isfile(lp):
+            sys.exit("FATAL #186: derived list %s missing - regenerate it" % lp)
+        if flag == "--thumbnails":
+            argv186 += ["--hybrid", "thin", flag, lp]
+        else:
+            argv186 += [flag, lp]
+    argv186.insert(argv186.index("--smooth-unkeyed") + 1, "--supersample")
     try:
         r = subprocess.run(argv186, capture_output=True, text=True)
     except OSError as e:

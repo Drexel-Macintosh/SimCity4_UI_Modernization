@@ -235,6 +235,10 @@ foreach ($f in $Factor) {
     # with the real path (F13).
     $ladderDir = Join-Path $PSScriptRoot (Join-Path $outFor[$f] 'SimCity_1')
 
+    # v4.9.0 Beta 1: the exe's run summary (hybrid done / skipped-by-lane
+    # counts) is load-bearing evidence and used to survive only in a
+    # gitignored preview tree. Tee it to a committed file per factor.
+    $summaryFile = Join-Path $PSScriptRoot ("rebuild-summary-{0}.txt" -f ($f -replace '[.]', ''))
     if ($DryRun) {
         Write-Output ("  DRYRUN would run: Upscale2x.exe " + ($argv -join ' '))
         # F13 (review 2026-08-16): the dry run must show the WHOLE rebuild -
@@ -246,10 +250,11 @@ foreach ($f in $Factor) {
         Write-Output ("  DRYRUN would run: gate_key_integrity.py --tier {0}" -f $f)
         continue
     }
-    & $exe @argv
+    & $exe @argv | Tee-Object -FilePath $summaryFile
     if ($LASTEXITCODE -ne 0) {
         throw ("Upscale2x failed for factor {0} (exit {1})" -f $f, $LASTEXITCODE)
     }
+    Write-Output ("  run summary teed to {0}" -f $summaryFile)
 
     # #180 LADDER REDRAW IS A POST-STEP, NOT AN OVERLAY (wired 2026-08-16).
     # redraw_ladder.py re-lays the Mayor Rating filmstrip {46a006b0,14015549}

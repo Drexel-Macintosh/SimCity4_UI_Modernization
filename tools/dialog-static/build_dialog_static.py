@@ -2771,7 +2771,21 @@ def main():
                                 # flag - the parser appends per occurrence.
                                 "--height-exact-strips",
                                 os.path.join(TOOLS, "upscale",
-                                             "height-exact-slabs.txt")],
+                                             "height-exact-slabs.txt"),
+                                # v4.9.0 Beta 1 (2026-09-07): the resampler
+                                # half of the corpus flag set. Third-party
+                                # art (CamUI, SaveWarning, RegionCensus) was
+                                # plain nearest at 1.5x by omission - "a
+                                # stroke in that art renders 1 px or 2 px
+                                # while the stock chrome beside it renders
+                                # one width" (KNOWN-LIMITATIONS). Same rule,
+                                # same gates; integer factors refuse it.
+                                "--smooth-unkeyed", "--supersample",
+                                "--even-strips",
+                                os.path.join(TOOLS, "upscale", "even-strips.txt"),
+                                "--hybrid", "thin",
+                                "--thumbnails",
+                                os.path.join(TOOLS, "upscale", "thumbnails.txt")],
                                capture_output=True, text=True)
             if r.returncode != 0:
                 sys.exit("THIRD-PARTY ART UPSCALE FAILED:\n" + r.stderr + r.stdout)
