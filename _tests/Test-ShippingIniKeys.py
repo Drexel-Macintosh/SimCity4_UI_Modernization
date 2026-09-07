@@ -288,11 +288,98 @@ def main():
             print("    %s" % m2)
         return 1
 
+    # ------------------------------------------------------------------
+    # v4.9.0 Beta 1: NO DEV LEVER MAY BE SEEDED OR SHIPPED SET. Two crashes
+    # on record ran with a probe-family key left in the live ini; the DLL
+    # now prints a DEV KEYS ACTIVE roll-up at boot, and this gate keeps the
+    # two shipped inis clean of them. The list mirrors kDevKeys in
+    # SC4UIScaleDllDirector.cpp (cross-checked below so the two cannot drift).
+    # ------------------------------------------------------------------
+    print()
+    print("  dev-lever check (kStarterIni + reference ini):")
+    dev = gate_no_dev_keys(declared, sdecl)
+    if dev:
+        print()
+        print("FAIL: %d dev lever(s) seeded/shipped set:" % len(dev))
+        for d in dev:
+            print("    %s" % d)
+        return 1
+
     print()
     print("ALL PASS (%d reference keys + %d seeded keys, all reachable;"
-          " load-bearing keys present in both; no BOM)"
+          " load-bearing keys present in both; no BOM; no dev lever seeded)"
           % (len(declared), len(sdecl)))
     return 0
+
+
+def gate_no_dev_keys(declared, sdecl):
+    """Every key in a [Probe] section is a dev lever; the [UiSpike]/[Logging]
+    entries come from the DLL's own kDevKeys table, parsed out of the source so
+    the gate and the roll-up cannot drift apart."""
+    src_path = os.path.join(REPO, "src", "SC4UIScaleDllDirector.cpp")
+    with io.open(src_path, encoding="utf-8", errors="replace") as fh:
+        src = fh.read()
+    table = re.findall(r'\{\s*L"(\w+)",\s*L"(\w+)",\s*L"([^"]*)"\s*\}', src)
+    if len(table) < 10:
+        return ["could not parse kDevKeys out of SC4UIScaleDllDirector.cpp "
+                "(found %d rows) - the gate has gone stale" % len(table)]
+    defaults = {(s, k): d for (s, k, d) in table}
+    problems = []
+    for label, keys, text in (("kStarterIni", sdecl, starter_ini_text() or ""),
+                              ("reference ini", declared, open(INI, encoding="utf-8").read())):
+        values = {}
+        section = None
+        for line in text.split("\n"):
+            s = line.strip()
+            if s.startswith("[") and s.endswith("]"):
+                section = s[1:-1]
+            elif s and not s.startswith(";") and "=" in s:
+                k, v = s.split("=", 1)
+                values[(section, k.strip())] = v.strip()
+        for (section, key) in keys:
+            if section == "Probe":
+                problems.append("%s: [Probe] %s is seeded/shipped - the whole "
+                                "[Probe] section is dev-only" % (label, key))
+                continue
+            if (section, key) in defaults:
+                v = values.get((section, key), "")
+                d = defaults[(section, key)]
+                if key == "MissionBubbleFx":
+                    bad = v.isdigit() and int(v) >= 3
+                elif key == "LogLevel":
+                    bad = v.isdigit() and int(v) >= 2
+                else:
+                    bad = (v != d)
+                if bad:
+                    problems.append("%s: [%s] %s=%s (dev lever; default %s)"
+                                    % (label, section, key, v, d))
+        print("    %-14s %d keys checked against %d dev levers" % (label, len(keys), len(defaults)))
+    # positive control: an invented seeded [Probe] key must be reported
+    ctrl = gate_no_dev_keys_ctrl(defaults)
+    if not ctrl:
+        problems.append("positive control failed: a seeded [Probe] key was NOT reported")
+    return problems
+
+
+def gate_no_dev_keys_ctrl(defaults):
+    fake = [("Probe", "Invented"), ("UiSpike", "MissionBubbleFx")]
+    text = "[Probe]\nInvented=1\n[UiSpike]\nMissionBubbleFx=3\n"
+    values = {}
+    section = None
+    for line in text.split("\n"):
+        s = line.strip()
+        if s.startswith("["):
+            section = s[1:-1]
+        elif "=" in s:
+            k, v = s.split("=", 1)
+            values[(section, k)] = v
+    hits = 0
+    for (section, key) in fake:
+        if section == "Probe":
+            hits += 1
+        elif key == "MissionBubbleFx" and int(values[(section, key)]) >= 3:
+            hits += 1
+    return hits == 2
 
 
 if __name__ == "__main__":

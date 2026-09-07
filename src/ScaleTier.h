@@ -162,9 +162,14 @@ namespace ScaleTier
 	// apply in one pass. v4.5.0: this no longer renames anything - it swaps
 	// the CONTENT of each package's stable `.dat` name in from the matching
 	// `.<tag>.uipay` payload, and a package with no tier match commits `.off`.
-	// PLUGINS-ONLY: all managed files - both dats and FontStyle.ini - live in
-	// this mod's own Plugins subfolders; nothing in the game install directory
-	// (portable, no Program Files writes). Idempotent, and free in the steady
+	// PLUGINS-ONLY, with ONE engine-forced exception: the dats live in this
+	// mod's own Documents Plugins subfolders, but the game probes the loose
+	// font ini in <install>\Plugins ONLY, so SyncFont mirrors the active
+	// tier's FontStyle there each boot (this header used to claim "no Program
+	// Files writes"; that was never true of the font - corrected 2026-09-07,
+	// Beta 1 audit). On a Steam/GOG install under Program Files that write
+	// needs the game to run elevated; when it fails the log says so and text
+	// stays 1x inside scaled frames. Idempotent, and free in the steady
 	// state (four file stats, no I/O, when the stamp still matches); a failed
 	// swap fails INERT and self-heals on the next boot.
 	void SyncStaticLayers(float factor);

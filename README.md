@@ -67,6 +67,18 @@ no-mod install.
    carry. To change it, open **Options → Graphic Options**; that panel also
    sets resolution and window mode, and changes apply on restart.
 
+**Large plugin folders.** SimCity 4 is a 32-bit program. With a plugin
+folder of several gigabytes it needs the community 4 GB (Large Address Aware)
+patch for its own sake, and this mod's enlarged art shares that space: at 3x
+the packages decode to roughly 1 GB if every sheet were in use at once (the
+game loads sheets lazily, so the real figure is a fraction of that). At each
+start the mod indexes every plugin file once to find third-party menu icons it
+must enlarge; the log's `boot phases` line reports what that cost, and files
+that are cloud placeholders (OneDrive Files On-Demand) are counted but not
+opened, so the scan never pulls a plugin folder down from the cloud. If
+startup is slow, that line and the `IconSynth: scanned ...` line say where the
+time went - attach `010-SC4UIScale\SC4UIScale.log` to any report.
+
 **Optional companion plugin.** The in-game resolution and window-mode control
 writes `SC4GraphicsOptions.ini`, which is read by the community plugin
 [SC4 Graphics Options](https://community.simtropolis.com/files/file/36091-sc4-graphics-options/).

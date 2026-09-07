@@ -130,7 +130,21 @@ void Logger::WriteHeader(const char* headerLine)
 	}
 
 	EnterCriticalSection(static_cast<CRITICAL_SECTION*>(lock));
-	fprintf(static_cast<FILE*>(file), "%s\n", headerLine);
+	int n = fprintf(static_cast<FILE*>(file), "%s\n", headerLine);
+	if (n > 0) { bytesWritten += static_cast<unsigned long long>(n); }
+	// v4.9.0 Beta 1: the per-line stamps carry no date, so a session that
+	// crosses midnight could not be matched against the game's own exception
+	// reports (which are dated). The date goes here once, and an hour marker
+	// is printed whenever the hour changes (see WriteLine).
+	SYSTEMTIME st;
+	GetLocalTime(&st);
+	n = fprintf(static_cast<FILE*>(file),
+		"[%02u:%02u:%02u.%03u] Log opened %04u-%02u-%02u local. Stamps below carry "
+		"no date; a '---- hour' marker line is printed when the hour changes.\n",
+		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
+		st.wYear, st.wMonth, st.wDay);
+	if (n > 0) { bytesWritten += static_cast<unsigned long long>(n); }
+	lastHour = st.wHour;
 	fflush(static_cast<FILE*>(file));
 	LeaveCriticalSection(static_cast<CRITICAL_SECTION*>(lock));
 }
@@ -156,11 +170,44 @@ void Logger::WriteLine(LogLevel level, const char* format, ...)
 	// UI thread. The bucket says whether that ever actually stalls.
 	PerfProbe::Scope perf_("log.WriteLine");
 	EnterCriticalSection(static_cast<CRITICAL_SECTION*>(lock));
-	fprintf(
+	if (static_cast<int>(st.wHour) != lastHour)
+	{
+		if (lastHour >= 0)
+		{
+			int m = fprintf(static_cast<FILE*>(file),
+				"---- %04u-%02u-%02u %02u:00 local - hour rollover (stamps carry no date) ----\n",
+				st.wYear, st.wMonth, st.wDay, st.wHour);
+			if (m > 0) { bytesWritten += static_cast<unsigned long long>(m); }
+		}
+		lastHour = st.wHour;
+	}
+	int n = fprintf(
 		static_cast<FILE*>(file),
 		"[%02u:%02u:%02u.%03u] %s\n",
 		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
 		message);
+	if (n > 0) { bytesWritten += static_cast<unsigned long long>(n); }
+	// v4.9.0 Beta 1 SOFT CAP. One Info line inside a 16 ms path once produced
+	// "5211 lines and a 1 MB log in one session" (MDOCK); at LogLevel=3 the
+	// live log grows ~9 MB/h. Past 64 MB the level drops to Info, once, and
+	// says so - a runaway Debug/Trace path cannot fill a disk, and the line
+	// names the cure. Info lines are all budgeted; they are never dropped.
+	const unsigned long long kSoftCapBytes = 64ull * 1024ull * 1024ull;
+	if (!softCapNoted && bytesWritten > kSoftCapBytes)
+	{
+		softCapNoted = true;
+		int m = fprintf(static_cast<FILE*>(file),
+			"[%02u:%02u:%02u.%03u] LOG SOFT CAP: %llu bytes written this session - "
+			"LogLevel dropped to 1 (Info) from here on so a hot Debug/Trace line "
+			"cannot fill the disk. Lower LogLevel in SC4UIScale.ini, or find the "
+			"repeating line above and budget it.\n",
+			st.wHour, st.wMinute, st.wSecond, st.wMilliseconds, bytesWritten);
+		if (m > 0) { bytesWritten += static_cast<unsigned long long>(m); }
+		if (static_cast<int>(logLevel) > static_cast<int>(LogLevel::Info))
+		{
+			logLevel = LogLevel::Info;
+		}
+	}
 	fflush(static_cast<FILE*>(file));
 	LeaveCriticalSection(static_cast<CRITICAL_SECTION*>(lock));
 }

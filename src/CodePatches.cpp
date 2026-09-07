@@ -30,6 +30,62 @@ namespace
 	const uint8_t kImulOpcode = 0x6B;
 	const uint8_t kStockMultiplier = 0x07;
 
+	// v4.9.0 Beta 1 (S1): SPECULATIVE READS IN PROBE CODE GO THROUGH HERE.
+	// Two exception reports (2026-08-18 08:30, 2026-08-31 13:08) fault on the
+	// same instruction in LogBubbleCallStack: a stack dword passed a
+	// hand-written `base + 0xA20000` bound and was dereferenced, but the exe's
+	// SizeOfImage is 0x81E000, so the top 2 MB of that window is unmapped.
+	// Two more (2026-08-14) executed at heap addresses - an indirect call
+	// through a garbage vptr, the shape of SpHoverLog/SpTargetLog. The law
+	// ("every speculative deref in a probe gets SEH", REGRESSION.md 2026-08-18)
+	// had been applied to one function. Now: the image span is READ from the
+	// PE header, every read is SEH-guarded, and a vtable slot is called only
+	// when both the vptr and the slot point into the image. A refused read
+	// logs and returns; it never crashes the game for a diagnostic.
+	namespace ProbeSafe
+	{
+		uintptr_t gImgLo = 0, gImgHi = 0;
+		void Resolve()
+		{
+			if (gImgHi != 0) { return; }
+			const uintptr_t base =
+				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const IMAGE_DOS_HEADER* dos =
+				reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+			const IMAGE_NT_HEADERS* nt =
+				reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos->e_lfanew);
+			gImgLo = base + 0x1000;
+			gImgHi = base + nt->OptionalHeader.SizeOfImage;
+		}
+		uintptr_t ImageLo() { Resolve(); return gImgLo; }
+		uintptr_t ImageHi() { Resolve(); return gImgHi; }
+		bool InImage(uintptr_t v) { Resolve(); return v >= gImgLo && v < gImgHi; }
+		// SEH-guarded copy: false on a fault. No C++ objects in here (C2712).
+		bool ReadBytes(const void* at, void* out, size_t n)
+		{
+			__try { memcpy(out, at, n); return true; }
+			__except (EXCEPTION_EXECUTE_HANDLER) { return false; }
+		}
+		bool ReadPtr(const void* at, uintptr_t* out)
+		{
+			return ReadBytes(at, out, sizeof(uintptr_t));
+		}
+		// The object's vptr if readable AND inside the image; nullptr otherwise.
+		void** SafeVt(const void* obj)
+		{
+			uintptr_t vt = 0;
+			if (!obj || !ReadPtr(obj, &vt) || !InImage(vt)) { return nullptr; }
+			return reinterpret_cast<void**>(vt);
+		}
+		// A slot that is readable AND points into the image; 0 otherwise.
+		uintptr_t SafeSlot(void** vt, int slot)
+		{
+			uintptr_t fn = 0;
+			if (!vt || !ReadPtr(vt + slot, &fn) || !InImage(fn)) { return 0; }
+			return fn;
+		}
+	}
+
 	// TOOLTIP WRAP WIDTH (task #41, 2026-07-29). The tip layer (window
 	// 0x2AAB8CC1, class 0x00AB6770) code-paints the whole tooltip; its Plot
 	// override 0x798710 wraps/measures the tip text against a HARDCODED
@@ -4799,8 +4855,11 @@ namespace CodePatches
 		{
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			const uintptr_t lo = base + 0x1000;
-			const uintptr_t hi = base + 0xA20000;
+			// v4.9.0 Beta 1: the bound is the exe's REAL image span (the old
+			// `base + 0xA20000` overshot SizeOfImage by 2 MB and this scan
+			// faulted on it twice), and every read is SEH-guarded.
+			const uintptr_t lo = ProbeSafe::ImageLo();
+			const uintptr_t hi = ProbeSafe::ImageHi();
 			const uintptr_t* p =
 				reinterpret_cast<const uintptr_t*>(frameAnchor);
 			char line[420];
@@ -4808,14 +4867,18 @@ namespace CodePatches
 			line[0] = 0;
 			for (int k = 0; k < 1024 && found < 14; ++k)
 			{
-				const uintptr_t v = p[k];
+				uintptr_t v = 0;
+				if (!ProbeSafe::ReadPtr(p + k, &v)) { break; }   // off the stack
 				if (v < lo || v >= hi) { continue; }
 				// return addresses immediately follow a call: E8 rel32,
 				// FF /2 (reg/[disp8]/[disp32]), or 9A far (never used).
-				const uint8_t* c = reinterpret_cast<const uint8_t*>(v);
-				const bool isRet = (c[-5] == 0xE8)
-					|| (c[-2] == 0xFF) || (c[-3] == 0xFF) || (c[-6] == 0xFF)
-					|| (c[-7] == 0xFF);
+				// c[i] holds the byte at v-7+i.
+				uint8_t c[8] = {};
+				if (!ProbeSafe::ReadBytes(
+						reinterpret_cast<const uint8_t*>(v) - 7, c, 7)) { continue; }
+				const bool isRet = (c[2] == 0xE8)
+					|| (c[5] == 0xFF) || (c[4] == 0xFF) || (c[1] == 0xFF)
+					|| (c[0] == 0xFF);
 				if (!isRet) { continue; }
 				const uint32_t va =
 					static_cast<uint32_t>(v - base + kImageBase);
@@ -6973,23 +7036,35 @@ namespace CodePatches
 			++gSpTargetLogs;
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void** vt = *reinterpret_cast<void***>(occ);
+			// v4.9.0 Beta 1 (S1): vptr and slots validated before any call.
+			void** vt = ProbeSafe::SafeVt(occ);
+			const uintptr_t getType = ProbeSafe::SafeSlot(vt, 0x1C / 4);
+			const uintptr_t qi = ProbeSafe::SafeSlot(vt, 0);
+			if (!vt || !getType || !qi)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: OFFERTARGET #%ld occ=%p vptr/slots NOT in the "
+					"game image - skipped (probe read refused, not a crash).",
+					gSpTargetCalls, occ);
+				return;
+			}
 			const uint32_t vtVa = static_cast<uint32_t>(
 				reinterpret_cast<uintptr_t>(vt) - base + kImageBase);
 			const uint32_t type =
-				reinterpret_cast<ObjGetTypeFn>(vt[0x1C / 4])(occ);
+				reinterpret_cast<ObjGetTypeFn>(getType)(occ);
 			const uint32_t iids[3] =
 				{ 0xE9793A65, 0x4B44FBE2, 0xA9B40F05 };
 			uint32_t ivt[3] = { 0, 0, 0 };
 			for (int k = 0; k < 3; ++k)
 			{
 				void* p = nullptr;
-				if (reinterpret_cast<ObjQiFn>(vt[0])(occ, iids[k], &p) && p)
+				if (reinterpret_cast<ObjQiFn>(qi)(occ, iids[k], &p) && p)
 				{
-					void** pv = *reinterpret_cast<void***>(p);
-					ivt[k] = static_cast<uint32_t>(
-						reinterpret_cast<uintptr_t>(pv) - base + kImageBase);
-					reinterpret_cast<ObjRelFn>(pv[2])(p);
+					void** pv = ProbeSafe::SafeVt(p);
+					const uintptr_t rel = ProbeSafe::SafeSlot(pv, 2);
+					ivt[k] = pv ? static_cast<uint32_t>(
+						reinterpret_cast<uintptr_t>(pv) - base + kImageBase) : 0u;
+					if (rel) { reinterpret_cast<ObjRelFn>(rel)(p); }
 				}
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -7650,7 +7725,8 @@ namespace CodePatches
 			// four previously-unthunked subs - the draw path runs there.
 			const uintptr_t vts[6] = { 0xAA4900, 0xAA4868, 0xAA48F0,
 				0xAA484C, 0xAA47E8, 0xAA47D0 };
-			const uintptr_t txtLo = base + 0x1000, txtHi = base + 0xA20000;
+			// v4.9.0 Beta 1: the real image span, not a hand-written bound.
+			const uintptr_t txtLo = ProbeSafe::ImageLo(), txtHi = ProbeSafe::ImageHi();
 			uint8_t* pool = static_cast<uint8_t*>(VirtualAlloc(nullptr,
 				16384, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE));
 			if (!pool)
@@ -7779,8 +7855,9 @@ namespace CodePatches
 			{
 				used += wsprintfA(line + used, " <fault>");
 			}
-			const uint32_t vtVa = static_cast<uint32_t>(
-				*reinterpret_cast<uintptr_t*>(self) - base + kImageBase);
+			uintptr_t selfVt = 0;   // v4.9.0 Beta 1: guarded read
+			const uint32_t vtVa = ProbeSafe::ReadPtr(self, &selfVt)
+				? static_cast<uint32_t>(selfVt - base + kImageBase) : 0u;
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: DRAWCAP #%ld this=%p vt=0x%08X f:%s.",
 				n, self, vtVa, line);
@@ -7805,22 +7882,36 @@ namespace CodePatches
 			++gSpHoverLogs;
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void** vt = *reinterpret_cast<void***>(obj);
+			// v4.9.0 Beta 1 (S1): vptr and slots validated before any call -
+			// an unreadable or out-of-image pointer logs and returns instead
+			// of jumping into heap data (the 2026-08-14 PRIV_INSTRUCTION shape).
+			void** vt = ProbeSafe::SafeVt(obj);
+			const uintptr_t getType = ProbeSafe::SafeSlot(vt, 0x1C / 4);
+			const uintptr_t qi = ProbeSafe::SafeSlot(vt, 0);
+			if (!vt || !getType || !qi)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: SPHOVER #%ld obj=%p vptr/slots NOT in the game "
+					"image - skipped (probe read refused, not a crash).",
+					gSpHoverCalls, obj);
+				return;
+			}
 			const uint32_t vtVa = static_cast<uint32_t>(
 				reinterpret_cast<uintptr_t>(vt) - base + kImageBase);
 			const uint32_t type =
-				reinterpret_cast<ObjGetTypeFn>(vt[0x1C / 4])(obj);
+				reinterpret_cast<ObjGetTypeFn>(getType)(obj);
 			uint32_t drawVtVa = 0;
 			void* draw = nullptr;
 			if (type == 0xCB79919B || type == 0xAB72FBB3)
 			{
-				if (reinterpret_cast<ObjQiFn>(vt[0])(obj, 0x2B3B7D86, &draw)
+				if (reinterpret_cast<ObjQiFn>(qi)(obj, 0x2B3B7D86, &draw)
 					&& draw)
 				{
-					void** dvt = *reinterpret_cast<void***>(draw);
-					drawVtVa = static_cast<uint32_t>(
-						reinterpret_cast<uintptr_t>(dvt) - base + kImageBase);
-					reinterpret_cast<ObjRelFn>(dvt[2])(draw);
+					void** dvt = ProbeSafe::SafeVt(draw);
+					const uintptr_t rel = ProbeSafe::SafeSlot(dvt, 2);
+					drawVtVa = dvt ? static_cast<uint32_t>(
+						reinterpret_cast<uintptr_t>(dvt) - base + kImageBase) : 0u;
+					if (rel) { reinterpret_cast<ObjRelFn>(rel)(draw); }
 				}
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -8206,6 +8297,17 @@ namespace CodePatches
 					int16_t a = 0, b = 0;
 					memcpy(&a, p, 2);
 					memcpy(&b, p + 2, 2);
+					// v4.9.0 Beta 1 (S7): the narrowing below wraps silently
+					// past int16; refuse rather than write a negative size.
+					if (a * mul + 0.5f > 32767.0f || b * mul + 0.5f > 32767.0f
+						|| a * mul < -32768.0f || b * mul < -32768.0f)
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"CodePatches: BALLOONFIX +0x%X i16 (%d,%d) x %.2f "
+							"would overflow int16 - REFUSED.", off, a, b,
+							static_cast<double>(mul));
+						return;
+					}
 					int16_t na = static_cast<int16_t>(a * mul + 0.5f);
 					int16_t nb = static_cast<int16_t>(b * mul + 0.5f);
 					memcpy(p, &na, 2);
@@ -8565,7 +8667,8 @@ namespace CodePatches
 				void* inst = *out;
 				const uintptr_t base =
 					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-				const uintptr_t vt = *reinterpret_cast<uintptr_t*>(inst);
+				uintptr_t vt = 0;
+				if (!ProbeSafe::ReadPtr(inst, &vt)) { break; }   // v4.9.0 Beta 1: guarded
 				const uint32_t vtVa =
 					static_cast<uint32_t>(vt - base + kImageBase);
 				Logger::Get().WriteLine(LogLevel::Info,
@@ -8906,9 +9009,9 @@ namespace CodePatches
 				const uint32_t ret = static_cast<uint32_t>(
 					reinterpret_cast<uintptr_t>(_ReturnAddress())
 					- base + kImageBase);
-				const uintptr_t vtVa =
-					reinterpret_cast<uintptr_t>(*reinterpret_cast<void**>(self))
-					- base + kImageBase;
+				uintptr_t selfVt = 0;   // v4.9.0 Beta 1: guarded read; an
+				ProbeSafe::ReadPtr(self, &selfVt);   // unreadable self reads as FOREIGN
+				const uintptr_t vtVa = selfVt ? (selfVt - base + kImageBase) : 0u;
 				if (vtVa == kWinTextIfaceVt)
 				{
 					void* obj = reinterpret_cast<char*>(self) - 0xD8;

@@ -54,6 +54,9 @@ public:
 
 	void WriteHeader(const char* headerLine);
 	void WriteLine(LogLevel level, const char* format, ...);
+	// v4.9.0 Beta 1: bytes written this session (the soft cap and the
+	// heartbeat read it). Plain counter, single writer thread.
+	unsigned long long BytesWritten() const { return bytesWritten; }
 
 private:
 	Logger();
@@ -62,4 +65,7 @@ private:
 	void* file; // FILE*
 	LogLevel logLevel;
 	void* lock; // CRITICAL_SECTION*
+	unsigned long long bytesWritten = 0;
+	int lastHour = -1;      // hour-rollover marker (the stamps carry no date)
+	bool softCapNoted = false;
 };

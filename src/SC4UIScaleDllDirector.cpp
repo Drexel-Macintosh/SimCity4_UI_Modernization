@@ -121,6 +121,111 @@ namespace
 	}
 }
 
+// v4.9.0 Beta 1 (S1/R5): EVERY DEV-ONLY KEY THAT IS SET SAYS SO, in one line at
+// boot. Both crashes in probe code this project has on record (2026-08-18 and
+// 2026-08-31, the same unguarded stack scan) ran on a machine where a
+// probe-family key had been left set from an earlier investigation. Each
+// lever still logs its own resolved value where it arms (house law); this is
+// the roll-up a reader greps for in a stranger's log before anything else.
+// The whole [Probe] section is dev by definition; the [UiSpike] entries below
+// are the dev levers that live beside the user keys, with their defaults.
+namespace
+{
+	struct DevKey { const wchar_t* section; const wchar_t* key; const wchar_t* def; };
+	const DevKey kDevKeys[] = {
+		{ L"UiSpike", L"HighlightProbe",      L"0" },
+		{ L"UiSpike", L"ZoneQuadProbe",       L"0" },
+		{ L"UiSpike", L"NborArrow",           L"0" },
+		{ L"UiSpike", L"DotSize",             L"0" },
+		{ L"UiSpike", L"EffectKill",          L""  },
+		{ L"UiSpike", L"CsiKill",             L"0" },
+		{ L"UiSpike", L"CsiCountPlate",       L"0" },
+		{ L"UiSpike", L"CsiAim",              L"0" },
+		{ L"UiSpike", L"BalloonViewSuppress", L"0" },
+		{ L"UiSpike", L"BalloonViewKill",     L"0" },
+		{ L"UiSpike", L"BalloonSpriteScale",  L"0" },
+		{ L"UiSpike", L"BalloonSpriteOffset", L"0" },
+		{ L"UiSpike", L"BalloonSpriteKind",   L"0" },
+		{ L"UiSpike", L"MarkerZoomScale",     L"0" },
+		{ L"UiSpike", L"LiveTune",            L"0" },
+		{ L"UiSpike", L"DumpTree",            L"0" },
+		{ L"UiSpike", L"LiveDumpMs",          L"0" },
+		{ L"UiSpike", L"SpinProbe",           L"0" },
+		{ L"UiSpike", L"MissionBubbleFx",     L"2" },   // 3 = live SPPROBE (dev)
+		{ L"Logging", L"LogLevel",            L"1" },   // 2/3 = Debug/Trace
+	};
+
+	bool DevValueDiffers(const wchar_t* key, const wchar_t* raw, const wchar_t* def)
+	{
+		// MissionBubbleFx 0/1/2 are all user settings; only 3+ is the probe.
+		if (_wcsicmp(key, L"MissionBubbleFx") == 0) { return _wtoi(raw) >= 3; }
+		if (_wcsicmp(key, L"LogLevel") == 0) { return _wtoi(raw) >= 2; }
+		wchar_t* endA = nullptr; wchar_t* endB = nullptr;
+		const double a = wcstod(raw, &endA);
+		const double b = wcstod(def, &endB);
+		if (raw[0] && def[0] && endA && *endA == 0 && endB && *endB == 0)
+		{
+			return a != b;
+		}
+		return _wcsicmp(raw, def) != 0;
+	}
+
+	void LogDevKeys(Logger& logger, const wchar_t* ini)
+	{
+		char line[1400] = {};
+		int used = 0, n = 0;
+		auto append = [&](const wchar_t* sec, const wchar_t* key, const wchar_t* val)
+		{
+			char a[200] = {};
+			WideCharToMultiByte(CP_UTF8, 0, sec, -1, a, sizeof(a), nullptr, nullptr);
+			char k[200] = {};
+			WideCharToMultiByte(CP_UTF8, 0, key, -1, k, sizeof(k), nullptr, nullptr);
+			char v[200] = {};
+			WideCharToMultiByte(CP_UTF8, 0, val, -1, v, sizeof(v), nullptr, nullptr);
+			if (used < static_cast<int>(sizeof(line)) - 64)
+			{
+				used += _snprintf_s(line + used, sizeof(line) - used, _TRUNCATE,
+					"%s[%s] %s=%s", n ? ", " : "", a, k, v);
+			}
+			n++;
+		};
+		// The whole [Probe] section: every key there is a dev lever.
+		static wchar_t section[8192];
+		const DWORD got = GetPrivateProfileSectionW(L"Probe", section, 8192, ini);
+		for (const wchar_t* p = section; got && *p; p += wcslen(p) + 1)
+		{
+			if (*p == L';' || *p == L'#') { continue; }
+			const wchar_t* eq = wcschr(p, L'=');
+			if (!eq) { continue; }
+			wchar_t key[128] = {};
+			const size_t kl = static_cast<size_t>(eq - p) < 127 ? static_cast<size_t>(eq - p) : 127;
+			wcsncpy_s(key, p, kl);
+			append(L"Probe", key, eq + 1);
+		}
+		for (const DevKey& d : kDevKeys)
+		{
+			wchar_t raw[128] = {};
+			GetPrivateProfileStringW(d.section, d.key, L"", raw, 128, ini);
+			if (raw[0] == 0) { continue; }
+			if (DevValueDiffers(d.key, raw, d.def)) { append(d.section, d.key, raw); }
+		}
+		if (n == 0)
+		{
+			logger.WriteLine(LogLevel::Info,
+				"Dev keys: none active - shipping defaults (no [Probe] section keys, "
+				"no dev lever in [UiSpike], LogLevel < 2).");
+		}
+		else
+		{
+			logger.WriteLine(LogLevel::Info,
+				"\xE2\x9A\xA0 DEV KEYS ACTIVE (%d): %s%s. These arm diagnostics that are "
+				"not part of the product; two recorded crashes ran with one left set. "
+				"Remove them from SC4UIScale.ini for ordinary play.",
+				n, line, (used >= static_cast<int>(sizeof(line)) - 64) ? ", ..." : "");
+		}
+	}
+}
+
 class SC4UIScaleDllDirector final : public cRZMessage2COMDirector
 {
 public:
@@ -278,6 +383,7 @@ public:
 				"factor is the one on the 'AutoScale: ... -> tier' line below, "
 				"and that is what art, fonts and geometry all use.");
 		}
+		LogDevKeys(logger, iniPath);   // v4.9.0 Beta 1: the dev-lever roll-up
 
 		// DPI awareness FIRST (before reading the monitor size below), so the
 		// metrics come back in physical pixels - and before the game creates

@@ -239,6 +239,27 @@ private:
 	bool visibilityProbeLogged = false;
 	bool continuous = false;      // incremental sweeps active (post initial scale)
 	bool inPass = false;          // re-entrancy latch: no nested tree walks
+	// v4.9.0 Beta 1 (S2): the latch is set and cleared by a scope object, so
+	// an exception that unwinds through a sweep cannot leave it latched and
+	// turn every later sweep into a silent no-op for the rest of the session.
+	// Nested struct: it may touch the private member.
+	struct PassGuard
+	{
+		UiSpike& s;
+		explicit PassGuard(UiSpike& u) : s(u) { s.inPass = true; }
+		~PassGuard() { s.inPass = false; }
+		PassGuard(const PassGuard&) = delete;
+		PassGuard& operator=(const PassGuard&) = delete;
+	};
+	// v4.9.0 Beta 1 (S6/R6): resource heartbeat - one Info line every five
+	// minutes with private bytes, handles, GDI/USER objects, address space
+	// left, and our own container/table fill levels. Any tester's log then
+	// carries a slope instead of a story.
+	void HeartbeatTick(unsigned int nowTickMs);
+	unsigned int lastHeartbeatMs = 0;
+	unsigned int firstHeartbeatMs = 0;
+	unsigned int heartbeatSeq = 0;
+	int cityLoads = 0;            // ArmDeferred count this session
 	unsigned int fireAtMs = 0;
 	unsigned int tickSerial = 0;  // incremental sweeps run every 4th tick (1s)
 	bool bootDumpDone = false;    // one-shot main-window dump at the region

@@ -65,6 +65,7 @@
 #include <string>      // the wrapped caption we build
 #include <set>         // #188 SMALLWIN per-epoch dedupe
 #include <Windows.h>   // SEH guard for probing hook return values
+#include <psapi.h>     // v4.9.0 Beta 1: PROCESS_MEMORY_COUNTERS_EX for the heartbeat (K32 export, no new lib)
 
 // The live-tune re-read below used a HARDCODED absolute path to this dev
 // box's Plugins folder. On any other machine that read silently returns
@@ -6853,6 +6854,15 @@ namespace
 				return;
 			}
 			gBufVtWritable = true;
+			// v4.9.0 Beta 1 (S6): the page stays RWX for the session - every
+			// later slot write relies on gBufVtWritable. Recorded so a stray
+			// write into that page by anything in this 50-plugin process is
+			// attributable to a page WE opened.
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: buffer class vtable page at %p made PAGE_EXECUTE_READWRITE "
+				"for the session (was 0x%08lX; not restored - later slot writes rely "
+				"on it).", static_cast<void*>(&kBufClassVt[0]),
+				static_cast<unsigned long>(oldProt));
 		}
 		if (!gClassBltOrig)
 		{
@@ -7817,9 +7827,11 @@ namespace
 void UiSpike::OnFlyoutOpened(uint32_t flyoutId)
 {
 	if (!lastView || inPass) { return; }     // no view yet, or already sweeping
-	inPass = true;                           // no nested tree walks (see Run)
-	ScaleGodFlyouts(lastView, gTierF);
-	inPass = false;
+	{
+		PassGuard passGuard(*this);          // no nested tree walks (see Run);
+		                                     // RAII so an unwind cannot latch it
+		ScaleGodFlyouts(lastView, gTierF);
+	}
 	// v2.36.3 (task #77): sub_7E5C10 is also the CLOSER - clicking the same
 	// button again closes the flyout (it compares arg2 against [this+0x200]).
 	// On a close the window is already gone, and the old line logged
@@ -8798,6 +8810,7 @@ UiSpike::UiSpike(const Settings& settings)
 
 void UiSpike::ArmDeferred(unsigned int fireAtTickMs)
 {
+	cityLoads++;   // heartbeat: city arms this session (counted before any early-out)
 	if (!settings.spikeDumpTree && settings.spikeScaleWindowId == 0 && !settings.spikeScaleAll)
 	{
 		return;
@@ -9311,6 +9324,71 @@ void UiSpike::ResetTracking()
 	menuBaselineCaptured = false;
 }
 
+// v4.9.0 Beta 1 - RESOURCE HEARTBEAT. One Info line every 5 minutes (and one
+// at the first tick, the baseline) so any tester's log carries a slope:
+// private bytes, handles, GDI/USER objects, address space left, our two maps,
+// the fixed-table fill levels and the city/epoch counters. ~2 KB per hour.
+// Nothing here calls into the game. Memory counters come from kernel32's
+// K32GetProcessMemoryInfo (resolved once), so no new import library.
+void UiSpike::HeartbeatTick(unsigned int nowTickMs)
+{
+	const unsigned int kPeriodMs = 5u * 60u * 1000u;
+	if (lastHeartbeatMs != 0
+		&& static_cast<int>(nowTickMs - lastHeartbeatMs) < static_cast<int>(kPeriodMs))
+	{
+		return;
+	}
+	if (firstHeartbeatMs == 0) { firstHeartbeatMs = nowTickMs ? nowTickMs : 1u; }
+	lastHeartbeatMs = nowTickMs ? nowTickMs : 1u;
+	heartbeatSeq++;
+
+	typedef BOOL (WINAPI* PmiFn)(HANDLE, PROCESS_MEMORY_COUNTERS*, DWORD);
+	static PmiFn pmi = nullptr;
+	static bool pmiTried = false;
+	if (!pmiTried)
+	{
+		pmiTried = true;
+		HMODULE k32 = GetModuleHandleW(L"kernel32.dll");
+		if (k32)
+		{
+			pmi = reinterpret_cast<PmiFn>(GetProcAddress(k32, "K32GetProcessMemoryInfo"));
+		}
+	}
+	PROCESS_MEMORY_COUNTERS_EX pm = {};
+	pm.cb = sizeof(pm);
+	if (pmi)
+	{
+		pmi(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pm), sizeof(pm));
+	}
+	MEMORYSTATUSEX ms = {};
+	ms.dwLength = sizeof(ms);
+	GlobalMemoryStatusEx(&ms);
+	DWORD handles = 0;
+	GetProcessHandleCount(GetCurrentProcess(), &handles);
+	const DWORD gdi = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
+	const DWORD usr = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
+	const unsigned int mb = 1024u * 1024u;
+	Logger::Get().WriteLine(LogLevel::Info,
+		"HEARTBEAT #%u t=+%umin privMB=%u peakPrivMB=%u wsMB=%u availVirtMB=%u "
+		"handles=%lu gdi=%lu user=%lu | scaleMap=%u menuBaseline=%u cities=%d "
+		"epoch=%d armed=%d continuous=%d ready=%d bornQ=%d visSeen=%d mdock=%d "
+		"ticks=%u | logKB=%llu",
+		heartbeatSeq,
+		static_cast<unsigned int>((nowTickMs - firstHeartbeatMs) / 60000u),
+		static_cast<unsigned int>(pm.PrivateUsage / mb),
+		static_cast<unsigned int>(pm.PeakPagefileUsage / mb),
+		static_cast<unsigned int>(pm.WorkingSetSize / mb),
+		static_cast<unsigned int>(ms.ullAvailVirtual / mb),
+		static_cast<unsigned long>(handles),
+		static_cast<unsigned long>(gdi),
+		static_cast<unsigned long>(usr),
+		static_cast<unsigned int>(scaleMap.size()),
+		static_cast<unsigned int>(menuBaseline.size()),
+		cityLoads, gGaugeEpoch, armed ? 1 : 0, continuous ? 1 : 0,
+		gReadyCount, gBornQN, gVisSeenN, gMDockLoggedN, tickSerial,
+		Logger::Get().BytesWritten() / 1024ull);
+}
+
 void UiSpike::TickCheck(unsigned int nowTickMs)
 {
 	if (inPass)
@@ -9319,7 +9397,7 @@ void UiSpike::TickCheck(unsigned int nowTickMs)
 		// cIGZWin calls: never run two walks on the same stack.
 		return;
 	}
-	inPass = true;
+	PassGuard passGuard(*this);   // v4.9.0 Beta 1: RAII, see UiSpike.h
 
 	if (armed && static_cast<int>(nowTickMs - fireAtMs) >= 0)
 	{
@@ -9379,7 +9457,8 @@ void UiSpike::TickCheck(unsigned int nowTickMs)
 		LiveViewDump();
 	}
 
-	inPass = false;
+	HeartbeatTick(nowTickMs);
+	// inPass is cleared by passGuard's destructor.
 }
 
 namespace
@@ -9626,6 +9705,31 @@ UiSpike::ScaleState UiSpike::Classify(cIGZWin* win)
 			return ScaleState::Unrecognized;
 		}
 		return ScaleState::ResetToOriginal;
+	}
+	// v4.9.0 Beta 1 (S3): an ANONYMOUS window (id 0) born at a recycled
+	// address matches a dead record's id (0 == 0), fails both size tests and
+	// lands here - silently, until now. That is the "one flyout stuck at 1x
+	// after hours" shape the code already describes (the region-switch
+	// population bug). Say so once per id per city, the MDOCK budget shape.
+	{
+		static uint32_t seen[16];
+		static int seenN = 0;
+		static int seenEpoch = -1;
+		if (seenEpoch != gGaugeEpoch) { seenN = 0; seenEpoch = gGaugeEpoch; }
+		bool dup = false;
+		for (int i = 0; i < seenN; i++) { if (seen[i] == rec.id) { dup = true; break; } }
+		if (!dup && seenN < 16)
+		{
+			seen[seenN++] = rec.id;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: UNRECOG id=0x%08X ptr=%p now %dx%d, record orig %dx%d "
+				"scaled %dx%d%s - left alone. Once per id per city.",
+				rec.id, static_cast<void*>(win), w, h, rec.origW, rec.origH,
+				rec.scaledW, rec.scaledH,
+				rec.id == 0
+					? " [ANONYMOUS: if this is a NEW window at a reused address it stays 1x until restart]"
+					: "");
+		}
 	}
 	return ScaleState::Unrecognized;
 }
