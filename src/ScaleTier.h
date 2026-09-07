@@ -234,6 +234,9 @@ namespace ScaleTier
 	void ScanUncoveredIcons(float factor);
 
 	void EnlargeUncoveredIcons(float factor);
+	// v4.9.0 Beta 1: one log line with every boot-path phase in ms and a
+	// total; call once, after the last boot-path walk in the director ctor.
+	void LogBootPhases();
 
 	// USER-CONFIRMED, real damage: an sc4pac uninstall removes the DLL but
 	// leaves FontStyle.ini behind (sc4pac does not uninstall .ini files, to

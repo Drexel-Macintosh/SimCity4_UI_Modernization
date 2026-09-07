@@ -19,6 +19,7 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <psapi.h>     // v4.9.0 Beta 1: PROCESS_MEMORY_COUNTERS_EX (K32 export in kernel32, no new lib)
 
 #include <cwchar>
 #include <cstdlib>
@@ -379,16 +380,30 @@ namespace
 		FindClose(h);
 	}
 
+	// v4.9.0 Beta 1: how long the content discovery took, in microseconds.
+	// Win32 only (no PerfProbe) because this region is lifted and compiled
+	// standalone by _tests/Test-FolderDiscovery.ps1. Read by LogBootPhases.
+	unsigned long long gDiscoverUs = 0;
+
 	void ResolveOurDirs()
 	{
 		if (gOurDirs.resolved) { return; }
 		gOurDirs.resolved = true;
+		LARGE_INTEGER qf = {}, q0 = {}, q1 = {};
+		QueryPerformanceFrequency(&qf);
+		QueryPerformanceCounter(&q0);
 		wchar_t root[MAX_PATH] = {};
 		PluginsRootQuiet(root, MAX_PATH);
 		int e = 0, o = 0;
 		gEarlyCandidates = 0;
 		gOvrCandidates = 0;
 		ScanForOurDirs(root, 1, e, o);
+		QueryPerformanceCounter(&q1);
+		if (qf.QuadPart > 0)
+		{
+			gDiscoverUs = static_cast<unsigned long long>(q1.QuadPart - q0.QuadPart)
+				* 1000000ull / static_cast<unsigned long long>(qf.QuadPart);
+		}
 		if (!e)
 		{
 			swprintf_s(gOurDirs.early, L"%s010-SC4UIScale\\", root);
@@ -2288,6 +2303,18 @@ namespace IconSynth
 	// ==== BEGIN BOOT-WALK (lifted verbatim by _tests/Test-BootWalk.ps1) ====
 	const int kLongPath = 1024;
 
+	// v4.9.0 Beta 1 counters (region-local so the standalone lift compiles):
+	unsigned gCloudOnlySeen = 0;   // DBPFs that are cloud placeholders - NOT opened
+	unsigned gIndexOpened = 0;     // DBPFs whose index was read
+	unsigned gIndexChunked = 0;    // of those, indexes read in more than one chunk
+	unsigned gBigIndexLogged = 0;  // "big index" lines printed (capped)
+	// Cloud placeholder attributes (OneDrive Files On-Demand and friends). An
+	// open on one of these HYDRATES the file - the whole 20 GB folder if the
+	// scan does it to each - so they are counted and skipped. Literals so the
+	// SDK version does not matter.
+	const DWORD kCloudAttrs = 0x00001000 /*OFFLINE*/ | 0x00040000 /*RECALL_ON_OPEN*/
+		| 0x00400000 /*RECALL_ON_DATA_ACCESS*/;
+
 	// How many entries lived past the classic limit. This is the POSITIVE
 	// CONTROL for the long-path handling itself: the CONTROL icon cannot
 	// detect a truncated walk because it is chosen BY that same walk (#139:
@@ -2296,7 +2323,7 @@ namespace IconSynth
 	int gLongPathsSeen = 0;
 
 	void Walk(const wchar_t* dir, Fingerprint& fp,
-		void (*onFile)(const wchar_t*, const wchar_t*, void*), void* ctx)
+		void (*onFile)(const wchar_t*, const wchar_t*, DWORD, void*), void* ctx)
 	{
 		wchar_t glob[kLongPath];
 		if (swprintf_s(glob, L"%s\\*", dir) < 0) { return; }
@@ -2335,7 +2362,7 @@ namespace IconSynth
 				(static_cast<uint64_t>(fd.ftLastWriteTime.dwHighDateTime) << 32)
 				| fd.ftLastWriteTime.dwLowDateTime;
 			if (t > fp.newest) { fp.newest = t; }
-			if (onFile) { onFile(full, fd.cFileName, ctx); }
+			if (onFile) { onFile(full, fd.cFileName, fd.dwFileAttributes, ctx); }
 		} while (FindNextFileW(h, &fd));
 		FindClose(h);
 	}
@@ -2368,34 +2395,65 @@ namespace IconSynth
 			const uint32_t offset = *reinterpret_cast<uint32_t*>(hdr + 0x28);
 			const uint32_t idxMin = *reinterpret_cast<uint32_t*>(hdr + 0x3C);
 			const uint32_t stride = (idxMin == 1) ? 24 : 20;
-			// Sanity, so a malformed or non-SC4 DBPF cannot make us allocate
-			// wildly or walk off the end.
-			if (count > 0 && count < 200000 && offset > 0)
+			// v4.9.0 Beta 1: NO COUNT CAP. The old `count < 200000` guard
+			// silently skipped any index past it - a mega-pack read as
+			// "no icons" and its icons stayed uncovered with nothing said.
+			// The bound is now the FILE SIZE (64-bit), and the index is read
+			// in 64 KB chunks into a fixed buffer: no malloc, no ceiling.
+			LARGE_INTEGER fsz = {};
+			const unsigned long long need =
+				static_cast<unsigned long long>(offset)
+				+ static_cast<unsigned long long>(count) * stride;
+			if (count > 0 && offset > 0 && GetFileSizeEx(f, &fsz)
+				&& need <= static_cast<unsigned long long>(fsz.QuadPart)
+				&& SetFilePointer(f, offset, nullptr, FILE_BEGIN)
+					!= INVALID_SET_FILE_POINTER)
 			{
-				const uint32_t bytes = count * stride;
-				uint8_t* idx = static_cast<uint8_t*>(malloc(bytes));
-				if (idx)
+				static uint8_t chunk[65536];
+				const uint32_t perChunk = static_cast<uint32_t>(sizeof(chunk)) / stride;
+				uint32_t done = 0;
+				uint32_t chunks = 0;
+				ok = true;
+				while (done < count)
 				{
-					if (SetFilePointer(f, offset, nullptr, FILE_BEGIN)
-							!= INVALID_SET_FILE_POINTER
-						&& ReadFile(f, idx, bytes, &got, nullptr)
-						&& got == bytes)
+					const uint32_t n = (count - done < perChunk) ? (count - done) : perChunk;
+					const uint32_t bytes = n * stride;
+					if (!ReadFile(f, chunk, bytes, &got, nullptr) || got != bytes)
 					{
-						for (uint32_t i = 0; i < count; i++)
-						{
-							const uint8_t* e = idx + i * stride;
-							const uint32_t t = *reinterpret_cast<const uint32_t*>(e);
-							const uint32_t g = *reinterpret_cast<const uint32_t*>(e + 4);
-							const uint32_t inst = *reinterpret_cast<const uint32_t*>(e + 8);
-							if (t == kIconType && g == kIconGroup && onTgi)
-							{
-								onTgi(inst, ctx);
-							}
-						}
-						ok = true;
+						ok = false;
+						break;
 					}
-					free(idx);
+					for (uint32_t i = 0; i < n; i++)
+					{
+						const uint8_t* e = chunk + i * stride;
+						const uint32_t t = *reinterpret_cast<const uint32_t*>(e);
+						const uint32_t g = *reinterpret_cast<const uint32_t*>(e + 4);
+						const uint32_t inst = *reinterpret_cast<const uint32_t*>(e + 8);
+						if (t == kIconType && g == kIconGroup && onTgi)
+						{
+							onTgi(inst, ctx);
+						}
+					}
+					done += n;
+					chunks++;
 				}
+				gIndexOpened++;
+				if (chunks > 1) { gIndexChunked++; }
+				if (count >= 200000 && gBigIndexLogged < 8)
+				{
+					gBigIndexLogged++;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"IconSynth: %ls index has %u entries (%u KB) - read in %u "
+						"chunks (the pre-4.9.0 scan skipped indexes this size).",
+						path, count, static_cast<unsigned>(need - offset) / 1024u, chunks);
+				}
+			}
+			else if (count > 0 && offset > 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"IconSynth: %ls index (%u entries at 0x%X) runs past the file "
+					"(%lld bytes) - malformed, NOT read.",
+					path, count, offset, static_cast<long long>(fsz.QuadPart));
 			}
 		}
 		CloseHandle(f);
@@ -2451,6 +2509,51 @@ namespace IconSynth
 		list.cap = 0;
 	}
 
+	// v4.9.0 Beta 1: the sets are SORTED once per phase and searched by
+	// bisection. The old shape was a linear dedupe per TGI (O(N^2) over a
+	// 20 GB folder's icons) and a linear scan per PNG read in the factory
+	// wrap (O(icons x fixlist)) - both on the boot/city-load path.
+	int U32Cmp(const void* a, const void* b)
+	{
+		const uint32_t x = *static_cast<const uint32_t*>(a);
+		const uint32_t y = *static_cast<const uint32_t*>(b);
+		return (x < y) ? -1 : (x > y) ? 1 : 0;
+	}
+
+	void U32SortUnique(U32List& list)
+	{
+		if (list.n <= 1) { return; }
+		qsort(list.data, static_cast<size_t>(list.n), sizeof(uint32_t), U32Cmp);
+		int w = 1;
+		for (int r = 1; r < list.n; r++)
+		{
+			if (list.data[r] != list.data[w - 1]) { list.data[w++] = list.data[r]; }
+		}
+		list.n = w;
+	}
+
+	bool U32Contains(const U32List& list, uint32_t v)
+	{
+		int lo = 0, hi = list.n - 1;
+		while (lo <= hi)
+		{
+			const int mid = lo + (hi - lo) / 2;
+			const uint32_t m = list.data[mid];
+			if (m == v) { return true; }
+			if (m < v) { lo = mid + 1; } else { hi = mid - 1; }
+		}
+		return false;
+	}
+
+	bool U32IsSorted(const U32List& list)
+	{
+		for (int i = 1; i < list.n; i++)
+		{
+			if (list.data[i] <= list.data[i - 1]) { return false; }
+		}
+		return true;
+	}
+
 	struct PtrList
 	{
 		cIGZUnknown** data;
@@ -2495,15 +2598,33 @@ namespace IconSynth
 	void AddTgi(uint32_t inst, void* /*ctx*/)
 	{
 		if (!gScan) { return; }
+		// v4.9.0 Beta 1: push now, sort+unique once per phase (U32SortUnique).
 		U32List& list = gScan->collectingOurs ? gScan->ours : gScan->theirs;
-		for (int i = 0; i < list.n; i++) { if (list.data[i] == inst) { return; } }
 		U32Push(list, inst);
 	}
 
-	void OnFile(const wchar_t* full, const wchar_t* name, void* /*ctx*/)
+	void OnFile(const wchar_t* full, const wchar_t* name, DWORD attrs, void* /*ctx*/)
 	{
 		if (!gScan || !IsDbpfName(name)) { return; }
 		if (IsOurPackage(name) != gScan->collectingOurs) { return; }
+		if (attrs & kCloudAttrs)
+		{
+			// v4.9.0 Beta 1: a cloud placeholder. Opening it would hydrate it;
+			// counted, named (first 8), never opened. Only in the THEIRS pass
+			// so a file is counted once.
+			if (!gScan->collectingOurs)
+			{
+				gCloudOnlySeen++;
+				if (gCloudOnlySeen <= 8)
+				{
+					Logger::Get().WriteLine(LogLevel::Info,
+						"IconSynth: cloud-only placeholder NOT opened: %ls "
+						"(attrs 0x%08lX) - its icons are unknown to this scan.",
+						full, static_cast<unsigned long>(attrs));
+				}
+			}
+			return;
+		}
 		ReadIconTgis(full, AddTgi, nullptr);
 	}
 
@@ -2534,6 +2655,10 @@ namespace IconSynth
 		gFixList.n = 0;   // keep the buffer; only the logical length resets
 		gControlInst = 0;
 		gLongPathsSeen = 0;
+		gCloudOnlySeen = 0;
+		gIndexOpened = 0;
+		gIndexChunked = 0;
+		gBigIndexLogged = 0;
 
 		// \\?\ turns off the 260-character limit for every path derived from
 		// this root (#139 trap 1). It requires a fully-qualified path with
@@ -2582,42 +2707,48 @@ namespace IconSynth
 				"IconSynth: scan root 2 (install side): %ls", root2);
 		}
 
-		gScan->collectingOurs = true;
-		Walk(root, fp, OnFile, nullptr);
-		if (root2[0]) { Walk(root2, fp, OnFile, nullptr); }
+		Fingerprint fp2 = {};
+		{
+			PerfProbe::Scope perf_("boot.iconIndex");
+			gScan->collectingOurs = true;
+			Walk(root, fp, OnFile, nullptr);
+			if (root2[0]) { Walk(root2, fp, OnFile, nullptr); }
+			U32SortUnique(gScan->ours);
+			gScan->collectingOurs = false;
+			Walk(root, fp2, OnFile, nullptr);
+			if (root2[0]) { Walk(root2, fp2, OnFile, nullptr); }
+			U32SortUnique(gScan->theirs);
+		}
 		const int nOurs = gScan->ours.n;
 		if (nOurs > 0) { gControlInst = gScan->ours.data[0]; }
-
-		Fingerprint fp2 = {};
-		gScan->collectingOurs = false;
-		Walk(root, fp2, OnFile, nullptr);
-		if (root2[0]) { Walk(root2, fp2, OnFile, nullptr); }
 
 		// The difference IS the defect set: icons some plugin supplies at 1x
 		// that no package of ours enlarges. At any tier > 1 the engine scales
 		// the strip's cell but not this art, so the draw over-reads - two
 		// copies at rest, and nothing at all on hover once the state index
 		// walks past the end of the texture.
+		// v4.9.0 Beta 1: both lists are sorted+unique, so this is a merge
+		// (O(ours + theirs)) and gFixList comes out SORTED for InFixList.
 		int uncovered = 0;
 		int logged = 0;
-		for (int i = 0; i < gScan->theirs.n; i++)
 		{
-			const uint32_t inst = gScan->theirs.data[i];
-			bool covered = false;
-			for (int j = 0; j < nOurs; j++)
+			PerfProbe::Scope perf_("boot.iconDiff");
+			int j = 0;
+			for (int i = 0; i < gScan->theirs.n; i++)
 			{
-				if (gScan->ours.data[j] == inst) { covered = true; break; }
-			}
-			if (covered) { continue; }
-			uncovered++;
-			U32Push(gFixList, inst);
-			if (logged < 24)
-			{
-				logged++;
-				Logger::Get().WriteLine(LogLevel::Info,
-					"IconSynth:   UNCOVERED icon {%08X,%08X,%08X} - this one "
-					"renders doubled and vanishes on hover at f=%.2f",
-					kIconType, kIconGroup, inst, factor);
+				const uint32_t inst = gScan->theirs.data[i];
+				while (j < nOurs && gScan->ours.data[j] < inst) { j++; }
+				if (j < nOurs && gScan->ours.data[j] == inst) { continue; }
+				uncovered++;
+				U32Push(gFixList, inst);
+				if (logged < 24)
+				{
+					logged++;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"IconSynth:   UNCOVERED icon {%08X,%08X,%08X} - this one "
+						"renders doubled and vanishes on hover at f=%.2f",
+						kIconType, kIconGroup, inst, factor);
+				}
 			}
 		}
 
@@ -2629,12 +2760,15 @@ namespace IconSynth
 			"(%d past MAX_PATH - #139 cost 10 missed icons to a truncating "
 			"walk, so a 0 here on a NAM install means the \\\\?\\ prefix is "
 			"not working). ours=%d theirs=%d UNCOVERED=%d%s  "
-			"fingerprint=%u/%llu/%llu",
+			"fingerprint=%u/%llu/%llu  indexes opened=%u chunked=%u "
+			"cloudOnly=%u (placeholders NOT opened - UNCOVERED is a lower bound "
+			"when this is nonzero)",
 			fp2.files, fp2.bytes, GetTickCount() - t0, gLongPathsSeen,
 			nOurs, gScan->theirs.n, uncovered,
 			(logged < uncovered) ? " (list truncated at 24 for readability - "
 				"every one is still counted and queued)" : "",
-			fp2.files, fp2.bytes, fp2.newest);
+			fp2.files, fp2.bytes, fp2.newest,
+			gIndexOpened, gIndexChunked, gCloudOnlySeen);
 
 		U32Free(gScan->ours);
 		U32Free(gScan->theirs);
@@ -3035,8 +3169,13 @@ namespace IconSynth
 	typedef bool(__fastcall* FacReadFn)(void*, void*, cIGZPersistResource*, void*);
 	FacReadFn gFacOrigRead = nullptr;
 
+	// v4.9.0 Beta 1: bisection over the sorted fix list; falls back to the
+	// linear scan (never silently wrong) if the list is somehow unsorted -
+	// InstallFactoryWrap logs that case once.
+	bool gFixListSorted = false;
 	bool InFixList(uint32_t inst)
 	{
+		if (gFixListSorted) { return U32Contains(gFixList, inst); }
 		for (int i = 0; i < gFixList.n; i++)
 		{
 			if (gFixList.data[i] == inst) { return true; }
@@ -3052,7 +3191,10 @@ namespace IconSynth
 		// NULL IS NOT EVIDENCE. Without this, "no born-correct lines" reads
 		// identically for "the wrap never ran" and "the wrap ran and our two
 		// icons never came through Read" - two very different next steps.
-		if (gFacReads == 1 || (gFacReads % 500) == 0)
+		// v4.9.0 Beta 1: #1, #1000, then every 10,000 - each line is a
+		// synchronous fflush on the UI thread, and a 20 GB folder reads
+		// tens of thousands of PNGs on a city load.
+		if (gFacReads == 1 || gFacReads == 1000 || (gFacReads % 10000) == 0)
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
 				"IconSynth: factory Read #%u (hits so far %u) - the wrap IS "
@@ -3107,6 +3249,14 @@ namespace IconSynth
 	void InstallFactoryWrap(cIGZPersistResourceFactory* fac, float factor)
 	{
 		if (!fac || gFacInstance) { return; }
+		gFixListSorted = U32IsSorted(gFixList);
+		if (!gFixListSorted && gFixList.n > 1)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth: fix list is NOT sorted (%d entries) - InFixList falls "
+				"back to the linear scan. That is a bug in the scan's merge, not "
+				"a runtime condition.", gFixList.n);
+		}
 		void** vt = *reinterpret_cast<void***>(fac);
 		if (!vt) { return; }
 		for (int i = 0; i < kFacSlots; i++) { gFacVtCopy[i] = vt[i]; }
@@ -3123,6 +3273,77 @@ namespace IconSynth
 			static_cast<void*>(fac), static_cast<void*>(vt),
 			static_cast<void*>(gFacVtCopy),
 			reinterpret_cast<void*>(gFacOrigRead));
+	}
+
+	// v4.9.0 Beta 1: the address-space line. LAA from the exe's own PE
+	// header, virtual space from GlobalMemoryStatusEx, private bytes from
+	// kernel32's K32GetProcessMemoryInfo. Printed at stage-2 start and end so
+	// a user's log shows what the icon work cost in the one resource a
+	// 32-bit process runs out of.
+	void LogAddressSpace(const char* when)
+	{
+		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		bool laa = false;
+		if (base)
+		{
+			const IMAGE_DOS_HEADER* dos = reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
+			const IMAGE_NT_HEADERS* nt =
+				reinterpret_cast<const IMAGE_NT_HEADERS*>(base + dos->e_lfanew);
+			laa = (nt->FileHeader.Characteristics & IMAGE_FILE_LARGE_ADDRESS_AWARE) != 0;
+		}
+		MEMORYSTATUSEX ms = {};
+		ms.dwLength = sizeof(ms);
+		GlobalMemoryStatusEx(&ms);
+		typedef BOOL (WINAPI* PmiFn)(HANDLE, PROCESS_MEMORY_COUNTERS*, DWORD);
+		PROCESS_MEMORY_COUNTERS_EX pm = {};
+		pm.cb = sizeof(pm);
+		HMODULE k32 = GetModuleHandleW(L"kernel32.dll");
+		PmiFn pmi = k32 ? reinterpret_cast<PmiFn>(GetProcAddress(k32, "K32GetProcessMemoryInfo")) : nullptr;
+		if (pmi) { pmi(GetCurrentProcess(), reinterpret_cast<PROCESS_MEMORY_COUNTERS*>(&pm), sizeof(pm)); }
+		const unsigned mb = 1024u * 1024u;
+		Logger::Get().WriteLine(LogLevel::Info,
+			"IconSynth: address space at %s - LAA=%d totalVirtual=%u MB "
+			"availVirtual=%u MB privateBytes=%u MB peakPrivate=%u MB%s",
+			when, laa ? 1 : 0,
+			static_cast<unsigned>(ms.ullTotalVirtual / mb),
+			static_cast<unsigned>(ms.ullAvailVirtual / mb),
+			static_cast<unsigned>(pm.PrivateUsage / mb),
+			static_cast<unsigned>(pm.PeakPagefileUsage / mb),
+			laa ? "" : " - NO 4GB PATCH: this process has 2 GB of address space, "
+			           "and a large plugin folder plus 3x art may not fit.");
+	}
+
+	// v4.9.0 Beta 1: [Probe] IconSynthGcProbe=1 - prove that a garbage-
+	// collected icon comes back enlarged through the factory wrap (the
+	// argument for holding nothing). Re-fetches the first four fix-list keys
+	// both ways after a forced collection and prints sizes + wrap hits.
+	void GcProbe(cIGZPersistResourceManager* rm, float factor, const wchar_t* ini)
+	{
+		if (GetPrivateProfileIntW(L"Probe", L"IconSynthGcProbe", 0, ini) <= 0) { return; }
+		const unsigned hitsBefore = gFacHits;
+		rm->ForceGarbageCollection();
+		Logger::Get().WriteLine(LogLevel::Info,
+			"IconSynth: GCPROBE forced a resource collection (wrap hits before %u).",
+			hitsBefore);
+		for (int i = 0; i < gFixList.n && i < 4; i++)
+		{
+			const cGZPersistResourceKey key(kIconType, kIconGroup, gFixList.data[i]);
+			cIGZBuffer* shared = nullptr;
+			cIGZBuffer* priv = nullptr;
+			const bool gotShared = rm->GetResource(key, GZIID_cIGZBuffer,
+				reinterpret_cast<void**>(&shared), 0, nullptr) && shared;
+			const bool gotPriv = rm->GetPrivateResource(key, GZIID_cIGZBuffer,
+				reinterpret_cast<void**>(&priv), 0, nullptr) && priv;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth: GCPROBE {%08X} after GC: GetResource %dx%d | "
+				"GetPrivateResource %dx%d | wrap hits now %u (f=%.2f)",
+				gFixList.data[i],
+				gotShared ? shared->Width() : -1, gotShared ? shared->Height() : -1,
+				gotPriv ? priv->Width() : -1, gotPriv ? priv->Height() : -1,
+				gFacHits, factor);
+			if (shared) { shared->Release(); }
+			if (priv) { priv->Release(); }
+		}
 	}
 
 	void EnlargeAndRegister(float factor)
@@ -3150,6 +3371,80 @@ namespace IconSynth
 
 		const DWORD t0 = GetTickCount();
 		gMade = gMiss = gSkip = gFail = 0;
+		LogAddressSpace("stage 2 start");
+
+		// v4.9.0 Beta 1 - WRAP FIRST, EAGER ONLY AS A BUDGETED FALLBACK.
+		// Until now this function fetched, enlarged and HELD every uncovered
+		// icon at PostAppInit - ~272 KB each at 3x, proportional to the
+		// player's custom-lot count, never released. 6,619 icons (a measured
+		// 45,945-file install) is ~1.8 GB of a 4 GB address space; a 20 GB
+		// folder does not fit at all. The factory wrap installed at the END of
+		// this function already enlarges an uncovered icon in place at its
+		// FIRST Read, and every consumer's instance passes through that Read
+		// (measured 2026-08-15: GetPrivateResource mints per consumer). So the
+		// wrap is installed FIRST, proven in the same launch (a private fetch
+		// must go through it and count a hit), and when proven the eager loop
+		// does not run and nothing is held. The eager loop survives only for a
+		// game without a factory to wrap, under [IconSynth] EagerBudgetMB.
+		wchar_t iniPath[MAX_PATH] = {};
+		OurIniPath(iniPath, MAX_PATH);
+		const bool noWrap =
+			GetPrivateProfileIntW(L"Probe", L"IconSynthNoWrap", 0, iniPath) > 0;
+		const unsigned budgetMb = static_cast<unsigned>(
+			GetPrivateProfileIntW(L"IconSynth", L"EagerBudgetMB", 256, iniPath));
+		cIGZPersistResourceFactory* fac = nullptr;
+		const bool haveFac = !noWrap && rm->FindObjectFactory(kIconType, &fac);
+		Logger::Get().WriteLine(LogLevel::Info,
+			"IconSynth: factory for type %08X: found=%d ptr=%p (factoryCount=%u)%s "
+			"- the wrap point every consumer's instance passes through.",
+			kIconType, haveFac ? 1 : 0, static_cast<void*>(fac),
+			rm->GetFactoryCount(),
+			noWrap ? " [Probe] IconSynthNoWrap=1: wrap DELIBERATELY not installed" : "");
+		if (haveFac && fac) { InstallFactoryWrap(fac, factor); }
+		bool wrapProven = false;
+		if (gFacInstance)
+		{
+			const unsigned hitsBefore = gFacHits;
+			const cGZPersistResourceKey wk(kIconType, kIconGroup, gFixList.data[0]);
+			cIGZBuffer* wb = nullptr;
+			const bool got = rm->GetPrivateResource(wk, GZIID_cIGZBuffer,
+				reinterpret_cast<void**>(&wb), 0, nullptr) && wb;
+			wrapProven = got && (gFacHits > hitsBefore);
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth: stage 2 WRAP CONTROL {%08X}: GetPrivateResource %s "
+				"%dx%d, wrap hits %u -> %u - %s.",
+				gFixList.data[0], got ? "read back" : "FAILED",
+				got ? wb->Width() : -1, got ? wb->Height() : -1,
+				hitsBefore, gFacHits,
+				wrapProven
+					? "PASS: the wrap is PRIMARY (lazy, in place, nothing held)"
+					: "NOT PROVEN (no hit through the wrap): budgeted eager fallback");
+			if (wb) { wb->Release(); }
+		}
+		else
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth: no factory wrap this launch - budgeted eager fallback "
+				"(%u MB).", budgetMb);
+		}
+		MEMORYSTATUSEX msx = {};
+		msx.dwLength = sizeof(msx);
+		GlobalMemoryStatusEx(&msx);
+		const unsigned long long budgetBytes =
+			static_cast<unsigned long long>(budgetMb) * 1024ull * 1024ull;
+		unsigned long long eagerBytes = 0;
+		int leftUnfixed = 0;
+		bool eagerRefused = false;
+		if (!wrapProven && msx.ullAvailVirtual < 512ull * 1024ull * 1024ull)
+		{
+			eagerRefused = true;
+			leftUnfixed = gFixList.n;
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth: EAGER FALLBACK REFUSED - only %u MB of address space "
+				"left; %d uncovered icons stay 1x rather than exhaust the process.",
+				static_cast<unsigned>(msx.ullAvailVirtual / (1024ull * 1024ull)),
+				gFixList.n);
+		}
 
 		// POSITIVE CONTROL FIRST. One icon we KNOW our packages enlarged: it
 		// must come back at the scaled size. If it comes back 1x the fetch is
@@ -3181,7 +3476,7 @@ namespace IconSynth
 			}
 		}
 
-		for (int i = 0; i < gFixList.n; i++)
+		for (int i = 0; !wrapProven && !eagerRefused && i < gFixList.n; i++)
 		{
 			const uint32_t inst = gFixList.data[i];
 			const cGZPersistResourceKey key(kIconType, kIconGroup, inst);
@@ -3223,6 +3518,20 @@ namespace IconSynth
 				src->Release();
 				continue;
 			}
+
+			// v4.9.0 Beta 1: the byte budget. The enlarged object plus the
+			// 1x the manager caches beside it, per icon; stop at the budget
+			// and say how many were left.
+			const unsigned long long cost =
+				static_cast<unsigned long long>(newW) * newH * 4ull
+				+ static_cast<unsigned long long>(sw) * sh * 4ull;
+			if (eagerBytes + cost > budgetBytes)
+			{
+				leftUnfixed = gFixList.n - i;
+				src->Release();
+				break;
+			}
+			eagerBytes += cost;
 
 			// PATH A - REPLACE THE REGISTRATION. Non-destructive: it builds a
 			// separate object and only swaps it in when every step succeeded,
@@ -3340,26 +3649,37 @@ namespace IconSynth
 			if (priv) { priv->Release(); }
 		}
 
-		// If instances are minted per consumer, the FACTORY is the only point
-		// every one of them passes through - so find out now whether there is
-		// one to wrap, in the same launch rather than the next.
-		cIGZPersistResourceFactory* fac = nullptr;
-		const bool haveFac = rm->FindObjectFactory(kIconType, &fac);
-		Logger::Get().WriteLine(LogLevel::Info,
-			"IconSynth: factory for type %08X: found=%d ptr=%p (factoryCount=%u)"
-			" - this is the wrap point if every consumer gets its own instance.",
-			kIconType, haveFac ? 1 : 0, static_cast<void*>(fac),
-			rm->GetFactoryCount());
-		if (haveFac && fac) { InstallFactoryWrap(fac, factor); }
+		// (v4.9.0 Beta 1: the factory find + wrap install moved ABOVE the loop.)
 
 		// "registered" was the wrong word once this grew a second path, and a
 		// log line that names the wrong mechanism sends the next reader to the
 		// wrong code (#77). Say FIXED, and say how.
-		Logger::Get().WriteLine(LogLevel::Info,
-			"IconSynth: stage 2 done in %u ms - fixed=%d notFound=%d "
-			"skipped=%d failed=%d of %d uncovered. Every fixed icon is held "
-			"by reference so the cache cannot drop it back to 1x.",
-			GetTickCount() - t0, gMade, gMiss, gSkip, gFail, gFixList.n);
+		if (wrapProven)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth: stage 2 done in %u ms - factory wrap PRIMARY: %d "
+				"uncovered icons enlarge lazily at first Read, nothing fetched "
+				"eagerly, nothing held (v4.9.0 Beta 1; before, every one was "
+				"fetched, enlarged and held here).",
+				GetTickCount() - t0, gFixList.n);
+		}
+		else
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"IconSynth: stage 2 done in %u ms - EAGER FALLBACK (wrap %s): "
+				"fixed=%d notFound=%d skipped=%d failed=%d of %d uncovered under "
+				"a %u MB budget (%u MB used); %d left UNFIXED - those render "
+				"doubled at f=%.2f. Raise [IconSynth] EagerBudgetMB or reduce "
+				"lots. Fixed icons are held by reference so the cache cannot "
+				"drop them back to 1x.",
+				GetTickCount() - t0,
+				gFacInstance ? "installed, not proven" : "absent",
+				gMade, gMiss, gSkip, gFail, gFixList.n, budgetMb,
+				static_cast<unsigned>(eagerBytes / (1024ull * 1024ull)),
+				leftUnfixed, factor);
+		}
+		LogAddressSpace("stage 2 end");
+		GcProbe(rm, factor, iniPath);
 	}
 }
 
@@ -4063,6 +4383,39 @@ namespace ScaleTier
 		IconSynth::EnlargeAndRegister(factor);
 	}
 
+	// v4.9.0 Beta 1: ONE LINE NAMING WHERE THE BOOT WENT. Every boot-path
+	// phase records into PerfProbe (discovery records its own microseconds
+	// because that region is compiled standalone by a test); this prints them
+	// with a total, and warns past the project's own 3 s freeze law - so a
+	// stranger's log answers "why is startup slow" without a debugger.
+	void LogBootPhases()
+	{
+		PerfProbe::Row rows[32];
+		const int n = PerfProbe::Snapshot(rows, 32);
+		unsigned long long totalUs = gDiscoverUs;
+		char line[600] = {};
+		int used = _snprintf_s(line, sizeof(line), _TRUNCATE,
+			"discover %u ms", static_cast<unsigned>(gDiscoverUs / 1000ull));
+		for (int i = 0; i < n; i++)
+		{
+			if (strncmp(rows[i].name, "boot.", 5) != 0) { continue; }
+			totalUs += rows[i].totalUs;
+			if (used > 0 && used < static_cast<int>(sizeof(line)) - 48)
+			{
+				used += _snprintf_s(line + used, sizeof(line) - used, _TRUNCATE,
+					" | %s %u ms (x%u)", rows[i].name + 5,
+					static_cast<unsigned>(rows[i].totalUs / 1000ull), rows[i].count);
+			}
+		}
+		const unsigned totalMs = static_cast<unsigned>(totalUs / 1000ull);
+		Logger::Get().WriteLine(LogLevel::Info,
+			"ScaleTier: boot phases - %s | TOTAL %u ms%s", line, totalMs,
+			totalMs > 3000
+				? " - WARNING: over 3000 ms on a watched moment (the project's "
+				  "own freeze law). The phases above say which walk to blame."
+				: "");
+	}
+
 	// ICONSYNTH stage 1 (task #149) - SEPARATE FROM SyncStaticLayers ON PURPOSE.
 	//
 	// IT USED TO LIVE INSIDE SyncStaticLayers AND THAT WAS A REAL BUG.
@@ -4123,6 +4476,7 @@ namespace ScaleTier
 		static bool s_present = false;
 		if (s_checked) { return s_present; }
 		s_checked = true;
+		PerfProbe::Scope perf_("boot.pauseRemover");   // v4.9.0 Beta 1
 		wchar_t pluginsRoot[MAX_PATH] = {};
 		PluginsRoot(pluginsRoot, MAX_PATH);
 		static const wchar_t* const kRemovers[] = {
@@ -4148,6 +4502,14 @@ namespace ScaleTier
 
 	bool WebButtonModPresent(const wchar_t* pluginsDir)
 	{
+		// v4.9.0 Beta 1: MEMOISED. Two callers (SyncStaticLayers and
+		// WebRedirect::Install) each walked BOTH Plugins roots, unbounded,
+		// with a std::wstring per file - four full traversals of a 20 GB
+		// folder at boot for one yes/no. Both pass the same root.
+		static bool s_checked = false;
+		static bool s_present = false;
+		if (s_checked) { return s_present; }
+		s_checked = true;
 		const wchar_t* needle = L"web button improvement mod";
 		// BOTH PLUGIN ROOTS (2026-08-22): the game loads <install>\Plugins as
 		// well, and the same blind spot that hid install-root icons from the
@@ -4175,7 +4537,7 @@ namespace ScaleTier
 					if (!entry.is_regular_file()) { continue; }
 					std::wstring name = entry.path().filename().wstring();
 					for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
-					if (name.find(needle) != std::wstring::npos) { return true; }
+					if (name.find(needle) != std::wstring::npos) { s_present = true; return true; }
 				}
 			}
 			catch (...) { /* unreadable tree -> treat as absent */ }
@@ -4213,7 +4575,11 @@ namespace ScaleTier
 		// Runs before the factor guard below so it applies at every tier,
 		// including stock. (The ShellExecute redirect is gated separately in
 		// the director.)
-		const bool webBtnPresent = WebButtonModPresent(pluginsRoot);
+		bool webBtnPresent = false;
+		{
+			PerfProbe::Scope perf_("boot.webbtn");
+			webBtnPresent = WebButtonModPresent(pluginsRoot);
+		}
 		SyncDat(docPlugins, L"z_SC4UIScale_WebText", L"", !webBtnPresent);
 
 		// #182 GUARD (adversarial review 2026-08-17): now that MANUAL factors
@@ -4260,6 +4626,7 @@ namespace ScaleTier
 		// or was updated out from under the copy we built - must be gated OFF
 		// no matter which tier is active.
 		bool depOk[kThirdPartyDepCount] = {};
+		const unsigned long long depT0 = PerfProbe::NowUs();   // v4.9.0 Beta 1
 		// MEMOIZED lookups (2026-08-25, review finding 4): the eight ZCarbon
 		// rows share two filenames (scoty_Carbon_Files.dat x8,
 		// scoty_carbon_PNG.dat x3), and a FindPluginFile walk has no early
@@ -4414,6 +4781,7 @@ namespace ScaleTier
 					dep.package, hit);
 			}
 		}
+		PerfProbe::Add("boot.deps", PerfProbe::NowUs() - depT0);
 
 		// PUBLIC-INSTALL NET (2026-08-25). The released bundle deliberately
 		// ships NO carbon-derived dats (they are another author's pixels), so
