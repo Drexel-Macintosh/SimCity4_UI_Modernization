@@ -21777,3 +21777,13 @@ files above plus this section to the commit.
   now names the file and its depth instead of saying nothing.
 - `longPathsSeen` was double-counted by the old two-pass scan (120 for 60);
   the index counts once (pastMaxPath=60).
+
+### 08:20 - the fine-key variant is PARKED, not judged
+
+The user can test at 2x only for now. The hybrid runs at 1.5x alone, so the
+A4 variant cannot be judged on this pass: `build_variant_packages.ps1
+-Restore` put the v4.8.0 packages back (`tools/packages/15x`, then
+Deploy-OnGameClose + Test-DatIntegrity), and Beta 1 ships the 1.5x tier
+exactly as v4.8.0 shipped it. The variant tree and packages stay in
+`tools/upscale/preview-15x-thin_h_fk` / `tools/packages/15x-variants/thin_h_fk`
+for a later 1.5x launch; law 117 stands - it does not ship unseen.
