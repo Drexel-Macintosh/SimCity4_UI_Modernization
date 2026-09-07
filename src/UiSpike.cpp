@@ -9368,11 +9368,14 @@ void UiSpike::HeartbeatTick(unsigned int nowTickMs)
 	const DWORD gdi = GetGuiResources(GetCurrentProcess(), GR_GDIOBJECTS);
 	const DWORD usr = GetGuiResources(GetCurrentProcess(), GR_USEROBJECTS);
 	const unsigned int mb = 1024u * 1024u;
+	int fixN = 0, heldN = 0;
+	unsigned facReads = 0, facHits = 0;
+	ScaleTier::IconSynthCounts(&fixN, &heldN, &facReads, &facHits);
 	Logger::Get().WriteLine(LogLevel::Info,
 		"HEARTBEAT #%u t=+%umin privMB=%u peakPrivMB=%u wsMB=%u availVirtMB=%u "
 		"handles=%lu gdi=%lu user=%lu | scaleMap=%u menuBaseline=%u cities=%d "
 		"epoch=%d armed=%d continuous=%d ready=%d bornQ=%d visSeen=%d mdock=%d "
-		"ticks=%u | logKB=%llu",
+		"ticks=%u | icons: uncovered=%d held=%d facReads=%u facHits=%u | logKB=%llu",
 		heartbeatSeq,
 		static_cast<unsigned int>((nowTickMs - firstHeartbeatMs) / 60000u),
 		static_cast<unsigned int>(pm.PrivateUsage / mb),
@@ -9386,6 +9389,7 @@ void UiSpike::HeartbeatTick(unsigned int nowTickMs)
 		static_cast<unsigned int>(menuBaseline.size()),
 		cityLoads, gGaugeEpoch, armed ? 1 : 0, continuous ? 1 : 0,
 		gReadyCount, gBornQN, gVisSeenN, gMDockLoggedN, tickSerial,
+		fixN, heldN, facReads, facHits,
 		Logger::Get().BytesWritten() / 1024ull);
 }
 

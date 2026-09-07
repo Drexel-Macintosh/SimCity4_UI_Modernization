@@ -240,6 +240,10 @@ namespace ScaleTier
 	// v4.9.0 Beta 1: free the one-walk boot index (names arena) after the
 	// last boot consumer; safe to call any time - the next consumer rebuilds.
 	void ReleaseBootIndex();
+	// v4.9.0 Beta 1: the icon-synth counters for the heartbeat line -
+	// uncovered icons in the fix list, objects held by reference, factory
+	// wrap reads and hits this session.
+	void IconSynthCounts(int* fixList, int* held, unsigned* facReads, unsigned* facHits);
 
 	// USER-CONFIRMED, real damage: an sc4pac uninstall removes the DLL but
 	// leaves FontStyle.ini behind (sc4pac does not uninstall .ini files, to

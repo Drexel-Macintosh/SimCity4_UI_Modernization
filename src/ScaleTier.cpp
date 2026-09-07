@@ -4736,6 +4736,14 @@ namespace ScaleTier
 		IconSynth::BootIndex::Release();
 	}
 
+	void IconSynthCounts(int* fixList, int* held, unsigned* facReads, unsigned* facHits)
+	{
+		if (fixList) { *fixList = IconSynth::gFixList.n; }
+		if (held) { *held = IconSynth::gHold.n; }
+		if (facReads) { *facReads = IconSynth::gFacReads; }
+		if (facHits) { *facHits = IconSynth::gFacHits; }
+	}
+
 	void LogBootPhases()
 	{
 		PerfProbe::Row rows[32];
