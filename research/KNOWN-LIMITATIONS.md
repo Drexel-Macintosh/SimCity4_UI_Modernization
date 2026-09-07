@@ -63,6 +63,18 @@ regression suite that holds them in place is in `_tests/`.
   nearest copy by the user's choice — a rendered picture wants hard pixels,
   and the two icon packages are byte-identical to v4.7.2. 2x and 3x are
   untouched: 0 of 2206 sheets changed. Ledger #203 in `_tests/REGRESSION.md`.
+- **"Shrink the 2x tier by 3/4" is the 1.5x area average, not a new resampler.**
+  The exact-area 3/4 reduction of the 2x art integrates the same source over
+  the same output box as the x3 area average with every weight exactly 4x,
+  so it is `box` bit for bit — measured 2026-09-07 (`from2x_box`, 25 stock
+  sheets, 1.7M px: 100.0000% pixel-identical; bench rows identical in every
+  column) — the average the user rejected on screen as soft; a nearest pick
+  from the 2x art is nearest at the opposite phase (the ragged copy, and it
+  moves 9,409 key pixels on 60 keyed sheets); a Lanczos shrink of it has its
+  cutoff above the source band and lands the most uneven strokes in the
+  bench (swc 0.473 vs the hybrid's 0.189) with key fringe. The 2x tier is
+  the source held at 2x2; nothing in it reaches 1.5x that the source does
+  not. Ledger "Beta 1 A2" (2026-09-07) in `_tests/REGRESSION.md`.
 - **Two post-launch 1.5x rule changes were gate-verified, not
   launch-verified.** The user's two launches judged the round-1 tree (round 2
   with the thumbnail sheets returned to shipped bytes). Two changes to the

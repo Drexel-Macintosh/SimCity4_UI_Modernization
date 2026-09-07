@@ -21001,3 +21001,515 @@ table), _tests/Test-15xEdgeQuality.py (baseline refreshed to v4.8.0 as a
 deliberate act, selftest red-capable), gate_hybrid_parity.py (2206/2206),
 gate_key_integrity.py at 1.5/2/3, the 2x/3x sha1 identity manifest,
 Test-DatIntegrity, Test-Builders -Factor 1.5.
+
+## 2026-09-07 — Beta 1 A2: "shrink the 2x" measured — it is `box`
+
+THE PROPOSAL, put on the record as a MEASURED CONTROL so nobody proposes it
+again: "the 2x tier is good; take the 2x art and shrink it by 3/4 for 1.5x".
+Three candidates were added to tools/research/sharp15/x3_candidates.py, each a
+CONTROL (docstring says so), each refusing integer factors by returning
+nearest and refusing every non-1.5 factor, each per cell via _per_cell:
+  from2x_box      2x block replicate, then the exact-area reduction by 3/4 with
+                  INTEGER weights (output k covers 2x thirds [4k, 4k+4); 2x pixel
+                  j covers thirds [3j, 3j+3); the overlap is the weight - (3,1),
+                  (2,2), (1,3), summing to 4 per axis), key-aware exactly as
+                  _box2 (key 2x pixels zero weight, key weight >= half -> exact
+                  key, G=1 nudge), then _nn_key_mask as the hybrid.
+  from2x_nearest  PIL-style centre-phase pick from the 2x replicate: 2x pixel
+                  (4k+2)//3 = source (2k+1)//3. No key mask, deliberately.
+  from2x_lanczos  PIL Image.resize(LANCZOS) on the 2x replicate, per channel in
+                  L mode, no premultiply, no key knowledge; then _nn_key_mask.
+Plus tools/research/sharp15/from2x_diff.py: the direct pixel diff of
+from2x_box against box on the bench's own sheet sample.
+
+PREDICTIONS, written before anything ran:
+  1. from2x_box lands on box's bench row within integer tie-break: max |delta|
+     1 per channel, no |delta| > 1, on every sheet. The sharper form, from the
+     arithmetic: BIT-IDENTICAL, 100% of pixels. Output k covers source
+     [2k/3, 2(k+1)/3) on BOTH grids (x3 cells [2k, 2k+2); 2x thirds [4k, 4k+4)),
+     an x3 cell is 1/3 source px at weight 1 of 2 and a 2x third is 1/6 source
+     px at weight 1 of 4, so per source pixel every from2x weight is exactly
+     4x the x3 box weight, numerator AND denominator (the key exclusion removes
+     the same source pixels from both), and (4s)//(4n) == s//n. Key rule: key
+     weight >= 8 of 16 <-> >= 2 of 4 cells. The only way to get a |delta| of 1
+     is a weight that is NOT an exact multiple - none exists. So the diff must
+     read identical 100%, |d|==1 0%, |d|>1 0%; theorem_check must print the box
+     row again under from2x_box (1: 1+half, 2: 3, 3: 4+half, 4: 6 - same
+     histogram, same swc, same blended count); the bench rows must agree in
+     every column.
+  2. from2x_nearest reads like even_nearest (the unit's wording) - more
+     precisely it IS nearest at the opposite phase (multiplicities 1,2,1,2 for
+     2,1,2,1): zero invented colours, zero blended, soft_frac and edge_w in
+     nearest's range, and on the theorem sheet (both parities present) EXACTLY
+     nearest's width histogram, since a phase shift only swaps which origin
+     parity wins the odd-width coin flip. On the bench that means swc close to
+     nearest AND to even_nearest (those two differ by 0.001 in edge_w and 0.003
+     in soft_frac in the 2026-08 lab table: even_nearest never fixed the
+     odd/even theorem, it only re-ordered the coin flips) - NOT the hybrid's
+     lower swc. On keyed sheets key_moved > 0 (the key set shifts with the
+     phase), which is exactly why R2 pins the key set to nearest's.
+  3. from2x_lanczos is SOFTER than lanczos: higher edge_w, higher soft_frac,
+     more invented colours. PIL widens the kernel by the reduction 4/3 and
+     sees two samples per source pixel at +-1/4, so in source units the
+     kernel is lanczos3(1.5d - 3/8) + lanczos3(1.5d + 3/8); the zero-order
+     hold's sinc attenuates the baseband (0.64 at source Nyquist) while the
+     pass band (to 0.75 cyc/px) reaches into the hold's first image, which is
+     roughness, not detail. lanczos on the source taps the samples directly
+     with the interpolating kernel and has no hold in front of it.
+  Positive controls the run must reproduce or the instrument is wrong: the
+  2x/3x CONTROL rows read manuf 0, soft 0, cv 0; every candidate at an integer
+  factor equals nearest (theorem_check asserts it); SHIPPED 1.5x == thin_h on
+  the unkeyed group (the shipped v4.8.0 tree is thin_h's bytes).
+
+MEASURED (all on 2026-09-07; commands, from tools\research\sharp15:
+`python theorem_check.py`; `python bench.py` (120 unkeyed + 60 keyed, seed 7,
+the bench's own sampler); `python from2x_diff.py 15 10 7`; `python
+tier_panel.py --set default --cand box,from2x_box,thin_h` ->
+_tests\captures\tier-panels\ (11 panels, each 1x | 1.5x shipped | box |
+from2x_box | thin_h | 2x | 3x)).
+
+theorem_check.py: THEOREM CHECK PASS. The control rows at f=1.5 (at the
+integer factors every candidate == nearest, all zeros):
+    nearest          1:{1: 48, 2: 48}  2:{3: 96}  3:{4: 48, 5: 48}  4:{6: 96}   swc 0.111 blended 0
+    from2x_nearest   1:{1: 48, 2: 48}  2:{3: 96}  3:{4: 48, 5: 48}  4:{6: 96}   swc 0.111 blended 0
+    box              1:{1: 96}  2:{2: 48, 3: 48}  3:{4: 96}  4:{5: 48, 6: 48}   swc 0.073 blended 0
+    from2x_box       1:{1: 96}  2:{2: 48, 3: 48}  3:{4: 96}  4:{5: 48, 6: 48}   swc 0.073 blended 0
+    catrom           1:{}  2:{}  3:{}  4:{1: 46, 2: 46}   swc 0.333 blended 292
+    lanczos          1:{}  2:{}  3:{}  4:{}   swc 0.000 blended 384
+    from2x_lanczos   1:{}  2:{}  3:{}  4:{1: 46, 2: 46}   swc 0.333 blended 292
+    thin_h           1:{1: 96}  2:{3: 96}  3:{4: 96}  4:{6: 96}   swc 0.000 blended 0
+from2x_box reproduces box's row; from2x_nearest reproduces nearest's row;
+from2x_lanczos's row is CATROM's, not lanczos's (a narrower kernel - see 3).
+
+from2x_diff.py (25 stock sheets, 15 unkeyed + 10 keyed, 1,698,936 output px):
+    A raw vs box                       identical  100.0000%   |d|==1   0.0000%   |d|>1   0.0000%
+    B masked vs masked box             identical  100.0000%   |d|==1   0.0000%   |d|>1   0.0000%
+    C masked vs box (as registered)    identical   94.4685%   |d|==1   0.0000%   |d|>1   5.5315%
+    C split: alpha-only on nearest-key pixels 93342 (5.4941%), RGB differs 635 (0.0374%)
+    every one of the 15 unkeyed sheets identical at every stage; all of C's
+    differences are on the 10 keyed sheets.
+
+bench.py, verbatim:
+===== UNKEYED sheets  (shipped path = --supersample)  (120 sheets) =====
+path                     manuf/1k   edge_w soft_frac  key_near key_moved key_exact     swc    cv1    cv2    cv3
+CONTROL shipped 2x          0.000    1.001    0.0000         0       n/a         0   0.000   0.00   0.00   0.00
+CONTROL shipped 3x          0.000    1.001    0.0000         0       n/a         0   0.000   0.00   0.00   0.00
+SHIPPED 1.5x               84.029    1.477    0.6572         0         0         0   0.230   0.24   0.18   0.11
+  nearest                   0.000    1.114    0.3481         0         0         0   0.314   0.33   0.00   0.11
+  ss_shipped              115.450    1.661    0.7735         0         0         0   0.470   0.48   0.41   0.37
+  ss_factormap            117.329    1.674    0.7852         0         0         0   0.162   0.16   0.19   0.06
+  majority                  0.000    1.128    0.3797         0         0         0   0.328   0.34   0.15   0.06
+  even_nearest              0.000    1.113    0.3464         0         0         0   0.493   0.51   0.23   0.34
+  from2x_nearest            0.000    1.114    0.3457         0         0         0   0.314   0.33   0.00   0.11
+  ss_restore              116.354    1.671    0.7839         0         0         0   0.162   0.16   0.19   0.06
+  box                     117.329    1.674    0.7852         0         0         0   0.162   0.16   0.19   0.06
+  from2x_box              117.329    1.674    0.7852         0         0         0   0.162   0.16   0.19   0.06
+  thin                      0.000    1.120    0.3472         0         0         0   0.317   0.33   0.05   0.10
+  bold                      0.000    1.098    0.3170         0         0         0   0.314   0.33   0.03   0.10
+  thin_h                  105.193    1.548    0.6934         0         0         0   0.189   0.19   0.19   0.08
+  bold_h                  105.193    1.546    0.6925         0         0         0   0.193   0.20   0.18   0.08
+  thin_hc                 114.770    1.540    0.7538         0         0         0   0.188   0.19   0.19   0.08
+  thin_hl                 126.078    1.525    0.7782         0         0         0   0.181   0.18   0.19   0.08
+  catrom                  268.297    1.810    0.9505         0         0         0   0.351   0.36   0.34   0.40
+  lanczos                 316.429    1.782    0.9602         0         0         0   0.346   0.36   0.33   0.33
+  from2x_lanczos          285.594    1.661    0.8692         0         0         0   0.473   0.50   0.42   0.38
+  scale3x_box             117.933    1.651    0.7916         0         0         0   0.221   0.22   0.24   0.16
+  scale3x_thin              0.000    1.119    0.3442         0         0         0   0.331   0.34   0.16   0.13
+  scale3x_bold              0.000    1.103    0.3269         0         0         0   0.329   0.34   0.16   0.12
+
+===== KEYED sheets    (shipped path = plain NEAREST; --smooth-keyed OFF)  (60 sheets) =====
+path                     manuf/1k   edge_w soft_frac  key_near key_moved key_exact     swc    cv1    cv2    cv3
+CONTROL shipped 2x          0.000    1.003    0.0000         0       n/a   1225904   0.000   0.00   0.00   0.00
+CONTROL shipped 3x          0.000    1.003    0.0000         0       n/a   2758284   0.000   0.00   0.00   0.00
+SHIPPED 1.5x                1.145    1.047    0.1325         0       857    693830   0.273   0.33   0.00   0.10
+  nearest                   0.000    1.042    0.1264         0         0    693795   0.277   0.33   0.00   0.10
+  ss_shipped              177.125    1.466    0.6300    687614    693795         0   0.331   0.38   0.25   0.07
+  ss_factormap            178.019    1.477    0.6348    687993    693795         0   0.200   0.22   0.14   0.05
+  majority                  0.000    1.047    0.1404         0      4049    697508   0.293   0.33   0.16   0.09
+  even_nearest              0.000    1.041    0.1241         0      7733    691982   0.538   0.65   0.18   0.11
+  from2x_nearest            0.000    1.039    0.1173         0      9409    692424   0.277   0.33   0.00   0.10
+  ss_restore               37.607    1.475    0.6332        28      5358    688773   0.199   0.22   0.14   0.05
+  box                     134.149    1.450    0.6119         0      4071    697442   0.202   0.23   0.14   0.06
+  from2x_box               36.005    1.449    0.6104         0         0    693795   0.218   0.25   0.14   0.06
+  thin                      0.000    1.042    0.1239         0      1105    694494   0.284   0.33   0.06   0.08
+  bold                      0.000    1.038    0.1214         0      1355    693394   0.268   0.32   0.03   0.09
+  thin_h                   14.366    1.125    0.2177         0         0    693795   0.264   0.30   0.14   0.08
+  bold_h                   14.366    1.124    0.2170         0         0    693795   0.266   0.31   0.13   0.09
+  thin_hc                  17.773    1.128    0.2555         0         0    693795   0.262   0.30   0.15   0.08
+  thin_hl                  19.774    1.127    0.2599         0         0    693795   0.261   0.30   0.15   0.08
+  catrom                  243.229    1.539    0.9369         0      4627    693826   0.302   0.34   0.17   0.21
+  lanczos                 274.658    1.557    0.9393         0      4447    694138   0.288   0.34   0.17   0.15
+  from2x_lanczos          148.274    1.463    0.8081       116         0    693795   0.499   0.63   0.19   0.15
+  scale3x_box             134.157    1.444    0.6140         0      4801    697778   0.266   0.29   0.24   0.09
+  scale3x_thin              0.000    1.042    0.1230         0      2964    696091   0.306   0.35   0.18   0.11
+  scale3x_bold              0.000    1.038    0.1187         0      3134    695335   0.290   0.33   0.18   0.11
+
+AGAINST THE PREDICTIONS:
+  1. HELD, in the sharper form. from2x_box == box to the bit at the arithmetic
+     stage: 100.0000% of 1.7M px, zero pixels at |d|==1 - there is no
+     tie-break because there is no rounding, every weight is an exact 4x. On
+     the unkeyed bench group the two rows agree in EVERY column. Theorem rows
+     identical.
+     D1 (a deviation of the setup, not of the arithmetic): on the KEYED group
+     the rows differ (manuf 134.1 vs 36.0, key_moved 4071 vs 0, key_exact
+     697442 vs 693795, swc 0.202 vs 0.218) because the lab `box` candidate
+     applies NO nearest key mask - only the _h/_hc/_hl modes do - while this
+     unit specified from2x_box WITH it. Stage B (both masked) is 100.0000%
+     identical, and stage C's 5.53% is exactly 93,342 alpha-only pixels on
+     nearest-key positions (_box2 writes the KEY constant with alpha 255,
+     which the source does not contain - hence `box`'s inflated invented
+     count and its 4,071 moved key pixels; the mask copies nearest's pixel
+     with its source alpha) plus 635 RGB pixels where the coverage rule and
+     nearest's key set disagree. The masked form IS the shipping rule
+     (from2x_box's key_exact 693795 == nearest's), so the row to hold a
+     "shrink the 2x" proposal against is from2x_box's: the box under the key
+     rule every shipped 1.5x sheet obeys.
+  2. HELD in the derived form, and the unit's wording was WRONG: from2x_nearest
+     reads like NEAREST, not like even_nearest. swc 0.314 / cv1 0.33 / cv2 0.00
+     / cv3 0.11 on the unkeyed group and 0.277 / 0.33 / 0.00 / 0.10 keyed -
+     nearest's numbers to three places on both groups - while even_nearest
+     reads 0.493 and 0.538. The three copy rules agree only on the
+     whole-image columns (manuf 0, edge_w 1.11, soft 0.35), which is all the
+     2026-08 lab could see. Phase shift confirmed: soft_frac 0.3457 vs 0.3481
+     (a different set of edges lands on the 2-wide phase) and, keyed, 9,409
+     moved key pixels - the reason R2 pins the key set to nearest's.
+  3. REFUTED. from2x_lanczos is NOT softer than lanczos; on every whole-image
+     softness column it is SHARPER: edge_w 1.661 vs 1.782, soft_frac 0.8692 vs
+     0.9602, invented 285.6 vs 316.4 per 1k (keyed: 1.463 vs 1.557, 0.808 vs
+     0.939, 148.3 vs 274.7). What it is instead is ROUGHER: swc 0.473 / cv1
+     0.50 unkeyed and 0.499 / 0.63 keyed - the worst stroke-width consistency
+     in the table alongside even_nearest and ss_shipped, 2.5x the shipped
+     hybrid's 0.189 - and it fringes 116 near-key pixels on the keyed group
+     (the naive filter has no key knowledge; the mask restores the key SET,
+     not the colours beside it). The prediction weighed the wrong term. PIL
+     antialiases to the OUTPUT Nyquist: on a 4/3 reduction its kernel is
+     lanczos3(x / (4/3)) in 2x pixels = lanczos3(1.5 d) in source pixels,
+     cutoff 0.75 cyc/px, ABOVE the source's 0.5, support +-2 source px against
+     the direct kernel's +-3 with cutoff 0.5. The hold's two-sample comb
+     (cos(pi f / 2): 0.71 at 0.5 cyc/px) is a mild roll-off next to that;
+     the net filter passes the whole source band and the low end of the
+     hold's first image band (source content at 0.25-0.5 cyc/px folded to
+     0.5-0.75), which is where the stroke widths go 1-or-2 again. Sharper
+     edges, ragged strokes, key fringe: the two rejected horns at once. Its
+     theorem row (catrom's, 292 blended, 4px strokes measured 1|2) said the
+     same thing before the bench did.
+     Caveat on swc for blenders: swc is computed on the runs whose centre
+     pixel holds the exact source colour, so it is a subset number for a
+     blender (from2x_lanczos blended 1,879,295 runs on the unkeyed group,
+     lanczos 1,814,585, catrom 1,758,800 - stroke_width.sheet_stats
+     ink=True); the whole-image columns carry the softness verdict. Pooled
+     swc_ink (A4's relative instrument, no zero control, mid-change this
+     session - not load-bearing here): nearest 1.192, lanczos 1.197, catrom
+     1.218, from2x_lanczos 1.253, thin_h 1.272, box 1.274.
+  D4. The stated positive control "SHIPPED 1.5x == thin_h on the unkeyed
+     group" was over-stated: the rows differ (84.0 / 1.477 / 0.657 / 0.230
+     vs 105.2 / 1.548 / 0.693 / 0.189). Per sheet: 85 of 120 unkeyed sheets
+     are thin_h's bytes exactly; the other 35 are 24 thumbnails (group
+     6a386d26, in thumbnails.txt, shipped == nearest - the user's choice at
+     launch 2) and 11 even-strips sheets (in even-strips.txt, refused by the
+     even-strips rule and built by the cell path). Nothing unexplained. Keyed
+     group: 6 of 60 are thin_h, 51 are plain nearest (41 plain + 10
+     even-strips), 3 even-strips-other - the bench label's own statement of
+     the keyed policy. Observation only; not this unit's business.
+  The instrument controls held: 2x/3x rows 0.000 / 0.0000 / 0.00 everywhere;
+  every candidate == nearest at 2 and 3 (theorem_check asserts it).
+
+VERDICT: "take the 2x art and shrink it by 3/4" is not a resampler for the
+1.5x tier - it is the ones already on the table, reached the long way round.
+The 2x tier is the source held at 2x2; every kernel run on it is a kernel on
+the source. The exact-area shrink IS `box`, bit for bit (the average the user
+rejected on screen as soft, pre-#200); the nearest pick from it IS nearest at
+the other phase (the ragged copy rejected on screen, #200), moving 9,409 key
+pixels on 60 keyed sheets for good measure; the Lanczos shrink is a Lanczos
+with its cutoff above the source band - sharper than the source Lanczos on
+the edge columns and the most uneven strokes in the table, plus key fringe.
+None of the three approaches the shipped hybrid on any column it was chosen
+for (thin_h: invented 105.2, soft 0.693, swc 0.189; from2x_box 117.3 / 0.785 /
+0.162 is the box trade the hybrid was built to escape; from2x_lanczos 285.6 /
+0.869 / 0.473). Recorded in research/KNOWN-LIMITATIONS.md so it is not
+proposed again. Files: tools/research/sharp15/x3_candidates.py (three
+controls, registered), tools/research/sharp15/from2x_diff.py (new,
+allowlisted in .gitignore), _tests/captures/tier-panels/ (11 panels,
+gitignored game art), this entry. Upscale2x.cs and the shipped trees
+untouched.
+
+---
+
+## 2026-09-07 — Beta 1 A3: crash census — 20 exception reports (19 non-empty), 14 never ledgered
+
+Full census in `_tests\CRASH-CENSUS.md`. Read every `.txt` in
+`Documents\SimCity 4\Exception Reports\` (the `.mdmp` minidumps were not
+opened); 20 files, one 0-byte (08-30 06:45:43). DLL faults were mapped by
+searching the EIP bytes in the shipped `Plugins\SC4UIScale.dll` and converting
+file offset → RVA through the PE section table; exe faults were confirmed
+byte-exact against the installed `SimCity 4.exe` and grepped against `docs\`
+and this file for a prior attribution.
+
+| # | when | code | fault module | EIP | RVA (Sec:Off) | ECX / ESI / EAX | first 16 bytes @ EIP | top 3 frames | DLL image size | ledgered? |
+|---|------|------|--------------|-----|---------------|-----------------|----------------------|--------------|----------------|-----------|
+| 1 | 08-05 15:48:39 | AV | SimCity 4.exe | 0x00884fe1 | 0x484fe1 (01:0x47dfe1) | 0 / 02fa0020 / 0 | `c6 44 08 01 00 8b 96 14 01 00 00 8b 86 1c 01 00` | exe 01:0047dfe1; GZDll+580630; GZDll+134413 | 1,581,056 | no |
+| 2 | 08-05 15:56:54 | AV | SimCity 4.exe | 0x00884fe1 | 0x484fe1 | 0 / 02f80020 / 0 | `c6 44 08 01 00 …` | exe 01:0047dfe1; GZDll+580630; GZDll+134413 | 1,581,056 | no |
+| 3 | 08-05 16:01:05 | AV | SimCity 4.exe | 0x00884fe1 | 0x484fe1 | 0 / 031d0020 / 0 | `c6 44 08 01 00 …` | exe 01:0047dfe1; GZDll+580630; GZDll+134413 | DLL not loaded | no |
+| 4 | 08-05 16:02:06 | AV | SimCity 4.exe | 0x0098e9a6 | 0x58e9a6 (01:0x5879a6) | 0 / 030e8b14 / 00adaa58 | `8b 41 4c 83 c1 4c ff 60 3c cc 8b 81 e4 00 00 00` | GZDll+527273; GZDll+587663; exe 01:00472f8e | DLL not loaded | no |
+| 5 | 08-05 16:03:08 | AV | SimCity 4.exe | 0x0098e9a6 | 0x58e9a6 | 0 / 03028b14 / 00adaa58 | `8b 41 4c 83 c1 4c …` | GZDll+527273; GZDll+587663; exe 01:00472f8e | DLL not loaded | no |
+| 6 | 08-05 16:04:54 | AV | SimCity 4.exe | 0x0098e9a6 | 0x58e9a6 | 0 / 030b8b14 / 00adaa58 | `8b 41 4c 83 c1 4c …` | GZDll+527273; GZDll+587663; exe 01:00472f8e | DLL not loaded | no |
+| 7 | 08-05 16:10:46 | AV | SimCity 4.exe | 0x0098e9a6 | 0x58e9a6 | 0 / 02f78b14 / 00adaa58 | `8b 41 4c 83 c1 4c …` | GZDll+527273; GZDll+587663; exe 01:00472f8e | DLL not loaded | no |
+| 8 | 08-05 16:11:12 | AV | SimCity 4.exe | 0x0098e9a6 | 0x58e9a6 | 0 / 030a8b14 / 00adaa58 | `8b 41 4c 83 c1 4c …` | GZDll+527273; GZDll+587663; exe 01:00472f8e | DLL not loaded | no |
+| 9 | 08-14 15:01:28 | **PRIV_INSTRUCTION** | (none) | 0x36363c2a | — (heap) | 36363c18 / 00825d60 / 77db9fdc | `6e 8a 96 00 00 00 63 01 00 00 98 01 00 00 cd 04` | (stack only) | 1,597,440 | **yes — #156** |
+| 10 | 08-14 15:02:03 | **PRIV_INSTRUCTION** | (none) | 0x363434ac | — (heap) | 00825d5f / 511502c9 / 1ae25d15 | `f4 01 00 00 f4 01 00 00 00 00 00 00 00 00 00 00` | 00:00000000 | 1,597,440 | **yes — #156** |
+| 11 | 08-14 16:06:19 | AV | SimCity 4.exe | 0x0099c4a1 | 0x59c4a1 (01:0x5954a1) | 1 / 36020e18 / 1d430ea0 | `83 7b 64 00 0f 84 48 02 00 00 8b 03 83 65 f8 00` | GZDll+583332; **SC4UIScale 01:0000482b**; GZDll+580644 | 1,605,632 | **yes — #156** |
+| 12 | 08-18 08:30:43 | AV | **SC4UIScale.dll** | 0x6ff3bc8a | **0x2bc8a** (01:0x2ac8a) | 00e20000 / 00c90f91 / 00400000 | `80 7e fb e8 74 18 80 7e fe ff 74 12 80 7e fd ff` | SC4UIScale 01:0002ac8a; exe 01:001e191c; exe 03:0005b698 | 1,691,648 | **no** |
+| 13 | 08-18 15:43:51 | AV | **SC4UIScale.dll** | 0x6e149a29 | **0x29a29** (01:0x28a29) | 38 / 0 / 030f0124 | `8b 33 2b f2 81 c6 00 00 40 00 e8 18 6d 00 00 83` | SC4UIScale 01:00028a29; SC4UIScale 01:00028aaf | 1,691,648 | **yes — power-plant probe** |
+| 14 | 08-18 15:44:35 | AV | **SC4UIScale.dll** | 0x6ff39a29 | **0x29a29** | 38 / 0 / 03020010 | `8b 33 2b f2 81 c6 00 00 40 00 …` | SC4UIScale 01:00028a29; SC4UIScale 01:00028aaf | 1,691,648 | **yes — power-plant probe** |
+| 15 | 08-23 17:36:22 | AV | SimCity 4.exe | 0x007b4683 | 0x3b4683 (01:0x3ad683) | 410 / 0 / 15a | `8b 55 00 8b cd 89 44 24 18 ff 92 8c 00 00 00 33` | (stack only) | 2,039,808 | no |
+| 16 | 08-23 17:36:48 | AV | SimCity 4.exe | 0x007b4683 | 0x3b4683 | 410 / 0 / 15a | `8b 55 00 8b cd …` | (stack only) | 2,039,808 | no |
+| 17 | 08-23 17:40:51 | AV | SimCity 4.exe | 0x007b4683 | 0x3b4683 | 410 / 0 / 15a | `8b 55 00 8b cd …` | (stack only) | 2,039,808 | no |
+| 18 | 08-30 06:45:43 | — | — | — | — | — | (0-byte file — no record) | — | n/a |
+| 19 | 08-31 13:08:52 | AV | **SC4UIScale.dll** | 0x6f329000 | **0x49000** (01:0x48000) | 00400000 / 00d634ac / 5 | `80 7e fb e8 74 18 80 7e fe ff 74 12 80 7e fd ff` | SC4UIScale 01:00048000; exe 01:001e191c | 2,224,128 | **no** |
+| 20 | 09-01 10:58:47 | AV | SimCity 4.exe | 0x0099d757 | 0x59d757 (01:0x596757) | 009d6610 / 009d6610 / e904e983 | `ff 90 fc 00 00 00 50 ff 75 f8 ff 55 0c 83 c4 10` | GZDll+588122; **SC4TouchControls 01:00006bd4**; GZDll+588135 | 2,224,128 | no |
+
+**Our-DLL faults (4 reports, 2 functions).** `80 7e fb e8 …` (= `cmp byte
+ptr [esi-5],0E8h / …`, the return-address sniffer's `c[-5]==0xE8` cascade) is
+**`LogBubbleCallStack`** — #12 and #19; confirmed by the same bytes in the
+shipped v4.8.0 DLL at RVA 0x49000 immediately followed by
+`push "CodePatches: BUBBLESTACK%s."`. `8b 33 2b f2 81 c6 00 00 40 00` (= `mov
+esi,[ebx] / sub esi,eax / add esi,0x400000`) is **`SpGetterLog`** (RVA 0x29a29,
+ECX=0x38) — #13/#14, the power-plant crash already recorded above (2026-08-18);
+its bytes are gone from the shipped DLL because that site was `__try`-wrapped.
+No report shares `LogBubbleCallStack`'s bytes beyond #12/#19; four *other*
+byte-signature groups recur, all in the exe (0x884fe1 ×3, 0x98e9a6 ×5,
+0x7b4683 ×3).
+
+**Exe faults (8 reports, 4 addresses) — none attributed anywhere in the repo.**
+RVAs 0x484fe1 (`mov byte[eax+ecx+1],0`, null base), 0x58e9a6 (`jmp [eax+3C]`
+after a null-`this` load), 0x59c4a1 (`mov eax,[ebx]`, adjacent to `PlotPresent`
+0x0099C498), 0x3b4683 (`call [edx+8C]`), 0x59d757 (`call [eax+FC]`). ⚠ The
+`0x00910010` minimap-bake family (#109/#121, REGRESSION.md:5262-5268 and
+5437-5460) is **08-03/08-04 and no longer in the folder** — the surviving 08-05
+cluster faults elsewhere, and #3-8 crashed with **SC4UIScale.dll not even
+loaded**, so that cluster is not ours and not the bake family. #20's stack is
+dominated by **SC4TouchControls.dll** (a different mod).
+
+**Unmapped (task item c).** #9/#10 (08-14 PRIV_INSTRUCTION) execute at heap
+addresses (0x36363c2a, 0x363434ac) with no module — no RVA, no byte map. Loaded
+image size 1,597,440 places them in the ≈v2.9x era; they and #11 are the
+**#156** hook-signature episode (2026-08-14: "PRIV_INSTRUCTION from a wrong
+arity, ACCESS_VIOLATION from `__stdcall`…"), #11's `SC4UIScale 01:0000482b`
+frame corroborating.
+
+**THE RULE.** An exception report younger than the last ledger entry blocks a
+release; the release checklist reads that folder first (RUNBOOK §6). The game
+writes these for free and they sat unread — two of our own probe crashes
+(`LogBubbleCallStack`) were never recorded, and `SpGetterLog` had been fixed
+while a *second* unguarded probe kept faulting. New build gate
+**`_tests\Test-ProbeDerefGuards.py`** fails the build on any speculative
+dereference (rebase / raw vptr read / vtable-slot call) outside a `__try`,
+which is the exact shape behind #12/#13/#14/#19.
+
+## 2026-09-07 — Beta 1 A4: the fine-key lift, gate-verified, awaiting the user's eyes
+
+THE QUESTION. v4.8.0's hybrid dispatch (Upscale2x.cs, the #175 fine-key guard
+at MinKeyRun) still hands every keyed sheet whose smallest key run is 1-2 px to
+NEAREST - `sHybridSkippedFineKey`. That refusal was measured for the
+coverage-re-keyed SMOOTH path (the ladder's 1px and 2px key gaps collapsed to
+one width); under the hybrid the key set is nearest's by rule, so the reason
+the refusal existed no longer applies to it. Whether the hybrid's colour under
+a fine key looks better is the user's call, in-game - this unit builds that A/B
+and gate-verifies it. No C# change; Upscale2x.cs is untouched until the verdict.
+
+HOW THE A/B IS BUILT (same rig as #203): build_variant_tree.py gained
+--hybrid-finekey - sheets the round-1 manifest kept as `finekey` take thin_h;
+even-strips / no-smooth / thumbnails stay kept exactly as before; kept sheets
+are now BYTE copies of the shipped file (round 1 re-encoded them through PIL).
+build_variant_packages.ps1 -Variant thin_h_fk then runs the four preview-tree
+consumers through SC4UI_UPSCALE_DIR (+ _ACK=lab).
+
+THE 377 ARE 375 + 2. The round-1 manifest's `finekey` count was 377. Two of
+them are the Mayor Rating ladders {46a006b0,14015549} + {1abe787d,14015549}
+(redraw_ladder.py LADDERS, read from that file): their shipped bytes are the
+#180 re-lay, which Rebuild-Corpus.ps1 runs AFTER the exe and which would
+overwrite a lifted C# output just the same. They are counted `ladder` now and
+kept. Lifted: 375. Manifest counts (thin_h_fk): cand 1572 = 1197 round-1
+hybrid + 375 lifted; even 275, nosmooth 1, thumb 356, ladder 2, finekey 0,
+finekey_lifted 375, keyed_skipped 0, missing_src 0; nine 30 (21 of the lifted
+are nine-slice sheets), tiled 9.
+
+TREE VERIFICATION against tools\upscale\preview-15x (2206 sheets): same names,
+dims identical on all 2206 (law 66). Pixels differ on EXACTLY the 375 lifted
+sheets - the pixel-different set equals the lifted set, no lifted sheet came
+out pixel-identical, no non-lifted sheet changed a pixel. Bytes: the 634 kept
+sheets are byte-identical; the 1197 round-1 hybrid sheets are pixel-identical
+to the shipped C# output but not byte-identical (PIL container vs GDI+, the
+same fact #203 records) - so this run re-proved C#/Python parity on 1197/1197
+hybrid sheets as a by-product.
+
+PREDICTIONS, written before the instruments ran:
+  P1  exact-key set identical to shipped on every lifted sheet (the key mask
+      copies nearest's key set).
+  P2  key_moved 0 on the 375 (0 before; the corpus's 2,059 are the ladders'
+      936 + four #172/#180-class sheets, none of them lifted).
+  P3  key_near unchanged (key cells carry zero weight; keyed stock has no
+      near-key pixel to blend from).
+  P4  swc on the lifted sheets down by roughly a third (the unit's number);
+      the tighter form: LESS than a third, because on a fine-key sheet a
+      large share of the bounded 1-2 px runs ARE key runs, and the key set
+      is pinned to nearest's - those runs keep nearest's 1|2 raggedness by
+      design.
+
+MEASURED - AND P1 FAILED ON THE FIRST BUILD, WHICH IS THE FINDING OF THIS UNIT.
+gate_key_integrity --dir preview-15x-thin_h_fk --factor 1.5 went RED on 12
+lifted sheets, 61 predicted-key pixels NOT key on each: {1abe787d,14416220 /
+14416224} and {46a006b0,14416220..14416223, 14416225..1441622a} - the 129x129
+nine-slice frames (min key run 1). Diagnosis, measured on 46a006b0/14416220:
+the shipped key set == the SHEET-level nearest map (BuildSampleMap, whole
+sheet: 195 >= floor(129*1.5) -> floor(o/1.5)); the variant key set == the
+PER-CELL nearest map (3x3 cells, 43 -> 65 px, a non-integral 1.5x cell: cell k
+maps local floor(o/1.5) from an origin of 43k, which lands one source column
+off the sheet map at every third column of the 2nd and 3rd cells). The
+candidate's key mask (`_nn_key_mask`, "nearest is the factor map inside the
+cell") was written for cell-strip sheets, which the even-strips rule refuses
+before the hybrid runs; a nine-slice sheet with an odd cell width reaches it,
+and only the fine-key refusal had kept these 12 away from it. 61 px each =
+key pixels the per-cell map placed one column over. The C# port carries the
+same per-cell rule (parity), so a straight C# lift would fail R2 identically.
+CURE IN THE VARIANT BUILDER (build_variant_tree.py, lifted sheets only): the
+exact-key set is held to the SHIPPED NEAREST'S SHEET MAP - the gate's own R2
+model, mirrored (cell-strips states, whole sheet) - and where the candidate's
+per-cell mask disagrees the pixel is the shipped one, nearest's verbatim.
+Counted: key_set_px_reverted 732 = 12 sheets x 61 px, key_set_not_nearest 0;
+a no-op on the other 363. Rebuilt: gate_key_integrity PASS (scanned 2206,
+keyed 466, exempt 4, unverifiable 0, near-key-inherited-from-stock 1 - the
+same census line as the shipped tree). THE C# LIFT NEEDS THE SAME RULE (a
+sheet-level key mask in UpscaleHybrid) OR A REFUSAL for nine-slice cells whose
+1.5x width is not integral; that is a port decision for after the verdict, and
+the 12 sheets are the sheets to look at on screen for it.
+
+PIXEL REPORT on the 377 (shipped 1.5x vs thin_h_fk, against the 1x extract):
+  exact-key set identical 377/377; pixel-identical 2 (the ladders); key_near
+  rose on 0 sheets; key_moved changed on 0 sheets.
+                       swc     cv1    cv2    cv3    cv4   swc_ink  blended  manuf    soft_frac edge_w  key_exact  key_near key_moved
+  lifted 375 shipped   0.2789  0.334  0.000  0.103  0.000  1.3086       0        0    0.1263   1.040  3,609,742      0        0
+  lifted 375 variant   0.2365  0.273  0.117  0.070  0.050  1.3770   8,328  425,963    0.2105   1.120  3,609,742      0        0
+  ladders 2  both      0.3697  0.566  0.235  0.023  0.000  0.7085     152        0    0.0106   1.003      2,106      0      936
+  Per lifted sheet, swc: better 300, same 2, worse 73 (worst moves +0.04).
+  VERDICTS: P1 holds AFTER the sheet-map rule (it did not hold before it -
+  12 sheets); P2 holds; P3 holds; P4 does NOT - swc fell 15.2% on the lifted
+  sheets, not a third, and the tighter form was right about why (cv2 and cv4
+  rise from 0 the way they did corpus-wide in #203: the metric reads the
+  exact-colour core of an even run whose edge blended). swc_ink got WORSE on
+  the lifted set (1.309 -> 1.377): the blends spread a stroke's ink over the
+  spill pixel unevenly across phases - the ink number does not endorse the
+  lift, only the eyes can.
+
+EDGE-QUALITY GATE, whole corpus (_tests\Test-15xEdgeQuality.py; 2x and 3x
+controls read manuf 0 soft 0 swc 0 on 2206 sheets both runs):
+  shipped v4.8.0   manuf 6,197,630  soft 0.5638  edge_w 1.370  swc 0.2237
+                   cv1 0.232 cv2 0.133 cv3 0.095 cv4 0.052  swc_ink 1.4668
+                   key_near 10,251  key_moved 2,059   PASS within baseline
+  thin_h_fk        manuf 6,623,593  soft 0.5779  edge_w 1.392  swc 0.2203
+                   cv1 0.228 cv2 0.149 cv3 0.083 cv4 0.064  swc_ink 1.4720
+                   key_near 10,251  key_moved 2,059  (2x/3x controls: manuf 0, swc 0)
+                   FAIL (377) - every line is the same class: "invented N colours,
+                   baseline 0, not in a blending list" on 375 lifted sheets (all 375 of
+                   them invent colours now; the two extra lines are the corpus-level
+                   cv2 0.149 > 0.133+0.005 and cv4 0.064 > 0.052+0.005 - the even-run
+                   core effect of #203, on more sheets). No dims line, no key_near
+                   line, no key_moved line: the gate's transparency and dimension
+                   invariants hold on the variant. This FAIL is the gate doing its job
+                   (a resampler may not start blending copy-only sheets without a
+                   deliberate baseline refresh); it is not a defect and it is not
+                   green - it becomes green only by --refresh-baseline after a YES.
+                   Corpus swc 0.2237 -> 0.2203, cv1 0.232 -> 0.228, swc_ink 1.4668 ->
+                   1.4720, manuf +425,963, soft_frac 0.5638 -> 0.5779, edge_w 1.370 ->
+                   1.392: the lift moves the whole-corpus numbers by 1.5%, the way 375
+                   of 2206 sheets would.
+
+swc_ink IS A COLUMN NOW (beside swc, in measure/corpus/JSON/baseline), from
+stroke_width.py's ink measure, which was VECTORISED for it (the per-run loop
+was ~25M iterations per tier; equal to rounding against the loop on 120
+sheet/tier pairs - max per-run |diff| 4.6e-13 from numpy's SIMD reduction
+order, pooled swc_ink within 4.4e-16; 13x faster). It has NO zero control: the
++1 spill pixel makes per-run ink depend on the neighbour's contrast, so the
+integer tiers read a floor - 2x 1.3896, 3x 1.4230 - reported, not gated. At
+1.5x it is gated relative to the baseline ONLY once the baseline records it;
+the committed baseline (2026-09-01) does not, so the run prints a NOTE with the
+current value. BASELINE'S swc_ink, for the refresh decision: 1.4668 on the
+shipped v4.8.0 tree. Nothing was refreshed.
+  --selftest WAS RED FOR THE WRONG REASON since the v4.8.0 rebuild and nobody
+  had noticed: mutation 2 repaints the centre pixel with a novel colour and
+  expects manuf +1, but on a hybrid sheet the centre pixel is already a blend
+  (already counted), so manuf did not move - "blend-pixel caught=False", exit
+  1, at HEAD before this unit touched the file. Repaired: the mutated pixel
+  must be a SOURCE colour (searched for), and manuf must rise by exactly 1;
+  mutation 1 now also requires swc_ink to move. Selftest: exit 0, all three
+  detectors fire.
+
+gate_row_banding.py RE-RUN (reads tools\selective-safe\stage-15x / stage /
+stage-3x - the STAGED sheets; run BEFORE the variant packages overwrote
+stage-15x, so this is the shipped v4.8.0). thresh 12:
+  14015555  1.5x RAGGED 118/260 = 0.454   2x 0.000  3x 0.000
+  13f15230  1.5x RAGGED 116/216 = 0.537   2x 0.000  3x 0.000
+  14415860  1.5x RAGGED 101/268 = 0.377   2x 0.000  3x 0.000
+  13d14ca0  1.5x RAGGED  69/335 = 0.206   2x 0.000  3x 0.000  (the control sheet)
+  controls clean; "RAGGED AT 1.5x ONLY" on all four. Under the hybrid this
+  ridge-thickness metric still reads ragged: a blended ridge has no single
+  thickness, and the metric's own docstring makes it a #162 mechanism test,
+  not a quality score. Re-run AFTER the variant packages (stage-15x =
+  thin_h_fk): the three #162 buttons are unkeyed, untouched by the lift, and
+  read 0.454 / 0.537 / 0.377 again - the rig's positive control; the "control"
+  sheet 13d14ca0 is the DOCK, a fine-key sheet that WAS lifted, and it reads
+  0.206 -> 0.299 (100/335 columns) under the hybrid - one more number the eyes
+  must overrule or confirm. 2x/3x 0.000 throughout, both runs.
+
+PACKAGES. build_variant_packages.ps1 found a STALE park: 15x-variants\baseline
+held the v4.7.2 NEAREST dats from 2026-08-30 (SelectiveArt 13,411,333 B), and
+its own -Restore would have refused it (park older than the corpus) - it was
+renamed to 15x-variants\baseline-v4.7.2-nearest-parked-2026-08-30\ (kept, not
+deleted) so the script parked the CURRENT v4.8.0 set as
+tools\packages\15x-variants\baseline\ (SelectiveArt 17,589,383 B, DialogStatic
+2,912,173 B, ItemIcons 4,712,509 B, ItemIconsSub 1,410,334 B - the shipped
+bytes, all 20 dats). Variant result copied to
+tools\packages\15x-variants\thin_h_fk\; tools\packages\15x\ NOW HOLDS THE
+VARIANT (the script's contract; -Restore puts the baseline back, and works:
+the park is newer than the corpus). Side effect to know: tools\selective-safe\
+stage-15x, refmap-15x.csv, tools\dialog-static\stage-15x and the itemicons
+stage-15x now hold the variant staging - Rebuild-Corpus / Test-Builders
+-Factor 1.5 before the next release build regardless of the verdict.
+  compare_packages_pixels.py, baseline (v4.8.0) vs thin_h_fk, alpha included:
+  SelectiveArt  696 entries (none added/removed): 266 byte-identical, 324
+                pixel-identical (the round-1 hybrid sheets, PIL-recoded - hence
+                17,589,383 -> 15,646,662 B, the #203 encoder fact again), 106
+                differ: 309,408 colour px + 10,902 alpha-only px, 0 of them on
+                a colour-key pixel. Largest: 46a006b0/14015581 (819x195) 27,406
+                colour px; 144161f8 21,190; 14015545 18,359; 140155e1 15,253;
+                13d14ca0 (the dock) 13,749.
+  DialogStatic  266 entries: 198 byte-identical, 37 pixel-identical, 31 differ:
+                68,954 colour px + 3,375 alpha-only, 0 on key
+                (2,912,173 -> 2,807,859 B). Largest: 1abe787d/14416270 7,664;
+                46a006b0/14416322 6,985; 13f15250 4,812.
+  ItemIcons 356 / ItemIconsSub 130 entries: byte-identical (thumbnails kept).
+  Every other dat (CamUI, Csi, RaiseUI, RegionCensus, SaveWarning, ThirdParty,
+  Warrior, the eight ZCarbon*): byte-identical to the park - the side-builders
+  did not run, by the script's design.
+
+NOT DONE HERE, BY ORDER: no deploy, no Plugins write, no launch. The lead runs
+(from C:\dev\SC4UIScale, game closed):
+  powershell -File _tests\Deploy-OnGameClose.ps1        (waits for SC4 to close; copies packages\15x
+                                                         SelectiveArt/DialogStatic + the DLL into 010-SC4UIScale)
+  powershell -File _tests\Set-Tier.ps1 -Tier 1.5 -Windowed
+  powershell -File _tests\Test-DatIntegrity.ps1         (entry counts unchanged: 696 / 266)
+  then launch, look at: any keyed chrome with 1-2 px key lines (the 375), and
+  specifically the 129x129 nine-slice frames 1441622x (the 12 map-corrected
+  sheets). Afterwards: tools\research\sharp15\build_variant_packages.ps1 -Restore.
+VERDICT -> C#: yes = port the lift as "MinKeyRun no longer refuses under
+--hybrid" PLUS the sheet-level key mask (or the nine-slice refusal), parity-
+gate against preview-15x-thin_h_fk, refresh the edge-quality baseline as a
+deliberate act (the lifted sheets invent colours, which the current baseline
+records as copy-only); no = nothing to port, delete the variant tree and the
+15x-variants\thin_h_fk packages, the finding about the per-cell key map stays
+on record: the 9 nine-slice sheets already on the hybrid pass R2 today because
+NONE OF THEM CARRIES A KEY PIXEL AT ALL (measured on all 30 hybrid nine-slice
+sheets: the 21 lifted ones are keyed, 9 of those have integral 1.5x cells and
+a map difference of 0, the 12 129x129 frames have 64 differing map columns
+and 61 displaced key px each; the 9 unlifted are unkeyed) - the guard was the
+absence of a key, not a rule.

@@ -449,6 +449,145 @@ scale3x_bold = _make(True, "bold")
 scale3x_box = _make(True, "box")
 
 
+# ---------------------------------------------------------------- 2026-09-07 A2 CONTROL
+# "Take the 2x art and shrink it by 3/4." The three candidates below are a
+# CONTROL, not a contender: they exist to put on the record, as a measurement,
+# that starting from the 2x tier is not a new resampler at 3/2. The 2x
+# replicate is a zero-order hold of the same source - every sample of the
+# source is in it and nothing else is - so every kernel run on it collapses to
+# a kernel on the source. In particular the exact-area reduction of the 2x
+# replicate by 3/4 integrates the SAME piecewise-constant image over the SAME
+# output box as the x3 box does (output k covers source [2k/3, 2(k+1)/3) on
+# both grids), so `from2x_box` IS `box`; the integer arithmetic below is built
+# so the identity is exact, not approximate, and the bench proves it.
+
+def _x2_replicate(a):
+    return np.repeat(np.repeat(a, 2, 0), 2, 1)
+
+
+def _from2x_taps(n_src, n_out):
+    """Exact-area taps from the 2x replicate axis (n2 = 2*n_src pixels) to the
+    output axis at f = 1.5, with INTEGER weights.
+
+    Output pixel k covers the 2x interval [4k/3, 4(k+1)/3), i.e. thirds
+    [4k, 4k+4); 2x pixel j covers thirds [3j, 3j+3). The overlap in thirds is
+    the weight: an integer, exactly two 2x pixels per output, summing to 4
+    per axis - (3,1), (2,2), (1,3) as 4k mod 3 runs 0, 1, 2. Past the last 2x
+    pixel the interval clamps to it, the clamp _block_cells applies on the x3
+    grid (an odd source width pins its last output to its last source pixel).
+
+    Returns (j0, j1, w0, w1), each shape (n_out,)."""
+    k = np.arange(n_out, dtype=np.int64)
+    lo = 4 * k
+    j0 = lo // 3
+    r = lo - 3 * j0                      # 0, 1, 2
+    w0 = 3 - r                           # 3, 2, 1
+    w1 = 4 - w0                          # 1, 2, 3
+    n2 = 2 * n_src
+    j0 = np.minimum(j0, n2 - 1)
+    j1 = np.minimum(j0 + 1, n2 - 1)
+    return j0, j1, w0, w1
+
+
+def _from2x_box_raw(cell, cw, ch):
+    """CONTROL. 2x block replicate, then the exact-area reduction by 3/4 with
+    the integer taps above, key-aware exactly as _box2 is: key 2x pixels
+    carry zero weight, every output divides by the weight it accumulated, a
+    block the key owns by half or more (key weight >= 8 of 16) re-emits
+    exact FF00FF, and an average that lands on the key by accident takes the
+    G=1 nudge. This is the stage that must equal _box2 (== `box`).
+
+    Per source pixel the weight here is exactly 4x the x3 box's (an x3 cell
+    is 1/3 of a source pixel at weight 1 of 2; a 2x third is 1/6 of a source
+    pixel at weight 1 of 4), so numerator and denominator are both 4x
+    _box2's and s // n is the same integer. PREDICTION, written before the
+    run: bit-identical to `box` on every sheet. This candidate's purpose is
+    to PROVE that equality, not to win (from2x_diff.py measures it; the
+    number is in _tests/REGRESSION.md, 2026-09-07 A2)."""
+    h, w = cell.shape[:2]
+    X2 = _x2_replicate(cell).astype(np.int64)
+    key = (X2[..., 0] == 255) & (X2[..., 1] == 0) & (X2[..., 2] == 255)
+    nk = (~key).astype(np.int64)
+    kk = key.astype(np.int64)
+    jx0, jx1, wx0, wx1 = _from2x_taps(w, cw)
+    jy0, jy1, wy0, wy1 = _from2x_taps(h, ch)
+    C = X2 * nk[..., None]
+    # x pass on the 2x rows, then y pass on the result: the per-pixel key
+    # weight is a product of the two axis weights, so the sum separates
+    sx = C[:, jx0] * wx0[None, :, None] + C[:, jx1] * wx1[None, :, None]    # h2, cw, 4
+    nx = nk[:, jx0] * wx0[None, :] + nk[:, jx1] * wx1[None, :]              # h2, cw
+    kx = kk[:, jx0] * wx0[None, :] + kk[:, jx1] * wx1[None, :]
+    s = sx[jy0] * wy0[:, None, None] + sx[jy1] * wy1[:, None, None]         # ch, cw, 4
+    n = nx[jy0] * wy0[:, None] + nx[jy1] * wy1[:, None]
+    kw = kx[jy0] * wy0[:, None] + kx[jy1] * wy1[:, None]
+    out = (s // np.maximum(n, 1)[..., None]).astype(np.uint8)
+    keyout = kw * 2 >= 16
+    out[keyout] = KEY
+    acc = (out[..., 0] == 255) & (out[..., 1] == 0) & (out[..., 2] == 255) & ~keyout
+    out[..., 1][acc] = 1
+    return out
+
+
+def _from2x_box_cell(cell, cw, ch):
+    """_from2x_box_raw, then the nearest key mask as the hybrid carries it.
+    NOTE the lab `box` candidate applies NO key mask (only the _h/_hc/_hl
+    modes do), so on a KEYED sheet this differs from `box` by exactly the
+    mask step and by nothing else; from2x_diff.py measures both stages."""
+    return _nn_key_mask(_from2x_box_raw(cell, cw, ch), cell, cw, ch)
+
+
+def _from2x_nearest_cell(cell, cw, ch):
+    """CONTROL. PIL-style centre-phase pick from the 2x replicate: output k
+    takes 2x pixel floor((k+.5)*4/3) = (4k+2)//3, which is source pixel
+    (2k+1)//3 - multiplicities 1,2,1,2 where nearest's factor map floor(2k/3)
+    gives 2,1,2,1. It is nearest at the OPPOSITE PHASE: the same coin, the
+    other face, so the odd/even table is nearest's with the parities swapped.
+    No key mask, deliberately: a phase-shifted copy moves the key set, and
+    key_moved is the number that shows why R2 pins the key set to nearest's."""
+    h, w = cell.shape[:2]
+    X2 = _x2_replicate(cell)
+    jx = np.minimum((4 * np.arange(cw, dtype=np.int64) + 2) // 3, 2 * w - 1)
+    jy = np.minimum((4 * np.arange(ch, dtype=np.int64) + 2) // 3, 2 * h - 1)
+    return X2[jy][:, jx]
+
+
+def _from2x_lanczos_cell(cell, cw, ch):
+    """CONTROL, the softer one. PIL Image.resize(LANCZOS) on the 2x replicate,
+    per channel in L mode, no premultiply, no key knowledge - the naive
+    "shrink the 2x with a good filter" proposal verbatim. PIL widens the
+    kernel by the reduction 4/3 (support 4 2x pixels = 2 source pixels) and
+    sees two samples per source pixel at +-1/4, so in source units the
+    kernel is lanczos3(1.5d - 3/8) + lanczos3(1.5d + 3/8): the zero-order
+    hold's sinc attenuates the baseband and the pass band reaches into the
+    hold's first image. Then the nearest key mask, so the row is not
+    disqualified on key_moved before its softness is read; key_near stays
+    whatever the naive filter fringed."""
+    from PIL import Image
+    X2 = _x2_replicate(cell)
+    out = np.stack([np.array(Image.fromarray(np.ascontiguousarray(X2[..., c]), "L")
+                             .resize((cw, ch), Image.LANCZOS)) for c in range(4)], -1)
+    return _nn_key_mask(out, cell, cw, ch)
+
+
+def _make_from2x(mode):
+    fns = {"box": _from2x_box_cell, "nearest": _from2x_nearest_cell,
+           "lanczos": _from2x_lanczos_cell}
+
+    def cand(a, ow, oh, factor=1.5, states_x=0, states_y=0, wrap=False, tol=0):
+        if _is_int(factor):
+            return nearest(a, ow, oh, factor)
+        if abs(factor - 1.5) > 1e-9:
+            raise ValueError("from2x controls are defined for f=1.5 only")
+        return _per_cell(a, ow, oh, states_x, states_y, fns[mode])
+    cand.__name__ = "from2x_" + mode
+    return cand
+
+
+from2x_box = _make_from2x("box")          # CONTROL: must equal box
+from2x_nearest = _make_from2x("nearest")  # CONTROL: nearest at the opposite phase
+from2x_lanczos = _make_from2x("lanczos")  # CONTROL: the softer lanczos
+
+
 def _guard(fn):
     """Integer-factor refusal for the 2026-08 prototypes, which were only
     ever run at 1.5 and hard-code the x3 block map."""
@@ -466,8 +605,10 @@ CANDIDATES = {
     'ss_factormap': _guard(supersample_factormap),
     'majority':     _guard(majority),
     'even_nearest': _guard(even_nearest),
+    'from2x_nearest': from2x_nearest,   # A2 control (2026-09-07)
     'ss_restore':   _guard(ss_edge_restore),
     'box':          box,
+    'from2x_box':   from2x_box,         # A2 control (2026-09-07): == box
     'thin':         thin,
     'bold':         bold,
     'thin_h':       thin_h,
@@ -476,6 +617,7 @@ CANDIDATES = {
     'thin_hl':      thin_hl,
     'catrom':       catrom,
     'lanczos':      lanczos,
+    'from2x_lanczos': from2x_lanczos,   # A2 control (2026-09-07): softer
     'scale3x_box':  scale3x_box,
     'scale3x_thin': scale3x_thin,
     'scale3x_bold': scale3x_bold,

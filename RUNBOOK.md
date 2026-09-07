@@ -199,6 +199,11 @@ transparent and *draws as pink* on screen.
 
 ## 6. Cut a release
 
+**First, read the crash folder.** No release ships while any `.txt` in
+`Documents\SimCity 4\Exception Reports\` is newer than this ledger's last dated
+entry — triage each new report into `_tests\REGRESSION.md` (census method and
+the standing rule: `_tests\CRASH-CENSUS.md`) before building.
+
 ```powershell
 _packaging\Build-Dist.ps1          # player-ready bundle
 ```

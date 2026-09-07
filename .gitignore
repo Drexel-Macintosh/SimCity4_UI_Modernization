@@ -219,6 +219,8 @@ __pycache__/
 !/tools/research/sharp15/build_variant_tree.py
 !/tools/research/sharp15/build_variant_packages.ps1
 !/tools/research/sharp15/compare_packages_pixels.py
+# 2026-09-07 A2 control: from2x_box vs box pixel diff (the candidates live in x3_candidates.py)
+!/tools/research/sharp15/from2x_diff.py
 
 # Working restore points taken before a risky layout change. Real installs,
 # not repo content - they carry game-derived art and per-machine settings.
