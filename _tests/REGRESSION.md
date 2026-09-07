@@ -21954,3 +21954,22 @@ the user tests at 2x now, so they ship gate-verified, not launch-verified,
 exactly as #203's two rule changes did - said here.
 Test-ThirdPartyGates reads "state file stale" until the next boot re-arms
 (files were deployed after the last boot) - expected, clears on launch.
+
+### 10:28 - RELEASED: v4.10.0 (https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/tag/v4.10.0)
+
+Bundle `SC4UIScale-v4.10.0.zip` 123,774,490 B, sha256 B0A6B473...92EF8E, published
+2026-09-07T14:28:04Z, marked Latest. Bundle gates: Build-Dist PASS on hard
+patterns (6 soft lines = the word "touch" in README/THIRD-PARTY-NOTICES,
+unchanged since v4.8.0), Test-BinaryPii CLEAN (131 files), Test-DatIntegrity
+ALL PASS with 127 SHA256SUMS rows re-verified, the bundle's DLL byte-equal to
+the build. Per the user's standing order the v4.8.0 release was deleted after
+publishing (its git tag stays; 26 v4.* tags). sc4pac channel regenerated
+(`gen_channel.py --publish --last-modified 2026-09-07T14:28:04Z`: 102/102
+checksums re-verified, both yamls written). The live install carries the
+same DLL and packages (Test-DatIntegrity ALL PASS at 10:25).
+
+Open after this release (all instrumented, none blocking): the hours-slope
+under PLAY (heartbeat in every log; testers attach it); the fine-key 1.5x
+variant, parked unjudged; the warm 50k DLL-vs-control delta (offline harness
+stands in); ClassifyDir's 8 FindFirstFile per directory (802 ms of the 50k
+boot's 1.9 s non-index cost) and a persistent index cache for cold trees.
