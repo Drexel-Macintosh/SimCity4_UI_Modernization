@@ -21750,3 +21750,30 @@ WHAT TO DO NEXT: run the working tree at 50,000 (`.\_tests\Test-BootWalk.ps1 -Fi
 and put its INDEX row next to the 56.6 s BOOT row above; fix FindPluginFile's abort or
 retire it behind FindDep; halve the logged past-MAX_PATH count or count once; add the three
 files above plus this section to the commit.
+
+### After-row (lead, 08:07): the reworked walkers on the same 50,000-file tree
+
+`Test-BootWalk.ps1 -Files 50000` against the working tree (commit 191be5b):
+
+    N=50000  boot   64,607 ms   discover  918   walks  56,356   deps  7,333   (pre-rework code, this run)
+    N=50000  INDEX   3,986 ms   build     631   icons   3,297   deps     22   web 29   topfolders 7   (one walk per root)
+
+- 16x less boot work; the residue is real I/O - 50,128 opens and 400,000
+  index entries read once (3.3 s of the 4.0 s). That is OVER the plan's
+  3,000 ms / 2,000 ms thresholds at 50k on this SSD, and it is the honest
+  number: a persistent per-file index cache (path, size, mtime) would make a
+  warm boot enumeration-only and is the next lever, not shipped in Beta 1.
+- Expected failure #1 FIXED (the 200,000-entry index counts its icons; theirs
+  = 400,000 exactly, sha1 of the uncovered set equals the key).
+- The web-button dat at a 440-char path: the old MAX_PATH walk reports ABSENT
+  - and a bare run of the OLD `FindPluginFile` on that tree TERMINATES THE
+  PROCESS (0xC0000409, secure-CRT overflow inside `swprintf_s`; 360
+  truncations caught by the harness's handler). The pre-Beta-1 DLL would have
+  died at boot on such a tree. `FindDep` over the index sees the file;
+  `FindPluginFile` has no live caller left (grep) and stays only for this
+  differential: 17/18 needles identical (path, size, matches), the 18th is
+  that past-MAX_PATH file.
+- NAM at depth 4 still reads ABSENT by design (the 3-folder budget); the DLL
+  now names the file and its depth instead of saying nothing.
+- `longPathsSeen` was double-counted by the old two-pass scan (120 for 60);
+  the index counts once (pastMaxPath=60).
