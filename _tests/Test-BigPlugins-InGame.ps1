@@ -42,10 +42,24 @@ if ($Control) {
 $label = if ($Control) { 'control' } else { 'dll' }
 $out = Join-Path $PSScriptRoot ("bigplugins-{0}-{1}.csv" -f $label, (Get-Date -Format 'yyyyMMdd-HHmmss'))
 "t_s,privMB,peakPagedMB,wsMB,responding,mainWindow" | Set-Content -Encoding ASCII $out
+# The user dir needs more than Plugins: the game reads SC4GraphicsOptions.ini
+# from it (AutoScale's resolution) and creates Regions/Albums on first run.
+$liveUser = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'SimCity 4'
+foreach ($n in 'Regions', 'Albums') { $d = Join-Path $Root $n; if (-not (Test-Path $d)) { New-Item -ItemType Directory $d | Out-Null } }
+foreach ($n in 'SC4GraphicsOptions.ini') {
+    $src = Join-Path (Join-Path $liveUser 'Plugins') $n
+    $dst = Join-Path (Join-Path $Root 'Plugins') $n
+    if ((Test-Path $src) -and -not (Test-Path $dst)) { Copy-Item $src $dst; Write-Output "  copied $n into the synthetic Plugins" }
+}
+# -UserDir takes the DOCUMENTED form exactly: quoted, WITH the trailing
+# backslash. The first run passed it without the backslash and the game
+# started with no user dir at all (no plugins, no regions, nothing written) -
+# measured 2026-09-07 08:21.
+$userDirArg = '-UserDir:"{0}\"' -f $Root.TrimEnd('\')
 $t0 = Get-Date
-Start-Process -FilePath $Exe -WorkingDirectory (Split-Path $Exe) -ArgumentList ('-UserDir:"{0}"' -f $Root) | Out-Null
+Start-Process -FilePath $Exe -WorkingDirectory (Split-Path $Exe) -ArgumentList $userDirArg | Out-Null
 Write-Output ("launched {0} with -UserDir:{1} at {2:HH:mm:ss}; sampling every 2 s to {3}" -f (Split-Path $Exe -Leaf), $Root, $t0, $out)
-$first = $null; $milestone = $null; $peak = 0; $samples = 0; $differs = $false
+$first = $null; $milestone = $null; $peak = 0; $samples = 0; $differs = $false; $maxPriv = 0
 while (((Get-Date) - $t0).TotalSeconds -lt $Seconds) {
     Start-Sleep -Seconds 2
     $p = Get-Process 'SimCity 4' -ErrorAction SilentlyContinue
@@ -57,12 +71,16 @@ while (((Get-Date) - $t0).TotalSeconds -lt $Seconds) {
     "$ts,$priv,$pk,$ws,$resp,$mw" | Add-Content -Encoding ASCII $out
     $samples++
     if ($null -eq $first) { $first = $priv } elseif ($priv -ne $first) { $differs = $true }
+    if ($priv -gt $maxPriv) { $maxPriv = $priv }
     if ($pk -gt $peak) { $peak = $pk }
     if ($null -eq $milestone -and $mw -and $resp) { $milestone = $ts; Write-Output ("MILESTONE: main window responding at +{0} s (priv {1} MB)" -f $ts, $priv) }
 }
 Write-Output ("samples {0}; peak paged {1} MB; milestone {2}" -f $samples, $peak, ($(if ($null -ne $milestone) { "+$milestone s" } else { 'NOT SEEN' })))
-if ($null -eq $first -or $first -lt 50 -or -not $differs) {
-    Write-Output "INSTRUMENT CONTROL FAILED: first sample <= 50 MB or no sample ever changed - the reading is bogus; no verdict."
+$ourLog = Join-Path $Root 'Plugins\010-SC4UIScale\SC4UIScale.log'
+$regions = Join-Path $Root 'Regions'
+Write-Output ("user dir honoured: Regions {0}; our log {1}" -f $(if (Test-Path $regions) { 'present' } else { 'ABSENT' }), $(if (Test-Path $ourLog) { "written ($((Get-Item $ourLog).Length) B)" } else { if ($Control) { 'n/a (control)' } else { 'ABSENT - the DLL did not run in this tree' } }))
+if ($null -eq $first -or $maxPriv -lt 50 -or -not $differs) {
+    Write-Output "INSTRUMENT CONTROL FAILED: no sample ever exceeded 50 MB or none ever changed - the reading is bogus; no verdict."
     exit 2
 }
 Write-Output ("{0} run recorded to {1}. Compare the two runs' MILESTONE and peak paged MB (plan: delta <= 3.0 s, <= 64 MB on the wrap path)." -f $label, $out)
