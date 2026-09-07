@@ -237,6 +237,9 @@ namespace ScaleTier
 	// v4.9.0 Beta 1: one log line with every boot-path phase in ms and a
 	// total; call once, after the last boot-path walk in the director ctor.
 	void LogBootPhases();
+	// v4.9.0 Beta 1: free the one-walk boot index (names arena) after the
+	// last boot consumer; safe to call any time - the next consumer rebuilds.
+	void ReleaseBootIndex();
 
 	// USER-CONFIRMED, real damage: an sc4pac uninstall removes the DLL but
 	// leaves FontStyle.ini behind (sc4pac does not uninstall .ini files, to

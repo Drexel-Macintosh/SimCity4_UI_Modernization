@@ -6720,9 +6720,9 @@ namespace CodePatches
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 			uint32_t vtVa = 0;
-			if (self)
+			uintptr_t vt = 0;   // v4.9.0 Beta 1: guarded read (Test-ProbeDerefGuards)
+			if (self && ProbeSafe::ReadPtr(self, &vt))
 			{
-				const uintptr_t vt = *reinterpret_cast<uintptr_t*>(self);
 				vtVa = static_cast<uint32_t>(vt - base + kImageBase);
 			}
 			const uint32_t retVa = static_cast<uint32_t>(

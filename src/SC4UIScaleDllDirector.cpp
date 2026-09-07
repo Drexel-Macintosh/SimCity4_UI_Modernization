@@ -805,8 +805,10 @@ public:
 				CodePatches::ApplyIntroVideoScale(settings.spikeScaleFactor);
 			}
 		}
-		// v4.9.0 Beta 1: where the boot went, in one line (all walks done).
+		// v4.9.0 Beta 1: where the boot went, in one line (all walks done),
+		// then the walk's index is freed - nothing later needs it.
 		ScaleTier::LogBootPhases();
+		ScaleTier::ReleaseBootIndex();
 
 		// ScaleRemap installs ONLY if explicitly opted in (default off). Its
 		// internal!=present metric lies are the rejected whole-frame approach;

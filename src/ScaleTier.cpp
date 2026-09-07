@@ -26,6 +26,8 @@
 #include <cstdint>
 #include <filesystem>
 #include <string>
+#include <vector>      // v4.9.0 Beta 1: BootIndex
+#include <algorithm>   // v4.9.0 Beta 1: binary_search over our override TGIs
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -2322,9 +2324,26 @@ namespace IconSynth
 	// A number here proves the deep tree was actually reachable.
 	int gLongPathsSeen = 0;
 
+	// v4.9.0 Beta 1: the callback gets the whole WIN32_FIND_DATAW (name, size,
+	// attributes, times) so ONE walk can feed every consumer; `depth` caps a
+	// Plugins-into-Plugins junction loop instead of recursing until the stack
+	// dies (the game's own scan would loop too - but ours must not be the one
+	// that crashes).
+	unsigned gWalkDepthRefused = 0;
 	void Walk(const wchar_t* dir, Fingerprint& fp,
-		void (*onFile)(const wchar_t*, const wchar_t*, DWORD, void*), void* ctx)
+		void (*onFile)(const wchar_t*, const WIN32_FIND_DATAW&, void*), void* ctx,
+		int depth = 0)
 	{
+		if (depth >= 48)
+		{
+			if (gWalkDepthRefused++ == 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"IconSynth: walk depth 48 reached under %ls - NOT descending "
+					"(a junction loop or an absurdly deep tree).", dir);
+			}
+			return;
+		}
 		wchar_t glob[kLongPath];
 		if (swprintf_s(glob, L"%s\\*", dir) < 0) { return; }
 		WIN32_FIND_DATAW fd = {};
@@ -2352,7 +2371,7 @@ namespace IconSynth
 			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
 				// SC4's plugin scan is RECURSIVE, so ours must be too.
-				Walk(full, fp, onFile, ctx);
+				Walk(full, fp, onFile, ctx, depth + 1);
 				continue;
 			}
 			fp.files++;
@@ -2362,7 +2381,7 @@ namespace IconSynth
 				(static_cast<uint64_t>(fd.ftLastWriteTime.dwHighDateTime) << 32)
 				| fd.ftLastWriteTime.dwLowDateTime;
 			if (t > fp.newest) { fp.newest = t; }
-			if (onFile) { onFile(full, fd.cFileName, fd.dwFileAttributes, ctx); }
+			if (onFile) { onFile(full, fd, ctx); }
 		} while (FindNextFileW(h, &fd));
 		FindClose(h);
 	}
@@ -2371,8 +2390,11 @@ namespace IconSynth
 	// SC4 ships index major 7, minor 0 (20-byte entries) or 1 (24). Reading
 	// only the index means no QFS, no PNG, no allocation beyond the index
 	// itself - which is what keeps this affordable at boot.
+	// v4.9.0 Beta 1: EVERY entry goes to the callback (type, group, instance);
+	// the icon filter moved into the caller, because the same read now also
+	// feeds the per-TGI conflict census against our override packages.
 	bool ReadIconTgis(const wchar_t* path,
-		void (*onTgi)(uint32_t, void*), void* ctx)
+		void (*onTgi)(uint32_t, uint32_t, uint32_t, void*), void* ctx)
 	{
 		HANDLE f = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, nullptr,
 			OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -2429,10 +2451,7 @@ namespace IconSynth
 						const uint32_t t = *reinterpret_cast<const uint32_t*>(e);
 						const uint32_t g = *reinterpret_cast<const uint32_t*>(e + 4);
 						const uint32_t inst = *reinterpret_cast<const uint32_t*>(e + 8);
-						if (t == kIconType && g == kIconGroup && onTgi)
-						{
-							onTgi(inst, ctx);
-						}
+						if (onTgi) { onTgi(t, g, inst, ctx); }
 					}
 					done += n;
 					chunks++;
@@ -2460,6 +2479,311 @@ namespace IconSynth
 		return ok;
 	}
 	// ==== END BOOT-WALK ====
+
+	// ==== BEGIN BOOT-INDEX (v4.9.0 Beta 1) ====
+	// ONE WALK PER PLUGINS ROOT, EVERY CONSUMER READS THE INDEX.
+	//
+	// Before Beta 1 the boot path traversed the Plugins tree ~16 times in the
+	// DLL constructor - during the game's own plugin scan, before the splash:
+	// folder discovery (8 FindFirstFile per directory), 6-7 depth-4 dependency
+	// walks that never early-exited, 4 unbounded std::filesystem walks for one
+	// web-button yes/no, up to 2 pause-remover walks, and IconSynth's 4 walks
+	// that opened every DBPF. On a 473-file tree that is 100 ms; on a 20 GB
+	// tree it is minutes, and on a cloud-backed folder it hydrates the lot.
+	//
+	// Now: Walk() runs ONCE per root (long-path safe, \\?\, depth-capped)
+	// and records every file - relative path, leaf, size, attributes, depth,
+	// whether it sits under one of our own folders. The dependency gates, the
+	// pause-remover and web-button checks and the icon scan all read this
+	// index; the icon scan opens each DBPF once per pass (its index only). The
+	// dependency semantics are reproduced EXACTLY (see FindDep) and pinned by
+	// _tests/Test-ThirdPartyGates.ps1 and the BootWalk differential harness.
+	// The index is released at the end of the constructor (ReleaseBootIndex);
+	// a later caller (a runtime tier switch) rebuilds it - one walk.
+	namespace BootIndex
+	{
+		const int kRootDocs = 0;
+		const int kRootInstall = 1;
+		struct File
+		{
+			uint32_t relOff;      // into names: path RELATIVE to its root, no leading backslash
+			uint32_t leafOff;     // into names: the file name (inside the same string)
+			uint64_t size;
+			uint32_t attrs;
+			uint32_t conflicts;   // entries at TGIs our armed OVERRIDE packages carry (theirs pass)
+			uint16_t depth;       // 0 = directly in the root
+			uint8_t  root;
+			uint8_t  underOurs;   // a path component is our early/override leaf or _dllstash
+			uint8_t  underOverride; // the file lives inside our OVERRIDE folder
+			uint8_t  dbpf;
+		};
+		struct Index
+		{
+			std::vector<File> files;
+			std::vector<wchar_t> names;
+			wchar_t root[2][kLongPath];        // WITHOUT \\?\, WITH trailing backslash; [1] empty = none
+			uint32_t count[2];
+			unsigned long long bytes[2];
+			unsigned long long newest[2];
+			DWORD walkMs[2];
+			uint32_t pastMaxPath;
+			bool built;
+		};
+		Index gIx;
+		struct WalkCtx { int root; size_t prefixLen; };
+
+		const wchar_t* Rel(const File& f)  { return &gIx.names[f.relOff]; }
+		const wchar_t* Leaf(const File& f) { return &gIx.names[f.leafOff]; }
+		bool FullPath(const File& f, wchar_t* out, size_t cap, bool prefixed)
+		{
+			return swprintf_s(out, cap, L"%s%s%s", prefixed ? L"\\\\?\\" : L"",
+				gIx.root[f.root], Rel(f)) >= 0;
+		}
+
+		void OnEntry(const wchar_t* full, const WIN32_FIND_DATAW& fd, void* ctxp)
+		{
+			const WalkCtx* ctx = static_cast<const WalkCtx*>(ctxp);
+			const wchar_t* rel = full + ctx->prefixLen;
+			File f = {};
+			f.root = static_cast<uint8_t>(ctx->root);
+			f.size = (static_cast<uint64_t>(fd.nFileSizeHigh) << 32) | fd.nFileSizeLow;
+			f.attrs = fd.dwFileAttributes;
+			f.relOff = static_cast<uint32_t>(gIx.names.size());
+			const size_t n = wcslen(rel);
+			gIx.names.insert(gIx.names.end(), rel, rel + n + 1);
+			// leaf = after the last backslash; depth = backslashes before it;
+			// underOurs = any DIRECTORY component names one of our folders.
+			uint32_t leafRel = 0;
+			uint16_t depth = 0;
+			for (size_t i = 0; i < n; i++)
+			{
+				if (rel[i] == L'\\') { depth++; leafRel = static_cast<uint32_t>(i + 1); }
+			}
+			f.depth = depth;
+			f.leafOff = f.relOff + leafRel;
+			f.dbpf = IsDbpfName(rel + leafRel) ? 1 : 0;
+			ResolveOurDirs();
+			{
+				size_t s = 0;
+				for (size_t i = 0; i < leafRel; i++)
+				{
+					if (rel[i] == L'\\')
+					{
+						wchar_t comp[128] = {};
+						const size_t len = i - s;
+						if (len < 127)
+						{
+							wcsncpy_s(comp, rel + s, len);
+							if (_wcsicmp(comp, gOurDirs.overrideLeaf) == 0
+								|| _wcsicmp(comp, gOurDirs.earlyLeaf) == 0
+								|| _wcsicmp(comp, L"_dllstash") == 0)
+							{
+								f.underOurs = 1;
+							}
+						}
+						s = i + 1;
+					}
+				}
+			}
+			{
+				const size_t ol = wcslen(gOurDirs.override_);
+				const wchar_t* unprefixed = full + 4;   // past the long-path prefix
+				if (ol > 0 && _wcsnicmp(unprefixed, gOurDirs.override_, ol) == 0)
+				{
+					f.underOverride = 1;
+				}
+			}
+			gIx.files.push_back(f);
+		}
+
+		void Ensure()
+		{
+			if (gIx.built) { return; }
+			gIx.built = true;
+			gIx.files.clear();
+			gIx.names.clear();
+			gIx.files.reserve(4096);
+			gIx.names.reserve(256 * 1024);
+			PerfProbe::Scope perf_("boot.walk");
+			wchar_t docs[MAX_PATH] = {};
+			PluginsRoot(docs, MAX_PATH);
+			wchar_t inst[MAX_PATH] = {};
+			InstallPluginsDir(inst, MAX_PATH);
+			for (int r = 0; r < 2; r++)
+			{
+				wchar_t* dst = gIx.root[r];
+				dst[0] = 0;
+				const wchar_t* src = (r == 0) ? docs : inst;
+				if (!src[0]) { continue; }
+				swprintf_s(dst, kLongPath, L"%s", src);
+				size_t l = wcslen(dst);
+				while (l > 0 && dst[l - 1] == L'\\') { dst[--l] = 0; }
+				if (r == 1 && _wcsicmp(dst, gIx.root[0]) == 0) { dst[0] = 0; continue; }
+				// stored WITH a trailing backslash, so root + rel is a path
+				wcscat_s(dst, kLongPath, L"\\");
+			}
+			// gIx.root[0] now ends with a backslash; the same for [1] if present.
+			// Walk with the \\?\ prefix and NO trailing backslash (Walk adds one).
+			for (int r = 0; r < 2; r++)
+			{
+				if (!gIx.root[r][0]) { continue; }
+				wchar_t prefixed[kLongPath];
+				swprintf_s(prefixed, L"\\\\?\\%s", gIx.root[r]);
+				size_t pl = wcslen(prefixed);
+				if (pl > 0 && prefixed[pl - 1] == L'\\') { prefixed[--pl] = 0; }
+				WalkCtx ctx = { r, pl + 1 };
+				Fingerprint fp = {};
+				const DWORD t0 = GetTickCount();
+				const int before = gLongPathsSeen;
+				gLongPathsSeen = 0;
+				Walk(prefixed, fp, OnEntry, &ctx);
+				gIx.pastMaxPath += static_cast<uint32_t>(gLongPathsSeen);
+				gLongPathsSeen = before;
+				gIx.walkMs[r] = GetTickCount() - t0;
+				gIx.count[r] = fp.files;
+				gIx.bytes[r] = fp.bytes;
+				gIx.newest[r] = fp.newest;
+			}
+			Logger::Get().WriteLine(LogLevel::Info,
+				"BootIndex: ONE walk per root - Documents %u files / %llu bytes in "
+				"%u ms%s%s; %u past MAX_PATH; %u names KB. Every boot consumer "
+				"reads this index (v4.9.0 Beta 1).",
+				gIx.count[0], gIx.bytes[0], gIx.walkMs[0],
+				gIx.root[1][0] ? ", install " : " (install root: none or same)",
+				gIx.root[1][0] ? "walked too" : "",
+				gIx.pastMaxPath,
+				static_cast<unsigned>(gIx.names.size() * sizeof(wchar_t) / 1024));
+			if (gIx.root[1][0])
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"BootIndex: install root %ls - %u files / %llu bytes in %u ms.",
+					gIx.root[1], gIx.count[1], gIx.bytes[1], gIx.walkMs[1]);
+			}
+		}
+
+		const Index& Get() { Ensure(); return gIx; }
+
+		void Release()
+		{
+			std::vector<File>().swap(gIx.files);
+			std::vector<wchar_t>().swap(gIx.names);
+			gIx.built = false;
+			gIx.pastMaxPath = 0;
+		}
+
+		// FindPluginFile's EXACT semantics (Documents root only; files whose
+		// directory depth is <= 3; nothing under our own folders; first hit in
+		// enumeration order wins; every copy counted; size = the first hit's
+		// low 32 bits; path = root + rel, no prefix) - plus what the old walk
+		// could not say: a match that exists only DEEPER than the budget.
+		struct DepHit
+		{
+			bool present;
+			DWORD size;
+			int matches;
+			int deepestDepth;                 // -1 = no match at any depth
+			wchar_t path[kLongPath];
+			wchar_t deepPath[kLongPath];
+		};
+		void FindDep(const wchar_t* name, bool prefix, DepHit& out)
+		{
+			Ensure();
+			memset(&out, 0, sizeof(out));
+			out.deepestDepth = -1;
+			const size_t n = wcslen(name);
+			for (const File& f : gIx.files)
+			{
+				if (f.root != kRootDocs || f.underOurs) { continue; }
+				const wchar_t* leaf = Leaf(f);
+				const bool hit = prefix
+					? (_wcsnicmp(leaf, name, n) == 0)
+					: (_wcsicmp(leaf, name) == 0);
+				if (!hit) { continue; }
+				if (f.depth > 3)
+				{
+					if (static_cast<int>(f.depth) > out.deepestDepth)
+					{
+						out.deepestDepth = f.depth;
+						FullPath(f, out.deepPath, kLongPath, false);
+					}
+					continue;
+				}
+				out.matches++;
+				if (!out.present)
+				{
+					out.present = true;
+					out.size = static_cast<DWORD>(f.size & 0xFFFFFFFFull);
+					FullPath(f, out.path, kLongPath, false);
+				}
+			}
+		}
+
+		// WebButtonModPresent's semantics: both roots, every depth, the
+		// lower-cased leaf contains the needle.
+		bool AnyNameContains(const wchar_t* lowerNeedle)
+		{
+			Ensure();
+			for (const File& f : gIx.files)
+			{
+				wchar_t lower[kLongPath];
+				swprintf_s(lower, L"%s", Leaf(f));
+				for (wchar_t* c = lower; *c; ++c) { *c = static_cast<wchar_t>(towlower(*c)); }
+				if (wcsstr(lower, lowerNeedle) != nullptr) { return true; }
+			}
+			return false;
+		}
+
+		void SetConflicts(size_t fileIdx, uint32_t n)
+		{
+			if (fileIdx < gIx.files.size()) { gIx.files[fileIdx].conflicts = n; }
+		}
+
+		// Top-level Documents folders (depth >= 1 files only) with the number
+		// of DBPFs and the number of entries at our override TGIs they hold,
+		// plus the first conflicting file - for the load-order warning.
+		struct TopFolder
+		{
+			wchar_t name[128];
+			unsigned dbpf;
+			unsigned conflicts;
+			wchar_t firstConflict[kLongPath];
+		};
+		void TopLevelFolders(std::vector<TopFolder>& out)
+		{
+			Ensure();
+			out.clear();
+			for (const File& f : gIx.files)
+			{
+				if (f.root != kRootDocs || f.depth < 1 || !f.dbpf) { continue; }
+				const wchar_t* rel = Rel(f);
+				const wchar_t* slash = wcschr(rel, L'\\');
+				if (!slash) { continue; }
+				wchar_t top[128] = {};
+				const size_t len = static_cast<size_t>(slash - rel);
+				if (len >= 127) { continue; }
+				wcsncpy_s(top, rel, len);
+				TopFolder* tf = nullptr;
+				for (TopFolder& e : out)
+				{
+					if (_wcsicmp(e.name, top) == 0) { tf = &e; break; }
+				}
+				if (!tf)
+				{
+					TopFolder e = {};
+					wcscpy_s(e.name, top);
+					out.push_back(e);
+					tf = &out.back();
+				}
+				tf->dbpf++;
+				if (f.conflicts)
+				{
+					if (tf->conflicts == 0) { FullPath(f, tf->firstConflict, kLongPath, false); }
+					tf->conflicts += f.conflicts;
+				}
+			}
+		}
+	}
+	// ==== END BOOT-INDEX ====
 
 	// ---- THE SCAN ---------------------------------------------------------
 	// Two passes over the SAME file list: ours supplies the covered set, every
@@ -2595,37 +2919,39 @@ namespace IconSynth
 	U32List  gFixList = {};
 	uint32_t gControlInst = 0;   // one of OURS, known-enlarged on disk
 
-	void AddTgi(uint32_t inst, void* /*ctx*/)
+	// v4.9.0 Beta 1: the per-TGI conflict census. Every entry of every DBPF
+	// under our armed OVERRIDE folder is collected (ours pass); every entry of
+	// every foreign DBPF is then checked against that set (theirs pass), so
+	// the load-order warning can say "this folder carries N of our override
+	// TGIs" instead of guessing from the folder name.
+	struct Tgi { uint32_t t, g, i; };
+	std::vector<Tgi> gOurOverrideTgis;
+	bool TgiLess(const Tgi& a, const Tgi& b)
 	{
-		if (!gScan) { return; }
-		// v4.9.0 Beta 1: push now, sort+unique once per phase (U32SortUnique).
-		U32List& list = gScan->collectingOurs ? gScan->ours : gScan->theirs;
-		U32Push(list, inst);
+		if (a.t != b.t) { return a.t < b.t; }
+		if (a.g != b.g) { return a.g < b.g; }
+		return a.i < b.i;
+	}
+	bool TgiInOurOverrides(uint32_t t, uint32_t g, uint32_t i)
+	{
+		const Tgi k = { t, g, i };
+		return std::binary_search(gOurOverrideTgis.begin(), gOurOverrideTgis.end(), k, TgiLess);
 	}
 
-	void OnFile(const wchar_t* full, const wchar_t* name, DWORD attrs, void* /*ctx*/)
+	// ctx: ours pass - non-null when the file sits under our OVERRIDE folder
+	//      (collect its TGIs); theirs pass - a pointer to the file's conflict
+	//      counter. The icon lists take only {PNG, ItemIcon group} entries.
+	void AddTgi(uint32_t t, uint32_t g, uint32_t inst, void* ctx)
 	{
-		if (!gScan || !IsDbpfName(name)) { return; }
-		if (IsOurPackage(name) != gScan->collectingOurs) { return; }
-		if (attrs & kCloudAttrs)
+		if (!gScan) { return; }
+		if (gScan->collectingOurs)
 		{
-			// v4.9.0 Beta 1: a cloud placeholder. Opening it would hydrate it;
-			// counted, named (first 8), never opened. Only in the THEIRS pass
-			// so a file is counted once.
-			if (!gScan->collectingOurs)
-			{
-				gCloudOnlySeen++;
-				if (gCloudOnlySeen <= 8)
-				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"IconSynth: cloud-only placeholder NOT opened: %ls "
-						"(attrs 0x%08lX) - its icons are unknown to this scan.",
-						full, static_cast<unsigned long>(attrs));
-				}
-			}
+			if (ctx) { const Tgi k = { t, g, inst }; gOurOverrideTgis.push_back(k); }
+			if (t == kIconType && g == kIconGroup) { U32Push(gScan->ours, inst); }
 			return;
 		}
-		ReadIconTgis(full, AddTgi, nullptr);
+		if (ctx && TgiInOurOverrides(t, g, inst)) { (*static_cast<uint32_t*>(ctx))++; }
+		if (t == kIconType && g == kIconGroup) { U32Push(gScan->theirs, inst); }
 	}
 
 	// Returns the number of UNCOVERED icons; logs the whole picture.
@@ -2660,64 +2986,78 @@ namespace IconSynth
 		gIndexChunked = 0;
 		gBigIndexLogged = 0;
 
-		// \\?\ turns off the 260-character limit for every path derived from
-		// this root (#139 trap 1). It requires a fully-qualified path with
-		// backslashes, which DllDir already produces.
-		wchar_t root[kLongPath];
-		if (wcsncmp(pluginsDir, L"\\\\?\\", 4) == 0)
-		{
-			swprintf_s(root, L"%s", pluginsDir);
-		}
-		else
-		{
-			swprintf_s(root, L"\\\\?\\%s", pluginsDir);
-		}
-
-		// The second root: <install>\Plugins\ beside the running game. Empty
-		// when the exe path cannot be parsed, and SKIPPED when it resolves to
-		// the same folder as the DLL's own (a DLL deployed into the install
-		// tree must not be walked twice - harmless but wasteful).
-		wchar_t root2[kLongPath] = L"";
-		{
-			wchar_t instPlugins[MAX_PATH];
-			InstallPluginsDir(instPlugins, MAX_PATH);
-			if (instPlugins[0])
-			{
-				size_t n = wcslen(instPlugins);
-				while (n > 0 && instPlugins[n - 1] == L'\\')
-				{
-					instPlugins[--n] = 0;
-				}
-				const wchar_t* docCmp = pluginsDir;
-				if (wcsncmp(docCmp, L"\\\\?\\", 4) == 0) { docCmp += 4; }
-				if (_wcsicmp(instPlugins, docCmp) != 0)
-				{
-					swprintf_s(root2, L"\\\\?\\%s", instPlugins);
-				}
-			}
-		}
+		// v4.9.0 Beta 1: the roots come from the ONE boot walk (BootIndex);
+		// this scan no longer walks anything. Both passes iterate the index in
+		// its enumeration order (Documents root, then install root), which is
+		// exactly the order the four old walks produced.
+		BootIndex::Ensure();
+		const BootIndex::Index& ix = BootIndex::Get();
 		Logger::Get().WriteLine(LogLevel::Info,
 			"IconSynth: scan root 1 (DLL side): %ls%s",
-			root,
-			root2[0] ? "" : "   [scan root 2 (<install>\\Plugins): not "
+			ix.root[0],
+			ix.root[1][0] ? "" : "   [scan root 2 (<install>\\Plugins): not "
 			"scanned - unresolved or identical to root 1]");
-		if (root2[0])
+		if (ix.root[1][0])
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
-				"IconSynth: scan root 2 (install side): %ls", root2);
+				"IconSynth: scan root 2 (install side): %ls", ix.root[1]);
 		}
 
 		Fingerprint fp2 = {};
+		fp2.files = ix.count[0] + ix.count[1];
+		fp2.bytes = ix.bytes[0] + ix.bytes[1];
+		fp2.newest = (ix.newest[0] > ix.newest[1]) ? ix.newest[0] : ix.newest[1];
+		gLongPathsSeen = static_cast<int>(ix.pastMaxPath);
+		gOurOverrideTgis.clear();
 		{
 			PerfProbe::Scope perf_("boot.iconIndex");
-			gScan->collectingOurs = true;
-			Walk(root, fp, OnFile, nullptr);
-			if (root2[0]) { Walk(root2, fp, OnFile, nullptr); }
-			U32SortUnique(gScan->ours);
-			gScan->collectingOurs = false;
-			Walk(root, fp2, OnFile, nullptr);
-			if (root2[0]) { Walk(root2, fp2, OnFile, nullptr); }
-			U32SortUnique(gScan->theirs);
+			for (int pass = 0; pass < 2; pass++)
+			{
+				gScan->collectingOurs = (pass == 0);
+				for (size_t k = 0; k < ix.files.size(); k++)
+				{
+					const BootIndex::File& f = ix.files[k];
+					if (!f.dbpf) { continue; }
+					const wchar_t* leaf = BootIndex::Leaf(f);
+					if (IsOurPackage(leaf) != gScan->collectingOurs) { continue; }
+					if (f.attrs & kCloudAttrs)
+					{
+						// A cloud placeholder: opening it would hydrate it.
+						// Counted and named (first 8), never opened; theirs
+						// pass only so a file is counted once.
+						if (pass == 1)
+						{
+							gCloudOnlySeen++;
+							if (gCloudOnlySeen <= 8)
+							{
+								Logger::Get().WriteLine(LogLevel::Info,
+									"IconSynth: cloud-only placeholder NOT opened: "
+									"%ls%ls (attrs 0x%08lX) - its icons are unknown "
+									"to this scan.", ix.root[f.root], BootIndex::Rel(f),
+									static_cast<unsigned long>(f.attrs));
+							}
+						}
+						continue;
+					}
+					wchar_t full[kLongPath];
+					if (!BootIndex::FullPath(f, full, kLongPath, true)) { continue; }
+					uint32_t conflicts = 0;
+					void* ctx = (pass == 0)
+						? (f.underOverride ? reinterpret_cast<void*>(1) : nullptr)
+						: static_cast<void*>(&conflicts);
+					ReadIconTgis(full, AddTgi, ctx);
+					if (pass == 1 && conflicts) { BootIndex::SetConflicts(k, conflicts); }
+				}
+				if (pass == 0)
+				{
+					U32SortUnique(gScan->ours);
+					std::sort(gOurOverrideTgis.begin(), gOurOverrideTgis.end(), TgiLess);
+				}
+				else
+				{
+					U32SortUnique(gScan->theirs);
+				}
+			}
 		}
 		const int nOurs = gScan->ours.n;
 		if (nOurs > 0) { gControlInst = gScan->ours.data[0]; }
@@ -4388,6 +4728,14 @@ namespace ScaleTier
 	// because that region is compiled standalone by a test); this prints them
 	// with a total, and warns past the project's own 3 s freeze law - so a
 	// stranger's log answers "why is startup slow" without a debugger.
+	// v4.9.0 Beta 1: free the boot index once the last consumer has run (the
+	// director calls this after LogBootPhases). A later caller rebuilds it
+	// with one walk.
+	void ReleaseBootIndex()
+	{
+		IconSynth::BootIndex::Release();
+	}
+
 	void LogBootPhases()
 	{
 		PerfProbe::Row rows[32];
@@ -4483,17 +4831,18 @@ namespace ScaleTier
 			L"y_scoty_Carbon_Yellow-pause-remover.dat",
 			L"zzPuase Thingy Remover.dat",
 		};
+		(void)pluginsRoot;
 		for (const wchar_t* name : kRemovers)
 		{
-			wchar_t hit[MAX_PATH] = {};
-			DWORD sz = 0;
-			if (FindPluginFile(pluginsRoot, name, false, 4, hit, MAX_PATH, &sz))
+			static IconSynth::BootIndex::DepHit dh;   // v4.9.0 Beta 1: the one walk
+			IconSynth::BootIndex::FindDep(name, false, dh);
+			if (dh.present)
 			{
 				s_present = true;
 				Logger::Get().WriteLine(LogLevel::Info,
 					"ScaleTier: pause-border remover present (%ls, %u bytes) - "
 					"our carbon gold border stands down so the player's own "
-					"choice wins.", hit, sz);
+					"choice wins.", dh.path, dh.size);
 				break;
 			}
 		}
@@ -4510,39 +4859,16 @@ namespace ScaleTier
 		static bool s_present = false;
 		if (s_checked) { return s_present; }
 		s_checked = true;
-		const wchar_t* needle = L"web button improvement mod";
 		// BOTH PLUGIN ROOTS (2026-08-22): the game loads <install>\Plugins as
 		// well, and the same blind spot that hid install-root icons from the
 		// uncovered-icon scan would here keep our WebText override armed
 		// against a mod installed in the other root - its text would fight
-		// ours on the region screen.
-		wchar_t instPlugins[MAX_PATH];
-		InstallPluginsDir(instPlugins, MAX_PATH);
-		for (int pass = 0; pass < 2; pass++)
-		{
-			const wchar_t* dir = (pass == 0) ? pluginsDir : instPlugins;
-			if (!dir[0]) { continue; }
-			if (pass == 1 && _wcsicmp(instPlugins, pluginsDir) == 0)
-			{
-				continue;   // one tree, already searched
-			}
-			try
-			{
-				// skip_permission_denied: one unreadable subfolder used to
-				// throw and abort the WHOLE walk via the catch below, so the
-				// mod read as absent because some unrelated folder was locked.
-				for (const auto& entry : std::filesystem::recursive_directory_iterator(
-					dir, std::filesystem::directory_options::skip_permission_denied))
-				{
-					if (!entry.is_regular_file()) { continue; }
-					std::wstring name = entry.path().filename().wstring();
-					for (wchar_t& c : name) { c = static_cast<wchar_t>(towlower(c)); }
-					if (name.find(needle) != std::wstring::npos) { s_present = true; return true; }
-				}
-			}
-			catch (...) { /* unreadable tree -> treat as absent */ }
-		}
-		return false;
+		// ours on the region screen. v4.9.0 Beta 1: both roots are in the ONE
+		// boot index (long-path safe, placeholders included), so this is a
+		// name scan over it, not a std::filesystem walk.
+		(void)pluginsDir;
+		s_present = IconSynth::BootIndex::AnyNameContains(L"web button improvement mod");
+		return s_present;
 	}
 
 	void SyncStaticLayers(float factor)
@@ -4634,9 +4960,12 @@ namespace ScaleTier
 		// this cache a no-skin machine pays 8 extra full-tree walks at DLL
 		// load, and this project's own law says a ~3s cost on a watched
 		// moment is a freeze. One walk per DISTINCT (name, prefix) pair.
+		// v4.9.0 Beta 1: hits can exceed MAX_PATH (NAM nests 283-298 deep), so
+		// every buffer here is kLongPath and the cache lives off the stack.
 		struct DepLookup { const wchar_t* name; bool prefix; bool present;
-		                   DWORD size; wchar_t hit[MAX_PATH]; };
-		DepLookup cache[2 * 32] = {};
+		                   DWORD size; wchar_t hit[IconSynth::kLongPath]; };
+		static DepLookup cache[2 * 32];
+		memset(cache, 0, sizeof(cache));
 		int cacheN = 0;
 		auto findCached = [&](const wchar_t* name, bool prefix,
 		                      wchar_t* outHit, DWORD* outSz) -> bool {
@@ -4645,16 +4974,31 @@ namespace ScaleTier
 				if (cache[c].prefix == prefix
 					&& _wcsicmp(cache[c].name, name) == 0)
 				{
-					wcscpy_s(outHit, MAX_PATH, cache[c].hit);
+					wcscpy_s(outHit, IconSynth::kLongPath, cache[c].hit);
 					*outSz = cache[c].size;
 					return cache[c].present;
 				}
 			}
-			wchar_t h[MAX_PATH] = {};
-			DWORD s = 0;
-			int matches = 0;
-			const bool p = FindPluginFile(
-				pluginsRoot, name, prefix, 4, h, MAX_PATH, &s, &matches);
+			// v4.9.0 Beta 1: the ONE boot walk, not a depth-4 walk per name.
+			static IconSynth::BootIndex::DepHit dh;
+			IconSynth::BootIndex::FindDep(name, prefix, dh);
+			wchar_t* h = dh.path;
+			DWORD s = dh.size;
+			int matches = dh.matches;
+			const bool p = dh.present;
+			if (!p && dh.deepestDepth > 3)
+			{
+				// The old walk could not say this: the file EXISTS, deeper than
+				// the 3-folder budget, so the gate reads ABSENT and the package
+				// stays off. A categorising player (Plugins\Networks\NAM\...)
+				// hits this with nothing else to tell them.
+				Logger::Get().WriteLine(LogLevel::Info,
+					"ScaleTier: %ls exists only at folder depth %d (%ls) - beyond "
+					"the 3-folder dependency budget, so the gate reports ABSENT "
+					"and the package that needs it stays OFF. Move that mod's "
+					"folder up to at most three folders below Plugins.",
+					name, dh.deepestDepth, dh.deepPath);
+			}
 			if (matches > 1)
 			{
 				// The gate fingerprints the copy found FIRST; the game loads
@@ -4672,17 +5016,18 @@ namespace ScaleTier
 				cache[cacheN].prefix = prefix;
 				cache[cacheN].present = p;
 				cache[cacheN].size = s;
-				wcscpy_s(cache[cacheN].hit, MAX_PATH, h);
+				wcscpy_s(cache[cacheN].hit, IconSynth::kLongPath, h);
 				cacheN++;
 			}
-			wcscpy_s(outHit, MAX_PATH, h);
+			wcscpy_s(outHit, IconSynth::kLongPath, h);
 			*outSz = s;
 			return p;
 		};
 		for (int d = 0; d < kThirdPartyDepCount; d++)
 		{
 			const ThirdPartyDep& dep = kThirdPartyDeps[d];
-			wchar_t hit[MAX_PATH] = {};
+			static wchar_t hit[IconSynth::kLongPath];
+			hit[0] = 0;
 			DWORD sz = 0;
 			bool present = findCached(dep.modFile, dep.prefixMatch, hit, &sz);
 			bool sizeOk = (dep.modSize == 0) || (sz == dep.modSize);
@@ -4696,7 +5041,8 @@ namespace ScaleTier
 			DWORD failExpect = dep.modSize;
 			if (present && sizeOk && dep.modFile2 != nullptr)
 			{
-				wchar_t hit2[MAX_PATH] = {};
+				static wchar_t hit2[IconSynth::kLongPath];
+				hit2[0] = 0;
 				DWORD sz2 = 0;
 				const bool p2 = findCached(dep.modFile2,
 					dep.prefixMatch, hit2, &sz2);
@@ -4711,7 +5057,7 @@ namespace ScaleTier
 					sz = sz2;
 					failName = dep.modFile2;
 					failExpect = dep.modSize2;
-					swprintf_s(hit, L"%s", dep.modFile2);
+					swprintf_s(hit, IconSynth::kLongPath, L"%s", dep.modFile2);
 				}
 			}
 			depOk[d] = present && sizeOk;
@@ -4736,7 +5082,8 @@ namespace ScaleTier
 				// carbon packages while eleven skin dats keep loading.
 				if (skinStillLoads && dep.modFile2 != nullptr)
 				{
-					wchar_t other[MAX_PATH] = {};
+					static wchar_t other[IconSynth::kLongPath];
+					other[0] = 0;
 					DWORD otherSz = 0;
 					const wchar_t* otherName =
 						(failName == dep.modFile) ? dep.modFile2 : dep.modFile;
@@ -4790,76 +5137,109 @@ namespace ScaleTier
 		// green, because the packages simply do not exist to be checked.
 		// Nothing else in the product would ever tell them. This does.
 		bool carbonSkinPresent = false;
-		wchar_t carbonSkinPath[MAX_PATH] = {};
+		static wchar_t carbonSkinPath[IconSynth::kLongPath];
+		carbonSkinPath[0] = 0;
 		for (int c = 0; c < cacheN; c++)
 		{
 			if (cache[c].present
 				&& _wcsicmp(cache[c].name, L"scoty_Carbon_Files.dat") == 0)
 			{
 				carbonSkinPresent = true;
-				wcscpy_s(carbonSkinPath, MAX_PATH, cache[c].hit);
+				wcscpy_s(carbonSkinPath, IconSynth::kLongPath, cache[c].hit);
 				break;
 			}
 		}
-		if (carbonSkinPresent)
+		// v4.9.0 Beta 1 (R5) - THE LOAD-ORDER WARNING, FOR EVERY FOLDER, ON
+		// EVIDENCE. Our overrides win only because our top-level folder sorts
+		// last. Until now the check ran only when the Carbon skin was found
+		// and looked only at the skin's folder; a `zzz_`, `zzzz` or `~` folder
+		// from any other hand install beat us silently. Now every top-level
+		// Documents folder that (a) sorts at/after ours under EITHER case
+		// folding of the game's comparator ('_' 0x5F sits between the upper
+		// and lower case letters, so a name like `z____scoty_mods` sorts
+		// before us upcased and after us lowercased) AND (b) actually CARRIES
+		// entries at TGIs our armed override packages ship (the per-TGI census
+		// the icon scan now takes) is named, with the count. Folders that
+		// merely sort after us but carry none of our TGIs cannot hurt us and
+		// are not named - a warning that fires on every install is noise.
 		{
-			// THE COMPARATOR-AMBIGUOUS FOLDER, checked at runtime (2026-08-25).
-			// Our overrides only win because zzz-SC4UIScale sorts last. '_'
-			// (0x5F) sits BETWEEN the upper-case letters and the lower-case
-			// ones, so a folder like the skin author's own `z____scoty_mods`
-			// sorts BEFORE us when the comparator upcases and AFTER us when it
-			// lowercases - and in the second case every package we just armed
-			// is inert. The installer renames it; a player who unzips the mod
-			// by hand gets the ambiguous name back, and nothing else would
-			// ever tell them.
-			const size_t rootLen = wcslen(pluginsRoot);
-			if (_wcsnicmp(carbonSkinPath, pluginsRoot, rootLen) == 0)
-			{
-				wchar_t folder[MAX_PATH] = {};
-				wcscpy_s(folder, MAX_PATH, carbonSkinPath + rootLen);
-				if (wchar_t* slash = wcschr(folder, L'\\'))
+			wchar_t ourTop[MAX_PATH] = {};
+			OverrideTopLevel(ourTop, MAX_PATH);
+			auto foldCmp = [](const wchar_t* a, const wchar_t* b, bool upper) -> int {
+				for (;; ++a, ++b)
 				{
-					*slash = L'\0';
-				}
-				auto foldCmp = [](const wchar_t* a, const wchar_t* b,
-				                  bool upper) -> int {
-					for (;; ++a, ++b)
+					wchar_t ca = *a, cb = *b;
+					if (upper)
 					{
-						wchar_t ca = *a, cb = *b;
-						if (upper)
-						{
-							if (ca >= L'a' && ca <= L'z') { ca = ca - 32; }
-							if (cb >= L'a' && cb <= L'z') { cb = cb - 32; }
-						}
-						else
-						{
-							if (ca >= L'A' && ca <= L'Z') { ca = ca + 32; }
-							if (cb >= L'A' && cb <= L'Z') { cb = cb + 32; }
-						}
-						if (ca != cb) { return (ca < cb) ? -1 : 1; }
-						if (ca == 0) { return 0; }
+						if (ca >= L'a' && ca <= L'z') { ca = ca - 32; }
+						if (cb >= L'a' && cb <= L'z') { cb = cb - 32; }
 					}
-				};
-				// Compare against the folder we ACTUALLY occupy. Against the
-				// literal v4.2.0 name this verdict was computed for a folder
-				// that need not exist, and got the answer wrong in both
-				// directions on any package-manager install.
-				wchar_t ourTop[MAX_PATH] = {};
-				OverrideTopLevel(ourTop, MAX_PATH);
-				const int cUp = foldCmp(folder, ourTop, true);
-				const int cLo = foldCmp(folder, ourTop, false);
-				if (cUp >= 0 || cLo >= 0)
+					else
+					{
+						if (ca >= L'A' && ca <= L'Z') { ca = ca + 32; }
+						if (cb >= L'A' && cb <= L'Z') { cb = cb + 32; }
+					}
+					if (ca != cb) { return (ca < cb) ? -1 : 1; }
+					if (ca == 0) { return 0; }
+				}
+			};
+			std::vector<IconSynth::BootIndex::TopFolder> tops;
+			IconSynth::BootIndex::TopLevelFolders(tops);
+			int warned = 0, candidates = 0;
+			for (const IconSynth::BootIndex::TopFolder& tf : tops)
+			{
+				if (ourTop[0] && _wcsicmp(tf.name, ourTop) == 0) { continue; }
+				if (_wcsicmp(tf.name, gOurDirs.earlyLeaf) == 0) { continue; }
+				const int cUp = foldCmp(tf.name, ourTop, true);
+				const int cLo = foldCmp(tf.name, ourTop, false);
+				if (cUp < 0 && cLo < 0) { continue; }
+				candidates++;
+				if (tf.conflicts == 0) { continue; }
+				warned++;
+				if (warned <= 8)
 				{
-					Logger::Get().WriteLine(
-						LogLevel::Info,
-						"ScaleTier: WARNING - the skin folder '%ls' can sort "
-						"AT/AFTER our override folder '%ls' (upcased cmp %d, "
-						"lowercased cmp %d). Under that ordering the skin loads "
-						"after our overrides and every carbon package is armed "
-						"but never rendered. Rename the folder so it sorts "
-						"earlier under both foldings (the supported name is "
-						"zz-scoty-mods).",
-						folder, ourTop, cUp, cLo);
+					Logger::Get().WriteLine(LogLevel::Info,
+						"ScaleTier: WARNING - top-level folder '%ls' (%u DBPF) sorts "
+						"AT/AFTER our override folder '%ls' (upcased cmp %d, lowercased "
+						"cmp %d) AND carries %u entries at TGIs our armed overrides "
+						"ship (first: %ls). Under that ordering its 1x art/layouts "
+						"win over ours at every scale factor. Rename it to sort "
+						"before '%ls'.",
+						tf.name, tf.dbpf, ourTop, cUp, cLo, tf.conflicts,
+						tf.firstConflict, ourTop);
+				}
+			}
+			if (warned > 8)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"ScaleTier: WARNING - %d more top-level folders sort after ours "
+					"and carry our override TGIs (first 8 named above).", warned - 8);
+			}
+			Logger::Get().WriteLine(LogLevel::Info,
+				"ScaleTier: load-order census - %u top-level folders with DBPFs, %d "
+				"sort at/after '%ls', %d of those carry our override TGIs "
+				"(%u override TGIs armed).%s",
+				static_cast<unsigned>(tops.size()), candidates, ourTop, warned,
+				static_cast<unsigned>(IconSynth::gOurOverrideTgis.size()),
+				(candidates > 0 && warned == 0)
+					? " None of them can override us - no warning."
+					: "");
+			if (carbonSkinPresent && carbonSkinPath[0])
+			{
+				// The skin-specific advice, kept: the supported folder name.
+				const size_t rootLen = wcslen(pluginsRoot);
+				if (_wcsnicmp(carbonSkinPath, pluginsRoot, rootLen) == 0)
+				{
+					wchar_t folder[MAX_PATH] = {};
+					wcscpy_s(folder, MAX_PATH, carbonSkinPath + rootLen);
+					if (wchar_t* slash = wcschr(folder, L'\\')) { *slash = L'\0'; }
+					if (foldCmp(folder, ourTop, true) >= 0 || foldCmp(folder, ourTop, false) >= 0)
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"ScaleTier:   ^ that is the Carbon skin's folder ('%ls'); the "
+							"supported name is zz-scoty-mods, which sorts before ours "
+							"under both foldings.", folder);
+					}
 				}
 			}
 		}
