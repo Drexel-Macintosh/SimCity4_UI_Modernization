@@ -65,7 +65,7 @@
 #include <string>      // the wrapped caption we build
 #include <set>         // #188 SMALLWIN per-epoch dedupe
 #include <Windows.h>   // SEH guard for probing hook return values
-#include <psapi.h>     // v4.9.0 Beta 1: PROCESS_MEMORY_COUNTERS_EX for the heartbeat (K32 export, no new lib)
+#include <psapi.h>     // v4.10.0: PROCESS_MEMORY_COUNTERS_EX for the heartbeat (K32 export, no new lib)
 
 // The live-tune re-read below used a HARDCODED absolute path to this dev
 // box's Plugins folder. On any other machine that read silently returns
@@ -771,7 +771,7 @@ namespace
 				// the legend text right lives in these objects - dump
 				// their first dwords so the next fix is measured, not
 				// guessed.
-				uintptr_t headRaw = 0;   // v4.9.0 Beta 1: guarded read of a measured offset
+				uintptr_t headRaw = 0;   // v4.10.0: guarded read of a measured offset
 				CodePatches::SafeReadPtr(chart + 0x228, &headRaw);
 				uint32_t* head = reinterpret_cast<uint32_t*>(headRaw);
 				int n = 0;
@@ -6864,7 +6864,7 @@ namespace
 				return;
 			}
 			gBufVtWritable = true;
-			// v4.9.0 Beta 1 (S6): the page stays RWX for the session - every
+			// v4.10.0 (S6): the page stays RWX for the session - every
 			// later slot write relies on gBufVtWritable. Recorded so a stray
 			// write into that page by anything in this 50-plugin process is
 			// attributable to a page WE opened.
@@ -9340,7 +9340,7 @@ void UiSpike::ResetTracking()
 	menuBaselineCaptured = false;
 }
 
-// v4.9.0 Beta 1 - RESOURCE HEARTBEAT. One Info line every 5 minutes (and one
+// v4.10.0 - RESOURCE HEARTBEAT. One Info line every 5 minutes (and one
 // at the first tick, the baseline) so any tester's log carries a slope:
 // private bytes, handles, GDI/USER objects, address space left, our two maps,
 // the fixed-table fill levels and the city/epoch counters. ~2 KB per hour.
@@ -9417,7 +9417,7 @@ void UiSpike::TickCheck(unsigned int nowTickMs)
 		// cIGZWin calls: never run two walks on the same stack.
 		return;
 	}
-	PassGuard passGuard(*this);   // v4.9.0 Beta 1: RAII, see UiSpike.h
+	PassGuard passGuard(*this);   // v4.10.0: RAII, see UiSpike.h
 
 	if (armed && static_cast<int>(nowTickMs - fireAtMs) >= 0)
 	{
@@ -9726,7 +9726,7 @@ UiSpike::ScaleState UiSpike::Classify(cIGZWin* win)
 		}
 		return ScaleState::ResetToOriginal;
 	}
-	// v4.9.0 Beta 1 (S3): an ANONYMOUS window (id 0) born at a recycled
+	// v4.10.0 (S3): an ANONYMOUS window (id 0) born at a recycled
 	// address matches a dead record's id (0 == 0), fails both size tests and
 	// lands here - silently, until now. That is the "one flyout stuck at 1x
 	// after hours" shape the code already describes (the region-switch

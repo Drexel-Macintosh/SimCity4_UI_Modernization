@@ -132,7 +132,7 @@ void Logger::WriteHeader(const char* headerLine)
 	EnterCriticalSection(static_cast<CRITICAL_SECTION*>(lock));
 	int n = fprintf(static_cast<FILE*>(file), "%s\n", headerLine);
 	if (n > 0) { bytesWritten += static_cast<unsigned long long>(n); }
-	// v4.9.0 Beta 1: the per-line stamps carry no date, so a session that
+	// v4.10.0: the per-line stamps carry no date, so a session that
 	// crosses midnight could not be matched against the game's own exception
 	// reports (which are dated). The date goes here once, and an hour marker
 	// is printed whenever the hour changes (see WriteLine).
@@ -187,7 +187,7 @@ void Logger::WriteLine(LogLevel level, const char* format, ...)
 		st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
 		message);
 	if (n > 0) { bytesWritten += static_cast<unsigned long long>(n); }
-	// v4.9.0 Beta 1 SOFT CAP. One Info line inside a 16 ms path once produced
+	// v4.10.0 SOFT CAP. One Info line inside a 16 ms path once produced
 	// "5211 lines and a 1 MB log in one session" (MDOCK); at LogLevel=3 the
 	// live log grows ~9 MB/h. Past 64 MB the level drops to Info, once, and
 	// says so - a runaway Debug/Trace path cannot fill a disk, and the line

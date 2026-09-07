@@ -30,7 +30,7 @@ namespace
 	const uint8_t kImulOpcode = 0x6B;
 	const uint8_t kStockMultiplier = 0x07;
 
-	// v4.9.0 Beta 1 (S1): SPECULATIVE READS IN PROBE CODE GO THROUGH HERE.
+	// v4.10.0 (S1): SPECULATIVE READS IN PROBE CODE GO THROUGH HERE.
 	// Two exception reports (2026-08-18 08:30, 2026-08-31 13:08) fault on the
 	// same instruction in LogBubbleCallStack: a stack dword passed a
 	// hand-written `base + 0xA20000` bound and was dereferenced, but the exe's
@@ -1108,7 +1108,7 @@ namespace
 
 namespace CodePatches
 {
-	// v4.9.0 Beta 1: the SEH-guarded pointer read, exported for UiSpike's
+	// v4.10.0: the SEH-guarded pointer read, exported for UiSpike's
 	// hooked-slot probes (ProbeSafe itself is file-local).
 	bool SafeReadPtr(const void* at, uintptr_t* out)
 	{
@@ -4869,7 +4869,7 @@ namespace CodePatches
 		{
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			// v4.9.0 Beta 1: the bound is the exe's REAL image span (the old
+			// v4.10.0: the bound is the exe's REAL image span (the old
 			// `base + 0xA20000` overshot SizeOfImage by 2 MB and this scan
 			// faulted on it twice), and every read is SEH-guarded.
 			const uintptr_t lo = ProbeSafe::ImageLo();
@@ -6734,7 +6734,7 @@ namespace CodePatches
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 			uint32_t vtVa = 0;
-			uintptr_t vt = 0;   // v4.9.0 Beta 1: guarded read (Test-ProbeDerefGuards)
+			uintptr_t vt = 0;   // v4.10.0: guarded read (Test-ProbeDerefGuards)
 			if (self && ProbeSafe::ReadPtr(self, &vt))
 			{
 				vtVa = static_cast<uint32_t>(vt - base + kImageBase);
@@ -7050,7 +7050,7 @@ namespace CodePatches
 			++gSpTargetLogs;
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			// v4.9.0 Beta 1 (S1): vptr and slots validated before any call.
+			// v4.10.0 (S1): vptr and slots validated before any call.
 			void** vt = ProbeSafe::SafeVt(occ);
 			const uintptr_t getType = ProbeSafe::SafeSlot(vt, 0x1C / 4);
 			const uintptr_t qi = ProbeSafe::SafeSlot(vt, 0);
@@ -7739,7 +7739,7 @@ namespace CodePatches
 			// four previously-unthunked subs - the draw path runs there.
 			const uintptr_t vts[6] = { 0xAA4900, 0xAA4868, 0xAA48F0,
 				0xAA484C, 0xAA47E8, 0xAA47D0 };
-			// v4.9.0 Beta 1: the real image span, not a hand-written bound.
+			// v4.10.0: the real image span, not a hand-written bound.
 			const uintptr_t txtLo = ProbeSafe::ImageLo(), txtHi = ProbeSafe::ImageHi();
 			uint8_t* pool = static_cast<uint8_t*>(VirtualAlloc(nullptr,
 				16384, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE));
@@ -7869,7 +7869,7 @@ namespace CodePatches
 			{
 				used += wsprintfA(line + used, " <fault>");
 			}
-			uintptr_t selfVt = 0;   // v4.9.0 Beta 1: guarded read
+			uintptr_t selfVt = 0;   // v4.10.0: guarded read
 			const uint32_t vtVa = ProbeSafe::ReadPtr(self, &selfVt)
 				? static_cast<uint32_t>(selfVt - base + kImageBase) : 0u;
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -7896,7 +7896,7 @@ namespace CodePatches
 			++gSpHoverLogs;
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			// v4.9.0 Beta 1 (S1): vptr and slots validated before any call -
+			// v4.10.0 (S1): vptr and slots validated before any call -
 			// an unreadable or out-of-image pointer logs and returns instead
 			// of jumping into heap data (the 2026-08-14 PRIV_INSTRUCTION shape).
 			void** vt = ProbeSafe::SafeVt(obj);
@@ -8311,7 +8311,7 @@ namespace CodePatches
 					int16_t a = 0, b = 0;
 					memcpy(&a, p, 2);
 					memcpy(&b, p + 2, 2);
-					// v4.9.0 Beta 1 (S7): the narrowing below wraps silently
+					// v4.10.0 (S7): the narrowing below wraps silently
 					// past int16; refuse rather than write a negative size.
 					if (a * mul + 0.5f > 32767.0f || b * mul + 0.5f > 32767.0f
 						|| a * mul < -32768.0f || b * mul < -32768.0f)
@@ -8682,7 +8682,7 @@ namespace CodePatches
 				const uintptr_t base =
 					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 				uintptr_t vt = 0;
-				if (!ProbeSafe::ReadPtr(inst, &vt)) { break; }   // v4.9.0 Beta 1: guarded
+				if (!ProbeSafe::ReadPtr(inst, &vt)) { break; }   // v4.10.0: guarded
 				const uint32_t vtVa =
 					static_cast<uint32_t>(vt - base + kImageBase);
 				Logger::Get().WriteLine(LogLevel::Info,
@@ -9023,7 +9023,7 @@ namespace CodePatches
 				const uint32_t ret = static_cast<uint32_t>(
 					reinterpret_cast<uintptr_t>(_ReturnAddress())
 					- base + kImageBase);
-				uintptr_t selfVt = 0;   // v4.9.0 Beta 1: guarded read; an
+				uintptr_t selfVt = 0;   // v4.10.0: guarded read; an
 				ProbeSafe::ReadPtr(self, &selfVt);   // unreadable self reads as FOREIGN
 				const uintptr_t vtVa = selfVt ? (selfVt - base + kImageBase) : 0u;
 				if (vtVa == kWinTextIfaceVt)
@@ -9876,7 +9876,7 @@ namespace CodePatches
 				"output is an arming failure, not evidence.");
 			return;
 		}
-		void** vt = ProbeSafe::SafeVt(svc);   // v4.9.0 Beta 1: validated vptr
+		void** vt = ProbeSafe::SafeVt(svc);   // v4.10.0: validated vptr
 		if (!vt)
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -9961,7 +9961,7 @@ namespace CodePatches
 				"- not installed (retries next city).");
 			return;
 		}
-		void** vt = ProbeSafe::SafeVt(svc);   // v4.9.0 Beta 1: validated vptr
+		void** vt = ProbeSafe::SafeVt(svc);   // v4.10.0: validated vptr
 		if (!vt)
 		{
 			Logger::Get().WriteLine(LogLevel::Info,

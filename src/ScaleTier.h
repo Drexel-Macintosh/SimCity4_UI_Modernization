@@ -167,7 +167,7 @@ namespace ScaleTier
 	// font ini in <install>\Plugins ONLY, so SyncFont mirrors the active
 	// tier's FontStyle there each boot (this header used to claim "no Program
 	// Files writes"; that was never true of the font - corrected 2026-09-07,
-	// Beta 1 audit). On a Steam/GOG install under Program Files that write
+	// 4.10.0 audit). On a Steam/GOG install under Program Files that write
 	// needs the game to run elevated; when it fails the log says so and text
 	// stays 1x inside scaled frames. Idempotent, and free in the steady
 	// state (four file stats, no I/O, when the stamp still matches); a failed
@@ -234,17 +234,17 @@ namespace ScaleTier
 	void ScanUncoveredIcons(float factor);
 
 	void EnlargeUncoveredIcons(float factor);
-	// v4.9.0 Beta 1: one log line with every boot-path phase in ms and a
+	// v4.10.0: one log line with every boot-path phase in ms and a
 	// total; call once, after the last boot-path walk in the director ctor.
 	void LogBootPhases();
-	// v4.9.0 Beta 1: free the one-walk boot index (names arena) after the
+	// v4.10.0: free the one-walk boot index (names arena) after the
 	// last boot consumer; safe to call any time - the next consumer rebuilds.
 	void ReleaseBootIndex();
-	// v4.9.0 Beta 1: the load-order census - every top-level folder that sorts
+	// v4.10.0: the load-order census - every top-level folder that sorts
 	// after ours AND carries our override TGIs. Call AFTER ScanUncoveredIcons
 	// (that scan collects the TGIs); pass false at the stock tier.
 	void LoadOrderCensus(bool tierActive);
-	// v4.9.0 Beta 1: the icon-synth counters for the heartbeat line -
+	// v4.10.0: the icon-synth counters for the heartbeat line -
 	// uncovered icons in the fix list, objects held by reference, factory
 	// wrap reads and hits this session.
 	void IconSynthCounts(int* fixList, int* held, unsigned* facReads, unsigned* facHits);

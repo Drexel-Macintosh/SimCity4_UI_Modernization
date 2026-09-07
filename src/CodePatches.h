@@ -7,7 +7,7 @@
 // a mismatch (wrong exe build) skips that patch with a log line.
 namespace CodePatches
 {
-	// v4.9.0 Beta 1: SEH-guarded pointer read for hooked-slot probes in other
+	// v4.10.0: SEH-guarded pointer read for hooked-slot probes in other
 	// translation units (false on a fault, never a crash).
 	bool SafeReadPtr(const void* at, uintptr_t* out);
 

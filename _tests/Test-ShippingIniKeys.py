@@ -289,7 +289,7 @@ def main():
         return 1
 
     # ------------------------------------------------------------------
-    # v4.9.0 Beta 1: NO DEV LEVER MAY BE SEEDED OR SHIPPED SET. Two crashes
+    # v4.10.0: NO DEV LEVER MAY BE SEEDED OR SHIPPED SET. Two crashes
     # on record ran with a probe-family key left in the live ini; the DLL
     # now prints a DEV KEYS ACTIVE roll-up at boot, and this gate keeps the
     # two shipped inis clean of them. The list mirrors kDevKeys in

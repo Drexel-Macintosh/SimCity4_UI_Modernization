@@ -52,7 +52,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.9.0-beta1"
+#define UISCALE_VERSION_STR "4.10.0"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -121,7 +121,7 @@ namespace
 	}
 }
 
-// v4.9.0 Beta 1 (S1/R5): EVERY DEV-ONLY KEY THAT IS SET SAYS SO, in one line at
+// v4.10.0 (S1/R5): EVERY DEV-ONLY KEY THAT IS SET SAYS SO, in one line at
 // boot. Both crashes in probe code this project has on record (2026-08-18 and
 // 2026-08-31, the same unguarded stack scan) ran on a machine where a
 // probe-family key had been left set from an earlier investigation. Each
@@ -389,7 +389,7 @@ public:
 				"factor is the one on the 'AutoScale: ... -> tier' line below, "
 				"and that is what art, fonts and geometry all use.");
 		}
-		LogDevKeys(logger, iniPath);   // v4.9.0 Beta 1: the dev-lever roll-up
+		LogDevKeys(logger, iniPath);   // v4.10.0: the dev-lever roll-up
 
 		// DPI awareness FIRST (before reading the monitor size below), so the
 		// metrics come back in physical pixels - and before the game creates
@@ -797,7 +797,7 @@ public:
 			{
 				ScaleTier::ScanUncoveredIcons(settings.spikeScaleFactor);
 			}
-			// v4.9.0 Beta 1: the load-order census needs the override TGIs the
+			// v4.10.0: the load-order census needs the override TGIs the
 			// scan above collected - so it runs here, not inside SyncStaticLayers.
 			ScaleTier::LoadOrderCensus(tierActive);
 
@@ -814,7 +814,7 @@ public:
 				CodePatches::ApplyIntroVideoScale(settings.spikeScaleFactor);
 			}
 		}
-		// v4.9.0 Beta 1: where the boot went, in one line (all walks done),
+		// v4.10.0: where the boot went, in one line (all walks done),
 		// then the walk's index is freed - nothing later needs it.
 		ScaleTier::LogBootPhases();
 		ScaleTier::ReleaseBootIndex();

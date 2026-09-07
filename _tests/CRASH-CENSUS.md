@@ -2,7 +2,7 @@
 
 Source: `Documents\SimCity 4\Exception Reports\`
 (read the `.txt` reports only; the `.mdmp` minidumps were not opened).
-Census run 2026-09-07 (Beta 1, Unit A3). **20 `.txt` files present, one 0-byte
+Census run 2026-09-07 (4.10.0, Unit A3). **20 `.txt` files present, one 0-byte
 (2026-08-30 06:45:43) → 19 non-empty crash records.** Of the 19, **5 are
 already in the ledger and 14 were never recorded.**
 
@@ -150,7 +150,7 @@ Five EIP-byte signatures recur; only the third is inside our DLL:
 shipped **v4.8.0** `Plugins\SC4UIScale.dll` (`SizeOfImage 0x21F000` = 2,224,128),
 confirming #19/#20 are the v4.8.0-era binary. The current `build\Release` DLL is
 newer still (`SizeOfImage 0x225000`, rebuilt 2026-09-07 07:26 — the in-flight
-v4.9.0 Beta 1 tree), which is why the older crash bytes are not all byte-exact
+v4.10.0 tree), which is why the older crash bytes are not all byte-exact
 in `build\Release` while they are exact in the deployed v4.8.0 DLL.
 
 ## The rule this census establishes

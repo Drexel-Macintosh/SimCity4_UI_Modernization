@@ -19,15 +19,15 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <psapi.h>     // v4.9.0 Beta 1: PROCESS_MEMORY_COUNTERS_EX (K32 export in kernel32, no new lib)
+#include <psapi.h>     // v4.10.0: PROCESS_MEMORY_COUNTERS_EX (K32 export in kernel32, no new lib)
 
 #include <cwchar>
 #include <cstdlib>
 #include <cstdint>
 #include <filesystem>
 #include <string>
-#include <vector>      // v4.9.0 Beta 1: BootIndex
-#include <algorithm>   // v4.9.0 Beta 1: binary_search over our override TGIs
+#include <vector>      // v4.10.0: BootIndex
+#include <algorithm>   // v4.10.0: binary_search over our override TGIs
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -382,7 +382,7 @@ namespace
 		FindClose(h);
 	}
 
-	// v4.9.0 Beta 1: how long the content discovery took, in microseconds.
+	// v4.10.0: how long the content discovery took, in microseconds.
 	// Win32 only (no PerfProbe) because this region is lifted and compiled
 	// standalone by _tests/Test-FolderDiscovery.ps1. Read by LogBootPhases.
 	unsigned long long gDiscoverUs = 0;
@@ -2305,7 +2305,7 @@ namespace IconSynth
 	// ==== BEGIN BOOT-WALK (lifted verbatim by _tests/Test-BootWalk.ps1) ====
 	const int kLongPath = 1024;
 
-	// v4.9.0 Beta 1 counters (region-local so the standalone lift compiles):
+	// v4.10.0 counters (region-local so the standalone lift compiles):
 	unsigned gCloudOnlySeen = 0;   // DBPFs that are cloud placeholders - NOT opened
 	unsigned gIndexOpened = 0;     // DBPFs whose index was read
 	unsigned gIndexChunked = 0;    // of those, indexes read in more than one chunk
@@ -2324,7 +2324,7 @@ namespace IconSynth
 	// A number here proves the deep tree was actually reachable.
 	int gLongPathsSeen = 0;
 
-	// v4.9.0 Beta 1: the callback gets the whole WIN32_FIND_DATAW (name, size,
+	// v4.10.0: the callback gets the whole WIN32_FIND_DATAW (name, size,
 	// attributes, times) so ONE walk can feed every consumer; `depth` caps a
 	// Plugins-into-Plugins junction loop instead of recursing until the stack
 	// dies (the game's own scan would loop too - but ours must not be the one
@@ -2390,7 +2390,7 @@ namespace IconSynth
 	// SC4 ships index major 7, minor 0 (20-byte entries) or 1 (24). Reading
 	// only the index means no QFS, no PNG, no allocation beyond the index
 	// itself - which is what keeps this affordable at boot.
-	// v4.9.0 Beta 1: EVERY entry goes to the callback (type, group, instance);
+	// v4.10.0: EVERY entry goes to the callback (type, group, instance);
 	// the icon filter moved into the caller, because the same read now also
 	// feeds the per-TGI conflict census against our override packages.
 	bool ReadIconTgis(const wchar_t* path,
@@ -2417,7 +2417,7 @@ namespace IconSynth
 			const uint32_t offset = *reinterpret_cast<uint32_t*>(hdr + 0x28);
 			const uint32_t idxMin = *reinterpret_cast<uint32_t*>(hdr + 0x3C);
 			const uint32_t stride = (idxMin == 1) ? 24 : 20;
-			// v4.9.0 Beta 1: NO COUNT CAP. The old `count < 200000` guard
+			// v4.10.0: NO COUNT CAP. The old `count < 200000` guard
 			// silently skipped any index past it - a mega-pack read as
 			// "no icons" and its icons stayed uncovered with nothing said.
 			// The bound is now the FILE SIZE (64-bit), and the index is read
@@ -2480,10 +2480,10 @@ namespace IconSynth
 	}
 	// ==== END BOOT-WALK ====
 
-	// ==== BEGIN BOOT-INDEX (v4.9.0 Beta 1) ====
+	// ==== BEGIN BOOT-INDEX (v4.10.0) ====
 	// ONE WALK PER PLUGINS ROOT, EVERY CONSUMER READS THE INDEX.
 	//
-	// Before Beta 1 the boot path traversed the Plugins tree ~16 times in the
+	// Before 4.10.0 the boot path traversed the Plugins tree ~16 times in the
 	// DLL constructor - during the game's own plugin scan, before the splash:
 	// folder discovery (8 FindFirstFile per directory), 6-7 depth-4 dependency
 	// walks that never early-exited, 4 unbounded std::filesystem walks for one
@@ -2647,7 +2647,7 @@ namespace IconSynth
 			Logger::Get().WriteLine(LogLevel::Info,
 				"BootIndex: ONE walk per root - Documents %u files / %llu bytes in "
 				"%u ms%s%s; %u past MAX_PATH; %u names KB. Every boot consumer "
-				"reads this index (v4.9.0 Beta 1).",
+				"reads this index (v4.10.0).",
 				gIx.count[0], gIx.bytes[0], gIx.walkMs[0],
 				gIx.root[1][0] ? ", install " : " (install root: none or same)",
 				gIx.root[1][0] ? "walked too" : "",
@@ -2833,7 +2833,7 @@ namespace IconSynth
 		list.cap = 0;
 	}
 
-	// v4.9.0 Beta 1: the sets are SORTED once per phase and searched by
+	// v4.10.0: the sets are SORTED once per phase and searched by
 	// bisection. The old shape was a linear dedupe per TGI (O(N^2) over a
 	// 20 GB folder's icons) and a linear scan per PNG read in the factory
 	// wrap (O(icons x fixlist)) - both on the boot/city-load path.
@@ -2919,7 +2919,7 @@ namespace IconSynth
 	U32List  gFixList = {};
 	uint32_t gControlInst = 0;   // one of OURS, known-enlarged on disk
 
-	// v4.9.0 Beta 1: the per-TGI conflict census. Every entry of every DBPF
+	// v4.10.0: the per-TGI conflict census. Every entry of every DBPF
 	// under our armed OVERRIDE folder is collected (ours pass); every entry of
 	// every foreign DBPF is then checked against that set (theirs pass), so
 	// the load-order warning can say "this folder carries N of our override
@@ -2986,7 +2986,7 @@ namespace IconSynth
 		gIndexChunked = 0;
 		gBigIndexLogged = 0;
 
-		// v4.9.0 Beta 1: the roots come from the ONE boot walk (BootIndex);
+		// v4.10.0: the roots come from the ONE boot walk (BootIndex);
 		// this scan no longer walks anything. Both passes iterate the index in
 		// its enumeration order (Documents root, then install root), which is
 		// exactly the order the four old walks produced.
@@ -3067,7 +3067,7 @@ namespace IconSynth
 		// the strip's cell but not this art, so the draw over-reads - two
 		// copies at rest, and nothing at all on hover once the state index
 		// walks past the end of the texture.
-		// v4.9.0 Beta 1: both lists are sorted+unique, so this is a merge
+		// v4.10.0: both lists are sorted+unique, so this is a merge
 		// (O(ours + theirs)) and gFixList comes out SORTED for InFixList.
 		int uncovered = 0;
 		int logged = 0;
@@ -3153,7 +3153,7 @@ namespace IconSynth
 	// registered. Any failure at any step leaves the original registration
 	// untouched, so the worst case is the old broken-but-stable rendering.
 	int  gMade = 0, gMiss = 0, gSkip = 0, gFail = 0;
-	// v4.9.0 Beta 1: the per-icon step lines (Init refused / VERIFY / step
+	// v4.10.0: the per-icon step lines (Init refused / VERIFY / step
 	// FAILED) are budgeted - the 50k run printed them for every icon.
 	int  gIconStepLog = 0;
 	const int kIconStepLogMax = 8;
@@ -3533,7 +3533,7 @@ namespace IconSynth
 	typedef bool(__fastcall* FacReadFn)(void*, void*, cIGZPersistResource*, void*);
 	FacReadFn gFacOrigRead = nullptr;
 
-	// v4.9.0 Beta 1: bisection over the sorted fix list; falls back to the
+	// v4.10.0: bisection over the sorted fix list; falls back to the
 	// linear scan (never silently wrong) if the list is somehow unsorted -
 	// InstallFactoryWrap logs that case once.
 	bool gFixListSorted = false;
@@ -3555,7 +3555,7 @@ namespace IconSynth
 		// NULL IS NOT EVIDENCE. Without this, "no born-correct lines" reads
 		// identically for "the wrap never ran" and "the wrap ran and our two
 		// icons never came through Read" - two very different next steps.
-		// v4.9.0 Beta 1: #1, #1000, then every 10,000 - each line is a
+		// v4.10.0: #1, #1000, then every 10,000 - each line is a
 		// synchronous fflush on the UI thread, and a 20 GB folder reads
 		// tens of thousands of PNGs on a city load.
 		if (gFacReads == 1 || gFacReads == 1000 || (gFacReads % 10000) == 0)
@@ -3639,7 +3639,7 @@ namespace IconSynth
 			reinterpret_cast<void*>(gFacOrigRead));
 	}
 
-	// v4.9.0 Beta 1: the address-space line. LAA from the exe's own PE
+	// v4.10.0: the address-space line. LAA from the exe's own PE
 	// header, virtual space from GlobalMemoryStatusEx, private bytes from
 	// kernel32's K32GetProcessMemoryInfo. Printed at stage-2 start and end so
 	// a user's log shows what the icon work cost in the one resource a
@@ -3677,7 +3677,7 @@ namespace IconSynth
 			           "and a large plugin folder plus 3x art may not fit.");
 	}
 
-	// v4.9.0 Beta 1: [Probe] IconSynthGcProbe=1 - prove that a garbage-
+	// v4.10.0: [Probe] IconSynthGcProbe=1 - prove that a garbage-
 	// collected icon comes back enlarged through the factory wrap (the
 	// argument for holding nothing). Re-fetches the first four fix-list keys
 	// both ways after a forced collection and prints sizes + wrap hits.
@@ -3737,7 +3737,7 @@ namespace IconSynth
 		gMade = gMiss = gSkip = gFail = 0;
 		LogAddressSpace("stage 2 start");
 
-		// v4.9.0 Beta 1 - WRAP FIRST, EAGER ONLY AS A BUDGETED FALLBACK.
+		// v4.10.0 - WRAP FIRST, EAGER ONLY AS A BUDGETED FALLBACK.
 		// Until now this function fetched, enlarged and HELD every uncovered
 		// icon at PostAppInit - ~272 KB each at 3x, proportional to the
 		// player's custom-lot count, never released. 6,619 icons (a measured
@@ -3923,7 +3923,7 @@ namespace IconSynth
 				continue;
 			}
 
-			// v4.9.0 Beta 1: the byte budget. The enlarged object plus the
+			// v4.10.0: the byte budget. The enlarged object plus the
 			// 1x the manager caches beside it, per icon; stop at the budget
 			// and say how many were left.
 			const unsigned long long cost =
@@ -4053,7 +4053,7 @@ namespace IconSynth
 			if (priv) { priv->Release(); }
 		}
 
-		// (v4.9.0 Beta 1: the factory find + wrap install moved ABOVE the loop.)
+		// (v4.10.0: the factory find + wrap install moved ABOVE the loop.)
 
 		// "registered" was the wrong word once this grew a second path, and a
 		// log line that names the wrong mechanism sends the next reader to the
@@ -4063,7 +4063,7 @@ namespace IconSynth
 			Logger::Get().WriteLine(LogLevel::Info,
 				"IconSynth: stage 2 done in %u ms - factory wrap PRIMARY (control "
 				"%s): %d uncovered icons enlarge lazily at first Read, nothing "
-				"fetched eagerly, nothing held (v4.9.0 Beta 1; before, every one "
+				"fetched eagerly, nothing held (v4.10.0; before, every one "
 				"was fetched, enlarged and held here).",
 				GetTickCount() - t0, wrapProven ? "PASS" : "inconclusive",
 				gFixList.n);
@@ -4787,12 +4787,12 @@ namespace ScaleTier
 		IconSynth::EnlargeAndRegister(factor);
 	}
 
-	// v4.9.0 Beta 1: ONE LINE NAMING WHERE THE BOOT WENT. Every boot-path
+	// v4.10.0: ONE LINE NAMING WHERE THE BOOT WENT. Every boot-path
 	// phase records into PerfProbe (discovery records its own microseconds
 	// because that region is compiled standalone by a test); this prints them
 	// with a total, and warns past the project's own 3 s freeze law - so a
 	// stranger's log answers "why is startup slow" without a debugger.
-	// v4.9.0 Beta 1: free the boot index once the last consumer has run (the
+	// v4.10.0: free the boot index once the last consumer has run (the
 	// director calls this after LogBootPhases). A later caller rebuilds it
 	// with one walk.
 	void ReleaseBootIndex()
@@ -4896,7 +4896,7 @@ namespace ScaleTier
 		static bool s_present = false;
 		if (s_checked) { return s_present; }
 		s_checked = true;
-		PerfProbe::Scope perf_("boot.pauseRemover");   // v4.9.0 Beta 1
+		PerfProbe::Scope perf_("boot.pauseRemover");   // v4.10.0
 		wchar_t pluginsRoot[MAX_PATH] = {};
 		PluginsRoot(pluginsRoot, MAX_PATH);
 		static const wchar_t* const kRemovers[] = {
@@ -4906,7 +4906,7 @@ namespace ScaleTier
 		(void)pluginsRoot;
 		for (const wchar_t* name : kRemovers)
 		{
-			static IconSynth::BootIndex::DepHit dh;   // v4.9.0 Beta 1: the one walk
+			static IconSynth::BootIndex::DepHit dh;   // v4.10.0: the one walk
 			IconSynth::BootIndex::FindDep(name, false, dh);
 			if (dh.present)
 			{
@@ -4923,7 +4923,7 @@ namespace ScaleTier
 
 	bool WebButtonModPresent(const wchar_t* pluginsDir)
 	{
-		// v4.9.0 Beta 1: MEMOISED. Two callers (SyncStaticLayers and
+		// v4.10.0: MEMOISED. Two callers (SyncStaticLayers and
 		// WebRedirect::Install) each walked BOTH Plugins roots, unbounded,
 		// with a std::wstring per file - four full traversals of a 20 GB
 		// folder at boot for one yes/no. Both pass the same root.
@@ -4935,7 +4935,7 @@ namespace ScaleTier
 		// well, and the same blind spot that hid install-root icons from the
 		// uncovered-icon scan would here keep our WebText override armed
 		// against a mod installed in the other root - its text would fight
-		// ours on the region screen. v4.9.0 Beta 1: both roots are in the ONE
+		// ours on the region screen. v4.10.0: both roots are in the ONE
 		// boot index (long-path safe, placeholders included), so this is a
 		// name scan over it, not a std::filesystem walk.
 		(void)pluginsDir;
@@ -4943,7 +4943,7 @@ namespace ScaleTier
 		return s_present;
 	}
 
-	// v4.9.0 Beta 1: the load-order census, AFTER the icon scan. It first
+	// v4.10.0: the load-order census, AFTER the icon scan. It first
 	// lived at the tail of SyncStaticLayers and printed "(0 override TGIs
 	// armed)" on its very first live boot: SyncStaticLayers runs before
 	// ScanUncoveredIcons, which is what collects the override TGIs - the census
@@ -4967,7 +4967,7 @@ namespace ScaleTier
 		PluginsRoot(pluginsRoot, MAX_PATH);
 		const bool carbonSkinPresent = gCarbonSkinPresent;
 		const wchar_t* carbonSkinPath = gCarbonSkinPath;
-	// v4.9.0 Beta 1 (R5) - THE LOAD-ORDER WARNING, FOR EVERY FOLDER, ON
+	// v4.10.0 (R5) - THE LOAD-ORDER WARNING, FOR EVERY FOLDER, ON
 	// EVIDENCE. Our overrides win only because our top-level folder sorts
 	// last. Until now the check ran only when the Carbon skin was found
 	// and looked only at the skin's folder; a `zzz_`, `zzzz` or `~` folder
@@ -5144,7 +5144,7 @@ namespace ScaleTier
 		// or was updated out from under the copy we built - must be gated OFF
 		// no matter which tier is active.
 		bool depOk[kThirdPartyDepCount] = {};
-		const unsigned long long depT0 = PerfProbe::NowUs();   // v4.9.0 Beta 1
+		const unsigned long long depT0 = PerfProbe::NowUs();   // v4.10.0
 		// MEMOIZED lookups (2026-08-25, review finding 4): the eight ZCarbon
 		// rows share two filenames (scoty_Carbon_Files.dat x8,
 		// scoty_carbon_PNG.dat x3), and a FindPluginFile walk has no early
@@ -5152,7 +5152,7 @@ namespace ScaleTier
 		// this cache a no-skin machine pays 8 extra full-tree walks at DLL
 		// load, and this project's own law says a ~3s cost on a watched
 		// moment is a freeze. One walk per DISTINCT (name, prefix) pair.
-		// v4.9.0 Beta 1: hits can exceed MAX_PATH (NAM nests 283-298 deep), so
+		// v4.10.0: hits can exceed MAX_PATH (NAM nests 283-298 deep), so
 		// every buffer here is kLongPath and the cache lives off the stack.
 		struct DepLookup { const wchar_t* name; bool prefix; bool present;
 		                   DWORD size; wchar_t hit[IconSynth::kLongPath]; };
@@ -5171,7 +5171,7 @@ namespace ScaleTier
 					return cache[c].present;
 				}
 			}
-			// v4.9.0 Beta 1: the ONE boot walk, not a depth-4 walk per name.
+			// v4.10.0: the ONE boot walk, not a depth-4 walk per name.
 			static IconSynth::BootIndex::DepHit dh;
 			IconSynth::BootIndex::FindDep(name, prefix, dh);
 			wchar_t* h = dh.path;
@@ -5341,7 +5341,7 @@ namespace ScaleTier
 				break;
 			}
 		}
-		// v4.9.0 Beta 1: the load-order census moved to LoadOrderCensus(),
+		// v4.10.0: the load-order census moved to LoadOrderCensus(),
 		// which the director runs AFTER the icon scan has collected the
 		// override TGIs. Only the skin state is recorded here.
 		gCarbonSkinPresent = carbonSkinPresent;

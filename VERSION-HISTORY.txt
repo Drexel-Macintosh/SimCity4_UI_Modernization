@@ -1,7 +1,7 @@
-SC4UIScale 4.9.0-beta1 (2026-09-07) - Beta 1: the boot path, the probes, the trail
+SC4UIScale 4.10.0 (2026-09-07) - the boot path, the probes, the trail
 ================================================================================
 
-THE THREE QUESTIONS asked before Beta 1, each answered by measurement (the
+THE THREE QUESTIONS asked before this release, each answered by measurement (the
 ledger's 2026-09-07 sections carry the numbers):
 
 1. 20+ GB PLUGIN FOLDERS - not seamless before this build. The DLL's own

@@ -534,7 +534,7 @@ static int RunDeps(const wchar_t* needlesPath)
 }
 
 #if BW_HAS_INDEX
-// ---- The Beta 1 BOOT-INDEX consumers, driven the way the DLL drives them:
+// ---- The 4.10.0 BOOT-INDEX consumers, driven the way the DLL drives them:
 // one walk per root, then every consumer reads the index. The icon pass is
 // the harness's own loop over the index (each DBPF opened once per pass,
 // sort/unique dedupe) because the DLL's consumer sits outside the sentinels.
@@ -1042,7 +1042,7 @@ foreach ($N in $FileSizes) {
     $trunc = $r2.rows | Where-Object { $_.phase -eq 'crt-truncations' } | Select-Object -First 1
     if ($trunc) { Write-Output "  crt truncations caught by the handler: $($trunc.count)" }
 
-    # ---- the Beta 1 index, when the source has one ----------------------------
+    # ---- the 4.10.0 index, when the source has one ----------------------------
     $indexRec = $null
     if ($hasIndex) {
         Compare-IndexDeps $r2 $m "N=$N"

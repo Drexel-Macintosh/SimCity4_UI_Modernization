@@ -235,7 +235,7 @@ foreach ($f in $Factor) {
     # with the real path (F13).
     $ladderDir = Join-Path $PSScriptRoot (Join-Path $outFor[$f] 'SimCity_1')
 
-    # v4.9.0 Beta 1: the exe's run summary (hybrid done / skipped-by-lane
+    # v4.10.0: the exe's run summary (hybrid done / skipped-by-lane
     # counts) is load-bearing evidence and used to survive only in a
     # gitignored preview tree. Tee it to a committed file per factor.
     $summaryFile = Join-Path $PSScriptRoot ("rebuild-summary-{0}.txt" -f ($f -replace '[.]', ''))

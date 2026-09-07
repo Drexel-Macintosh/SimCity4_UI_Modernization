@@ -74,7 +74,7 @@ regression suite that holds them in place is in `_tests/`.
   cutoff above the source band and lands the most uneven strokes in the
   bench (swc 0.473 vs the hybrid's 0.189) with key fringe. The 2x tier is
   the source held at 2x2; nothing in it reaches 1.5x that the source does
-  not. Ledger "Beta 1 A2" (2026-09-07) in `_tests/REGRESSION.md`.
+  not. Ledger "4.10.0 A2" (2026-09-07) in `_tests/REGRESSION.md`.
 - **Two post-launch 1.5x rule changes were gate-verified, not
   launch-verified.** The user's two launches judged the round-1 tree (round 2
   with the thumbnail sheets returned to shipped bytes). Two changes to the
@@ -96,7 +96,7 @@ regression suite that holds them in place is in `_tests/`.
 ## Performance and lifecycle
 
 - **Large plugin folders: the boot walk is now one pass per Plugins root, and
-  what it costs is in the log (Beta 1, 2026-09-07).** Before 4.9.0 the DLL's
+  what it costs is in the log (4.10.0, 2026-09-07).** Before 4.9.0 the DLL's
   constructor traversed the Plugins tree about sixteen times, opened every
   DBPF, and then fetched, enlarged and held every third-party menu icon it had
   found - a cost proportional to the player's custom-lot count that a 20 GB
@@ -109,7 +109,7 @@ regression suite that holds them in place is in `_tests/`.
   space` names the room left (and says so if the 4GB patch is missing). The
   eager loop survives only for a game without a factory to wrap, under
   `[IconSynth] EagerBudgetMB` (256). Measured against a synthetic tree, not a
-  real 20 GB install - see the ledger's Beta 1 A1 section for the numbers.
+  real 20 GB install - see the ledger's 4.10.0 A1 section for the numbers.
 - **Cloud placeholder files are counted, not opened.** A plugin folder under
   OneDrive Files On-Demand holds files that are not on disk until opened;
   opening each one from the scan would hydrate the whole folder. Such files

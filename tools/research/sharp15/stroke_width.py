@@ -131,7 +131,7 @@ def _axis_stats(src_p, out_p, f, maxl=MAXL):
 def _ink_stats(src, out, f, maxl=MAXL):
     """Integrated ink per bounded source run, grouped by L, both axes.
 
-    VECTORISED 2026-09-07 (Beta 1 A4, when swc_ink became a column of
+    VECTORISED 2026-09-07 (4.10.0 A4, when swc_ink became a column of
     _tests/Test-15xEdgeQuality.py): the per-run Python loop was ~25M
     iterations per tier on the corpus. The arithmetic is the loop's, term for
     term: span = lum[oy, x0:x1+1], summed. Equal to ROUNDING, not bit-equal:

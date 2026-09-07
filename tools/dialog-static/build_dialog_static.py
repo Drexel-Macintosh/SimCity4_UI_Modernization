@@ -2772,7 +2772,7 @@ def main():
                                 "--height-exact-strips",
                                 os.path.join(TOOLS, "upscale",
                                              "height-exact-slabs.txt"),
-                                # v4.9.0 Beta 1 (2026-09-07): the resampler
+                                # v4.10.0 (2026-09-07): the resampler
                                 # half of the corpus flag set. Third-party
                                 # art (CamUI, SaveWarning, RegionCensus) was
                                 # plain nearest at 1.5x by omission - "a

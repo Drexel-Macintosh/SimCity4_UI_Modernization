@@ -1,6 +1,6 @@
 # Changelog
 
-## 4.9.0-beta1 (2026-09-07) - Beta 1: the boot path scales to big plugin folders, probe reads cannot crash, and long sessions leave a trail
+## 4.10.0 (2026-09-07) - the boot path scales to big plugin folders, probe reads cannot crash, and long sessions leave a trail
 
 **One line of behaviour: the mod boots by walking your Plugins folder once,
 enlarges third-party menu icons only when they are first used instead of
@@ -79,7 +79,7 @@ straight-edge rule.**
   and on the plain copy. 2x and 3x are byte-identical.
 - The remaining 1.5x lever - the 377 colour-keyed sheets that still take the
   plain copy - is built as a variant for an on-screen decision and is NOT in
-  this beta's packages unless the release notes say so.
+  this release's packages.
 
 ### Tooling
 
