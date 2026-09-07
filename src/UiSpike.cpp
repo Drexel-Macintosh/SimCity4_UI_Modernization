@@ -771,8 +771,9 @@ namespace
 				// the legend text right lives in these objects - dump
 				// their first dwords so the next fix is measured, not
 				// guessed.
-				uint32_t* head = reinterpret_cast<uint32_t*>(
-					*reinterpret_cast<uintptr_t*>(chart + 0x228));
+				uintptr_t headRaw = 0;   // v4.9.0 Beta 1: guarded read of a measured offset
+				CodePatches::SafeReadPtr(chart + 0x228, &headRaw);
+				uint32_t* head = reinterpret_cast<uint32_t*>(headRaw);
 				int n = 0;
 				uint32_t* node = head ? reinterpret_cast<uint32_t*>(
 					static_cast<uintptr_t>(head[0])) : nullptr;
@@ -2957,6 +2958,7 @@ namespace
 				if (rw > 40 && rw < 160)
 				{
 					gDrawCtxLog++;
+					// deref-ok: a1 is the swapped Blt slot's own draw-context argument (the game's live object)
 					void** a1vt = *reinterpret_cast<void***>(a1);
 					int32_t* af = reinterpret_cast<int32_t*>(a1);
 					Logger::Get().WriteLine(LogLevel::Debug,
@@ -3529,6 +3531,7 @@ namespace
 			// distinguishable from a clean one.
 			if (a1)
 			{
+				// deref-ok: a1 is the swapped Blt slot's own argument, null-checked, compared to kBufClassVt
 				void** vt = *reinterpret_cast<void***>(a1);
 				if (vt == kBufClassVt)
 				{
@@ -3560,6 +3563,7 @@ namespace
 			{
 				gStripProbe--;
 				int aw = 0, ah = 0;
+				// deref-ok: a1 null-checked; the slot's own draw-context argument
 				void** a1vt = a1 ? *reinterpret_cast<void***>(a1) : nullptr;
 				if (a1vt == kBufClassVt)
 				{
@@ -3604,6 +3608,7 @@ namespace
 		{
 			int32_t* s = reinterpret_cast<int32_t*>(a2);
 			int32_t* d = reinterpret_cast<int32_t*>(a3);
+			// deref-ok: a1 is the slot's own argument, compared to kBufClassVt before any field is read
 			void** a1vt = *reinterpret_cast<void***>(a1);
 			if (a1vt == kBufClassVt)   // only then are af[5..8] a real rect
 			{
@@ -4743,6 +4748,7 @@ namespace
 				static_cast<uint32_t>(mm[0x1A])));
 			if (bltDst)
 			{
+				// deref-ok: bltDst is the hooked slot's own destination buffer (measured mm[0x1A]), null-checked
 				void** vt = *reinterpret_cast<void***>(bltDst);
 				if (vt != gBltVtCopy)
 				{
@@ -4759,6 +4765,7 @@ namespace
 				static_cast<uint32_t>(mm[0x37])));
 			if (ctxBuf)
 			{
+				// deref-ok: ctxBuf is the hooked slot's own context buffer (measured mm[0x37]), null-checked
 				void** vt = *reinterpret_cast<void***>(ctxBuf);
 				if (vt != gCtxVtCopy)
 				{
@@ -4994,6 +5001,7 @@ namespace
 				// (where the pictures actually composite) -> reveals the hit-vs-visual
 				// x offset behind "only the right half is clickable".
 				cIGZWin* sw = reinterpret_cast<cIGZWin*>(self);
+				// deref-ok: self is the hooked window; +0x68 is its measured dest-buffer field (probe-only, gStripProbe > 0)
 				void* s68d = *reinterpret_cast<void**>(
 					reinterpret_cast<char*>(self) + 0x68);
 				int b5 = 0, b6 = 0, b7 = 0, b8 = 0;
@@ -5027,9 +5035,11 @@ namespace
 		void** s68SavedVt = nullptr;
 		if (IDX == 88 && gStripProbe > 0)
 		{
+			// deref-ok: self is the hooked window; +0x68 measured (probe-only, gStripProbe > 0)
 			s68 = *reinterpret_cast<void**>(reinterpret_cast<char*>(self) + 0x68);
 			if (s68)
 			{
+				// deref-ok: s68 null-checked; the window's own dest buffer
 				void** vt = *reinterpret_cast<void***>(s68);
 				if (vt != reinterpret_cast<void**>(gStripVtCopy))
 				{
@@ -7247,9 +7257,11 @@ namespace
 			if (dstrip)
 			{
 				typedef void*(__fastcall* GetWinFn)(void*, void*);
+				// deref-ok: dstrip is the strip control the hook received; dsvt && dsvt[3] checked
 				void** dsvt = *reinterpret_cast<void***>(dstrip);
 				if (dsvt && dsvt[3])
 				{
+					// deref-ok: the strip control's own GetWindow slot - exactly the call the builder makes at 0x7EB1D9
 					dstripWin = reinterpret_cast<GetWinFn>(dsvt[3])(dstrip, nullptr);
 				}
 				if (dstripWin)
@@ -7692,9 +7704,11 @@ namespace
 			// The strip control's window via its own vt+0x0C, exactly the call
 			// the builder makes at 0x7EB1D9 - never a guessed obj+4.
 			typedef void*(__fastcall* GetWinFn)(void*, void*);
+			// deref-ok: strip is the hooked control; svt && svt[3] checked
 			void** svt = *reinterpret_cast<void***>(strip);
 			if (svt && svt[3])
 			{
+				// deref-ok: the strip control's own GetWindow slot (builder call 0x7EB1D9)
 				stripWin = reinterpret_cast<GetWinFn>(svt[3])(strip, nullptr);
 			}
 			if (stripWin)
@@ -8199,6 +8213,7 @@ void UiSpike::EdgeProbeTick(cIGZWin* pView)
 				if (ww < sw * 9 / 10 || wh < sh * 9 / 10) { continue; }
 				const int vis = w->IsVisible() ? 1 : 0;
 				hits[n].id = w->GetID();
+				// deref-ok: w is a walked live cIGZWin* (GetID/IsVisible beside it)
 				hits[n].vt = *reinterpret_cast<void**>(w);
 				hits[n].l = w->GetL(); hits[n].t = w->GetT();
 				hits[n].w = ww; hits[n].h = wh;
@@ -8242,6 +8257,7 @@ void UiSpike::EdgeProbeTick(cIGZWin* pView)
 		Logger::Get().WriteLine(LogLevel::Debug,
 			"UiSpike: EDGE   bubble rect (%d,%d %dx%d) vis=%d vt=%p",
 			bub->GetL(), bub->GetT(), bub->GetW(), bub->GetH(),
+			// deref-ok: bub is a live cIGZWin* the walk returned
 			bub->IsVisible() ? 1 : 0, *reinterpret_cast<void**>(bub));
 	}
 }

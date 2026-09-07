@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 // Targeted byte patches into SimCity 4.exe (1.1.641) for controls whose
 // geometry is hardcoded in the drawing code and unreachable through the
@@ -6,6 +7,10 @@
 // a mismatch (wrong exe build) skips that patch with a log line.
 namespace CodePatches
 {
+	// v4.9.0 Beta 1: SEH-guarded pointer read for hooked-slot probes in other
+	// translation units (false on a fault, never a crash).
+	bool SafeReadPtr(const void* at, uintptr_t* out);
+
 	// Mayor-rating change-arrows: the HUD controller reveals arrow art by
 	// SetW(delta * 7) - 7px per rating point at three imul sites
 	// (DYNAMIC-CONTROLS.md). With 2x face/arrow art the multiplier must

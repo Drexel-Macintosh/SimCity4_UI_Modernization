@@ -1108,6 +1108,13 @@ namespace
 
 namespace CodePatches
 {
+	// v4.9.0 Beta 1: the SEH-guarded pointer read, exported for UiSpike's
+	// hooked-slot probes (ProbeSafe itself is file-local).
+	bool SafeReadPtr(const void* at, uintptr_t* out)
+	{
+		return ProbeSafe::ReadPtr(at, out);
+	}
+
 	void ApplyRatingArrowScale(float factor)
 	{
 		const long scaled = std::lround(kStockMultiplier * factor);
@@ -4411,15 +4418,22 @@ namespace CodePatches
 				if (!self) { break; }
 				uint8_t* ctl = static_cast<uint8_t*>(self);
 				void* win = static_cast<void*>(ctl + 0x0C);
+				// deref-ok: win is the hooked rating control's own window (+0x0C), null-checked vptr below
 				void** wvt = *reinterpret_cast<void***>(win);
 				if (!wvt) { break; }
+				// deref-ok: wvt slot on the control's own window, wvt null-checked
 				void* arrow = reinterpret_cast<WinChildRecFn>(
 					wvt[0x8C / 4])(win, kDeclineArrowId);
 				if (!arrow) { break; }
+				// deref-ok: arrow is the control's own child rec, null-checked
 				void** avt = *reinterpret_cast<void***>(arrow);
+				// deref-ok: live child window slot (GetL) on a rec the game returned
 				const int32_t liveL = reinterpret_cast<WinGetIntFn>(avt[0xAC / 4])(arrow);
+				// deref-ok: live child window slot (GetT)
 				const int32_t liveT = reinterpret_cast<WinGetIntFn>(avt[0xB0 / 4])(arrow);
+				// deref-ok: live child window slot (GetW)
 				const int32_t liveW = reinterpret_cast<WinGetIntFn>(avt[0xA4 / 4])(arrow);
+				// deref-ok: live child window slot (GetH)
 				const int32_t liveH = reinterpret_cast<WinGetIntFn>(avt[0xA8 / 4])(arrow);
 				int32_t* cachedL = reinterpret_cast<int32_t*>(ctl + 0x378);
 				int32_t* cachedT = reinterpret_cast<int32_t*>(ctl + 0x37C);
@@ -9862,7 +9876,14 @@ namespace CodePatches
 				"output is an arming failure, not evidence.");
 			return;
 		}
-		void** vt = *reinterpret_cast<void***>(svc);
+		void** vt = ProbeSafe::SafeVt(svc);   // v4.9.0 Beta 1: validated vptr
+		if (!vt)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: VIEWOBJ render singleton vptr not in the game image "
+				"- NOT installed (probe read refused, not a crash).");
+			return;
+		}
 		void* target = vt[0x80 / 4];
 		const uintptr_t tva =
 			reinterpret_cast<uintptr_t>(target) - base + kImageBase;
@@ -9940,7 +9961,14 @@ namespace CodePatches
 				"- not installed (retries next city).");
 			return;
 		}
-		void** vt = *reinterpret_cast<void***>(svc);
+		void** vt = ProbeSafe::SafeVt(svc);   // v4.9.0 Beta 1: validated vptr
+		if (!vt)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: PICKPROBE render singleton vptr not in the game image "
+				"- NOT installed (probe read refused, not a crash).");
+			return;
+		}
 		void* target = vt[0x104 / 4];
 		const uintptr_t tva =
 			reinterpret_cast<uintptr_t>(target) - base + kImageBase;
