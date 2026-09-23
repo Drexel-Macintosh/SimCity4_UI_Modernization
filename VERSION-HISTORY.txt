@@ -1,3 +1,33 @@
+SC4UIScale 4.10.1 (2026-09-23) - bar charts fill the panel; Custom Tunes scales
+================================================================================
+
+Two fixes, both measured in the running game, found by decoding the chart and
+grid widgets against the Mac debug-symbol type archive:
+
+1. BAR CHARTS. EARLYCHART's plot-rect thunk sits on the line chart AND the
+   bar chart, and gave both the line chart's legend margin (244 px at 2x).
+   Bar charts have no legend, so RCI Demand, Education by Age and Population
+   by Age ended a quarter short of the panel. The user saw the empty band;
+   the thunk now takes the budget only for the line chart's vtable (0xAB4D08).
+   Log after the fix: vt=00ADE648 no-legend budgetRM=0, right edge 974 -> 972
+   in a 976-wide window. The user confirmed the bars reach the edge.
+
+2. CUSTOM TUNES. The playlist's song-title column is set in code (255 px),
+   the one width in Audio Options no .UI can reach. A SetColumnWidth detour,
+   picked by its return address, sizes it as 255/289 of the grid the game
+   actually loaded: 510 with our 2x dialog, the stock 255 if a skin's 1x
+   copy wins (a fixed patch would have hidden the checkboxes there). Log:
+   "255 -> 510 (the loaded grid is 578 px wide)". The visual waits for a
+   custom song in the list.
+
+Also in the repository, not the bundle:
+- The cIGZWin header gate (_tests\Test-GZWinHeaderSlots.py): the vendored SDK
+  header puts 40 of 147 declarations on the wrong exe slot.
+- The widget decodes in tools\research\WIDGET-INTERFACES.md.
+- The restored and completed engine documentation (19 passages overwritten
+  on 2026-09-01 and their 24 recovered revisions).
+- crosscheck.py passing on a fresh clone.
+
 SC4UIScale 4.10.0 (2026-09-07) - the boot path, the probes, the trail
 ================================================================================
 

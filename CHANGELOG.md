@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 4.10.1 (2026-09-23) - bar charts fill the Graphs panel again, and Custom Tunes titles scale
+
+**One line of behaviour: at a scaled tier the three bar charts in the Graphs
+panel use their full width again, and the Custom Tunes playlist's song-title
+column grows with the interface. Nothing else changes; the art and fonts are
+byte-identical to 4.10.0.**
 
 - **Bar charts fill the Graphs panel again at a scaled tier.**
   - RCI Demand, Education by Age and Population by Age are the game's three
