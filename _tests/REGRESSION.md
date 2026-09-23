@@ -22037,3 +22037,8 @@ Built and deployed by `Deploy-OnGameClose.ps1` at 15:56; the deployed DLL is byt
 - **EXPECTED LOG.**
   - At boot: `Custom Tunes column hook installed on SetColumnWidth ...`.
   - Opening Audio Options at 2x with our dialog: `Custom Tunes song column 255 -> 510 (the loaded grid is 578 px wide ...)`.
+- **MEASURED 16:48, the detour build, 2x.** The user opened Audio Options. The log shows:
+  - `[16:48:29.684] CodePatches: Custom Tunes column hook installed on SetColumnWidth 009AC43B (acts only for the call returning to 0x004F4B52; ...)`
+  - `[16:48:36.915] CodePatches: Custom Tunes song column 255 -> 510 (the loaded grid is 578 px wide; stock is 255 of 289).`
+
+  The hook fired on the one call it discriminates, and read the grid the game actually built: 578 = our DialogStatic 2x copy, area (30,92,608,456). The only thing not yet seen is the visual, which needs custom music.

@@ -195,8 +195,11 @@ window rect. **Never scale them.**
     - `_tests\Test-PatchSiteBytes.py` pins the 15-byte call site and the
       10-byte prologue. The two VAs are classified as control flow in
       `gate_patch_families_combined.py` and `crosscheck.py`.
-  - **Still a static reading.** Confirm it once custom tunes exist. Opening
-    Audio Options logs the chosen width either way.
+  - **The runtime path is MEASURED (2026-09-23 16:48, 2x).** Opening Audio
+    Options logged `Custom Tunes song column 255 -> 510 (the loaded grid is
+    578 px wide; stock is 255 of 289)`: the hook fired on its one call and
+    read our 2x copy's grid. Only the visual is unseen, because it needs
+    custom music in the list.
 - The cheat windows, lot editor, dev property viewers, Lua debugger and
   `GZWinFileBrowser` bake widths and gutters in code. None of them is a
   player dialog.
