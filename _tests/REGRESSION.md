@@ -22042,3 +22042,19 @@ Built and deployed by `Deploy-OnGameClose.ps1` at 15:56; the deployed DLL is byt
   - `[16:48:36.915] CodePatches: Custom Tunes song column 255 -> 510 (the loaded grid is 578 px wide; stock is 255 of 289).`
 
   The hook fired on the one call it discriminates, and read the grid the game actually built: 578 = our DialogStatic 2x copy, area (30,92,608,456). The only thing not yet seen is the visual, which needs custom music.
+
+### 18:17 - RELEASED: v4.10.1 (https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/tag/v4.10.1)
+
+The user: "release it as v4.10.1".
+
+- **Crash gate.** No exception report is newer than the v4.10.0 ledger entry (the newest is 2026-09-01, already censused).
+- **Build.** Release commit `3ee2485` (macro 4.10.1, CHANGELOG, VERSION-HISTORY). The DLL is 948,224 B, sha256 688777625DBF...A13C0, and carries the version string. It is deployed to the live install (DEPLOYED == BUILT).
+- **Bundle.** `SC4UIScale-v4.10.1.zip`: 123,775,480 B, sha256 93C195F4...312B5F, published 2026-09-23T22:17:29Z, marked Latest. The uploaded asset's digest equals the local sha256.
+- **Bundle gates.**
+  - Build-Dist PASS on hard patterns. The 6 soft lines are the word "touch", unchanged since v4.8.0.
+  - Test-BinaryPii CLEAN (131 files).
+  - Test-DatIntegrity ALL PASS (127 SHA256SUMS rows, 71 deployed==built).
+  - Sync-Check PASS (990 tracked files, clean, pushed).
+- **Previous release.** v4.10.0 was deleted after publishing, per the user's standing order. Its git tag stays.
+- **sc4pac channel.** Regenerated with `gen_channel.py --publish --last-modified 2026-09-23T22:17:29Z`: 127/127 files claimed, 102/102 checksums re-hashed in both yamls, all 208 comment lines preserved. `Test-ChannelYaml` is clear on both (version matches the DLL; asset URL HTTP 200 at the exact size; the lean file is upstream-clean).
+- **Contents vs 4.10.0.** The DLL only: the bar-chart margin and the Custom Tunes column. Art, fonts and packages are byte-identical.

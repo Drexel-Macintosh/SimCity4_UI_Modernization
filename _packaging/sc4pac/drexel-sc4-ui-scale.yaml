@@ -1,8 +1,8 @@
 # ###########################################################################
 # GENERATED FILE - do not hand-edit; your edit is lost on the next build.
 #   generator : tools/sc4pac/gen_channel.py
-#   bundle    : SC4UIScale-v4.10.0
-#   generated : 2026-09-07T14:28:19Z
+#   bundle    : SC4UIScale-v4.10.1
+#   generated : 2026-09-23T22:18:03Z
 # The prose below is carried verbatim from the hand-written version of this
 # file. The generator refuses to write output that drops any of it.
 # ###########################################################################
@@ -116,7 +116,7 @@
 # examined, 3/3 controls fired, ZERO CAM keys changed hands.
 group: "a-drexel"
 name: "sc4-ui-scale"
-version: "4.10.0"
+version: "4.10.1"
 subfolder: "050-load-first"
 dependencies:
 - "config:sc4-edition-windows-digital"
@@ -128,7 +128,7 @@ assets:
   # It ALSO needs the checksum for a second, measured reason: a file
   # listed only under `include:` was NOT INSTALLED AT ALL.
   - include: "/Plugins/SC4UIScale.dll"
-    sha256: "36dbd90f6f2369954c16d4d4249176c499496927661efcd20afa59cdef1f60cf"
+    sha256: "688777625dbfe5b9d1a46ddbee9d27a344ec67066193ca0f30b2b274c8fa13c0"
   # Shipped by --ship-asset-inis. NOTE: no `isIni: true` - that lands the
   # file at the Plugins root renamed `_sc4pacnew.ini` and never activates
   # it. This keeps it in the package folder, where the DLL reads it.
@@ -161,7 +161,7 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_DialogStatic.3x.uipay"
     sha256: "a3c238e46ee08c97978c0588501c788783d5b3680feef072063566ae9e2a44bd"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_DialogStatic.off.uipay"
-    sha256: "cc548bc196232f1a8c3bce02d99dae2f954c404ab6fde0aa0a17a450a10454ac"
+    sha256: "b742efc4d16387f8d02e858d4592cf86f164aac2d463b71cde5ea1a9ed62c61a"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.15x.uipay"
     sha256: "cce35c3854a5831cf654b93ba48bbf45e6c025cac9edae5db7187dad542807ab"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.2x.uipay"
@@ -169,7 +169,7 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.3x.uipay"
     sha256: "4714374b6da5d2a0f2b229ef7c861dc8c423f2b6765dc923ead23150ddebfc72"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_ItemIcons.off.uipay"
-    sha256: "723df0a0b7f0c69e19fc26ce5c1e49963378ff3ebc2b0b8fdec627b402f188a3"
+    sha256: "478ad06dfd3867016e822e3f3361b3075437d20ec26873925a771c6517958d5d"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.15x.uipay"
     sha256: "58f05d13f8dfb0e94b35bac805f307039fb8d2f583b9448125059c2fa4558379"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.2x.uipay"
@@ -177,9 +177,9 @@ assets:
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.3x.uipay"
     sha256: "73209d2e64c4f0adbc644c499eb299bc1c29b20792c86a7e7db24f1cb539ec98"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_SelectiveArt.off.uipay"
-    sha256: "712253f8b9dcedd06435482f64cac4295b264db76b7113c1d5f571ff8f2d3117"
+    sha256: "ee15170a421969e06edd8012c3571951155d2d2218084fce772782540aa670c6"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_WebText.off.uipay"
-    sha256: "c8d328f235a0a31b5b1309cec1b9af1b15d40a84b7463aa095ab8773ce3bce45"
+    sha256: "0769e99c3b24af2bf34632d64d27de270aead616fe9670fcb5a121329289564b"
   - include: "/Plugins/010-SC4UIScale/z_SC4UIScale_WebText.on.uipay"
     sha256: "38623f2a5b250bc477d7e739c4f714067823e4b8ea55b2c8516774ce9331ea99"
   include:
@@ -219,7 +219,7 @@ info:
 # examined, 3/3 controls fired, ZERO CAM keys changed hands.
 group: "a-drexel"
 name: "sc4-ui-scale-mod-overrides"
-version: "4.10.0"
+version: "4.10.1"
 subfolder: "900-overrides"
 dependencies:
 - "a-drexel:sc4-ui-scale"
@@ -231,7 +231,7 @@ assets:
   # would change this package's longest-common-prefix and re-root the
   # whole install one level deeper (the v4.5.0 discovery trap, again).
   - include: "/Plugins/zzz-SC4UIScale/THIRD-PARTY-NOTICES.md"
-    sha256: "357c7e5264beeba5a79b379d511ce871e552e822d634a38aa2ded3c6ed3535ca"
+    sha256: "4d36dad2a9e53097dd3fcb96348b0246f524f9800ee5d94487434524fdcb3260"
   # PAYLOADS. `.uipay` is a NON-CANONICAL extension: measured against
   # sc4pac 0.10.0, such a file is silently DROPPED when listed under
   # `include:` and installs only through a `withChecksum` entry. There is
@@ -244,7 +244,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CamUI.3x.uipay"
     sha256: "31867ed40954822a317b0d655b8e0b79a5bfee67b0996f4b66134d85272a0cad"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CamUI.off.uipay"
-    sha256: "8d9b698240f23ef4fe17f9508165e05a017a1732af9e13ae9d648d22d86456de"
+    sha256: "7da34aa0718099130f2028339e8686fcdc7853b601761efafd1e8a974cf81fc3"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.15x.uipay"
     sha256: "9adc057447b4b3949641325f7ee5b851d02da191f03834726905ae0056ddc1fc"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.2x.uipay"
@@ -252,7 +252,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.3x.uipay"
     sha256: "eea37c6549f05c1ab352a9c4b059eecf181c4d4f14441aa06fe4585afcfab043"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_CsiIcons.off.uipay"
-    sha256: "af9928ea851718ef3a12cc17c9662f4fdca8a0f2b04521278324c395fd5e3e36"
+    sha256: "7d625933e6c1fb583b160d213773aef5f071e5f64fae71338ce25101c6f83216"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.15x.uipay"
     sha256: "6fbabe2dcc9a711af9c41696d2dff6df1f6ef6ad891644de7063f92b65e0f56b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.2x.uipay"
@@ -260,7 +260,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.3x.uipay"
     sha256: "10371223ae3ddab19b94b5d2e885ebb6b6e30fdd49492f531fe1c17572279adb"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ItemIconsSub.off.uipay"
-    sha256: "c1917d69bd2369e6eff6771f0576b66e57bab6899069a1f653f74f823a1214b8"
+    sha256: "87e1d6db03c00c75d02e1bcd81b6efd3e69cf76b71f3e8338486656343be758e"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.15x.uipay"
     sha256: "4265a83aa9a387261c024e4db669924b30147b958a4ab2fa3cceccbe6508a7ae"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.2x.uipay"
@@ -268,7 +268,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.3x.uipay"
     sha256: "71fa556818effbb09163e5cc251215fdee8e0349ac52dd810c847e8e0e045f1a"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_NamIcons.off.uipay"
-    sha256: "4239851d4f167bf69b01a91c1a66c4737d624910cf5e6bdefe10d0a2065efe65"
+    sha256: "6214bb63d624b003ac0c6d0c9d2d2432580036a75e6b4f2ab987a50497951fc6"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RaiseUI.15x.uipay"
     sha256: "c9d200bc5afc40dee3b24a62b640cb9ca57342a26f8a33652375cb3a6eee9cbc"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RaiseUI.2x.uipay"
@@ -276,7 +276,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RaiseUI.3x.uipay"
     sha256: "03b080c2ad4354a3d550d9833e7d9d232e1492a3c4696522e57c453d3ecdef83"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RaiseUI.off.uipay"
-    sha256: "a6f252761fe4fde37bb25f8ad55881d49e6a15b91d791762c494be87c4b1cb97"
+    sha256: "1b9c708827255fec430bd2549404d3f886b45d831677b58e4ec85fce13a50364"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RegionCensusUI.15x.uipay"
     sha256: "cd9a65ba9fe3b972610682291eb1ec8e86fb55af7d5237afaa9865e6c3d4d371"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RegionCensusUI.2x.uipay"
@@ -284,7 +284,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RegionCensusUI.3x.uipay"
     sha256: "5d650b1dc84f1c3aa0882475a762a8d64a4251d6b72c673270a898a3f73376a9"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_RegionCensusUI.off.uipay"
-    sha256: "fb9a2231cf961393b4442db8b87532be06ca002d34726d86bb1bc3e8783eb746"
+    sha256: "ea62ff806c8c80ad5314cd3744f40ec0ed5ac364c31c74479587210841aa011b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.15x.uipay"
     sha256: "4d545a6e5733fdb165b22756459c44f6e887943b20376801ac2c3be60995eda7"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.2x.uipay"
@@ -292,11 +292,11 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.3x.uipay"
     sha256: "78a86b9bb42c8f9d22cf2286f3781f4e871dcd8a3d58ef75ba4dbe2bd34f780b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SaveWarningUI.off.uipay"
-    sha256: "97985c5e98799cc64ca0bd08adffd4c14703d2b2168d94b110e610ffcaf4b773"
+    sha256: "a19c343cc3773b79537f95de37a9b3368361463059b6fae9a4f885aba03c6005"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SelectorUI.1x.uipay"
     sha256: "1bd7a470b923d31a3b6ed98b50a949dfd3fb687848e4d33e3e6c8c88ecd84973"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_SelectorUI.off.uipay"
-    sha256: "8175be31e1666ea3d46c625db0502add60a1d601b99540824e7ea9b8d6a55ca8"
+    sha256: "6c4fb3d03380048d1bfe9de1475299ec5988592f69d7b345650e3be48a544512"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.15x.uipay"
     sha256: "833082c0bd26c89b8410c2400a98ceec7072a535364937a4cf360936e4d75d9f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.2x.uipay"
@@ -304,7 +304,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.3x.uipay"
     sha256: "8faf5ef874fc550f1fa0d7c86f80b366851404ef00808b3192e222fc9fa368f3"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ThirdPartyUI.off.uipay"
-    sha256: "76fde775602667540531ba82df60b33b4dbda6e62a4d207e2272d13fd8380068"
+    sha256: "ab126ec8246195c05982651cb851b6be03fe2cf59a11ba0e516ac66d1220b979"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.15x.uipay"
     sha256: "3f66642d3fe4b2126413fd64169e230fc8b30c805551b72182dddae48ee1565e"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.2x.uipay"
@@ -312,7 +312,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.3x.uipay"
     sha256: "ae11bbc82536297525e165728ac6348dbb4b2883e50d0331a8bfd815fb1a7398"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WarriorUI.off.uipay"
-    sha256: "ac490efe877ec0294617fe101dc5486b10b11ce5b5eb6c432188842c646baec6"
+    sha256: "a98d516d4b249b669793f9fb3027dea11bd2eb75c7db07c8f491bcd07ce5365f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.15x.uipay"
     sha256: "1fc4beb55894f9ed7790ef9d36f7519aa9064a0b3a1ff84a934fecc629172177"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.2x.uipay"
@@ -320,7 +320,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.3x.uipay"
     sha256: "5df6d65053b3583c1757feec51b7cb4ea1a38571d47ad18cd5fd918d83262f40"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_WebButtonUI.off.uipay"
-    sha256: "1e08f999be2253d9c349ac7d2f5016a3d955b4b5037f0a65a2de25262916d087"
+    sha256: "ea44ad018bfb77a23a5d936f7e58915141c9d31ce6deef8ef048021e22f636e9"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.15x.uipay"
     sha256: "e98af95a4a76cd37d3c29912fcf7bf5706a4de21095698f1d14fdb71e240e353"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.2x.uipay"
@@ -328,7 +328,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.3x.uipay"
     sha256: "14193c4ad83d84b635be5fc1a131419b42317c6a43a540aff62ee7a8b6bcfc2f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonArt.off.uipay"
-    sha256: "df1da8137f7ba28b0adc5349c845000eac42b8679b8807f988cfc61ab0e7072f"
+    sha256: "d35a1cbdecf96a174d5d5ef84289f84b09ebf575586461b08212f529f7378296"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.15x.uipay"
     sha256: "e22d72d148806d8f4f9bf09b538d7479ff2f438edebb5d58ef70756594d5f1ba"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.2x.uipay"
@@ -336,7 +336,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.3x.uipay"
     sha256: "caa08b2b5e63f860607d5365ce8b8c6acbf3ac2bd4983471524f8649d96f72bc"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonCamUI.off.uipay"
-    sha256: "5553039665b82fa3112c2845ee89ac5e7fe3aa2fc962dc4b30cb6a35c0d649f4"
+    sha256: "553cb70cfef2df786ae69239583b098f0ed8cc6dc40a1da312e1148b13d8ae13"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.15x.uipay"
     sha256: "c4a9e307a8d2ab74fe8f40d74b4da709ec7a76c74a2958c5bb9c3e40e7e72f7f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.2x.uipay"
@@ -344,7 +344,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.3x.uipay"
     sha256: "5ce37b4bf4ae011f55ff8a649d8fd90bb598d5eef8b748864e70fdb14e2b37a0"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonGodMod.off.uipay"
-    sha256: "94e247df1bb6ad5385695f7590233b1f71acbf579eba39e7813bcf7e0e0b28c6"
+    sha256: "363a29cef7be8f0a7169f8ebb6f07e2f685adbdff7d166c7b92c282a9e5f585f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.15x.uipay"
     sha256: "7ba9c8924949d5d438133b660e9fce03c3771244413382392e0ed335c809c613"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.2x.uipay"
@@ -352,7 +352,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.3x.uipay"
     sha256: "e2b7aa75d137e3000de72ec416bdd1c51610e319fe8c78fd8017e96e46c2f15a"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonIcons.off.uipay"
-    sha256: "f0e3e1783ce9ee3e1b953c2f4113f350b3fa775710d480600e0ca7a7a7e362fa"
+    sha256: "c1634da76c7f4e28f507d098fce93be9d73f3965b3f4c3c85ea31d45839673d3"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.15x.uipay"
     sha256: "708c88ef296ca6c6313a5b2108f06c0f820784ff3174359aa3f0900d1eafdc5e"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.2x.uipay"
@@ -360,7 +360,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.3x.uipay"
     sha256: "06f3490037d604aab51fa0004aa43a493956739feeb5b64ae91650cbab93502f"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonNam.off.uipay"
-    sha256: "14a01aba6472820e2cee4694ccb78c91b0cc26b2fb993708023f32f4725984c3"
+    sha256: "1d8b870366edc09939b7498dd7abd9dc6271f55c5b32bcd0e18d088f2edeba4c"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonPauseOff.15x.uipay"
     sha256: "4c482cc4b246485e1ba783e0c65970da4cb1cb13258346c46b0afdf4af25a38d"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonPauseOff.2x.uipay"
@@ -368,7 +368,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonPauseOff.3x.uipay"
     sha256: "63bb8e525db2f7bf72807fc2c3483131c07718053f85a0a8d61eda9bc3269bf6"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonPauseOff.off.uipay"
-    sha256: "d8b5635e51d6c0fde2191c8813cba04cf4b335ddee8a2770e1de51709de3cefd"
+    sha256: "b2e8b9527790c0a510a2a5b2baf10cd3afe71c675c1f831092440d9c3653507e"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonRaiseUI.15x.uipay"
     sha256: "543a26bdcbfcf82029ff0fecfbe31c0045a97a14e6eee20c8dc6ff9c0e8d8239"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonRaiseUI.2x.uipay"
@@ -376,7 +376,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonRaiseUI.3x.uipay"
     sha256: "1a662c1ecab28720b12ab87d300b5d09551d7fbf4bb1e34b51b2c2ea0393520c"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonRaiseUI.off.uipay"
-    sha256: "c49dfcb45a6f3650b2fad9839f1e0b001e974a222fecd3074bccd359a0ea3c5e"
+    sha256: "af1551a1c3978fd05619871b2e89f58e6d26a745f602e3f9c7956f8bcbb90e49"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.15x.uipay"
     sha256: "a56a8ac2361abe15f5f495390bd9678d5e539d4b1380c036f1f8da26ec25ead9"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.2x.uipay"
@@ -384,7 +384,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.3x.uipay"
     sha256: "7ea002b9c2692056e7469508aed8cfe90a550c93185a9511240812914db27fea"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonSaveWarning.off.uipay"
-    sha256: "2c8e452ea442c9b0547a8c4b1973910935966a7cd295ca18a33f5f70ad617613"
+    sha256: "d8b2c993aecce212c114b699f518898f81421918c19f71b769e1e27ef77e5922"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.15x.uipay"
     sha256: "57e99890d007a120921ff6aef6af71c32b40d726a472a1e4d38783e2441b50c1"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.2x.uipay"
@@ -392,7 +392,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.3x.uipay"
     sha256: "fd33506897dea8bee59bd4fdbbe1515b2b2ae8bdac6453f8b4560b36df33504b"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonStyles.off.uipay"
-    sha256: "fd93692bbbf5adf2330c70a558097478e3dbbaaffcd934501b31d627c27889f2"
+    sha256: "e103d0215448050b5ea5b85929954aea6f6825912d5f7d3c23cd646e6d71e723"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.15x.uipay"
     sha256: "854fa762aa1b696e292174323d174629fd9181f8f5542aadb53b8d05bcc531bb"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.2x.uipay"
@@ -400,7 +400,7 @@ assets:
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.3x.uipay"
     sha256: "3705d7fedff6f61e3f0e7410d074c512685ee54aa541f7227b834d0c8bd188df"
   - include: "/Plugins/zzz-SC4UIScale/z_SC4UIScale_ZCarbonUI.off.uipay"
-    sha256: "68b4b42e155e45ec00d2f72c4521125095dbdb97842fefbd073a7ce7a6ca5ea7"
+    sha256: "b1bd7383ebff408751c7a99eff57256149754aaa83d4b1eb2f70058274d1ee0c"
   include:
   # Built FROM other mods' own artwork, so these must WIN - hence the last
   # canonical subfolder. Gated AT RUNTIME on each mod's files by exact name
@@ -430,12 +430,12 @@ info:
 
 # THE ASSET. One zip serves both packages.
 assetId: "a-drexel-sc4-ui-scale"
-version: "4.10.0"
+version: "4.10.1"
 # The RELEASE publish time from the GitHub API, not a file mtime. sc4pac uses
 # this to decide whether a cached asset is stale, so it has to move when the
 # asset does.
-lastModified: "2026-09-07T14:28:04Z"
-url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.10.0/SC4UIScale-v4.10.0.zip"
+lastModified: "2026-09-23T22:17:29Z"
+url: "https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/download/v4.10.1/SC4UIScale-v4.10.1.zip"
 # No `nonPersistentUrl`: docs/metadata.md scopes that field to a SECOND
 # host's page (e.g. url on GitHub, nonPersistentUrl on Simtropolis) and the
 # update checkers only consume STEX/SC4E links. GitHub is our only host, so
