@@ -62,10 +62,13 @@ this SDK can reach it. Recognising that early is worth days.
    Never name a slot in 134–138 by counting the header.
 
    ⚠ **CORRECTED 2026-09-23 — the band model above is superseded.**
-   - The undeclared slot 57 is **`GZWinOffset(dx,dy)`**. The header lists no virtual the game lacks. The apparent "six-for-five collapse" is the header's **late `SetSize(cRZPoint)`**: MSVC pulls it up next to `SetSize(w,h)`, which shifts slots 54–117 by one.
-   - The game has all **six** mouse handlers, 134–138 plus **139 = `GZOnMouseWheel`** (4 args). 140 is `GZOnCaptureChanged`, 141 Enter, 142 Exit and 143 `GZOnCommand`. Every header name from 118 up therefore lands one slot low, so the header's `GZOnCaptureChanged`/`GZOnCommand` never reached 139/142 "with no correction".
+   - The undeclared slot 57 is **`GZWinOffset(dx,dy)`**. The header lists no virtual the game lacks. **In the exe, every header name from slot 57 up simply sits one slot further on**; there is no band that returns to zero.
+   - The apparent "six-for-five collapse" came from **naming the 4-argument slot 139 `GZOnCaptureChanged`**. The header gives `GZOnCaptureChanged` four arguments, and the exe's 139 is the 4-argument **`GZOnMouseWheel`**.
+   - The game has all **six** mouse handlers: 134–138 plus 139 = wheel. 140 is `GZOnCaptureChanged`, 141 Enter, 142 Exit and 143 `GZOnCommand`.
+   - Compiled through MSVC, the header's `GZOnCaptureChanged`/`GZOnCommand` *do* land on 139/142. That is the MSVC group of the late `SetSize(cRZPoint)` cancelling the missing `GZWinOffset`. The slots matched; the **names** at those slots were wrong.
    - MSVC also swaps the `GetArea`, `GetAreaAbsolute` and fill-colour overload pairs (47–50, 102–107).
-   - Only the **compiled** layout counts, and it is wrong for 40 of the 147 declarations. `_tests\Test-GZWinHeaderSlots.py` compiles the header, compares every method `src\` calls against the exe, and fails the build on a mismatch. The measurement is in `tools\sdk\ghidra\README.md`.
+   - Only the **compiled** layout counts, and it is wrong for 40 of the 147 declarations. `_tests\Test-GZWinHeaderSlots.py` compiles the header, compares every method `src\` calls against the exe, and fails on a mismatch. It is a manual gate; `--selftest` plants four defects. The measurement is in `tools\sdk\ghidra\README.md`.
+   - *Same-day correction: an earlier version of this note blamed the collapse on the late `SetSize(cRZPoint)`, and said the header's two names "never reached 139/142". Both were wrong, as an independent review showed.*
 2. **Slot 88 (`vt+0x160`) is the PER-CLASS "draw myself"**, not the composite
    driver. Measured across four classes, all distinct:
    `cSC4WinAuraBar 0x797CC0` · `GZWinBMP 0x9BC325` (the hooked one) ·

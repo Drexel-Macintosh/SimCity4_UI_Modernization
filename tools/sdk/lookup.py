@@ -421,12 +421,14 @@ def report_macsyms(raw):
         print("  (no type or method named %r - POSITIVE CONTROL: 'cIGZWin' and"
               " 'GZPaint' both hit here)" % raw)
     else:
-        print("\n  !! MAC layout. MSVC groups same-named overloads at the first one's")
-        print("     slot in REVERSE order, so where an interface has overloads the")
-        print("     Mac slot numbers are wrong on Windows (cIGZWin 102-107,")
-        print("     FlatRect 4-14): compile the Mac order with MSVC to predict.")
-        print("     Windows field offsets = Mac - 0x10 for cGZWin-derived classes.")
-        print("     Byte-verify before relying (tools\\sdk\\ghidra\\README.md).")
+        print("\n  !! MAC layout - a PREDICTION for Windows, never a fact. MSVC groups")
+        print("     same-named overloads at the first one's slot in REVERSE order,")
+        print("     but the Windows source did not always share the Mac's names, so")
+        print("     neither rule is safe alone: the Mac numbers are wrong for")
+        print("     FlatRect 4-14; the Mac order compiled with MSVC is wrong for")
+        print("     cIGZWin 53-118. Windows field offsets = Mac - 0x10 for")
+        print("     cGZWin-derived classes. Byte-verify every slot you rely on")
+        print("     (tools\\sdk\\ghidra\\README.md).")
 
 
 def main():

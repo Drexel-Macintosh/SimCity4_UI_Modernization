@@ -975,6 +975,15 @@ public:
 		{
 			CodePatches::ApplyCostBoxScale(settings.spikeScaleFactor);
 		}
+		// v4.10.1: the Custom Tunes song-title column is the one width in the
+		// Audio Options dialog set in code rather than its .UI. Its own key,
+		// like CostBoxPatch: a different constant in a different subsystem.
+		// A detour, not a factor: the width follows the grid the game loaded,
+		// so another mod's 1x copy of the dialog keeps the stock 255.
+		if (settings.spikeScaleAll && settings.spikeCustomTunesColumnPatch)
+		{
+			CodePatches::InstallCustomTunesColumnScale();
+		}
 		// #131: the region map. Rides ScaleRegion, not ScaleAll - ScaleRegion
 		// is the switch that says "the region screen is ours". This is the one
 		// patch here that compensates for no artwork at all: the region

@@ -2,6 +2,10 @@
 """Gate: every cIGZWin method src\\ calls through the vendored gzcom-dll header
 must compile to the slot that method REALLY occupies in SimCity 4.exe 1.1.641.
 
+    python _tests\\Test-GZWinHeaderSlots.py             the gate
+    python _tests\\Test-GZWinHeaderSlots.py --selftest  + four planted defects,
+                                                       each of which must FAIL
+
 WHY THIS EXISTS
 ---------------
 The pinned gzcom-dll cIGZWin.h (submodule 08c529bc = upstream HEAD 779b669b,
@@ -19,6 +23,8 @@ of its 147 declarations:
            reaches exe GetArea(cRZRect&), which writes 16 bytes through
            whatever is on the stack.
   102-107  GetFillColor / SetFillColor: the r,g,b and cRZColor overloads swap.
+           (SetFillColor(cRZColor) is also by-reference in the header where
+           the exe's slot-105 function takes the colour BY VALUE.)
   118-147  every declaration except CenterWindowInRect(const cRZRect&) lands
            one slot low (CenterWindowInRect(cRZRect*) two low): PlotPresent,
            all the GZOn* handlers, SendMsg, PostMsg.
@@ -26,28 +32,47 @@ of its 147 declarations:
 The 47-50 and 102-107 errors were INTRODUCED upstream by 387a9751 ("Fix the
 ordering of a few overloads", 2026-06-27): it wrote those groups in the exe's
 slot order, and MSVC reverses overload groups, so they now compile backwards.
-The parent commit 26fcb160 compiles all eight correctly (measured 2026-09-23).
+The parent commit 26fcb160 compiles them correctly (measured 2026-09-23).
 
-Some declarations sit on the right slot with the wrong ABI (SIGNATURE_DEFECTS
-below): the exe takes colours BY VALUE, and two keyboard methods pop more
-arguments than the header passes. Those are denied too.
+Right slot, wrong ABI (SIGNATURE_DEFECTS below): SetShadeColor (the exe takes
+the colour by value), AccelerateKeyboardMsg (the exe pops one argument, the
+header passes none), CheckKeyEquivalent (the exe pops two, the header passes
+one). Five input handlers ALSO declare the wrong argument count, by the exe's
+own DoMessage pushes and `ret N`: GZOnSetFocus (header 2, exe 1),
+GZOnMouseWheel (3 vs 4), GZOnCaptureChanged (4 vs 2), GZOnMouseEnter (2 vs 1)
+and GZOnCommand (1 vs 2). They are already denied here as wrong-slot; a header
+fix that only moved them would still unbalance the stack.
 
-THE TRUTH COLUMN. Measured 2026-09-23, each row from the exe's own code (what
-the function does with its arguments, its `ret N`, and who calls it), on the
-cGZWin base vtable 0x00ADC8D8 and cSC4WinAlertBorder 0x00AB5B48; slots
-115-147 additionally from the exe's own DoMessage jump table (0x99CEF9 routes
-message types to 129-143). The Mac debug-symbol vtable agrees except where
-MSVC groups overloads (102-107). Evidence scripts:
-tools\\sdk\\ghidra\\verify\\ (A-full-probe, B-second-class-exe-decode).
+THE TRUTH COLUMN. Measured 2026-09-23 from the exe's own code - what each
+function does with its arguments, its `ret N`, and who calls it - on the cGZWin
+base vtable 0x00ADC8D8 and cSC4WinAlertBorder 0x00AB5B48. Slots 50-60, 63-70,
+86-89 and 115-150 were also compared across 15 window classes, and 129-143 are
+additionally pinned by the exe's DoMessage jump table (0x99CEF9 routes message
+types to them). Evidence scripts: tools\\sdk\\ghidra\\verify\\ (A-full-probe,
+B-second-class-exe-decode).
 
 HOW THE GATE DECIDES. It compiles the probe, reads each COMPILED slot from
 MSVC's own listing, and then scans src\\ for calls to any cIGZWin method name:
   * a name with any overload on a wrong slot           -> FAIL (unless ALLOWED)
   * a name with a known ABI defect                      -> FAIL
   * a name no truth row covers                          -> FAIL: decode its exe
-    slot, add a row, and only then call it.
-The scan is by NAME, so it is conservative: a same-named method on another
-interface also has to be covered. PASS = exit 0. Needs MSVC (vcvars32).
+    slot, add a row, and only then call it
+  * GZWinMoveTo (ALLOWED, it reaches GZWinOffset) with an argument that does
+    not look like a delta - not 0, no subtraction, not a d*/delta name - is
+    an absolute move through a relative method -> FAIL, unless the line says
+    `// relative-ok: <reason>`.
+
+LIMITS, stated so the verdict is not over-read.
+  * The scan is by NAME, not by receiver type. It errs toward requiring rows,
+    so its DENIALS are conservative - but a PASS on a name can come from a
+    same-named method of another interface. Today three of the names it finds
+    are never called on a cIGZWin at all (NOT_CIGZWIN below), and SetCaption
+    is called on both a cIGZWin and a cIGZWinText; the cIGZWinText slot is
+    not verified by this gate.
+  * The ABI check covers only the three names listed.
+  * Nothing runs this gate automatically: it is a manual gate, like the rest
+    of _tests\\. Run it before any change that adds a cIGZWin call.
+PASS = exit 0. Needs MSVC (vcvars32).
 """
 import os
 import re
@@ -117,6 +142,17 @@ SIGNATURE_DEFECTS = {
 # A mislabel we call on purpose, with the semantics of the slot it reaches.
 ALLOWED = {"GZWinMoveTo": "reaches exe GZWinOffset (slot 57): every call must pass a delta"}
 
+# Names the scan finds in src\ that belong to OTHER interfaces today (measured
+# 2026-09-23). Informational: they still need a row, because the scan cannot
+# see receivers; they are just not counted as cIGZWin calls.
+NOT_CIGZWIN = {
+    "Init": "Logger::Init, cIGZBuffer::Init",
+    "GetMainWindow": "cISC4App::GetMainWindow",
+    "IsEnabled": "Logger::IsEnabled",
+}
+
+WAIVER = "relative-ok"
+
 
 def compile_probe():
     asm = os.path.join(PROBE, "vtprobe.asm")
@@ -146,6 +182,107 @@ def header_names():
         "QueryInterface", "AddRef", "Release"}
 
 
+def read_src():
+    files = []
+    for f in sorted(os.listdir(SRC)):
+        if f.endswith((".cpp", ".h")):
+            files.append((f, open(os.path.join(SRC, f), encoding="latin-1").read()))
+    return files
+
+
+def split_args(s, start):
+    """Top-level comma split of the call whose '(' is at s[start]."""
+    depth, cur, args = 0, "", []
+    for ch in s[start:]:
+        if ch == "(":
+            depth += 1
+            if depth == 1:
+                continue
+        elif ch == ")":
+            depth -= 1
+            if depth == 0:
+                args.append(cur)
+                return args
+        if ch == "," and depth == 1:
+            args.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    return None     # unbalanced within the window
+
+
+def looks_like_delta(arg):
+    a = arg.strip()
+    return (a == "0" or "-" in a
+            or re.fullmatch(r"d[xylt]", a) is not None
+            or re.search(r"(?i)delta|D[xy]\b", a) is not None)
+
+
+def moveto_absolute_calls(files):
+    bad = []
+    for fname, text in files:
+        lines = text.split("\n")
+        for i, raw in enumerate(lines):
+            code = raw.split("//")[0]
+            for m in re.finditer(r"(?:->|\.)\s*GZWinMoveTo\s*\(", code):
+                window = code[m.end() - 1:] + " " + " ".join(
+                    l.split("//")[0] for l in lines[i + 1:i + 4])
+                args = split_args(window, 0)
+                if args is None or len(args) != 2:
+                    bad.append(f"{fname}:{i + 1}: GZWinMoveTo call not parsed - check it by hand")
+                    continue
+                if all(looks_like_delta(a) for a in args):
+                    continue
+                if WAIVER in raw:
+                    continue
+                bad.append(f"{fname}:{i + 1}: GZWinMoveTo({args[0].strip()}, {args[1].strip()}) "
+                           f"- an ABSOLUTE-looking argument through a RELATIVE method "
+                           f"(exe slot 57 is GZWinOffset); pass a delta, or mark the line "
+                           f"'// {WAIVER}: <why>'")
+    return bad
+
+
+def check(files, wrong, right, quiet=False):
+    text = "".join(re.sub(r"//.*", "", t) for _, t in files)
+    called = {}
+    for n in sorted(header_names()):
+        k = len(re.findall(r"(?:->|\.)" + n + r"\s*\(", text))
+        if k:
+            called[n] = k
+    if called.get("GetW", 0) == 0:
+        sys.exit("FAIL: control - the src scan found no GetW calls; the scanner is blind")
+
+    bad = []
+    for n, k in called.items():
+        if n in ALLOWED:
+            continue
+        if n in wrong:
+            bad.append(f"{n} x{k}: compiles to the wrong exe slot ({', '.join(wrong[n])})")
+        elif n in SIGNATURE_DEFECTS:
+            bad.append(f"{n} x{k}: {SIGNATURE_DEFECTS[n]}")
+        elif n not in right:
+            bad.append(f"{n} x{k}: no exe-verified row - decode its slot before calling it")
+    bad += moveto_absolute_calls(files)
+
+    if not quiet:
+        real = [n for n in called if n not in NOT_CIGZWIN]
+        print(f"\nsrc calls {len(called)} cIGZWin method NAMES; {len(real)} are real "
+              f"cIGZWin calls ({', '.join(sorted(NOT_CIGZWIN))} belong to other "
+              f"interfaces). Wrong-slot names in the header: {sorted(wrong)}")
+        for k, v in ALLOWED.items():
+            print(f"allowed: {k} - {v} (x{called.get(k, 0)}, every argument delta-shaped "
+                  f"or waived)")
+    return bad
+
+
+MUTATIONS = [
+    ("wrong slot", "void mut(cIGZWin* w){ w->GetArea(); }", "GetArea"),
+    ("no verified row", "void mut(cIGZWin* w){ w->PullToFront(); }", "PullToFront"),
+    ("ABI defect", "void mut(cIGZWin* w, cRZColor& c){ w->SetShadeColor(c); }", "SetShadeColor"),
+    ("absolute move", "void mut(cIGZWin* w){ w->GZWinMoveTo(640, 480); }", "GZWinMoveTo(640"),
+]
+
+
 def main():
     compiled = compile_probe()
     missing = sorted(set(EXE_SLOT) - set(compiled))
@@ -172,36 +309,20 @@ def main():
             sys.exit(f"FAIL: control - {must} now compiles correctly; the header "
                      "changed. Re-derive this gate (and the RELATIVE call sites).")
 
-    src = ""
-    for f in os.listdir(SRC):
-        if f.endswith((".cpp", ".h")):
-            src += re.sub(r"//.*", "", open(os.path.join(SRC, f), encoding="latin-1").read())
-    called = {}
-    for n in sorted(header_names()):
-        k = len(re.findall(r"(?:->|\.)" + n + r"\s*\(", src))
-        if k:
-            called[n] = k
-    if called.get("GetW", 0) == 0:
-        sys.exit("FAIL: control - the src scan found no GetW calls; the scanner is blind")
-
-    bad = []
-    for n, k in called.items():
-        if n in ALLOWED:
-            continue
-        if n in wrong:
-            bad.append(f"{n} x{k}: compiles to the wrong exe slot ({', '.join(wrong[n])})")
-        elif n in SIGNATURE_DEFECTS:
-            bad.append(f"{n} x{k}: {SIGNATURE_DEFECTS[n]}")
-        elif n not in right:
-            bad.append(f"{n} x{k}: no exe-verified row - decode its slot before calling it")
-
-    print(f"\nsrc calls {len(called)} cIGZWin method names; wrong-slot names in the "
-          f"header: {sorted(wrong)}")
-    for k, v in ALLOWED.items():
-        print(f"allowed: {k} - {v} (x{called.get(k, 0)})")
+    files = read_src()
+    bad = check(files, wrong, right)
     if bad:
         print("\n".join("  " + b for b in bad))
         sys.exit("FAIL: src calls cIGZWin methods that do not reach the slot they name")
+
+    if "--selftest" in sys.argv:
+        print("\nselftest: each planted defect must FAIL")
+        for label, code, needle in MUTATIONS:
+            mbad = check(files + [("MUTATION.cpp", code)], wrong, right, quiet=True)
+            hit = any(needle in b for b in mbad)
+            print(f"  {label:16} {'FAILS as it must' if hit else 'NOT CAUGHT'}")
+            if not hit:
+                sys.exit(f"FAIL: selftest - the '{label}' mutation was not caught")
     print("ALL PASS")
 
 

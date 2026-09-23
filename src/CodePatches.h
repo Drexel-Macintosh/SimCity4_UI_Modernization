@@ -20,6 +20,7 @@ namespace CodePatches
 	// 0x798710, two `push 0xfa` sites). Verify-before-write; skips itself
 	// on any unexpected exe bytes.
 	void ApplyTooltipWrapScale(float factor);
+	void InstallCustomTunesColumnScale();
 
 	// #159: the placement cost readout is rasterised into a 128x32 runtime
 	// buffer sized for the 1x font, so scaled glyphs are clipped before any

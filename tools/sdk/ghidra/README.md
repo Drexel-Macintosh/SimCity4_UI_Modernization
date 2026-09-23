@@ -14,7 +14,7 @@
 
 `python tools\sdk\lookup.py <ClassOrMethodName>` prints it (section 6).
 
-## The Mac and Windows builds differ — here is exactly how
+## The Mac and Windows builds differ — here is how
 
 The two compilers lay out **same-named overloads** differently.
 
@@ -22,8 +22,26 @@ The two compilers lay out **same-named overloads** differently.
 - **MSVC pulls every overload of a name up to the first one's slot, in
   reverse declaration order.**
 
-**To predict a Windows vtable, compile the Mac declaration order with MSVC.**
-Never read the Mac slot numbers directly where an interface has overloads.
+**The two sources are not guaranteed to share names, so no single rule
+predicts a Windows vtable.** Measured on two interfaces, each rule fails on
+the other:
+
+| interface | compile the Mac order with MSVC | read the Mac slot numbers |
+|---|---|---|
+| `cIGZWinFlatRect` | **right** at all 20 slots | wrong at 4–14 |
+| `cIGZWin` | wrong at 53–118 | **right** except 103 and 106 |
+
+- On FlatRect, the Windows build grouped the same overloads the Mac names
+  show.
+- On `cIGZWin`, the exe keeps `SetSize(w,h)` at 53 and `SetSize(cRZPoint)` at
+  118, ungrouped. MSVC always groups same-named overloads, so in the Windows
+  source those two could not have shared a name. Compiling the Mac order
+  pulls them together, and everything from 53 to 118 moves.
+
+**Treat both rules as predictions, and byte-verify every slot you rely on.**
+
+> ⚠ Same-day correction (2026-09-23). This section first said "compile the Mac declaration order with MSVC; never read the Mac slot numbers directly". An independent review showed that rule mispredicts `cIGZWin` 53–118. The commit that introduced it (`76d7e55`) also calls MSVC grouping "the whole difference", which it is not.
+
 Measured 2026-09-23:
 
 | check | result |
@@ -53,8 +71,8 @@ declarations**:
 | band | what compiles wrong |
 |---|---|
 | 47–50 | Each `GetArea` / `GetAreaAbsolute` pair is swapped. `GetArea()` reaches the exe's `GetArea(cRZRect&)`, which writes 16 bytes through whatever is on the stack. |
-| 53–57 | `GZWinOffset` (57) is missing, and the late `SetSize(cRZPoint)` is pulled up to 53. **`GZWinMoveTo` compiles to the exe's `GZWinOffset`**. That is why every one of our 21 move calls passes a delta, and why the scaling laws say "moves BY, not TO". `SetSize(w,h)` reaches `SetArea(const cRZRect&)`. |
-| 102–107 | The `GetFillColor` / `SetFillColor` r,g,b and `cRZColor` overloads are swapped. |
+| 53–57 | `GZWinOffset` (57) is missing, and the late `SetSize(cRZPoint)` is pulled up to 53. **`GZWinMoveTo` compiles to the exe's `GZWinOffset`**. That is why every one of our 20 move calls passes a delta, and why the scaling laws say "moves BY, not TO". `SetSize(w,h)` reaches `SetArea(const cRZRect&)`. |
+| 102–107 | The `GetFillColor` / `SetFillColor` r,g,b and `cRZColor` overloads are swapped. `SetFillColor(cRZColor)` is also by-reference, where the exe's function takes the colour by value. |
 | 118–147 | Every declaration except `CenterWindowInRect(ref)` lands one slot low (`CenterWindowInRect(ptr)` two low): `PlotPresent`, all `GZOn*`, `SendMsg`, `PostMsg`. |
 
 **The 47–50 and 102–107 bands are an upstream regression.**
@@ -64,20 +82,42 @@ declarations**:
 - Its parent `26fcb160` compiles all eight correctly. MEASURED by compiling
   both versions.
 
-**Right slot, wrong ABI:**
-- the exe takes colours **by value** (`SetFillColor(cRZColor)`,
-  `SetShadeColor`), where the header passes references;
+**Right slot, wrong ABI** (three):
+- `SetShadeColor`: the exe takes the colour **by value**, where the header
+  passes a reference;
 - `AccelerateKeyboardMsg` pops one argument, and the header passes none;
 - `CheckKeyEquivalent` pops two, and the header passes one.
 
-**Gate.** `_tests\Test-GZWinHeaderSlots.py` compiles a probe and scans `src\`.
-It fails the build if we call:
-- any `cIGZWin` method whose compiled slot is wrong,
-- one with a known ABI defect, or
-- one no exe-verified row covers.
+**Wrong argument counts on five input handlers**, by the exe's own DoMessage
+pushes and each handler's `ret N`. They are also on wrong slots, so a header
+fix that only moved them would still unbalance the stack:
 
-Today `src\` calls 29 `cIGZWin` methods; all 29 are verified.
-`GZWinMoveTo` is the one deliberate exception, used as `GZWinOffset`.
+| slot | handler | header args | exe args |
+|---|---|---|---|
+| 132 | `GZOnSetFocus` | 2 | 1 |
+| 139 | `GZOnMouseWheel` | 3 | 4 |
+| 140 | `GZOnCaptureChanged` | 4 | 2 |
+| 141 | `GZOnMouseEnter` | 2 | 1 |
+| 143 | `GZOnCommand` | 1 | 2 |
+
+**Gate.** `_tests\Test-GZWinHeaderSlots.py` compiles a probe and scans `src\`.
+It **fails** if we call:
+- any `cIGZWin` method whose compiled slot is wrong,
+- one of the three with a known ABI defect,
+- one no exe-verified row covers, or
+- `GZWinMoveTo` with an argument that is not delta-shaped, unless the line
+  says `// relative-ok: <why>`.
+
+`--selftest` plants one of each defect and requires every one to fail. It is
+a manual gate, like the rest of `_tests\`; nothing runs it automatically.
+
+Today the scan finds 29 `cIGZWin` method names in `src\` calls. Of these:
+- 26 are real `cIGZWin` calls.
+- `Init`, `GetMainWindow` and `IsEnabled` belong to other interfaces.
+- `SetCaption` is also called on a `cIGZWinText`, which this gate does not
+  verify.
+- `GZWinMoveTo` is the one deliberate exception: used as `GZWinOffset`, with
+  all 20 call sites passing deltas.
 
 **Upstream status** (read-only search, 2026-09-23):
 - nsgomez/gzcom-dll: no issue or PR mentions it, and the file is unchanged at

@@ -322,6 +322,21 @@ PERMANENT_OUT_OF_SCOPE = {
         "VAs for the #130 decline-arrow anchor hook (v2.74.0, log-only by "
         "default). A hook VA holds no rect, size or position. FALSIFIER: a "
         "geometry immediate appearing at either VA."),
+    "_V4101_CUSTOMTUNES_HOOK_DOC": (
+        "PERMANENT - CONTROL FLOW, not geometry (the _V274_HOOK_VA_DOC "
+        "precedent). v4.10.1: kSetColumnWidthVa (0x9AC43B) is the MinHook "
+        "target cGZWinGrid::SetColumnWidth - grid vtable 0xADD578 slot 65, "
+        "MEASURED - and kCustomTunesRetVa (0x4F4B52) is the return address "
+        "that picks the one call the detour rescales (sub_4F44C0's "
+        "SetColumnWidth(0,1,255), the Custom Tunes song column). Neither "
+        "address holds an immediate this model could reproduce: the column "
+        "width is a cIGZWinGrid argument, not a cIGZWin rect, and the owner "
+        "calls no census primitive. ADJUDICATED ELSEWHERE, NOT UNCHECKED: "
+        "_tests/Test-PatchSiteBytes.py byte-pins the 15-byte call site and "
+        "the 10-byte SetColumnWidth prologue against the shipped exe. "
+        "FALSIFIER: Test-PatchSiteBytes red, or a census that models "
+        "cIGZWinGrid column widths - then promote sub_4F44C0 into "
+        "census.EXTRA_BUILDERS and let the site adjudicate."),
     "kTipWrapSites": (
         "PERMANENT - not a window-rect constant. MEASURED from the stock "
         "exe (2026-08-04): both sites are `push 0xfa` feeding "
@@ -442,6 +457,10 @@ _V274_HOOKS = ("kRatingUpdateVa", "kDeclineStepVa")
 for _name in _V274_HOOKS:
     SKIPPED[_name] = SKIPPED["_V274_HOOK_VA_DOC"]
 del SKIPPED["_V274_HOOK_VA_DOC"]
+_V4101_HOOKS = ("kSetColumnWidthVa", "kCustomTunesRetVa")
+for _name in _V4101_HOOKS:
+    SKIPPED[_name] = SKIPPED["_V4101_CUSTOMTUNES_HOOK_DOC"]
+del SKIPPED["_V4101_CUSTOMTUNES_HOOK_DOC"]
 # 2026-08-30 sweep (v4.5.9): the three _DOC groups above, fanned out the same
 # way - one rationale per group, matched on the entry name.
 _V459_HOOKS = ("kCsiDrawVa", "kSpAttachVa", "kSpBindVa", "kSpHoverVa",

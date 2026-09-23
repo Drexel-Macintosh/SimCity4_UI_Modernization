@@ -86,6 +86,8 @@ void Settings::Load(const wchar_t* iniPath)
 	spikeMissionBubbleScale = gf(spike, "MissionBubbleScale", spikeMissionBubbleScale);
 	spikeTooltipWrapPatch = gi(spike, "TooltipWrapPatch", spikeTooltipWrapPatch ? 1 : 0) != 0;
 	spikeCostBoxPatch = gi(spike, "CostBoxPatch", spikeCostBoxPatch ? 1 : 0) != 0;
+	spikeCustomTunesColumnPatch = gi(spike, "CustomTunesColumnPatch",
+		spikeCustomTunesColumnPatch ? 1 : 0) != 0;
 	spikeParentFrameRounding = gi(spike, "ParentFrameRounding", spikeParentFrameRounding ? 1 : 0) != 0;
 	spikeHtmlSizePatch = gi(spike, "HtmlSizePatch", spikeHtmlSizePatch ? 1 : 0) != 0;
 	spikeAdviceRowPatch = gi(spike, "AdviceRowPatch", spikeAdviceRowPatch ? 1 : 0) != 0;

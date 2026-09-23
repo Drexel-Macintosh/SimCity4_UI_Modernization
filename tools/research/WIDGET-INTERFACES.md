@@ -21,23 +21,26 @@ archive (`tools\sdk\ghidra\`) on real widgets. Written 2026-09-23.
 
 ## 0. Reading the Mac symbols on Windows — the rule
 
-The Mac and Windows builds differ, and the difference has one cause: the
-compilers lay out **same-named overloads** differently.
+The Mac and Windows builds differ, and the main cause is that the compilers
+lay out **same-named overloads** differently.
 
 - The Mac compiler keeps declaration order.
 - **MSVC pulls every overload of a name up to the first one's slot, in
   reverse declaration order.**
 
-**The rule: to predict a Windows vtable, compile the Mac declaration order
-with MSVC. Do not read the Mac slot numbers.** MEASURED:
-- cIGZWinFlatRect: all 20 Windows slots reproduce
-  (`verify\W-FlatRect\msvc_order.cpp`).
-- The same grouping explains cIGZWin 102–107 (3 getters, then 3 setters, where
-  the Mac interleaves Get/Set), cIGZLineGraph 22/23 and cIGZScatterGraph
-  15/16, 18/20.
-- One exception: cIGZWin's `SetSize(w,h)` (53) and `SetSize(cRZPoint)` (118)
-  are not grouped in the exe. Since MSVC always groups same-named overloads,
-  the two cannot have shared a name in the Windows source.
+**No single rule predicts a Windows vtable; treat both as predictions and
+byte-verify.** MEASURED:
+- **Compiling the Mac declaration order with MSVC** reproduces all 20 Windows
+  slots of cIGZWinFlatRect (`verify\W-FlatRect\msvc_order.cpp`). The same
+  grouping explains cIGZWin 102–107 (3 getters, then 3 setters, where the Mac
+  interleaves Get/Set), cIGZLineGraph 22/23 and cIGZScatterGraph 15/16, 18/20.
+- **The same rule mispredicts cIGZWin 53–118.** The exe keeps `SetSize(w,h)`
+  (53) and `SetSize(cRZPoint)` (118) ungrouped. MSVC always groups same-named
+  overloads, so the two could not have shared a name in the Windows source,
+  and a second kind of Mac/PC difference exists: the sources' names. On
+  cIGZWin the raw Mac slot numbers are right everywhere except 103/106.
+
+> ⚠ Same-day correction (2026-09-23). This section first gave "compile the Mac order with MSVC; do not read the Mac slot numbers" as THE rule, with the `SetSize` pair as a footnote. An independent review measured the rule failing across cIGZWin 53–118, so the pair is the counterexample, not an exception to note in passing.
 
 Two more cautions, both MEASURED:
 - **Field offsets differ by cGZWin's size.** Windows `cGZWin` is 0xD8 bytes;
@@ -172,8 +175,31 @@ window rect. **Never scale them.**
   - Read statically: titles stay 255 px wide at every scale, and the checkbox
     column starts at an unscaled x = 255.
   - This contradicts the comment in `build_dialog_static.py`
-    (grep `200px song-name`).
-  - **HYPOTHESIS until seen at 2x.**
+    (grep `200px song-name`). That comment now carries a dated correction.
+  - **PATCHED in v4.10.1 (unreleased), at the user's request, without an
+    on-screen check.** The user has no custom tunes, so the list is empty.
+    - **It is a detour, not a byte patch.** The first version rewrote the
+      imm32 to lround(255·f). An independent review found the flaw: that is
+      only right while *our* scaled copy of the dialog is loaded. If another
+      mod's 1x copy wins (an updated Carbon skin disarming our ZCarbonUI, for
+      example), a 510 column in a 289 grid hides every checkbox.
+    - `CodePatches::InstallCustomTunesColumnScale` hooks
+      `cGZWinGrid::SetColumnWidth` (`0x009AC43B`, grid slot 65).
+    - It acts only on the call returning to `0x004F4B52` with the stock
+      arguments (0, 1, 255).
+    - It sets the width to lround(255 × gridW / 289), where gridW is the
+      loaded grid's own `[win+0xB0] − [win+0xA8]`, the formula of the game's
+      `GetW`.
+    - Results: our copies → 382 / 510 / 765; any 1x copy → 255, exactly stock.
+    - Ini key `[UiSpike] CustomTunesColumnPatch` (default 1).
+    - `_tests\Test-PatchSiteBytes.py` pins the 15-byte call site and the
+      10-byte prologue. The two VAs are classified as control flow in
+      `gate_patch_families_combined.py` and `crosscheck.py`.
+  - **The runtime path is MEASURED (2026-09-23 16:48, 2x).** Opening Audio
+    Options logged `Custom Tunes song column 255 -> 510 (the loaded grid is
+    578 px wide; stock is 255 of 289)`: the hook fired on its one call and
+    read our 2x copy's grid. Only the visual is unseen, because it needs
+    custom music in the list.
 - The cheat windows, lot editor, dev property viewers, Lua debugger and
   `GZWinFileBrowser` bake widths and gutters in code. None of them is a
   player dialog.
@@ -312,6 +338,16 @@ Demographic and Population Demographic.
 - If confirmed, the cure is to apply `budgetRM` only to the type-1 main vtable
   `0xAB4D08`, leaving type 2 on its proportional margin.
 
+> ✅ **CONFIRMED ON SCREEN, then FIXED (2026-09-23).**
+> - The user's 2x screenshot of Graphs → **RCI Demand** shows the bars ending under the line chart's plot edge, with the right quarter of the panel empty and the category labels crowded together. The line chart **Garbage** looked correct: its legend fills that space.
+> - The same screenshots show the chart title renders (§6).
+> - Fixed in v4.10.1 (unreleased). `ChartStoreThunk` reads the chart's main vtable with `SafeReadPtr` and takes the legend budget only for `0xAB4D08`; bar charts get the proportional margin (about 4 px at 2x).
+> - The `EARLYCHART` log line now prints the vtable and `line` or `no-legend`, so the next log shows which path each chart took.
+> - Grep `ONLY THE LINE CHART HAS A LEGEND` in `src\UiSpike.cpp`.
+> - **Post-fix, confirmed 16:18.**
+>   - The user sees the RCI Demand bars running to the edge.
+>   - The log shows `vt=00ADE648 no-legend budgetRM=0`, moving the right edge from 974 to 972 in a 976-wide window; the line chart stays at `vt=00AB4D08 line budgetRM=244`.
+
 ---
 
 ## 5. Corrections this work made to other docs (2026-09-23)
@@ -323,11 +359,10 @@ Demographic and Population Demographic.
 | `SC4-UI-ENGINE.md` | grep `not a grid.` | `vt+0x1AC` at `0x79D91C` is `SetFillColor(25,3,220)` |
 | `SC4-UI-ENGINE.md` | grep `is pushed` near `ChartTickText` | push site `0x76D658` |
 | `SC4-UI-ENGINE.md` | grep `true of the chart's LEGEND ROWS` | the Legend squeeze reaches the chart title |
-| `SC4-UI-ENGINE.md` | grep `is \`GZPaint\` (class vtable` | `0x798710` is GZPaint of cSC4WinCalloutBox |
+| `SC4-UI-ENGINE.md` | grep ``is `GZPaint` (class vtable`` | `0x798710` is GZPaint of cSC4WinCalloutBox |
+| `build_dialog_static.py` | grep `CORRECTED 2026-09-23` | in the Audio playlist, `wingridcol` sizes column 1 (the checkboxes); titles are column 0, set in code |
 
 **Flagged, not changed:**
-- The `build_dialog_static.py` Custom Tunes comment (waits for the on-screen
-  check).
 - `src\` comments that call `0x798710` "Plot".
 - `kMsgTypeToolTipTick`: the id table at `0xB08040` holds `0x0CA56DD7`, but the
   code posts `0xCA56DD76`. The code value is what behaves.
@@ -336,8 +371,14 @@ Demographic and Population Demographic.
 
 - Does `cIGZBuffer` vt+0x70 honour line widths above 1? This must be decoded
   before any width lever is raised.
-- The bar-chart gutter (§4.1) and the Custom Tunes column pin (§2): each needs
-  one look at 2x.
+- ~~The bar-chart gutter (§4.1) and the Custom Tunes column pin (§2): each
+  needs one look at 2x.~~
+  - The gutter was confirmed on screen and fixed.
+  - Custom Tunes is patched, but still needs one look once custom tunes exist.
+  - After the v4.10.1 deploy, RCI Demand must show bars running to about 4 px
+    from the plot's right edge.
+- ~~Is the chart title visible on stock screens?~~ Yes. The 2x screenshots of
+  Garbage and Demand both show it (2026-09-23).
 - The tooltip frame art: ship 2x frames and scale the literals in §3? Decide
   together, in-game.
 - The `0x42B7C35x` family: caption bar or scrollbar? Is `0x0047BAA6` a

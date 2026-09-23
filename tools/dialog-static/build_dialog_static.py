@@ -2442,6 +2442,13 @@ def main():
         # third is a PIXEL width (Audio playlist: "1,1,200" = 200px song-name
         # column; the checkbox column then uses dcolwidth). Scale ONLY the
         # width slot, never the indices.
+        # CORRECTED 2026-09-23 (static decode, WIDGET-INTERFACES.md section 2):
+        # in the Audio playlist "1,1,200" sizes COLUMN 1, the checkbox column.
+        # The song titles are column 0, and the game sets that one in code,
+        # SetColumnWidth(0,1,255) at 0x4F4B4C - which no .UI rewrite can
+        # reach. The DLL scales it (CodePatches ApplyCustomTunesColumnScale).
+        # Also: the loader never passes a wingridcol's middle value on (it
+        # always calls SetColumnWidth(a,1,w)).
         def dbl_gridcol(m):
             nums = [int(v) for v in re.findall(r"\d+", m.group(1))]
             out = []
