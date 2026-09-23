@@ -219,7 +219,12 @@ def render(nodes, art_dirs, states=4):
             # Reconcile Edges dialog are on this path and were previously
             # rendered here as plain clipped blits - i.e. wrong for exactly the
             # dialog under investigation.
-EXACTLY the audit row whose replacement opens `            # SUPERSEDED 2026-09-01 - kept, per annotate-never-rewrite. This line` and ends `            im = nine_slice(im, w, h)`, applied UNMODIFIED. Anchor verified unique (line 222). File is LF (0 CRLF, 307 LF). The only other match in the repo is `_working-backup\PRE-OVERNIGHT-2026-08-15-2145\...` — the frozen archive, do NOT touch it.
+            # RESTORED 2026-09-23: an intended 2026-09-01 revision of this line
+            # was lost (commit 0961524 wrote its edit instruction instead of its
+            # text); the original is restored here. nine_slice reads a bare int
+            # as the HORIZONTAL cell only and derives the vertical one itself
+            # (see its docstring), so this call already cuts (W/3, H/3).
+            im = nine_slice(im, w, h, im.width // 3)
         else:
             im = im.crop((0, 0, min(im.width, w), min(im.height, h)))  # clip
         canvas.alpha_composite(im, (ax, ay))

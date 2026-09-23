@@ -11,7 +11,19 @@ what the SDK omits, the known addresses and ids, and how the gap is worked
 around. The full derivations live in `SC4-UI-ENGINE.md`; this file is the gap
 index.
 
-EXACTLY the audit row whose replacement opens `**Standing rule.** Where the headers and the binary disagree, the binary wins.` and adds `**⛔ STANDING RULE 2 — `vendor\gzcom-dll\` IS READ-ONLY. Added 2026-09-01.**`, applied UNMODIFIED. Anchor verified unique (line 14).
+**Standing rule.** Where the headers and the binary disagree, the binary wins.
+Index vtable slots by number, never by header name (§1), and check a hook's
+argument count from its `ret` immediate before installing it (§1.4).
+
+**⛔ STANDING RULE 2 — `vendor\gzcom-dll\` IS READ-ONLY. Added 2026-09-01.**
+Never fix a header there: every header correction goes in this file instead.
+`vendor/gzcom-dll` is a pinned git submodule, so the parent repository commits
+only its SHA. A header edit is therefore never captured by a parent commit,
+and a cold clone re-fetches upstream's bytes, so the edit vanishes. CARRIED
+from the message of commit `0961524` and from the section that records the
+measurement (grep `^## Identifiers the vendored SDK`).
+
+⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. STANDING RULE 2 above was re-written 2026-09-23 from the two sources it cites.
 
 ---
 
@@ -1171,7 +1183,11 @@ through both, and against the wrong sibling it reads as six slots richer than
 it is. (6) Find the
 ctor by searching `.text` for the vtable VA (two hits: ctor and deleting
 dtor); the ctor's `mov [reg+N], <vt>` must equal the factory's `add eax, N`.
-EXACTLY the audit row whose replacement opens `(7) Cross-check the name against **the exe's own class registry** — a table`, applied UNMODIFIED. Anchor verified unique (line 1144).
+(7) Cross-check the name against `GZCLSIDDefs.h`, which carries names the
+exe table does not (`kcSC4WinText`, `kcSC4WinAlertBorder`, `kcSC4WinAuraBar`).
+The standing warning governs: the right class is not the right window.
+
+⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here.
 
 ---
 
@@ -1506,7 +1522,11 @@ matter to scaling follows.
   tooltip. Created through helper `sub_441B50` with parent = 0 (`push 0` @
   `0x441B6B`), so the loader's NULL-parent default decides where they land;
   the size is the load-bearing half.
-EXACTLY the audit row whose replacement adds `## 13. `cISC4ViewObject3D` — the interface with no header`, applied UNMODIFIED (it already numbers itself 13 and its subsections 13.1-13.6, which is correct: §12 is currently the last section and this bullet is the last line of the file). ⚠ FOUR audit rows share this anchor and all four wanted to be §13. This is the only one that keeps its number; the other three are re-anchored and renumbered as edits 21, 22 and 23.
+- **The 36 child ids under the Ordinances dialog are one family:** 12
+  `0x12C+k`, 12 `0x2F4+k`, 4 `0x551+k`, Accept/Cancel, `0x0ABCE000/1` and the
+  popup's four outer/inner ids — a child-window population, not 36 roots.
+
+⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. What it was to add, a numbered section on the header-less interface `cISC4ViewObject3D`, is covered in shorter form by the section below (grep `^## Identifiers the vendored SDK`, subsection `cISC4ViewObject3D`).
 
 ---
 
