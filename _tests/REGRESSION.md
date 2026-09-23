@@ -21973,3 +21973,52 @@ under PLAY (heartbeat in every log; testers attach it); the fine-key 1.5x
 variant, parked unjudged; the warm 50k DLL-vs-control delta (offline harness
 stands in); ClassifyDir's 8 FindFirstFile per directory (802 ms of the 50k
 boot's 1.9 s non-index cost) and a persistent index cache for cold trees.
+
+## 2026-09-23 — bar-chart margin DEFECT (user-confirmed, fixed), Custom Tunes column patch, cIGZWin header gate  [FIX CONFIRMED on screen + log, 16:18]
+
+### Bar charts took the line chart's legend margin — CONFIRMED ON SCREEN, FIXED
+
+- **Prediction (static).** The widget decode (`tools\research\WIDGET-INTERFACES.md` §4.1) found `InstallChartBornScale` patching iface vt+0x30 on BOTH the type-1 line chart (`0xAB4C28`) and the type-2 bar chart (`0xADE568`).
+- **The mechanism.** `ChartStoreThunk` applied `budgetRM = GraphLegendPlotRightMargin(f)` to both: legend strip + lround(2f) = **244 at 2x, 181 at 1.5x, 377 at 3x**. The bar builder's stock right margin is W−2 (`0x76D837`), and it creates no legend.
+- **Seen by the user, 2x.** Graphs → **Garbage** (line) was correct: its legend fills the band. Graphs → **RCI Demand** (bar) was wrong: the bars end under the line chart's plot edge, the right quarter of the panel is empty, and the category labels crowd.
+- **Cure.** The thunk reads the chart's main vtable (`SafeReadPtr(chart)`) and takes the budget only for `0xAB4D08` (cSC4LineGraph). Anything else gets the proportional margin, winW − round((winW − rr)·f), which is ≈ winW − 4 at 2x.
+- **EXPECTED LOG after the fix.** EARLYCHART lines now carry `vt=%08X line|no-legend`.
+  - A bar chart logs `vt=00ADE648 no-legend budgetRM=0` with a right edge near winW − 4.
+  - The line chart logs `vt=00AB4D08 line budgetRM=244` at 2x.
+- **EXPECTED ON SCREEN.** RCI Demand, Education by Age and Population by Age have bars running to the plot's right edge.
+
+### Custom Tunes song column — PATCHED, NOT SEEN (no custom tunes installed)
+
+- **The site.** `SetColumnWidth(0,1,255)` at `0x4F4B4C`; `push 0xFF` at `0x4F4B43`. The nine bytes `68 FF 00 00 00 6A 01 6A 00` are unique in the image.
+- **The patch.** `CodePatches::ApplyCustomTunesColumnScale` writes lround(255·f) = 383 / 510 / 765. Ini key `[UiSpike] CustomTunesColumnPatch=1`.
+- **Gates.** Registered in `gate_patch_families_combined.py` (now 321 spans, 46 tables, 24 families) and pinned by `Test-PatchSiteBytes.py` (6 sites).
+- **EXPECTED LOG at 2x.** `CodePatches: Custom Tunes song column 255 -> 510 at 0x004F4B43 - applied.`
+- The user asked for it without an on-screen check. Confirm once custom music exists.
+
+### cIGZWin header gate (manual)
+
+- **What it checks.** `_tests\Test-GZWinHeaderSlots.py` compiles the vendored `cIGZWin.h`. Under MSVC the header puts 40 of 147 declarations on the wrong exe slot. The gate fails on any `src\` call that:
+  - lands on a wrong slot,
+  - has a known ABI defect,
+  - has no verified row, or
+  - is an absolute-looking `GZWinMoveTo`.
+- **`--selftest`.** Four planted defects, each must fail. ALL PASS at 2026-09-23.
+- **Details.** `tools\sdk\ghidra\README.md`.
+
+### Deploy
+
+Built and deployed by `Deploy-OnGameClose.ps1` at 15:56; the deployed DLL is byte-equal to the build (947,712 B). Gates green at deploy time:
+- `gate_patch_families_combined.py`
+- `Test-PatchSiteBytes`
+- `Test-ProbeDerefGuards`
+- `Test-ShippingIniKeys`
+- `Test-StockTierContract`
+- `Test-GZWinHeaderSlots --selftest`
+
+### 16:18 - post-fix check: CONFIRMED on screen and in the log
+
+- **The user, 2x, Graphs → RCI Demand:** "The bars go all the way to the edge now." The category labels are evenly spaced again.
+- **The log (MEASURED, `SC4UIScale.log` 16:18):**
+  - `EARLYCHART store (45,20,974,492) -> (90,40,972,472) in 976x512 sane=1 vt=00ADE648 no-legend budgetRM=0` for the bar chart. The stock right is winW−2 = 974; the scaled right is winW − round(2·2) = 972, exactly as predicted.
+  - `... (45,20,866,492) -> (90,40,732,472) in 976x512 sane=1 vt=00AB4D08 line budgetRM=244` for the line chart, which is unchanged.
+- **Custom Tunes, also in the log:** `CodePatches: Custom Tunes song column 255 -> 510 at 0x004F4B43 - applied.` The patch runs; its on-screen effect waits for custom music.

@@ -104,6 +104,14 @@ SITES = [
         bytes([0xFF, 0xFF, 0xFF, 0xFF, 0xFF]),
         "push 128 - the cost box's buffer width (#159).",
     ),
+    (
+        "kCustomTunesColSite",
+        0x004F4B43,
+        bytes([0x68, 0xFF, 0x00, 0x00, 0x00, 0x6A, 0x01, 0x6A, 0x00]),
+        bytes([0xFF] * 9),
+        "push 255 / push 1 / push 0 - SetColumnWidth(0,1,255), the Custom "
+        "Tunes song-title column (v4.10.1). Unique in the image.",
+    ),
 ]
 
 

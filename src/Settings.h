@@ -195,6 +195,9 @@ struct Settings
 	                                  // clipped (#159). Separate from the
 	                                  // tooltip wrap: different constant,
 	                                  // different subsystem.
+	bool spikeCustomTunesColumnPatch = true; // byte-patch the Custom Tunes
+	                                  // song-title column, pinned to 255 px in
+	                                  // code (0x4F4B43), to 255f (v4.10.1).
 	bool spikeHtmlSizePatch = true;   // scale the HTML engine's two .rdata
 	                                  // font-size tables (SIZE=1..7 + H1..H7)
 	                                  // by the factor and retarget the message

@@ -2732,6 +2732,48 @@ namespace CodePatches
 		}
 	}
 
+	// ============ CUSTOM TUNES SONG COLUMN (v4.10.1) ======================
+	// The Audio Options "Custom Tunes" playlist (grid 0x8A550C56, dialog
+	// I-ca53f06e) is filled by 0x004F4A28, which pins the song-title column
+	// IN CODE: SetColumnWidth(0, 1, 255) at 0x004F4B4C, `push 0xFF` at
+	// 0x004F4B43. Every other width in that dialog comes from its .UI, which
+	// the DialogStatic package already scales (grid 289 -> 433/578/867 wide,
+	// column 1 200 -> 300/400/600). Left alone, the titles clip at a 1x width
+	// while their font grows, and the checkbox column starts at an unscaled
+	// x = 255. Scaling 255 -> 255*f restores the 1x ratio (255 of 289).
+	// STATIC READING, NOT SEEN ON SCREEN: the user has no custom tunes, so the
+	// list is empty. Patched at the user's request 2026-09-23 on the strength
+	// of the decode (tools\research\WIDGET-INTERFACES.md section 2). The nine
+	// verified bytes - push 255 / push 1 / push 0 - occur exactly once in the
+	// image, so the check pins this call and no other.
+	const uintptr_t kCustomTunesColSite = 0x4F4B43;
+	const uint32_t kStockCustomTunesCol = 255;
+
+	void ApplyCustomTunesColumnScale(float factor)
+	{
+		const long scaled = std::lround(kStockCustomTunesCol * factor);
+		if (scaled == static_cast<long>(kStockCustomTunesCol))
+		{
+			return; // identity factor: nothing to do
+		}
+		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t delta = base - kImageBase;
+		const uint8_t expect[9] = { 0x68, 0xFF, 0x00, 0x00, 0x00,
+			0x6A, 0x01, 0x6A, 0x00 };
+		uint8_t repl[9];
+		memcpy(repl, expect, sizeof repl);
+		const uint32_t val = static_cast<uint32_t>(scaled);
+		memcpy(repl + 1, &val, 4);   // only the imm32 changes
+		const bool ok = VerifiedWrite("custom tunes column", kCustomTunesColSite,
+			delta, expect, repl, sizeof repl);
+		Logger::Get().WriteLine(
+			LogLevel::Info,
+			"CodePatches: Custom Tunes song column %u -> %ld at 0x%08X - %s.",
+			kStockCustomTunesCol, scaled,
+			static_cast<uint32_t>(kCustomTunesColSite),
+			ok ? "applied" : "NOT applied");
+	}
+
 	// ============ CHEAT ENTRY DIALOG (v4.5.6) =============================
 	// THE Ctrl+X CHEAT BOX, whose typed text is clipped at every scaled tier.
 	// USER-CONFIRMED ON SCREEN 2026-08-30 (screenshot: "Region_Census" with

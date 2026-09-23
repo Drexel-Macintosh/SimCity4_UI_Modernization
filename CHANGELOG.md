@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+- **Bar charts fill the Graphs panel again at a scaled tier.**
+  - RCI Demand, Education by Age and Population by Age are the game's three
+    bar charts. They had been taking the line chart's legend margin, which
+    left an empty band down the right side: about 244 px at 2x, 181 at 1.5x
+    and 377 at 3x.
+  - Bar charts have no legend. Now only the line chart makes room for one,
+    and the bars run to the plot's edge again.
+  - Seen on screen at 2x before the fix.
+- **Custom Tunes song titles scale with the interface.**
+  - The Audio Options playlist sets its title column in code, at a fixed
+    255 px; every other width in that dialog was already scaled.
+  - The column now scales with the tier: 383, 510 or 765 px.
+  - Ini key `[UiSpike] CustomTunesColumnPatch`, default 1.
+  - Not yet seen on screen: the list only fills once custom music is
+    installed.
+
 ## 4.10.0 (2026-09-07) - the boot path scales to big plugin folders, probe reads cannot crash, and long sessions leave a trail
 
 **One line of behaviour: the mod boots by walking your Plugins folder once,

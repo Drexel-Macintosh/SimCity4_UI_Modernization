@@ -696,6 +696,10 @@ namespace
 	// says vt=00AB4D08). The sweep-block fixup stays as the fallback; its
 	// bandH==32 marker makes it inert on charts this thunk already handled.
 	uintptr_t gChartStoreReal = 0;    // rebased 0x9B1F1D
+	// Rebased 0xAB4D08 = cSC4LineGraph's main vtable, the type-1 chart and the
+	// ONLY chart type that has a legend column (the bar builder, type 2, makes
+	// no legend items; its stock right margin is W-2 at 0x76D837).
+	uintptr_t gChartLineMainVt = 0;
 	int       gChartBornLog = 0;      // EARLYCHART lines, 8 max per city
 	int       gChartLegendLog = 0;    // LEGENDOBJ/GKID recon, 3 rounds max
 	int       gChartReconLog = 0;     // LEGENDCBOX/LEGENDSWATCH, 14 max
@@ -734,8 +738,18 @@ namespace
 			// H-EARLYCHART candidate and it paints the plot border INSIDE the
 			// checkbox column - so a zero here means "not armed", and we keep
 			// the proportional margin we ship today.
-			const int32_t budgetRM =
-				CodePatches::GraphLegendPlotRightMargin(f);
+			// v4.10.1: ONLY THE LINE CHART HAS A LEGEND TO CLEAR. This thunk
+			// also sits on the type-2 (bar) cIGZGraph vtable, and taking the
+			// legend budget there pulled every bar chart's right edge in by
+			// the width of a legend it does not have - 244 px at 2x.
+			// USER-CONFIRMED ON SCREEN 2026-09-23: Graphs -> RCI Demand showed
+			// the bars ending under the line chart's plot edge with the right
+			// quarter of the panel empty. Bars take the proportional margin.
+			uintptr_t chartVt = 0;
+			CodePatches::SafeReadPtr(chart, &chartVt);
+			const bool hasLegend = (chartVt == gChartLineMainVt);
+			const int32_t budgetRM = hasLegend
+				? CodePatches::GraphLegendPlotRightMargin(f) : 0;
 			const int32_t nr = (budgetRM > 0)
 				? (winW - budgetRM)
 				: (winW - RoundHalfUp((winW - rr) * f));
@@ -761,10 +775,11 @@ namespace
 				gChartBornLog++;
 				Logger::Get().WriteLine(LogLevel::Info,
 					"UiSpike: EARLYCHART store (%d,%d,%d,%d) -> "
-					"(%d,%d,%d,%d) in %dx%d sane=%d budgetRM=%d - born "
-					"correct, no stock frame", l, t, rr, b,
+					"(%d,%d,%d,%d) in %dx%d sane=%d vt=%08X %s budgetRM=%d "
+					"- born correct, no stock frame", l, t, rr, b,
 					r[0], r[1], r[2], r[3], winW, winH, sane ? 1 : 0,
-					budgetRM);
+					static_cast<uint32_t>(chartVt),
+					hasLegend ? "line" : "no-legend", budgetRM);
 				// LEGENDOBJ: the legend entries live in a linked list at
 				// chart+0x228 (sub_9B5ADE walks it, calling each node's
 				// [+8]->vt[1] to draw). The "invisible barrier" pushing
@@ -812,6 +827,7 @@ namespace
 		const uintptr_t delta = reinterpret_cast<uintptr_t>(
 			GetModuleHandleW(nullptr)) - 0x400000;
 		gChartStoreReal = 0x9B1F1D + delta;
+		gChartLineMainVt = 0xAB4D08 + delta;
 		static const uintptr_t kSlots[] = {
 			0xAB4C28 + 0x30,   // type1 iface (the live Graphs chart)
 			0xADE568 + 0x30,   // type2 iface
