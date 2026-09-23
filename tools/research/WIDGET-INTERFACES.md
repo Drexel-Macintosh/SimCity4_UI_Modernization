@@ -178,15 +178,25 @@ window rect. **Never scale them.**
     (grep `200px song-name`). That comment now carries a dated correction.
   - **PATCHED in v4.10.1 (unreleased), at the user's request, without an
     on-screen check.** The user has no custom tunes, so the list is empty.
-    The director calls `CodePatches::ApplyCustomTunesColumnScale`, which rewrites the imm32 to
-    lround(255·f): 383 at 1.5x, 510 at 2x, 765 at 3x. That keeps the 1x ratio
-    of 255 in a 289-wide grid.
-    - It verifies nine bytes first (push 255 / push 1 / push 0, unique in the
-      image).
+    - **It is a detour, not a byte patch.** The first version rewrote the
+      imm32 to lround(255·f). An independent review found the flaw: that is
+      only right while *our* scaled copy of the dialog is loaded. If another
+      mod's 1x copy wins (an updated Carbon skin disarming our ZCarbonUI, for
+      example), a 510 column in a 289 grid hides every checkbox.
+    - `CodePatches::InstallCustomTunesColumnScale` hooks
+      `cGZWinGrid::SetColumnWidth` (`0x009AC43B`, grid slot 65).
+    - It acts only on the call returning to `0x004F4B52` with the stock
+      arguments (0, 1, 255).
+    - It sets the width to lround(255 × gridW / 289), where gridW is the
+      loaded grid's own `[win+0xB0] − [win+0xA8]`, the formula of the game's
+      `GetW`.
+    - Results: our copies → 382 / 510 / 765; any 1x copy → 255, exactly stock.
     - Ini key `[UiSpike] CustomTunesColumnPatch` (default 1).
-    - Pinned by `_tests\Test-PatchSiteBytes.py`, registered in
-      `gate_patch_families_combined.py`.
-  - **Still a static reading.** Confirm it once custom tunes exist.
+    - `_tests\Test-PatchSiteBytes.py` pins the 15-byte call site and the
+      10-byte prologue. The two VAs are classified as control flow in
+      `gate_patch_families_combined.py` and `crosscheck.py`.
+  - **Still a static reading.** Confirm it once custom tunes exist. Opening
+    Audio Options logs the chosen width either way.
 - The cheat windows, lot editor, dev property viewers, Lua debugger and
   `GZWinFileBrowser` bake widths and gutters in code. None of them is a
   player dialog.

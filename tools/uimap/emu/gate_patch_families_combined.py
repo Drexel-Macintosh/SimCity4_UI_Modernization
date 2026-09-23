@@ -151,10 +151,6 @@ WIDTHS = {
     # #159 COST BOX (three sites, one feature):
     "kCostBoxHeightSite":        (2, "6a 20 push imm8 - opcode + imm8, refuses >0x7F"),
     "kCostBoxWidthSite":         (5, "68 imm32 push (stock 128)"),
-    # v4.10.1 CUSTOM TUNES song column: SetColumnWidth(0,1,255) at 0x4F4B4C.
-    # Nine bytes VERIFIED (push 255 / push 1 / push 0 - unique in the image),
-    # four WRITTEN (the imm32 at +1). Width is the verified span.
-    "kCustomTunesColSite":       (9, "68 ff 00 00 00 6a 01 6a 00 - imm32 at +1 written"),
     "kCostOriginSite":           (8, "83 c3 7c / 68 01 80 00 00 -> E9 rel32 + 3 nop (jmp to cave)"),
     # signpost pole-balloon quad (two 68-imm32 float pushes, 16 bytes apart):
     "kSignpostSizeSite":         (5, "68 imm32 (push 44.0f) at 0x5F20AF"),
@@ -227,7 +223,10 @@ NON_SITE_TABLES = {"kGraphLegendStrips", "kStockHtmlFontSizes", "kStockHtmlHeadi
                    "kHighlightStock",                        # HIGHLIGHT  0x5E90E0
                    "kZoneQuadStock",                         # ZONEQUAD   0x6CC970
                    "kNborArrowStock",                        # NBORARROW  0x6D4860
-                   "kDotSizeStock"}                          # DOTSIZE    0x5F7810
+                   "kDotSizeStock",                          # DOTSIZE    0x5F7810
+                   # v4.10.1 Custom Tunes column: the SetColumnWidth prologue
+                   # the MinHook install verifies (byte values, not a site).
+                   "kSetColumnWidthStock"}
 # Scalars that are NOT patch sites: the module base every site is expressed
 # against, and stock-value constants. Excluded by NAME so the anti-rot sweep
 # still shouts about anything genuinely new.
@@ -263,7 +262,13 @@ NON_SITE_SCALARS = {"kImageBase", "kX8DispatchSite", "kX8StubBlock",
                     # probes read and relay, they do not edit an immediate.
                     "kHighlightVa", "kZoneQuadVa",
                     "kNborArrowVa", "kDotSizeVa",
-                    "kZoneManagerPtr"}                        # .bss cISC4ZoneManager* 0xB43D14
+                    "kZoneManagerPtr",                        # .bss cISC4ZoneManager* 0xB43D14
+                    # v4.10.1 Custom Tunes column: a MinHook detour target
+                    # (cGZWinGrid::SetColumnWidth 0x9AC43B) and the RETURN
+                    # ADDRESS that picks the one call it acts on (0x4F4B52).
+                    # No immediate is edited - the byte patch these replaced
+                    # was retired the same day (it assumed our dialog copy).
+                    "kSetColumnWidthVa", "kCustomTunesRetVa"}
 
 # --------------------------------------------------------------------------
 FAILURES = []

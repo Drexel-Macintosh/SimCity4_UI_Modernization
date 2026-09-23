@@ -2734,44 +2734,129 @@ namespace CodePatches
 
 	// ============ CUSTOM TUNES SONG COLUMN (v4.10.1) ======================
 	// The Audio Options "Custom Tunes" playlist (grid 0x8A550C56, dialog
-	// I-ca53f06e) is filled by 0x004F4A28, which pins the song-title column
-	// IN CODE: SetColumnWidth(0, 1, 255) at 0x004F4B4C, `push 0xFF` at
-	// 0x004F4B43. Every other width in that dialog comes from its .UI, which
-	// the DialogStatic package already scales (grid 289 -> 433/578/867 wide,
-	// column 1 200 -> 300/400/600). Left alone, the titles clip at a 1x width
-	// while their font grows, and the checkbox column starts at an unscaled
-	// x = 255. Scaling 255 -> 255*f restores the 1x ratio (255 of 289).
-	// STATIC READING, NOT SEEN ON SCREEN: the user has no custom tunes, so the
-	// list is empty. Patched at the user's request 2026-09-23 on the strength
-	// of the decode (tools\research\WIDGET-INTERFACES.md section 2). The nine
-	// verified bytes - push 255 / push 1 / push 0 - occur exactly once in the
-	// image, so the check pins this call and no other.
-	const uintptr_t kCustomTunesColSite = 0x4F4B43;
-	const uint32_t kStockCustomTunesCol = 255;
-
-	void ApplyCustomTunesColumnScale(float factor)
+	// I-ca53f06e) is filled by sub_4F44C0, which pins the song-title column
+	// IN CODE: SetColumnWidth(0, 1, 255) at 0x004F4B4C (`push 0xFF` at
+	// 0x004F4B43). Every other width in that dialog comes from its .UI, which
+	// the DialogStatic package scales (grid 289 -> 433/578/867 wide, column 1
+	// 200 -> 300/400/600). Left alone, the titles clip at a 1x width while
+	// their font grows, and the checkbox column starts at an unscaled x=255.
+	//
+	// WHY A DETOUR AND NOT THE BYTE PATCH IT REPLACED (same day). A fixed
+	// 255 -> 255*f is only right while OUR scaled copy of the dialog is the
+	// one loaded. If another mod's 1x copy wins - an updated Carbon skin whose
+	// version check turns our ZCarbonUI off, say - the grid is 289 wide and a
+	// 510 column pushes every checkbox out of sight. So the width is taken
+	// from the grid the game actually built: 255 of 289, the stock ratio, of
+	// whatever width the loaded grid has. Our 2x copy -> 510; any 1x copy ->
+	// 255, exactly stock. Gate on the condition you depend on - here the
+	// dependency is removed instead.
+	//
+	// The detour sits on cGZWinGrid::SetColumnWidth (0x009AC43B, grid slot
+	// 65, __thiscall (first, count, width), returns al=1, ret 0xC) and acts
+	// ONLY for the call whose return address is 0x004F4B52 and whose
+	// arguments are the stock (0, 1, 255); every other grid passes straight
+	// through. STATIC READING, NOT SEEN ON SCREEN: the user has no custom
+	// tunes, so the list is empty. Patched at the user's request 2026-09-23
+	// (tools\research\WIDGET-INTERFACES.md section 2).
+	namespace
 	{
-		const long scaled = std::lround(kStockCustomTunesCol * factor);
-		if (scaled == static_cast<long>(kStockCustomTunesCol))
+		const uintptr_t kSetColumnWidthVa = 0x9AC43B;
+		const uintptr_t kCustomTunesRetVa = 0x4F4B52;
+		const uint8_t kSetColumnWidthStock[] = {
+			0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x28, 0x53, 0x8B, 0x5D, 0x10 };
+		const int32_t kStockCustomTunesCol = 255;
+		const int32_t kStockCustomTunesGridW = 289;   // stock .UI area (15,46,304,228)
+
+		typedef uint32_t(__fastcall* SetColumnWidthFn)(void*, void*,
+			int32_t, int32_t, int32_t);
+		SetColumnWidthFn gSetColumnWidthOrig = nullptr;
+		uintptr_t gCustomTunesRet = 0;
+		volatile LONG gCustomTunesLogged = 0;
+		bool gCustomTunesInstalled = false;
+
+		// The grid's window width, read the way the game's own GetW (base
+		// slot 41, 0x0099C81B, not overridden by cGZWinGrid) computes it:
+		// rect right - rect left, [win+0xB0] - [win+0xA8]. The cIGZWinGrid
+		// interface is the object base and the cGZWin window follows at +4
+		// (WIDGET-INTERFACES.md section 2). Whole-body __try: a torn pointer
+		// reads as 0 and the call is left exactly as the game made it.
+		int32_t CustomTunesGridWidth(const void* grid)
 		{
-			return; // identity factor: nothing to do
+			__try
+			{
+				const uint8_t* win = static_cast<const uint8_t*>(grid) + 4;
+				return *reinterpret_cast<const int32_t*>(win + 0xB0)
+					- *reinterpret_cast<const int32_t*>(win + 0xA8);
+			}
+			__except (EXCEPTION_EXECUTE_HANDLER)
+			{
+				return 0;
+			}
 		}
+
+		uint32_t __fastcall SetColumnWidthDetour(void* self, void* edx,
+			int32_t first, int32_t count, int32_t width)
+		{
+			if (reinterpret_cast<uintptr_t>(_ReturnAddress()) == gCustomTunesRet
+				&& self != nullptr && first == 0 && count == 1
+				&& width == kStockCustomTunesCol)
+			{
+				const int32_t gridW = CustomTunesGridWidth(self);
+				if (gridW > 0)
+				{
+					const int32_t scaled = static_cast<int32_t>(std::lround(
+						static_cast<double>(kStockCustomTunesCol) * gridW
+						/ kStockCustomTunesGridW));
+					if (InterlockedExchange(&gCustomTunesLogged, 1) == 0)
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"CodePatches: Custom Tunes song column %d -> %d "
+							"(the loaded grid is %d px wide; stock is 255 of 289).",
+							width, scaled, gridW);
+					}
+					width = scaled;
+				}
+			}
+			return gSetColumnWidthOrig(self, edx, first, count, width);
+		}
+	}
+
+	void InstallCustomTunesColumnScale()
+	{
+		if (gCustomTunesInstalled) { return; }
 		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 		const uintptr_t delta = base - kImageBase;
-		const uint8_t expect[9] = { 0x68, 0xFF, 0x00, 0x00, 0x00,
-			0x6A, 0x01, 0x6A, 0x00 };
-		uint8_t repl[9];
-		memcpy(repl, expect, sizeof repl);
-		const uint32_t val = static_cast<uint32_t>(scaled);
-		memcpy(repl + 1, &val, 4);   // only the imm32 changes
-		const bool ok = VerifiedWrite("custom tunes column", kCustomTunesColSite,
-			delta, expect, repl, sizeof repl);
-		Logger::Get().WriteLine(
-			LogLevel::Info,
-			"CodePatches: Custom Tunes song column %u -> %ld at 0x%08X - %s.",
-			kStockCustomTunesCol, scaled,
-			static_cast<uint32_t>(kCustomTunesColSite),
-			ok ? "applied" : "NOT applied");
+		void* target = reinterpret_cast<void*>(kSetColumnWidthVa + delta);
+		if (memcmp(target, kSetColumnWidthStock, sizeof(kSetColumnWidthStock)) != 0)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: Custom Tunes - SetColumnWidth prologue mismatch at "
+				"%p - skipped (the column stays stock).", target);
+			return;
+		}
+		gCustomTunesRet = kCustomTunesRetVa + delta;
+		const MH_STATUS init = MH_Initialize();
+		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
+		{
+			Logger::Get().WriteLine(LogLevel::Error,
+				"CodePatches: Custom Tunes MH_Initialize failed (%d).", init);
+			return;
+		}
+		if (MH_CreateHook(target, reinterpret_cast<void*>(&SetColumnWidthDetour),
+				reinterpret_cast<void**>(&gSetColumnWidthOrig)) != MH_OK
+			|| MH_EnableHook(target) != MH_OK)
+		{
+			Logger::Get().WriteLine(LogLevel::Error,
+				"CodePatches: Custom Tunes failed to hook SetColumnWidth at %p.",
+				target);
+			return;
+		}
+		gCustomTunesInstalled = true;
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: Custom Tunes column hook installed on SetColumnWidth "
+			"%p (acts only for the call returning to 0x%08X; the width follows "
+			"the loaded grid, 255 of 289).", target,
+			static_cast<uint32_t>(kCustomTunesRetVa));
 	}
 
 	// ============ CHEAT ENTRY DIALOG (v4.5.6) =============================

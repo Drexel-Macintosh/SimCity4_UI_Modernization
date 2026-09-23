@@ -13,7 +13,10 @@
 - **Custom Tunes song titles scale with the interface.**
   - The Audio Options playlist sets its title column in code, at a fixed
     255 px; every other width in that dialog was already scaled.
-  - The column now scales with the tier: 383, 510 or 765 px.
+  - The column is now sized from the list the game actually built: 255/289
+    of its width, the stock proportion. With our scaled dialog that is 382,
+    510 or 765 px. If a skin's unscaled copy of the dialog loads instead, the
+    column stays at the stock 255, so the checkboxes never slide out of view.
   - Ini key `[UiSpike] CustomTunesColumnPatch`, default 1.
   - Not yet seen on screen: the list only fills once custom music is
     installed.

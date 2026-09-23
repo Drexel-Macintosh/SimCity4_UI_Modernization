@@ -22022,3 +22022,18 @@ Built and deployed by `Deploy-OnGameClose.ps1` at 15:56; the deployed DLL is byt
   - `EARLYCHART store (45,20,974,492) -> (90,40,972,472) in 976x512 sane=1 vt=00ADE648 no-legend budgetRM=0` for the bar chart. The stock right is winW−2 = 974; the scaled right is winW − round(2·2) = 972, exactly as predicted.
   - `... (45,20,866,492) -> (90,40,732,472) in 976x512 sane=1 vt=00AB4D08 line budgetRM=244` for the line chart, which is unchanged.
 - **Custom Tunes, also in the log:** `CodePatches: Custom Tunes song column 255 -> 510 at 0x004F4B43 - applied.` The patch runs; its on-screen effect waits for custom music.
+
+### Same day - Custom Tunes reworked from a byte patch to a detour (review finding)
+
+- **The finding.** An independent review showed the byte patch (255 → 255·f) is only correct while OUR scaled copy of the Audio Options dialog is loaded. A mod's 1x copy winning (e.g. an updated Carbon skin that disarms ZCarbonUI) would put a 510 px column in a 289 px grid, with every checkbox out of view.
+- **The cure removes the dependency.**
+  - The detour sits on `cGZWinGrid::SetColumnWidth` 0x9AC43B.
+  - It acts only on the call returning to 0x4F4B52 with args (0,1,255).
+  - It sets lround(255 × gridW / 289) from the loaded grid's own rect.
+- **Gates.** `crosscheck.py` failed on the first version: its model could not place the byte-patch site. It is green now (268/268, the two hook VAs classified control flow). Also green:
+  - `gate_patch_families_combined.py`: 320 spans, 45 tables, 23 families;
+  - `Test-PatchSiteBytes`: 7 pins, including the 15-byte call site and the 10-byte prologue;
+  - `Test-ProbeDerefGuards`: the width read is a whole-body `__try` helper.
+- **EXPECTED LOG.**
+  - At boot: `Custom Tunes column hook installed on SetColumnWidth ...`.
+  - Opening Audio Options at 2x with our dialog: `Custom Tunes song column 255 -> 510 (the loaded grid is 578 px wide ...)`.
