@@ -219,12 +219,41 @@ def render(nodes, art_dirs, states=4):
             # Reconcile Edges dialog are on this path and were previously
             # rendered here as plain clipped blits - i.e. wrong for exactly the
             # dialog under investigation.
-            # RESTORED 2026-09-23: an intended 2026-09-01 revision of this line
-            # was lost (commit 0961524 wrote its edit instruction instead of its
-            # text); the original is restored here. nine_slice reads a bare int
-            # as the HORIZONTAL cell only and derives the vertical one itself
-            # (see its docstring), so this call already cuts (W/3, H/3).
-            im = nine_slice(im, w, h, im.width // 3)
+            # SUPERSEDED 2026-09-01 - kept, per annotate-never-rewrite. This line
+            # read `nine_slice(im, w, h, im.width // 3)`: the LEGACY SCALAR form
+            # that the docstring above documents as "the HORIZONTAL cell ONLY".
+            # It was never wrong on OUTPUT, only in what it SAYS - the scalar
+            # branch pairs `int(cell)` with the very `im.height // 3` that
+            # `cell=None` derives, so the two spellings are the same arithmetic.
+            # MEASURED 2026-09-01, by re-running this module's own `nine_slice`
+            # over all 30 sheets in `tools\upscale\nine-slice.txt` (9 non-square)
+            # at f=1.5/2.0/3.0: 90 of 90 renders BYTE-IDENTICAL across the two
+            # spellings. POSITIVE CONTROL, so that null is not a blind one: on the
+            # non-square 411x371 sheet {1abe787d,8c0e0f2d}, derive vs the REFUTED
+            # width-on-both-axes cell (137,137) is NOT identical - the comparison
+            # can see a per-axis difference when there is one. (The first control
+            # tried was a SQUARE 78x78 sheet, where the two agree by construction
+            # and the test proves nothing - a value agreeing with both hypotheses.)
+            # An earlier clean render therefore still stands: this is a SPELLING
+            # fix, not a behaviour fix.
+            #
+            # DERIVE - do not hand a cell in. Where the node declares an
+            # `imagerect`, `im` was cropped to it just above, so `im.width`/
+            # `im.height` ARE `(r-l)`/`(b-t)` of the declared rect, and
+            # `cell=None` yields `((r-l)/3, (b-t)/3)` - exactly the expression
+            # the docstring's STILL OPEN paragraph names for this path. Where
+            # it declares none - 271 of the 313 image-bound edge nodes in
+            # `dialog-static\stage`, MEASURED 2026-09-23 - `im` is the whole
+            # sheet and `cell=None` yields `(W/3, H/3)`, the natural-rect cell.
+            # Restating it at the call site would only be a second place to get it
+            # wrong, and would re-freeze the choice that paragraph left open.
+            # PROVENANCE: the per-axis quotient is CARRIED from the 2026-08-31
+            # disassembly recorded in `nine_slice`'s docstring - NOT re-read from
+            # the exe on 2026-09-01, so no address is re-asserted here. The
+            # byte-identity and its control are MEASURED 2026-09-01.
+            # (Revision prepared 2026-09-01, lost to commit 0961524,
+            # re-verified and applied 2026-09-23.)
+            im = nine_slice(im, w, h)
         else:
             im = im.crop((0, 0, min(im.width, w), min(im.height, h)))  # clip
         canvas.alpha_composite(im, (ax, ay))

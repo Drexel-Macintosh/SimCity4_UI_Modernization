@@ -474,8 +474,16 @@ def seam_drift(art1, artf, f, winf):
 # 6. OUTPUT - cp1252 consoles cannot print the house glyphs
 # ══════════════════════════════════════════════════════════════════════════════
 
-_SUB = {"": "[STOP]", "": "[WARN]", "": "[*]",
-        "→": "->", "✓": "ok", "": "[PASS]", "": "[FAIL]"}
+# The keys are written as \u escapes ON PURPOSE. The literal glyphs were
+# stripped to "" by the 4.0 publish (0984796), and an empty key makes
+# str.replace("", v) insert v between EVERY character - every gate that
+# printed through out() came out as "[FAIL]" soup (found 2026-09-23). An escape
+# survives any sanitizer; the guard below refuses an empty key outright.
+# U+26D4 is the one out()'s docstring names (gate_abut_1_5x's MODEL-IS-WRONG
+# line); the others are the house glyphs these labels stand for.
+_SUB = {"⛔": "[STOP]", "⚠": "[WARN]", "⭐": "[*]",
+        "→": "->", "✓": "ok", "✅": "[PASS]", "❌": "[FAIL]"}
+assert all(_SUB), "scale_rules._SUB has an empty key - out() would garble every line"
 
 
 def out(*parts):

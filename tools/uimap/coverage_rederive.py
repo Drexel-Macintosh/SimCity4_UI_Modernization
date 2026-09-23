@@ -418,25 +418,91 @@ SCOPE_PHRASE = "of RETAIL-REACHABLE stock .UI roots"
 # ⛔ REJECTED, and recorded so it is not proposed again: a companion change was
 # designed to STRIP kNeverScaleIds members from the NUMERATOR, on the reasoning
 # that an id named in a do-not-scale list is not evidence of scaling. MEASURED
-# and refuted before it was written: 16 of the 21 kNeverScaleIds members are
-# ALSO staged dialog-static targets. They are in that array PRECISELY BECAUSE
-# data-scaling already handles them and the runtime sweep must stand down, or
-# the window gets scaled twice. Stripping them would have counted 16 correctly
-# handled windows as unreached. kNeverScaleIds membership is evidence that
-# coverage comes from ANOTHER mechanism, not that it is absent.
+# and refuted before it was written.
 #
-# RESTORED 2026-09-23: an intended 2026-09-01 revision of this comment was
-# lost (commit 0961524 wrote its edit instruction instead of its text); the
-# original is restored here.
+# SUPERSEDED 2026-09-01 (evening). The original sentence is KEPT VERBATIM,
+# because the size and DIRECTION of the error is the useful part:
+#     "16 of the 21 kNeverScaleIds members are ALSO staged dialog-static
+#      targets. ... Stripping them would have counted 16 correctly handled
+#      windows as unreached."
+# BOTH halves of that count were wrong, and they were wrong for DIFFERENT
+# reasons, which is why the line survived:
+#
+#   * DENOMINATOR - genuinely moved.  MEASURED this run through this file's
+#     own cpp_id_list(): kNeverScaleIds at src\UiSpike.cpp:5376 holds 22
+#     entries, 22 distinct.  The 22nd is 0x85202C0E, the snapshot /
+#     camera-mode capture frame, added at src\UiSpike.cpp:5471 and shipped in
+#     v4.7.2 (git: the only commit touching that literal in UiSpike.cpp).  It
+#     was 21 when the sentence above was written.
+#
+#   * NUMERATOR - never was 16.  RE-DERIVED this run using this file's OWN
+#     machinery, not a re-implementation: cpp_id_list() for the array, the
+#     identical build_dialog_static.py tuple regex used at the ds_ids site in
+#     section 5 below, the same script_files() + parse_script() corpus, and
+#     the same rule that site applies - a root counts as staged when its
+#     SCRIPT INSTANCE is a staged target.  The intersection is 17, not 16.
+#     POSITIVE CONTROL, run before that 17 was believed: the same staged_roots
+#     set reproduces this tool's own printed "reached ONLY via the staged
+#     dialog path : 7" exactly (0x0A592004, 0x0A5BA192, 0x0A8CD3EE,
+#     0x2A96ED21, 0x6A4D0A59, 0x8A5AB1D0, 0xEBBC081E), so the set being
+#     intersected IS the one the tool uses.  The 17 is corpus-independent
+#     (game-only corpus 17, game+plugins 17) - it is NOT an
+#     INSTALLATION_DEPENDENT number.  And it was ALREADY 17 when "16" was
+#     written: re-running the same derivation against that commit's
+#     src\UiSpike.cpp (21 ids) and its build_dialog_static.py gives 17 of 21.
+#     So "16" was a hand-count that never matched the instrument.  The
+#     ORIGINAL figure was the wrong one; today's UiSpike change only exposed
+#     it.
+#
+# CURRENT, MEASURED 2026-09-01 (evening): 17 of the 22 kNeverScaleIds members
+# are ALSO staged dialog-static targets.  The five that are not, and why -
+# because "not staged" has three different causes here and only one of them
+# is interesting:
+#   0x0A41C7B2, 0x0A41C7B3   Disaster Tools button containers.  Real depth-0
+#                            roots (one script instance each: I-0a41be3e /
+#                            I-0a41be3f).  Art-sized, deliberately never
+#                            staged.  TRUE negatives.
+#   0x10000006               U-Drive-It status panel.  A real root in 42 stock
+#                            scripts (43 with this machine's plugin corpus - a
+#                            CORPUS-SIZE number, unlike the 17), and the
+#                            builder DOES ship it: TARGETS += 
+#                            discover_query_family() at
+#                            tools\dialog-static\build_dialog_static.py:1078
+#                            adopts every script containing id=0x10000005 +
+#                            clsid=0x89e1567c (line 1073).  The ds_ids regex
+#                            reads literal target tuples only, so it cannot
+#                            see that adoption.  ds_ids UNDERCOUNTS by
+#                            construction: 17 is a FLOOR, not a ceiling.
+#   0x6A243D9F, 0x85202C0E   Not a depth-0 root id in ANY layout script in the
+#                            corpus, so they cannot be staged targets at all.
+#                            CONTROL for that null: the same query finds the
+#                            other 20 members as roots, so it is not a blind
+#                            instrument.  This REFUTES the guess that the
+#                            numerator might have stayed at 16 because
+#                            0x85202C0E is unstaged - it is unstaged, and the
+#                            numerator was still never 16.  0x85202C0E is in
+#                            the array to stop the SWEEP sizing a window that
+#                            has no .UI script to stage in the first place.
+#
+# THE REASONING THIS NOTE PROTECTS IS UNTOUCHED BY EITHER CORRECTION, which is
+# exactly why the proposal stays REJECTED: members are in that array PRECISELY
+# BECAUSE data-scaling already handles them and the runtime sweep must stand
+# down, or the window gets scaled twice.  Stripping them would have counted 17
+# correctly handled windows as unreached.  kNeverScaleIds membership is
+# evidence that coverage comes from ANOTHER mechanism, not that it is absent.
+#
+# STANDING INSTRUCTION: do not hand-edit either number again.  Re-derive both
+# halves with the machinery named above, and print the "staged dialog path : 7"
+# control first - a numerator quoted without that control is an unproven null.
+#
+# (Revision prepared 2026-09-01, lost to commit 0961524, recovered and applied 2026-09-23; its measurements date from 2026-09-01.)
 
 INSTALLATION_DEPENDENT = {
     "ui_files", "layout_scripts", "non_layout_files",
     "depth0_roots", "roots_with_nonzero_id", "classifier_agreement",
 }
 
-# RESTORED 2026-09-23: an intended 2026-09-01 revision of EXPECT and
-# COVERAGE_FLOOR was lost (commit 0961524 wrote its edit instruction instead
-# of its text); the original is restored here.
+# (Revision prepared 2026-09-01, lost to commit 0961524, recovered and applied 2026-09-23; its measurements date from 2026-09-01.)
 EXPECT = {
     "ui_files":                339,   # .ui on disk (game + plugins)
     "layout_scripts":          290,   # of those, DOUBLE-CLASSIFIED text layouts
@@ -452,6 +518,79 @@ EXPECT = {
     "stale_copy_root_ids":      32,
     "non_layout_files":         49,   # the measured non-layout bucket
 }
+
+# ---------------------------------------------------------------------------
+# 2026-09-01 - EXPECT WAS ASKED TO BE RE-DERIVED TODAY. IT IS NOT, AND THE
+# PRECONDITION THAT BLOCKS IT IS WRITTEN DOWN HERE RATHER THAN LEFT IMPLICIT.
+#
+# MEASURED (this run: `python coverage_rederive.py`, exit 1, six divergences):
+#     ui_files              339 -> 1093     (game 330 + plugins 763)
+#     layout_scripts        290 -> 1028
+#     non_layout_files       49 -> 50
+#     depth0_roots          338 -> 1076
+#     roots_with_nonzero_id 337 -> 1075
+#     classifier agreement    0 -> 15       <- NOT the same class as the five above
+#
+# FIVE of the six are genuine CORPUS-SIZE divergences and would be a legitimate
+# re-derivation. non_layout_files 49 -> 50 was checked file by file rather than
+# waved through: the extra entry is T-00000000_G-4a87bfe8_I-2a87bffc.ui, a
+# plugin copy (26,173 bytes) of a game file (22,396 bytes) that is already in
+# the bucket - a duplicate of a known non-layout, not a new kind of file. The
+# other 49 are the same 45 binary + 3 INI + 1 comment-block files already on
+# the record above.
+#
+# THE SIXTH IS THE BLOCKER, and filing it under "corpus size" is the mistake
+# this note exists to stop. All 15 disagreements are banner=False/content=True:
+# files whose CONTENT is a layout script and whose first line is not in the
+# UI-editor banner family. classify_file() returns 'disagree' for them and
+# parse_script() returns None for anything that is not 'layout', so all 15 are
+# OUT of `parsed` - and 1028 / 1076 / 1075 are therefore counts taken on a
+# corpus with a KNOWN DROP in it. Freezing those three into EXPECT is verbatim
+# the second-order defect recorded in this file's own header: "EXPECT had been
+# frozen to the POST-DROP numbers ... The expectations agreed with the bug."
+# A green banner bought that way is the exact thing #99 was filed for.
+#
+# HOW BIG THE DROP IS, MEASURED, so it is bounded rather than merely feared:
+#   * all 15 live in tools\uiscripts\extracted-plugins (third-party building
+#     query dialogs - "# Charlottetown Query", "# ABL Query", ...);
+#   * they carry 15 depth-0 roots, every one with a nonzero id;
+#   * those 15 roots carry exactly ONE distinct id, 0x10000005, and that id is
+#     ALREADY among the 117 and ALREADY named in src\UiSpike.cpp;
+#   * admitting all 15 moves layout_scripts 1028 -> 1043, depth0_roots
+#     1076 -> 1091, roots_with_nonzero_id 1075 -> 1090, and leaves
+#     distinct_root_ids at 118 and distinct_nonzero_root_ids at 117 UNCHANGED.
+# So the coverage denominator is untouched by the drop. THAT is the positive
+# statement the headline rests on. The [OK ] printed by the two distinct-id
+# checks is not it: an [OK ] computed on a corpus with a known drop is worth
+# exactly what the drop is measured to contain - and here it was measured, and
+# it contains nothing new.
+#
+# WHY THE BANNER MISSES THEM - two different causes that must be decided
+# separately. banner_ok() matches a PREFIX after BOM + whitespace, so a single
+# leading comment line defeats it. MEASURED: 14 of the 15 do not contain the
+# banner family anywhere in their first 4 KB and are hand-authored third-party
+# headers; exactly ONE does contain it, on its SECOND line
+# (T-00000000_G-96a006b0_I-6561d8dc.ui, "# Jeronij Seawalls Version 4 Custom UI"
+# and then the banner). That one is a genuine UI-editor script the provenance
+# classifier cannot see - a defect in the classifier. The other 14 are a SCOPE
+# question about whether non-UI-editor third-party layouts belong in this
+# corpus at all. Do not settle both with one widened prefix without saying so.
+#
+# ORDER OF OPERATIONS, and it is not negotiable:
+#   1. resolve the 15 (widen the banner family for the leading-comment case,
+#      and/or record the hand-authored class as accepted) until CLASSIFIER
+#      AGREEMENT reads [OK ];
+#   2. re-run;
+#   3. THEN re-derive the five corpus-size numbers from THAT run, and say so in
+#      coverage-matrix.md, as the block above already requires.
+# Doing 3 before 1 is how this instrument lied the first time.
+#
+# UNCHANGED AND STILL TRUE: none of the above touches the stock headline. This
+# run still computes 90/90 = 100.0% of RETAIL-REACHABLE stock .UI roots and
+# 93/117 = 79.5% over all roots, on the same 117 that both distinct-id checks
+# and the measurement above agree is the right denominator. Quote those WITH
+# the scope phrase. Quote nothing whose own check FAILED.
+# ---------------------------------------------------------------------------
 
 # The pre-2026-08-03 EXPECT block, kept so the size and DIRECTION of the
 # instrument's error stays on the record instead of being quietly overwritten.
@@ -472,10 +611,59 @@ EXPECT_BEFORE_CORPUS_FIX = {
 # says so out loud when coverage exceeds the floor.
 #
 # MEASURED 2026-08-03 against the CORRECTED 337-root denominator.
+#
+# SUPERSEDED IN PART 2026-09-01. The "raise it" instruction above is correct
+# only for a floor whose measurement does not move with the plugin set, and two
+# of these three do. On a machine with plugins installed the run prints
+#   [OK ] roots w/ root id named  floor 293  measured 1037  (IMPROVED - raise the floor to 1037)
+#   [OK ] roots w/ any id named   floor 295  measured 1039  (IMPROVED - raise the floor to 1039)
+# and following that would be wrong twice over.
+#
+# MEASURED this run, same script and the same src\UiSpike.cpp, with the corpus
+# restricted to tools\uiscripts\extracted (the stock tree) and then widened:
+#     corpus           roots w/ root id named   roots w/ any id named   distinct named
+#     GAME ONLY                          293                     295              86
+#     GAME + PLUGINS                    1037                    1039              86
+# The first two columns are ROOT-INSTANCE counts. They scale with the plugin
+# tree and belong in the same class as ui_files, not in a repo-committed floor:
+#   (a) 1037 writes THIS machine's 763 plugin .ui files into the gate, so the
+#       next machine with a smaller Plugins folder prints "<-- COVERAGE
+#       REGRESSED" for a corpus difference - the one diagnosis this file spends
+#       two header blocks keeping separate from a real regression;
+#   (b) it also removes the teeth the floor exists for: with 763 plugin scripts
+#       padding the numerator, stock coverage can fall a long way before the
+#       total drops under 1037.
+# 293 and 295 are therefore NOT stale. Measured GAME-ONLY today they are
+# exactly 293 and 295 - they are the STOCK floor and they sit at it with zero
+# margin. They are left where they are. What they need is a SCOPE, not a raise:
+# the durable fix is to compute these two over the game tree alone (main()
+# already partitions it as `game` at the plug_paths split) instead of over all
+# of roots_with_id. Until that lands, read these two as "the stock floor,
+# currently checked against a plugin-padded numerator".
+#
+# distinct_root_ids_named IS raised, 83 -> 86: it is the one of the three that
+# is corpus-INVARIANT, and that was checked rather than assumed. MEASURED 86
+# game-only and 86 game+plugins (table above), with the denominator 117 in both.
+# It is also unchanged if the 15 disagreeing files are admitted - that last one
+# follows from two measured facts rather than a third run, namely that the only
+# root id those 15 carry is 0x10000005 and that it is already inside the 117
+# and already named in src\UiSpike.cpp. The floor is on the COUNT. The RATIO
+# 86/117 = 73.5% stays RETIRED as a headline for the reason given above
+# EXCLUDED_ROOTS - do not resurrect it here just because the count moved.
+#
+# UNRELATED TO ALL OF THE ABOVE, recorded so the two SKIPs this run prints are
+# not mistaken for a coverage problem: MEASURED, SCALED_WINDOW_IDS appears 5
+# times in src\UiSpike.cpp and all five are inside // comments (lines 5390,
+# 5969, 6001, 6100, 6155) - it names an ART package list and has never been a
+# C++ array in that file; kSkipScaleIds appears ZERO times, the name is dead.
+# Both SKIPs are correct as printed, and they clear by updating this tool's
+# array-name list - never by adding an array to UiSpike.cpp to satisfy a tool.
 # ---------------------------------------------------------------------------
 COVERAGE_FLOOR = {
-    "roots_root_id_named":   293,   # 293/337 = 86.9%
-    "roots_any_id_named":    295,   # 295/337 = 87.5%
+    # STOCK floor. Measured game-only 2026-09-01 as still exactly 293 / 295.
+    # Do NOT raise to the plugin-padded 1037 / 1039 - see the block above.
+    "roots_root_id_named":   293,   # 293/328 game-only; 1037/1075 with plugins
+    "roots_any_id_named":    295,   # 295/328 game-only; 1039/1075 with plugins
     # v2.65.0 (#54): 79 -> 83. Three Mode C roots (0x0A41C7B2/B3, 0x27DF05BF)
     # entered kNeverScaleIds. NOTE the denominator is misleading and the #54
     # census says why: of the 38 roots this metric counted as "uncovered",
@@ -486,7 +674,8 @@ COVERAGE_FLOOR = {
     # 3 are MEASURED ABSENT from the shipping image, and 2 more are code-created
     # or dev twins. In-scope coverage is ~87/92. Do not read 70.9% as "29% of
     # the UI is broken" - most of that denominator must NEVER be scaled.
-    "distinct_root_ids_named": 83,  #  83/117 = 70.9%
+    # RAISED 83 -> 86 on 2026-09-01: corpus-invariant, measured 86 on both.
+    "distinct_root_ids_named": 86,  #  86/117; the RATIO stays retired
 }
 
 # NOTE (discrepancy, NOT forced into agreement): coverage-matrix.md section 2

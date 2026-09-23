@@ -2,7 +2,8 @@ r"""gate_tiled_seam.py - WHERE THE TILE BOUNDARY LANDS (#160).
 
 WHY THIS EXISTS, AND WHAT EVERY OTHER GATE IN THIS FOLDER WAS DOING INSTEAD.
 
-`gate_art_vs_window.py:195` reads, in full:
+`gate_art_vs_window.py` (grep `if blt == "tiled":`; it was line 195 when this
+was written, and line numbers drift) reads, in full:
 
     if blt == "tiled":
         continue                      # repeats: always covers

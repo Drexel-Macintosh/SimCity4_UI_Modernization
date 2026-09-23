@@ -84,15 +84,47 @@ costs a day:
 — the third is the only one where **under-sized art TILES rather than
 shrinking**, so its art must be compared against the **window**, not the source.
 
-**No element of the shipped UI is known to sit outside the boundary**,
-and two elements once believed to be outside it are on the inside. Both are
-worth recording, because each was put outside on a structural null.
+**⛔ SUPERSEDED 2026-09-01 — kept verbatim, because it is the exact shape of
+claim this section warns against:** ~~"No element of the shipped UI is known to
+sit outside the boundary."~~ That was an absence reported as a fact. The
+overlay census has since falsified it. **Three elements are now known to sit
+outside the GZWin boundary, and all three are reachable anyway.** The correct
+statement is not "nothing is outside", it is:
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here.
+> **Outside the GZWin boundary is not the same as out of reach.** A window is
+> one kind of handle. A view-object `Draw` slot and a model's own vertices are
+> two others, and both are ours to hold.
 
-**The paused screen-edge border IS a window** — `cSC4WinAlertBorder`, id
-`0x6A5E44B6`, vtable `0x00AB5B48`, born full-screen and *never flipping
-visibility*, which is precisely why a visibility probe cannot fire on it. Its
+| outside GZWin | what it is instead | the handle that is still there |
+|---|---|---|
+| traffic/commute **route trace** (overlay census row 16) | a `cISC4ViewObject3D` drawable, never a window. Ctor `0x007DDD50` stamps vtable `0x00ABB648` at `[obj]` and `0x00ABB630` at `[obj+4]` (`lea edi,[esi+4]` at `0x007DDD55`); the object is then handed to `cISC43DRender::AddViewObject(cISC4ViewObject3D*, int32_t, uint32_t)` — `call [edx+0x80]` at `0x004CA54D` on the singleton at `.data 0x00B43DD0`, args `(obj, 5, 0x3E8)`. **MEASURED.** The `+0x80` is not a header guess that happened to fit: `AddViewObject` is declaration index 29 in `cISC43DRender.h`, so slot 29+3 = 32 = `+0x80`, and the header count and the call site agree exactly | one `.text` function. `0x00ABB648` slot 3 (`+0x0C`) = **`0x007DD9B0`**, `this` plus one arg, whose first act is `mov eax,[ebp+0x14]` on the strand list and an empty-list bail. **MEASURED** |
+| **neighbour-connection arrow** (overlay census row 15) | an S3D mesh sized by its own float vertices, drawn into the 3D scene. TGI `{0x5AD0E817, 0xBADB57F1, 0x29F10000…0x29F10430}` — **exactly 20 records** in `SimCity_1.dat`, a 5 × 4 grid on the instance's two low nibbles, every one parsing byte-exact to its `VERT` block end (4, 7 or 14–15 vertices, 20-byte stride, one group each). **MEASURED** | the geometry *is* the lever — editable vertices in a dat. Do **not** reach for the exemplar: `OccupantSize` (`push 0x27812810` at `0x004A25D2`, imm32 operand at `0x004A25D3`) **MEASURED** is read by the marker factory but does not reach the drawn plate — **CARRIED** from `overlays\row-15-neighbor-connection-arrows.md`, where the anisotropic A/B was run |
+| **`cSTETerrainView3D`** — clsid `0xC9B84E10` (`GZCLSIDDefs.h:294`, written `0x0C9B84E10` with a cosmetic leading zero) | a five-vptr view object. All five are installed by the derived block at `0x00756815`, inside the ctor entered at `0x007567C0`: `[this]=0x00AB4480`, `[this+0x04]=0x00AB4468`, `[this+0x0C]=0x00AB4410`, `[this+0x10]=0x00AB4400`, `[this+0x14]=0x00AB43E8`. **MEASURED** | identified, not opaque. `0x00AB4480` is **exactly 5 slots** — the ASCII `"unlevel\0"` begins at `0x00AB4494`, a hard terminator rather than an inference — and reads `{QI 0x00752730, AddRef 0x005BE3E0, Release 0x005BCB30, Draw 0x0075BFD0, Pick 0x00752700}`: the same shape `AddViewObject` takes. `0x00AB4410` is **exactly 22 slots** (the next table starts at `0x00AB4468`, the one this same ctor stamps at `[this+4]`) = `cISTETerrainView.h`'s 19 own + 3 `cIGZUnknown`. `0x00AB43E8` slot 5 is the `GetGZCLSID` stub `0x007523E0` = `mov eax,0xC9B84E10; ret`. **MEASURED** |
+
+Anatomy for the first two lives in `SC4-WORLD-OVERLAYS.md` rows 15 and 16 and
+in `tools\research\overlays\row-15-*.md` / `row-16-*.md`. This section carries
+only the boundary fact.
+
+**Two consequences for the triage rule at the end of this section.** Its
+"stop — it is outside this SDK" is now too strong: *outside GZWin* names
+**which subsystem draws a thing**, not whether a lever exists. And its test
+(b), "has no art in any dat", mis-scores a mesh — the neighbour arrow's art is
+20 S3D records, so a sprite-shaped art search returns a clean and useless zero.
+
+**The caution below now cuts both ways.** It was written against calling a
+thing *outside* the boundary on a null. Calling a thing *inside* on a null is
+the same error with the sign reversed, and the sentence just superseded was
+exactly that. **Two elements once believed to be outside the boundary are on
+the inside.** Both are worth recording, because each was put outside on a
+structural null.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
+
+**The paused screen-edge border IS a window** — `cSC4WinAlertBorder`,
+**clsid `0xCA5D3294`**, id
+`0x6A5E44B6`, vtable `0x00AB5B48`, ctor **`0x00794060`**, born full-screen and
+*never flipping visibility*, which is precisely why a visibility probe cannot
+fire on it. Its
 art exists in the shipped dats as three 120x120 sheets, `0x14315E60/61/62`,
 and staging all three scales it. Note on the two 9-slice blitters:
 `0x008D8800` serves **`GZWinBMP`'s `edgeimage=yes` path and `GZWinBtn`'s** and
@@ -101,7 +133,81 @@ exactly one caller**, so an audit of `0x008D8800`'s callers says nothing about
 the border. Neither blitter divides: each of the three drawers (`0x00794100`,
 `0x009BC325`, `0x009B05E0`) cuts its own cell first. See §4.6c.
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here.
+*Added 2026-09-01. The class identity above used to stop at the id and the
+vtable; nothing was rewritten, only the missing halves supplied.*
+
+**Where the clsid came from, and why it was never a hunt** — MEASURED
+(2026-09-01, `SimCity 4.exe` 1.1.641.0 Steam, 7,876,608 bytes, ImageBase
+`0x00400000`). The game names the class itself, in the `{clsid → class-name}`
+registry §8.1 already cites at `0xB08F78`: the row at **`.data 0xB08F70`** is
+`[0xCA5D3294][0x00A895FC → "cSC4WinAlertBorder"]` — **eight bytes, one row,
+before the address this file has quoted all along.** Two independent
+corroborations, both MEASURED, both with different failure modes from the
+registry read: the `GetGZCLSID` stub at **`0x00793EA0`** is
+`B8 94 32 5D CA / C3` = `mov eax, 0xCA5D3294; ret`; and the sole creation site
+at **`0x007EF029`** asks `GetClassObject(0xCA5D3294, 0xCA5D3290, &out)` and then,
+at `0x007EF071`, `push 0x6A5E44B6` into the id setter `vt[+0x100]` — so the
+clsid and the id this file already carried are pinned to each other in one
+basic block. That same site sizes the window from its **parent's** rect
+(`vt[+0xDC](0, 0, [parent+0xC0]−[parent+0xB8], [parent+0xBC]−[parent+0xB4])` at
+`0x007EF069`), which is the byte-level form of "born full-screen", and it is a
+**code** site: no `.UI` script is consulted anywhere on the path.
+
+**Ctor and object size** — MEASURED. The ctor is **`0x00794060`–`0x007940DC`
+(125 bytes, `0x7D`)**, `int3` padding to the next function at `0x007940E0`; it
+stamps `0x00AB5B48` at `[this+0x00]`, `0x00AB5B34` at `[this+0xD8]`, and
+`0x00AB5B0C` then `0x00AB5B20` at `[this+0xE0]`. The **object** is **`0xEC`
+bytes**, from the one factory that calls the ctor — `0x007941C0`:
+`push 0xEC` → `operator new 0x005E55E0` → `call 0x00794060` → return `obj+0xE0`.
+⚠ **`0xEC` is the ALLOCATION size, not the ctor's byte length.** Those two
+numbers were conflated once in the note that prompted this entry; both are
+recorded here so the conflation cannot recur.
+
+**THE BORDER'S OWN CELL RULE — `Plot 0x00794100` performs ONE nine-slice, and
+its cell is `(img->Width() / 3, img->Height() / 3)`.** MEASURED. This is stated
+here, in §0, and not in §4.6c, because §4.6c's note is *correct* and stays as it
+is: `0x00794100` genuinely does not serve that row, since the row's roles are
+derived **from the `.UI` corpus** and this window appears in no `.UI` script at
+all. But the consequence was a hole — a reader was told the function exists,
+told it does not serve the role row, and never told what it computes, so **the
+only full-screen nine-slice in the game had no documented cell rule anywhere in
+this file.** It has one now.
+
+`0x00794100` is **slot 88 (`vt+0x160`) of `0x00AB5B48`** — MEASURED: the only
+dword reference to `0x00794100` in the whole image is `.rdata 0xAB5CA8`, and
+`0xAB5CA8 − 0xAB5B48 = 0x160`. So it is the per-class "draw myself" of the
+slot-88 law above, reached by no direct call. Body, MEASURED:
+
+> Gate on the image `[this+0xE4]` being non-null; then on
+> `byte [ [ [this+0xE8] + 0x0C ] + 0x45C ]`; then on the device `[this+0x68]`'s
+> `vt[+0x18](0x8010)` returning true. Then call the image's `vt[+0x28]` and
+> `vt[+0x24]` and **divide EACH result by 3** — the compiler's unsigned-divide-
+> by-3 idiom `mov eax, 0xAAAAAAAB; mul; shr <hi>, 1`, emitted **twice**, at
+> `0x0079414D` and `0x00794161`. Hand the pair, the image `[this+0xE4]`, the
+> device `[this+0x68]` and the window rect `[this+0x24]` to **exactly one** call
+> of `0x008D9550`, at `0x00794198`; close with the device's `vt[+0x1C](0x8010)`.
+
+Two provenance notes on that paragraph. `vt[+0x24]`/`vt[+0x28]` are
+`cIGZBuffer::Width()` / `Height()` **by header slot order**
+(`vendor/gzcom-dll/gzcom-dll/include/cIGZBuffer.h`: three `cIGZUnknown` slots,
+then `Init`…`IsLocked`, then `Width` at slot 9 = `+0x24`, `Height` at slot 10 =
+`+0x28`) — that is CARRIED from the header, and the which-is-which pairing is
+the one part of this rule not independently pinned against the binary. **The
+rule does not rest on it:** what is MEASURED, and what matters, is that *both*
+dimensions go through the same `/3`. And "exactly one nine-slice" is not an
+absence claim — the positive control is the xref direction: `0x008D9550` has
+**exactly one `E8` caller in `.text`, `0x00794198`** (RE-MEASURED 2026-09-01,
+full `.text` scan of all `E8 rel32` targets), which is both why §0's
+"one caller" line above is still true and why one call site here is the whole
+population.
+
+So the alert border reaches the *same* `/3` as §4.6c's 9-slice role row, by a
+different code path, with the divide applied on **both axes** —
+**NINE-SLICE CELL IS TWO NUMBERS, ONE PER AXIS**, not a width-only cell. (The
+offline model was carrying the width-only form; `tools\uimap\emu\render_dialog.py`
+was corrected the same day.)
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
 
 **The region city-bubble's Mayor Rating bar IS a window** —
 `clsid=0xAA5D16A9` (`cSC4WinAuraBar`), `id=0x4A553000`, declared 102x11 in
@@ -131,23 +237,292 @@ shown, and whether it has ever shown it.
 > screen-sized**.
 
 So anything that spans the whole screen, or that paints over the 3D view
-without owning a window, is being drawn in the **render / present path**, which
-this project has never decoded and for which none of its instruments are
-scoped. Two consequences:
+without owning a window, is **not** thereby out of reach.
 
-1. **A blit-level hook on the UI buffer class can never see it** — a zero from
-   such a detector is structural, not evidence (`METHOD.md`, "a null is not
-   evidence until the instrument is proven able to see").
-2. **The only foothold would be the graphics API** — everything visible must
-   pass through the DirectDraw primary surface. That is a new subsystem, it
-   runs through dgVoodoo, and it should be gated off by default and log-only.
+> **THE SCREEN HAS THREE CATEGORIES, NOT TWO. Corrected 2026-09-01.**
+> This passage used to read: *"…is being drawn in the **render / present
+> path**, which this project has never decoded and for which none of its
+> instruments are scoped"*, with the consequence *"**The only foothold would be
+> the graphics API**"*. **SUPERSEDED, and kept here because the shape of the
+> error is the lesson:** it collapsed two different things into one bucket, and
+> the middle category — the one it erased — is where most world overlays live.
+> It was also self-refuting by the time it was written: the `AddViewObject`
+> detour (`#188 VIEWOBJ`, `src/CodePatches.cpp`) is an instrument scoped to
+> exactly that category and was already shipped.
+
+| # | Category | Who draws it | Foothold |
+|---|---|---|---|
+| 1 | A `cIGZWin` window | the window's own slot 88 "draw myself" | everything in §§1–5 of this file |
+| 2 | A **registered view object** of the 3D view | `cISC4ViewObject3D::Draw` — an ordinary vtable slot at `vt+0x0C` | **detour that slot.** Enumerate the registrations with the `AddViewObject` detour (`#188 VIEWOBJ`), which costs no new code |
+| 3 | Neither: screen-spanning paint owning no window and never registered | the render / present path, still undecoded here | the graphics API (DirectDraw primary surface, via dgVoodoo). Gate off by default, log-only |
+
+**Category 2 is decoded, and its drawer is a plain function pointer.** All
+addresses below MEASURED 2026-09-01 against `SimCity 4.exe` 1.1.641
+(7,876,608 bytes, ImageBase `0x00400000`), byte-read from the shipped image.
+
+* **The route-trace overlay** (world-overlay census row 16) paints over the 3D
+  view and owns no window — and it is category 2, not category 3. The traffic
+  query tool builds it at `0x004CA460` and registers it four instructions
+  later: `0x004CA543` `mov edx,[ecx]` · `0x004CA545` `push 0x3E8` (key) ·
+  `0x004CA54A` `push 5` (layer) · `0x004CA54C` `push eax` (the object) ·
+  `0x004CA54D` `call dword ptr [edx+0x80]`. MEASURED: the call is
+  `cISC43DRender` **`vt+0x80`** with that argument triple. CARRIED: that slot
+  resolves to `0x007C5D90` (`recovered-headers/cISC4ViewObject3D.h`, `#188
+  VIEWOBJ`) — not re-verified this run.
+* Its ctor `0x007DDD50` stamps both vptrs by hand: `0x007DDD55`
+  `lea edi,[esi+4]`, then `0x007DDD67` `mov dword [esi],0x00ABB648` and
+  `0x007DDD6D` `mov dword [edi],0x00ABB630`. So `0x00ABB648` is the object's
+  primary vtable and `0x00ABB630` lands at `[obj+0x04]`. MEASURED.
+* **THE DRAWER IS `0x007DD9B0`** = `.rdata 0x00ABB648` slot `+0x0C`. MEASURED:
+  `0x00ABB648` reads `{0x005BCB40, 0x005BE3E0, 0x005BCB30, 0x007DD9B0,
+  0x00735290}` and the sixth dword is `0x00000000` — **exactly five slots**,
+  the `cISC4ViewObject3D` shape (QI / AddRef / Release / Draw / Pick). The
+  function is `__thiscall` with **one** 4-byte argument (`0x007DD9B4`
+  `mov ebp,ecx`; `0x007DD9C4` `mov edi,[esp+0x4C]` is its only stack read) and
+  returns a byte (`0x007DDA91` `mov al,1`, `0x007DDA97` `ret 4`) — that is
+  `bool Draw(void* pDrawContext)`.
+* **The terrain is the same shape, which is why this generalises.** The
+  `cSTETerrainView3D` ctor body at `0x00756815` installs five vptrs in one
+  run. The first, `[this+0x00] = 0x00AB4480`, is a `cISC4ViewObject3D`:
+  MEASURED `{0x00752730, 0x005BE3E0, 0x005BCB30, 0x0075BFD0, 0x00752700}`,
+  bounded above not by a null but by string data (`unlevel` at `0x00AB4494`) —
+  **five slots, positively terminated**, with **Draw at `0x0075BFD0`**, also
+  `__thiscall` with one stack argument (`0x0075BFD1` `mov esi,[esp+8]` after a
+  single `push esi`). `[this+0x0C] = 0x00AB4410` is `cISTETerrainView`,
+  MEASURED at **exactly 22 slots** (slot 22 at `0x00AB4468` is the separate
+  vptr the same ctor writes to `[this+0x04]` at `0x0075681B`), matching
+  `cISTETerrainView.h`'s 3 + 19. `[this+0x14] = 0x00AB43E8` is
+  `cIGZSerializable`.
+
+Two consequences, restated:
+
+1. **A blit-level hook on the UI buffer class can never see category 2 or
+   category 3** — a zero from such a detector is structural, not evidence
+   (`METHOD.md`, "a null is not evidence until the instrument is proven able to
+   see"). This half of the old text stands unchanged.
+2. **A view object's `Draw` slot is an ordinary hook target.** The graphics API
+   is the foothold only for what is **not** a registered view object. So the
+   order of work inverts: enumerate the view-object registrations *first*, and
+   reach for DirectDraw / dgVoodoo only once the element is proven absent from
+   that list. This SUPERSEDES "the only foothold would be the graphics API".
 
 **Triage rule, before spending a session:** if an element (a) never appears as
-a window in a full-depth dump, (b) has no art in any dat, and (c) spans or
-overlays the 3D view — stop. It is outside this SDK. Write down the negatives
-and move on.
+a window in a full-depth dump, (b) has no art in any dat, (c) spans or overlays
+the 3D view, **and (d) does not appear through the `AddViewObject` detour** —
+then, and only then, is it outside this SDK. Stop, write down the negatives and
+move on. **(d) is not optional.** An element that satisfies (a)–(c) but *does*
+show up in the registrations is category 2: reachable, and its lever is a
+vtable slot, not a new subsystem. Dropping (d) is exactly what kept the route
+trace mis-attributed across three successive owners (CARRIED —
+`overlays/row-16-route-overlay.md`).
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here.
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
+
+
+### 0.1 `cSTETerrainView3D` — a fully decoded object on the OUTSIDE of the boundary
+
+The triage rule above says *stop*. That is still right for a scaling defect —
+but "outside this SDK" is not the same as "opaque", and this class is the
+proof. It is the second object decoded to the vptr level on the far side of the
+line; the first is the traffic-query **route trace** (a `cISC4ViewObject3D`,
+drawer `0x007DD9B0`, `SC4-WORLD-OVERLAYS.md` row 16 and
+`overlays/row-16-route-overlay.md`). Read the two together: they are the same
+shape, and that shape is how anything painted into the 3D view is reached.
+
+**Provenance.** Every VA, vtable, slot count and immediate below is
+**MEASURED** — re-read byte-for-byte out of the shipped `SimCity 4.exe`
+(1.1.641.0 Steam, 7,876,608 bytes, ImageBase `0x00400000`) on 2026-09-01;
+`file offset = VA − 0x400000` holds for `.text` / `.rdata` / `.data`. The two
+items that are **CARRIED** rather than re-measured here are named in place.
+
+#### The clsid, and the grep that misses it
+
+    kcSTETerrainView3D = 0xC9B84E10
+
+**CARRIED** from the vendor header
+`vendor/gzcom-dll/gzcom-dll/include/GZCLSIDDefs.h:294` — which is
+**third-party (gzcom-dll, LGPL) and must not be edited**; the constant is
+quoted here, not changed there.
+
+⚠ **That header writes it `0x0C9B84E10` — nine digits, a cosmetic leading
+zero — so a grep for the 8-digit form finds nothing in the SDK.** The same
+style is used for its neighbours (`kcSTETerrain = 0x0E98F9525`), so it is a
+house convention and not a typo. Search for `B84E10`, or for the name.
+
+The value is confirmed against the image, not merely copied. `0x007523E0` is a
+six-byte `GetGZCLSID` stub:
+
+    0x007523E0   B8 10 4E B8 C9    mov eax, 0xC9B84E10
+    0x007523E5   C3                ret
+
+It has **zero direct callers image-wide** (imm32 scan for `0x007523E0` across
+`.text`: none), because it is reached only as a vtable slot — `.rdata`
+`0x00AB43E8 + 0x14`, the sixth and last slot of the object's
+`cIGZSerializable` vptr. That is *why* the stub exists, and it is why a
+caller-count audit says nothing about it.
+
+⛔ **The name is the header's, not the game's.** The image contains no
+`cSTETerrainView3D`, no `STETerrainView` and no `TerrainView` string, and the
+648-entry `{clsid → class-name}` registry at `.data 0xB08F78` (§8.1) does
+**not** carry `0xC9B84E10`. Never cite a game string for this name.
+
+#### The object carries FIVE vptrs — and the ctor is not where a lookup lands
+
+The construction body is at **`0x00756815`** — but ⚠ **`0x00756815` is not a
+function start.** Nothing in the image references it, and a `funcs.json` or
+disassembler lookup on that address finds no function. The enclosing ctor is
+**`sub_7567C0`**, which runs base-first and then overwrites:
+
+| VA | what it does |
+|---|---|
+| `0x007567C0` | `push esi; mov esi,ecx; push edi;` **`lea edi,[esi+4]`** — the `+0x04` subobject pointer, which is why the block below writes `[edi]` and not a disp8 |
+| `0x007567C9`–`0x007567E8` | stamps the **base** vtables `0xA881C0` / `0xAB4380` / `0xA81174` / `0xA80784`, and calls the base ctor `0x0090DA1E` on `edi` |
+| `0x007567E9`–`0x00756812` | zeroes the base fields |
+| **`0x00756815`**–`0x0075683B` | **the five derived vptr stores** (table below) |
+| `0x00756841`–`0x007568C9` | field init — `[+0x64] = 0x7F7FFFFF`, `[+0x68] = 0xFF7FFFFF` (`+FLT_MAX` / `−FLT_MAX`, a bounds seed), flags `[+0x31]` / `[+0x48]` / `[+0x49]` / `[+0xB8]` set to 1, the rest zeroed |
+| `0x007568D3` | `ret` |
+
+**The five vptrs.** Each of the five `.rdata` addresses has **exactly two**
+imm32 references image-wide: this ctor block, and a mirror block at
+`0x0075698D`–`0x007569AE` inside the **destructor `sub_756980`** — which
+re-stamps the same five, releases four members in a `dec edi` loop, and
+tail-jumps to the base dtor `0x0090D990` with `ecx = this+4`. Two independent
+sites, the same five offsets: the layout is pinned, not read once and hoped
+over.
+
+| `this+` | vtable | slots | interface | how the offset was PROVEN |
+|---|---|---|---|---|
+| **`+0x00`** | **`0x00AB4480`** | **5** | `cISC4ViewObject3D` | the slot count is a hard `.rdata` boundary — `0x00AB4494` is the ASCII `"unlevel"`, not a pointer. Contents `{QI 0x752730, AddRef 0x5BE3E0, Release 0x5BCB30, Draw 0x75BFD0, Pick 0x752700}`. The 5-slot shape and the `Draw@+0x0C` / `Pick@+0x10` names are **CARRIED** from `tools/research/recovered-headers/cISC4ViewObject3D.h` (recovered 2026-08-24; that file is **ours**, not vendored) |
+| `+0x04` | `0x00AB4468` | 6 | framework base | the ctor's `lea edi,[esi+4]` and the dtor's `lea ebx,[esi+4]`. QI's **default branch** is `add ecx,4; jmp 0x009457C6` — every unrecognised iid is delegated to this subobject |
+| **`+0x0C`** | **`0x00AB4410`** | **22** | **`cISTETerrainView`** | QI at `0x00752744`: `cmp eax,0x6771477D` → `lea eax,[ecx+0x0C]`. Byte-level, not a slot-count guess |
+| `+0x10` | `0x00AB4400` | 4 | **`cIGZMessageTarget2`** | QI at `0x0075273D`: `cmp eax,0x452294AA` → `lea eax,[ecx+0x10]`, and `0x452294AA` = `kcIGZMessageTarget2`, `GZCLSIDDefs.h:77`. 4 slots = `cIGZUnknown` + one notify |
+| **`+0x14`** | **`0x00AB43E8`** | **6** | **`cIGZSerializable`** | QI at `0x00752780`: `cmp eax,0xE4FDA3D4` → `lea eax,[ecx+0x14]`, and `0xE4FDA3D4` = `GZIID_cIGZSerializable`, `cIGZSerializable.h:29`. Slots `{0x756950, 0x756960, 0x756970, Write 0x752CD0, Read 0x7527D0, GetGZCLSID 0x7523E0}` — a **6-for-6 match** with the vendor header |
+
+The counts are boundary-derived and mutually consistent:
+`0x00AB43E8 → 0x00AB4400` = 6 · `0x00AB4400 → 0x00AB4410` = 4 ·
+`0x00AB4410 → 0x00AB4468` = **0x58 = 22** · `0x00AB4468 → 0x00AB4480` = 6 ·
+`0x00AB4480` + 5 slots = the string.
+
+Two further QI facts, both from the same body: `0x00752734` answers **both**
+`0xC989F960` and the clsid `0xC9B84E10` with `this` at `+0x00`. **`0xC989F960`
+is NOT the generic view-object iid** — it has only three imm32 references in
+the whole image (`0x00752735` here, `0x007B23E5` in a second class's QI, and
+`0x007CB1C1`, a `QueryInterface(0xC989F960, &out)` consumer). Two implementers
+is not a family. Do not promote it to `GZIID_cISC4ViewObject3D`, which
+`recovered-headers/cISC4ViewObject3D.h` still records as **NOT DETERMINED**.
+
+#### ⭐ `cISTETerrainView.h` is a COMPLETE, ORDER-CORRECT vendor header — a rarity
+
+`vendor/gzcom-dll/gzcom-dll/include/cISTETerrainView.h` (**third-party,
+gzcom-dll, do not edit**) declares **19** pure virtuals and derives from
+`cIGZUnknown` (3). **3 + 19 = 22**, exactly the measured width of
+`0x00AB4410`. §0's two standing warnings about `cIGZWin.h` — one missing
+virtual, one six-for-five collapse — do **not** apply to this header.
+
+And the **order** is confirmed too, not just the count. `Pick 0x00752700` —
+the view object's own slot 4 — is a pure forwarder:
+
+    0x00752704   8B 41 0C      mov eax,[ecx+0x0C]   ; the cISTETerrainView vptr
+    0x00752707   6A 00         push 0               ; a literal false
+    ...                                             ; forwards its own four args
+    0x00752718   83 C1 0C      add ecx,0x0C         ; this = the subobject
+    0x0075271C   FF 50 0C      call [eax+0x0C]      ; slot 3 = 0x0075A230
+    0x0075271F   C2 10 00      ret 0x10             ; four dwords in
+
+Slot 3 of a `cIGZUnknown`-derived vtable is the **first declared own virtual**,
+and this header's first declared own virtual is
+`Pick(cS3DVector3 const&, cS3DVector3 const&, SC4DrawContext*, float*, bool)`.
+A four-argument outer `Pick` calling a five-argument inner `Pick` with a
+trailing literal `false` matches both signatures at once. **This header is safe
+to index against by slot.**
+
+#### What it is worth to a scaling defect: nothing — and that is the finding
+
+The class's own zoom-scale table is
+`.rdata 0x00AB4330 = {1.0f, 2.0f, 4.0f, 8.0f, 16.0f}`, consumed at exactly one
+site image-wide: `0x00751CB5  fmul dword ptr [ecx*4 + 0x00AB4330]`, inside
+`sub_751C80`, index read from `[0x00B4C70C]`. **One reference, and it is a
+terrain/water texture-coordinate multiplier.** It is not a UI lever, it is not
+shared with any UI class, and it must never be multiplied by a UI factor.
+Written down so the next reader does not have to re-find it and guess.
+
+⚠ **Narrowing §0's item 2, which is KEPT exactly as written above.** That item
+says the only foothold for anything painting over the 3D view "would be the
+graphics API". For **screen-spanning composited** output that still stands. As
+a general claim it is now too strong, and is **superseded on this point only**:
+an object registered through `cISC43DRender::AddViewObject` is reached through
+**its own vtable**, with no graphics-API hook at all — the route trace (row 16)
+and this class are two worked examples. The graphics API remains the only
+foothold for output that is **not** a registered view object.
+
+⛔ **The boundary itself has not moved.** Decodable is not scalable. Nothing in
+this subsection is a lever this mod may pull, and §0's triage rule stands
+unchanged. What changed is that the far side of the boundary now has two
+documented objects instead of zero.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
+
+### 0.2 THE TERRAIN-SCALE FALSE LEVER — `.rdata 0xAB4330` (a NEGATIVE, carrying its control)
+
+**Recorded so the next reader does not spend a session on it.** A five-entry
+power-of-two float table sitting beside a five-zoom-level game reads like the
+zoom table. **It is not**, and nothing this mod scales passes through it.
+
+| item | value | provenance |
+|---|---|---|
+| the table | `.rdata 0xAB4330` = five floats **`{1.0, 2.0, 4.0, 8.0, 16.0}`** — raw LE bytes `00 00 80 3F · 00 00 00 40 · 00 00 80 40 · 00 00 00 41 · 00 00 80 41` (i.e. dwords `3F800000 40000000 40800000 41000000 41800000`) | **MEASURED** 2026-09-01 — file offset `0x6B4330` (`.rdata` VA `0xA80000` → raw `0x680000`) |
+| its **only** consumer | `0x00751CB5` — `fmul dword ptr [ecx*4 + 0xAB4330]`, bytes `D8 0C 8D 30 43 AB 00` | **MEASURED** |
+| the containing function | **`0x00751C80`**, size `0x250` (ends at the next start `0x751ED0`), 3 callers | **MEASURED** — `tools\uimap\funcs.json` + disassembly |
+| the index | `[0xB4C70C]`, written at `0x007574E7` from `[arg+0x14]` — the view's LOD/zoom level | **MEASURED** |
+| the three callers | `0x0075671A` and `0x00756739` (both inside `0x007566C0`), `0x0075752E` (inside `0x007574D0`) — all inside the **STE terrain-view module**, whose `cISC4ViewObject3D` vtable `0xAB4480` = `{0x752730, 0x5BE3E0, 0x5BCB30, 0x75BFD0, 0x752700}` | **MEASURED** |
+
+**What `0x751C80` actually does** — body **MEASURED**; the *name* "terrain /
+water mesh texture-coordinate regenerator" is **INFERRED** from that shape, not
+from a symbol. It computes `s = [0xB0D708] × table[level]`, then walks a count
+`[0xB4C754]` of **0x20-byte vertex records** across **two** arrays
+(`[0xB4C758]`, `[0xB4C75C]`), rewriting each record's float pair at
+**`+0x10 / +0x14`** from its pair at `+0x00 / +0x08` times `s`. A four-case jump
+table at `0x751EB8` = `{0x751CD2, 0x751D3B, 0x751DB5, 0x751E40}`, selected by
+`[arg+0x18] ≤ 3`, picks the variant; two of the four mirror one coordinate about
+`[0xB4C734]` (`fld [0xB4C734]; fsub <src>; fmul s`). That is **UV regeneration
+for two world meshes under the four map rotations** — geometry texture
+coordinates. Not a widget size, not a window rect, not a sprite scale.
+
+**THE NULL, AND THE POSITIVE CONTROL IT CARRIES.** A null is not evidence until
+the instrument is proven able to see (§0 above; `METHOD.md`), so the control is
+the point:
+
+> **Instrument** (**MEASURED** this run): capstone linear disassembly of **all
+> 32,113 known function bodies** in `.text`, counting every operand — memory
+> displacement or immediate — that lands in `.rdata` (`0xA80000 … 0xB06A2A`).
+>
+> * refs into `.rdata` from anywhere: **33,633** → the scanner demonstrably
+>   *does* see `.rdata` references.
+> * refs into `.rdata` from the **UI band**: **716** (band = the 237 function
+>   bodies containing every `.text` VA this document names; §8's VAs alone give
+>   139 functions and 516 refs) → it sees them *from UI code specifically*.
+> * refs from the **UI band** into `[0xAB4330, 0xAB4344)`: **ZERO**.
+> * refs from **all of `.text`** into `[0xAB4330, 0xAB4344)`: **exactly ONE** —
+>   the `fmul` at `0x751CB5`, inside `0x751C80`, inside the terrain-view module.
+
+Not one line of the GZWin UI reaches this table, and its single reader scales
+mesh UVs. **Patching it would change terrain texturing, not UI size.**
+
+**The contrast that makes the trap obvious.** The exe's real five-zoom table is
+`.rdata 0xABACE0` = `08 00 00 00 · 10 00 00 00 · 20 00 00 00 · 49 00 00 00 ·
+92 00 00 00` = **`{8, 16, 32, 73, 146}`** pixels per tile (bytes **MEASURED**
+this run; the identification as one fixed scale per zoom level is **CARRIED**
+from this session's terrain work). Note it is **not** power-of-two — the
+suspiciously clean `{1,2,4,8,16}` is the *less* likely zoom table, not the more
+likely one.
+
+> **Law — a five-element table is not automatically the zoom table.** Entry
+> count is a coincidence generator; the *consumer's address* is the evidence.
+> Before treating any small numeric table as a scale lever, find every consumer
+> and check which band it lives in — and state the control that proves your
+> scanner could have found a consumer if one existed.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
 
 ---
 
@@ -162,11 +537,9 @@ a window descends from decides how it can be fixed at all**:
 | Window id | Role | Class / evidence |
 |---|---|---|
 | `0x6104489A` | `WinSC4App` — the app frame, first child of the main window | walked at `README.md` → architecture; `kGZWin_WinSC4App` in `UiSpike.cpp` |
-| `0x9A47B417` | The 3D city view. **Host of every in-city HUD panel, toolbar, flyout and sub-flyout.** | clsid `0x9A47B417` = `cSC4View3DWin` (registry, `DYNAMIC-CONTROLS.md` Q1); QI'd as `cISC4View3DWin` |
+| `0x9A47B417` | The 3D city view. **Host of every in-city HUD panel, toolbar, flyout and sub-flyout — AND, on a SECOND and entirely separate list, of the renderer's layered VIEW OBJECTS, which are not windows at all and which no window walk can see (§1.1a).** | clsid `0x9A47B417` = `cSC4View3DWin` (registry, `DYNAMIC-CONTROLS.md` Q1); QI'd as `cISC4View3DWin`. Second list: `cISC4View3DWin::GetRenderer()` → `cISC43DRender::AddViewObject`, MEASURED at `0x004CA54D` (§1.1a) |
 | `0xEA659793` | Region-screen host, 13 children (legend, region panel, button clusters, compass, hidden flyouts) | boot tree dump; `kGZWin_RegionScreen` comment in `UiSpike.cpp` |
 | `0xAA32BCE6` | The **Data Views fold-out panel** (compact bar + expanded pages + list flyout + a `0x0000AAAA` marker). The `kGZWin_MenuContainer` name it carries in `UiSpike.cpp` is a misnomer. | 8-child tree dump of the live panel |
-
-⚠ An intended 2026-09-01 revision of the `0x9A47B417` row of this table was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here.
 
 > **`0xAA32BCE6` is a cautionary tale, not a menu host.** A label reading
 > "hosts the entire plop-menu machinery" is enough to keep it on the sweep's
@@ -176,6 +549,123 @@ a window descends from decides how it can be fixed at all**:
 > **`0x2AAB8CC1` is likewise not the region host.** It is the **tooltip layer**
 > (class vtable `0x00AB6770`); on the region screen it
 > exists but is empty and hidden (`UiSpike.cpp` `kGZWin_RegionScreen` comment).
+
+~~The row above previously read "The 3D city view. **Host of every in-city HUD
+panel, toolbar, flyout and sub-flyout.**" — full stop, windows only.~~
+**⛔ SUPERSEDED 2026-09-01 (kept): incomplete, not wrong.** Everything it said
+about windows still holds. What it omitted is that the same view owns a second,
+disjoint list whose members are not windows, so a reader who found no window
+concluded from it — and from §9 step 1 — that the element had to be static
+`.UI`, and went looking for a script that does not exist.
+
+### 1.1a The view's SECOND list — LAYERED VIEW OBJECTS, invisible to every window walk
+
+⭐ **PARENTAGE IS A THREE-WAY QUESTION, NOT TWO.** Before asking "under
+`0x9A47B417` or under the main window?", ask whether the thing is a **window at
+all**. The 3D view's renderer keeps its own ordered list, entered by
+
+```
+cISC43DRender::AddViewObject(cISC4ViewObject3D* obj, int32_t layer, uint32_t key)
+```
+
+(declaration: `vendor\gzcom-dll\gzcom-dll\include\cISC43DRender.h:85` — third
+party, cite it, do not edit it for this).
+
+**The worked example, byte-verified 2026-09-01 against `SimCity 4.exe`
+1.1.641 (ImageBase `0x00400000`) — the route-trace overlay (overlay census
+row 16):**
+
+| Address | Bytes / instruction | What it establishes | Prov. |
+|---|---|---|---|
+| `0x004CA4EA` | `6A 2C` `push 0x2c` → `call 0x005E55E0` | the drawable is **44 bytes**, built by `new` in code | MEASURED |
+| `0x004CA4FA` | `call 0x007DDD50` | its one constructor | MEASURED |
+| `0x004CA51C` | `mov [edi+0x9C], ebx` | the tool holds it at `[tool+0x9C]`, not in any child list | MEASURED |
+| `0x004CA537` | `mov ecx, [0x00B43DD0]` | the receiver is the **renderer**, not the window | MEASURED |
+| `0x004CA545` / `0x004CA54A` / `0x004CA54C` | `push 0x3E8` / `push 5` / `push eax` | **key `0x3E8`, layer `5`**, object | MEASURED |
+| `0x004CA54D` | `call dword ptr [edx+0x80]` | vtable slot `+0x80` = `AddViewObject`: `cISC43DRender : cIGZUnknown` (3 slots) + its own index 29 = 32 → `32*4 = 0x80` | MEASURED (binary) + header (`cISC43DRender.h:85`) |
+
+**`0x00B43DD0` is the renderer, and that was checked two independent ways —
+neither of them a null.** (a) It is written at `0x006025CB` from
+`call dword ptr [edx+0x10]` on `[0x00B43DC4]`, and `+0x10` is
+`cISC4View3DWin::GetRenderer` (3 `cIGZUnknown` slots + `AsIGZWin` at `+0x0C`;
+`cISC4View3DWin.h:53`); the two neighbouring stores in the same block,
+`+0x0C`→`0x00B43DC8` and `+0x14`→`0x00B43DCC`, land `AsIGZWin` and
+`GetModelMaker` on consecutive globals, so the whole triple lines up with the
+header. (b) It is written again at `0x007AD0EB` from `[esi+0x168]`, the same
+pointer whose `+0x20` and `+0x24` fill `0x00B43DD8` / `0x00B43DDC` at
+`0x007AD0D0` / `0x007AD0E0` — `cISC43DRender::GetViewUtilities` and
+`GetLightingManager`, again at the header's slots. (All MEASURED this run.)
+
+**Why it is NOT a window — a TYPE fact, not a null.** The constructor
+`0x007DDD50` does `lea edi,[esi+4]`, stamps `0x00ABB648` at `[esi]`
+(`0x007DDD67`) and `0x00ABB630` at `[esi+4]` (`0x007DDD6D`). `.rdata`
+`0x00ABB648` holds **exactly five slots** — `+0x00` `0x005BCB40` QI, `+0x04`
+`0x005BE3E0` AddRef, `+0x08` `0x005BCB30` Release, `+0x0C` `0x007DD9B0`
+**Draw**, `+0x10` `0x00735290` Pick — and `+0x14` is `0x00000000`. That is the
+same five-slot `cISC4ViewObject3D` shape as the terrain view object's
+`0x00AB4480`, **including the identical AddRef `0x005BE3E0` and Release
+`0x005BCB30` thunks**. A 44-byte object behind a five-slot vtable cannot be a
+`cIGZWin`: it has none of `cIGZWin`'s methods and no room for its state. So the
+statement "no window walk can see it" is a consequence of its TYPE, not a
+report that a dump came back empty — and the observation that would refute it
+is a `.text` site handing this pointer to a `cIGZWin` child-add. There is none
+reachable from the class: `0x00ABB648` has **exactly two** `.text` references
+in the whole image, `0x007DDD69` (this constructor) and `0x007DDDCF` (the
+destructor). (MEASURED.)
+
+Consequences, and they are the reason this section exists:
+
+- **It has no window id.** It carries a *layer* (`5`) and a renderer *key*
+  (`0x3E8`). `GetChildWindowFromID` does not search that list, and
+  `EnumChildren` does not return its members — so it is invisible to
+  `ScalePanelsUnder`, to `ScalePanelRoot`, to `ScaleSubtree`, and to the entire
+  sweep argument of §1.2, which is written about **windows**.
+- **It has no `area=` and no `.UI` script.** It is built with `new` in code
+  (`0x004CA4EA`), so there is nothing for `build_dialog_static.py` or
+  `build_selective_safe.py` to double. Looking for its script is looking for a
+  file that was never authored.
+- **The lever is its own `Draw` slot and its own fields.** `Draw` is
+  `0x007DD9B0` = `0x00ABB648 + 0x0C`; it is `__thiscall` with one stack
+  argument (`ret 4` at `0x007DDA97`, MEASURED) and returns immediately when the
+  strand list at `[this+0x14]` is empty. Geometry lives in the object, not in
+  data: strand nodes are `0x44` bytes each (`push 0x44` at `0x007DDD7D`),
+  chained from `[this+0x14]`/`[this+0x18]`, and the vertex emitter `0x007DD410`
+  divides by the per-strand float at `[item+0x38]` (`fdivr dword ptr [ebx+0x38]`
+  at `0x007DD4A3`, MEASURED) — the width term.
+- ⚠ **`[obj+0x10]` is a VALUE THAT AGREES WITH BOTH HYPOTHESES.** The
+  constructor writes `0x40000000` = `2.0f` at `0x007DDD76`. The dash cadence
+  multiplies it by the class double `4.5` at `.rdata` `0x00ABB628` (read at
+  `0x007DD127`, its **only** `.text` reference — MEASURED). An observed `2.0`
+  therefore confirms **nothing** about any per-zoom table; it is the ctor
+  default until something is measured writing over it.
+
+**This is also the one named exception to §0's triage rule.** That rule says to
+stop when an element (a) never appears as a window, (b) has no art in a dat and
+(c) overlays the 3D view. A layered view object satisfies all three and is
+still **fully reachable** — it has a class, a constructor, a vtable, a `Draw`
+slot and per-object fields. So the rule now reads: **stop only after you have
+also failed to find it on the renderer's view-object list.** The cheap test is
+one grep of the disassembly for a call through `cISC43DRender` slot `+0x80`
+near whatever tool or manager owns the element.
+
+**⛔ §9 step 1 is SUPERSEDED by this section (its old text kept there
+verbatim).** It asks the parentage question in two branches — "Under
+`0x9A47B417` → runtime + art. Under the main window → static `.UI`. Both → 4x
+bug." Read it as **three**:
+
+> 1. **Parentage — THREE branches.** Under `0x9A47B417` **as a window** →
+>    runtime + art. Under the main window → static `.UI`. Both → 4x bug.
+>    **Registered on the 3D view as a VIEW OBJECT** (`AddViewObject`, e.g. the
+>    route trace at `0x004CA54D`, layer 5 / key `0x3E8`) → **neither** the
+>    runtime sweep **nor** `.UI`: the lever is its own `Draw` slot and its own
+>    per-object fields. (§1.1a, §1.2)
+
+**LAW: "I FOUND NO WINDOW" DOES NOT IMPLY "IT IS DATA."** A window walk that
+returns nothing has ruled out one of three homes, not two. Before concluding
+static `.UI`, rule out the view-object list as well — otherwise the next hour
+is spent hunting a script that does not exist.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
 
 ### 1.2 THE PARENTAGE RULE — the first question to ask about any panel
 
@@ -737,7 +1227,141 @@ or without any patch. **Any sizing policy must select only exact multiples.**
 | **2x, small tile** | **64** | **512** | **`-3`** | **none — see §2.4.6** |
 | 1.5x / 3x | 64/128/256 | 384 / 768 | *inexact* | overruns |
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. The revision kept the last row above and was to add, after the table, a warning that this `zoom` is the minimap's alone and a new §2.4.2a on the 3D city view's scale, a fixed five-entry table: `.rdata 0x00ABACE0` = `{8,16,32,73,146}`, recorded in `_tests/REGRESSION.md` (grep `the pixels-per-tile table at`).
+> ⚠ **THE `zoom` ABOVE IS THE MINIMAP'S, AND ONLY THE MINIMAP'S.** It is a
+> *derived* number — a shift loop over `blitSize / terrainDim` — and the
+> power-of-two constraint belongs to that derivation alone. The 3D city view's
+> zoom is a different subsystem, with a different mechanism and no power-of-two
+> anything. See §2.4.2a. **Do not carry the constraint across.**
+
+#### 2.4.2a THE 3D CITY VIEW'S SCALE — a five-entry TABLE, not a derivation
+
+**Everything below was read from the shipped `SimCity 4.exe` (1.1.641.0 Steam,
+7,876,608 bytes, ImageBase `0x00400000`) on 2026-09-01. Provenance is MEASURED
+unless a line says otherwise.**
+
+*(Revision prepared 2026-09-01, lost to commit 0961524, re-verified and applied 2026-09-23. Lines marked 2026-09-23 are corrections that re-verification made.)*
+
+**The table.** `.rdata` **`0x00ABACE0`** = five `int32` — **`{8, 16, 32, 73,
+146}`** — **pixels per map tile, one per zoom level**. Bytes at file offset
+`0x006BACE0`, byte-for-byte:
+
+```
+08 00 00 00   10 00 00 00   20 00 00 00   49 00 00 00   92 00 00 00
+```
+
+**Its owner.** The table belongs to **`cSC4CameraControl`**, clsid
+**`0xC9C628EC`** — MEASURED: the `GetGZCLSID` stub at `0x007CCBF0` is
+`B8 EC 28 C6 C9 / C3`. The *name* is MEASURED too (2026-09-23): the exe's own
+id-name table pairs `0xC9C628EC` with the string `"cSC4CameraControl"` at
+`.data 0x00B08FF8`, and the SDK's `GZCLSIDDefs.h` agrees (grep
+`kcSC4CameraControl`). ctor
+`0x007CC990` (stamps vtable `0x00ABAD18`, `C7 00 18 AD AB 00`), object size
+`0x160`.
+
+**Its one consumer.** Exactly one `.text` reference, at **`0x007CBE4D`**, inside
+`sub_007CBE40` — the camera's projection recompute:
+
+```
+0x007CBE47  8B BE 08 01 00 00        mov  edi, [esi+0x108]          ; zoom level
+0x007CBE4D  DB 04 BD E0 AC AB 00     fild dword ptr [edi*4+0xABACE0]
+0x007CBE5A  D8 8E F0 00 00 00        fmul dword ptr [esi+0xF0]
+```
+
+> **Positive control on that "exactly one".** The instrument was a whole-`.text`
+> byte scan for the little-endian dword. On the same pass it found the sibling
+> table `0x00ABACCC`'s single reference at `0x007CBEB7` and four references to
+> `kcSTETerrainView3D`'s clsid `0xC9B84E10` — so it is not blind. Its limit:
+> it sees only **absolute** references; a base held in a register is invisible
+> to it.
+
+**Five levels, and where the five comes from.** The index is `[cam+0x108]`.
+Apart from the ctor's zero-fill (`0x007CCAE3`), a scan of `0x007CB000`–
+`0x007CE400`, which holds the class's code, finds it written at exactly two sites:
+`0x007CDD3D`, in the float-argument setter `0x007CDC50`, and `0x007CDF45`, in
+`0x007CDE60`, which takes an integer zoom and the rotation. (The same scan's
+two byte writes to `[esi+0x108]`, `0x007CB591`/`0x007CB90D`, are on the view
+object that holds the camera at `[+0x8C]`, not on the camera.)
+Both setters range-check first, against `[cam+0xF4]` and `[cam+0xF8]` — at
+`0x007CDCB6`/`0x007CDCCB` and at `0x007CDEDB`/`0x007CDEEC` — and return without
+writing when the request is out of range (a reject, not a clamp; MEASURED
+2026-09-23). The ctor seeds those bounds `0.0f` (`0x007CCAB8`, from the
+register zeroed at `0x007CC998`) and `4.0f` (`0x007CCABE`,
+`C7 80 F8 00 00 00 00 00 80 40`). **Index range 0..4 — five levels, five
+constants.**
+
+⚠ **But the setters hold a sixth, doubled step** (MEASURED 2026-09-23). Before
+that range check, each folds a request above `[cam+0xF8]` and up to a third
+bound, `[cam+0xFC]` (ctor `5.0f`, `0x007CCAC8`), down to index 4 and computes
+a scale of `pow(2.0, z − 4.0)`, which it then passes to the scale setter
+`0x007CD6E0` (below; calls at `0x007CDD10`/`0x007CDF19`). The `pow` calls at
+`0x007CDC9F`/`0x007CDEB7` go to `0x009EFC60`, whose error path cites the CRT's
+`"pow"` record at `0x00B18C58`, with the double `2.0` at `0x00A80AC8` as the
+base. A request of 5.0 therefore leaves index 4 at scale 2.0, i.e. a
+projection of 146 × 2 = 292 pixels per tile. The zoom-in step
+`0x007CE080`, which asks for the next level, has no direct caller and no
+stored pointer; whether stock play ever requests more than 4.0 was not
+established.
+
+**The parallel pitch table.** `.rdata` **`0x00ABACCC`** = five `float`
+`{0.5235988, 0.6108652, 0.6981317, 0.7853982, 0.7853982}` = **30°, 35°, 40°,
+45°, 45°** — read at `0x007CBEB4` (`D9 04 BD CC AC AB 00`) with the **same**
+`edi`. Rotation is a *separate* index, `[cam+0x10C]`, bounded `0..3` at
+`0x007CDF09` (`cmp esi,3 / jg`); yaw = `(rot + 1.0) * (π/2) + [cam+0x118]`, from
+`0x007CBE98`–`0x007CBEAA` reading `0x00A81228` = `1.0f`, `0x00ABAD04` =
+`1.5707964f`, with the ctor's `[cam+0x118]` = `0xBEC90FDB` = −0.3926991 = −π/8,
+i.e. −22.5° (`0x007CCB04`; MEASURED 2026-09-23).
+
+**⚠ It is a table, not a ladder.** `8 → 16 → 32` doubles, but `32 → 73` does not
+(73/32 = 2.28), and **73 and 146 are not powers of two.** That alone rules out
+§2.4.2's shift-loop derivation for this table — no `>>`/`<<` sequence produces
+73. A reader who arrives here carrying the minimap's power-of-two constraint is
+on the wrong subsystem.
+
+**⚠ Do NOT flatten this to "no interpolation".** The number the recompute
+actually uses is `pixelsPerTile[zoom] * [cam+0xF0]` (the `fmul` at
+`0x007CBE5A`). `[cam+0xF0]` is a **separate, settable float**: setter
+`0x007CD6E0` has **7** call sites, two of them the index setters above, which
+pass `1.0f` for any request up to 4.0 (`0x007CDC5E`, `0x007CDE76`). It
+accepts a new value only while the CURRENT one lies strictly between
+`0x00A81054` = `0.0f` and `0x00A8FAF0` = `1000.0f` — the compares at
+`0x007CD700`/`0x007CD717` load `[cam+0xF0]`, not the argument, so the new
+value itself is never range-checked (MEASURED 2026-09-23). Its ctor default is `1.0f` (`0x007CCA97`, `esi` =
+`0x3F800000` set at `0x007CCA09`) — **and a ctor default of 1.0 agrees with both
+hypotheses, so an observed 1.0 is not evidence that nothing writes it.**
+MEASURED: *the table* holds five fixed entries and is never interpolated.
+NOT ESTABLISHED: that the product is always one of exactly five values.
+
+**Pan is a pure translation — the structural proof.** The look-at point is the
+3-float vector `[cam+0x44..0x4C]`. Its general setter is `0x007CD810`
+(**20** call sites across the exe): it returns without a write
+(`0x007CDA13`) if any component is non-finite or lies outside `0x00ABAC9C` =
+`-100000.0f` .. `0x00ABACA8` = `+100000.0f` — a reject, not a clamp (MEASURED
+2026-09-23) — and otherwise writes it at
+`0x007CD8F2`–`0x007CD900`, zeroes `[cam+0x50..0x58]`, and calls the
+**view-matrix** rebuild `0x007CC290` at `0x007CD91A`. It **never** calls
+`0x007CBE40`. Every zoom-change path (`0x007CDD67`, `0x007CDF82`) calls
+`0x007CBE40` *first* and `0x007CC290` second. **Law: moving the focus point
+cannot change scale, because the scale recompute is not on that path.**
+
+**Where the instance comes from, and why "pixels" is literal.** Two creation
+sites in the whole exe. (1) The region screen, `0x007ACE8B` — already documented
+as `[regionScreen+0x164]` in `REGION-SCREEN.md` (CARRIED). (2) `0x007F4273`,
+inside `sub_007F41B0`, which in the same function creates a `kcS3DCamera`
+(`0xE9C6262A`; name CARRIED from the same SDK header, grep `kcS3DCamera`) at
+`[owner+0xEC]`, stores
+the `cSC4CameraControl` at `[owner+0xF0]` (`0x007F424D`), and then hands the
+camera the host view's live width/height at `0x007F4291` → `0x007CB9B0`, which
+writes `[cam+0x12C]`/`[cam+0x130]` (ctor defaults `0x320`/`0x258` =
+**800x600**, `0x007CCB22`/`0x007CCB2C`). The camera's projection is therefore
+expressed in the 3D view's own screen pixels, which is what makes
+`{8,16,32,73,146}` literally *pixels* per tile. **INFERRED, not measured:** that
+`sub_007F41B0`'s owner is `cSC4View3DWin` itself — this run pinned only that the
+owner holds the S3D camera and feeds this camera the view size; the owner class
+was not identified.
+
+**What this subsection is NOT.** It is not a lever this mod pulls, and nothing
+here sits on the UI path. It is here so a reader hunting "the 3D view's zoom"
+stops finding §2.4.2 and stops.
 
 #### 2.4.3 The recompute `0x7A7840` MARKS; it does not PAINT
 
@@ -1536,9 +2160,17 @@ copies scaled anyway so shared-art refs stay consistent.
 
 ---
 
-## 4. Art binding — the four paths a pixel takes to the screen
+## 4. Art binding — the FIVE paths a pixel takes to the screen
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here.
+*(Retitled 2026-09-01 — this heading read "the four paths", and the store
+census below counted only type `0x856DDBAC` image resources. Both were
+narrower than the engine: a **fifth** path, **S3D model geometry**, sizes
+world overlays and is reachable by no image pass at all. The old count is
+**superseded, not deleted** — Paths 1–4 and §4.1–§4.6c are unchanged and every
+cross-reference to them still holds. The fifth path is **§4.0**, numbered low
+and placed first precisely because the census that follows is blind to it.)*
+
+*(Revision prepared 2026-09-01, lost to commit 0961524, re-verified and applied 2026-09-23.)*
 
 The store: **2,280 image resources** (type `0x856DDBAC`) in `SimCity_1.dat`
 across 10 groups. *(Reworded 2026-08-30 — this line said "2,280 PNGs".
@@ -1556,12 +2188,123 @@ denominator — distinct `{gid,iid}` pairs against distinct instances, and 330
 type-0 entries against 286 text files against the 281-file layout corpus —
 so always state which is meant.
 
+**That census is TYPE-SCOPED, and therefore structurally blind to model art.**
+MEASURED 2026-09-01: the same nine discovered archives hold **42,895** records
+of type `0x5AD0E817` (S3D) under group `0xBADB57F1` alone. Not one of them is
+type `0x856DDBAC`, not one is reachable from an `image=` ref, and not one is
+counted in any figure in this section. See §4.0.
+
 **Law: art groups `0x46A006B0` and `0x1ABE787D` are twins — and the twin
 structure is exact, with a third twin.** `0x1ABE787D` is a **strict subset**
 of `0x46A006B0`: all 743 of its instances also exist under `46A006B0` (which
 has 810). **Group `0x00000001` is a third twin**: all 62 of its members exist
 under BOTH. Overriding one without the others produces mixed-scale UI —
 covering a shared instance can mean covering three TGIs.
+
+### 4.0 Path 5 — S3D MODEL GEOMETRY, which no image pass can reach
+
+**Numbered 4.0 and placed first** because the store census above cannot see
+it. It is the **fifth** path in discovery order; Paths 1–4 keep their numbers
+(§4.1–§4.5) so that no cross-reference in this file moves.
+
+This path sits **outside the GZWin boundary of §0**: no window, no `.UI`
+script, no `imagerect`, no bitmap. The object is a world occupant and the
+model renderer draws it from **vertex positions stored in an S3D (`3DMD`)
+resource**. Its size is world-unit geometry, not pixels.
+
+**Worked example — the neighbour-connection arrow (world-overlay census
+row 15).** Everything below is MEASURED 2026-09-01 from the shipped bytes
+unless the line says CARRIED; the CARRIED lines are the in-game deltas from
+the 2026-08-31 probe run recorded in
+`tools\research\overlays\row-15-neighbor-connection-arrows.md`.
+
+* **The model family — MEASURED.** Type `0x5AD0E817`, group `0xBADB57F1`,
+  instances `0x29F10000`–`0x29F10430`: **exactly 20 records**, every one in
+  `SimCity_1.dat`, every one magic `3DMD`. The instance encodes the variant —
+  `0x29F10<Z><R>0` with `Z` = zoom−1 (0–4) and `R` = rotation (0–3) — so the
+  family is **5 zooms × 4 rotations**. *Positive control for that "20": the
+  same scan over the nine discovered archives returns 42,895 S3D records under
+  group `0xBADB57F1`, so 20 is a filter result and not a dead instrument.*
+* **Vertex counts and extents — MEASURED** (decoded `VERT` chunks;
+  `tools\dbpf\row15-probe\s3d_family.py`):
+
+  | zoom | payload | vertices | extents at rot 0 — dx, dy, dz |
+  |---|---|---|---|
+  | 1 | 336 B | 4 | 7.624, 12.704, 3.158 |
+  | 2 | 336 B | 4 | 4.784, 12.641, 1.981 |
+  | 3 | 420 B | 7 | 1.456, 4.805, 11.648 |
+  | 4 | 420 B | 7 | 1.456, 4.805, 11.648 |
+  | 5 | 622 B rot 0/3, 590 B rot 1/2 | 15 rot 0/3, 14 rot 1/2 | 1.456, 4.753, 11.934 |
+
+  146 vertices across the family ⇒ **438 position float32s**. **Rotation is
+  BAKED INTO THE VERTICES**, not applied by a transform: at zooms 3–5 the
+  rot-1/rot-3 records are the rot-0/rot-2 records with `dx` and `dz`
+  exchanged. The zoom-1 and zoom-2 members are **camera-tilted plates** whose
+  axes do not mean what the zoom-3..5 boxes' axes mean — which is why a probe
+  on this family must scale **uniformly**, or it measures a different thing at
+  different zooms.
+* **The binding — MEASURED.** The exemplar
+  `{0x6534284A, 0xC977C536, 0x29F10000}` is a 180-byte binary `EQZB1###`
+  record in `SimCity_1.dat` named `UI8x1x3_ConnectArrow_29F1`. Its property
+  `0x27812821` (RKT) = `{0x5AD0E817, 0xBADB57F1, 0x29F10000}` — **the exemplar
+  names its model by TGI, and that is the entire art binding.** No `image=`,
+  no code-assembled TGI, no `sc4://` URL: Paths 1–4 all miss it.
+* **The near-miss — MEASURED.** The same exemplar carries property
+  `0x27812810` (**OccupantSize**) = float32 `{8.0, 3.0, 1.0}` at record bytes
+  `0x58`/`0x5C`/`0x60` (raw `00 00 00 41 00 00 40 40 00 00 80 3F`). The exe
+  reads it: `push 0x27812810` — opcode `68` at `0x004A25D2`, **immediate at
+  `0x004A25D3`** — then `mov ecx,eax` / `call dword ptr [edx+0x24]`. Two
+  cautions from the same scan. The immediate occurs **eight** times in
+  `.text` — `0x4A25D3`, `0x4A2B42`, `0x4A3DBE`, `0x5EF5F7`, `0x5EFF86`,
+  `0x698552`, `0x69BD5B`, `0x69C6AB` — so an xref count on this property is
+  not a count of consumers. And the exemplar's **name** orders the numbers
+  `8x1x3` while the **property** holds `{8, 3, 1}`: the name is not a safe
+  restatement of the property, and neither one reaches the plate.
+* **Which of the two sizes the plate — CARRIED** (in-game 2026-08-31; not
+  re-derivable offline). One probe DAT changed both candidates at once, in
+  shapes that cannot be confused with each other: all 438 position floats
+  ×3.0 (**changes SIZE**), and OccupantSize `{8,3,1}` → `{8,24,1}`, ×8 on a
+  single component (**changes SHAPE**).
+  - **Geometry fired.** Predicted a uniform ×3.0; measured **×2.99 wide,
+    ×3.05 tall**, aspect preserved 2.42 → 2.41. **The plate is sized by its
+    own S3D model vertices.**
+  - **OccupantSize did not.** A ×8 on one component left an aspect change of
+    **0.4%** — i.e. absent. **OccupantSize does not reach the rendered
+    geometry.**
+  - **The control that makes that negative real.** A third override in the
+    same DAT moved an unrelated S3D (the zot ring) by **×3.00**. An S3D we
+    authored and loaded from `Plugins` therefore does reach the model
+    renderer, so the OccupantSize null is a measurement and not a delivery
+    failure. Without that row the negative would have been worthless.
+  - **Still unknown, recorded rather than guessed:** what *does* consume
+    OccupantSize. Footprint, collision and placement are all candidates and
+    none of them is identified.
+
+⭐ **Law: A PROPERTY THE FACTORY DEMONSTRABLY READS IS NOT A PROPERTY THAT
+REACHES THE PLATE.** An xref on a property read is evidence about the **data**
+path, not about rendering. `0x27812810` **is** read, at a byte-verified site,
+and the rendered arrow does not move when its value changes. To settle "does
+X size this?" you need a probe that changes X *and* something on screen that
+disagrees — plus a positive control proving the delivery channel works, or the
+negative is a fake null. This is the same shape as the `{g,i}` law in §4.1: a
+brace pair that *looks* like an art ref, and a property read that *looks* like
+a sizing input, are both matches on the wrong question.
+
+**Fixable at:** the **S3D geometry**, staged in a `Plugins` DAT by multiplying
+the position float32s. There is **no pixel immediate and no zoom table of its
+own on this path**, so no `.text` byte patch, no `imagerect` and no art pass
+can reach it — and equally, none of this project's art or runtime-scale
+machinery can break it. *(Noted 2026-09-23: the 3D view's pixels-per-tile
+table, §2.4.2a, does sit on this path — the row-15 write-up normalises the
+arrow's widths by its 146 and 73 — but it scales every world occupant alike,
+so it is no lever for this one.)* Scale **uniformly** (the zoom-1/2 tilted plates above are why).
+`tools\dbpf\row15-probe\s3d_family.py` — `position_offsets()` /
+`scale_positions()` — rewrites values in place, so no chunk length, vertex
+count or record length can move; `build_row15_probe.py` in the same folder is
+the probe builder and documents all five overrides and the checks that refused
+its first version. Full decode:
+`tools\research\overlays\row-15-neighbor-connection-arrows.md`. Census row:
+`SC4-WORLD-OVERLAYS.md` row 15.
 
 ### 4.1 Path 1 — `.UI`-referenced TGI
 
@@ -1869,10 +2612,10 @@ still come out even.** Which divide that is depends entirely on what the sheet
 | ROLE | What the engine does | Sizing rule for a scaled sheet | Derived from |
 |---|---|---|---|
 | **N-state strip** (buttons, ItemIcons, checkboxes) | `cell = imageWidth / N`, state selected by index. Cut **HORIZONTALLY ONLY** | ⚠ **THIS CELL DESCRIBES PRE-#171 / PRE-#177 BEHAVIOUR AND BOTH HALVES HAVE BEEN OVERTAKEN BY THE CODE IT CITES. Re-measure before acting on it.** **Width, as the tool works today:** `ScaleDim` (`tools\upscale\Upscale2x.cs`, grep `private static int ScaleDim`) takes a **cell-first** branch BEFORE `CellUnit` is ever consulted — grep `CELL-FIRST STRIP SIZING` (#171/#165) and the guard `if (stripAxis && sStripStates > 1 && v % sStripStates == 0)`, which returns `sStripStates * R(v/sStripStates, f)` and never falls through to the snap. `sStripStates` arrives per file from `cell-strips.txt`, so **N DOES drive the width snap for every listed strip**. The code's own worked examples contradict the historical text: Zoom Out 84px/4 states is `4 * R(21*1.5) = 128`, cell **32** — EXACT, not 132/cell 33; the 8-state radiocheck 136px is `8 * R(17*1.5) = 208`, cell **26** — EXACT, so the corpus's two 8-state strips (`1abe787d 14416245` and `46a006b0 14416315` in `cell-strips.txt` — grep the TGI, not a line number) ARE now snapped to a multiple of N. `CellUnit` (grep `private static int CellUnit`) is still the LCM of whichever of `kCellCounts = {3,4}` divide the 1x dimension and still never sees N — it now governs only the sheets the cell-first branch does not claim. **Height, as the tool works today:** exact when `sNoHeightSnap` is set (grep `private static bool sNoHeightSnap`), which `--height-exact-group` and `--height-exact-strips` set. **The corpus rebuild now passes `--height-exact-strips` twice** — grep `--height-exact-strips` in `upscale\Rebuild-Corpus.ps1`: the #177 derived list, then the #185 hand-authored slab list, which the parser appends. The historical claims that the rebuild "passes neither", that heights "ARE cell-snapped", and that passing the flag is "a forbidden cure" are therefore all overtaken, and the `gate_btn_undercover.py --tier 15x` figures once quoted here (`{(0,1):1, (1,0):1, (0,2):347, (0,6):3}`) predate both flags — do not requote them without a fresh run. Only **ItemIcons** take the exact height via `--height-exact-group 6A386D26` in the ItemIcon builders. | `upscale\find_cell_strips.py` — reads **the `.UI` that BINDS each sheet**. 193 of 2206. ⚠ The note that stood here — that the derived list reaches the per-state SAMPLER and `--height-exact-strips` **only**, and "never reaches `CellUnit`, so N does not drive the width snap" — is **half true and half overtaken**: it still never reaches `CellUnit`, but since #171 it reaches `ScaleDim`'s cell-first branch through `sStripStates`, which is precisely N driving the width. The sampler is `BuildSampleMap` (grep `private static int[] BuildSampleMap`), fed `sStripStates` from `UpscaleNearest` |
-| **9-slice frame** (`blttype=edge`, `edgeimage=yes`) | `cell = (img->Width()/3, img->Height()/3)`; corners unstretched, edges stretch only *along* the run. **Note on the drawer:** `0x00794100` does not serve this row — it is `cSC4WinAlertBorder`'s own slot-88 draw, a code-created full-screen window that appears in **no `.UI` script at all**, so it can never own a role derived *from* the `.UI` corpus. The drawer for this row is the widget's own slot-88 draw: **`GZWinBMP` → `0x009BC325`** (EDGE branch, entered on flag bit 8 of the holder at `[this+0xD8]` via its `vt[10]`), **`GZWinBtn` → `0x009B05E0`** (its draw's nine-slice branch). **Note: each of the three drawers performs the `/3` ITSELF and hands an already-cut cell to a blitter that contains no divide** — `0x008D9550` for the alert border (one caller image-wide), `0x008D8800` for `GZWinBMP` and `GZWinBtn`. The arithmetic in this row: `0x009BC325` divides the *source rect*, which for a sheet with no `imagerect` **is** the image's natural rect. | snap to a multiple of **3, and 3 alone** | `upscale\find_nine_slice.py` |
+| **9-slice frame** (`blttype=edge`, `edgeimage=yes`) | `cell = (img->Width()/3, img->Height()/3)`; corners unstretched, edges stretch only *along* the run. **Note on the drawer:** `0x00794100` does not serve this row — it is `cSC4WinAlertBorder`'s own slot-88 draw, a code-created full-screen window that appears in **no `.UI` script at all**, so it can never own a role derived *from* the `.UI` corpus. The drawer for this row is the widget's own slot-88 draw: **`GZWinBMP` → `0x009BC325`** (EDGE branch, entered on flag bit 8 of the holder at `[this+0xD8]` via its `vt[10]`), **`GZWinBtn` → `0x009B05E0`** (its draw's nine-slice branch). **Note: each of the three drawers performs the `/3` ITSELF and hands an already-cut cell to a blitter that contains no divide** — `0x008D9550` for the alert border (one caller image-wide), `0x008D8800` for `GZWinBMP` and `GZWinBtn`. The arithmetic in this row: `0x009BC325` divides the *source rect*, which for a sheet with no `imagerect` **is** the image's natural rect. | **Law: THE NINE-SLICE CELL IS TWO NUMBERS, ONE PER AXIS.** The cell is `(W/3, H/3)`, so **BOTH dimensions must snap to a multiple of 3 INDEPENDENTLY** — DERIVED in one step from the two divides measured below. A scaled sheet that is `/3`-clean in width and *not* in height is **broken**: it satisfies one of the two divides the engine performs and lets the other truncate, so the horizontal seams land where the `.UI`'s scaled geometry no longer expects them. ⚠ **THE CLASSIC IMPLEMENTATION ERROR IS A WIDTH-ONLY CELL** — one quotient taken from the width and applied to both axes. It is invisible on a square sheet and wrong on every other one, which is exactly why it survives review. **MEASURED 2026-09-01 from the shipped `Apps\SimCity 4.exe` (ImageBase `0x00400000`): all three drawers form the two quotients SEPARATELY.** `GZWinBMP` EDGE branch, entered by the `jne` at `0x009BC3B7` → `0x009BC411`: `idiv ecx` at `0x009BC418` and again at `0x009BC423`, hitting the `r` and `b` of the source rect based at `[ebp-0x10]` (`[ebp-8]`, `[ebp-4]`), each storing back over its own operand, off ONE shared `push 3; pop ecx` at `0x009BC415`/`0x009BC417`; the cut rect goes to `0x008D8800` at `0x009BC439`. `GZWinBtn`: **two separate `push 3`** (`0x009B05E5`, `0x009B05EE`), `idiv esi` at `0x009B05E9` on `(r−l)` and `idiv ebx` at `0x009B0602` on `(b−t)`, each re-based at `(l,t)` (`0x009B0604`, `0x009B060A`) — a DIFFERENT expression from `GZWinBMP`'s, so never carry one to the other. Even `cSC4WinAlertBorder`'s `0x00794100` is per-axis: two `0xAAAAAAAB` magic-multiply `/3` at `0x0079414D` and `0x00794161`, one per getter (`vt[+0x28]` called at `0x00794148`, then `vt[+0x24]` at `0x0079415C`); it sits at vtable `0x00AB5B48` **slot 88** (`+0x160`, i.e. `.rdata 0x00AB5CA8`), and that is the ONLY `.rdata` dword equal to `0x00794100` in the whole section. The blitters underneath still divide by nothing: a linear sweep from entry to first `ret` finds no `div`/`idiv` and no `0xAAAAAAAB` in `0x008D8800` (323 instructions) or `0x008D9550` (277). ⚠ **SUPERSEDED, KEPT (annotate, never rewrite):** until 2026-09-01 this cell read only *"snap to a multiple of **3, and 3 alone**"*. The COUNT was right; the SHAPE was missing — and the shape is what a reader implements. **THE COST THAT PROVED IT — THE MODEL SHIPPED THE ERROR.** `tools\uimap\emu\render_dialog.py`'s `nine_slice()` used a WIDTH-ONLY cell: one `img->Width()/3` applied to both axes, then clamped by `im.height // 2`, which COUPLED the axes and crushed the horizontal cell as well. Corrected 2026-08-31; its docstring keeps the superseded read verbatim. The offline model — whose entire job is to reproduce the shipped code — therefore had the wrong SHAPE of the most-used blit rule in the engine. Blast radius CARRIED from that docstring, with the three sheet sizes re-measured this run out of `SimCity_1.dat`: `{46a006b0,4c0f0d31}` 193×46, engine `(64,15)` vs old `(23,23)`; `{46a006b0,144161f1}` 360×144, engine `(120,48)` vs old `(72,72)`; `{1abe787d,8c0e0f2d}` 411×371, engine `(137,123)` vs old `(137,137)`. **CONTROL — THE MODEL IS A THIRD IMPLEMENTATION OF THIS RULE AND OWES §4.6c.1'S DISCIPLINE:** `render_dialog.py`'s cell must equal `(W/3, H/3)` per axis for every entry in `nine-slice.txt`, checked and not assumed — 21 of those 30 sheets are square, so a width-only model passes all 21 silently and a square-only dialog test can never see it. | `upscale\find_nine_slice.py` — **MEASURED 2026-09-01: 30 entries, all 30 resolved out of `SimCity_1.dat`; 9 are NON-SQUARE, and `{1abe787d,8c0e0f2d}` 411×371 divides by 3 in WIDTH and NOT in HEIGHT.** The axes are independent in the stock corpus, not only in the code. ⚠ The width-only shorthand still survives in this tool's own prose — `img->Width()/3` appears twice in `find_nine_slice.py` (its module docstring, and the header line it EMITS into `nine-slice.txt`). That is a COMMENT, not code: fix the wording, and never infer the tool's behaviour from it. |
 | **Tiled background** (`blttype=tiled`) | src-follows-dst: the source is **repeated** across the destination. No divide at all | **Law: snap NOTHING.** Its only contract is with its WINDOW, and the window scales by a plain round | `no-snap.txt` is generated by **`upscale\find_no_snap.py`** — the generated file says so on its own header line, `Generated by tools\upscale\find_no_snap.py` — and its scope is `blttype=tiled` **OR** a sheet a `.UI` binds 1:1 to a window of exactly its 1x size, in either case only if no `.UI` ever draws it as a `GZWinBtn` state or a 9-slice and it is absent from `cell-strips.txt`/`nine-slice.txt` (grep `Qualifies here if` in `find_no_snap.py`: the module docstring states all four conditions). It held **121 entries** when this row was written and holds **233** today, so recount it (`grep -vc "^#" no-snap.txt`) rather than quoting either figure. This is the file the corpus rebuild binds to `--no-snap`; the exe parses only `--cell-strips`/`--nine-slice`/`--no-snap` (grep each flag string in `Upscale2x.cs` — one `string.Equals` arm each) |
 
-⚠ An intended 2026-09-01 revision of the **9-slice frame** row's last two cells was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. The per-axis law its new cell opened with — the nine-slice cell is two numbers, `(W/3, H/3)` — is stated in the `nine_slice` docstring of `tools/uimap/emu/render_dialog.py` (grep `THE CELL IS TWO NUMBERS, ONE PER AXIS`).
+*(**9-slice frame** row of the table above, last two cells: revision prepared 2026-09-01, lost to commit 0961524, re-verified and applied 2026-09-23.)*
 
 **Law: DERIVED LISTS, NEVER HAND-LISTS.** Every one of those three lists is
 generated from the `.UI` corpus. The counter-example is measured: scoping the
@@ -2080,14 +2823,17 @@ re-lay* moves them anyway, data pre-scale cannot win — patch the re-lay
 
 ---
 
-### 4.8 The three "role unknown" code-created windows (register #17) — Photo Album / recorded-animation export cluster
+### 4.8 The three "role unknown" code-created windows (register #17) — an image-file browser, a RecordedAnimations browser, and the Snapshot capture frame
 
-⚠ An intended 2026-09-01 revision of this section was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. The identification its new title carried is recorded elsewhere: `0x85202C0E` is the Snapshot / camera-mode capture frame (vtable `0x00AB9BF8`), not an export-resolution preset picker — CARRIED from `_tests/REGRESSION.md` (grep `is the SNAPSHOT / CAMERA MODE capture frame`) and `tools/research/FINAL-3-PERCENT.md` (grep `is not an export-resolution preset picker`).
+*(Revision prepared 2026-09-01, lost to commit 0961524, re-verified and applied 2026-09-23. Lines marked 2026-09-23 are corrections that re-verification made.)*
 
 Static disasm (`tools\research\disasm_at.py`, `SimCity 4.exe` 1.1.641.0 Steam,
 ImageBase `0x400000`), byte-verified against the shipped exe. Two of the three
 are now fully identified; the third's builder function is identified but its
-id↔vtable link is not.
+id↔vtable link is not. [⚠ **CORRECTED 2026-09-23:** all three are identified —
+the third is the Snapshot capture frame below, whose id↔vtable link
+`0x85202C0E`↔`0x00AB9BF8` is MEASURED. What stays open is the id of the Photo
+Album window, vt `0xAB9980`.]
 
 **`0x9AEDEF7C` — CONFIRMED: an image-file Open/Browse dialog's content list.**
 Its sole `SetID` site is inside a 656-byte vtable-only method at `0x79D8D0`
@@ -2138,7 +2884,8 @@ opens it. **Conclusion: `0xA802B4EB` is the load/browse dialog for SC4's
 recorded camera-path ("movie") feature, defaulting to
 `...\RecordedAnimations\`.**
 
-**`0x85202C0E` (register-cited vt `0xAB9980`, `sub_7BC350`) — PARTIAL.**
+**`sub_7BC350` / vt `0xAB9980` (register-cited as `0x85202C0E`) — the Photo
+Album panel. The id pairing is REFUTED; see the supersede notice below.**
 `sub_7BC350` itself is fully identified: it reads exemplar/property values
 `0x6A8CD21F, 0xAA8CD25D, 0xAA8CD14A, 0xAA8CD139, 0x4A8CD356(×2), 0x6A8CD222,
 0x8A8CC775(×2), 0xAA8CC64E, 0x8A8CC773, 0x4A8CD34E, 0xA8CD3FF, 0xA8CD401,
@@ -2154,37 +2901,136 @@ Album cluster) from a routine that also centers a 640×480 (`0x280×0x1E0`)
 dialog on screen. **`sub_7BC350` is the Photo Album panel's
 content/backdrop-populate routine — that half is closed.**
 
-What did NOT close: the literal id `0x85202C0E` occurs exactly twice in the
-whole image (`68 0E 2C 20 85`, `.text` only, no `.rdata`/`.data` hits) —
-`0x7B753B` and `0x7B7AA7` — and both are `GetChildWindowFromID`-style lookups
-belonging to a *different* get-or-create pair (`sub_7B7530`/`sub_7B7480`)
-whose constructed object's own vtable is stamped **`0x00AB9BF8`**, not
-`0xAB9980`. `0xAB9BF8` and `0xAB9980` are siblings, not the same class: they
-share ~85 of the first 90 vtable slots byte-for-byte (both inherit the
-documented `cIGZWin` layout — identical GZPaint at slot 87) but diverge at
-slots 0–2 (QI/AddRef/Release equivalents), 3, 4, 5, 55, 62, and 88 (Plot —
-`0x7C0220` for the `0xAB9980` sibling vs `0x7B6B30` for the `0xAB9BF8`
-sibling, matching the register's "Plot is per-class" note). `0xAB9BF8`'s
-own `OnCreate` (vtable slot 4, `0x7B7A80`, the function that does
-`SetID(0x85202C0E)`) builds a **standard image/video export-resolution
-preset list** — `160×120`, `320×240`, then successively larger 4:3-ish
-presets gated by comparisons against a live width up to `2048×~1536`,
-via repeated calls to `0x4467A0(w,h)` — behaviourally an "export size"
-picker, which fits the same Photo-Album/recorded-animation-export feature
-family as the other two windows above, but is not itself proven to be
-`sub_7BC350`'s object.
+**⚠ SUPERSEDED 2026-09-01 — KEPT FOR HISTORY.** Two readings this section
+used to carry are now dead, and both are reproduced here so the record still
+shows what was believed and why it was wrong.
 
-**Net:** the id↔vtable pairing `0x85202C0E`↔`0xAB9980` printed in the
-original register entry could not be re-derived by static means in this
-pass — no code path was found connecting `sub_7BC350`'s caller (`0x7BCFA1`)
-to a literal `SetID(0x85202C0E)`, and the two places that literal DOES occur
-belong to the sibling vtable `0xAB9BF8` instead. `sub_7BC350`'s role (Photo
-Album content populate) is solid regardless of which id its window carries.
-**To close the id↔vtable link fully needs a live instrument**: break on the
-`SetID` call inside whichever function actually creates `sub_7BC350`'s
-target window (or dump `[this]` of the window returned by the property-`
-0xA8CD3FF` lookup at `0x7BCF3C` while the Photo Album panel is open
-in-game) — a static `.text`/`.rdata`/`.data` sweep cannot see a
+*(1) The register's id↔vtable pairing `0x85202C0E`↔`0xAB9980`* — REFUTED, and
+the refutation stands. The literal id `0x85202C0E` occurs exactly twice in the
+whole image (`68 0E 2C 20 85`, `.text` only, no `.rdata`/`.data` hits) —
+`0x7B753C` and `0x7B7AA8` (byte offsets of the immediate; the `push` opcodes
+are at `0x7B753B` and `0x7B7AA7`) — re-scanned and MEASURED 2026-09-01. Neither
+site involves `0xAB9980`: `0x7B753B` is the lookup in the get-or-create
+`sub_7B7530`, which builds its object with the ctor `sub_7B7480` (stamp
+`mov dword ptr [esi], 0xab9bf8` at `0x7B748B`, MEASURED), and `0x7B7AA7` is the
+`SetID` inside that class's own `OnCreate`, `0x7B7A80` (MEASURED 2026-09-23).
+`0xAB9BF8` and `0xAB9980` remain siblings, not the same class: they share
+**81** of the first 90 vtable slots byte-for-byte and diverge at exactly nine —
+slots 0–2 (QI/AddRef/Release equivalents), 3, 4, 5, 55, 62, and 88, the
+per-class draw `GZPaint` (`0x7C0220` for the `0xAB9980` sibling vs `0x7B6B30`
+for the `0xAB9BF8` sibling). Slot 87 (`GetNotificationTarget`, `0x0099BE4C`)
+and slot 89 (`Plot`, `0x0099BA07`) are shared. MEASURED 2026-09-23: the
+2026-08 pass this block carried read "~85 of the first 90", "identical
+GZPaint at slot 87" and "88 (Plot — …)"; the count is 81, and those two
+names are the ones §2.1's slot table corrects.
+
+*(2) The 2026-08 reading of `0xAB9BF8`'s `OnCreate`* as **"a standard
+image/video export-resolution preset list … behaviourally an 'export size'
+picker, which fits the same Photo-Album/recorded-animation-export feature
+family"** — WRONG in its two load-bearing words. The preset table is real (it
+is re-measured below), but the window is not a *picker* and it is not in the
+Photo Album family. Every record in that table is applied to **the window's
+own rectangle**, so these dimensions are export pixels, not list-widget
+geometry. A reader acting on the old sentence would have let the scaler
+multiply them. The same reading gave this section its title until 2026-09-01:
+"… — Photo Album / recorded-animation export cluster".
+
+**`0x85202C0E` (vt `0x00AB9BF8`, ctor `0x7B7480`) — CLOSED 2026-09-01: the
+Snapshot / camera-mode CAPTURE FRAME.** Everything in this block was read out
+of `SimCity 4.exe` 1.1.641.0 Steam (ImageBase `0x400000`) on 2026-09-01 with
+`tools\research\disasm_at.py` plus raw dword/C-string reads, unless a line
+says otherwise.
+
+* **The game's own name for it (MEASURED).** `.data 0xB09308` =
+  `{0x6A935E4B, 0x00A889FC}` and `.rdata 0xA889FC` =
+  `"kCommandID_OpenSnapshotDialog"`, read as raw bytes. The immediately
+  preceding entry `.data 0xB09300` = `{0x6A935E45, 0x00A88A1C ->
+  "kCommandID_OpenPhotoAlbumDialog"}`. **Snapshot and Photo Album are two
+  different commands in the game's own registry** — that pair of adjacent
+  rows is the byte-level reason the "Photo-Album family" placement had to go.
+
+* **Two byte-verified routes in (MEASURED).** (1) direct:
+  `0x7B01F1  cmp edi, 0x8A1DA655` → `0x7B0253` → `call 0x7B7530` with
+  `arg1 = [esi+0x48]`, `arg2 = 1`. (2) via the command bus: the city-dock
+  button switch at `0x77449B  cmp eax, 0x8A1DA655` → `0x7744E4` →
+  `push 0x6A935E4B; call [eax+0x50]`, and the command handler at
+  `0x7F2EA6  cmp edi, 0x6A935E4B` → `0x7F2ED8` → `call 0x7B7530(win, 0)`.
+  Both switches route a *different* dock button, `0xCA1DA670`, to
+  `0x6A935E45` (`cmp` at `0x774504`, dispatch at `0x774517`) and to
+  `sub_7BDD60` (`cmp` at `0x7B0296`, call at `0x7B02AC`) — that is the
+  Photo Album, and it never reaches `0x7B7530`.
+
+* **`OnCreate` is `0x7B7A80`, vtable slot 4 (MEASURED).** `.rdata 0xAB9C08`
+  reads `0x007B7A80` as a raw dword — which is why the function has no direct
+  callers. It does `SetID(0x85202C0E)` at `0x7B7AA7` (`vt+0x100`) and
+  `SetFlag(0x10000 /* WinFlag_PrivateBuffer */, 0)` at `0x7B7ABF`
+  (`vt+0x110`).
+
+* **The preset table is real (MEASURED).** When the vector at
+  `[this+0xEC]`/`[this+0xF0]` is empty, `OnCreate` fills it with 8-byte
+  `{width,height}` records through `0x4467A0` — which is a plain `push_back`:
+  it copies two dwords and does `add dword ptr [ecx+4], 8` (`0x4467AC`–
+  `0x4467BF`). Emission order, immediates read off the listing: `160x120`,
+  `320x240`, `480x360`, then `640x480`, `800x600`, `1024x768`, `1280x1024`,
+  `1600x1200`, `1800x1350`, `2048x1536`, each gated by `cmp ebx, <its own
+  width>` where `ebx` is the **live parent width** (`vt+0x2C` then `vt+0xA4`
+  / `vt+0xA8` — named `GetParentWin` / `GetW` / `GetH` by INFERENCE from
+  `cIGZWin.h`; the arithmetic itself is MEASURED — falling back to `640x480`
+  when there is no parent, `0x7B7B84`), and finally one record equal to the
+  live parent size itself (`0x7B7CD3`–`0x7B7CE6`).
+
+* **The decisive fact: the records are applied to the window ITSELF
+  (MEASURED).** `sub_7B6D90(index)` clamps `index` against the record count
+  `([this+0xF0] - [this+0xEC]) >> 3`, stores it at `[this+0xE0]`, loads
+  `{w,h} = records[index]` (`0x7B6E03`/`0x7B6E06`), fetches the current rect
+  through `vt+0xBC`, and builds a rect of **exactly `w × h`** centred on the
+  old one — `x = (l+r)/2 − w/2`, `right = x + w`, likewise vertically
+  (`0x7B6E0A`–`0x7B6E53`) — then hands that rect to `vt+0xD8`
+  (`0x7B6E57`). `OnCreate` ends by calling it with `count−1`
+  (`0x7B7E73`–`0x7B7E86`), i.e. the full-parent record, and `sub_7B7530`'s
+  second argument selects `arg2 − 1` on the create path
+  (`0x7B759B`–`0x7B75A7`). Before that it also does the same thing by hand:
+  `GZWinMoveTo` (`vt+0xE0`) to the centred origin and `SetSize` (`vt+0xD4`)
+  to the last record's `w,h` (`0x7B7DCF`–`0x7B7E2B`).
+  **So this window's width and height ARE the capture resolution in pixels.**
+  Scale it by `f` and you have changed the number the user picked.
+
+* **It has no children (MEASURED).** The whole `OnCreate` body
+  `0x7B7A80`–`0x7B7E9B` (1,052 bytes) contains **zero**
+  `call dword ptr [reg+0x38]` — counted over the full disassembly listing,
+  which is the positive control: the same listing does show twelve other
+  distinct `call dword ptr [reg+0x…]` slots, so the scanner could have seen a
+  `+0x38` had one been there. Besides the preset vector it fills three
+  members: a font at `[this+0xDC]` (`0x7B7AC5`–`0x7B7B0D`; "font" is INFERRED
+  from the fallback, which is built from the literal `"Arial MT"` at
+  `0x00AA26CC`), the once-only flag byte `[this+0xD8]` (tested at `0x7B7A86`,
+  set at `0x7B7E57`) — both MEASURED 2026-09-23 — and the
+  `cRZString` at `[this+0xF8]` (`cRZString` vtable `0x00A80810`, stamped by
+  the ctor at `0x7B7509`), filled at `0x7B7D05`–`0x7B7DB1` with three
+  strings fetched through `0x603040` with the key pairs
+  `{0x6A231EAA, 0x2A56DE25}`, `{0x6A231EAA, 0xCA56DE46}` and
+  `{0x6A231EAA, 0x0A56DE50}` (the immediates are MEASURED; reading them as a
+  localized group/instance string lookup is INFERRED), each followed by an
+  append of `0x0A` — a three-line newline-joined caption.
+
+* **Already shipped, do not undo.** `0x85202C0E` sits in `kNeverScaleIds`
+  (`src/UiSpike.cpp`, grep `THE SNAPSHOT / CAMERA MODE CAPTURE FRAME`), shipped
+  v4.7.2. This is the one window in
+  §4.8 whose **pixels are data**, not decoration.
+
+**What survives from the old entry:** `sub_7BC350` is still the Photo Album
+panel's content/backdrop-populate routine, with everything above the
+supersede notice intact — CARRIED from the 2026-08-30 adjudication, not
+re-measured this pass. What died is only the *link* from that routine to
+`0x85202C0E`. They are separate features: separate dock buttons
+(`0xCA1DA670` vs `0x8A1DA655`), separate commands (`0x6A935E45` vs
+`0x6A935E4B`), separate builders (`sub_7BDD60` vs `sub_7B7530`). The
+`0xAB9980` window therefore still has no id of its own on record; naming it
+still needs a live instrument — the recipe below is CARRIED from the 2026-08
+pass: break on the `SetID` inside whichever function creates `sub_7BC350`'s
+target window, or dump `[this]` of the window returned by the
+property-`0xA8CD3FF` lookup at `0x7BCF3C` with the Photo
+Album open in-game. A static `.text`/`.rdata`/`.data` sweep cannot see a
 non-literal (computed/hashed) id, and register unknown #10 already notes
 89 of 162 `SetID` sites are non-literal.
 
@@ -3161,7 +4007,7 @@ then subsystems.
 
 | VA | What | Used for |
 |---|---|---|
-| `0xB08F78` | **`{clsid → class-name}` registry**, `.data`, 648 entries, 8-byte stride `[clsid][char* name]`; name pool ~`0xA89000` | naming every custom clsid seen in `.UI` |
+| `0xB07FD8`–`0xB09410` | **the game's own `{id → name}` table**, `.data` — **MEASURED 2026-09-01, every number below re-read from the shipped exe this run (1.1.641.0 Steam, ImageBase `0x400000`; `.data` VA `0xB07000` → raw `0x707000`, so `file offset = VA − 0x400000` holds).** Base **`0xB07FD8`**, **648 entries**, 8-byte stride `[u32 id][char* name]`, last entry `0xB09410` = `{0x8BA12D18,"kCommandID_GZLog"}`, `{0,0}` terminator at `0xB09418` (`0x1440` bytes total). **It is NOT clsid-only.** Measured content split (0-based indices): **238 message-type names** (`kMsg*` / `kMessageType*` / `kSC4Message*`, clustered in indices 0–256), **234 `c*` class and interface names** (indices 285–520, not contiguous), and **124 `kCommandID_*` as one contiguous tail** (indices 524–647 = `0xB09038`–`0xB09410`), plus **52 others** (counted 2026-09-23): 20 more message-type names under other prefixes (`kMessage*`, `k…MessageType…`, `kSC4Msg*`, `kSGLMessage*`, `kSndEventMsgType*`; indices 235–257, so indices 0–257 are all message ids), 27 system-service ids (indices 258–284, `kSystemServiceId` … `kGZIMEProxyDefaultServiceID`), `kSC4PropClassIDProperty` and `kSC4CLSID_cSC4WinToolTipMgr` inside the class span (indices 404 and 517), and `kSimAgent`, `kAnimTickAgent`, `frame_sample` (indices 521–523). Spot-verified byte-exactly this run: `0xB07FD8={0x533CCA1E,"kMsgTypeToolTipTick"}`, `0xB08018={0x69247DC7,"kMsgTrafficMapChanged"}`, `0xB08F70={0xCA5D3294,"cSC4WinAlertBorder"}`, `0xB08F78={0xCA318388,"cSC4WinMiniMap"}`, `0xB09158={0x6A935CF4,"kCommandID_TrafficQueryTool"}`, `0xB09308={0x6A935E4B,"kCommandID_OpenSnapshotDialog"}`. Name pool is `.rdata` `0xA88654`–`0xA8C950` (MEASURED min/max name pointer over all 648 rows; the upper bound is COMPUTED as the highest pointer `0xA8C93C` + `len("kMsgTypeToolTipTick")+1`). **645 unique ids of 648 — three collisions** (`0x0243FC6F` listed twice as `kMsgPingResult`; `0x66956810` = `kSC4MessageSimBegin` *and* `kSC4MessageSimOneShot`; `0x2990C05A` = `cSC4FireProtectionSimulator` *and* `cSC4ProtectionSimulator`), so a lookup must not assume one id yields one name. **Static table, not a runtime lookup path: a whole-image scan for the 4-byte immediate finds ZERO references to the base `0xB07FD8` and zero to the row `0xB08F78`** — TRUE null with a positive control, the same scanner returning `0xAB4330`→1, `0xABACE0`→1, `0xAB9BF8`→2, `0xABB648`→2. ⚠ *Amended 2026-09-01 — SUPERSEDED text kept verbatim: this row read "`0xB08F78` — **`{clsid → class-name}` registry**, `.data`, 648 entries, 8-byte stride `[clsid][char* name]`; name pool ~`0xA89000` — used for: naming every custom clsid seen in `.UI`". Wrong twice. (1) `0xB08F78` is not the base, it is **entry index 500, i.e. #501 of 648** — `(0xB08F78 − 0xB07FD8) ÷ 8 = 500`; walking 648 entries from there ends at `0xB0A3B8`, 500 entries past the `0xB09418` terminator, while skipping the 500 rows below it that hold every message id. (2) The scope was wrong: message ids and the 124 `kCommandID_*` names live in the same contiguous run, so "clsid-only" made a reader conclude they are named nowhere.* | naming **any** id met in a log, a `.UI` script or a factory branch — class names, message ids and command ids alike. This is the lookup that closed the route trace (`kMsgTrafficMapChanged` at `0xB08018`) and the snapshot frame (`kCommandID_OpenSnapshotDialog` at `0xB09308`) on 2026-09-01 |
 | `0xB16FA0` | standard clsid/iid/descriptor table, 12-byte stride | GZWinBtn/BMP descriptors |
 | `0x4662B0` | window-class registration (`push <factory>; push <clsid>; mov ecx,esi; call 0x90E133`) | finding factories |
 | `0x90E133` | the registration callee | — |
@@ -3174,7 +4020,7 @@ then subsystems.
 | `0x602B00` | the standard image loader (TGI → image) | every code-bound art path |
 | `0x5FD480` | `GetProperty` (exemplars) | ItemIcons |
 
-⚠ An intended 2026-09-01 revision of the `0xB08F78` row of this table was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. The extent that revision named, `0xB07FD8`–`0xB09410`, matches the 648-entry table in the generated dump `tools/research/udriveit/idname-tables.txt` (grep `table at 0x00B07FD8`).
+*(The `0xB07FD8`–`0xB09410` row: revision prepared 2026-09-01, lost to commit 0961524, re-verified and applied 2026-09-23. The generated dump `tools/research/udriveit/idname-tables.txt` lists the same 648 rows — grep `table at 0x00B07FD8`.)*
 
 ### 8.2 `.UI` deserialization and fonts
 
@@ -3365,7 +4211,329 @@ helper calls `mgr->IsWindowValid`, i.e. reads the freed bucket array. That is
 the general shape: **on this path, every route that goes through the engine
 goes through the object that is already dead.**
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. The new §8.8 it was to add — the route-trace overlay's whole chain, from the query tool's pick handler to the `cISC4ViewObject3D` drawer `0x007DD9B0` — is recorded in `tools/research/overlays/row-16-route-overlay.md` (grep `MEASURED 2026-08-31 — the drawer is a dedicated`).
+### 8.8 The ROUTE-TRACE overlay — the whole chain, and the one worked example of "outside the boundary, still reachable"
+
+*(Revision prepared 2026-09-01, lost to commit 0961524, re-verified and applied 2026-09-23: every address below was re-read that day, and the three passages dated 2026-09-23 are the substantive corrections.)*
+
+§0 says the render / present path is outside this SDK. That is still true, and
+this subsection is the counter-example that shows what the sentence actually
+costs: **the route trace is not a `cIGZWin`, appears in no `.UI`, owns no art
+in any dat, and no window-level lever in this document can touch it — yet it is
+completely reachable**, because the game hands it to the renderer through an
+interface this project has already decoded
+(`cISC43DRender::AddViewObject`, `recovered-headers/cISC4ViewObject3D.h`). The
+census entry and its lever notes live in `SC4-WORLD-OVERLAYS.md` row 16 and
+`overlays/row-16-route-overlay.md`; what is added here is the byte-level chain,
+end to end.
+
+**Every address below was re-read out of `SimCity 4.exe` 1.1.641.0 Steam
+(7,876,608 bytes, ImageBase `0x00400000`) on 2026-09-01.** Provenance is
+MEASURED unless the line says otherwise.
+
+**1 — The command id, out of the game's own table.**
+`kCommandID_TrafficQueryTool = 0x6A935CF4`, read from the `{id → char* name}`
+registry at `.data 0x00B09158` (8-byte stride; the row above it, `0x00B09150`,
+is `kCommandID_QueryTool = 0x6A935CF3`). Not a guess and not a hash — the
+string is in the image.
+
+**2 — The factory branch.** The command switch subtracts and steps:
+
+    007F26A9  81 EF F3 5C 93 6A   sub edi, 0x6A935CF3   ; plain query
+    007F26AF  0F 84 CE 00 00 00   je  0x007F2783
+    007F26B5  4F                  dec edi               ; -> 0x6A935CF4
+    007F26B6  74 6D               je  0x007F2725        ; THE TRAFFIC BRANCH
+
+`0x007F2725` does `push 0xA0` → `0x005E55E0`, then
+`push 0x32 / push 1 / mov ecx,eax / call 0x004C4590`. A **0xA0-byte** object,
+ctor args `(1, 0x32)`.
+
+**3 — The ctor `0x004C4590` (`ret 8`), and why arg1 is the ROUTE MODE.**
+
+| site | bytes | effect |
+|---|---|---|
+| `0x004C45A2` | `C7 06 88 0A A9 00` | `[this] = 0x00A90A88` — the primary vtable |
+| `0x004C45A8` | `C7 46 28 78 0A A9 00` | `[this+0x28] = 0x00A90A78` — the `cIGZMessageTarget2` sub-object |
+| `0x004C45FE` | `89 86 8C 00 00 00` | `[this+0x8C] = arg1` |
+| `0x004C460A` | — | `[this+0x90] = arg2` (`0x32` on both commands) |
+| `0x004C461A` | `89 9E 9C 00 00 00` | `[this+0x9C] = 0` — **the drawable slot, born null** |
+
+⭐ **The control for "arg1 = route mode" is the SIBLING BRANCH, not the name.**
+`kCommandID_QueryTool` builds the *same class* at `0x007F2799` — same `0xA0`
+allocation, same ctor — with `push 0x32 / push 0`. One class, two commands, and
+the only difference between them is `[this+0x8C]`: `1` = route trace, `0` =
+plain query. A `1` that were also a constructor default would prove nothing
+(the law in `_tests/REGRESSION.md`, grep
+`A VALUE THAT AGREES WITH BOTH HYPOTHESES`); this one is written by the
+*caller*, and the other caller writes `0`.
+
+**4 — The tool's vtable `0x00A90A88` is 30 slots, and the drawer is not in it.**
+The table runs `0x00A90A88`–`0x00A90AFC`; the next vtable start is
+`0x00A90B00`, stamped as a vptr at `0x004D42A8` (`mov [esi+4], 0xA90B00`) in a
+different class's ctor. Slot 3 (`+0x0C`) = `0x004C57A0`; slot 16 (`+0x40`) =
+`0x004D4D70`. **`0x007DD9B0` — the function that actually paints the trace — is
+not one of the 30.** The tool never draws; it builds a drawable and hands it
+away. *(Positive control for that null: the same slot scan does find
+`0x007DD9B0`, at `0x00ABB648+0x0C`. The instrument can see the thing it did not
+find here.)*
+
+**5 — Init / OnActivate `0x004C57A0` (slot `+0x0C`).** The mode gate:
+
+    004C57B1  8B 86 8C 00 00 00   mov eax,[esi+0x8C]
+    004C57B7  48                  dec eax
+    004C57B8  74 10               je  0x004C57CA      ; route mode
+
+Route mode writes `[this+0x0C] = 0xC7AF928F`, `[this+0x10] = 0xCB8D5B54`; plain
+mode writes `0xC7AF928E` / `0x816D7F74`. Cross-check that closes the loop: the
+factory's own already-running test reads those back — `cmp eax,0xC7AF928F` at
+`0x007F2730` on the traffic branch, `cmp eax,0xC7AF928E` at `0x007F278E` on the
+query branch. Neither id appears in any of the 648 rows of the game's own
+`{id → name}` table (`0x00B07FD8`–`0x00B09410`, §8.1), so the class itself
+stays unnamed.
+
+Init then makes **six** `AddNotification(target, msgId)` calls on the message
+server `[0x00B43CCC]` through `vt+0x14` (`cIGZMessageServer2` slot 5, by vendor
+header order), every one with `target = this+0x28` — the second vptr, i.e. the
+message-target sub-object (`lea ebp,[esi+0x28]` at `0x004C57F5`):
+
+| call site | msg id | name, from the game's own `.data` id→name table |
+|---|---|---|
+| `0x004C57FB` | `0x0A456D95` | *(not present in the id→name table)* |
+| `0x004C5808` | `0x0A456D96` | *(not present in the id→name table)* |
+| `0x004C5815` | `0x26D31EC2` | `kSC4MessagePreCityShutdown` (`0x00B082C0`) |
+| `0x004C5822` | `0xA6B79602` | `kSC4MessageViewZRChange3` (`0x00B086C0`) |
+| `0x004C582F` | `0x66956814` | `kSC4MessageSimNewDay` (`0x00B085B0`) |
+| **`0x004C583C`** | **`0x69247DC7`** | **`kMsgTrafficMapChanged`** (`0x00B08018`) |
+
+The last one is the decisive one: **the sim invalidates this overlay behind your
+back.** Any cure that caches geometry has to survive `kMsgTrafficMapChanged` —
+and `kSC4MessageViewZRChange3` is the reason a per-zoom width table exists at
+all.
+
+**6 — Pick → build.** `0x004D4D70` is the pick handler (slot `+0x40`). Its gate:
+
+    004D4F19  83 BE 8C 00 00 00 01   cmp dword [esi+0x8C], 1
+    004D4F20  C6 86 89 00 00 00 01   mov byte  [esi+0x89], 1
+    004D4F27  75 1A                  jne 0x004D4F43
+    004D4F2B  E8 20 5D FF FF         call 0x004CAC50        ; ecx = esi
+
+`0x004CAC50` is the pick ACTION, and it **tears down first**: if `[this+0x9C]`
+is non-null it calls `RemoveViewObject` on the renderer singleton
+`[0x00B43DD0]` through `vt+0x84` (`0x004CAC66`), then `0x0053C940`, then
+clears `[this+0x9C]` (`0x004CAC81`), then Releases the old pointer (`0x004CAC8D`).
+Only then does it dispatch on the picked object's type id:
+`0x278128A0 → 0x004CAA60`, `0xC772BF98 → 0x004CAAE0`.
+
+⛔ **Corrected here: `0x004CAC50` does NOT call the builder directly.** The hop
+is `0x004CAA60`, which ends `push ebx (= &this+0x30) / mov ecx,edi /
+call 0x004CA460` at `0x004CAAD3`. The earlier shorthand
+"`0x004CAC50` → `0x004CA460`" (`overlays/row-16-route-overlay.md`,
+`SC4-WORLD-OVERLAYS.md` row 16) is **kept** as the summary it was, and is not
+wrong about the order — but a hook placed on the strength of it would be placed
+one frame too high. The builder has exactly five callers image-wide:
+`0x004CAAD3`, `0x004CABFF`, `0x004CAC48`, `0x004CB9AB`, `0x004D766D`.
+
+**7 — The builder `0x004CA460`, and where the per-zoom number comes from.**
+It first stacks six inline float immediates into its own frame —
+`{2.0, 2.0, 2.0, 2.0, 1.4, 1.2}` (`0x40000000` ×4, then `0x3FB33333`,
+`0x3F99999A`) at `0x004CA4A2`, `A4AA`, `A4B2`, `A4BA`, `A4C5`, `A4D0` — then:
+
+    004CA4E8  75 69                  jne 0x004CA553      ; [tool+0x9C] live already: skip creation
+    004CA4EA  6A 2C                  push 0x2C           ; the drawable is 44 bytes
+    004CA4EC  E8 ..                  call 0x005E55E0
+    004CA4FA  E8 51 38 31 00         call 0x007DDD50     ; ctor, ecx = the block
+    004CA51C  89 9F 9C 00 00 00      mov [tool+0x9C], ebx      ; with the AddRef/Release swap
+    004CA532  E8 59 28 31 00         call 0x007DCD90     ; render-state prime
+    004CA545  68 E8 03 00 00         push 0x3E8          ; sortKey
+    004CA54A  6A 05                  push 5              ; pass
+    004CA54C  50                     push eax            ; the drawable
+    004CA54D  FF 92 80 00 00 00      call [edx+0x80]     ; AddViewObject, on [0x00B43DD0]
+    004CA553  8B 44 24 30            mov eax,[esp+0x30]        ; <- the ZOOM index
+    004CA557  8B 54 84 6C            mov edx,[esp+eax*4+0x6C]  ; <- the six immediates
+    004CA562  E8 79 C8 3E 00         call 0x008B6DE0     ; [drawable+0x10] = that float
+
+⭐ **The index really is the zoom, and the stack arithmetic is the proof.** The
+slot read at `[esp+0x30]` is written by `0x007F66A0` (`ret 8`, called at
+`0x004CA4DB` with `ecx = [0x00B43DD8]`), whose entire body is
+`*arg1 = [this+0x0C]; *arg2 = [this+0x10]` — the view singleton's zoom and
+rotation. Frame check: after the prologue and the two argument pushes the first
+immediate lands at frame offset `−0x18`, and `[esp+0x6C]` at `0x004CA557` (esp
+restored by that callee's `ret 8`) resolves to the same `−0x18`. Table base and
+read base are one address.
+
+⚠ **CORRECTED 2026-09-23 — the zoom index is 0-based, so the sixth immediate is
+never read.** The 2026-09-01 draft ended the paragraph above with *"(INFERRED,
+not measured: the table is 1-based with a dead slot 0 — six entries for five
+zoom levels, giving zooms 1–5 the widths `{2.0, 2.0, 2.0, 1.4, 1.2}`.)"*
+MEASURED instead: `[[0x00B43DD8]+0x0C]` is copied from the camera's zoom index
+`[cam+0x108]` at `0x007F84AB`; the camera's zoom-out stops at 0
+(`test eax,eax / jle` at `0x007CE0FF`); and four readers index five-entry
+tables with no bias — `.rdata 0x00ABACE0` `{8,16,32,73,146}` by the camera's
+index (`0x007CBE4D`), and `0x00AA523C` `{0.5,0.75,1.0,1.5,2.0}` (`0x005F6064`),
+`0x00A8FE8C` (`0x004B100F`) and `0x00ABC05C` (`0x007E7609`) by this copy — each
+bounded by unrelated data at indices −1 and 5. So zooms 0–4 get
+`{2.0, 2.0, 2.0, 2.0, 1.4}`: only the closest zoom differs, and `1.2` is dead.
+
+⭐ **`pass = 5` is not a magic number.** `AddViewObject` is `cISC43DRender`
+`vt+0x80` = **`0x007C5D90`**, and its whole body is a four-way dispatch onto
+four lists on the renderer, each insert through `0x007C5C80`:
+
+| pass | list | measured at |
+|---|---|---|
+| 3 | `[rend+0x188]` | `0x007C5DA6` |
+| **5** | **`[rend+0x18C]`** | `0x007C5DCA` |
+| 0 | `[rend+0x190]` | `0x007C5DE3` |
+| 2 | `[rend+0x194]` | `0x007C5DF0` |
+
+Frame order is `0 → 2 → <scene> → 3 → 5` (CARRIED, from
+`recovered-headers/cISC4ViewObject3D.h`), so **the route trace composites AFTER
+the city**, and `0x3E8` is only its sort key inside that pass.
+
+**8 — The drawable. ctor `0x007DDD50` (`ret 0`, returns `this`).**
+
+    007DDD67  C7 06 48 B6 AB 00       mov [this],      0x00ABB648   ; cISC4ViewObject3D vptr
+    007DDD6D  C7 07 30 B6 AB 00       mov [this+4],    0x00ABB630   ; adjustor-thunk vtable
+    007DDD76  C7 46 10 00 00 00 40    mov [this+0x10], 0x40000000   ; scale = 2.0f
+    007DDD7D  6A 44                   push 0x44 -> 0x0090CF54       ; strand-list sentinel
+
+`[this+0x14]` is the self-linked sentinel (`0x007DDD87`); `[this+0x18]` is the
+same at construction (`0x007DDDA1`) and thereafter **the current strand**.
+
+⭐ **`0x00ABB648` is a `cISC4ViewObject3D` vtable, proven by shared slots rather
+than asserted**: `AddRef 0x005BE3E0` and `Release 0x005BCB30` are byte-identical
+to the terrain view object's table (`0x00AB4480`), slot 5 is a `0x00000000`
+terminator — the interface is exactly 5 wide — and slot 3 (`+0x0C`) is Draw.
+
+`0x00ABB628`, the `double 4.5` sitting immediately below the adjustor-thunk
+table `0x00ABB630` (so `0x20` below `0x00ABB648`), has
+**exactly one reference in the entire image**: `0x007DD127`.
+
+**9 — Filling the path.** One function builds every strand: **`0x004C5E20`**, a
+single body running `0x004C5E20`–`0x004C67E7` (preceded by `ret` + `int3`
+padding; called from `0x004CA7EE` and `0x004CA9CD`). Inside it,
+**BeginStrand `0x007DDC50`** at `0x004C614B`, `0x004C64E4`, `0x004C6729`, and
+**AddPoint `0x007DDB30`** at `0x004C61C2`, `0x004C6202`, `0x004C630E`,
+`0x004C653D`, `0x004C654D`, `0x004C668A`, `0x004C669A`, `0x004C6739`,
+`0x004C67D8`.
+
+`0x007DDC50` (`ret 0xC`) allocates a **0x44-byte node** (`push 0x44` →
+`0x0090CF54` at `0x007DDCC4`): `{next, prev}` at `+0` / `+4` and a **0x3C-byte
+item at `+8`**. It sorted-inserts into `[drawable+0x14]` by the float at
+`node+0x10`, makes the node `[drawable+0x18]`, and writes **`[item+0x34]`** —
+the optional texture, refcount-bumped through `0x004664A0`
+(`mov eax,[ecx+0xC]; inc eax; mov [ecx+0xC],eax; ret`) only when non-null — and
+**`[item+0x38]`**, the width.
+
+⚠ **Where those two fields come from — MEASURED 2026-09-23.** BeginStrand builds
+the item in a stack temporary and copies it into the node. It zeroes the
+temporary's texture slot (entry `esp` − 8) at `0x007DDCC6`, so it always stores
+a null texture and its AddRef branch cannot fire. Nothing in BeginStrand writes
+the width slot it copies (entry `esp` − 4, read at `0x007DDD10`), although the
+same esp-resolved walk finds a write to every other field of that temporary.
+The only other code that stores to those two node fields is **`0x007DCE20`**
+(`ret 8`: re-fetches `[node+0x3C]` by id through `[0x00B43CD4]` `vt+0x14`,
+writes `[node+0x40]` = arg 2; every such store in the drawable's code block
+`0x007DC800`–`0x007DDE00` was checked), and its only caller in the image is the
+second consumer below (`0x0060C21E`: texture `0xABE9EB36`, width `0.25f`). **The
+traffic tool never calls it**, so what the route trace's `[item+0x38]` holds is
+not established statically — read it live before treating it as a tuned value.
+
+⚠ **A second, independent consumer of this exact drawable class exists** at
+`0x0060C150` (ctor) / `0x0060C17E` (prime) / `0x0060C1F8` (scale setter) /
+`0x0060C20C` (BeginStrand) / `0x0060C21E` (texture + width, `0x007DCE20`) /
+`0x0060C698` (AddPoint). Anything patched on the
+*class* rather than on the *tool* lands there too. Say which one you meant.
+
+**10 — Draw.** `0x007DD9B0` = `0x00ABB648` slot 3 (`+0x0C`): one argument,
+`ret 4`, `al = 1` on both exits. Its body is the strand walk —
+`mov ebx,[ebp+0x14]; mov esi,[ebx]; cmp esi,ebx` (`0x007DDA60`) — and per node
+`lea edx,[esi+8]; push edx; push edi; mov ecx,ebp; call 0x007DD410`
+(`0x007DDA70`–`0x007DDA77`): **one emitter call per strand, with (drawContext,
+item)**. `recovered-headers/cISC4ViewObject3D.h` declares this slot
+`void Draw(SC4DrawContext*)`; the call *shape* agrees exactly (one argument,
+`ret 4`), and the `al = 1` is simply discarded by the declared type.
+
+**11 — The emitter `0x007DD410`** (`ret 8`; `this` = the drawable, arg1 = the
+draw context, arg2 = the item):
+
+| what | measured at | fact |
+|---|---|---|
+| ribbon, not a line | `0x007DD46F` | `shl edi,1` — the vertex count is forced EVEN, two vertices per path point |
+| vertex size | `0x007DD471` / `0x007DD474` | `lea edx,[edi+edi*2]` then `shl edx,3` = `count × 24` bytes from `0x005E55E0`; freed at `0x007DD8A5` (`0x005E5620`). **A 24-byte vertex** |
+| minimum | `0x007DD480` | `cmp edi,4 / jb 0x007DD8AD` — fewer than 4 vertices draws nothing |
+| **half-width** | `0x007DD48F`–`0x007DD4A3` | `fld [this+0x10]` · `fadd st,st` · `fdivr [item+0x38]` = **`[item+0x38] ÷ (2 × [drawable+0x10])`**. ⭐ **Mind the SIGN: a BIGGER `[drawable+0x10]` makes the trace THINNER.** |
+| optional texture | `0x007DD84C`, `0x007DD862`, `0x007DD891` | `[item+0x34]`; the whole texture-state block is skipped when it is null |
+| submit | `0x007DD88C` | `push buf; push count; push 0x0A; push 1; mov ecx,ebp; call 0x007D2990` — `ebp` is arg1 here, the draw context (reloaded at `0x007DD786`), and `0x007D2990` is a 4-arg wrapper (`ret 0x10`) onto the device at `[drawContext+0x30]` |
+
+⚠ **The words "triangle strip" are NOT byte-confirmed** — they are CARRIED from
+`overlays/row-16-route-overlay.md`. The submit constants are `1` and `0x0A`, and
+neither was decoded to a primitive type this run. What *is* proven is the ribbon
+shape (even vertex count, two per point) and the 24-byte vertex. Do not build a
+patch on the primitive's name.
+
+**12 — The dash cadence.** `0x007DD0D0`, called only from inside the emitter
+(`0x007DD5D6`, `0x007DD7A3`), both times with the drawable as `this` — the
+pointer stored at `0x007DD41C` and the one read back at `0x007DD5CC` resolve to
+the same frame offset. It `fsqrt`s the segment length (`0x007DD10F`) and then:
+
+    007DD11B  D8 61 10               fsub dword [this+0x10]       ; length − scale
+    007DD122  D9 41 10               fld  dword [this+0x10]
+    007DD125  DC 0D 28 B6 AB 00      fmul qword [0x00ABB628]      ; × 4.5
+
+and clamps the step between the two. **`step = [drawable+0x10] × 4.5`.**
+
+⚠ **`[drawable+0x10] == 2.0` observed live confirms NOTHING**: the ctor writes
+exactly `2.0f` at `0x007DDD76`, so 2.0 agrees with both "the per-zoom table
+fired" and "it never fired". The only other writer found is `0x008B6DE0`
+— `mov eax,[esp+4]; mov [ecx+0x10],eax; ret 4` — which a drawable reaches from
+exactly two direct calls: `0x004CA562` (this builder) and `0x0060C1F8` (the
+second consumer, with `18.0f`). ⚠ *Corrected 2026-09-23:* the draft also listed
+`0x00695206` as a writer of this field. It is not one: `0x008B6DE0` is a generic
+`+0x10` store shared by other classes. `0x00695206` applies it to a different,
+`0x68`-byte object, and four `.rdata` vtable slots point at it (`0x00A810B8`,
+`0x00AC42D8`, `0x00AC8DE8`, `0x00AC8FD8`), while neither of the drawable's two
+vtables does. **To separate the two hypotheses, force the closest zoom — the
+only one whose entry is not `2.0` (it is `1.4`; the `1.2` is never read, see 7)
+— and re-read the field.**
+
+#### 8.8.1 The VA table
+
+| VA | What |
+|---|---|
+| `0x00B09158` | `.data` row `{0x6A935CF4, "kCommandID_TrafficQueryTool"}` |
+| `0x00B08018` | `.data` row `{0x69247DC7, "kMsgTrafficMapChanged"}` |
+| `0x007F26B5` → `0x007F2725` | command-switch traffic branch → its body (`new 0xA0`, ctor args `1, 0x32`) |
+| `0x007F2799` | the **control** branch — same class, same ctor, arg1 = `0` (plain query) |
+| **`0x004C4590`** | tool ctor (`ret 8`). vptrs `0x004C45A2` / `0x004C45A8`; `[this+0x8C] = mode` at `0x004C45FE`; `[this+0x9C] = 0` at `0x004C461A` |
+| **`0x00A90A88`** | tool primary vtable, **30 slots** (ends `0x00A90AFC`; next table `0x00A90B00`, stamped at `0x004D42A8`). Contains no drawer |
+| `0x00A90A78` | the tool's `cIGZMessageTarget2` vtable; sub-object at `this+0x28` |
+| **`0x004C57A0`** | Init / OnActivate (slot `+0x0C`); mode gate `0x004C57B1`; six `AddNotification`s `0x004C57FB`–`0x004C583C` on `[0x00B43CCC]` |
+| **`0x004D4D70`** | pick handler (slot `+0x40`); route gate `cmp [esi+0x8C],1` at `0x004D4F19`; `call 0x004CAC50` at `0x004D4F2B` |
+| `0x004CAC50` | pick action — `RemoveViewObject` (`[0x00B43DD0]` `vt+0x84`) at `0x004CAC66`, clear `[this+0x9C]` at `0x004CAC81`, then type dispatch |
+| `0x004CAA60` | the hop the summaries omit; `call 0x004CA460` at `0x004CAAD3` |
+| **`0x004CA460`** | the builder. Six per-zoom immediates `0x004CA4A2`–`0x004CA4D0`; `new(0x2C)` `0x004CA4EA`; ctor `0x004CA4FA`; store `0x004CA51C`; prime `0x004CA532`; **`AddViewObject(obj, 5, 0x3E8)` `0x004CA54D`**; zoom-indexed scale write `0x004CA553`–`0x004CA562` |
+| `0x007F66A0` | zoom / rotation getter on `[0x00B43DD8]` (`*a1 = [this+0x0C]`, `*a2 = [this+0x10]`, `ret 8`) — the source of the table index |
+| **`0x007C5D90`** | `cISC43DRender::AddViewObject` (`vt+0x80`); pass→list dispatch `0x007C5DA6` / `0x007C5DCA` / `0x007C5DE3` / `0x007C5DF0`, insert `0x007C5C80` |
+| **`0x007DDD50`** | drawable ctor. `0x00ABB648` @`0x007DDD67`; `0x00ABB630` @`0x007DDD6D`; **scale `2.0f` @`0x007DDD76`**; list head `0x44` @`0x007DDD7D` |
+| **`0x00ABB648`** | the drawable's `cISC4ViewObject3D` vtable — QI `0x005BCB40`, AddRef `0x005BE3E0`, Release `0x005BCB30`, **Draw `0x007DD9B0`**, Pick `0x00735290`, then a `0` terminator |
+| `0x00ABB628` | the `double 4.5`; sole reference image-wide is `0x007DD127` |
+| **`0x004C5E20`** | the strand filler (`0x004C5E20`–`0x004C67E7`); callers `0x004CA7EE`, `0x004CA9CD` |
+| **`0x007DDC50`** | BeginStrand (`ret 0xC`) — `0x44`-byte node @`0x007DDCC4`; `[item+0x34]` texture (AddRef `0x004664A0`), `[item+0x38]` width — both copied from its own temporary: texture always null, width never written there |
+| **`0x007DDB30`** | AddPoint |
+| `0x007DCE20` | strand texture + width setter (`ret 8`; `[node+0x3C]`, `[node+0x40]`); sole caller `0x0060C21E` — the traffic tool never calls it |
+| **`0x007DD9B0`** | **THE DRAWER** — `ret 4`, one argument; strand walk `0x007DDA60`, per-strand emit `0x007DDA77` |
+| **`0x007DD410`** | the emitter (`ret 8`) — even count `0x007DD46F`, `count×24` buffer `0x007DD471` / `0x007DD474`, min-4 `0x007DD480`, half-width `0x007DD48F`–`0x007DD4A3`, texture `0x007DD84C`, submit `0x007DD88C` |
+| **`0x007DD0D0`** | dash cadence — `step = [drawable+0x10] × 4.5` @`0x007DD11B`–`0x007DD125` |
+| `0x008B6DE0` | generic `[ecx+0x10]` store — the only non-ctor writer of `[drawable+0x10]` found; on a drawable called from `0x004CA562` and `0x0060C1F8` only (its third caller `0x00695206` and four vtable slots belong to other classes) |
+| `0x0060C150` … | the SECOND consumer of the same drawable class — **not** the traffic tool |
+
+**Why this sits in a document about windows.** Because the fastest wrong answer
+to "the route trace is the wrong size" is to go hunting for its window, its
+`.UI` id or its art, and there are none. The whole of §1–§7 is inapplicable to
+it, and the levers that *do* apply — `[item+0x38]`, the per-zoom immediates,
+`[drawable+0x10]`, and the `pass` / `sortKey` chosen at registration — live in a
+different subsystem entirely. ⭐ **Ask WHICH DRAWING CHANNEL owns a thing before
+asking which lever moves it.** Nothing is patched for row 16: no defect has been
+reported against it at any tier.
 
 ---
 

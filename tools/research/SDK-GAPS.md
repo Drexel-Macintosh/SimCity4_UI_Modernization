@@ -16,14 +16,68 @@ Index vtable slots by number, never by header name (§1), and check a hook's
 argument count from its `ret` immediate before installing it (§1.4).
 
 **⛔ STANDING RULE 2 — `vendor\gzcom-dll\` IS READ-ONLY. Added 2026-09-01.**
-Never fix a header there: every header correction goes in this file instead.
-`vendor/gzcom-dll` is a pinned git submodule, so the parent repository commits
-only its SHA. A header edit is therefore never captured by a parent commit,
-and a cold clone re-fetches upstream's bytes, so the edit vanishes. CARRIED
-from the message of commit `0961524` and from the section that records the
-measurement (grep `^## Identifiers the vendored SDK`).
+Never fix a header. Every correction goes in THIS file instead.
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. STANDING RULE 2 above was re-written 2026-09-23 from the two sources it cites.
+When §1 says `cIGZWin.h` omits a virtual, the tempting repair is to add the
+declaration to the header. Do not. The **288** files under
+`vendor\gzcom-dll\gzcom-dll\include\` (MEASURED 2026-09-01, `find … -type f`)
+are third-party source we vendor, not source we own, and an edit there is not
+merely discouraged — **it cannot be delivered.** Two independent reasons,
+either one decisive:
+
+1. **The parent repo cannot commit it.** MEASURED 2026-09-01,
+   `git ls-files -s vendor/gzcom-dll` in `C:\dev\SC4UIScale`: the parent index
+   holds **one** entry for the whole tree —
+   `160000 08c529bc2edd32e11c269960a03011ad035c0529 0  vendor/gzcom-dll` — a
+   gitlink, i.e. a commit pointer, not 288 blobs. `git ls-files
+   vendor/gzcom-dll/gzcom-dll/include` returns **0** files. **Positive
+   control:** the same command returns **22** for `src/`, so the query can see
+   tracked files and the zero is real, not a broken scan. **Empirical control,
+   run and reverted the same day:** append one line to `cIGZWin.h` and parent
+   `git status --porcelain` *does* print ` M vendor/gzcom-dll` — the edit is
+   **not** silent on your own machine, which is exactly what makes this trap
+   look survivable — but `git add vendor/gzcom-dll && git diff --cached` prints
+   **nothing**. The content change is unstageable. A parent commit can move the
+   submodule SHA; it can never carry a line of your text.
+2. **The cold clone throws it away.** MEASURED 2026-09-01: `.gitmodules`
+   declares `vendor/gzcom-dll` → `https://github.com/nsgomez/gzcom-dll`, the
+   submodule's own `origin` is that same URL, and `08c529bc` is reachable from
+   `origin/master` (`git branch -r --contains`). A `--recurse-submodules` clone
+   therefore re-fetches nsgomez's bytes and the local edit is gone. Under
+   GITHUB IS THE SOURCE OF TRUTH that is the textbook **present but not
+   executed** failure: the fix works on the machine that wrote it and on no
+   other.
+
+**The tree is pristine today, and that record is worth keeping.** MEASURED
+2026-09-01: `git status --porcelain` inside `vendor\gzcom-dll` is **empty**, at
+`08c529bc2edd32e11c269960a03011ad035c0529` ("Add a Season enumeration to
+`cISC4WeatherSimulator`", 2026-07-12), which is the exact SHA the parent index
+records above. Not one of the 288 headers has ever been edited here. Any future
+non-empty porcelain in that tree is a defect to revert, not a change to review.
+
+**Where a correction goes instead.**
+
+| you want to… | do this |
+|---|---|
+| record that a header is wrong, missing or misnamed | add it **here**, in the gap index, with the derivation in `SC4-UI-ENGINE.md` |
+| have a compile-time type the SDK does not declare | add a **project-local** header under `C:\dev\SC4UIScale\src\` — never under `vendor\`. MEASURED 2026-09-01: the allowlist `.gitignore` re-includes `/src/`, and the parent tracks 22 files there, so a header in `src\` really is committed and really does survive the cold clone |
+| genuinely change gzcom-dll | fork it upstream and re-pin the submodule — a deliberate act with its own review, not a header patch |
+
+**⚠ One existing note reads as permission. It is a LICENCE statement, not an
+edit policy — NOT superseded, scoped.** `THIRD-PARTY-NOTICES.md` §1 says
+"Modifications to gzcom-dll itself must be shared under LGPL-2.1 or later…
+If you change anything under `vendor\gzcom-dll\`, that change is LGPL, not
+CC0". That sentence stays true and stays where it is: it answers *what licence
+a change would carry*. It does not say a change is deliverable, and by the two
+measurements above it is not. Read the two together as: an edit there would be
+LGPL, **and** it would also never reach a user.
+
+**Provenance of this block.** All of it is git/repository forensics, MEASURED
+in `C:\dev\SC4UIScale` on 2026-09-01. **No binary address is asserted here** —
+nothing in this block was read from `SimCity 4.exe`, and none should be added
+to it; the addresses live in the numbered sections below.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
 
 ---
 
@@ -1183,11 +1237,186 @@ through both, and against the wrong sibling it reads as six slots richer than
 it is. (6) Find the
 ctor by searching `.text` for the vtable VA (two hits: ctor and deleting
 dtor); the ctor's `mov [reg+N], <vt>` must equal the factory's `add eax, N`.
-(7) Cross-check the name against `GZCLSIDDefs.h`, which carries names the
-exe table does not (`kcSC4WinText`, `kcSC4WinAlertBorder`, `kcSC4WinAuraBar`).
+(7) Cross-check the name against **the exe's own class registry** — a table
+of 8-byte `{clsid, char* name}` pairs at `.data 0x00B07FD8 … 0x00B09410`,
+648 entries (MEASURED 2026-09-01: walked outward from a known entry while
+both fields stayed well-formed). Look the id up there FIRST; fall back to
+`GZCLSIDDefs.h` only for the ids the table does not carry. Counts MEASURED
+2026-09-01: the header holds 259 `static const int32_t` entries, of which
+174 appear in the exe table and 85 do not; the exe table holds 471 ids the
+header omits. The asymmetry runs mostly the OTHER way round, so never
+conclude "unnamed" from the header alone.
+
+> ~~"Cross-check the name against `GZCLSIDDefs.h`, which carries names the
+> exe table does not (`kcSC4WinText`, `kcSC4WinAlertBorder`,
+> `kcSC4WinAuraBar`)."~~
+> **SUPERSEDED 2026-09-01 — two of the three examples are refuted.**
+> MEASURED: `kcSC4WinAlertBorder` `0xCA5D3294` **is** in the exe table, at
+> `.data 0x00B08F70` → `cSC4WinAlertBorder`; `kcSC4WinAuraBar` `0xAA5D16A9`
+> **is** at `.data 0x00B08FA0` → `cSC4WinAuraBar`. Only `kcSC4WinText`
+> `0xAA7CECFD` survives the claim: its sole dword occurrence in the whole
+> 7,876,608-byte image is `VA 0x007BE6F1` in `.text`, so the table genuinely
+> does not name it. Kept here because the old sentence was used as a reason
+> to trust the header over the exe.
+
 The standing warning governs: the right class is not the right window.
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here.
+**Worked example — `0x89E1567C`, the clsid the dialog tooling keys on.**
+It is absent from `GZCLSIDDefs.h`: a case-insensitive grep for `89e1567c`
+finds nothing, while the same grep does find `0x0CA5D3294` and
+`0x0AB72FBB3` in that file, so it could have seen the entry (positive
+control, MEASURED 2026-09-01). Script-derived tooling has therefore carried
+it unnamed. **The exe names it.** All rows MEASURED 2026-09-01 from the
+shipped 1.1.641 image (`ImageBase 0x00400000`):
+
+| fact | value |
+| --- | --- |
+| registry entry | `.data 0x00B08FA8`, name ptr `0x00A8957C` → `cSC4WinGenTransparent` |
+| registration site | `0x004663B8`: `push 0x004661D0` / `push 0x89E1567C` / `mov ecx,esi` / `call 0x0090E133` — one of 12 identical groups in `0x00466000…0x00466900` |
+| factory | `0x004661D0` — `push 0x128` (object = 296 bytes), `call 0x005E55E0` (operator new), then a naked tail `jmp` to the ctor |
+| ctor | `0x0079C560` (`__thiscall`); calls base ctor `0x0099B6A5` |
+| primary vtable | `[this+0x00] = 0x00AB7358` |
+| secondary vtable | `[this+0xD8] = 0x00AB72D8` (slot 0 = `0x0079C580`) |
+
+It passes step (2)'s window test: `[0x00AB7358 + 87*4] == 0x0099BE4C`. It is
+a real distinct class, not an alias of a sibling — slot 0 is `0x00998F83`,
+not the base `0x0099B774`, and 19 of slots 0…150 differ from
+`cSC4WinAlertBorder`'s vtable `0x00AB5B48` (that vtable CARRIED from the
+2026-09-01 dialog measurements; re-confirmed a window vtable here by the
+same slot-87 test). The name is a description, not a decoration: a
+*transparent* generic window is a pure-geometry container with no art of its
+own, which is why it is the root of so many scripted panels.
+
+Why this matters to us (MEASURED 2026-09-01 over our own corpus, not the
+exe): 161 of the 207 `.UI` scripts under
+`tools/research/carbon/builder-inputs/thirdparty-src/` declare it as
+`<LEGACY clsid=0x89e1567c iid=IGZWinGen …>` — the query panels, the Start
+New City / existing-city bubbles and the Move In My Sim marker
+(`tools/dialog-static/REPORT-15x.md` rows, e.g. `I-0a8cd184` id
+`0x0a551c50` and `I-6a9455c9` id `0x27df05bf`). The adoption rule lives at
+`tools/dialog-static/build_dialog_static.py:1073`
+(`discover_query_family()`), which takes a script on `id=0x10000005` **and**
+`clsid=0x89e1567c`; `src/UiSpike.cpp:5410` is the comment recording what
+that rule cost. The pair, not the clsid alone, is the key — this class also
+appears as an INNER container under a different root, which is how the
+eleven U-Drive-It status scripts were enrolled by accident (see the comment
+block at `src/UiSpike.cpp:5400-5421`). The `iid=IGZWinGen` in the scripts is
+the interface the script asks for, not the class; the class is
+`cSC4WinGenTransparent`.
+
+**Do not add it to `GZCLSIDDefs.h`.** That file is vendored third-party code
+(`vendor/gzcom-dll/`, LGPL 2.1, © 2016 Nelson Gomez) and its own header
+comment says the list "was machine-generated and should not be altered
+without good reason". Measured names we recover belong here, in our tree.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
+
+
+### 8.5 The command-id registry — `0x00B09038`…`0x00B09410`
+
+**Gap.** The SDK has no command-id table anywhere. Six headers mention
+command ids and all six are *parameter names*, never values:
+`cIGZCommandDispatcher.h:34`, `cIGZCommandGenerator.h:35-36`,
+`cIGZCommandServer.h:39-73`, `cISC4Advice.h:66`, `cISC4Advisor.h:64`,
+`cISC4View3DWin.h:57`. The only command constants that exist in `vendor\`
+are the `kMiscCommand_*`/`kToolCommand_*` block inside `GZMSGIDDefs.h` — a
+message-id class doubling as a partial command table, which contains neither
+id below. **Do not grep `GZMSGIDDefs.h` for these names and conclude they are
+wrong; they were never SDK symbols.** This subsection is the table.
+
+**⚠ The names below are the GAME's own, not ours.** They are not
+reconstructions, not guesses, and not our coinages: they are verbatim
+NUL-terminated ASCII in `.rdata`, paired to the ids by the table the exe
+ships. Provenance for every line here: **MEASURED**, this run, against
+`SimCity 4.exe` **1.1.641.0** Steam, 7,876,608 bytes, ImageBase `0x400000`
+(both re-confirmed from the PE header before anything else was read).
+
+**Known.**
+
+- **The table: 124 contiguous 8-byte `{id, char* name}` pairs,
+  `0x00B09038`…`0x00B09410`.** Strictly bounded by walking outward while the
+  second dword still resolves to a `kCommandID_`-prefixed string: first row
+  `0x6A935C34 kCommandID_ToggleGodPanel`, last row
+  `0x8BA12D18 kCommandID_GZLog`. This is a **sub-range of the §8(b) GZCOM
+  id→name table**, not a second mechanism — §8(b) already says that table is
+  the authority for command ids; this pins where the command rows actually
+  are, so they can be enumerated instead of guessed.
+- **`0x6A935CF4` = `kCommandID_TrafficQueryTool`** — row at `.data`
+  `0x00B09158`, name string at `.rdata` `0x00A890A0` (raw bytes
+  `6B 43 6F 6D ... "kCommandID_TrafficQueryTool\x00"`).
+- **`0x6A935E4B` = `kCommandID_OpenSnapshotDialog`** — row at `.data`
+  `0x00B09308`, name string at `.rdata` `0x00A889FC`.
+- **Dispatch shape, common to both:** `mov ecx,[0x00B43CB0]` (the command
+  server singleton) → `mov eax,[ecx]` → `push 0; push 0; push <id>` →
+  `call [eax+0x50]`. Slot `+0x50` is the id-taking execute entry.
+
+#### The route-trace tool — `0x6A935CF4`
+
+- **Factory branch `0x007F26B5`.** The id is *never materialised as a literal
+  here*: the dispatcher runs a decrement chain — `sub edi, 0x6A935CF3`
+  (`0x007F26A9`, the QueryTool row) then **`dec edi` at `0x007F26B5`** →
+  `je 0x7F2725`, so the branch is taken for `0x6A935CF3 + 1` = `0x6A935CF4`.
+  **A byte-grep for `F4 5C 93 6A` does not find this site** — it finds only
+  `0x007F4F41`, `.rdata 0x00ABC174`, and the two `.data` rows. Anyone
+  re-deriving the factory by literal search will conclude, wrongly, that the
+  branch does not exist.
+- **Object size `0xA0`**, allocated at `0x007F273B`–`0x007F2740`
+  (`push 0xA0; call 0x5E55E0`).
+- **Ctor `0x004C4590`, `__thiscall`, two stack args** (`ret 8` at
+  `0x004C4624`). Called at `0x007F2752` as `push 0x32; push 1` ⇒ **arg1 = 1,
+  arg2 = 0x32**. It stamps the primary vtable `0x00A90A88` at `[this+0x00]`
+  (`0x004C45A2`) and a second interface vtable `0x00A90A78` at `[this+0x28]`
+  (`0x004C45A8`), and stores **arg1 into `[this+0x8C]` at `0x004C45FE`** —
+  which is the field the activation gate reads, so **arg1 is the route
+  mode**, confirmed end-to-end rather than assumed.
+- **Init/OnActivate `0x004C57A0` — vtable slot 3 (`+0x0C`).** Gates on
+  `mov eax,[esi+0x8C]; dec eax; je 0x4C57CA` (`0x004C57B1`–`0x004C57B8`),
+  i.e. **`[this+0x8C] == 1`**. Mode 1 writes `[this+0x0C]=0xC7AF928F`,
+  `[this+0x10]=0xCB8D5B54`; any other mode writes `0xC7AF928E` /
+  `0x816D7F74`. The mode-1 value `0xC7AF928F` is the same iid the factory
+  tests at `0x007F2730`, so the two halves corroborate.
+- **Pick handler = vtable slot 16 (`+0x40`) = `0x004D4D70`.** MEASURED by
+  indexing the vtable, not by name.
+- **The primary vtable `0x00A90A88` has exactly 30 slots (`+0x00`…`+0x74`),
+  and none is draw-shaped.** ⚠ **A naive walk that consumes pointers while
+  they land in `.text` yields 43 and is WRONG** — vtables here carry no
+  MSVC RTTI locator (`0x00A90A84` = `0x004D7160`, an ordinary `.text`
+  pointer, not a COL), so a run-walk has no terminator and silently runs into
+  the neighbour. The real boundary is external: `0x004D42A8` stamps
+  **`0x00A90B00`** as a vtable in its own right (alongside `0x00A90B18` at
+  `0x004D42A2`), and `0x00A90B00 = 0x00A90A88 + 0x78` = **exactly slot 30**.
+  Bound a vtable by who *stamps* the next one, never by where the pointers
+  stop looking like code.
+
+#### The snapshot / camera-mode frame — `0x6A935E4B`
+
+- **Two byte-verified routes reach it from the city-dock camera button
+  `0x8A1DA655`:**
+  - **Route A — the command route.** `cmp eax, 0x8A1DA655` at `0x0077449B`
+    → `je 0x7744E4` → `push 0x6A935E4B` at `0x007744F0` →
+    `call [eax+0x50]` at `0x007744F5`. The button literally dispatches the
+    named command; this is what ties id and button together.
+  - **Route B — the direct route.** `cmp edi, 0x8A1DA655` at `0x007B01F1`
+    → `je 0x7B0253` → `call 0x913C46`, `call [edx+0x0C]`, then
+    **`push 1; push [esi+0x48]; call 0x7B7530`** at `0x007B0262`–`0x007B0265`
+    — the get-or-create. Matches `regionmap/slice-4.md:683` independently.
+  - (Cited addresses are the **instruction** starts. A dword-grep reports the
+    immediate field — `0x0077449C` and `0x007B01F3` — one byte later.)
+- This is the **camera-mode capture frame**, whose width and height are the
+  export resolution in real pixels, so it must never be scaled; see
+  `FINAL-3-PERCENT.md` §"CORRECTED 2026-09-01" for the vtable `0x00AB9BF8`
+  correction and the `kNeverScaleIds` entry. Nothing in that note is
+  superseded here — this subsection only supplies the command-id half it
+  refers to.
+
+**How to work the gap.** To name any command id, index the table:
+`(id, name)` pairs are 8 bytes apart from `0x00B09038`; the name pointer is
+the second dword and lands in `.rdata`. Quote the game's name as the game's
+name. If a future note needs a symbol the exe does **not** name, coin it in
+*our* tree and label it ours explicitly — the distinction is the whole point
+of this subsection.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
 
 ---
 
@@ -1526,7 +1755,497 @@ matter to scaling follows.
   `0x12C+k`, 12 `0x2F4+k`, 4 `0x551+k`, Accept/Cancel, `0x0ABCE000/1` and the
   popup's four outer/inner ids — a child-window population, not 36 roots.
 
-⚠ An intended 2026-09-01 revision of this passage was lost (commit 0961524 wrote its edit instruction instead of its text); the original is restored here. What it was to add, a numbered section on the header-less interface `cISC4ViewObject3D`, is covered in shorter form by the section below (grep `^## Identifiers the vendored SDK`, subsection `cISC4ViewObject3D`).
+---
+
+## 13. `GZCLSIDDefs.h` types class ids as **signed** — never order one
+
+**Gap.** All **259** constants in `GZCLSIDDefs.h` are declared
+`static const int32_t`, while every GZCOM entry point that *consumes* a class
+or interface id takes `uint32_t` — `cIGZUnknown::QueryInterface(uint32_t riid,
+void**)` (`cIGZUnknown.h:42`) and `cIGZCOM::GetClassObject(uint32_t clsid,
+uint32_t iid, void**)` (`cIGZCOM.h:55`). **135 of the 259** ids exceed
+`INT32_MAX` and are therefore held as negative numbers, the terrain view among
+them: `kcSTETerrainView3D = 0x0C9B84E10` (`GZCLSIDDefs.h:294`, written with a
+cosmetic leading zero) is stored as **`-910668272`**. The sibling table in the
+same SDK does the opposite — all **46** constants in `GZMSGIDDefs.h` are
+`static const uint32_t` — so the two machine-generated id tables disagree
+about the signedness of the same kind of value. MEASURED this run: both
+headers parsed, counts and the signed value reproduced by a compiled probe.
+
+**⛔ Do not "fix" the header.** `vendor\gzcom-dll` is a git submodule of
+`nsgomez/gzcom-dll` (`.gitmodules`); the file's own banner says the list "was
+machine-generated and should not be altered without good reason"; and a
+whole-file retype would be erased by the next submodule update while producing
+a 259-line diff in the meantime. The only real fix is a PR upstream. **The
+workaround belongs in our code and is one cast at the use site.**
+
+**Measured behaviour** — compiled *and run* this session against the real
+header, MSVC x86 at the mod's own settings (`src\SC4UIScale.vcxproj:45`
+`stdcpp20`, line 44 `WarningLevel Level3`):
+
+| expression | result | reading |
+|---|---|---|
+| `kcSTETerrainView3D < 0` | `1` | it really is negative |
+| `(int32_t)kcSTETerrainView3D` | `-910668272` | what a debugger and a log print show |
+| `(uint32_t)kcSTETerrainView3D` | `0xC9B84E10` | the bit pattern is intact |
+| `uint32_t riid = 0xC9B84E10u; riid == kcSTETerrainView3D` | `1` | **safe** — the usual arithmetic conversions promote the `int` operand to `unsigned int` and the pattern returns |
+| `uint32_t assigned = kcSTETerrainView3D;` | `0xC9B84E10` | **safe** |
+| `kcSTETerrainView3D > 0x10000000` | `0` | **WRONG** — true as unsigned, false as written |
+
+Under `/std:c++20` the out-of-range `unsigned int` → `int32_t` conversion in
+the initializer is *well defined* (two's-complement wrap), not
+implementation-defined as it was before C++20 — which is why equality and
+assignment are genuinely safe rather than merely lucky.
+
+**The compiler will not warn you.** At the mod's `/W3` MSVC is silent on every
+row above. At `/W4`, C4245 (*"conversion from 'const int32_t' to 'uint32_t',
+signed/unsigned mismatch"*) fires on the **assignment only** — both the
+equality compare and the wrong relational compare stay silent even at `/W4`.
+`-Wsign-compare` is the GCC/Clang spelling and does not apply here; this
+project builds MSVC-only. MEASURED: `/W3` and `/W4` both compiled this run.
+
+**Rule.** Equality and assignment against a `uint32_t` may use a `GZCLSID::`
+constant bare. Anything else — `<`, `>`, a range check, a sort, a `std::map`
+key, a `printf("%u")`, a ternary that mixes it with an unsigned — must write
+`static_cast<uint32_t>(GZCLSID::k…)`. The failure is silent at both the
+compiler and the bit level: the value is *correct*, only its ordering is
+inverted, so it survives every equality-shaped test you would think to write.
+
+**Live exposure: none.** Positive control run this session — our tree has
+exactly **one** `GZCLSID::` use site, `src\SC4UIScaleDllDirector.cpp:738`
+(`if (riid == GZCLSID::kcIGZMessageTarget2)`), which is the safe equality
+shape, and a search of `src\` and `tools\` for an ordering, indexing or map
+use of a `GZCLSID::` constant returns zero. This section is a trap notice for
+the next reader, not a defect report.
+
+**Refuted here.** The reading that this is purely cosmetic — "the arithmetic
+conversions put the bit pattern back, so it never matters" — is *carried over
+from an earlier audit note and is only half true*. It holds for `==`, `!=`
+and assignment, which is every shape currently in the tree; it fails for
+relational comparison, as the sixth row above measures. The earlier note also
+put the constant count at 288 and named `-Wsign-compare` as the warning to
+expect: 288 is the file count of `vendor\gzcom-dll\gzcom-dll\include\`, not the
+constant count (259), and no warning of any spelling fires on this project's
+compiler at its own warning level. Both are corrected above and kept here
+rather than deleted.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
+
+---
+
+## 13. `GZMSGIDDefs.h` — the message-id gap, and why grep says "absent"
+
+**Gap.** `GZMSGIDDefs.h` defines 46 ids: 34 `kMiscCommand_*`, 7
+`kToolCommand_*`, `kModalWindowMouseMessage`, `kcGZSndEventStd`,
+`kHTMLDocument_ResourceDownloaded`, `kNetCommandGenerator_IdleMessage`,
+`kSC424HourClock_Command` — plus **five** literal `// <missing>` markers where
+the reconstruction gave up. Not one simulator, network or traffic message id
+is in the file. (MEASURED — counted from the header 2026-09-01. An audit note
+of the same date said *four* markers; it is five — that note is superseded on
+that point only.)
+
+**⚠ Do not add recovered ids to that header.** `vendor/gzcom-dll` is a git
+submodule (`.gitmodules` → `https://github.com/nsgomez/gzcom-dll`), so an edit
+there is silently discarded at the next submodule update. Recovered ids belong
+here, plus the subsystem note that measured them. Consume them from our own
+tree; never `#include` them from the SDK, which does not have them.
+
+### 13.1 The header stores ids as **decimal** — a hex grep returns a false null
+
+Of the 46 entries, 45 are decimal `int` literals assigned to `uint32_t`: 21
+negative, where the top bit is set (`kMiscCommand_ListCommands = -1414770972`
+= `0xABAC4EE4`), and 24 positive (`kMiscCommand_TakeSnapshot = 733050228` =
+`0x2BB17574`). Exactly one is written in hex (`kcGZSndEventStd = 0xDB53383B`).
+(MEASURED.)
+
+So `grep 69247DC7` over all 288 headers returning nothing is **not evidence
+the id is absent** — it is the expected result either way. Convert first:
+`0x69247DC7` → `1763999175` (positive; the top bit is clear). *Positive
+control:* the same decimal grep over the same 288 files finds `733050228` and
+`-1414770972` in `GZMSGIDDefs.h`, and finds `1763999175` nowhere. The null is
+real. (MEASURED.)
+
+### 13.2 The game ships its own id→name table — use it, not the header
+
+`.data` carries an array of `{uint32_t id, const char* name}` pairs holding
+EA's own symbol names. Rows read 2026-09-01 (MEASURED, byte-exact):
+
+| id VA / name-ptr VA | id | name @ `.rdata` | name |
+|---|---|---|---|
+| `0x00B08000` / `0x00B08004` | `0x69247DC4` | `0x00A8C8CC` | `kMsgTransitStrikeBegin` |
+| `0x00B08008` / `0x00B0800C` | `0x69247DC5` | `0x00A8C8B0` | `kMsgTransitStrikeFinished` |
+| `0x00B08010` / `0x00B08014` | `0x69247DC6` | `0x00A8C894` | `kMsgTransitStrikeThreatened` |
+| **`0x00B08018`** / **`0x00B0801C`** | **`0x69247DC7`** | `0x00A8C87C` | **`kMsgTrafficMapChanged`** |
+| `0x00B08020` / `0x00B08024` | `0x69247DC8` | `0x00A8C864` | `kMsgRoadDamageChange` |
+
+All five are absent from all 288 headers (name grep — no conversion needed,
+MEASURED). The same walk resolves command ids: `0x6A935CF4` =
+`kCommandID_TrafficQueryTool` at `0x00B09158`, `0x6A935E4B` =
+`kCommandID_OpenSnapshotDialog` at `0x00B09308` (MEASURED — the latter
+independently corroborates the address carried in the snapshot-frame note).
+
+The table is **not** a clean stride-8 array end to end: at `0x00B08030` the id
+slot holds `0x009B6D58`, a `.text` address. Walk it as pairs and accept only
+rows whose second word resolves to a printable `.rdata` C string. (MEASURED.)
+
+### 13.3 `kMsgTrafficMapChanged = 0x69247DC7` — the record
+
+**Provenance: MEASURED**, from the exe's own id→name table at `.data`
+`0x00B08018` / `0x00B0801C` (§13.2) — `SimCity 4.exe` 1.1.641.0 Steam,
+7,876,608 bytes, ImageBase `0x400000`.
+
+It is the decisive one of the **six** ids the route-query tool's `Init`
+`0x004C57A0` subscribes. The message server is fetched from
+`dword ptr [0x00B43CCC]` @ `0x004C57E2`; `lea ebp, [esi+0x28]` @ `0x004C57F5`
+fixes the `cIGZMessageTarget2` subobject at **`this+0x28`**; each subscribe is
+`call dword ptr [eax+0x14]` — slot `+0x14` is
+`cIGZMessageServer2::AddNotification(pTarget, dwMessageID)`, which matches the
+two pushes (id, then target). Call sites in order (MEASURED):
+
+| push @ | id | name from the §13.2 table |
+|---|---|---|
+| `0x004C57F0` | `0x0A456D95` | *no row* |
+| `0x004C57FE` | `0x0A456D96` | *no row* |
+| `0x004C580D` | `0x26D31EC2` | `kSC4MessagePreCityShutdown` |
+| `0x004C581A` | `0xA6B79602` | `kSC4MessageViewZRChange3` |
+| `0x004C5827` | `0x66956814` | `kSC4MessageSimNewDay` |
+| `0x004C5834` | **`0x69247DC7`** | **`kMsgTrafficMapChanged`** |
+
+Four of six resolve. The two `0x0A456D95/96` nulls are **real**: the same walk
+that named the other four found no row for either. All six are absent from the
+288 headers. (The class name `cSC4TrafficQueryTool` is CARRIED from the row-16
+note, not measured; only the command id's name `kCommandID_TrafficQueryTool`
+is measured.)
+
+`Init` also gates on `[esi+0x8C] == 1` (`mov eax,[esi+0x8c]` / `dec eax` /
+`je` @ `0x004C57B1` — MEASURED), the route-mode argument the ctor `0x004C4590`
+stores (CARRIED).
+
+**Consequence for row 16.** The route-trace drawable builder `0x004CA460` is
+reachable from this data-changed message as well as from the pick, so a lever
+gated on the pick path alone can be bypassed. Subsystem note:
+`tools/research/overlays/row-16-route-overlay.md`.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
+
+---
+
+## 13. Sub-object offsets — the hazard a C++ header cannot express
+
+**Gap.** Every gzcom-dll interface header is written `class cIFoo : public
+cIGZUnknown`, which reads as "a `cIFoo*` is the object". In this exe most
+concrete classes are multiply-derived, so an interface pointer is the address
+of an **embedded sub-object**, not the object base. C++ has no syntax for that
+offset, so the fact can only live here. **Rule: move between interfaces with
+`QueryInterface`, never with `reinterpret_cast` or a C-style cast.** Cases
+already recorded above: `GZWinBMP`'s interface at `this+0xD8` (§2), the gauge
+class's window vtable at `obj+4` and `cSC4WinMapView`'s at `obj+0xE0` (§8.1),
+and the 17 registration pairs whose factories `return obj+N` (§8 bullet (c)).
+
+### 13.1 `cISTETerrainView` is a SECONDARY base at `this+0x0C`
+
+`vendor\gzcom-dll\gzcom-dll\include\cISTETerrainView.h` is upstream
+third-party (Nicholas Hayes, LGPL 2.1) and **is not edited by this project**.
+Its slot list is *correct as shipped* — 22 slots, re-verified below. What a
+header cannot say is that this interface is not the object's primary base.
+
+**Identity.** `kcSTETerrainView3D` = `0xC9B84E10` — `GZCLSIDDefs.h:294`
+(written `0x0C9B84E10`, a cosmetic leading zero), and MEASURED as the literal
+in `0x007523E0` = `mov eax,0xC9B84E10; ret`.
+
+**Object map.** All five vptrs are installed by ONE constructor body,
+`0x007567C0` → `ret` at `0x007568D3`, straight-line with no branches. The
+vptr stores sit at `0x00756815`–`0x00756835`; `edi` there is
+`lea edi,[esi+4]` from `0x007567C4`. MEASURED this run:
+
+| at | vtable | slots | interface |
+| --- | --- | --- | --- |
+| `+0x00` | `0x00AB4480` | 5 | `cISC4ViewObject3D` — OUR recovered name, no vendor header exists (`tools\research\recovered-headers\cISC4ViewObject3D.h`) |
+| `+0x04` | `0x00AB4468` | 6 | **UNIDENTIFIED** |
+| `+0x0C` | `0x00AB4410` | 22 | `cISTETerrainView` |
+| `+0x10` | `0x00AB4400` | 4 | **UNIDENTIFIED** |
+| `+0x14` | `0x00AB43E8` | 6 | `cIGZSerializable` |
+
+So `(cISC4ViewObject3D*)pTerrainView` is wrong by `0x0C` bytes, in both
+directions, and so is any cast to the concrete class base. The five vtables
+are contiguous in `.rdata` in the order `0xAB43E8` → `0xAB4400` → `0xAB4410`
+→ `0xAB4468` → `0xAB4480`, each ending exactly where the next begins; the
+last ends at `0xAB4494`, where the ASCII `unlevel` (`75 6E 6C 65 76 65 6C 00`)
+begins — that adjacency is where the slot counts come from.
+
+**Three independent instruments agree, and the ctor is only the first.**
+
+1. **The ctor stores** (above).
+2. **The adjustor thunks** — the compiler writing the offsets down itself.
+   Slot 0 of each secondary vtable is `sub ecx,<delta>; jmp 0x00752730` (the
+   class `QueryInterface`) with delta = the sub-object offset:
+   `0x007568F0` −`0x04`, `0x00756910` −`0x0C`, `0x00756920` −`0x10`,
+   `0x00756950` −`0x14`. AddRef/Release pairs likewise: `0x00756930` /
+   `0x00756940` (−`0x10`) and `0x00756960` / `0x00756970` (−`0x14`), both
+   jumping to `0x005BE3E0` / `0x005BCB30`. This line of evidence never reads
+   the constructor, so it fails differently.
+3. **The game performs the cast in code, correctly.** `0x00752700` — slot 5
+   (`+0x10`) of `0x00AB4480`, i.e. `cISC4ViewObject3D::Pick` — is literally
+   the conversion written out:
+
+   ```
+   0x00752704  mov eax, [ecx+0x0C]   ; the cISTETerrainView vptr
+   0x00752707  push 0                ; the 5th arg the wider Pick takes
+   ...                               ; the 4 incoming args re-pushed
+   0x00752718  add ecx, 0x0C         ; this -> the cISTETerrainView sub-object
+   0x0075271C  call [eax+0x0C]       ; slot 3 = Pick = 0x0075A230
+   0x0075271F  ret 0x10
+   ```
+
+   The two interfaces' `Pick`s differ in arity (4 vs 5), which is why this
+   forwarder exists at all — and why a raw cast would call the wrong one
+   through the wrong `this`.
+
+**The header's slot ORDER is confirmed, not just its count** (a count alone
+is a value agreeing with both hypotheses). Spot checks against `0x00AB4410`:
+
+- slot 11 `+0x2C` = `0x007568E0` = `mov al,[ecx+0x3D]; ret` — zero-arg bool
+  getter ⇒ `IsWaterGlareEnabled() const`.
+- slot 12 `+0x30` = `0x00756080` — takes one byte arg, compares it against
+  that **same** `[ecx+0x3D]` and stores it ⇒ `SetWaterGlareStatus(bool)`.
+  The ctor pre-sets that byte to 1 at `0x0075683E`, `mov byte [esi+0x49],cl`
+  — and `0x49 = 0x0C + 0x3D`. The arithmetic closes **only** if the
+  sub-object is at `+0x0C`.
+- slot 20 `+0x50` = `0x00752AE0` = `mov al,[0x00B4C741]; ret` ⇒
+  `GetDisplayGridFlag() const` (a global, not a member).
+- slot 21 `+0x54` = `0x00755E80` ⇒ `SetDisplayGridFlag(bool)`.
+
+**`cIGZSerializable` at `+0x14` is pinned by fingerprint, not by guess:** 6
+slots; 0/1/2 are the −`0x14` thunks; slot 5 (`+0x14`) is
+`0x007523E0` = `mov eax,0xC9B84E10; ret`. `cIGZSerializable.h` declares
+exactly `Write` / `Read` / `GetGZCLSID` after `cIGZUnknown` — 6 slots, with
+`GetGZCLSID` last, returning the class id. Shape and value both match.
+
+**Honest scope — what is NOT known.**
+
+- `+0x04` `0x00AB4468` (6 slots) is unnamed. Slots: `0x007568F0` (−4 thunk),
+  `0x005BE420`, `0x005BCB60`, `0x00756900` (`sub ecx,4; jmp 0x00757540`),
+  `0x0090D981`, `0x009D7E63`. ⚠ Its slots 1/2 are **not** the class's
+  `0x005BE3E0`/`0x005BCB30` pair — do not assume it is a plain
+  `cIGZUnknown`-derived interface.
+- `+0x10` `0x00AB4400` (4 slots) is unnamed: three −`0x10` thunks plus one
+  own method, `0x00757560`.
+- The base chain is deeper than these five. The inlined base ctor at the top
+  of the same body stamps `0x00A881C0` / `0x00AB4380` / `0x00A81174` /
+  `0x00A80784` at `+0x00` / `+0x0C` / `+0x10` / `+0x14` before the derived
+  stores overwrite them — the offsets are stable up the hierarchy, but those
+  base interfaces are not decoded.
+- **This is a hazard note, not a defect report.** Nothing in `src\` obtains a
+  `cISTETerrainView*` today (grepped `src\` for `cISTETerrainView` and
+  `GZIID_cISTETerrainView`: zero hits). Nothing is wrong on screen; the entry
+  exists so the first consumer does not write the cast.
+
+**Provenance.** MEASURED this run against `SimCity 4.exe` 1.1.641.0
+(ImageBase `0x400000`): every address, vptr store, thunk delta, vtable slot
+value and slot width above, and `GZCLSIDDefs.h:294`. CARRIED (this project's
+own prior work, not re-measured here): the *name* `cISC4ViewObject3D`, its
+5-slot shape and the names `Draw` (`+0x0C` = `0x0075BFD0`) / `Pick`
+(`+0x10` = `0x00752700`) — recovered 2026-08-24, register item #12; and
+`GZIID_cISTETerrainView` = `0x6771477D`. INFERRED: the *method names* mapped
+onto `0x00AB4410`'s slots, which follow from the vendor header's declaration
+order plus the four body checks above, not from any symbol or string.
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
+
+---
+
+## 13. `cISC4ViewObject3D` — the interface with no header
+
+The SDK never declares this interface. It appears exactly twice across all 288
+headers, both times as a bare forward declaration — `cISC43DRender.h:32` and
+`cISC4DispatchManager.h:30` — yet three `cISC43DRender` virtuals take it
+(`cISC43DRender.h:85-87`) and `cISC4DispatchManager::GetDispatchVehicleView()`
+returns it (`cISC4DispatchManager.h:79`). It is the registration channel for
+everything that draws into the 3D scene without being a window or a model:
+the terrain, the traffic/commute route trace, the data-view overlay.
+
+> ⛔ **`vendor\gzcom-dll` is a git submodule of `nsgomez/gzcom-dll`
+> (`.gitmodules`) — third-party, DO NOT EDIT.** Do not create
+> `vendor\gzcom-dll\gzcom-dll\include\cISC4ViewObject3D.h`; a local file there
+> is destroyed by the next submodule checkout and is invisible to the parent
+> repo. Our reconstruction lives at
+> `tools\research\recovered-headers\cISC4ViewObject3D.h` (ours, tracked by the
+> parent repo, written 2026-08-24). **Upstreaming is the only route into
+> `vendor\`.** If C++ code needs the type, include the recovered header — do
+> not fork a second copy under `src\`; two reconstructions of one interface is
+> two things to keep in sync, and this section is the index entry for the one
+> that exists.
+
+### 13.1 The shape — five slots
+
+MEASURED 2026-09-01 from `SimCity 4.exe` 1.1.641.0 Steam, 7,876,608 bytes,
+ImageBase `0x400000`; `.text`/`.rdata`/`.data` all carry
+`VA − raw = 0x400000`, so file offset = VA − `0x400000` holds for every
+address in this section.
+
+| slot | vt offset | contract |
+|---|---|---|
+| 0-2 | `+0x00`..`+0x08` | inherited `cIGZUnknown` (QueryInterface / AddRef / Release) |
+| 3 | `+0x0C` | `bool Draw(void* pDrawContext)` |
+| 4 | `+0x10` | `bool Pick(cS3DVector3 const&, cS3DVector3 const&, SC4DrawContext*, float*)` |
+
+Two concrete vtables, read this run:
+
+```
+0x00ABB648  route trace     0x005BCB40 0x005BE3E0 0x005BCB30 0x007DD9B0 0x00735290 0x00000000
+0x00AB4480  terrain view    0x00752730 0x005BE3E0 0x005BCB30 0x0075BFD0 0x00752700 <"unlevel">
+```
+
+MEASURED: `0x00AB4480+0x14` is `0x656C6E75` / `0x006C6576` — the ASCII of the
+adjacent `.rdata` string `"unlevel"`, not a function pointer. The terrain
+vtable stops dead at five slots.
+
+### 13.2 Why five — seven vtables agreeing on slot 4
+
+MEASURED. Seven distinct view-object vtables all carry the **same** dword at
+`+0x10`, `0x00735290`:
+
+`0x00AB4480` (terrain) · `0x00AB39D0` · `0x00AB42F8` · `0x00AB4624` ·
+`0x00AA8314` (the five captured live through the `AddViewObject` hook,
+2026-08-17) · `0x00ABB648` (route trace) · `0x00ABB614` (data-view overlay).
+
+`0x00735290` is five bytes long: `32 c0 c2 10 00` = `xor al, al ; ret 0x10`.
+That single function is decisive twice over. It is the interface's **default
+`Pick`**, inherited by six of the seven — only the terrain overrides it — and
+its `ret 0x10` fixes `Pick` at **four stack arguments**, its `xor al,al` at
+**`bool`, returning false**. A shared default body in an unoverridden slot is
+what a base-class vtable entry looks like; seven unrelated classes cannot
+share it by coincidence.
+
+Slot 5 has no such agreement: five of the seven hold zero or non-code at
+`+0x14`, and the two that hold a valid pointer (`0x00AB42F8` → `0x005BCB50`,
+`0x00AB4624` → `0x00A806E8`) are running into the next packed `.rdata`
+object, not into a sixth interface slot. **The interface is five slots wide.**
+
+`0x00ABB648` and `0x00ABB614` are the cleanest single pair: identical in slots
+0, 1, 2 and 4, differing **only** at `+0x0C`. That difference is the whole
+interface — everything else is inherited.
+
+### 13.3 ⚠ `Draw` returns `bool` — SUPERSEDES the 2026-08-24 `void`
+
+**SUPERSEDED, KEPT:** `tools\research\recovered-headers\cISC4ViewObject3D.h`
+declares `virtual void Draw(SC4DrawContext*)`. The `void` is **refuted**; the
+slot-3 offset, the single argument and everything else in that header stand.
+Annotate the header, do not silently rewrite it.
+
+MEASURED — two independent implementations, both ending in `mov al, 1`:
+
+```
+route trace  0x007DD9B0 :  83 ec 38 55 8b e9 ...        sub esp,0x38 ; push ebp ; mov ebp,ecx
+             0x007DDA97 :  b0 01 5d 83 c4 38 c2 04 00   mov al,1 ; ... ; ret 4
+terrain      0x0075BFD0 :  56 8b 74 24 08 8b 46 38 ...  push esi ; mov esi,[esp+8] ; mov eax,[esi+0x38]
+             0x0075C0B6 :  5f b0 01 5e c2 04 00         mov al,1 ; ret 4
+```
+
+`ret 4` = **one** stack argument, `__thiscall` (`this` in `ecx`). `mov al, 1`
+before every return = a `bool` result, not a `void`. The terrain body reads
+`[arg1+0x38]` immediately, so the argument is a pointer, consistent with the
+draw context the renderer threads through — but nothing this run names its
+type, so `void*` is the honest signature and `SC4DrawContext*` remains
+INFERRED.
+
+Provenance note: `0x007DD9B0`'s prologue reserves `0x38` and its epilogue
+releases exactly `0x38` before `ret 4`, so the `ret` is this function's own —
+not a neighbour's found by a linear byte scan.
+
+### 13.4 `Pick`'s parameter types come from the terrain override
+
+MEASURED. `0x00752700`, the sole override, is a pure forwarder:
+
+```
+8b 54 24 10   mov edx,[esp+0x10]      ; arg4
+8b 41 0c      mov eax,[ecx+0x0C]      ; vptr of the subobject at this+0x0C
+6a 00         push 0                  ; the trailing bool
+52 ...        push arg4, arg3, arg2, arg1
+83 c1 0c      add ecx,0x0C            ; this += 0x0C
+ff 50 0c      call [eax+0x0C]         ; slot 3 of that vtable
+c2 10 00      ret 0x10                ; four stack args
+```
+
+The subobject at `this+0x0C` is the terrain's `cISTETerrainView` vptr
+`0x00AB4410` (CARRIED from the 2026-09-01 terrain census); MEASURED, its slot
+3 is `0x0075A230`. And `cISTETerrainView.h:48` — the first own virtual after
+the three `cIGZUnknown` slots — is:
+
+```cpp
+virtual bool Pick(cS3DVector3 const&, cS3DVector3 const&, SC4DrawContext*, float*, bool) = 0;
+```
+
+Four arguments forwarded plus one `push 0` into a vendor-declared five-argument
+`Pick`. **The parameter types are read off a header the SDK does supply**, and
+the `bool` return agrees with the default body's `xor al,al`. This is the one
+place in the interface where the types are not guesswork.
+
+### 13.5 Registration — `cISC43DRender::AddViewObject` at vt+`0x80`
+
+`cISC43DRender.h:85` declares `AddViewObject(cISC4ViewObject3D*, int32_t,
+uint32_t)` but the SDK gives no slot number. `src\CodePatches.cpp` derived
+**vt+`0x80`** by counting header declarations against two trusted anchors.
+MEASURED this run, an independent third anchor — the route trace's own
+registration call site:
+
+```
+0x004CA537  8b 0d d0 3d b4 00      mov ecx,[0x00B43DD0]     ; the renderer
+0x004CA53D  8b 87 9c 00 00 00      mov eax,[edi+0x9C]       ; the drawable
+0x004CA543  8b 11                  mov edx,[ecx]
+0x004CA545  68 e8 03 00 00         push 0x3E8               ; key
+0x004CA54A  6a 05                  push 5                   ; layer
+0x004CA54C  50                     push eax                 ; obj
+0x004CA54D  ff 92 80 00 00 00      call [edx+0x80]          ; AddViewObject
+```
+
+Three arguments pushed, `vt+0x80`, on the object held in the `.data` slot
+`0x00B43DD0` — the same global `CodePatches.cpp` already trusts for the model
+pick at `vt+0x104`. **`vt+0x80` is now measured, not counted.**
+
+INFERRED, corroborating: `0x007C5D90` occurs exactly once in all of `.rdata`,
+at `0x00ABABE0` — i.e. `+0x80` into a vtable based at `0x00ABAB60`. MEASURED,
+its body is `AddViewObject`-shaped and dispatches on the layer argument:
+
+```
+83 f8 03 ... 81 c6 88 01 00 00    layer == 3  ->  list at [renderer+0x188]
+83 f8 05 ... 81 c6 8c 01 00 00    layer == 5  ->  list at [renderer+0x18C]
+b0 01 5e c2 0c 00                 mov al,1 ; ret 0xC   (three stack args)
+```
+
+`ret 0xC` matches the header's three arguments. The `+0x188`/`+0x18C` list
+heads match the four-pass table already recorded in the recovered header. **The
+route trace's `push 5` is a real, handled case**, landing in the
+`[renderer+0x18C]` list — pass 5, which draws *after* the scene. That is the
+compositing lever for anything that must appear over the city.
+
+CARRIED, not re-verified here: the route drawable's ctor `0x007DDD50` stamps
+`0x00ABB648` at `[obj+0]` and `0x00ABB630` at `[obj+4]` — MEASURED this run —
+and the object is stored at `[tool+0x9C]`, which is what `0x004CA53D` reads.
+The `cISC4ViewObject3D` vptr is therefore at **offset 0** of the registered
+pointer, for both the route drawable and the terrain.
+
+Hazard, MEASURED: `0x005BCB40` / `0x005BE3E0` / `0x005BCB30` are **adjustor
+thunks** (`add ecx,4 ; jmp`), and `0x005BCB50` is their mirror
+(`sub ecx,4 ; jmp 0x005BCB40`). A hook installed on any of those three
+addresses fires for every class that shares the thunk, with a `this` that has
+already been shifted. Hook the drawer, not the refcount slots.
+
+### 13.6 Still not determined
+
+- **This interface's own GZIID.** Every capture reached these objects through
+  `AddViewObject` rather than a `QueryInterface`, so no iid constant was ever
+  pushed on an observed path. Without it, `QueryInterface` cannot be used to
+  test whether an arbitrary pointer is a view object — pointer-compare against
+  `FindViewObject` instead.
+- **The draw context's type.** `Draw`'s single argument is a pointer whose
+  `+0x38` the terrain reads; the name `SC4DrawContext*` is INFERRED from the
+  `cISTETerrainView::Pick` signature, never measured.
+- **The two method names.** `Draw` and `Pick` are inferred from behaviour and
+  from the matching vendor terrain signature, not from any symbol or string in
+  the image. **Treat the shape as pinned and the names as good guesses.**
+
+*(This passage is the 2026-09-01 audit's revision. Commit 0961524 lost it; it was recovered from that session's journal and applied 2026-09-23. Its measurements date from 2026-09-01 and were not re-run on 2026-09-23.)*
 
 ---
 

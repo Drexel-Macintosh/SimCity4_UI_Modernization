@@ -24,8 +24,10 @@ ROLES, because coverage means a different thing for each (law 86):
 
   blttype=tiled          the engine repeats the source across the dest, so any
                          art covers any window.                      SKIPPED
-  blttype=edge / 9-slice cell = W/3 and the three spans are [0,c] [c,W-c]
-                         [W-c,W], which tile any width exactly.      SKIPPED
+  blttype=edge / 9-slice PER AXIS: cell = (W/3, H/3), and the spans are
+                         [0,cx] [cx,W-cx] [W-cx,W] across and [0,cy]
+                         [cy,H-cy] [H-cy,H] down - each middle stretches, so
+                         they cover any width AND any height.        SKIPPED
   GZWinBtn state strip   the sheet holds N states side by side; ONE state must
                          cover the window, so artW/N >= winW and artH >= winH.
   everything else        dst-follows-src (law 83): the engine draws the source
@@ -33,10 +35,49 @@ ROLES, because coverage means a different thing for each (law 86):
                          the window's size. art < window is an UNCOVERED BAND -
                          the hairline.
 
-  RESTORED 2026-09-23: an intended 2026-09-01 revision of this passage was
-  lost (commit 0961524 wrote its edit instruction instead of its text); the
-  original is restored here. The per-axis cell it was to state, (W/3, H/3),
-  is documented in the nine_slice docstring of render_dialog.py.
+SUPERSEDED 2026-09-01, kept per annotate-never-rewrite. That row used to read
+"cell = W/3 and the three spans are [0,c] [c,W-c] [W-c,W], which tile any width
+exactly" - ONE number, taken from the width, applied to both axes. Wrong: both
+drawers this gate can meet form the two quotients SEPARATELY. MEASURED
+2026-09-01 by disassembling the shipped exe (`Apps\SimCity 4.exe`, 7,876,608
+bytes, ImageBase 0x00400000, .text RVA 0x7000 raw 0x7000):
+
+  EDGE branch of the GZWinBMP draw 0x009BC325, entered by the `jne` at
+      0x009BC3B7 -> 0x009BC411: `idiv ecx` at 0x009BC418 on [ebp-8] and again
+      at 0x009BC423 on [ebp-4], off ONE shared `push 3; pop ecx` at 0x009BC415.
+      The cell rect handed to blit helper 0x008D8800 (call at 0x009BC439) is
+      (l, t, r/3, b/3).
+  GZWinBtn 9-slice at 0x009B05E0: `idiv esi` at 0x009B05E9 on (r-l) and
+      `idiv ebx` at 0x009B0602 on (b-t), off two separate `push 3` loads
+      (0x009B05E5, 0x009B05EE); cell = ((r-l)/3, (b-t)/3) BASED AT (l,t) - a
+      DIFFERENT expression, do not carry one drawer to the other. Same helper
+      0x008D8800, call at 0x009B061E.
+  CARRIED, not re-measured: which clsid owns each of those two functions, and
+      that corners draw 1:1 while edges and centre STRETCH inside 0x008D8800
+      (BLIT-BEHAVIOUR.md drawer table; `render_dialog.py::nine_slice`, which
+      already carries this same correction). This exe has no RTTI locators
+      behind either vtable slot, so the names cannot be read from the bytes.
+
+NO CODE IMPACT - which is exactly why it is annotated and not patched. The row
+exists to justify the skip in scan() on blttype/edgeimage/NINE, and that
+justification SURVIVES per-axis: three spans tile EITHER axis, so a 9-slice
+node still cannot leave an uncovered band. Its positive control, MEASURED
+2026-09-01 over the staged corpus: 4 `blttype=edge` + 14 `edgeimage=yes` nodes
+across the 89 staged .UI files, plus the 30 sheets in
+`tools\upscale\nine-slice.txt` - the branch this row defends does fire.
+
+DO NOT reach for cSC4WinAlertBorder's 0x00794100 here. It is per-axis too (two
+0xAAAAAAAB magic-multiply `/3` at 0x0079414D and 0x00794161, each on the result
+of a DIFFERENT vtable call - [eax+0x28] at 0x00794148 and [edx+0x24] at
+0x0079415C - MEASURED 2026-09-01), and its only .rdata reference is 0x00AB5CA8,
+i.e. slot #88 of the vtable based at 0x00AB5B48. But that window is built in
+code and appears in NO script: grep `ca5d3294` over `tools\uiscripts\extracted`
+is 0 of 331 files, while the same grep sees `clsid=GZWinBtn` in 268 and
+`clsid=GZWinBMP` in 168 - so the null has its positive control (re-run
+2026-09-01). This gate only ever prices nodes parsed out of a .UI.
+
+(Revision prepared 2026-09-01, lost to commit 0961524, re-verified and
+applied 2026-09-23.)
 
 CONTROLS, and they are the whole experiment:
 

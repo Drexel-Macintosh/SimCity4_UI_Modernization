@@ -41,9 +41,66 @@ WHAT THIS GATE ASSERTS NOW
              closing, close it AT THE SOURCE - one scaler for art and rect -
              not by patching crops afterwards.
 
-RESTORED 2026-09-23: an intended 2026-09-01 revision of this section (it also
-covered run() and main()) was lost (commit 0961524 wrote its edit instruction
-instead of its text); the original is restored here.
+AMENDED 2026-09-01. The three lines above are the PRE-#172 statement and are
+kept verbatim - they are what this gate asserted when the thumbnail-split guard
+was written. The second HARD FAIL is now CONDITIONAL, and two more were added:
+
+  HARD FAIL  a #172 query-pair state cell is not exactly R(36f) x R(21f)
+  HARD FAIL  the #172 tables cannot be read out of `build_selective_safe.py`
+
+THE PIPELINE IS TWO STAGES, NOT ONE   (the amendment, 2026-09-01)
+-----------------------------------------------------------------
+SUPERSEDED, KEPT: everything above assumed `ScaleDim` alone decides a staged
+sheet's size, so the integer-tier control was armed for every sheet. True until
+#172; not true now.
+
+    stage 1  tools\upscale\Upscale2x.cs::ScaleDim
+             round-half-up, then the CellUnit snap - and it RETURNS EARLY at an
+             integer factor, which is exactly what the control tests
+    stage 2  tools\selective-safe\build_selective_safe.py::
+             clamp_query_pair_cells                              (#172)
+             TRIMS two sheets AFTER staging, at EVERY tier
+
+`clamp_query_pair_cells` trims each state cell of {46A006B0,14015547} (Query)
+and {46A006B0,4B8DA4A4} (Route Query) down to the scaled design window
+R(36f) x R(21f) and repacks the cells at the new pitch. It is deliberately NOT
+an integer no-op, because the overhang it removes exists in stock:
+
+    Query        1x 148x21   1.5x 224x33 -> 216x32   2x 296x42 -> 288x42
+                                                     3x 444x63 -> 432x63
+    Route Query  1x 148x23   1.5x 224x35 -> 216x32   2x 296x46 -> 288x42
+                                                     3x 444x69 -> 432x63
+
+    MEASURED 2026-09-01, PNG IHDR of the two sheets in stage-15x\ stage\
+    stage-3x\ against tools\dbpf\extracted\SimCity_1\; every staged cell is
+    exactly 54x32 / 72x42 / 108x63. CARRIED: the same six numbers are the #172
+    acceptance table in _tests\REGRESSION.md, approved 2026-08-16, art
+    re-staged 2026-08-30.
+
+So a staged size that differs from round(src1x * f) at 2x/3x is NOT evidence
+that ScaleDim failed to return early. For these two sheets it is evidence that
+the clamp ran, exactly as designed. Until this amendment the gate read it as a
+ScaleDim defect and exited 1 at BOTH integer tiers - attributing a deliberate,
+user-approved art repair to a bug in the offline upscaler. ScaleDim had in fact
+returned early exactly as modelled; the model had never been told stage 2
+exists. THE FIX WAS TO THE MODEL, NOT TO THE ART: no staged byte changed.
+
+WHY THE EXEMPTION IS NOT A HOLE
+  * the two sheets are DERIVED from the builder's own
+    QUERY_PAIR_SHEETS / QUERY_PAIR_WIN_1X / QUERY_PAIR_STATES, never a
+    hand-copied TGI pair - a retyped pair is the defect shape this project
+    keeps paying for, because it goes stale silently;
+  * what they are exempt FROM is replaced by what the clamp itself promises:
+    cell == R(36f) x R(21f), checked at EVERY tier, not only the integer ones;
+  * every OTHER sheet keeps the original control, so a genuine integer-tier
+    snap is still visible. POSITIVE CONTROL 2026-09-01: pointing the exemption
+    at a bogus TGI put both real sheets back in the control population and the
+    gate failed at 2x again; an off-by-one design window failed the acceptance
+    test; an unreadable builder failed the derivation check. The gate can still
+    fail three ways.
+
+(Revision prepared 2026-09-01, lost to commit 0961524, re-verified and
+applied 2026-09-23.)
 
 Offline. Reads the staged corpus and the 1x extract; no game, no exe.
 
@@ -97,6 +154,54 @@ SRC_NAMES = ("T-856ddbac_G-%08x_I-%08x.png",
              "T-0x856ddbac_G-0x%08x_I-0x%08x.png")
 
 
+# ---------------------------------------------------------------------------
+# THE #172 CLAMP STAGE, DERIVED FROM THE BUILDER'S OWN SOURCE (2026-09-01).
+#
+# Read, never imported: importing build_selective_safe.py executes module-level
+# path/FACTOR setup off sys.argv. Read, never RETYPED: a hand-copied TGI pair
+# is exactly the defect shape this project keeps paying for - it goes on being
+# believed after the build stops agreeing with it.
+#
+# A failed read returns empty and main() FAILS with that as the stated reason.
+# It must never fall through to "no sheets are exempt", because that resurrects
+# the false ScaleDim accusation, nor to "everything is exempt", which would
+# blind the control.
+# ---------------------------------------------------------------------------
+SEL_BUILDER = os.path.join(ROOT, "tools", "selective-safe",
+                           "build_selective_safe.py")
+
+
+def query_pair_model():
+    """-> (frozenset{(gid, iid)}, (win_w, win_h), n_states), or empty on any
+    failure to read. Mirrors build_selective_safe.py::clamp_query_pair_cells.
+
+    The clone duplicates (iid ^ CLONE_XOR) need no entry here: a clone has no
+    1x extract under its own iid, so it never reaches `snapped` in the first
+    place. Verified 2026-09-01 - no clone of either sheet is staged at any tier.
+    """
+    try:
+        with open(SEL_BUILDER, encoding="utf-8", errors="replace") as fh:
+            text = fh.read()
+    except OSError:
+        return frozenset(), None, None
+    ms = re.search(r"^QUERY_PAIR_SHEETS\s*=\s*\((.*?)^\)", text, re.S | re.M)
+    mw = re.search(r"^QUERY_PAIR_WIN_1X\s*=\s*\(\s*(\d+)\s*,\s*(\d+)\s*\)",
+                   text, re.M)
+    mn = re.search(r"^QUERY_PAIR_STATES\s*=\s*(\d+)", text, re.M)
+    if not (ms and mw and mn):
+        return frozenset(), None, None
+    sheets = frozenset(
+        (int(a, 16), int(b, 16))
+        for a, b in re.findall(r"\(\s*0x([0-9A-Fa-f]+)\s*,\s*0x([0-9A-Fa-f]+)\s*\)",
+                               ms.group(1)))
+    if not sheets:
+        return frozenset(), None, None
+    return sheets, (int(mw.group(1)), int(mw.group(2))), int(mn.group(1))
+
+
+QP_SHEETS, QP_WIN, QP_N = query_pair_model()
+
+
 def run(tier, limit):
     sub, f = STAGE[tier]
     stage = os.path.join(SS, sub)
@@ -132,10 +237,47 @@ def run(tier, limit):
         if swh != naive:
             snapped[(gid, iid)] = (o, swh, naive)
 
+    # THE CONTROL POPULATION EXCLUDES THE #172 SHEETS - see the header.
+    # `snapped` itself keeps them, so the under-read BASELINE below still
+    # counts them and that number cannot move unnoticed.
+    exempt = sorted(k for k in snapped if k in QP_SHEETS)
+    control = len(snapped) - len(exempt)
+
     print("  staged images with a 1x source : %d" % considered)
     print("  of those, SNAPPED by ScaleDim  : %d%s"
-          % (len(snapped),
+          % (control,
              "   (expected 0 at an integer factor)" if float(f).is_integer() else ""))
+    for gid, iid in exempt:
+        o, staged, naive = snapped[(gid, iid)]
+        print("    (+ {%08X,%08X} 1x=%dx%d staged=%dx%d vs naive %dx%d - #172 "
+              "post-staging clamp, not ScaleDim; checked against the clamp's "
+              "own acceptance test below)"
+              % (gid, iid, o[0], o[1], staged[0], staged[1], naive[0], naive[1]))
+
+    # ---- 1b. the acceptance test that PAYS FOR that exemption ---------------
+    # build_selective_safe.py::clamp_query_pair_cells promises one thing about
+    # its output: every state cell is exactly the scaled design window. Armed at
+    # EVERY tier - the clamp runs at every tier, so there is no reason to check
+    # it only where the control used to fire.
+    clamp_bad = []
+    tw = th = None
+    if QP_SHEETS:
+        tw, th = round_half_up(QP_WIN[0] * f), round_half_up(QP_WIN[1] * f)
+        for key in sorted(QP_SHEETS):
+            a = staged_dims.get(key)
+            if a is None:
+                clamp_bad.append((key, "is not staged - the clamp would ship "
+                                       "silently unapplied"))
+            elif a[0] % QP_N:
+                clamp_bad.append((key, "staged %dx%d - width not divisible by "
+                                       "%d states" % (a[0], a[1], QP_N)))
+            elif (a[0] // QP_N, a[1]) != (tw, th):
+                clamp_bad.append((key, "cell %dx%d, want %dx%d (sheet %dx%d)"
+                                  % (a[0] // QP_N, a[1], tw, th, a[0], a[1])))
+        print("  #172 query-pair cell == R(%df)xR(%df) = %dx%d : %s"
+              % (QP_WIN[0], QP_WIN[1], tw, th,
+                 "OK, %d sheet(s)" % len(QP_SHEETS) if not clamp_bad
+                 else "%d WRONG" % len(clamp_bad)))
 
     # ---- 2. do any imagerects still describe the UNSNAPPED size? ------------
     bad = []
@@ -237,7 +379,7 @@ def run(tier, limit):
                  staged[0], staged[1], staged[0] - rect[2], staged[1] - rect[3]))
     if len(bad) > limit:
         print("     ... and %d more" % (len(bad) - limit))
-    return len(bad), len(snapped), len(spread)
+    return len(bad), control, len(spread), clamp_bad
 
 
 def main():
@@ -247,6 +389,20 @@ def main():
         tiers = [sys.argv[sys.argv.index("--tier") + 1]]
     if "--list" in sys.argv:
         limit = int(sys.argv[sys.argv.index("--list") + 1])
+
+    # A DERIVATION THAT SILENTLY RETURNS NOTHING IS THE FAILURE, NOT A DEFAULT.
+    if not QP_SHEETS:
+        print("FAIL")
+        print("   could not read QUERY_PAIR_SHEETS / QUERY_PAIR_WIN_1X / "
+              "QUERY_PAIR_STATES out of")
+        print("   %s" % SEL_BUILDER)
+        print("   The #172 exemption and its replacement acceptance test are "
+              "DERIVED from that file,")
+        print("   never retyped. If the tables were renamed or the clamp was "
+              "removed, fix this gate")
+        print("   deliberately - do not let it fall back to a control that "
+              "cannot see stage 2.")
+        sys.exit(1)
 
     fail = []
     spread_by_tier = {}
@@ -258,14 +414,20 @@ def main():
         print()
         if res is None:
             continue
-        nbad, nsnap, nspread = res
+        nbad, nsnap, nspread, clamp_bad = res
         # nbad is REPORTED, NEVER FAILED ON. Closing that gap is what broke
         # the thumbnails twice; see the header. Left visible so the number
         # cannot drift unnoticed.
         spread_by_tier[tier] = nspread
+        # nsnap now EXCLUDES the #172 sheets, so this control still fires on a
+        # genuine integer-tier snap by any other sheet.
         if float(STAGE[tier][1]).is_integer() and nsnap:
             fail.append("%s: ScaleDim snapped %d image(s) at an INTEGER factor - "
                         "it is supposed to return early there" % (tier, nsnap))
+        for key, why in clamp_bad:
+            fail.append("%s: #172 query-pair sheet {%08X,%08X} %s - "
+                        "clamp_query_pair_cells promises cell == R(%df)xR(%df)"
+                        % (tier, key[0], key[1], why, QP_WIN[0], QP_WIN[1]))
 
     # OVER-EXTENSION IS A TIER-RELATIVE TEST, NOT AN ABSOLUTE ONE.
     # A handful of rects have run to the full sheet at EVERY tier since long
