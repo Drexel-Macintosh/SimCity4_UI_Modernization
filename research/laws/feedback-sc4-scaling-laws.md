@@ -665,7 +665,7 @@ Sprite and hit box are the same rect on this engine —
 click dead" cannot be geometric is wrong, and cost a not-a-bug closure on a real
 defect.
 
-> ⚠ **2026-09-23 — the NAMES in the previous paragraph are the header's, not the exe's.** Our `GZWinMoveTo(dx, dy)` call compiles to exe slot 57, which is **`GZWinOffset`**. That is why every one of our 21 move calls passes a delta ("moves BY, not TO"). The vendored gzcom-dll `cIGZWin.h` omits `GZWinOffset`, and MSVC's overload grouping shifts slots 53-57. The header's `SetSize(w,h)` compiles to the exe's `SetArea(const cRZRect&)`. `_tests\Test-GZWinHeaderSlots.py` gates it; `tools\sdk\ghidra\README.md` has the measurement. The funnel into `SetArea` → `CalcAbsoluteArea` is unchanged.
+> ⚠ **2026-09-23 — the NAMES in the previous paragraph are the header's, not the exe's.** Our `GZWinMoveTo(dx, dy)` call compiles to exe slot 57, which is **`GZWinOffset`**. That is why every one of our 20 move calls passes a delta ("moves BY, not TO"); `_tests\Test-GZWinHeaderSlots.py` now fails any new call whose arguments do not look like a delta. The vendored gzcom-dll `cIGZWin.h` omits `GZWinOffset`, and MSVC's overload grouping shifts slots 53-57. The header's `SetSize(w,h)` compiles to the exe's `SetArea(const cRZRect&)`. `_tests\Test-GZWinHeaderSlots.py` gates it; `tools\sdk\ghidra\README.md` has the measurement. The funnel into `SetArea` → `CalcAbsoluteArea` is unchanged.
 
 The rects agree, but the router's hit walk descends only into children
 whose rect **contains the point**, so a child that is perfectly self-consistent is

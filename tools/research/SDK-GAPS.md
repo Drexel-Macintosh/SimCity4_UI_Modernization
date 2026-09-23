@@ -318,7 +318,7 @@ count exactly: a 3-arg mouse handler is `ret 0xC`, a 2-arg point test
 `GZOnMouseDownL` corrupts the stack and crashes the game. Read the `ret`
 immediate before every vtable hook, without exception.
 
-> ⚠ **CORRECTED 2026-09-23.** The `ret 0x10` handler named `GZOnCaptureChanged` above is slot 139, **`GZOnMouseWheel`**. The real `GZOnCaptureChanged` (140) is `ret 8`. The rule itself stands, and it now has a gate: `_tests\Test-GZWinHeaderSlots.py` fails the build if `src\` calls any `cIGZWin` method whose compiled slot or ABI disagrees with the exe.
+> ⚠ **CORRECTED 2026-09-23.** The `ret 0x10` handler named `GZOnCaptureChanged` above is slot 139, **`GZOnMouseWheel`**. The real `GZOnCaptureChanged` (140) is `ret 8`. The rule itself stands, and it now has a gate: `_tests\Test-GZWinHeaderSlots.py` (manual) fails if `src\` calls any `cIGZWin` method whose compiled slot disagrees with the exe, one of three methods with a known ABI defect, or any name without an exe-verified row.
 
 ### 1.5 Window flags the SDK enum does not list
 
