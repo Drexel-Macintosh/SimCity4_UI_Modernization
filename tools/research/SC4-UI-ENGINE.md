@@ -60,6 +60,12 @@ this SDK can reach it. Recognising that early is worth days.
    `GZOnCaptureChanged`/`GZOnCommand`/5-arg `SendMsg` land on the measured 139
    / 142 / 144 with no correction. `SDK-GAPS.md` §1 carries the anchor table.
    Never name a slot in 134–138 by counting the header.
+
+   ⚠ **CORRECTED 2026-09-23 — the band model above is superseded.**
+   - The undeclared slot 57 is **`GZWinOffset(dx,dy)`**. The header lists no virtual the game lacks. The apparent "six-for-five collapse" is the header's **late `SetSize(cRZPoint)`**: MSVC pulls it up next to `SetSize(w,h)`, which shifts slots 54–117 by one.
+   - The game has all **six** mouse handlers, 134–138 plus **139 = `GZOnMouseWheel`** (4 args). 140 is `GZOnCaptureChanged`, 141 Enter, 142 Exit and 143 `GZOnCommand`. Every header name from 118 up therefore lands one slot low, so the header's `GZOnCaptureChanged`/`GZOnCommand` never reached 139/142 "with no correction".
+   - MSVC also swaps the `GetArea`, `GetAreaAbsolute` and fill-colour overload pairs (47–50, 102–107).
+   - Only the **compiled** layout counts, and it is wrong for 40 of the 147 declarations. `_tests\Test-GZWinHeaderSlots.py` compiles the header, compares every method `src\` calls against the exe, and fails the build on a mismatch. The measurement is in `tools\sdk\ghidra\README.md`.
 2. **Slot 88 (`vt+0x160`) is the PER-CLASS "draw myself"**, not the composite
    driver. Measured across four classes, all distinct:
    `cSC4WinAuraBar 0x797CC0` · `GZWinBMP 0x9BC325` (the hooked one) ·
@@ -2048,7 +2054,12 @@ Its sole `SetID` site is inside a 656-byte vtable-only method at `0x79D8D0`
 (`funcs.json`: 0 direct callers, i.e. virtual-dispatch only). That method:
 sets its own window's area to `(20,20)-(424,288)` (`vt+0xDC`, the register's
 `SetArea4`), configures a grid via `vt+0x1AC` with args `(0x19,3,0xDC)`
-(25 rows, 3 columns, 220px cell), then gets/creates a helper object through
+(25 rows, 3 columns, 220px cell) [⚠ **CORRECTED 2026-09-23: not a grid.**
+`vt+0x1AC` on this window is cIGZWin slot 107, `SetFillColor(r,g,b)`, so the call
+sets the fill colour RGB(25,3,220). MEASURED: `0x79D91C` pushes `0xDC,3,0x19` on
+`this`, and slot 107 of its vtable `0xAB7B58` is the inherited `0x99BFAC`, which
+packs r,g,b into `+0xD4` and returns with `ret 0xC`. The same slot is called with
+RGB(237,243,240) at `0x4F4AA9` and RGB(255,255,255) at `0x4BF094`], then gets/creates a helper object through
 the GZCOM singleton getter `0x90DDF1` using a 2-dword class-id pair
 `{0x1AA52EA4, 0x3AA52E64}` (stored at `[this+0xD8]`). Through that helper's
 `vt+0xC` it obtains a NEW child window, `SetID`s it `0x9AEDEF7C` (`0x79D95B`,
@@ -2353,7 +2364,9 @@ the next. The regime switch above removes any need for it.
   **`ChartLabel 0xE9C86B5E`** @**`0x0076DD91`** (the fetch is
   `0x0076DD8A call 0x913C72` → `push GUID` → `call [edx+0x14]`) and
   **`Legend 0xE9C86B5F`** @**`0x007A0747`**, plus `ChartTickText`
-  @`0x76D63E`,
+  @`0x76D63E` [⚠ **CORRECTED 2026-09-23:** `ChartTickText 0xE9C86B6E` is pushed
+  at **`0x76D658`**. `0x76D63E` is the style-manager call before the chart's
+  `Legend` push at `0x76D645`],
   `AdvisorHeadline 0xAA0F4AB4` @`0x7726B4`,
   `LoadScreenTitle 0x4A9C7970` @`0x777931`.
 - File probe order (proven by disassembly): the game probes
@@ -2367,6 +2380,12 @@ legend** is `ChartLabel`; the **Data Views** legend is `Legend`. The
 `make_fontstyle.py` entry `SIZE_SQUEEZE = {"Legend": 0.92}` therefore **does
 not apply to the Graphs chart** — it renders at ChartLabel's raw size, and
 any calculation that treats the chart as squeezed is ~8 % wrong. §5.4.6.
+
+> ⚠ **CORRECTED 2026-09-23. The paragraph above is true of the chart's LEGEND ROWS (`ChartLabel`), not of the whole chart.**
+> - The chart **title** is drawn in **`Legend` 0xE9C86B5F**. It is pushed at `0x76D645`, stored through cIGZGraph slot 39 at `0x76D670`, and drawn by DrawTitles `0x9B5B16` at `0x9B5E45`. So the 0.92 squeeze **does** reach the title.
+> - Axis labels and axis titles are drawn in `ChartTickText` 0xE9C86B6E, pushed at `0x76D658` into slots 21 and 29.
+>
+> MEASURED statically and reproduced by an independent verifier (`tools\sdk\ghidra\verify\W-Graph*`). Whether the title shows on stock screens is a runtime question. The whole chart family is in `WIDGET-INTERFACES.md`.
 
 **Because FontStyle doubles EVERY style, an unscaled frame ALWAYS clips its
 text** — including the unresolved-token case, which lands on the doubled
@@ -2439,6 +2458,14 @@ The tooltip is the opposite case: its Plot (`0x798710`) wraps text at a
 **HARDCODED 250px** (`push 0xfa` at `0x79880A` and `0x7988A9`), so with 2x
 fonts the text wrapped narrow-and-tall and painted over the frame's rounded
 corners. Cured by a byte patch to `250*factor`.
+
+> ⚠ **CORRECTED 2026-09-23. `0x798710` is `GZPaint` (class vtable `0x00AB6770` slot 88), not Plot.**
+> - The tip layer is **`cSC4WinCalloutBox`**, the Mac debug-symbol name. All 21 of its interface slots match that name.
+> - IID `0xC9B432CF`, ctor `0x799DD0`, 0x1B4 bytes. Init `0x7980D0` gives **every** instance window id `0x2AAB8CC1`. Nine code sites create one.
+> - The 250 wrap is still the only width cap. The constraint-derived value in GZPaint is a **height** budget: (constraint bottom − top) − 2·padX. Scaling padX therefore does not interact with the wrap patch.
+> - The remaining 1x literals are catalogued with VAs in `WIDGET-INTERFACES.md` §3: pads, the cursor-avoidance rect, the internal gaps, and the 16 px screen inset.
+>
+> MEASURED statically and independently re-derived.
 
 ### 5.4 THE GRAPHS CHART AND ITS LEGEND — the PANEL builds it, the chart only draws it
 
@@ -3156,7 +3183,7 @@ EXACTLY the audit row whose replacement opens `| `0xB07FD8`–`0xB09410` | **the
 | `0x7ED224` | polls-panel init — binds the small rating meter to the SAME `14015549` sheet through the GZWinBMP family |
 | **`0x7E87B1`, `0x7E89D7`, `0x7E8A02`** | the three `imul r32,r/m32,7` sites — **7 px per rating point, ARROWS ONLY** (reveal `SetW(delta*7)` + reposition; no pixel constant exists in the FILL chain — §2.6), bytes `6B F6 07` / `6B C9 07` / `6B C9 07`, patched imm8 at `+2` |
 | `0x7E8AF4` / `0x7E8B0A` | mayor face art swap (code-bound `0x14315E60`/`62`) |
-| `0x798710` | tooltip layer Plot (window `0x2AAB8CC1`, class vt `0x00AB6770`) |
+| `0x798710` | tooltip layer Plot (window `0x2AAB8CC1`, class vt `0x00AB6770`) — ⚠ corrected 2026-09-23: this is **`GZPaint`** (slot 88) of **`cSC4WinCalloutBox`**; see `WIDGET-INTERFACES.md` §3 |
 | **`0x79880A`, `0x7988A9`** | tooltip `push 0xfa` = the hardcoded 250px wrap width (patched to `250*factor`) |
 | `0x41DE20` | advisor 3D-head binder (creates each head ONCE per controller slot) |
 | `0x009CF772` / **`0x009CF241`** | **GZWinCombo** ctor / **Plot** (clsid `0x0000059B`, iid `0x412CE496`, vt `0x00AE2970`); factory `sub_7798C0` — baked disp8 field width `lea edi,[edx+0x78]` (=120), `combodowncolor` write `0x779B0D`, inclusive-rect disp8 `0x779927`, row-builder `inc eax` `0x77F813`; internal child id `0x53430D98` (§2) |

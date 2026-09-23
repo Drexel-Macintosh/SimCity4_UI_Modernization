@@ -1,0 +1,1289 @@
+{
+ "exe": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\SimCity 4 Deluxe\\Apps\\SimCity 4.exe",
+ "iid": "0xDAA6B9BE",
+ "clsid": "0xDAA6B9BF",
+ "interface_vtable": "0x00ADD578",
+ "abstract_vtable": "0x00ADD348",
+ "abstract_purecall_slots": 140,
+ "win_vtable_at_plus4": "0x00ADD7B0",
+ "slots": [
+  {
+   "slot": 0,
+   "vt_off": "0x000",
+   "mac_name": "QueryInterface",
+   "windows_va": "0x009A5CB5",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "cmp riid,0xDAA6B9BE -> *ppv=this(+0),AddRef; else ecx+=4, jmp cGZWin QI 0x99B774"
+  },
+  {
+   "slot": 1,
+   "vt_off": "0x004",
+   "mac_name": "AddRef",
+   "windows_va": "0x0094D34F",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "inc [ecx+0x10] (shared AddRef)"
+  },
+  {
+   "slot": 2,
+   "vt_off": "0x008",
+   "mac_name": "Release",
+   "windows_va": "0x009A7650",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "dec [ecx+0x10]; destroy at 1"
+  },
+  {
+   "slot": 3,
+   "vt_off": "0x00C",
+   "mac_name": "Init",
+   "windows_va": "0x009AF121",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "cIGZWin slot4 thunk target; chains base Init 0x99C2C3 on this+4"
+  },
+  {
+   "slot": 4,
+   "vt_off": "0x010",
+   "mac_name": "Shutdown",
+   "windows_va": "0x009ABED4",
+   "ret_bytes": "tail-jmp 0x99D2FE (0 args)",
+   "status": "VERIFIED",
+   "evidence": "cIGZWin slot5 thunk target; releases +0x164/+0x168/+0x208/+0x2C0/+0x26C/+0x270/+0x274/+0x278, tail-jmp base 0x99D2FE"
+  },
+  {
+   "slot": 5,
+   "vt_off": "0x014",
+   "mac_name": "AsIGZWin",
+   "windows_va": "0x009CFA36",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "returns this+4 (null-safe); deserializer calls it before cIGZWin calls"
+  },
+  {
+   "slot": 6,
+   "vt_off": "0x018",
+   "mac_name": "Refresh",
+   "windows_va": "0x009AFCCB",
+   "ret_bytes": 0,
+   "status": "CONSISTENT",
+   "evidence": "runs layout 0x9AEE63, sets dirty byte +0xE4"
+  },
+  {
+   "slot": 7,
+   "vt_off": "0x01C",
+   "mac_name": "SetArea",
+   "windows_va": "0x009A619F",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "ret 0x10; forwards to cGZWin SetArea 0x99C837 then recomputes +0x118..+0x124; cIGZWin slot55 thunks here"
+  },
+  {
+   "slot": 8,
+   "vt_off": "0x020",
+   "mac_name": "GetGridArea",
+   "windows_va": "0x009A76DA",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "rect {+0xF0, +0xF4, W-+0xF8, H-+0xFC} (gutters)"
+  },
+  {
+   "slot": 9,
+   "vt_off": "0x024",
+   "mac_name": "GetCellArea",
+   "windows_va": "0x009A7734",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "grid area + colhdr(+0x110 if flag 8) + rowhdr(+0x114 if flag 0x10) - scrollbar W/H"
+  },
+  {
+   "slot": 10,
+   "vt_off": "0x028",
+   "mac_name": "SetFlag",
+   "windows_va": "0x009A6284",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "if !(flags&f) -> slot11(flags|f); deserializer f* keywords"
+  },
+  {
+   "slot": 11,
+   "vt_off": "0x02C",
+   "mac_name": "SetFlags",
+   "windows_va": "0x009A81BE",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "stores +0xDC; scrollbar rebuild on bits 6"
+  },
+  {
+   "slot": 12,
+   "vt_off": "0x030",
+   "mac_name": "ClearFlag",
+   "windows_va": "0x009A629F",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "slot11(flags&~f)"
+  },
+  {
+   "slot": 13,
+   "vt_off": "0x034",
+   "mac_name": "IsFlagSet",
+   "windows_va": "0x009A62BC",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "flags&f"
+  },
+  {
+   "slot": 14,
+   "vt_off": "0x038",
+   "mac_name": "GetFlags",
+   "windows_va": "0x009683E0",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "mov eax,[ecx+0xDC]"
+  },
+  {
+   "slot": 15,
+   "vt_off": "0x03C",
+   "mac_name": "SetDefaultFont",
+   "windows_va": "0x009A62F0",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "+0x208 AddRef/Release; deserializer font="
+  },
+  {
+   "slot": 16,
+   "vt_off": "0x040",
+   "mac_name": "GetDefaultFont",
+   "windows_va": "0x009A6333",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "mov eax,[ecx+0x208]"
+  },
+  {
+   "slot": 17,
+   "vt_off": "0x044",
+   "mac_name": "SetDefaultFontColor",
+   "windows_va": "0x009A633A",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "(color,idx<6) -> +0x20C+4*idx; deserializer fontcolor idx 0"
+  },
+  {
+   "slot": 18,
+   "vt_off": "0x048",
+   "mac_name": "GetDefaultFontColor",
+   "windows_va": "0x009A6357",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "(color*,idx) reads +0x20C+4*idx"
+  },
+  {
+   "slot": 19,
+   "vt_off": "0x04C",
+   "mac_name": "SetDefaultFontColorByColumns",
+   "windows_va": "0x009AC269",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "(color,idx,start,count) -> column-format map +0x19C key (c,0)"
+  },
+  {
+   "slot": 20,
+   "vt_off": "0x050",
+   "mac_name": "SetDefaultFontColorByRows",
+   "windows_va": "0x009AC2E9",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "same on row map +0x1C0 key (0,r)"
+  },
+  {
+   "slot": 21,
+   "vt_off": "0x054",
+   "mac_name": "SetDefaultTextWrapping",
+   "windows_va": "0x009A6376",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "flag 0x800 (fcellwrap) via slots 13/10/12; deserializer textwrapping"
+  },
+  {
+   "slot": 22,
+   "vt_off": "0x058",
+   "mac_name": "GetDefaultTextWrapping",
+   "windows_va": "0x009A63B4",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "IsFlagSet(0x800)"
+  },
+  {
+   "slot": 23,
+   "vt_off": "0x05C",
+   "mac_name": "GetGutters",
+   "windows_va": "0x009A63BF",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "4 out-ptrs <- +0xF0..+0xFC"
+  },
+  {
+   "slot": 24,
+   "vt_off": "0x060",
+   "mac_name": "SetGutters",
+   "windows_va": "0x009A63F4",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "4 args -> +0xF0..+0xFC; deserializer gutters= (0,0,0,0 when absent)"
+  },
+  {
+   "slot": 25,
+   "vt_off": "0x064",
+   "mac_name": "GetCellGutters",
+   "windows_va": "0x009A642D",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "4 out-ptrs <- +0x100..+0x10C"
+  },
+  {
+   "slot": 26,
+   "vt_off": "0x068",
+   "mac_name": "SetCellGutters",
+   "windows_va": "0x009A6462",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "4 args -> +0x100..+0x10C"
+  },
+  {
+   "slot": 27,
+   "vt_off": "0x06C",
+   "mac_name": "SetOutlineUse",
+   "windows_va": "0x009A648F",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "(bool,color): flag 0x200 fdoutline + +0x148; deserializer fdoutline/olinecolor"
+  },
+  {
+   "slot": 28,
+   "vt_off": "0x070",
+   "mac_name": "GetOutlineColor",
+   "windows_va": "0x0076B620",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "mov eax,[ecx+0x148]"
+  },
+  {
+   "slot": 29,
+   "vt_off": "0x074",
+   "mac_name": "PauseRecalculations",
+   "windows_va": "0x009A64B3",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "counter +0xE8 inc/dec; layout skips while >0"
+  },
+  {
+   "slot": 30,
+   "vt_off": "0x078",
+   "mac_name": "ActLikeAListbox",
+   "windows_va": "0x009AA3E1",
+   "ret_bytes": 12,
+   "status": "CONSISTENT",
+   "evidence": "(cols->+0x138, maxSel->+0x190, bool allowNoSel->flag 0x1000); flags=(f&0xFFFC2BA6)|0x2BA6, rule=1"
+  },
+  {
+   "slot": 31,
+   "vt_off": "0x07C",
+   "mac_name": "ScrollCellsVertically",
+   "windows_va": "0x009AE48F",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "first visible row +0x12C += n, clamped"
+  },
+  {
+   "slot": 32,
+   "vt_off": "0x080",
+   "mac_name": "ScrollCellsHorizontally",
+   "windows_va": "0x009AD817",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "first visible col +0x128 += n, clamped"
+  },
+  {
+   "slot": 33,
+   "vt_off": "0x084",
+   "mac_name": "ScrollPagesVertically",
+   "windows_va": "0x009A64CB",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "slot31(n<<2)"
+  },
+  {
+   "slot": 34,
+   "vt_off": "0x088",
+   "mac_name": "ScrollPagesHorizontally",
+   "windows_va": "0x009A64DB",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "slot32(n<<2)"
+  },
+  {
+   "slot": 35,
+   "vt_off": "0x08C",
+   "mac_name": "ScrollToColumn",
+   "windows_va": "0x009A64EE",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "sets +0x128 clamped"
+  },
+  {
+   "slot": 36,
+   "vt_off": "0x090",
+   "mac_name": "ScrollToRow",
+   "windows_va": "0x009A6563",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "sets +0x12C clamped"
+  },
+  {
+   "slot": 37,
+   "vt_off": "0x094",
+   "mac_name": "ScrollToCell",
+   "windows_va": "0x009A65D8",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "slot35(col); slot36(row)"
+  },
+  {
+   "slot": 38,
+   "vt_off": "0x098",
+   "mac_name": "GetSelectionRules",
+   "windows_va": "0x009A65FB",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "out <- +0x18C,+0x190"
+  },
+  {
+   "slot": 39,
+   "vt_off": "0x09C",
+   "mac_name": "SetSelectionRules",
+   "windows_va": "0x009A6618",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "+0x18C,+0x190 then ClearSelection; deserializer selrule/maxselcount"
+  },
+  {
+   "slot": 40,
+   "vt_off": "0x0A0",
+   "mac_name": "GetSelectionCount",
+   "windows_va": "0x009A96FD",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "counts selection list +0x194"
+  },
+  {
+   "slot": 41,
+   "vt_off": "0x0A4",
+   "mac_name": "GetSelection1",
+   "windows_va": "0x009A9711",
+   "ret_bytes": 8,
+   "status": "CONSISTENT",
+   "evidence": "copies up to *count (col,row) pairs from +0x194"
+  },
+  {
+   "slot": 42,
+   "vt_off": "0x0A8",
+   "mac_name": "GetSelection2",
+   "windows_va": "0x009A87DC",
+   "ret_bytes": 8,
+   "status": "CONSISTENT",
+   "evidence": "first selected (col*,row*), false if none"
+  },
+  {
+   "slot": 43,
+   "vt_off": "0x0AC",
+   "mac_name": "SetSelection",
+   "windows_va": "0x009A9765",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "ClearSelection + AddCellToSelection(c,r,1)"
+  },
+  {
+   "slot": 44,
+   "vt_off": "0x0B0",
+   "mac_name": "AddCellToSelection",
+   "windows_va": "0x009AA477",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "(c,r,bool) honours +0x190 max and +0x18C rule"
+  },
+  {
+   "slot": 45,
+   "vt_off": "0x0B4",
+   "mac_name": "GetCellIsSelected",
+   "windows_va": "0x009A8809",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "(c,r) rule-dependent list match; ret 8"
+  },
+  {
+   "slot": 46,
+   "vt_off": "0x0B8",
+   "mac_name": "ClearSelection",
+   "windows_va": "0x009A8869",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "empties +0x194, invalidate"
+  },
+  {
+   "slot": 47,
+   "vt_off": "0x0BC",
+   "mac_name": "EnableFixedRanges",
+   "windows_va": "0x009A6639",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "flags 0x2000 ffixcolcnt / 0x4000 ffixrowcnt; limits reset -1"
+  },
+  {
+   "slot": 48,
+   "vt_off": "0x0C0",
+   "mac_name": "SetCellLimits",
+   "windows_va": "0x009A667E",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "+0x138,+0x13C"
+  },
+  {
+   "slot": 49,
+   "vt_off": "0x0C4",
+   "mac_name": "GetCellLimits",
+   "windows_va": "0x009A6697",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "out <- +0x138,+0x13C"
+  },
+  {
+   "slot": 50,
+   "vt_off": "0x0C8",
+   "mac_name": "GetCellUsedRange",
+   "windows_va": "0x009A97CE",
+   "ret_bytes": 4,
+   "status": "CONSISTENT",
+   "evidence": "cell map +0x1E4 min/max -> rect"
+  },
+  {
+   "slot": 51,
+   "vt_off": "0x0CC",
+   "mac_name": "GetCellVisibleRange",
+   "windows_va": "0x009A66B4",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "{+0x128,+0x12C, +0x128+(int)+0x130, +0x12C+(int)+0x134}"
+  },
+  {
+   "slot": 52,
+   "vt_off": "0x0D0",
+   "mac_name": "IsColumnWithinBounds",
+   "windows_va": "0x009A66FC",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "limit +0x138"
+  },
+  {
+   "slot": 53,
+   "vt_off": "0x0D4",
+   "mac_name": "IsRowWithinBounds",
+   "windows_va": "0x009A6722",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "limit +0x13C"
+  },
+  {
+   "slot": 54,
+   "vt_off": "0x0D8",
+   "mac_name": "IsCellWithinBounds",
+   "windows_va": "0x009A6748",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "slot52 && slot53"
+  },
+  {
+   "slot": 55,
+   "vt_off": "0x0DC",
+   "mac_name": "GetMostRecentlyAddedCell",
+   "windows_va": "0x009A6778",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "out <- +0x15C,+0x160; false if -1"
+  },
+  {
+   "slot": 56,
+   "vt_off": "0x0E0",
+   "mac_name": "SetBackgroundColor",
+   "windows_va": "0x009A679D",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "cIGZWin slot106 fill colour on this+4"
+  },
+  {
+   "slot": 57,
+   "vt_off": "0x0E4",
+   "mac_name": "SetBackgroundBitmap",
+   "windows_va": "0x009A67B1",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "+0x164 AddRef/Release; GZPaint draws it under flag 0x100"
+  },
+  {
+   "slot": 58,
+   "vt_off": "0x0E8",
+   "mac_name": "SetGridColors",
+   "windows_va": "0x009A67DE",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "2 colours -> +0x14C,+0x150; deserializer colgridclr/rowgridclr"
+  },
+  {
+   "slot": 59,
+   "vt_off": "0x0EC",
+   "mac_name": "GetGridColors",
+   "windows_va": "0x005F8AC0",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "out <- +0x14C,+0x150"
+  },
+  {
+   "slot": 60,
+   "vt_off": "0x0F0",
+   "mac_name": "SetDefaultTextAlignment",
+   "windows_va": "0x009A6814",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "+0x198; deserializer textalign"
+  },
+  {
+   "slot": 61,
+   "vt_off": "0x0F4",
+   "mac_name": "SetDefaultTextAlignmentByColumns",
+   "windows_va": "0x009AC369",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "(start,count,byte) -> col format +0x1D"
+  },
+  {
+   "slot": 62,
+   "vt_off": "0x0F8",
+   "mac_name": "SetDefaultTextAlignmentByRows",
+   "windows_va": "0x009AC3D2",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "(start,count,byte) -> row format +0x1D"
+  },
+  {
+   "slot": 63,
+   "vt_off": "0x0FC",
+   "mac_name": "GetDefaultTextAlignment",
+   "windows_va": "0x00423850",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "mov eax,[ecx+0x198]"
+  },
+  {
+   "slot": 64,
+   "vt_off": "0x100",
+   "mac_name": "SetDefaultColumnWidth",
+   "windows_va": "0x009A6823",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "+0x140 (px); deserializer dcolwidth (default 100)"
+  },
+  {
+   "slot": 65,
+   "vt_off": "0x104",
+   "mac_name": "SetColumnWidth",
+   "windows_va": "0x009AC43B",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "(start,count,w) -> int16 col-format +0x24 (clamped >=0); wingridcol"
+  },
+  {
+   "slot": 66,
+   "vt_off": "0x108",
+   "mac_name": "SetDefaultRowHeight",
+   "windows_va": "0x009A6830",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "+0x144 (px); deserializer drowheight (default 20)"
+  },
+  {
+   "slot": 67,
+   "vt_off": "0x10C",
+   "mac_name": "SetRowHeight",
+   "windows_va": "0x009AC4AA",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "(start,count,h) -> int16 row-format +0x24; wingridrow"
+  },
+  {
+   "slot": 68,
+   "vt_off": "0x110",
+   "mac_name": "GetDefaultColumnWidth",
+   "windows_va": "0x00459870",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "mov eax,[ecx+0x140]"
+  },
+  {
+   "slot": 69,
+   "vt_off": "0x114",
+   "mac_name": "GetDefaultRowHeight",
+   "windows_va": "0x00472E70",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "mov eax,[ecx+0x144]"
+  },
+  {
+   "slot": 70,
+   "vt_off": "0x118",
+   "mac_name": "GetColumnWidth",
+   "windows_va": "0x009AE35C",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "(start,count) sum of resolver 0x9AD684"
+  },
+  {
+   "slot": 71,
+   "vt_off": "0x11C",
+   "mac_name": "GetRowHeight",
+   "windows_va": "0x009AF0F6",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "(start,count) sum of resolver 0x9AE387"
+  },
+  {
+   "slot": 72,
+   "vt_off": "0x120",
+   "mac_name": "GetColumnHeaderArea",
+   "windows_va": "0x009A683D",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "flag 8, height +0x110"
+  },
+  {
+   "slot": 73,
+   "vt_off": "0x124",
+   "mac_name": "GetRowHeaderArea",
+   "windows_va": "0x009A68E2",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "flag 0x10, width +0x114"
+  },
+  {
+   "slot": 74,
+   "vt_off": "0x128",
+   "mac_name": "EnableHeaders",
+   "windows_va": "0x009A6986",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "(bool col->flag 8, bool row->flag 0x10); deserializer enablehdr"
+  },
+  {
+   "slot": 75,
+   "vt_off": "0x12C",
+   "mac_name": "GetHeaderSizes",
+   "windows_va": "0x009A69B7",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "out <- +0x110,+0x114"
+  },
+  {
+   "slot": 76,
+   "vt_off": "0x130",
+   "mac_name": "SetHeaderSizes",
+   "windows_va": "0x009A69D4",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "+0x110,+0x114 (px); deserializer colhdrsz,rowhdrsz"
+  },
+  {
+   "slot": 77,
+   "vt_off": "0x134",
+   "mac_name": "SetHeadingFormat",
+   "windows_va": "0x009A69F9",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "9-dword format -> +0x2C0 (GZPaint heading font)"
+  },
+  {
+   "slot": 78,
+   "vt_off": "0x138",
+   "mac_name": "GetColumnHeading",
+   "windows_va": "0x009AD986",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "map +0x2A8 lookup (GZPaint col headings)"
+  },
+  {
+   "slot": 79,
+   "vt_off": "0x13C",
+   "mac_name": "SetColumnHeading",
+   "windows_va": "0x009AD9B3",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "map +0x2A8 store; game code SetColumnHeading(c,'Class'...) 0x8B0ECC"
+  },
+  {
+   "slot": 80,
+   "vt_off": "0x140",
+   "mac_name": "GetRowHeading",
+   "windows_va": "0x009AD931",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "map +0x2B4 lookup"
+  },
+  {
+   "slot": 81,
+   "vt_off": "0x144",
+   "mac_name": "SetRowHeading",
+   "windows_va": "0x009AD95E",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "map +0x2B4 store"
+  },
+  {
+   "slot": 82,
+   "vt_off": "0x148",
+   "mac_name": "ClearAllRowHeadings",
+   "windows_va": "0x009AB87B",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "clears +0x2B4"
+  },
+  {
+   "slot": 83,
+   "vt_off": "0x14C",
+   "mac_name": "ClearAllColumnHeadings",
+   "windows_va": "0x009AB889",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "clears +0x2A8"
+  },
+  {
+   "slot": 84,
+   "vt_off": "0x150",
+   "mac_name": "GetCellFormat",
+   "windows_va": "0x009AA5CE",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "(c,r,fmt*) default +0x208 merged with col/row/cell; row auto-height calls it (vt+0x150)"
+  },
+  {
+   "slot": 85,
+   "vt_off": "0x154",
+   "mac_name": "SetCellFormat",
+   "windows_va": "0x009AC519",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "(c,r,fmt*), (-1,-1)=default; deserializer wingridcell, FileBrowser 0x9A2111"
+  },
+  {
+   "slot": 86,
+   "vt_off": "0x158",
+   "mac_name": "ClearCellFormat",
+   "windows_va": "0x009AB8FE",
+   "ret_bytes": 8,
+   "status": "CONSISTENT",
+   "evidence": "removes cell format"
+  },
+  {
+   "slot": 87,
+   "vt_off": "0x15C",
+   "mac_name": "GetColCellFormatExtra",
+   "windows_va": "0x009AA7E3",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "col map +0x19C key (c,0)"
+  },
+  {
+   "slot": 88,
+   "vt_off": "0x160",
+   "mac_name": "GetRowCellFormatExtra",
+   "windows_va": "0x009AA7FB",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "row map +0x1C0 key (0,r)"
+  },
+  {
+   "slot": 89,
+   "vt_off": "0x164",
+   "mac_name": "GetColRowCellFormatExtra",
+   "windows_va": "0x009A6C14",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "slot87 else slot88"
+  },
+  {
+   "slot": 90,
+   "vt_off": "0x168",
+   "mac_name": "SetCellFont",
+   "windows_va": "0x009AC741",
+   "ret_bytes": 12,
+   "status": "CONSISTENT",
+   "evidence": "(c,r,font*) bounds-checked via slot54"
+  },
+  {
+   "slot": 91,
+   "vt_off": "0x16C",
+   "mac_name": "SetCellColors",
+   "windows_va": "0x009AC866",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "(c,r,a,b) colours"
+  },
+  {
+   "slot": 92,
+   "vt_off": "0x170",
+   "mac_name": "SetCellWrapping",
+   "windows_va": "0x009AC960",
+   "ret_bytes": 12,
+   "status": "CONSISTENT",
+   "evidence": "(c,r,b) -> fmt +0x1C"
+  },
+  {
+   "slot": 93,
+   "vt_off": "0x174",
+   "mac_name": "SetCellAlignment",
+   "windows_va": "0x009ACA52",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "(c,r,h,v) -> fmt +0x1D/+0x1E"
+  },
+  {
+   "slot": 94,
+   "vt_off": "0x178",
+   "mac_name": "SetCellBorder",
+   "windows_va": "0x009ACB56",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "(c,r,a,b) -> fmt +0x1F/+0x20"
+  },
+  {
+   "slot": 95,
+   "vt_off": "0x17C",
+   "mac_name": "GetCellType",
+   "windows_va": "0x009AA59C",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "cell record type (1 win, 2 text, 4 bitmap)"
+  },
+  {
+   "slot": 96,
+   "vt_off": "0x180",
+   "mac_name": "ClearCell",
+   "windows_va": "0x009AB897",
+   "ret_bytes": 8,
+   "status": "CONSISTENT",
+   "evidence": "deselect (slot44 c,r,0) + remove"
+  },
+  {
+   "slot": 97,
+   "vt_off": "0x184",
+   "mac_name": "ClearCellRect",
+   "windows_va": "0x009A6A39",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "loops slot96 over (c,r,w,h)"
+  },
+  {
+   "slot": 98,
+   "vt_off": "0x188",
+   "mac_name": "ClearAllCells",
+   "windows_va": "0x009A6AF1",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "slot50 -> slot97 -> slot46"
+  },
+  {
+   "slot": 99,
+   "vt_off": "0x18C",
+   "mac_name": "DeleteCell",
+   "windows_va": "0x00938789",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "shared stub 'xor al,al; ret 0x10' - unimplemented on Windows"
+  },
+  {
+   "slot": 100,
+   "vt_off": "0x190",
+   "mac_name": "DeleteColumns",
+   "windows_va": "0x009AE5AC",
+   "ret_bytes": 12,
+   "status": "CONSISTENT",
+   "evidence": "(start,count,mode default 2)"
+  },
+  {
+   "slot": 101,
+   "vt_off": "0x194",
+   "mac_name": "DeleteRows",
+   "windows_va": "0x009AE6DF",
+   "ret_bytes": 12,
+   "status": "CONSISTENT",
+   "evidence": "(start,count,mode default 3); game 0x684EC3"
+  },
+  {
+   "slot": 102,
+   "vt_off": "0x198",
+   "mac_name": "CopyColumns",
+   "windows_va": "0x009AD9DB",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "(src,dst,count,flags)"
+  },
+  {
+   "slot": 103,
+   "vt_off": "0x19C",
+   "mac_name": "CopyRows",
+   "windows_va": "0x009ADB72",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "(src,dst,count,flags)"
+  },
+  {
+   "slot": 104,
+   "vt_off": "0x1A0",
+   "mac_name": "IsCellVisible",
+   "windows_va": "0x009A6B50",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "first-visible + float visible counts"
+  },
+  {
+   "slot": 105,
+   "vt_off": "0x1A4",
+   "mac_name": "MakeCellVisible",
+   "windows_va": "0x009AFC65",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "slot104 then slot31/slot32 scroll"
+  },
+  {
+   "slot": 106,
+   "vt_off": "0x1A8",
+   "mac_name": "GetCellRect",
+   "windows_va": "0x009AE813",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "(c,r,rect*) via GetColumnWidth; cell-window placement insets it by cell gutters"
+  },
+  {
+   "slot": 107,
+   "vt_off": "0x1AC",
+   "mac_name": "GetFirstVisibleCell",
+   "windows_va": "0x009A6BA5",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "out <- +0x128,+0x12C"
+  },
+  {
+   "slot": 108,
+   "vt_off": "0x1B0",
+   "mac_name": "SetFirstVisibleCell",
+   "windows_va": "0x009A6BC2",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "+0x128,+0x12C + invalidate"
+  },
+  {
+   "slot": 109,
+   "vt_off": "0x1B4",
+   "mac_name": "GetVisibleColumnAndRowCount",
+   "windows_va": "0x009A6BF7",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "float* x2 <- +0x130,+0x134"
+  },
+  {
+   "slot": 110,
+   "vt_off": "0x1B8",
+   "mac_name": "DoCursorHitTest",
+   "windows_va": "0x009A7C69",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "(x,y,out*,out*) uses slot8 + header sizes"
+  },
+  {
+   "slot": 111,
+   "vt_off": "0x1BC",
+   "mac_name": "GetCellTextValue",
+   "windows_va": "0x009AA813",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "type 2 -> string copy"
+  },
+  {
+   "slot": 112,
+   "vt_off": "0x1C0",
+   "mac_name": "SetCellTextValue",
+   "windows_va": "0x009AE8CB",
+   "ret_bytes": 24,
+   "status": "VERIFIED",
+   "evidence": "6 args; deserializer wingridcell text; Custom Tunes 0x4F4D78"
+  },
+  {
+   "slot": 113,
+   "vt_off": "0x1C4",
+   "mac_name": "GetCellBitmap",
+   "windows_va": "0x009AA8AA",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "type 4"
+  },
+  {
+   "slot": 114,
+   "vt_off": "0x1C8",
+   "mac_name": "SetCellBitmap",
+   "windows_va": "0x009AEB66",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "(c,r,bmp,1); deserializer + FileBrowser 0x9A49B0"
+  },
+  {
+   "slot": 115,
+   "vt_off": "0x1CC",
+   "mac_name": "GetCellWindow",
+   "windows_va": "0x009AA8E2",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "type 1"
+  },
+  {
+   "slot": 116,
+   "vt_off": "0x1D0",
+   "mac_name": "SetCellWindow",
+   "windows_va": "0x009AECB7",
+   "ret_bytes": 24,
+   "status": "VERIFIED",
+   "evidence": "6 args; Custom Tunes checkbox windows 0x4F4D9B; calls slot117"
+  },
+  {
+   "slot": 117,
+   "vt_off": "0x1D4",
+   "mac_name": "IsWindowACellWindow",
+   "windows_va": "0x009A8F16",
+   "ret_bytes": 16,
+   "status": "VERIFIED",
+   "evidence": "(win*,id,col*,row*) walks +0x22C, compares ptr or GetID (cIGZWin vt+0xFC); ret 0x10"
+  },
+  {
+   "slot": 118,
+   "vt_off": "0x1D8",
+   "mac_name": "ResizeColumnToFitCellWindows",
+   "windows_va": "0x009ADD09",
+   "ret_bytes": 8,
+   "status": "CONSISTENT",
+   "evidence": "(col,flag) sizes col from cell windows' GetW"
+  },
+  {
+   "slot": 119,
+   "vt_off": "0x1DC",
+   "mac_name": "SetCellExtraData",
+   "windows_va": "0x009ACE2F",
+   "ret_bytes": 12,
+   "status": "VERIFIED",
+   "evidence": "cell record +0x14 (mode +0x188=1)"
+  },
+  {
+   "slot": 120,
+   "vt_off": "0x1E0",
+   "mac_name": "GetCellExtraData",
+   "windows_va": "0x009AAAD1",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "cell record +0x14; game 0x669854 after GetSelection2"
+  },
+  {
+   "slot": 121,
+   "vt_off": "0x1E4",
+   "mac_name": "SetColumnExtraData",
+   "windows_va": "0x009AB198",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "map +0x25C"
+  },
+  {
+   "slot": 122,
+   "vt_off": "0x1E8",
+   "mac_name": "GetColumnExtraData",
+   "windows_va": "0x009AB1DC",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "map +0x25C"
+  },
+  {
+   "slot": 123,
+   "vt_off": "0x1EC",
+   "mac_name": "SetRowExtraData",
+   "windows_va": "0x009AB1FA",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "map +0x250"
+  },
+  {
+   "slot": 124,
+   "vt_off": "0x1F0",
+   "mac_name": "GetRowExtraData",
+   "windows_va": "0x009AB23E",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "map +0x250"
+  },
+  {
+   "slot": 125,
+   "vt_off": "0x1F4",
+   "mac_name": "SetExtraData",
+   "windows_va": "0x009A6D2D",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "+0x268, mode 1"
+  },
+  {
+   "slot": 126,
+   "vt_off": "0x1F8",
+   "mac_name": "GetExtraData",
+   "windows_va": "0x009A6D43",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "mov eax,[ecx+0x268]"
+  },
+  {
+   "slot": 127,
+   "vt_off": "0x1FC",
+   "mac_name": "GetCellExtraDataObject",
+   "windows_va": "0x009A6D4A",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "mode 2: slot120 then object vt+0"
+  },
+  {
+   "slot": 128,
+   "vt_off": "0x200",
+   "mac_name": "SetCellExtraDataObject",
+   "windows_va": "0x009A6D87",
+   "ret_bytes": 12,
+   "status": "CONSISTENT",
+   "evidence": "(c,r,obj*) AddRef + slot120 path"
+  },
+  {
+   "slot": 129,
+   "vt_off": "0x204",
+   "mac_name": "GetExtraDataObject",
+   "windows_va": "0x009A6E0F",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "+0x268 -> tail-jmp object vt+0"
+  },
+  {
+   "slot": 130,
+   "vt_off": "0x208",
+   "mac_name": "SetExtraDataObject",
+   "windows_va": "0x009A6E22",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "+0x268 AddRef/Release, mode 2"
+  },
+  {
+   "slot": 131,
+   "vt_off": "0x20C",
+   "mac_name": "SortColumn",
+   "windows_va": "0x009ACED6",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "4 args; game 0x47AD20/0x66ACC9"
+  },
+  {
+   "slot": 132,
+   "vt_off": "0x210",
+   "mac_name": "SortRow",
+   "windows_va": "0x009AD1E8",
+   "ret_bytes": 16,
+   "status": "CONSISTENT",
+   "evidence": "4 args"
+  },
+  {
+   "slot": 133,
+   "vt_off": "0x214",
+   "mac_name": "FindCellText",
+   "windows_va": "0x009A9892",
+   "ret_bytes": 36,
+   "status": "CONSISTENT",
+   "evidence": "9 args (ret 0x24); strlen when len==-1"
+  },
+  {
+   "slot": 134,
+   "vt_off": "0x218",
+   "mac_name": "SetOwnerDrawNotification",
+   "windows_va": "0x009A6E90",
+   "ret_bytes": 4,
+   "status": "VERIFIED",
+   "evidence": "+0x168 AddRef/Release; GZPaint notifies 0xFA785CB0/B1 to it"
+  },
+  {
+   "slot": 135,
+   "vt_off": "0x21C",
+   "mac_name": "GetBufferToDrawTo",
+   "windows_va": "0x009A6EBD",
+   "ret_bytes": 8,
+   "status": "CONSISTENT",
+   "evidence": "out <- cGZWin buffer obj+0x6C, rect obj+0x28"
+  },
+  {
+   "slot": 136,
+   "vt_off": "0x220",
+   "mac_name": "SetScrollBarImageVertical",
+   "windows_va": "0x009A6EF7",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "+0x274 -> applied to v-scrollbar +0x26C"
+  },
+  {
+   "slot": 137,
+   "vt_off": "0x224",
+   "mac_name": "SetScrollBarImageHorizontal",
+   "windows_va": "0x009A6F67",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "+0x278 -> h-scrollbar +0x270"
+  },
+  {
+   "slot": 138,
+   "vt_off": "0x228",
+   "mac_name": "SetSoundID",
+   "windows_va": "0x009A6EDA",
+   "ret_bytes": 8,
+   "status": "VERIFIED",
+   "evidence": "(idx<3, id) -> +0x29C+4*idx (played by extra slot 141)"
+  },
+  {
+   "slot": 139,
+   "vt_off": "0x22C",
+   "mac_name": "MakeDropDown",
+   "windows_va": "0x009A5F70",
+   "ret_bytes": 0,
+   "status": "VERIFIED",
+   "evidence": "SetFlag(0x40000) = fdrpdnmenu"
+  },
+  {
+   "slot": 140,
+   "vt_off": "0x230",
+   "mac_name": "(beyond Mac)",
+   "windows_va": "0x009A5F99",
+   "ret_bytes": 4,
+   "status": "UNCHECKED",
+   "evidence": "class-added virtual (beyond Mac list)"
+  },
+  {
+   "slot": 141,
+   "vt_off": "0x234",
+   "mac_name": "(beyond Mac)",
+   "windows_va": "0x009A824E",
+   "ret_bytes": 4,
+   "status": "UNCHECKED",
+   "evidence": "class-added virtual (beyond Mac list)"
+  }
+ ]
+}

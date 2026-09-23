@@ -421,9 +421,12 @@ def report_macsyms(raw):
         print("  (no type or method named %r - POSITIVE CONTROL: 'cIGZWin' and"
               " 'GZPaint' both hit here)" % raw)
     else:
-        print("\n  !! MAC layout. Slot order matched the exe at every cIGZWin slot")
-        print("     checked (_tests\\Test-GZWinHeaderSlots.py), but Windows field")
-        print("     offsets and this-adjusts differ - byte-verify before relying.")
+        print("\n  !! MAC layout. MSVC groups same-named overloads at the first one's")
+        print("     slot in REVERSE order, so where an interface has overloads the")
+        print("     Mac slot numbers are wrong on Windows (cIGZWin 102-107,")
+        print("     FlatRect 4-14): compile the Mac order with MSVC to predict.")
+        print("     Windows field offsets = Mac - 0x10 for cGZWin-derived classes.")
+        print("     Byte-verify before relying (tools\\sdk\\ghidra\\README.md).")
 
 
 def main():

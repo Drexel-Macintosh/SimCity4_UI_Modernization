@@ -36,6 +36,21 @@ virtuals, indices 0–143.
 | 134–138 | **undefined — no shift exists here** | the header names **six** `GZOnMouse*` (idx 130–135) against the game's **five** 3-arg slots |
 | ≥ 139 | **0 again** — the six-for-five collapse cancels the +1 | idx 136 `GZOnCaptureChanged` → 139, idx 137/138 → 140/141, idx 139 `GZOnCommand` → 142, idx 141 5-arg `SendMsg` → 144 |
 
+> ⚠ **CORRECTED 2026-09-23. This model is superseded; do not derive names from it.** It predates two measured facts.
+> 1. Real slot 57 is **`GZWinOffset(dx,dy)`**, which adds to all four edges; it is the relative sibling of `GZWinMoveTo` (56). The Mac debug symbols name it, and the exe's code agrees.
+> 2. MSVC groups every overload of a name at the first one's slot, in reverse declaration order. What our DLL calls is therefore the header's **compiled** layout, not "declaration index + 3". That layout is wrong for 40 of the 147 declarations.
+>
+> **There is no six-for-five collapse.** The exe has all six mouse handlers: 134–138 take 3 args, and **139 is `GZOnMouseWheel`** with 4 args. From 139 up, the real names are:
+> - 139 wheel
+> - **140 `GZOnCaptureChanged`** (2 args)
+> - 141 `GZOnMouseEnter`
+> - **142 `GZOnMouseExit`**
+> - **143 `GZOnCommand`** (2 args)
+> - 144/145 `SendMsg` (5-arg / `msg&`)
+> - 146/147 `PostMsg`
+>
+> MEASURED from the exe's own DoMessage jump table `0x99CEF9`, which routes message type 14→139, 18→140, 19→141, 20→142 and 3→143, and from each handler's `ret N`. The per-slot truth, compiled against exe, is in `_tests\Test-GZWinHeaderSlots.py` (grep `EXE_SLOT`) and `tools\sdk\ghidra\README.md`.
+
 Every anchor in that table is one of the independently measured rows below, so
 the model is checked against the binary at both ends and in the middle rather
 than assumed along its length.
@@ -87,6 +102,13 @@ Two names in the table below owe the header nothing: real slot 57
 | 142 | `0x238` | `GZOnCommand` | — |
 | 144 | `0x240` | 5-arg `SendMsg(pWin, type, d1, d2, d3)` | — |
 | 149 / 150 | `0x254` / `0x258` | refined per-pixel hit test / create-private-buffer — **past the end of `cIGZWin`** (header's last index is 146); `cGZWin`-derived extras | `0x0099BBBE` / `0x0099D0ED` |
+
+> ⚠ **CORRECTED 2026-09-23.** Rows 139 and 142 above carry the *compiled header's* names at those offsets, not the exe's.
+> - 139 (`0x22C`, `ret 0x10`) is **`GZOnMouseWheel`**.
+> - 142 (`0x238`) is **`GZOnMouseExit`**.
+> - `GZOnCaptureChanged` is 140 (`ret 8`) and `GZOnCommand` is 143 (`ret 8`).
+>
+> Also: slot 148 is `cGZWin`'s scalar deleting destructor. The interface proper is slots 0–147 (148 slots, the same count as the Mac vtable). See the banner under the band table.
 
 Two further names to read from the binary rather than from the header:
 
@@ -264,6 +286,14 @@ function, `cRZWin::DoMessage` = `0x0099CCF0`, slot 3 `[vt+0x0C]`:
 | 18 / 19 | 140 / 141 | 2 / 1 | `GZOnMouseEnter` / `GZOnMouseExit` |
 | 20 | 142 | 1 | `GZOnCommand` |
 
+> ⚠ **CORRECTED 2026-09-23 — the slots and arities above are right; four of the names are not.** MEASURED from the window manager's own senders:
+> - Type 14 → 139 is **`GZOnMouseWheel`**: 4 args, with the delta a signed short at `+0x0C`.
+> - Type 18 → 140 is **`GZOnCaptureChanged(old, new)`**. It is sent by the window manager's SetCapture, slot 29 `0x9DB667`.
+> - Type 19 → 141 is **`GZOnMouseEnter`** and type 20 → 142 is **`GZOnMouseExit`**. Both are sent by the hover tracker, slot 26 `0x9DB756`.
+> - Type 3 → 143 is **`GZOnCommand(code, value)`**. Controls send it as `SendMsg(target, 3, code, value, 0)`, e.g. at `0x9D422D`.
+>
+> Evidence: `tools\sdk\ghidra\verify\B-second-class-exe-decode\`.
+
 `cGZMessage` layout on the mouse path: `+0x00` type; `+0x04` cursor **x**
 (`movsx word`); `+0x08` cursor **y**; `+0x0C` wheel delta; `+0x0E` key/button
 flags. For non-mouse ids the same `+0x04`/`+0x08` dwords carry pointers —
@@ -287,6 +317,8 @@ count exactly: a 3-arg mouse handler is `ret 0xC`, a 2-arg point test
 `xor al,al; ret 4` — one argument — so hooking it as the header's 3-arg
 `GZOnMouseDownL` corrupts the stack and crashes the game. Read the `ret`
 immediate before every vtable hook, without exception.
+
+> ⚠ **CORRECTED 2026-09-23.** The `ret 0x10` handler named `GZOnCaptureChanged` above is slot 139, **`GZOnMouseWheel`**. The real `GZOnCaptureChanged` (140) is `ret 8`. The rule itself stands, and it now has a gate: `_tests\Test-GZWinHeaderSlots.py` fails the build if `src\` calls any `cIGZWin` method whose compiled slot or ABI disagrees with the exe.
 
 ### 1.5 Window flags the SDK enum does not list
 

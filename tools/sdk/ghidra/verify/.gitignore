@@ -1,0 +1,14 @@
+# Evidence regenerates from the user's own exe: commit the scripts and the
+# small derived slot tables, never disassembly dumps (THIRD-PARTY-NOTICES.md
+# section 4a caps whole-function listings) or other projects' downloaded files.
+*
+!.gitignore
+!*/
+!*.py
+!*.cpp
+!*.cmd
+!*.md
+!*.json
+# the upstream search downloaded other projects' headers, source and issue text
+C-upstream-search/
+__pycache__/

@@ -132,7 +132,7 @@ base `cGZWin`, the router, `cSC4WinAlertBorder`, `cSC4WinAuraBar`).
 |---|---|---|
 | **DOCUMENTED** (clsid/vtable/ctor/Draw all present, doc claims byte-verification) | **9** | `GZWinBMP`, `GZWinText`, `GZWinBtn`, `cSC4WinGenTransparent`, `cSC4WinText`, `cSC4WinRCI`, `cSC4WinTrendBar`, `cSC4WinAlertBorder`, `cSC4WinAuraBar` |
 | **PARTIAL** (mechanism known, a named piece missing) | **5** | `cSC4WinAdviceList` (guard is id-keyed — "STRUCTURAL WEAKNESS, noted not fixed", `:342`), `cSC4WinMiniMap` (the zoom −3 hole), flyout strip, the second buffer class `0x00ADB418` ("can take a renderer path under dgVoodoo", `SC4-UI-ENGINE.md:526`), `cSC4WinMapView` (`0x00AB8150` disambiguated as *not* its window vtable, `SDK-GAPS.md:736-739`) |
-| **THIN / STUB** (attribute-level only, no ctor or Draw decoded) | **4** | `GZWinTextEdit`, `GZWinSpinner`, `GZWinGrid`, `GZWinFlatRect` |
+| **THIN / STUB** (attribute-level only, no ctor or Draw decoded) | **4** | `GZWinTextEdit`, `GZWinSpinner`, `GZWinGrid`, `GZWinFlatRect` — ⚠ **2026-09-23: `GZWinGrid` and `GZWinFlatRect` are now PARTIAL.** For each: IID, CLSID, factory, ctor, GZPaint, every interface slot and the pixel fields, decoded statically and re-derived by an independent verifier. They stay PARTIAL, not DOCUMENTED, because none of it has been seen running. See `tools\research\WIDGET-INTERFACES.md` §1–2. `GZWinTextEdit` and `GZWinSpinner` remain THIN. |
 | **UNNAMED but measured** | **2** | the gauge class `0xCBCBF1E0` — **now fully identified in BOTH files (MEASURED 2026-08-31)**: `SDK-GAPS.md` §8.1 *and* `SC4-UI-ENGINE.md` §2's own `0xCBCBF1E0` catalogue row each carry outer vt `0x00AB4900`, window vt `0x00AB46A0` at `obj+4`, factory `0x00466220` (returns base+4), the slot-88 painter `0x00762830`, ctor `0x007628E0`, custom iid `0x0BCBF1DF` and the `0x108`-byte size. ⚠ *Superseded 2026-08-31, kept: this cell read "(`SDK-GAPS.md:740-742` has factory `0x00466220`, Plot `0x00762830`, ctor `0x007628E0`, iid `0x0BCBF1DF` — but the reference's own catalogue row `:344` still carries no factory, ctor, vtable or Plot VA and is symptom-level)". The row WAS updated, and both line numbers had drifted (`SC4-UI-ENGINE.md:344`→`:373`, `SDK-GAPS.md:740-742`→`:1003-1005`) — which is why the anchors above are sections and row ids, not line numbers.* — **see drift D-4 (CLOSED)**. Still open: both files name `0x00762830` **`Plot`**, but it sits at **slot 88 = `GZPaint`** — **see drift D-4a**. And the clip-viewport subclass at vt `0x00ADCB38` (`SDK-GAPS.md` §8.1) |
 
 ⚠ **The class population is printed two ways.** `SDK-GAPS.md:808-809` said "12 of
@@ -443,6 +443,25 @@ Lookup: `python tools\sdk\lookup.py <ClassOrMethod>`, section 6.
 finding, grep `SLOT 87 IS NOT GZPaint`), `SetFlag` at 68 = `0x0099DB6B`
 (`SetFlagDetour`), and `PlotPresent` at 124 = `0x0099C498` (`PlotPresentDetour`).
 All three were found here without the archive.
+
+⚠ **EXTENDED LATER THE SAME DAY (2026-09-23): "two bands" undercounted; it is four.**
+- All 147 declarations were compiled and read two ways (call-site and
+  member-pointer thunk), and the slots were decoded on 15 window classes.
+- **40 of 147** compile to the wrong exe slot. Besides 53–57 and 118–147,
+  the `GetArea`/`GetAreaAbsolute` pairs (47–50) and the fill-colour overloads
+  (102–107) are swapped.
+- Three more declarations sit on the right slot with the wrong ABI (colours
+  by value; two keyboard methods that pop more arguments).
+- The 47–50 and 102–107 errors were **introduced upstream by `387a9751`**. Its
+  parent compiles them correctly, measured by compiling both.
+- The gate is now an **allowlist**. The 29 `cIGZWin` methods `src\` calls are
+  each decoded from the exe's code, and a call to anything unverified fails the
+  build. It has three mutation controls, all exit 1.
+- Upstream (read-only search): not known anywhere and unchanged at HEAD.
+  Nothing has been posted.
+- The Mac archive is exact on `cIGZWin` **except 103 and 106**, where MSVC
+  grouped the fill-colour overloads. Rule: compile the Mac order with MSVC to
+  predict Windows.
 
 ---
 
