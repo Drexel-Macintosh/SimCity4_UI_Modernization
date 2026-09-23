@@ -257,6 +257,13 @@ redistributed by this project:
 
 * **dgVoodoo2** — an optional third-party graphics wrapper the user installs
   separately to run SimCity 4 at a modern resolution. Not shipped here.
+* **sc4-ghidra-symbols** — Nicholas Hayes (`0xC0000054`), **Apache-2.0**.
+  `tools\sdk\ghidra\out\SimCity4.gdt.json` is a format conversion (Ghidra
+  archive → JSON, by `tools\sdk\ghidra\ExportGdt.java`) of its `SimCity4.gdt`
+  at upstream commit `5997577`, with no other change. It is redistributed
+  under Apache-2.0, and the licence text sits beside it as
+  `LICENSE-sc4-ghidra-symbols.txt`. It is a research lookup source for
+  `tools\sdk\lookup.py` only. Nothing from it is compiled into the DLL.
 
 ---
 

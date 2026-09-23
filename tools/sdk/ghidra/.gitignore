@@ -1,0 +1,2 @@
+probe/vtprobe.asm
+probe/*.obj

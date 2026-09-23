@@ -364,6 +364,68 @@ def report_docs(forms, raw):
         print("    family must be re-verified before you reason from it.")
 
 
+MACSYMS = os.path.join(HERE, "ghidra", "out", "SimCity4.gdt.json")
+
+
+def _mac_method(field_name):
+    """Demangle-lite: '__ZThn232_N13cGZWinSpinner8GetValueEv' -> 'GetValue'."""
+    n = field_name or "?"
+    m = re.match(r"__ZThn\d+_NK?(\d+)", n)
+    if m:
+        rest = n[m.end() + int(m.group(1)):]
+        mm = re.match(r"(\d+)", rest)
+        if mm:
+            k = len(mm.group(1))
+            return rest[k:k + int(mm.group(1))]
+    return n
+
+
+def report_macsyms(raw):
+    """Class layouts + vtable slot names from the Mac builds' debug symbols."""
+    section("6. MAC DEBUG-SYMBOL TYPES (sc4-ghidra-symbols) - HYPOTHESES for Windows")
+    if re.fullmatch(r"(?:0x)?[0-9a-fA-F]{6,8}", raw):
+        print("  (an id/VA - the Mac archive has names and layouts, not Windows")
+        print("   addresses. Look up a class or method NAME here instead.)")
+        return
+    if not os.path.isfile(MACSYMS):
+        print("  (%s absent - regenerate: tools\\sdk\\ghidra\\run-export.cmd)"
+              % os.path.relpath(MACSYMS, ROOT))
+        return
+    import json
+    types = json.load(open(MACSYMS, encoding="utf-8"))["types"]
+    q = raw.lower()
+    exact = [t for t in types if t["name"].lower() in (q, "vftable_" + q)]
+    named = exact or [t for t in types if q in t["name"].lower()]
+    for t in named[:6]:
+        fields = t.get("fields") or []
+        print("\n  %s  (%d bytes, %d fields)" % (t["path"], t["size"], len(fields)))
+        is_vt = t["name"].startswith("vftable_")
+        for f in fields[:160]:
+            label = ("slot %3d" % (f["off"] // 4)) if is_vt else ("+0x%03X" % f["off"])
+            print("    %s  %-34s %s" % (label, _mac_method(f["name"])[:34],
+                                       f.get("sig") or f["type"]))
+        if t.get("values"):
+            print("    " + ", ".join("%s=%s" % kv for kv in list(t["values"].items())[:24]))
+    if len(named) > 6:
+        print("\n  ... %d more types match: %s" % (len(named) - 6,
+              ", ".join(t["name"] for t in named[6:30])))
+    slots = []
+    for t in types:
+        if t["name"].startswith("vftable_"):
+            for f in t.get("fields") or []:
+                if _mac_method(f["name"]).lower() == q:
+                    slots.append("%s slot %d" % (t["name"][8:], f["off"] // 4))
+    if slots:
+        print("\n  as a virtual method: " + "; ".join(slots[:20]))
+    if not named and not slots:
+        print("  (no type or method named %r - POSITIVE CONTROL: 'cIGZWin' and"
+              " 'GZPaint' both hit here)" % raw)
+    else:
+        print("\n  !! MAC layout. Slot order matched the exe at every cIGZWin slot")
+        print("     checked (_tests\\Test-GZWinHeaderSlots.py), but Windows field")
+        print("     offsets and this-adjusts differ - byte-verify before relying.")
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -394,6 +456,7 @@ def main():
     report_staged(forms, declaring)
     report_owner(forms)
     report_docs(forms, raw)
+    report_macsyms(raw)
     section("NEXT")
     print("  TRIAGE.md matches the SYMPTOM to a solved family.")
     print("  MECHANISM-GENERATIONS.md says which generation the family is on.")

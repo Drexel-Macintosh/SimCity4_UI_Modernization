@@ -663,7 +663,11 @@ Sprite and hit box are the same rect on this engine —
 `SetW`/`SetH`/`SetSize`/`GZWinMoveTo` all funnel into `SetArea` →
 `CalcAbsoluteArea` → `[this+0x14]` — and concluding from that that "draws right,
 click dead" cannot be geometric is wrong, and cost a not-a-bug closure on a real
-defect. The rects agree, but the router's hit walk descends only into children
+defect.
+
+> ⚠ **2026-09-23 — the NAMES in the previous paragraph are the header's, not the exe's.** Our `GZWinMoveTo(dx, dy)` call compiles to exe slot 57, which is **`GZWinOffset`**. That is why every one of our 21 move calls passes a delta ("moves BY, not TO"). The vendored gzcom-dll `cIGZWin.h` omits `GZWinOffset`, and MSVC's overload grouping shifts slots 53-57. The header's `SetSize(w,h)` compiles to the exe's `SetArea(const cRZRect&)`. `_tests\Test-GZWinHeaderSlots.py` gates it; `tools\sdk\ghidra\README.md` has the measurement. The funnel into `SetArea` → `CalcAbsoluteArea` is unchanged.
+
+The rects agree, but the router's hit walk descends only into children
 whose rect **contains the point**, so a child that is perfectly self-consistent is
 still unreachable if any ancestor no longer covers it. The engine does not clip
 the draw, so it keeps painting in the old place and looks fine.

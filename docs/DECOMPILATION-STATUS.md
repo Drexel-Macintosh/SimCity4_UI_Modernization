@@ -426,6 +426,24 @@ DLL touches a set of comparable size to the reference's own catalogue — but
 complete whitelist" exactly — MEASURED agreement between doc and source, the
 only one of the five lists the reference states a number for.
 
+### 4.6 The SDK header's cIGZWin slots against the exe (added 2026-09-23)
+
+MEASURED three independent ways, which agree: the exe's own code at
+cSC4WinAlertBorder's vtable `0x00AB5B48`, the Mac debug-symbol vtable from
+`0xC0000054/sc4-ghidra-symbols`, and an MSVC compile of the vendored header.
+**The vendored gzcom-dll `cIGZWin.h` compiles to the wrong slot in two bands.**
+In slots 53–57, our `GZWinMoveTo` reaches the exe's `GZWinOffset`, and
+`SetSize(w,h)` reaches `SetArea(const cRZRect&)`. From slot 118 on, calls land
+one slot low. Our source calls only `GZWinMoveTo` among these, always with a
+delta, so **nothing shipped is affected**. Gate: `_tests\Test-GZWinHeaderSlots.py`.
+Detail and the 87 interfaces the SDK lacks: `tools\sdk\ghidra\README.md`.
+Lookup: `python tools\sdk\lookup.py <ClassOrMethod>`, section 6.
+
+*Positive controls:* the Mac slot order puts `GZPaint` at 88 (our REGRESSION.md
+finding, grep `SLOT 87 IS NOT GZPaint`), `SetFlag` at 68 = `0x0099DB6B`
+(`SetFlagDetour`), and `PlotPresent` at 124 = `0x0099C498` (`PlotPresentDetour`).
+All three were found here without the archive.
+
 ---
 
 ## 5. Drift
