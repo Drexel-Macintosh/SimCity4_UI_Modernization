@@ -1,0 +1,1478 @@
+{
+ "wrong": [
+  {
+   "hidx": 47,
+   "sig": "bool GetArea(cRZRect&) const",
+   "compiled": 48,
+   "pm": 48,
+   "exe": 47,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 48,
+   "sig": "int32_t* GetArea() const",
+   "compiled": 47,
+   "pm": 47,
+   "exe": 48,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 49,
+   "sig": "bool GetAreaAbsolute(cRZRect&) const",
+   "compiled": 50,
+   "pm": 50,
+   "exe": 49,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 50,
+   "sig": "int32_t* GetAreaAbsolute() const",
+   "compiled": 49,
+   "pm": 49,
+   "exe": 50,
+   "src": "decoded",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 53,
+   "sig": "bool SetSize(int32_t, int32_t)",
+   "compiled": 54,
+   "pm": 54,
+   "exe": 53,
+   "src": "established",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 54,
+   "sig": "bool SetArea(const cRZRect&)",
+   "compiled": 56,
+   "pm": 56,
+   "exe": 54,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 56,
+   "sig": "bool GZWinMoveTo(int32_t, int32_t)",
+   "compiled": 57,
+   "pm": 57,
+   "exe": 56,
+   "src": "established",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 101,
+   "sig": "bool GetFillColor(cRZColor&)",
+   "compiled": 104,
+   "pm": 104,
+   "exe": 102,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 103,
+   "sig": "void GetFillColor(uint8_t&, uint8_t&, uint8_t&)",
+   "compiled": 102,
+   "pm": 102,
+   "exe": 104,
+   "src": "decoded",
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 104,
+   "sig": "bool SetFillColor(cRZColor const&)",
+   "compiled": 107,
+   "pm": 107,
+   "exe": 105,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 106,
+   "sig": "void SetFillColor(uint8_t, uint8_t, uint8_t)",
+   "compiled": 105,
+   "pm": 105,
+   "exe": 107,
+   "src": "decoded",
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 117,
+   "sig": "bool SetSize(cRZPoint const&)",
+   "compiled": 53,
+   "pm": 53,
+   "exe": 118,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 119,
+   "sig": "void CenterWindowInRect(cRZRect*)",
+   "compiled": 118,
+   "pm": 118,
+   "exe": 120,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 120,
+   "sig": "bool IsPointInWindowWindowCoordinates(int32_t, int32_t)",
+   "compiled": 120,
+   "pm": 120,
+   "exe": 121,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 121,
+   "sig": "bool IsPointInWindowParentCoordinates(int32_t, int32_t)",
+   "compiled": 121,
+   "pm": 121,
+   "exe": 122,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 122,
+   "sig": "bool PlotComposite()",
+   "compiled": 122,
+   "pm": 122,
+   "exe": 123,
+   "src": "B-decoded",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 123,
+   "sig": "bool PlotPresent()",
+   "compiled": 123,
+   "pm": 123,
+   "exe": 124,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 124,
+   "sig": "void SetFillColorRGB(uint32_t)",
+   "compiled": 124,
+   "pm": 124,
+   "exe": 125,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 125,
+   "sig": "uint32_t GetFillColorRGB()",
+   "compiled": 125,
+   "pm": 125,
+   "exe": 126,
+   "src": "B-decoded",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 126,
+   "sig": "uint32_t ConvertPackedRGBToNative(uint32_t)",
+   "compiled": 126,
+   "pm": 126,
+   "exe": 127,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 127,
+   "sig": "uint32_t ConvertNativeToPackedRGB(uint32_t)",
+   "compiled": 127,
+   "pm": 127,
+   "exe": 128,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 128,
+   "sig": "bool GZOnCharacter(int8_t)",
+   "compiled": 128,
+   "pm": 128,
+   "exe": 129,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 129,
+   "sig": "bool GZOnKeyDown(uint32_t, uint32_t)",
+   "compiled": 129,
+   "pm": 129,
+   "exe": 130,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 130,
+   "sig": "bool GZOnKeyUp(uint32_t, uint32_t)",
+   "compiled": 130,
+   "pm": 130,
+   "exe": 131,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 131,
+   "sig": "bool GZOnSetFocus(uint32_t, uint32_t)",
+   "compiled": 131,
+   "pm": 131,
+   "exe": 132,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 132,
+   "sig": "bool GZOnKillFocus(cIGZWin*)",
+   "compiled": 132,
+   "pm": 132,
+   "exe": 133,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 133,
+   "sig": "bool GZOnMouseDownL(int32_t, int32_t, uint32_t)",
+   "compiled": 133,
+   "pm": 133,
+   "exe": 134,
+   "src": "B-decoded",
+   "hdr_bytes": 12,
+   "exe_ret": 12
+  },
+  {
+   "hidx": 134,
+   "sig": "bool GZOnMouseDownR(int32_t, int32_t, uint32_t)",
+   "compiled": 134,
+   "pm": 134,
+   "exe": 135,
+   "src": "B-decoded",
+   "hdr_bytes": 12,
+   "exe_ret": 12
+  },
+  {
+   "hidx": 135,
+   "sig": "bool GZOnMouseUpL(int32_t, int32_t, uint32_t)",
+   "compiled": 135,
+   "pm": 135,
+   "exe": 136,
+   "src": "B-decoded",
+   "hdr_bytes": 12,
+   "exe_ret": 12
+  },
+  {
+   "hidx": 136,
+   "sig": "bool GZOnMouseUpR(int32_t, int32_t, uint32_t)",
+   "compiled": 136,
+   "pm": 136,
+   "exe": 137,
+   "src": "B-decoded",
+   "hdr_bytes": 12,
+   "exe_ret": 12
+  },
+  {
+   "hidx": 137,
+   "sig": "bool GZOnMouseMove(int32_t, int32_t, uint32_t)",
+   "compiled": 137,
+   "pm": 137,
+   "exe": 138,
+   "src": "B-decoded",
+   "hdr_bytes": 12,
+   "exe_ret": 12
+  },
+  {
+   "hidx": 138,
+   "sig": "bool GZOnMouseWheel(int32_t, int32_t, uint32_t)",
+   "compiled": 138,
+   "pm": 138,
+   "exe": 139,
+   "src": "B-decoded",
+   "hdr_bytes": 12,
+   "exe_ret": 16
+  },
+  {
+   "hidx": 139,
+   "sig": "bool GZOnCaptureChanged(cIGZWin*, uint32_t, uint32_t, uint32_t)",
+   "compiled": 139,
+   "pm": 139,
+   "exe": 140,
+   "src": "B-decoded",
+   "hdr_bytes": 16,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 140,
+   "sig": "bool GZOnMouseEnter(uint32_t, uint32_t)",
+   "compiled": 140,
+   "pm": 140,
+   "exe": 141,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 141,
+   "sig": "bool GZOnMouseExit(uint32_t)",
+   "compiled": 141,
+   "pm": 141,
+   "exe": 142,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 142,
+   "sig": "bool GZOnCommand(uint32_t)",
+   "compiled": 142,
+   "pm": 142,
+   "exe": 143,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 143,
+   "sig": "bool SendMsg(cIGZWin*, cGZMessage const&)",
+   "compiled": 144,
+   "pm": 144,
+   "exe": 145,
+   "src": "decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 144,
+   "sig": "bool SendMsg(cIGZWin*, uint32_t, uint32_t, uint32_t, uint32_t)",
+   "compiled": 143,
+   "pm": 143,
+   "exe": 144,
+   "src": "decoded",
+   "hdr_bytes": 20,
+   "exe_ret": 20
+  },
+  {
+   "hidx": 145,
+   "sig": "bool PostMsg(cIGZWin*, cGZMessage const&)",
+   "compiled": 146,
+   "pm": 146,
+   "exe": 147,
+   "src": "decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 146,
+   "sig": "bool PostMsg(cIGZWin*, uint32_t, uint32_t, uint32_t, uint32_t)",
+   "compiled": 145,
+   "pm": 145,
+   "exe": 146,
+   "src": "decoded",
+   "hdr_bytes": 20,
+   "exe_ret": 20
+  }
+ ],
+ "right": [
+  {
+   "hidx": 0,
+   "sig": "bool QueryInterface(uint32_t, void**)",
+   "compiled": 0,
+   "pm": 0,
+   "exe": 0,
+   "src": "gate",
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 2,
+   "sig": "uint32_t Release()",
+   "compiled": 2,
+   "pm": 2,
+   "exe": 2,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 4,
+   "sig": "bool Init()",
+   "compiled": 4,
+   "pm": 4,
+   "exe": 4,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 10,
+   "sig": "cIGZWin* GetMainWindow()",
+   "compiled": 10,
+   "pm": 10,
+   "exe": 10,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 11,
+   "sig": "cIGZWin* GetParentWin()",
+   "compiled": 11,
+   "pm": 11,
+   "exe": 11,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 13,
+   "sig": "int32_t GetChildCount()",
+   "compiled": 13,
+   "pm": 13,
+   "exe": 13,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 19,
+   "sig": "bool ChildExists(cIGZWin*)",
+   "compiled": 20,
+   "pm": 20,
+   "exe": 20,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 20,
+   "sig": "bool ChildExists(uint32_t)",
+   "compiled": 19,
+   "pm": 19,
+   "exe": 19,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 25,
+   "sig": "bool ChildToFront(cIGZWin*)",
+   "compiled": 26,
+   "pm": 26,
+   "exe": 26,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 26,
+   "sig": "bool ChildToFront(uint32_t)",
+   "compiled": 25,
+   "pm": 25,
+   "exe": 25,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 32,
+   "sig": "bool EnumChildren(uint32_t, cIGZWin::EnumChildrenCallback, void*)",
+   "compiled": 32,
+   "pm": 32,
+   "exe": 32,
+   "src": "gate",
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 34,
+   "sig": "cIGZWin* GetChildWindowFromID(uint32_t)",
+   "compiled": 34,
+   "pm": 34,
+   "exe": 34,
+   "src": "gate",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 35,
+   "sig": "cIGZWin* GetChildWindowFromIDRecursive(uint32_t)",
+   "compiled": 35,
+   "pm": 35,
+   "exe": 35,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 36,
+   "sig": "bool GetChildAs(uint32_t, uint32_t, void**)",
+   "compiled": 36,
+   "pm": 36,
+   "exe": 36,
+   "src": "established",
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 37,
+   "sig": "bool GetChildAsRecursive(uint32_t, uint32_t, void**)",
+   "compiled": 37,
+   "pm": 37,
+   "exe": 37,
+   "src": "established",
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 41,
+   "sig": "int32_t GetW() const",
+   "compiled": 41,
+   "pm": 41,
+   "exe": 41,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 42,
+   "sig": "int32_t GetH() const",
+   "compiled": 42,
+   "pm": 42,
+   "exe": 42,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 43,
+   "sig": "int32_t GetL() const",
+   "compiled": 43,
+   "pm": 43,
+   "exe": 43,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 44,
+   "sig": "int32_t GetT() const",
+   "compiled": 44,
+   "pm": 44,
+   "exe": 44,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 45,
+   "sig": "int32_t GetR() const",
+   "compiled": 45,
+   "pm": 45,
+   "exe": 45,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 46,
+   "sig": "int32_t GetB() const",
+   "compiled": 46,
+   "pm": 46,
+   "exe": 46,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 51,
+   "sig": "bool SetW(int32_t)",
+   "compiled": 51,
+   "pm": 51,
+   "exe": 51,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 52,
+   "sig": "bool SetH(int32_t)",
+   "compiled": 52,
+   "pm": 52,
+   "exe": 52,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 55,
+   "sig": "bool SetArea(int32_t, int32_t, int32_t, int32_t)",
+   "compiled": 55,
+   "pm": 55,
+   "exe": 55,
+   "src": "established",
+   "hdr_bytes": 16,
+   "exe_ret": 16
+  },
+  {
+   "hidx": 57,
+   "sig": "bool FitRectToWindow(cRZRect&, int32_t)",
+   "compiled": 58,
+   "pm": 58,
+   "exe": 58,
+   "src": "established",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 58,
+   "sig": "bool ScreenToWindowCoordinates(int32_t&, int32_t&) const",
+   "compiled": 59,
+   "pm": 59,
+   "exe": 59,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 59,
+   "sig": "bool WindowToScreenCoordinates(int32_t&, int32_t&) const",
+   "compiled": 60,
+   "pm": 60,
+   "exe": 60,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 62,
+   "sig": "uint32_t GetID() const",
+   "compiled": 63,
+   "pm": 63,
+   "exe": 63,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 63,
+   "sig": "bool SetID(uint32_t)",
+   "compiled": 64,
+   "pm": 64,
+   "exe": 64,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 64,
+   "sig": "uint32_t GetInstanceID() const",
+   "compiled": 65,
+   "pm": 65,
+   "exe": 65,
+   "src": "B-decoded",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 65,
+   "sig": "bool SetInstanceID(uint32_t)",
+   "compiled": 66,
+   "pm": 66,
+   "exe": 66,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 66,
+   "sig": "bool GetFlag(cIGZWin::tWinFlag) const",
+   "compiled": 67,
+   "pm": 67,
+   "exe": 67,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 67,
+   "sig": "tWinFlag SetFlag(cIGZWin::tWinFlag, bool)",
+   "compiled": 68,
+   "pm": 68,
+   "exe": 68,
+   "src": "established",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 68,
+   "sig": "bool ShowWindow()",
+   "compiled": 69,
+   "pm": 69,
+   "exe": 69,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 69,
+   "sig": "bool HideWindow()",
+   "compiled": 70,
+   "pm": 70,
+   "exe": 70,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 70,
+   "sig": "bool IsVisible() const",
+   "compiled": 71,
+   "pm": 71,
+   "exe": 71,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 71,
+   "sig": "bool IsEnabled() const",
+   "compiled": 72,
+   "pm": 72,
+   "exe": 72,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 72,
+   "sig": "cIGZString* GetCaption() const",
+   "compiled": 73,
+   "pm": 73,
+   "exe": 73,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 73,
+   "sig": "bool SetCaption(cIGZString const&)",
+   "compiled": 74,
+   "pm": 74,
+   "exe": 74,
+   "src": "gate",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 85,
+   "sig": "bool SetNotificationTarget(cIGZWin*)",
+   "compiled": 86,
+   "pm": 86,
+   "exe": 86,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 86,
+   "sig": "cIGZWin* GetNotificationTarget()",
+   "compiled": 87,
+   "pm": 87,
+   "exe": 87,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 87,
+   "sig": "bool GZPaint()",
+   "compiled": 88,
+   "pm": 88,
+   "exe": 88,
+   "src": "established",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 88,
+   "sig": "bool Plot()",
+   "compiled": 89,
+   "pm": 89,
+   "exe": 89,
+   "src": "B-decoded",
+   "hdr_bytes": 0,
+   "exe_ret": 0
+  },
+  {
+   "hidx": 90,
+   "sig": "void InvalidateSelf()",
+   "compiled": 91,
+   "pm": 91,
+   "exe": 91,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 91,
+   "sig": "void InvalidateSelfAndParents()",
+   "compiled": 92,
+   "pm": 92,
+   "exe": 92,
+   "src": "gate",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 102,
+   "sig": "uint32_t GetFillColor()",
+   "compiled": 103,
+   "pm": 103,
+   "exe": 103,
+   "src": "decoded",
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 105,
+   "sig": "void SetFillColor(uint32_t)",
+   "compiled": 106,
+   "pm": 106,
+   "exe": 106,
+   "src": "decoded",
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 114,
+   "sig": "bool EnumParams(cIGZWin::EnumParamsCallback, void*)",
+   "compiled": 115,
+   "pm": 115,
+   "exe": 115,
+   "src": "B-decoded",
+   "hdr_bytes": 8,
+   "exe_ret": 8
+  },
+  {
+   "hidx": 115,
+   "sig": "bool AddMessageFilter(cIGZWinMessageFilter*)",
+   "compiled": 116,
+   "pm": 116,
+   "exe": 116,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 116,
+   "sig": "bool RemoveMessageFilter(cIGZWinMessageFilter*)",
+   "compiled": 117,
+   "pm": 117,
+   "exe": 117,
+   "src": "B-decoded",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  },
+  {
+   "hidx": 118,
+   "sig": "void CenterWindowInRect(cRZRect const&)",
+   "compiled": 119,
+   "pm": 119,
+   "exe": 119,
+   "src": "established",
+   "hdr_bytes": 4,
+   "exe_ret": 4
+  }
+ ],
+ "undecoded": [
+  {
+   "hidx": 1,
+   "sig": "uint32_t AddRef()",
+   "compiled": 1,
+   "pm": 1,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 3,
+   "sig": "bool DoMessage(cGZMessage&)",
+   "compiled": 3,
+   "pm": 3,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 5,
+   "sig": "bool Shutdown()",
+   "compiled": 5,
+   "pm": 5,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 6,
+   "sig": "cIGZWinMgr* GetWindowManager()",
+   "compiled": 6,
+   "pm": 6,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 7,
+   "sig": "bool SetWindowManager(cIGZWinMgr*)",
+   "compiled": 7,
+   "pm": 7,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 8,
+   "sig": "cIGZKeyboard* GetKeyboard()",
+   "compiled": 8,
+   "pm": 8,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 9,
+   "sig": "bool SetKeyboard(cIGZKeyboard*)",
+   "compiled": 9,
+   "pm": 9,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 12,
+   "sig": "bool SetParentWin(cIGZWin*)",
+   "compiled": 12,
+   "pm": 12,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 14,
+   "sig": "bool ChildAdd(cIGZWin*)",
+   "compiled": 14,
+   "pm": 14,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 15,
+   "sig": "bool ChildRemove(cIGZWin*)",
+   "compiled": 15,
+   "pm": 15,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 16,
+   "sig": "bool ChildDelete(cIGZWin*)",
+   "compiled": 16,
+   "pm": 16,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 17,
+   "sig": "bool ChildDeleteAbsolute(cIGZWin*)",
+   "compiled": 17,
+   "pm": 17,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 18,
+   "sig": "bool ChildDeleteAll()",
+   "compiled": 18,
+   "pm": 18,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 21,
+   "sig": "bool IsWinInParentChain(cIGZWin*)",
+   "compiled": 21,
+   "pm": 21,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 22,
+   "sig": "bool IsWinInChildChain(cIGZWin*)",
+   "compiled": 22,
+   "pm": 22,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 23,
+   "sig": "bool PullToFront()",
+   "compiled": 23,
+   "pm": 23,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 24,
+   "sig": "bool SendToBack()",
+   "compiled": 24,
+   "pm": 24,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 27,
+   "sig": "bool ChildToBack(cIGZWin*)",
+   "compiled": 27,
+   "pm": 27,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 28,
+   "sig": "bool ChildStepFront(cIGZWin*)",
+   "compiled": 28,
+   "pm": 28,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 29,
+   "sig": "bool ChildStepBack(cIGZWin*)",
+   "compiled": 29,
+   "pm": 29,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 30,
+   "sig": "bool MoveRelativeTo(cIGZWin*, bool)",
+   "compiled": 30,
+   "pm": 30,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 31,
+   "sig": "bool ChildMoveRelative(cIGZWin*, cIGZWin*, bool)",
+   "compiled": 31,
+   "pm": 31,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 33,
+   "sig": "bool SortChildren(cIGZWin::SortChildrenCallback, void*, bool)",
+   "compiled": 33,
+   "pm": 33,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 38,
+   "sig": "cIGZWin* GetWindowFromPoint(int32_t, int32_t)",
+   "compiled": 38,
+   "pm": 38,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 39,
+   "sig": "cIGZWin* GetChildWindowFromPoint(int32_t, int32_t)",
+   "compiled": 39,
+   "pm": 39,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 40,
+   "sig": "cIGZWin* GetChildWindowFromCursorPoint(int32_t, int32_t)",
+   "compiled": 40,
+   "pm": 40,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 60,
+   "sig": "bool WindowToWindowCoordinates(cIGZWin*, int32_t&, int32_t&) const",
+   "compiled": 61,
+   "pm": 61,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 61,
+   "sig": "bool IsPointInWindowScreenCoordinates(int32_t, int32_t) const",
+   "compiled": 62,
+   "pm": 62,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 74,
+   "sig": "cIGZWinKeyAccelerator* GetKeyboardAccelerator()",
+   "compiled": 75,
+   "pm": 75,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 75,
+   "sig": "bool SetKeyboardAccelerator(cIGZWinKeyAccelerator*)",
+   "compiled": 76,
+   "pm": 76,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 76,
+   "sig": "bool AccelerateKeyboardMsg()",
+   "compiled": 77,
+   "pm": 77,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 77,
+   "sig": "uint32_t GetKeyEquivalent()",
+   "compiled": 78,
+   "pm": 78,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 78,
+   "sig": "bool SetKeyEquivalent(uint32_t)",
+   "compiled": 79,
+   "pm": 79,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 79,
+   "sig": "bool CheckKeyEquivalent(uint32_t)",
+   "compiled": 80,
+   "pm": 80,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 80,
+   "sig": "uint32_t MakeKeyEquivalent(uint32_t, uint32_t)",
+   "compiled": 81,
+   "pm": 81,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 81,
+   "sig": "bool IsChildKeyEquivalent(uint32_t, uint32_t)",
+   "compiled": 82,
+   "pm": 82,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 82,
+   "sig": "bool ProcessCursorMessage(cGZMessage&)",
+   "compiled": 83,
+   "pm": 83,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 83,
+   "sig": "bool UpdateCursor()",
+   "compiled": 84,
+   "pm": 84,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 84,
+   "sig": "bool SetCursor(cIGZCursor*, bool)",
+   "compiled": 85,
+   "pm": 85,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 89,
+   "sig": "intptr_t CalcAbsoluteArea()",
+   "compiled": 90,
+   "pm": 90,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 92,
+   "sig": "intptr_t GetDrawContext()",
+   "compiled": 93,
+   "pm": 93,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 93,
+   "sig": "intptr_t GetBufferToDrawTo()",
+   "compiled": 94,
+   "pm": 94,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 94,
+   "sig": "void SetBufferToDrawTo()",
+   "compiled": 95,
+   "pm": 95,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 95,
+   "sig": "void SetBufferToDrawToRecursive()",
+   "compiled": 96,
+   "pm": 96,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 96,
+   "sig": "void SetAreaToDrawTo()",
+   "compiled": 97,
+   "pm": 97,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 97,
+   "sig": "void SetAreaToDrawToRecursive()",
+   "compiled": 98,
+   "pm": 98,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 98,
+   "sig": "intptr_t GetAreaToDrawTo()",
+   "compiled": 99,
+   "pm": 99,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 99,
+   "sig": "bool PrivateBuffer(bool)",
+   "compiled": 100,
+   "pm": 100,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 100,
+   "sig": "intptr_t GetPrivateBuffer()",
+   "compiled": 101,
+   "pm": 101,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 0,
+   "exe_ret": null
+  },
+  {
+   "hidx": 107,
+   "sig": "bool MakeFillColor(uint8_t, uint8_t, uint8_t)",
+   "compiled": 108,
+   "pm": 108,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 12,
+   "exe_ret": null
+  },
+  {
+   "hidx": 108,
+   "sig": "void SetFadeEffectPeriod(int32_t, int32_t)",
+   "compiled": 109,
+   "pm": 109,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 109,
+   "sig": "void GetFadeEffectPeriod(int32_t&, int32_t&)",
+   "compiled": 110,
+   "pm": 110,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 110,
+   "sig": "void SetShadeColor(cRZColor const&)",
+   "compiled": 111,
+   "pm": 111,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 111,
+   "sig": "void GetShadeColor(cRZColor&)",
+   "compiled": 112,
+   "pm": 112,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 4,
+   "exe_ret": null
+  },
+  {
+   "hidx": 112,
+   "sig": "bool GetParam(uint32_t, cIGZVariant**)",
+   "compiled": 113,
+   "pm": 113,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  },
+  {
+   "hidx": 113,
+   "sig": "bool SetParam(uint32_t, cIGZVariant*)",
+   "compiled": 114,
+   "pm": 114,
+   "exe": null,
+   "src": null,
+   "hdr_bytes": 8,
+   "exe_ret": null
+  }
+ ]
+}

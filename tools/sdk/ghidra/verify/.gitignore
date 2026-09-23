@@ -14,3 +14,5 @@ C-upstream-search/
 __pycache__/
 # Scion cross-check: the fetched Scion headers are LGPL third-party files
 S-scion-crosscheck/_scion/
+# issue evidence: upstream headers fetched for the regression check
+I-issue-evidence/_cache/

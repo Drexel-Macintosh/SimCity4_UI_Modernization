@@ -22074,3 +22074,39 @@ The user asked: "What about this github in comparison to our decomp?"
   - **GetKey** (by value vs by reference) is ABI-identical, so our one call is fine.
 - **Nothing was posted upstream,** per the user.
 - Recorded in: `tools\sdk\ghidra\README.md` (Scion section) and `docs\DECOMPILATION-STATUS.md` §4.6.
+
+### Later: "Do we have enough to open issues and be 1000% sure of them?" Every claim re-derived; drafts written, NOT posted
+
+Everything is in `tools\sdk\ghidra\verify\I-issue-evidence\`, and every script there exits 0.
+
+- **cIGZWin.**
+  - A, B and the gate merged: 91 of 147 declarations decoded against the exe, **40 wrong, 51 right, 56 undecoded** (no claim about those).
+  - The five handler arities reproduce from B's `ret N`.
+  - The three right-slot ABI defects were re-read from their bodies:
+    - SetShadeColor stores the argument itself;
+    - AccelerateKeyboardMsg does `ret 4`;
+    - CheckKeyEquivalent does `ret 8`.
+  - The 387a9751 regression reproduces from fresh `gh` fetches: at `4669fa92` all 8 overloads compile right, and at `387a9751` and HEAD they compile wrong (controls GetW/GZPaint right in all three).
+  - The gate passes today, and its self-test fails every planted defect as designed.
+  - Spot-decoded bodies:
+    - 47/49 copy 16 bytes into the argument; 48/50 return a pointer;
+    - 54 and 118 forward to 55 and 53;
+    - 56 moves TO and 57 moves BY;
+    - 119 is the ref overload and 120 the null-tested ptr.
+- **cIGZApp, fully decoded.**
+  - Route: app global → the single setter caller `0x0044C214` → `new cSC4App` + 0x2C → vtable `0x00A86A68`. The base cGZApp vtable is `0x00AC3190`, and its constructor stores "SimCity 4".
+  - Slot by slot:
+    - 4 is AddApplicationService (FrameWork() → AddSystemService);
+    - 5 is ModuleName (returns the stored name);
+    - 6, 7 and 8 are pinned by the boot call sites;
+    - 9 by the shutdown call `0x87AB54`;
+    - 10 is FrameWork (returns `[0xB540AC]`);
+    - 11-13 are one empty `ret` in both classes;
+    - 14 is `mov al,1; ret` in the base, and SC4's version loads Resources.ini and returns `al=1`, so it is the only bool: LoadRegistry.
+  - **8 of the header's 12 methods are on the wrong slot.** The order among 11-13 is **not observable** in this exe; the draft cites the Mac symbols and Scion for it.
+- **cIGZCOMDirector.** 27 director vtables: 26 with distinct `mov eax,imm32; ret` at 13 (one of them `0xC3CAEC3B` = Scion's ID), 1 abstract. Slot 16 is the deleting destructor and the table ends there, so there is no AddDirector slot.
+- **Not claimed:**
+  - other builds (only the Steam 641 exe was measured);
+  - the 56 undecoded cIGZWin rows;
+  - a runtime demonstration of the wrong-slot calls. Most would corrupt the stack, so the evidence is compiler output plus exe bytes. The one runtime-observed item is GZWinMoveTo moving BY.
+- **Review.** An independent adversarial review (opus-reviewer; the DeepSeek lane is suspended) was set to try to refute every draft claim against the exe.

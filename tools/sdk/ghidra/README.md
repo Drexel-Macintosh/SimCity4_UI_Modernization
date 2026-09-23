@@ -119,6 +119,13 @@ Today the scan finds 29 `cIGZWin` method names in `src\` calls. Of these:
 - `GZWinMoveTo` is the one deliberate exception: used as `GZWinOffset`, with
   all 20 call sites passing deltas.
 
+**Re-verified for an upstream report** (2026-09-23 evening, `verify\I-issue-evidence\`):
+- Merging A, B and the gate: 91 of the 147 declarations are decoded against the exe. **40 are wrong and 51 right. 56 are undecoded, and no claim is made about them.**
+- The five handler arities reproduce independently from B's `ret N` values.
+- The three right-slot ABI defects were re-read from their bodies (`0x0099CA91`, `0x0099B980`, `0x0099BE94`).
+- The `387a9751` regression reproduces from fresh fetches of `4669fa92`, `387a9751` and HEAD.
+- Draft reports are in `verify\I-issue-evidence\drafts\`, **not posted**.
+
 **Upstream status** (read-only search, 2026-09-23):
 - nsgomez/gzcom-dll: no issue or PR mentions it, and the file is unchanged at
   HEAD.
@@ -169,7 +176,7 @@ both. The disagreements, settled against the exe:
 
 | interface | Scion | gzcom-dll | Mac archive | exe (MEASURED) | our DLL |
 |---|---|---|---|---|---|
-| `cIGZApp` | order A | order B from slot 4 | A | **A.** The framework's boot calls `PreFrameworkInit` at slot 6 (`0x87AFDD`), `PostFrameworkInit` at 7 (`0x87B09C`) and `GZRun` at 8 (`0x87959C`). gzcom-dll puts these at 7, 8 and 10. | never calls it |
+| `cIGZApp` | order A | order B from slot 4 | A | **A.** The framework's boot calls `PreFrameworkInit` at slot 6 (`0x87AFDD`), `PostFrameworkInit` at 7 (`0x87B09C`) and `GZRun` at 8 (`0x87959C`); gzcom-dll puts these at 7, 8 and 10. Later, all 15 slots of the live object (`0x00A86A68`) were decoded, along with the base `cGZApp`'s (`0x00AC3190`): **8 of the header's 12 methods are on the wrong slot**. Slots 11–13 are three identical empty `void` hooks, so their order among themselves is not observable. Slot 14 is the only `bool`, which makes it `LoadRegistry` (`I-issue-evidence\app_director.py`). | never calls it |
 | `cIGZCOMDirector` slot 13 | `GetDirectorID` | `AddDirector` | `AddDirector` | **`GetDirectorID`.** In all 26 concrete director vtables it is a different `mov eax,imm32; ret`, and one returns Scion's own `0xC3CAEC3B` (vtable `0x00AD8BA0`). The 27th is abstract. Slot 16 is the deleting destructor in both. | implements it, with `AddDirector` at 13. INFERRED: the exe never calls 13 on a plugin's director, or every gzcom-dll plugin would run `AddDirector` on a garbage pointer |
 | `cIGZFrameWorkW32` | inserts `Run` at 4 | no `Run` | no `Run` | **gzcom-dll.** We call `GetMainHWND` at slot 5 and subclass the window it returns. The live log's `Tick subclass installed` proves slot 5 returned a real window. | calls slot 5 |
 | `GetKey` (`cIGZPersistResource`, `cIGZPersistDBRecord`) | returns the key by value | fills a reference | — | Not needed: under MSVC x86 both pass one pointer and `ret 4`. | 1 call, correct either way |
