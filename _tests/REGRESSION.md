@@ -22058,3 +22058,19 @@ The user: "release it as v4.10.1".
 - **Previous release.** v4.10.0 was deleted after publishing, per the user's standing order. Its git tag stays.
 - **sc4pac channel.** Regenerated with `gen_channel.py --publish --last-modified 2026-09-23T22:17:29Z`: 127/127 files claimed, 102/102 checksums re-hashed in both yamls, all 208 comment lines preserved. `Test-ChannelYaml` is clear on both (version matches the DLL; asset URL HTTP 200 at the exact size; the lean file is upstream-clean).
 - **Contents vs 4.10.0.** The DLL only: the bar-chart margin and the Custom Tunes column. Art, fonts and packages are byte-identical.
+
+## 2026-09-23 (evening): nsgomez/scion compared with our decomp; two more wrong SDK headers found. No DLL change.
+
+The user asked: "What about this github in comparison to our decomp?"
+
+- **What Scion is.** It reimplements the GZ framework: COM, message servers, files, strings, and the DBPF reader.
+  - It is by gzcom-dll's author and is LGPL-2.1-or-later. The last commit is 2025-06-01.
+  - UI (GZWinD) is not started, and its resource manager is an empty file, so it has **no overlap with our UI work**.
+- **Toolchain, MEASURED.** Linker 7.10 (VS .NET 2003). STLport 4.x: 87 `_STL` RTTI names, 0 `std`. There is no Rich header.
+- **Interfaces.** 38 `cIGZ*` headers are in both Scion and our gzcom-dll pin; 25 are identical. That is one author, so agreement proves nothing. The differences were settled on the exe with `tools\sdk\ghidra\verify\S-scion-crosscheck\exe_checks.py`, which reports ALL MATCH.
+  - **`cIGZApp`: gzcom-dll is WRONG from slot 4.** The framework boot calls PreFrameworkInit, PostFrameworkInit and GZRun at slots 6, 7 and 8, as Scion and the Mac archive have them. Rulers in the same function: five framework/COM calls that both headers agree on. **We never call it.**
+  - **`cIGZCOMDirector` slot 13: gzcom-dll and the Mac archive are WRONG.** The slot is GetDirectorID in all 26 concrete director vtables, and vtable `0x00AD8BA0` returns Scion's own `0xC3CAEC3B`. We implement AddDirector there. It is harmless because the exe never calls it on plugins (INFERRED from every gzcom-dll plugin working).
+  - **`cIGZFrameWorkW32`: Scion is WRONG, gzcom-dll is right.** Scion inserts `Run` at slot 4. Our GetMainHWND call at slot 5 returns a real window: the live log has `Tick subclass installed`, which needs one.
+  - **GetKey** (by value vs by reference) is ABI-identical, so our one call is fine.
+- **Nothing was posted upstream,** per the user.
+- Recorded in: `tools\sdk\ghidra\README.md` (Scion section) and `docs\DECOMPILATION-STATUS.md` §4.6.

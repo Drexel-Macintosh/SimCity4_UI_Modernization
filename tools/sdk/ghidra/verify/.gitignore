@@ -12,3 +12,5 @@
 # the upstream search downloaded other projects' headers, source and issue text
 C-upstream-search/
 __pycache__/
+# Scion cross-check: the fetched Scion headers are LGPL third-party files
+S-scion-crosscheck/_scion/

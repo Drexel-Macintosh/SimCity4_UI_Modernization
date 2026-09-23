@@ -476,6 +476,22 @@ All three were found here without the archive.
     names there. It is right for FlatRect (20/20). Neither rule is safe
     alone; see `tools\sdk\ghidra\README.md`.
 
+⚠ **EXTENDED (2026-09-23, nsgomez/scion cross-check): two more SDK headers
+are wrong against the exe.**
+- **`cIGZApp`:** gzcom-dll's order is wrong from slot 4. The framework's
+  boot calls `PreFrameworkInit`, `PostFrameworkInit` and `GZRun` at slots
+  6, 7 and 8, as Scion and the Mac archive have them.
+- **`cIGZCOMDirector` slot 13:** it is `GetDirectorID` in all 26 concrete
+  director vtables in the exe. gzcom-dll and the Mac archive have
+  `AddDirector` there.
+- **Nothing shipped is affected.** We never call `cIGZApp`. The exe never
+  calls slot 13 on a plugin's director (INFERRED: if it did, every gzcom-dll
+  plugin would run `AddDirector` on a garbage pointer).
+- **The one framework interface where Scion is wrong is one we call:**
+  `cIGZFrameWorkW32`. Our log proves gzcom-dll's slot 5 = `GetMainHWND`.
+- Scion has no UI code, so it neither checks nor extends §4.
+- Detail and re-run: the Scion section of `tools\sdk\ghidra\README.md`.
+
 ---
 
 ## 5. Drift

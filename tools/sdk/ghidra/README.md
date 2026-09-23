@@ -143,6 +143,59 @@ Still unmapped UI interfaces: `cIGZWinBMP`, `cIGZWinHTML`, `cIGZWinListBox`,
 `cISC4WinAlertBorder`, `cISC4WinRCI`, `cISC4GlyphTextureManager` and
 `cISC4CachedStringTexture`.
 
+## A third source: nsgomez/scion (2026-09-23)
+
+[Scion](https://github.com/nsgomez/scion) reimplements the framework layer of
+this exe. It is by gzcom-dll's author and is LGPL-2.1-or-later.
+- **What it covers:** COM, message servers, files, strings, and the DBPF
+  reader with RefPack.
+- **What it lacks:** its README lists UI (GZWinD), graphics, sound and Lua as
+  not started. Its resource manager and multi-file segment are empty files.
+- **Last commit:** 2025-06-01.
+
+It has **no overlap with our UI work**. It is useful as an independent check
+of the framework interfaces we call. Evidence is in
+`verify\S-scion-crosscheck\`; `exe_checks.py` re-runs every row below.
+
+**Toolchain (MEASURED):**
+- Linker version 7.10, which is VS .NET 2003.
+- 87 RTTI names in STLport 4.x's `_STL` namespace, and 0 in `std`.
+- This Steam build has no Rich header, so the compiler's own build number
+  cannot be read.
+
+**Interfaces.** Of the 38 `cIGZ*` headers both projects declare, 25 match
+gzcom-dll exactly. That agreement is **not evidence**, since one author wrote
+both. The disagreements, settled against the exe:
+
+| interface | Scion | gzcom-dll | Mac archive | exe (MEASURED) | our DLL |
+|---|---|---|---|---|---|
+| `cIGZApp` | order A | order B from slot 4 | A | **A.** The framework's boot calls `PreFrameworkInit` at slot 6 (`0x87AFDD`), `PostFrameworkInit` at 7 (`0x87B09C`) and `GZRun` at 8 (`0x87959C`). gzcom-dll puts these at 7, 8 and 10. | never calls it |
+| `cIGZCOMDirector` slot 13 | `GetDirectorID` | `AddDirector` | `AddDirector` | **`GetDirectorID`.** In all 26 concrete director vtables it is a different `mov eax,imm32; ret`, and one returns Scion's own `0xC3CAEC3B` (vtable `0x00AD8BA0`). The 27th is abstract. Slot 16 is the deleting destructor in both. | implements it, with `AddDirector` at 13. INFERRED: the exe never calls 13 on a plugin's director, or every gzcom-dll plugin would run `AddDirector` on a garbage pointer |
+| `cIGZFrameWorkW32` | inserts `Run` at 4 | no `Run` | no `Run` | **gzcom-dll.** We call `GetMainHWND` at slot 5 and subclass the window it returns. The live log's `Tick subclass installed` proves slot 5 returned a real window. | calls slot 5 |
+| `GetKey` (`cIGZPersistResource`, `cIGZPersistDBRecord`) | returns the key by value | fills a reference | — | Not needed: under MSVC x86 both pass one pointer and `ret 4`. | 1 call, correct either way |
+
+Differences left unsettled, none of them called by us:
+- `cIGZAllocatorService`: Scion derives it from `cIGZSystemService`; gzcom-dll
+  and the Mac archive derive it from `cIGZUnknown`.
+- `cIGZCOMLibrary`: 10 methods in Scion, 4 in gzcom-dll.
+- `cIGZDBSegmentPackedFile`: gzcom-dll has `GetCompressedRecordLength` at
+  slot 34.
+- `cIGZFrameWork::OnIdle`: 0 arguments in Scion, 1 in gzcom-dll.
+- `cIGZVariant`: Scion declares 20 of gzcom-dll's 124 methods.
+
+Scion's boot source calls `AddCOMDirectorsHere`, `AddDynamicLibrariesHere`,
+`LoadRegistry`. The exe calls slots 13, 12, 11, which under Scion's own header
+are `AddApplicationServicesHere`, `AddCOMDirectorsHere`,
+`AddDynamicLibrariesHere`. So its header is right there while its code is not;
+Scion is not byte-verified everywhere either.
+
+**Two lessons for this archive:**
+- **The Mac archive can be wrong where no overloads are involved.** It gives
+  `AddDirector` at `cIGZCOMDirector` 13, and the exe has `GetDirectorID`.
+- **gzcom-dll has at least two more wrong headers besides `cIGZWin`:**
+  `cIGZApp`, and `cIGZCOMDirector` slot 13.
+- **Nothing has been posted upstream.** That waits for the user.
+
 ## Files
 
 | path | what |
@@ -150,4 +203,4 @@ Still unmapped UI interfaces: `cIGZWinBMP`, `cIGZWinHTML`, `cIGZWinListBox`,
 | `ExportGdt.java`, `run-export.cmd` | regenerate `out\SimCity4.gdt.json` (needs Ghidra 12.x at `GHIDRA_HOME`, default `C:\dev\tools\ghidra_12.1.4_PUBLIC`, and a clone at `SC4_SYMBOLS`, default `C:\dev\sc4-ghidra-symbols`) |
 | `calibrate_slots.py` | archive vs gzcom-dll slot agreement |
 | `probe\` | the header probe the gate compiles |
-| `verify\<unit>\` | the 2026-09-23 evidence scripts: `A-full-probe` (all 147 declarations, two compiler readings), `B-second-class-exe-decode` (slots decoded on 15 classes), `W-*` (widgets), and each `*-verify` (the independent skeptic). Only scripts and slot tables are committed. Disassembly dumps and downloaded third-party files regenerate locally and are ignored (`verify\.gitignore`); `THIRD-PARTY-NOTICES.md` §4a limits whole-function listings. |
+| `verify\<unit>\` | the 2026-09-23 evidence scripts: `A-full-probe` (all 147 declarations, two compiler readings), `B-second-class-exe-decode` (slots decoded on 15 classes), `W-*` (widgets), each `*-verify` (the independent skeptic), and `S-scion-crosscheck` (Scion vs gzcom-dll, settled on the exe). Only scripts and slot tables are committed. Disassembly dumps and downloaded third-party files regenerate locally and are ignored (`verify\.gitignore`); `THIRD-PARTY-NOTICES.md` §4a limits whole-function listings. |
