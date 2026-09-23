@@ -304,6 +304,11 @@ def ensure_work(*parts):
 
 
 def jdump(path, obj):
+    # Create the folder first. `_work\` is gitignored, so a fresh clone does
+    # not have it, and crosscheck.py used to finish its check and then die
+    # here writing the report - a gate that could never pass on a cold clone
+    # (found 2026-09-23 by running it on one).
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:
         json.dump(obj, f, indent=1)
