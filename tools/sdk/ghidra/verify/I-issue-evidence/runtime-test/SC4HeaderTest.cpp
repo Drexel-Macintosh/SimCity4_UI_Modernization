@@ -200,14 +200,29 @@ static bool PlainGeometry(cIGZWin* w)
 		&& SameAsBase(w, 111, 112) && SameAsBase(w, 118, 128);
 }
 
+// A window away from its parent's origin, inside a parent away from the
+// screen's origin, tells relative from absolute and "move by" from "move to".
+static bool Offset(int i)
+{
+	cIGZWin* w = gAll[i].w;
+	cRZRect pa;
+	int32_t q[4];
+	gAll[i].parent->GetAreaAbsolute(pa);
+	Rect4(pa, q);
+	return w->GetL() > 0 && w->GetT() > 0 && (q[0] > 0 || q[1] > 0);
+}
+
 static int FindGeometryWindow(bool strict)
 {
-	for (int i = 0; i < gAllN; i++)
-	{
-		cIGZWin* w = gAll[i].w;
-		if (!gAll[i].parent || !w->IsVisible() || w->GetW() < 12 || w->GetH() < 12) continue;
-		if (!strict || PlainGeometry(w)) return i;
-	}
+	for (int pass = 0; pass < 2; pass++)
+		for (int i = 0; i < gAllN; i++)
+		{
+			cIGZWin* w = gAll[i].w;
+			if (!gAll[i].parent || !w->IsVisible() || w->GetW() < 12 || w->GetH() < 12) continue;
+			if (strict && !PlainGeometry(w)) continue;
+			if (pass == 0 && !Offset(i)) continue;
+			return i;
+		}
 	return -1;
 }
 
@@ -338,30 +353,51 @@ static void TestColours(void* v)
 	Check(b && b2 && b3 && (c.raw & 0xFFFFFF) == ((uint32_t)rr << 16 | (uint32_t)gg << 8 | bb),
 		"GetFillColor(cRZColor&) (102), () (103) and (r&,g&,b&) (104) agree: 0x%08X = (%u,%u,%u)", c.raw, rr, gg, bb);
 
-	BALANCED(b, w->SetFillColor(c));
+	// Set colours DIFFERENT from the current ones, read them back through
+	// every getter, then restore. A setter that did nothing, or stored a
+	// pointer, reads back wrong.
+	cRZColor t;
+	t.raw = (c.raw & 0xFF000000) | (((c.raw & 0xFFFFFF) == 0x336699) ? 0x996633 : 0x336699);
+	const uint32_t want = t.raw & 0xFFFFFF;
+	BALANCED(b, w->SetFillColor(t));
 	w->GetFillColor(c2);
-	Check(b && c2.raw == c.raw, "SetFillColor(cRZColor) BY VALUE (slot 105) stores the colour itself: 0x%08X", c2.raw);
-	BALANCED(b, w->SetFillColor(rr, gg, bb));
+	uint8_t r2 = 0, g2 = 0, b2_ = 0;
+	w->GetFillColor(r2, g2, b2_);
+	Check(b && c2.raw == t.raw && ((uint32_t)r2 << 16 | (uint32_t)g2 << 8 | b2_) == want,
+		"SetFillColor(cRZColor) BY VALUE (slot 105) stores the colour itself: set 0x%08X, read 0x%08X = (%u,%u,%u)",
+		t.raw, c2.raw, r2, g2, b2_);
+	BALANCED(b, w->SetFillColor((uint8_t)0x12, (uint8_t)0x34, (uint8_t)0x56));
 	w->GetFillColor(c2);
-	Check(b && (c2.raw & 0xFFFFFF) == (c.raw & 0xFFFFFF), "SetFillColor(r, g, b) (slot 107) keeps the colour: 0x%08X", c2.raw);
+	Check(b && (c2.raw & 0xFFFFFF) == 0x123456, "SetFillColor(r, g, b) (slot 107) sets (0x12,0x34,0x56): read 0x%08X", c2.raw);
 	BALANCED(b, w->SetFillColor(native));
 	w->GetFillColor(c2);
-	Log("INFO  SetFillColor(uint32_t native) (slot 106): stack %s, colour now 0x%08X", b ? "balanced" : "OFF", c2.raw);
+	Log("INFO  SetFillColor(uint32_t native) (slot 106) with the original colour's native value: stack %s, colour now 0x%08X",
+		b ? "balanced" : "OFF", c2.raw);
 	gInfo++;
 	w->SetFillColor(c);
 	w->GetFillColor(c2);
 	Check(c2.raw == c.raw, "fill colour restored: 0x%08X", c2.raw);
 
-	cRZColor s, s2;
+	cRZColor s, s2, ts;
 	w->GetShadeColor(s);
-	BALANCED(b, w->SetShadeColor(s));
+	ts.raw = s.raw ^ 0x00A5A5A5;
+	BALANCED(b, w->SetShadeColor(ts));
 	w->GetShadeColor(s2);
-	Check(b && s2.raw == s.raw, "SetShadeColor(cRZColor) BY VALUE (slot 111) stores the colour itself: 0x%08X", s2.raw);
+	Check(b && s2.raw == ts.raw, "SetShadeColor(cRZColor) BY VALUE (slot 111) stores the colour itself: set 0x%08X, read 0x%08X",
+		ts.raw, s2.raw);
+	w->SetShadeColor(s);
+	w->GetShadeColor(s2);
+	Check(s2.raw == s.raw, "shade colour restored: 0x%08X", s2.raw);
 
-	uint32_t rgb = 0, nat = 0, back = 0;
+	uint32_t rgb = 0, nat = 0, back = 0, now = 0;
 	BALANCED(b, rgb = w->GetFillColorRGB());
-	BALANCED(b2, w->SetFillColorRGB(rgb));
-	Check(b && b2 && w->GetFillColorRGB() == rgb, "GetFillColorRGB (126) / SetFillColorRGB (125) round-trip 0x%08X", rgb);
+	BALANCED(b2, w->SetFillColorRGB(0x00336699));
+	now = w->GetFillColorRGB();
+	Check(b && b2 && now == 0x00336699, "SetFillColorRGB (125) / GetFillColorRGB (126): set 0x00336699, read 0x%08X", now);
+	w->SetFillColorRGB(rgb);
+	w->SetFillColor(c);
+	w->GetFillColor(c2);
+	Check(w->GetFillColorRGB() == rgb && c2.raw == c.raw, "fill colour restored again: 0x%08X", c2.raw);
 	BALANCED(b, nat = w->ConvertPackedRGBToNative(0x00F84010));
 	BALANCED(b2, back = w->ConvertNativeToPackedRGB(nat));
 	Check(b && b2 && (back & 0xFFFFFF) == 0xF84010, "ConvertPackedRGBToNative (127) / ConvertNativeToPackedRGB (128): 0xF84010 -> 0x%08X -> 0x%08X", nat, back);
