@@ -164,52 +164,61 @@ static void TestDirectors(void*)
 }
 
 // ------------------------------------------------------------------ windows
-struct Kids { cIGZWin* w[256]; int n; };
-static bool CollectKids(cIGZWin*, uint32_t, void* child, void* ctx)
+// The whole window tree under the main window, breadth first.
+struct Node { cIGZWin* w; cIGZWin* parent; };
+static Node gAll[4096];
+static int gAllN = 0;
+
+static bool CollectAll(cIGZWin* parent, uint32_t, void* child, void*)
 {
-	Kids* k = (Kids*)ctx;
-	if (child && k->n < 256) k->w[k->n++] = (cIGZWin*)child;
+	if (child && gAllN < 4096) { gAll[gAllN].w = (cIGZWin*)child; gAll[gAllN].parent = parent; gAllN++; }
 	return true;
 }
 
-static int Kids_(cIGZWin* w, Kids& k)
+static void WalkTree(cIGZWin* root)
 {
-	k.n = 0;
-	w->EnumChildren(GZIID_cIGZWin, CollectKids, &k);
-	return k.n;
+	gAllN = 0;
+	root->EnumChildren(GZIID_cIGZWin, CollectAll, nullptr);
+	for (int head = 0; head < gAllN && gAllN < 4096; head++)
+		gAll[head].w->EnumChildren(GZIID_cIGZWin, CollectAll, nullptr);
 }
 
-// Handlers identical to the base cGZWin's (0x00ADC8D8) at 129-143, so calling
-// them runs the shared stubs (or base SetFocus, a no-op on a visible window).
-static bool PlainHandlers(cIGZWin* w)
+static bool SameAsBase(cIGZWin* w, int from, int to)
 {
 	void** vt = *(void***)w;
 	void** bvt = (void**)Rebase(0x00ADC8D8);
-	for (int s = 129; s <= 143; s++)
+	for (int s = from; s <= to; s++)
 		if (vt[s] != bvt[s]) return false;
 	return true;
 }
 
-struct Pick { cIGZWin* geom; cIGZWin* plain; };
-
-static void FindWindows(cIGZWin* main, Pick& pick)
+// A window the geometry and colour tests can use: visible, with a parent, and
+// not overriding the methods under test, so the base class's code runs.
+static bool PlainGeometry(cIGZWin* w)
 {
-	pick.geom = pick.plain = nullptr;
-	static Kids l1, l2;
-	Kids_(main, l1);
-	for (int i = 0; i < l1.n; i++)
+	return SameAsBase(w, 41, 60) && SameAsBase(w, 75, 80) && SameAsBase(w, 102, 107)
+		&& SameAsBase(w, 111, 112) && SameAsBase(w, 118, 128);
+}
+
+static int FindGeometryWindow(bool strict)
+{
+	for (int i = 0; i < gAllN; i++)
 	{
-		if (!l1.w[i]->IsVisible()) continue;
-		Kids_(l1.w[i], l2);
-		for (int j = 0; j < l2.n; j++)
-		{
-			cIGZWin* c = l2.w[j];
-			if (!c->IsVisible() || c->GetW() < 12 || c->GetH() < 12) continue;
-			if (!pick.geom && PlainHandlers(c)) pick.geom = c;
-			if (!pick.plain && PlainHandlers(c)) pick.plain = c;
-		}
-		if (pick.geom) break;
+		cIGZWin* w = gAll[i].w;
+		if (!gAll[i].parent || !w->IsVisible() || w->GetW() < 12 || w->GetH() < 12) continue;
+		if (!strict || PlainGeometry(w)) return i;
 	}
+	return -1;
+}
+
+// For one handler slot: a visible window whose entry there is the base
+// class's, so the call runs the shared stub (or base SetFocus, a no-op on a
+// visible window).
+static cIGZWin* FindHandlerWindow(int slot)
+{
+	for (int i = 0; i < gAllN; i++)
+		if (gAll[i].w->IsVisible() && SameAsBase(gAll[i].w, slot, slot)) return gAll[i].w;
+	return nullptr;
 }
 
 struct WinCtx { cIGZWin* w; cIGZWin* parent; };
@@ -361,25 +370,29 @@ static void TestColours(void* v)
 static void TestHandlers(void* v)
 {
 	cIGZWin* w = ((WinCtx*)v)->w;
-	Log("handler window ID 0x%08X: its handlers 129-143 are the base class's", w->GetID());
 	bool b, r;
-#define H(label, call) do { r = true; BALANCED(b, r = w->call); \
-	Check(b && !r, "%-44s stack %s, returned %d", label, b ? "balanced" : "OFF", (int)r); } while (0)
-	H("GZOnCharacter(c) (slot 129)", GZOnCharacter(0));
-	H("GZOnKeyDown(key, mods) (130)", GZOnKeyDown(0, 0));
-	H("GZOnKeyUp(key, mods) (131)", GZOnKeyUp(0, 0));
-	if (w->IsVisible()) H("GZOnSetFocus(cIGZWin*) (132)", GZOnSetFocus(nullptr));
-	H("GZOnKillFocus(cIGZWin*) (133)", GZOnKillFocus(nullptr));
-	H("GZOnMouseDownL(x, y, mods) (134)", GZOnMouseDownL(0, 0, 0));
-	H("GZOnMouseDownR(x, y, mods) (135)", GZOnMouseDownR(0, 0, 0));
-	H("GZOnMouseUpL(x, y, mods) (136)", GZOnMouseUpL(0, 0, 0));
-	H("GZOnMouseUpR(x, y, mods) (137)", GZOnMouseUpR(0, 0, 0));
-	H("GZOnMouseMove(x, y, mods) (138)", GZOnMouseMove(0, 0, 0));
-	H("GZOnMouseWheel(x, y, mods, delta) (139)", GZOnMouseWheel(0, 0, 0, 0));
-	H("GZOnCaptureChanged(old, new) (140)", GZOnCaptureChanged(nullptr, nullptr));
-	H("GZOnMouseEnter(cIGZWin*) (141)", GZOnMouseEnter(nullptr));
-	H("GZOnMouseExit(data) (142)", GZOnMouseExit(0));
-	H("GZOnCommand(command, data) (143)", GZOnCommand(0, 0));
+	cIGZWin* hw;
+	// Each handler runs on a window whose entry for that slot is the base
+	// class's, so it reaches the shared stub for its argument size.
+#define H(slot, label, call) do { hw = FindHandlerWindow(slot); \
+	if (!hw) { Log("INFO  %-44s no window with the base handler; skipped", label); gInfo++; break; } \
+	r = true; BALANCED(b, r = hw->call); \
+	Check(b && !r, "%-44s stack %s, returned %d (window 0x%08X)", label, b ? "balanced" : "OFF", (int)r, hw->GetID()); } while (0)
+	H(129, "GZOnCharacter(c) (slot 129)", GZOnCharacter(0));
+	H(130, "GZOnKeyDown(key, mods) (130)", GZOnKeyDown(0, 0));
+	H(131, "GZOnKeyUp(key, mods) (131)", GZOnKeyUp(0, 0));
+	H(132, "GZOnSetFocus(cIGZWin*) (132)", GZOnSetFocus(nullptr));
+	H(133, "GZOnKillFocus(cIGZWin*) (133)", GZOnKillFocus(nullptr));
+	H(134, "GZOnMouseDownL(x, y, mods) (134)", GZOnMouseDownL(0, 0, 0));
+	H(135, "GZOnMouseDownR(x, y, mods) (135)", GZOnMouseDownR(0, 0, 0));
+	H(136, "GZOnMouseUpL(x, y, mods) (136)", GZOnMouseUpL(0, 0, 0));
+	H(137, "GZOnMouseUpR(x, y, mods) (137)", GZOnMouseUpR(0, 0, 0));
+	H(138, "GZOnMouseMove(x, y, mods) (138)", GZOnMouseMove(0, 0, 0));
+	H(139, "GZOnMouseWheel(x, y, mods, delta) (139)", GZOnMouseWheel(0, 0, 0, 0));
+	H(140, "GZOnCaptureChanged(old, new) (140)", GZOnCaptureChanged(nullptr, nullptr));
+	H(141, "GZOnMouseEnter(cIGZWin*) (141)", GZOnMouseEnter(nullptr));
+	H(142, "GZOnMouseExit(data) (142)", GZOnMouseExit(0));
+	H(143, "GZOnCommand(command, data) (143)", GZOnCommand(0, 0));
 #undef H
 
 	// Message type 0 is not one DoMessage handles, so these do nothing.
@@ -401,23 +414,25 @@ static UINT_PTR kTimerId = 0x5C4E;
 static int gTicksWithUI = 0;
 static bool gDone = false;
 
-static void RunWindowTests()
+// Returns false when the tree has no usable window yet (keep waiting).
+static bool RunWindowTests()
 {
 	cISC4AppPtr sc4;
 	cIGZWin* main = sc4 ? sc4->GetMainWindow() : nullptr;
-	Pick pick;
-	FindWindows(main, pick);
-	if (!pick.geom)
-	{
-		Log("INFO  no plain visible window found under the main window; window tests skipped");
-		gInfo++;
-		return;
-	}
-	WinCtx g = { pick.geom, pick.geom->GetParentWin() };
+	if (!main) return false;
+	WalkTree(main);
+	int gi = FindGeometryWindow(true);
+	const bool strict = gi >= 0;
+	if (gi < 0) gi = FindGeometryWindow(false);
+	if (gi < 0) return false;
+	Log("\n%d windows under the main window; geometry window: %s (vtable %p)", gAllN,
+		strict ? "does not override any method under test" : "a derived class (no plain window visible)",
+		*(void**)gAll[gi].w);
+	WinCtx g = { gAll[gi].w, gAll[gi].parent };
 	Run("cIGZWin geometry, moves and keys", TestGeometry, &g);
 	Run("cIGZWin colours", TestColours, &g);
-	WinCtx h = { pick.plain, pick.plain->GetParentWin() };
-	Run("cIGZWin input handlers and messages", TestHandlers, &h);
+	Run("cIGZWin input handlers and messages", TestHandlers, &g);
+	return true;
 }
 
 static LRESULT CALLBACK Subclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR)
@@ -426,13 +441,19 @@ static LRESULT CALLBACK Subclass(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp, UINT
 	{
 		cISC4AppPtr sc4;
 		cIGZWin* main = sc4 ? sc4->GetMainWindow() : nullptr;
-		if (main && main->GetChildCount() > 0 && ++gTicksWithUI >= 8)
+		// Wait 8 s after the UI appears, then retry every 5 s until a usable
+		// window exists, for up to 10 minutes.
+		if (main && main->GetChildCount() > 0 && ++gTicksWithUI >= 8 && (gTicksWithUI - 8) % 5 == 0)
 		{
-			gDone = true;
-			KillTimer(hwnd, kTimerId);
-			RunWindowTests();
-			Log("\nDONE: %d passed, %d failed, %d info", gPass, gFail, gInfo);
-			RemoveWindowSubclass(hwnd, Subclass, id);
+			const bool ran = RunWindowTests();
+			if (ran || gTicksWithUI > 600)
+			{
+				gDone = true;
+				KillTimer(hwnd, kTimerId);
+				if (!ran) { Log("INFO  no usable window appeared in 10 minutes; window tests skipped"); gInfo++; }
+				Log("\nDONE: %d passed, %d failed, %d info", gPass, gFail, gInfo);
+				RemoveWindowSubclass(hwnd, Subclass, id);
+			}
 		}
 		return 0;
 	}
