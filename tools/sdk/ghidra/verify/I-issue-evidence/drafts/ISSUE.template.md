@@ -22,6 +22,7 @@ So when the header's order doesn't match the game's, the plugin quietly calls a 
 **The fix** is on a branch in our fork, in three commits (one per header): https://github.com/Drexel-Macintosh/gzcom-dll/tree/fix-vtable-order
 - With it, every method in these three headers compiles to the game's slot, with the game's argument sizes.
 - All 31 files in `gzcom-dll/src` still compile.
+- A test plugin built against it passed 51 checks, with 0 failures, inside the running game (see "Tested in the game").
 - We'll open it as a pull request alongside this issue.
 
 ⚠ **One behaviour change:** with the fix, `GZWinMoveTo` really moves a window *to* (x, y). Plugins that worked around the bug by passing offsets should call the new `GZWinOffset(dx, dy)` instead.
@@ -143,6 +144,30 @@ In gzcom-dll, `cIGZCOMDirector.h` puts `AddDirector` at slot 13, and `cRZCOMDllD
 
 **A note, in case the header came from the Mac symbols:** the Mac type archive in sc4-ghidra-symbols does list `AddDirector` at slot 13 for `cIGZCOMDirector`, but the Windows game doesn't have it there. The same archive's `cRZCOMDllDirector` leaves slot 13 unnamed.
 
+## Tested in the game
+
+We also built a small test plugin against the fixed headers and ran it in SimCity 4.
+- **What it calls:** the fixed methods on live objects: the app, one of the game's own COM directors, and a real window.
+- **What it checks:** each result. It also checks that the stack is balanced after every call, because a method in the wrong slot, or with the wrong arguments, leaves it unbalanced.
+- **Side effects:** every change it makes is put back.
+
+**Result: 51 checks passed, 0 failed.**
+- **Moves:** `GZWinOffset` moves a window by (dx, dy), and `GZWinMoveTo` moves it to (x, y).
+- **Resizing:** `SetSize` resizes, and so does `SetSize(cRZPoint)` through the new `SetSizeFromPoint`.
+- **Area readers:** `GetArea(cRZRect&)` and `GetAreaAbsolute(cRZRect&)` fill the rectangle, and the no-argument versions return a pointer to it.
+- **Colours:** `SetFillColor(cRZColor)` and `SetShadeColor(cRZColor)` store a new colour passed by value; reading it back gives the same colour, and each getter agrees.
+- **Null pointer:** `CenterWindowInRect(cRZRect*)` accepts null, so the call reached the pointer version.
+- **Input handlers and messages:** all 15 input handlers and the four `SendMsg`/`PostMsg` overloads keep the stack balanced with the fixed argument lists. This includes the 4-argument `GZOnMouseWheel`.
+- **Keys:** `CheckKeyEquivalent(key, modifiers)` and `AccelerateKeyboardMsg(msg)` keep it balanced too.
+- **`cIGZApp`:** `FrameWork()` returns the framework and `ModuleName()` returns "SimCity 4".
+- **Directors:** the game's resource-manager director returns `0xC3CAEC3B` through slot 13.
+- **For contrast, the unfixed header:** its `FrameWork()` returned the text "SimCity 4", and its `GetArea(cRZRect&)` left the rectangle unfilled and the stack 4 bytes off.
+
+**What this test can't separate:**
+- **The five mouse button and move handlers** take the same arguments, so a stack check can't tell them apart from each other. Their order comes from the game's message dispatcher, which maps each Windows message to its slot.
+
+The test plugin and its full log are in the evidence folder linked at the end (`runtime-test/`).
+
 ## Scope
 
 - **`cIGZWin.h`: all 144 methods checked.** 40 are wrong (listed above) and 104 are right.
@@ -158,3 +183,4 @@ https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/tree/main/tools/sd
 - `regression_387a9751.py`: what 387a9751 changed.
 - `app_director.py`: the `cIGZApp` and director tables.
 - `verify_fixed_headers.py`: checks the fix branch, method by method.
+- `runtime-test/`: the in-game test plugin (`SC4HeaderTest.cpp`, `build.cmd`) and its log (`run3-log.md`).

@@ -22138,3 +22138,29 @@ What was done:
   - cIGZApp: 3-14. Director: GetDirectorID at 13, destructor at 16.
   - All 31 of gzcom-dll's src files compile. ALL CHECKS PASS.
 - **The draft.** One issue for all three headers: `drafts\ISSUE.md`, assembled from `ISSUE.template.md` plus the generated table. It is **NOT posted**, and no PR is opened.
+
+### 20:26-20:41: the fixed headers tested INSIDE the game. Run 3: 51 passed, 0 failed
+
+The user asked: "Can we test all these changes on our machine?"
+
+The test is `runtime-test\SC4HeaderTest.dll`, built against the fork. It checks each call's result and the stack pointer around it, runs every test under SEH, and puts back whatever it changes. The user ran the game three times:
+- **Run 1: 6/6.** The window search was too narrow, so no window was tested.
+- **Run 2: 49/49.** Not discriminating: the window was at (0,0) and the colour writes reused the current values.
+- **Run 3: 51/51, 0 failed** (`run3-log.md`).
+
+MEASURED in the running game:
+- **cIGZApp.** FrameWork() returns the framework; ModuleName() returns "SimCity 4". The OLD header's slot-5 "FrameWork" returned "SimCity 4".
+- **Directors.** The game's resource-manager director, found at `00B63690`, returns `0xC3CAEC3B` through the fixed slot 13. The plugin loaded with the new director layout and shut down normally.
+- **Moves.** GZWinOffset moves BY and GZWinMoveTo moves TO. Each put-back step fails if the two are swapped.
+- **Sizes and areas.** SetSize and SetSizeFromPoint resize. SetArea ×2 works.
+- **CenterWindowInRect(ptr)** accepts null.
+- **Colours.** New values were written and read back: 105 by value 0x336699, 107 (0x12,0x34,0x56), 111 by value 0xFF5A5A5A, and 125/126. Everything was restored.
+- **Handlers and messages.** All 15 input handlers and SendMsg/PostMsg ×2 keep the stack balanced with the fixed argument lists, including the 4-argument wheel.
+- **The OLD GetArea(rect&)** reached slot 48: the rect was not filled and the stack was off by 4.
+
+NOT separated by these runs:
+- relative vs absolute, which the fix does not change;
+- the five 12-byte mouse handlers, from each other (DoMessage's jump table separates them);
+- the side-effecting cIGZApp methods, which were not called.
+
+The test DLL and its log were removed from Plugins. The draft gained a "Tested in the game" section.

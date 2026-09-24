@@ -23,3 +23,18 @@ Every call is checked two ways:
 
 Every window change is put back. Every test runs under SEH, so a failure is
 logged, not a crash.
+
+## Results (2026-09-23, Steam 1.1.641, region screen)
+
+| run | result | what changed after it |
+|---|---|---|
+| 1 | 6/6 (app, directors); window tests found no window | the window search walked only 2 levels |
+| 2 | 49/49 | window at (0,0) in a parent at (0,0), and colour writes reused the current values: relative-vs-absolute and store-vs-no-op were not told apart. Moves were still told apart, by their put-back steps. |
+| 3 | **51/51, 0 failed** (`run3-log.md`) | no plain window on the region screen sits offset in an offset parent, so the geometry window is still (0,0). Colours now write different values and read them back, which is discriminating. |
+
+What the runs do not separate:
+- **relative vs absolute (47/48 vs 49/50).** The fix does not change this pairing; the bodies read +0xA8 vs +0x14.
+- **the five 12-byte mouse handlers (134-138)**, from each other. They are separated by DoMessage's jump table.
+- **the side-effecting cIGZApp methods (4, 6-9, 11-14)**, which were not called. The game's own boot and shutdown call sites pin them.
+
+**Clean-up:** the test DLL and its log were removed from Plugins after run 3.
