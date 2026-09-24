@@ -492,6 +492,12 @@ are wrong against the exe.**
 - Scion has no UI code, so it neither checks nor extends §4.
 - Detail and re-run: the Scion section of `tools\sdk\ghidra\README.md`.
 
+⚠ **FILED UPSTREAM (2026-09-23, at the user's say).**
+- Issue [nsgomez/gzcom-dll#38](https://github.com/nsgomez/gzcom-dll/issues/38) and pull request [#39](https://github.com/nsgomez/gzcom-dll/pull/39).
+- By then every cIGZWin position had been identified: 40 of 144 methods wrong, plus 9 argument lists.
+- The fix was tested inside the game: 51 passed, 0 failed.
+- Evidence: `tools\sdk\ghidra\verify\I-issue-evidence\`.
+
 ---
 
 ## 5. Drift

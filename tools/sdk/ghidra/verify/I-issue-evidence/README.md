@@ -4,8 +4,9 @@ Everything a report to nsgomez/gzcom-dll claims, re-derived from the
 committed evidence and the user's own exe. There is also a checker for the
 fix branch.
 
-**Nothing has been posted upstream.** The draft and the fix branch wait for
-the user.
+**Filed 2026-09-23, at the user's say:**
+- issue [nsgomez/gzcom-dll#38](https://github.com/nsgomez/gzcom-dll/issues/38), the body of `drafts\ISSUE.md`, later edited to link the PR;
+- pull request [nsgomez/gzcom-dll#39](https://github.com/nsgomez/gzcom-dll/pull/39), from `Drexel-Macintosh/gzcom-dll` `fix-vtable-order`, 3 commits.
 
 | script | what it proves |
 |---|---|

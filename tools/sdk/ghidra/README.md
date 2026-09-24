@@ -146,7 +146,10 @@ Today the scan finds 29 `cIGZWin` method names in `src\` calls. Of these:
   `GZWinOffset`.
 - One downstream project (SC4-ModernCamera) hit the relative-move symptom and
   put it down to the game.
-- **Nothing has been posted upstream.** That waits for the user.
+- ~~**Nothing has been posted upstream.** That waits for the user.~~
+  **FILED 2026-09-23, at the user's say:**
+  - issue [nsgomez/gzcom-dll#38](https://github.com/nsgomez/gzcom-dll/issues/38) covers all three headers;
+  - pull request [nsgomez/gzcom-dll#39](https://github.com/nsgomez/gzcom-dll/pull/39) is our `fix-vtable-order` branch.
 
 ## What it found: interfaces the SDK does not declare
 

@@ -22164,3 +22164,13 @@ NOT separated by these runs:
 - the side-effecting cIGZApp methods, which were not called.
 
 The test DLL and its log were removed from Plugins. The draft gained a "Tested in the game" section.
+
+### FILED: nsgomez/gzcom-dll#38 (issue) and #39 (pull request)
+
+The user: "Okay let's file the issue and open the pull request".
+
+- **Before posting:** upstream HEAD was still `779b669b`. No open report existed; the only related item is closed #25, about overload order in cISC43DRender.
+- **Issue #38.** The body is `drafts\ISSUE.md` (title line and draft comment stripped). It was then edited so "We'll open it as a pull request" reads "Pull request: #39".
+- **PR #39.** `Drexel-Macintosh:fix-vtable-order` → `nsgomez:master`, 3 commits. The body is plain English, says "Fixes #38", carries the GZWinMoveTo behaviour-change warning and the checks (MSVC slots and argument sizes, src still compiles, in-game 51/0).
+- **CI:** upstream has no Actions workflows, so there is nothing to monitor.
+- **Posted as** the Drexel-Macintosh account.
