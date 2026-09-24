@@ -1,0 +1,16 @@
+{
+ "count": [
+  "0   bool AccelerateKeyboardMsg()",
+  "1   bool CheckKeyEquivalent(uint32_t)",
+  "2   bool GZOnSetFocus(uint32_t, uint32_t)",
+  "3   bool GZOnMouseWheel(int32_t, int32_t, uint32_t)",
+  "4   bool GZOnCaptureChanged(cIGZWin*, uint32_t, uint32_t, uint32_t)",
+  "2   bool GZOnMouseEnter(uint32_t, uint32_t)",
+  "1   bool GZOnCommand(uint32_t)"
+ ],
+ "byvalue": [
+  "bool SetFillColor(cRZColor const&)",
+  "void SetShadeColor(cRZColor const&)"
+ ],
+ "readable": 142
+}

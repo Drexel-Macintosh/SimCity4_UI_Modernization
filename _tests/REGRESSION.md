@@ -22110,3 +22110,31 @@ Everything is in `tools\sdk\ghidra\verify\I-issue-evidence\`, and every script t
   - the 56 undecoded cIGZWin rows;
   - a runtime demonstration of the wrong-slot calls. Most would corrupt the stack, so the evidence is compiler output plus exe bytes. The one runtime-observed item is GZWinMoveTo moving BY.
 - **Review.** An independent adversarial review (opus-reviewer; the DeepSeek lane is suspended) was set to try to refute every draft claim against the exe.
+
+### Later still: the whole header verified, the fix pushed to our fork, one plain-English draft (NOT posted)
+
+The user asked for three things:
+- "let's start writing our issue ... in plain understandable english";
+- "make a copy of the git and push the fixes with the issue";
+- "we should go in with the entire thing verified".
+
+What was done:
+- **The review came back.** It found no wrong numbers or addresses, and independently confirmed all 40 rows, the handler arities, cIGZApp and the director census. It did catch omissions, all fixed:
+  - `SetFillColor(cRZColor)` at 105 takes the colour by value (a 9th argument list);
+  - 77/80/111 were claimed while the evidence file still counted them as undecoded;
+  - `387a9751` also broke `CenterWindowInRect(cRZRect*)` (it had reached the same-ABI ref overload) and fixed `SetArea(l,t,r,b)`;
+  - several wording overclaims.
+- **All 147 cIGZWin positions identified.** The last 51 were read from their bodies with `dump_undecoded.py`, and each has one line of evidence in `consolidate_cigzwin.py`. All 51 are right in the header, so the tally is **40 wrong, 104 right** of the 144 own methods.
+- **"Step" direction.** ChildToBack re-inserts at the list's end, and hit-testing walks from the head. So the head is the front: 28 = StepFront, 29 = StepBack.
+- **Argument types**, from the DoMessage dispatcher and the senders:
+  - SetFocus gets the window that lost focus (window manager `0x9DB87D`);
+  - MouseEnter gets the window left;
+  - CaptureChanged gets (old, new);
+  - the wheel's 4th argument is the signed delta;
+  - Command gets (command, data);
+  - AccelerateKeyboardMsg forwards to the accelerator's ProcessAccelerator(const cGZMessage&).
+- **The fork.** `Drexel-Macintosh/gzcom-dll`, branch `fix-vtable-order`: 3 commits (`eec5712` cIGZWin, `aa191d8` cIGZApp, `bf7a0e5` cIGZCOMDirector) on upstream `779b669b`.
+  - `verify_fixed_headers.py`: every cIGZWin method compiles to the game's slot, covering 3-147 exactly once, with the game's argument bytes wherever the census reads one.
+  - cIGZApp: 3-14. Director: GetDirectorID at 13, destructor at 16.
+  - All 31 of gzcom-dll's src files compile. ALL CHECKS PASS.
+- **The draft.** One issue for all three headers: `drafts\ISSUE.md`, assembled from `ISSUE.template.md` plus the generated table. It is **NOT posted**, and no PR is opened.

@@ -29,7 +29,15 @@ VERSIONS = ["4669fa92", "387a9751", "779b669b"]
 EXE = {"GetArea_rect": 47, "GetArea_ptr": 48, "GetAreaAbsolute_rect": 49, "GetAreaAbsolute_ptr": 50,
        "GetFillColor_color": 102, "GetFillColor_void": 103, "GetFillColor_rgb": 104,
        "SetFillColor_color": 105, "SetFillColor_u32": 106, "SetFillColor_rgb": 107,
+       "SetArea_rect": 54, "SetArea_ltrb": 55,
+       "CenterWindowInRect_ref": 119, "CenterWindowInRect_ptr": 120,
        "GetW": 41, "GZPaint": 88}
+# What the game has at the slots these probes can reach, for the change report.
+GAME = {47: "GetArea(cRZRect&)", 48: "GetArea()", 49: "GetAreaAbsolute(cRZRect&)", 50: "GetAreaAbsolute()",
+        54: "SetArea(const cRZRect&)", 55: "SetArea(l,t,r,b)", 56: "GZWinMoveTo", 102: "GetFillColor(cRZColor&)",
+        103: "GetFillColor()", 104: "GetFillColor(r&,g&,b&)", 105: "SetFillColor(cRZColor)",
+        106: "SetFillColor(uint32_t)", 107: "SetFillColor(r,g,b)", 118: "SetSize(const cRZPoint&)",
+        119: "CenterWindowInRect(const cRZRect&)", 120: "CenterWindowInRect(cRZRect*)"}
 
 
 def fetch(short):
@@ -96,10 +104,35 @@ def main():
         before, *after = cells
         if name in ("GetW", "GZPaint"):
             ok &= all(c == exe for c in cells)
-        elif name not in ("GetFillColor_void", "SetFillColor_u32"):
+        elif name.startswith(("GetArea", "GetFillColor_c", "GetFillColor_r", "SetFillColor_c", "SetFillColor_r")):
             ok &= before == exe and all(c != exe for c in after)
-    print("\n%s" % ("REPRODUCED: right before 387a9751, wrong from 387a9751 through HEAD; controls right"
-                    if ok else "NOT REPRODUCED"))
+    print("\nWhat 387a9751 changed (4669fa92 -> 387a9751):")
+    for name, exe in EXE.items():
+        b, a = res["4669fa92"].get(name), res["387a9751"].get(name)
+        if b == a:
+            continue
+        verdict = ("ADDED" if b is None else "FIXED" if a == exe else "BROKE" if b == exe else "wrong before and after")
+        if name == "CenterWindowInRect_ptr":
+            verdict = "BROKE in effect: it used to reach the reference overload, whose ABI is the same pointer"
+        print("  %-22s %s -> %s  (reached %s, now reaches %s)  %s"
+              % (name, b, a, GAME.get(b, b), GAME.get(a, a), verdict))
+    # The three extra changes the review found must still show.
+    ok &= res["4669fa92"].get("SetArea_ltrb") == 56 and res["387a9751"].get("SetArea_ltrb") == 55
+    ok &= res["4669fa92"].get("SetArea_rect") == 55 and res["387a9751"].get("SetArea_rect") == 56
+    ok &= res["4669fa92"].get("CenterWindowInRect_ptr") == 119 and res["387a9751"].get("CenterWindowInRect_ptr") == 118
+    # Every probe the gate knows, not just the ones above: which were already
+    # wrong before 387a9751, and which did it change?
+    import ast
+    src = open(os.path.join(REPO, "_tests", "Test-GZWinHeaderSlots.py"), encoding="utf-8").read()
+    gate = next(ast.literal_eval(n.value) for n in ast.parse(src).body
+                if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "EXE_SLOT")
+    wrong_now = sorted(n for n in gate if res["779b669b"].get(n) is not None and res["779b669b"][n] != gate[n])
+    changed = [n for n in wrong_now if res["4669fa92"].get(n) != res["779b669b"].get(n)]
+    same_before = [n for n in wrong_now if n not in changed]
+    print("\nOf the %d gate probes wrong at HEAD: %d changed with 387a9751 (%s); %d compiled to the same "
+          "wrong slot before it: %s" % (len(wrong_now), len(changed), ", ".join(changed), len(same_before),
+                                       ", ".join(same_before)))
+    print("\n%s" % ("REPRODUCED" if ok else "NOT REPRODUCED"))
     sys.exit(0 if ok else 1)
 
 

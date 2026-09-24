@@ -126,6 +126,18 @@ Today the scan finds 29 `cIGZWin` method names in `src\` calls. Of these:
 - The `387a9751` regression reproduces from fresh fetches of `4669fa92`, `387a9751` and HEAD.
 - Draft reports are in `verify\I-issue-evidence\drafts\`, **not posted**.
 
+⚠ **COMPLETED LATER THE SAME EVENING (the user: "we should go in with the entire thing verified").**
+- The last 51 were read from their bodies, so **all 147 positions are identified: 40 wrong, 104 right of the 144 own methods.**
+- All 51 are right in the header.
+- The fuller census also corrects the argument-list count: **9 mismatches**, adding `SetFillColor(cRZColor)` at 105, which takes the colour by value.
+- An independent review (opus-reviewer; DeepSeek lane suspended) confirmed every number and address. It also caught three omissions, all fixed:
+  - the 9th argument list;
+  - claims made about rows the evidence file still counted as undecoded;
+  - `387a9751` also broke `CenterWindowInRect(cRZCRect*)`.
+- The fix is on `Drexel-Macintosh/gzcom-dll`, branch `fix-vtable-order` (3 commits on upstream `779b669b`). `verify_fixed_headers.py` shows every method on the game's slot with the game's argument bytes, and gzcom-dll's 31 sources still compile.
+- The single plain-English draft is `drafts\ISSUE.md`. **Not posted.**
+- **Our own DLL, when the vendored gzcom-dll is updated to the fix:** `GZWinMoveTo` becomes absolute. Our 20 delta calls must switch to `GZWinOffset` in the same change; the header gate will flag it.
+
 **Upstream status** (read-only search, 2026-09-23):
 - nsgomez/gzcom-dll: no issue or PR mentions it, and the file is unchanged at
   HEAD.

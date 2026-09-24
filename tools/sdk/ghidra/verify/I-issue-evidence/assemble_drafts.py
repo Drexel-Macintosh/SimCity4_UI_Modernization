@@ -1,11 +1,12 @@
-r"""Rebuild drafts\cIGZWin.md from its template and the evidence.
+r"""Rebuild drafts\ISSUE.md from its template and the evidence.
 
     python tools\sdk\ghidra\verify\I-issue-evidence\assemble_drafts.py
 
 Runs consolidate_cigzwin.py, then make_cigzwin_table.py, and pastes the table
-into the template, so no slot number in the draft is typed by hand. Exits
-non-zero unless the evidence still gives exactly 40 wrong declarations,
-which is the count the draft's prose states.
+into drafts\ISSUE.template.md, so no slot number in the table is typed by
+hand. It exits non-zero unless the evidence still gives exactly what the
+prose states: all 147 positions identified, 40 wrong and 107 right, and 9
+argument-list mismatches.
 """
 import json
 import os
@@ -16,13 +17,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 PY = sys.executable
 subprocess.run([PY, os.path.join(HERE, "consolidate_cigzwin.py")], check=True, capture_output=True)
 C = json.load(open(os.path.join(HERE, "cigzwin_consolidated.json")))
-if len(C["wrong"]) != 40 or len(C["right"]) != 51 or len(C["undecoded"]) != 56:
-    sys.exit("evidence changed (%d wrong, %d right, %d undecoded): update the template's prose first"
-             % (len(C["wrong"]), len(C["right"]), len(C["undecoded"])))
+L = json.load(open(os.path.join(HERE, "cigzwin_argument_lists.json")))
+if (len(C["wrong"]), len(C["right"]), len(C["undecoded"])) != (40, 107, 0) \
+        or len(L["count"]) + len(L["byvalue"]) != 9 or L["readable"] != 142:
+    sys.exit("evidence changed (%d wrong, %d right, %d undecoded, %d argument lists, %d readable): "
+             "update the template's prose first" % (len(C["wrong"]), len(C["right"]), len(C["undecoded"]),
+                                                    len(L["count"]) + len(L["byvalue"]), L["readable"]))
 table = subprocess.run([PY, os.path.join(HERE, "make_cigzwin_table.py")] + sys.argv[1:],
                        check=True, capture_output=True, text=True).stdout.strip()
-tpl = open(os.path.join(HERE, "drafts", "cIGZWin.template.md"), encoding="utf-8").read()
-out = tpl.replace("{TABLE}", table).replace("Assembled by assemble_drafts.py; edit this template, not the output.",
-                                            "Assembled by assemble_drafts.py from cIGZWin.template.md.")
-open(os.path.join(HERE, "drafts", "cIGZWin.md"), "w", encoding="utf-8", newline="\n").write(out)
-print("drafts\\cIGZWin.md written: %d table rows" % (table.count("\n") - 1))
+tpl = open(os.path.join(HERE, "drafts", "ISSUE.template.md"), encoding="utf-8").read()
+out = tpl.replace("{TABLE}", table).replace(
+    "Assembled by assemble_drafts.py; edit this template, not the output.",
+    "Assembled by assemble_drafts.py from ISSUE.template.md.")
+open(os.path.join(HERE, "drafts", "ISSUE.md"), "w", encoding="utf-8", newline="\n").write(out)
+print("drafts\\ISSUE.md written: %d table rows" % (table.count("\n") - 1))
