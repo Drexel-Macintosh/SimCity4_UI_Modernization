@@ -133,7 +133,7 @@ Today the scan finds 29 `cIGZWin` method names in `src\` calls. Of these:
 - An independent review (opus-reviewer; DeepSeek lane suspended) confirmed every number and address. It also caught three omissions, all fixed:
   - the 9th argument list;
   - claims made about rows the evidence file still counted as undecoded;
-  - `387a9751` also broke `CenterWindowInRect(cRZCRect*)`.
+  - `387a9751` also broke `CenterWindowInRect(cRZRect*)`.
 - The fix is on `Drexel-Macintosh/gzcom-dll`, branch `fix-vtable-order` (3 commits on upstream `779b669b`). `verify_fixed_headers.py` shows every method on the game's slot with the game's argument bytes, and gzcom-dll's 31 sources still compile.
 - The single plain-English draft is `drafts\ISSUE.md`. **Not posted.**
 - **Our own DLL, when the vendored gzcom-dll is updated to the fix:** `GZWinMoveTo` becomes absolute. Our 20 delta calls must switch to `GZWinOffset` in the same change; the header gate will flag it.
