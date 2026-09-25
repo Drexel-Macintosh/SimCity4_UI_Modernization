@@ -9,6 +9,11 @@ The standing failure mode this exists to prevent: re-deriving the same
 diagnosis by hand, and filing a fixable defect as unfixable.
 **Match the symptom first, then confirm by measurement, then plan.**
 
+> **Source pointers.** Since the 2026-09-25 audit (B11), `src\UiSpike.cpp` is
+> several files: `UiSpike.cpp`, `UiSpikeFlyouts.cpp`, `UiSpikeMinimap.cpp`,
+> `UiSpikeRegion.cpp`, `UiSpikeSelector.cpp`, `UiSpikeIds.h`, `UiSpikeInternal.h`.
+> A grep this file names in `src\UiSpike.cpp` finds its symbol in one of them.
+
 ---
 
 ## 1. THE SYMPTOM TABLE

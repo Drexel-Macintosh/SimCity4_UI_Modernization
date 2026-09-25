@@ -70,9 +70,12 @@ for e in wc["setIds"]:
     code_ids[wid].append(("call=0x%06X" % e["call"], "owner=sub_%06X" % e["owner"]))
 
 # ---------- 3. our id-keyed lists ------------------------------------------
-# The id tables moved to UiSpikeIds.h in the audit B11 split (2026-09-25).
+# Every UiSpike source: the id tables moved to UiSpikeIds.h in the audit B11
+# split (2026-09-25), and a list that moves on to another split file must not
+# silently come back empty.
 uis = "\n".join(open(os.path.join(SRC, f), "r", errors="replace").read()
-                for f in ("UiSpikeIds.h", "UiSpike.cpp"))
+                for f in sorted(os.listdir(SRC))
+                if f.startswith("UiSpike") and f.endswith((".cpp", ".h")))
 
 def grab_list(name, text):
     i = text.find(name)

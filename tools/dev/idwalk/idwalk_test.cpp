@@ -1,4 +1,4 @@
-// Offline test of UiSpike.cpp's BATCHED ID LOOKUPS block (audit A1,
+// Offline test of UiSpikeFlyouts.cpp's BATCHED ID LOOKUPS block (audit A1,
 // 2026-09-25). run_idwalk_test.py copies that block, verbatim, into
 // idwalk_block.inc and builds this file against a mock window tree.
 //

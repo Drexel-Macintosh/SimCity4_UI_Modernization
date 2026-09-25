@@ -102,6 +102,7 @@
     <ClCompile Include="UiSpikeSelector.cpp" />
     <ClCompile Include="UiSpikeRegion.cpp" />
     <ClCompile Include="UiSpikeMinimap.cpp" />
+    <ClCompile Include="UiSpikeFlyouts.cpp" />
     <ClCompile Include="CodePatches.cpp" />
     <ClCompile Include="ScaleTier.cpp" />
     <ClCompile Include="WebRedirect.cpp" />

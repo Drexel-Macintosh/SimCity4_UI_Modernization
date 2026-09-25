@@ -11,6 +11,11 @@ laws that decide a fix are in `README.md`; symptom-to-mechanism triage is in
 `METHOD.md`; panel-specific anatomy lives in the family docs beside this one.
 Every generalisable engine fact belongs here.
 
+> **Source pointers.** Since the 2026-09-25 audit (B11), `src\UiSpike.cpp` is
+> several files: `UiSpike.cpp`, `UiSpikeFlyouts.cpp`, `UiSpikeMinimap.cpp`,
+> `UiSpikeRegion.cpp`, `UiSpikeSelector.cpp`, `UiSpikeIds.h`, `UiSpikeInternal.h`.
+> A grep this file names in `src\UiSpike.cpp` finds its symbol in one of them.
+
 **Evidence rules used throughout.** Every non-obvious claim carries its source
 inline: a **log line**, a **disassembly VA**, a **script path + line**, or the
 doc that proved it. Binary facts are from `SimCity 4.exe` **1.1.641.0 Steam

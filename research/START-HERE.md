@@ -19,7 +19,7 @@ Go to their symbols, not to a date-ordered ledger:
 
 - **The Graphics Options scale-selector rewrite (v3.14).** Banner
   `IN-GAME SCALE SELECTOR (v3.14 STATE MACHINE)` and entry point
-  `UiSpike::ServiceScaleSelector` in `src\UiSpike.cpp` (declared in
+  `UiSpike::ServiceScaleSelector` in `src\UiSpikeSelector.cpp` (declared in
   `src\UiSpike.h`, driven from the timer in `src\SC4UIScaleDllDirector.cpp`);
   the four parts are `SelState`, `SelDerive`, `SelApply`, `SelOnClose`. The
   architecture is a law:
@@ -29,7 +29,7 @@ Go to their symbols, not to a date-ordered ledger:
   Gates: `_tests\Test-SelectorDerive.py`, `_tests\Test-SelectorContract.py`.
 - **The sub-flyout bottom-anchor / arm-alignment arc** (short-count strips like
   Sports Grounds and Plazas). `SubPlaceDetour`, `SubPlaceTop`, `SubPlaceTopMb`
-  in `src\UiSpike.cpp`; written up in
+  in `src\UiSpikeFlyouts.cpp`; written up in
   [laws/project-sc4-flyout-bottom-anchor.md](laws/project-sc4-flyout-bottom-anchor.md)
   and registered in
   [UNKNOWNS-AND-NEXT-TARGETS.md](UNKNOWNS-AND-NEXT-TARGETS.md) §D.1.

@@ -21,10 +21,16 @@ since.** That is why the right-hand column is now a grep and never a number:
 | This file says | How to resolve it |
 |---|---|
 | `Settings::spikeScaleFactor` — `src\Settings.h:55` | `src\Settings.h` (grep `float spikeScaleFactor`) |
-| `gTierF` — `src\UiSpike.cpp:145` | `src\UiSpike.cpp` (grep `float gTierF =`; the §0 trap is the comment block immediately above it) |
-| `RoundHalfUp` — `src\UiSpike.cpp:151-154` | `src\UiSpike.cpp` (grep `inline int32_t RoundHalfUp`) |
-| `ScaleRound` — `src\UiSpike.cpp:3823-3826` | `src\UiSpike.cpp` (grep `inline int32_t ScaleRound`) |
+| `gTierF` — `src\UiSpike.cpp:145` | `src\UiSpikeFlyouts.cpp` (grep `float gTierF =`; the §0 trap is the comment block immediately above it) |
+| `RoundHalfUp` — `src\UiSpike.cpp:151-154` | `src\RoundHalfUp.h` (grep `inline int32_t RoundHalfUp`) |
+| `ScaleRound` — `src\UiSpike.cpp:3823-3826` | `src\UiSpikeInternal.h` (grep `inline int32_t ScaleRound`) |
 | `ScaleTier::Decide` — `src\ScaleTier.cpp:31-36` (`kPackages`) | `src\ScaleTier.cpp` (grep `kPackages[] =`, then `float Decide(`); called from `src\SC4UIScaleDllDirector.cpp` (grep `ScaleTier::Decide`) |
+
+**`src\UiSpike.cpp` in this document means all the `src\UiSpike*` files.** The 2026-09-25
+audit (B11) split it: the flyouts and their hooks are in `UiSpikeFlyouts.cpp`, the
+minimap in `UiSpikeMinimap.cpp`, the region screen in `UiSpikeRegion.cpp`, the selector
+in `UiSpikeSelector.cpp`, the id tables in `UiSpikeIds.h` and what they share in
+`UiSpikeInternal.h`. Grep them all (`src\UiSpike*`); the symbol is still the anchor.
 
 **Law: a `file:line` that points at the wrong thing is worse than no citation** —
 it reads as measured, and this project's own law is that an inference written

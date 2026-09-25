@@ -3,8 +3,10 @@
 
 #include "cIGZWin.h"
 #include "Logger.h"
+#include "RoundHalfUp.h"
 
 class cIGZBuffer;
+class UiSpike;
 
 // What UiSpike.cpp shares with the files split out of it (audit B11,
 // 2026-09-25). Each seam was measured by compiling the halves apart, and
@@ -13,11 +15,15 @@ class cIGZBuffer;
 //   UiSpikeRegion.cpp    ChildSnapshot, gGaugeEpoch, kGZWin_RegionScreen
 //   UiSpikeMinimap.cpp   ParentIdOf, SafeBufProbe; and UiSpike.cpp needs 13
 //                        names from it: SurfRetry, kSurfMaxAttempts and the
-//                        last block below
-// Functions and variables are defined in UiSpike.cpp, except the last block,
-// which UiSpikeMinimap.cpp defines. Constants and the ChildSnapshot and
-// SurfRetry types are inline here. Anything added widens a seam, so add only
-// what a split needs.
+//                        minimap block below
+//   UiSpikeFlyouts.cpp   LiveTuneIniPath, gChartProbe, gChartScale,
+//                        ScaleRound, kFgMax, SafeAbsRect, SafeBufProbe,
+//                        gGaugeEpoch, ChildSnapshot; and UiSpike.cpp needs
+//                        the 23 names of the flyout block below
+// Functions and variables are defined in UiSpike.cpp, except the minimap and
+// flyout blocks, which their own files define. Constants, ScaleRound and the
+// ChildSnapshot and SurfRetry types are inline here. Anything added widens a
+// seam, so add only what a split needs.
 namespace UiSpikeInternal
 {
 	// #192: the render size the director measured, for the resolution
@@ -134,4 +140,87 @@ namespace UiSpikeInternal
 	void RestoreSurfaceBilinear(cIGZBuffer* pBuf, int srcW, int srcH, int n);
 	void LogMinimapBuffer(const char* when, cIGZWin* pMM);
 	bool HookMiniMapDraw(cIGZWin* win, const char* who);
+
+	// ---- UiSpike.cpp -> UiSpikeFlyouts.cpp ----------------------------------
+	// The ini beside this DLL, for the live-tune re-read.
+	const char* LiveTuneIniPath();
+	// #57's two chart switches, which ScaleGodFlyouts's live-tune table sets.
+	extern int gChartProbe;
+	extern int gChartScale;
+
+	// Rounding-correct scaling. Truncation happens to be exact at f=2.0
+	// (bit-identical results) but drifts at non-integer factors (1.5x).
+	//
+	// HALF-UP, NOT HALF-AWAY-FROM-ZERO. THIS IS #162, AND THE FIX WAS
+	// ALREADY WRITTEN AT THE TOP OF UiSpike.cpp - IT JUST NEVER REACHED HERE.
+	//
+	// This was std::llround. llround rounds half AWAY FROM ZERO, so a span
+	// that straddles the origin has BOTH its edges pushed outward and comes
+	// out ONE PIXEL LONGER than the same span scaled as a length:
+	//
+	//     dashboard button 0x2988bc85, absolute design T = -11, h = 50
+	//     llround:  R(39*1.5=58.5)=59  R(-11*1.5=-16.5)=-17  ->  h = 76
+	//     the art:  ScaleDim(50, 1.5)                        ->  h = 75
+	//                                                     ONE UNCOVERED ROW
+	//
+	// which is the "phantom line under the mayor's hat", and the same
+	// asymmetry moves a negative-origin parent's whole subtree by a pixel
+	// against its own background art (the advisor-portrait line). Both were
+	// reported as 1.5x-only, and that is structural, not luck: at f=2 and
+	// f=3 the product v*f is an exact integer, the two rules are identical,
+	// and NOTHING changes. Measured over all 2920 nodes of the shipped .UI
+	// corpus: f=2 -> 0 size and 0 position changes; f=3 -> 0 and 0;
+	// f=1.5 -> 8 sizes and 44 positions, in 6 files, all of them descendants
+	// of the 12 nodes that have a negative absolute origin.
+	//
+	// RoundHalfUp (RoundHalfUp.h) is the art pipeline's
+	// own convention - Upscale2x.exe's dimensions and the .UI builders'
+	// scale_len both use floor(v + 0.5). Its comment has said since it was
+	// written that it "differs from llround/ScaleRound only at NEGATIVE half
+	// values" and that "the art pipeline convention wins for all tier-math
+	// forms". ScaleRound was the one place still disagreeing with it, so
+	// runtime geometry and shipped art could differ by a rounding rule -
+	// exactly the thing that comment promised could not happen.
+	//
+	// Proven offline by tools/uimap/emu/gate_art_vs_window.py, which prices
+	// every image-bound node against the PNG its tier actually ships:
+	// with llround, 1 node is short at 1.5x and 0 at 2x; with half-up,
+	// 0 and 0, and the f=2 control stays at 0 either way.
+	inline int32_t ScaleRound(int32_t v, float f)
+	{
+		return RoundHalfUp(static_cast<double>(v) * static_cast<double>(f));
+	}
+
+	// v2.25.0 (task #53): 6 was FULL (one slot wasted on the tooltip class),
+	// so any further class the ready-gate met was silently unguarded. 12.
+	const int kFgMax = 12;
+
+	// ---- UiSpikeFlyouts.cpp: what UiSpike.cpp reads, calls and resets -------
+	extern float gTierF;           // the hook-visible tier mirror (SetTierMirror)
+	extern int gScaleAbbPanel;     // [Flyout] ScaleGodPanelABB
+	extern int gReadyCount;        // the flash guard's ready list
+	extern void* gFgWaitRoot[4];
+	extern int gFgWaitN[4];
+	extern void* healDoneStrip;    // ADVHEAL
+	extern int healPhase;
+	typedef uintptr_t(__fastcall* FgThunkFn)(void*, void*);
+	extern FgThunkFn const kFgThunks[kFgMax];
+	bool IsOnScreen(cIGZWin* w, int guard = 24);
+	void NoteFlashCandidate(cIGZWin* win, uint32_t id, int n, const char* tag,
+		unsigned int msSinceArm);
+	extern UiSpike* gSpikeSelf;
+	extern void* gSubLastStrip;
+	extern void* gDisLastStrip;
+	extern bool gDisDockValid;
+	extern cIGZWin* gDisChromeHealed;
+	extern cIGZWin* gDisDockLogged;
+	extern int gBornQN;
+	void EnsureBufferClassBltHook();
+	extern int gVisSeenN;
+	extern int gMDockLoggedN;
+	extern int gMayorRebirthLogs;
+	void FindIdsRecursive(cIGZWin* root, const uint32_t* ids, int n,
+		cIGZWin** out);
+	void CollectIdsUnder(cIGZWin* root, const uint32_t* ids, int n,
+		cIGZWin* (*out)[4], int* counts);
 }

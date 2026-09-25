@@ -138,7 +138,7 @@ byte patch the DLL installs.
 
 | Path | What it is |
 |---|---|
-| `src/` | The DLL: director, window-tree scaler (`UiSpike.cpp`), executable patches (`CodePatches.cpp`), tier/package logic (`ScaleTier.cpp`) |
+| `src/` | The DLL: director, window-tree scaler (`UiSpike.cpp`, with the flyouts, minimap, region screen and scale selector split into the `UiSpike*.cpp` files beside it), executable patches (`CodePatches.cpp`), tier/package logic (`ScaleTier.cpp`) |
 | `tools/` | Package builders — every shipped `.dat` is generated, never hand-edited — plus the research corpus and the offline model |
 | `docs/`, `research/` | Product documentation and the distilled research tier (laws, unknowns register) |
 | `_tests/` | Gates, deploy scripts and the regression ledger |

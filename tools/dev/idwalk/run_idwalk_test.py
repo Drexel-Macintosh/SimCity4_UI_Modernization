@@ -1,5 +1,6 @@
 """run_idwalk_test.py - build and run idwalk_test.cpp against the CURRENT
-BATCHED ID LOOKUPS block of src/UiSpike.cpp (audit A1, 2026-09-25).
+BATCHED ID LOOKUPS block of src/UiSpikeFlyouts.cpp (audit A1, 2026-09-25;
+the block moved there from UiSpike.cpp in the audit B11 split).
 
     python tools/dev/idwalk/run_idwalk_test.py
 
@@ -20,7 +21,7 @@ import find_cxx  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
-SRC = os.path.join(REPO, "src", "UiSpike.cpp")
+SRC = os.path.join(REPO, "src", "UiSpikeFlyouts.cpp")
 START = "// Collect EVERY window with the given id under root (bounded walk)."
 END = "// ---- end BATCHED ID LOOKUPS"
 
@@ -30,7 +31,7 @@ def extract():
     a = [i for i, l in enumerate(lines) if START in l]
     b = [i for i, l in enumerate(lines) if END in l]
     if len(a) != 1 or len(b) != 1 or b[0] <= a[0]:
-        print("REFUSED: the block markers in src/UiSpike.cpp moved "
+        print("REFUSED: the block markers in src/UiSpikeFlyouts.cpp moved "
               "(start %d hit(s), end %d hit(s)) - fix START/END here." % (len(a), len(b)))
         sys.exit(2)
     return "".join(lines[a[0]:b[0] + 1])

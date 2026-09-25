@@ -36,7 +36,7 @@ WHAT IS MIRRORED, AND FROM WHERE  (all quoted read-only; `--selftest` re-reads
 them and FAILS if the source text has moved - a tripwire, not a promise)
 
   src\RoundHalfUp.h RoundHalfUp(double v)      -> floor(v + 0.5)
-  src\UiSpike.cpp   ScaleRound(int32 v, float) -> RoundHalfUp(v * f)
+  src\UiSpikeInternal.h ScaleRound(int32 v, float) -> RoundHalfUp(v * f)
   src\UiSpike.cpp   the edge-derived leaf rule -> R(l+w,f) - R(l,f)
   src\UiSpike.cpp   #161 parent-frame rounding -> R(pAbs+t,f) - R(pAbs,f)
   tools\upscale\Upscale2x.cs  CellUnit(v)      -> lcm of the counts dividing v
@@ -105,11 +105,11 @@ INTEGER_TIERS = (2.0, 3.0)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# 1. ROUNDING - src\UiSpike.cpp
+# 1. ROUNDING - src\RoundHalfUp.h, src\UiSpikeInternal.h
 # ══════════════════════════════════════════════════════════════════════════════
 
 def round_half_up(v):
-    """`UiSpike.cpp::RoundHalfUp` - floor(v + 0.5).
+    """`RoundHalfUp.h::RoundHalfUp` - floor(v + 0.5).
 
     The art pipeline's own convention (`Upscale2x.cs::ScaleDim` and the .UI
     builders' `scale_len` both use it), so runtime geometry and shipped art can
@@ -119,7 +119,7 @@ def round_half_up(v):
 
 
 def scale_round(v, f):
-    """`UiSpike.cpp::ScaleRound(int32_t v, float f)` - RoundHalfUp(v * f).
+    """`UiSpikeInternal.h::ScaleRound(int32_t v, float f)` - RoundHalfUp(v * f).
 
     The C++ multiplies `(double)v * (double)f` where f is a **float**. For
     1.5 / 2.0 / 3.0 the float is exact, so the double product is identical to
@@ -680,7 +680,9 @@ _TRIPWIRES = [
     # definition shared by UiSpike and ScaleTier.
     (os.path.join(SRC, "RoundHalfUp.h"),
      r"std::floor\(v \+ 0\.5\)", "RoundHalfUp body"),
-    (os.path.join(SRC, "UiSpike.cpp"),
+    # ScaleRound moved to UiSpikeInternal.h in the B11 split (2026-09-25):
+    # UiSpike.cpp and UiSpikeFlyouts.cpp both call it.
+    (os.path.join(SRC, "UiSpikeInternal.h"),
      r"RoundHalfUp\(static_cast<double>\(v\) \* static_cast<double>\(f\)\)",
      "ScaleRound body"),
     (os.path.join(SRC, "UiSpike.cpp"),
