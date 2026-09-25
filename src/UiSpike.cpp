@@ -1005,6 +1005,27 @@ namespace
 	int     gSubRingAutoX = 0;
 	int     gSubRingAutoY = 0;
 
+	// BIRTH OWNS THE DOCK (2026-09-25). When SubPlaceDetour docks a container it
+	// records the three decisions it made for this open - WHICH button spawned
+	// it (the game's own Place() anchor cy), WHERE it put the container, and the
+	// ring pin (gSubRingAutoY) - and the sweep REUSES them for that container
+	// instead of re-deriving them. Re-deriving was the defect: the sweep's older
+	// placement formula (SubPlaceTop minus the SubContainerShiftFromGeo shift)
+	// disagrees with birth's SubPlaceTopMb, so its +-3 px candidate match either
+	// found no button (6+ item strips: dead back-arrow zone) or claimed the
+	// NEIGHBOUR and rewrote the ring pin for it (the 5-item memo.submenus power
+	// strip at 3x: ring + back arrow jump one row down to Water whenever the
+	// container repaints). Gate: _tests\Test-SubBirthOwnsDock.py.
+	// Both frames are the container's PARENT frame (what Place() and GetT use).
+	// Cleared on every Place() of the container, so one open's record can never
+	// reach another (container addresses are recycled - see REBIRTH).
+	cIGZWin* gSubBornWin = nullptr;
+	int32_t  gSubBornCy = 0;        // Place() anchor = the spawn button's centre y
+	int32_t  gSubBornTopRel = 0;    // container top after the birth dock
+	int32_t  gSubBornAutoY = 0;     // the ring pin birth chose
+	int32_t  gSubBornH = 0;         // container height the record belongs to
+	int      gSubOwnLog = 0;        // SUBOWN verdict line, once per open
+
 	// Live record of the sub-flyout ring blit (v2.16.0). The game blits the 1x
 	// ring sprite at a DIFFERENT buffer y per menu (94 zones/roads, 119 rails
 	// - measured via RCAL 2026-07-29) and its native container placement
@@ -1041,6 +1062,10 @@ namespace
 	// claims it. That absolute X is the one unmeasured term in the ring law:
 	// kSubNativeDX (the game's own native container offset) was measured at
 	// f=2 and ASSUMED factor-independent, and 3x says otherwise.
+	// ⚠ Since 2026-09-25 a BORN container logs only its anchor button here
+	// (the birth-owns-the-dock filter runs first, because every candidate of
+	// a born container shares birth's target and would otherwise "match"); an
+	// anchor that matches nothing is reported by the SUBOWN negative line.
 	int     gSubCandLog = 0;  // #134: pre-gate candidate dump, 24 lines max
 	int     gSubShiftLog = 0; // SUBSHIFT diagnostic, independent counter
 	int     gSubRingBltX = -1;
@@ -7086,6 +7111,18 @@ namespace
 		// Let the game lay the whole assembly out at stock size first - its
 		// arithmetic is the source of truth and we never disturb it.
 		gOrigSubPlace(self, edx, w, h, cx, cy, mT, mB);
+		// BIRTH OWNS THE DOCK: every Place() from the sub-flyout builder
+		// (return address 0x7EB196, the twin guard below) starts a new open, so
+		// forget the previous open's record HERE - before the early return that
+		// follows. Cleared any later, a live SubBornScale=0 or a stock tier would
+		// skip the clear, and a recycled container address of the same height
+		// would inherit the last open's anchor and never dock (review 2026-09-25).
+		// It is set again only if this open's birth dock runs.
+		if (ret == reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr))
+			- 0x400000 + 0x007EB196)
+		{
+			gSubBornWin = nullptr;
+		}
 		if (!self || !gSubBornScaleOn || gTierF <= 1.01f) { return; }
 
 		// TWIN GUARD (law 32). Place is a SHARED class method: sub_7EAEB0
@@ -7668,22 +7705,18 @@ namespace
 			// DELETED. The disaster twin's real path is GODDOCK + the
 			// v4.0.40 rebuild dispatch in BltClassThunk.
 			//
-			// CONFIRMED, NOT YET FIXED (same review): the sweep-time
-			// mirror (~UiSpike.cpp:14883 at review time, search
-			// `SubPlaceTop(sub->GetH()` ) still uses the OLD viewH-margin
-			// formula plus `SubContainerShiftFromGeo`, so it now
-			// disagrees with THIS formula's output for cnt>=8 bars
-			// (Landmarks/Rewards/Parks: birth lands at 292, the sweep's
-			// own target sits near 276-ish). That candidate-match path
-			// was ALREADY measured this session to never succeed under
-			// the OLD birth formula either (`SUBGEO BTN` count stayed 0
-			// for the whole instrumented session, so the back-arrow hit
-			// zone it initializes was already not being refreshed) - this
-			// change does not newly break a working feature, but it does
-			// NOT restore the "birth and sweep agree" invariant a retired
-			// comment here used to assert, and it should not be read as
-			// having done so. See the law file's "what is still open"
-			// section before touching the sweep block.
+			// FIXED 2026-09-25 FOR BORN CONTAINERS ("birth owns the dock",
+			// see gSubBornWin). The sweep-time mirror (search
+			// `SubPlaceTop(sub->GetH()`) still carries the OLD viewH-margin
+			// formula plus `SubContainerShiftFromGeo`, and it disagreed with
+			// THIS formula: no button matched for 6+ item strips (dead
+			// back-arrow zone - `SUBGEO BTN` count 0), and for the 5-item
+			// memo.submenus power strip at 3x it matched the NEIGHBOUR and
+			// rewrote the ring pin one row down. A container docked here now
+			// records its anchor, top and pin, and the sweep reuses them
+			// instead of re-deriving them. The old formula remains ONLY for
+			// containers this block did not dock (SubBornDock=0 / SubMath=0).
+			// Gate: _tests\Test-SubBirthOwnsDock.py.
 			if (!isDisaster && gSubMath && ch > 0)
 			{
 				const int32_t nativeT = win->GetT();
@@ -7693,6 +7726,15 @@ namespace
 				// Hold the ring at the legacy dock, so the FIRST paint
 				// is already right and there is no attach-then-jump.
 				gSubRingAutoY = legDY - dy;
+				// BIRTH OWNS THE DOCK: this open's decisions, for the sweep
+				// to reuse (see gSubBornWin). `top` is where the move below
+				// puts the container: nativeT + dy.
+				gSubBornWin = win;
+				gSubBornCy = cy;
+				gSubBornTopRel = top;
+				gSubBornAutoY = gSubRingAutoY;
+				gSubBornH = newH;
+				gSubOwnLog = 0;
 				// 2026-08-23: raised 40 -> 2000, same reason as SUBPLACE's
 				// budget above.
 				static int sAnchorLog = 2000;
@@ -15323,6 +15365,19 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// keeps the strip and bar in their builder positions and never
 			// shifts the strip independently. The ring arm alignment should
 			// be fixed by adjusting gSubRingAutoY, not by shifting the strip.
+			// BIRTH OWNS THE DOCK (2026-09-25): a container that SubPlaceDetour
+			// docked THIS open is claimed by birth's own anchor (the game's
+			// Place() cy = the spawn button's centre) and target, and keeps
+			// birth's ring pin. The formula match below is the LEGACY path, for
+			// containers birth did not dock (SubBornDock=0 / SubMath=0): its
+			// SubPlaceTop + SUBSHIFT target disagrees with birth's SubPlaceTopMb,
+			// so on a born container it matched no button at 6+ items and the
+			// NEIGHBOUR at 5 (ring + back arrow one row low). See gSubBornWin.
+			const bool bornOwned = gSubMath && gSubBornWin == sub
+				&& gSubBornH == sub->GetH();
+			const int32_t parentAbsT = st - sub->GetT();   // parent frame -> abs
+			const int32_t bornCyAbs = gSubBornCy + parentAbsT;
+			const int32_t bornTopAbs = gSubBornTopRel + parentAbsT;
 			bool done = false;
 			bool subShiftLoggedThisSweep = false;
 			for (uint32_t pid : kParents)
@@ -15345,6 +15400,10 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					// #95: the model, or the legacy constant when SubMath=0.
 					const int32_t bcx = bl + kid->GetW() / 2;
 					const int32_t bcy = bt + kid->GetH() / 2;
+					// BIRTH OWNS THE DOCK: only the button birth was anchored to
+					// may claim a born container - never a neighbour whose
+					// formula target happens to land within the +-3 px window.
+					if (bornOwned && abs(bcy - bornCyAbs) > 2) { continue; }
 					// The LEGACY target is where the container must sit for the
 					// ring to land on its button, and it is exactly right about
 					// the ring at every factor - substituting the two Eff()
@@ -15372,14 +15431,20 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					// 26px disagreement fails both tests, which silently ends
 					// the dock AND freezes the back-arrow click zone.
 					const int32_t tgtL = legL;
-					int32_t tgtT = gSubMath
+					// A born container's target is where birth put it - the one
+					// SubPlaceTopMb decision for this open, never re-derived.
+					int32_t tgtT = bornOwned ? bornTopAbs
+						: gSubMath
 						? SubPlaceTop(sub->GetH(), bcy, pView->GetH(), gTierF)
 						: legT;
 					// v4.0.33: container shift from ring geometry (all counts).
 					// Uses gSubRingBltY (measured) and autoY0 = legT - tgtT
 					// to compute the exact shift needed for the arm to meet
 					// the strip at the target row.
-					if (gTierF > 1.0f)
+					// LEGACY PATH ONLY: birth's SubPlaceTopMb already chose the
+					// born container's top, and shifting it again is exactly the
+					// 148 px row this used to add on the 5-item power strip.
+					if (!bornOwned && gTierF > 1.0f)
 					{
 						cIGZWin* stw = sub->GetChildWindowFromID(0x8A2CAD8B);
 						if (stw && gSubRingBltY >= 0)
@@ -15475,7 +15540,11 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					// Refreshed EVERY sweep while the menu is open, so it can
 					// never drift; identically zero when SubMath is off.
 					gSubRingAutoX = 0;                                // X unmodelled
-					gSubRingAutoY = gSubMath ? (legT - tgtT) : 0;
+					// BIRTH OWNS THE DOCK: birth's pin, verbatim - one writer
+					// per open. (legT - tgtT is the same number only when the
+					// game's native top equals the unclamped law.)
+					gSubRingAutoY = bornOwned ? gSubBornAutoY
+						: (gSubMath ? (legT - tgtT) : 0);
 					// Back-arrow click zone (abs) + selected-button centre for
 					// the forward. Computed from the POST-dock container pos
 					// (tgt), the recorded ring blit, and the measured arrow
@@ -15500,6 +15569,22 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 						+ gSubRingAutoY + RoundHalfUp(kSubArrowY1 * gTierF) + 4;
 					gSubBtnCX = bl + kid->GetW() / 2;
 					gSubBtnCY = bt + kid->GetH() / 2;
+					// SUBOWN (law 44 - the probe states the verdict): which
+					// button owns this open, and the ring pin + arrow zone the
+					// sweep will now hold. Once per open (reset at birth).
+					if (bornOwned && gSubOwnLog < 1)
+					{
+						gSubOwnLog++;
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: SUBOWN birth btn=0x%08X ctr(%d,%d) top=%d "
+							"autoY=%d ringA=%d arrow(%d,%d)-(%d,%d) - sweep reuses "
+							"birth's anchor, target and ring pin",
+							kid->GetID(), gSubBtnCX, gSubBtnCY, tgtT,
+							gSubRingAutoY,
+							tgtT + gSubRingBltY + gSubRingAutoY + SubRingDYEff(),
+							gSubArrowAbs[0], gSubArrowAbs[1],
+							gSubArrowAbs[2], gSubArrowAbs[3]);
+					}
 					// #95 SUBGEO - the WHOLE assembly in one line, once per
 					// open. Two wrong models in a row came from reasoning about
 					// these four rects separately; this prints them together in
@@ -15559,6 +15644,17 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					}
 					break;
 				}
+			}
+			// SUBOWN's negative verdict: a born container whose anchor matched no
+			// candidate keeps birth's ring pin (nothing overwrites it) but gets no
+			// back-arrow zone - say so, once per open, instead of staying silent.
+			if (bornOwned && ringFresh && !done && gSubOwnLog < 1)
+			{
+				gSubOwnLog++;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"UiSpike: SUBOWN birth anchor cy=%d (abs %d) matched no button "
+					"in the open menu - ring pin kept (autoY=%d), no arrow zone",
+					gSubBornCy, bornCyAbs, gSubRingAutoY);
 			}
 		}
 

@@ -338,6 +338,19 @@ for a while. **The disaster twin's actual, live docking logic (GODDOCK)
 was not examined or changed by this fix and is out of scope**, same as
 before — just for a different, now-correct reason.
 
+> **FIXED 2026-09-25 (v4.10.2) for born containers — "birth owns the dock".**
+> The disagreement below also produced a VISIBLE defect nobody had tied to
+> it: for the 5-item memo.submenus power strip at 3x the sweep's ±3 px match
+> landed on the NEIGHBOUR (Water: shifted target 214 vs birth's 212) and
+> rewrote the ring pin 244 → 392, so the ring + back arrow sat one row low
+> whenever the container repainted. The cure was not to mirror
+> `SubPlaceTopMb` into the sweep but to stop the sweep deciding at all: birth
+> records its anchor (`cy`), top and pin, and the sweep reuses them for a
+> container birth docked. The paragraph below is kept as the record of the
+> defect; for born containers it no longer describes the code.
+> See `_tests\REGRESSION.md` "BIRTH OWNS THE DOCK" and
+> `_tests\Test-SubBirthOwnsDock.py`.
+
 **CONFIRMED, NOT FIXED (same review) — the sweep-time mirror now
 genuinely disagrees with birth, and feeds a real (if already-dormant)
 interactive control.** A second, independent `SubPlaceTop` call inside

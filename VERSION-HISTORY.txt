@@ -1,3 +1,30 @@
+SC4UIScale 4.10.2 (2026-09-25) - submenu rings stay on the button that opened them
+================================================================================
+
+One fix, found while testing a pull request for memo33's Submenus DLL, measured
+in three sessions of logs and confirmed in the running game:
+
+THE RING THAT JUMPED A ROW. Utilities -> Power -> the 5-item power submenu at
+3x: the ring and the red back arrow sometimes sat next to Water. The shared
+sub-flyout container (0x8A6E61E0) was positioned twice with two formulas.
+Birth (SubPlaceDetour) anchors on the game's own Place() cy and pins the ring;
+the sweep re-derived the button with the OLD SubPlaceTop minus the SUBSHIFT,
+and for that menu Water's target (214) landed within 3 px of birth's 212 while
+Power's did not (64) - so the sweep claimed Water and moved the pin 244 -> 392.
+It showed only when the menu repainted after that tick, hence "sometimes".
+Menus of 6+ items matched no button at all (dead back-arrow zone).
+
+Birth now records its anchor, top and pin; the sweep reuses them for a
+container birth docked (the record is cleared on every Place(), before any
+early return - an adversarial review caught a late clear). In game, v4.10.2:
+14 opens, every SUBOWN verdict names the spawn button, all 180 sweep ticks of
+the 5-item strip read RINGa 567 (Power), none 715.
+
+Also in the repository, not the bundle:
+- _tests\Test-SubBirthOwnsDock.py - an outcome model of the two placers with
+  four mutants that must fail (old sweep, no anchor filter, frame sign error,
+  late clear); reproduces the 7 logged births and the old sweep's claims.
+
 SC4UIScale 4.10.1 (2026-09-23) - bar charts fill the panel; Custom Tunes scales
 ================================================================================
 

@@ -38,6 +38,7 @@ stale expectations are this runbook's only failure mode.
 | `Test-ShippingIniKeys.py` | no | instant | The shipped user ini (`_packaging\SC4UIScale.ini`) may not document a key the DLL does not read, and may not carry a BOM (a BOM makes the DLL abandon the file and boot windowed). Three keys in the old 24 KB ini (`Scaling/AutoConfig`, `PresentWidth`, `PresentHeight`) were parsed into `Settings` and read by NOTHING — a player could set them and never learn the difference between "wrong value" and "dead key". Covers all four read paths including `Settings.cpp`'s own `GetPrivateProfileFloat` helper (no trailing `W`), which produced this gate's own first false failure. Asserts a positive control |
 | `Test-MiniMapX8Bake.py` | no | instant | **#121 BYTE gate for the x8 terrain-bake patch.** Reads the shipped exe READ-ONLY and asserts, against STOCK bytes only: the 15 dispatch bytes at `0x7A8560`, the 0x21-byte stub block at `0x7A856F` with its five blitter imm32s in order (/4, /2, 1:1, x2, x4), and the five jump-table dwords at `0x7A8628` are exactly what `CodePatches::ApplyMiniMapX8Bake` verifies before it writes; that the replacement it computes is **length-exact 15 bytes differing in exactly 6 positions** (lea imm8, cmp imm8, 4 table-address bytes) with the **`ja` rel8 UNCHANGED**, so the skip still lands at `0x7A85B0`; and **BLAST RADIUS** — the table VA `0x7A8628` appears as an imm32 **exactly once** in `.text` (the very `jmp` being replaced), so re-pointing it cannot reach anything else. Runs a **NEGATIVE control** (a deliberately corrupted dispatch copy must fail check [1]) and a **POSITIVE control** for the imm32 scanner. ⚠ **That positive control FAILED ON ITS FIRST RUN and the gate was the thing that was wrong, not the exe**: it searched for the bake's own VA `0x7A7FF0` and found ZERO hits, because the bake is reached by `call rel32` — a RELATIVE encoding whose absolute address never appears as an immediate anywhere. "Referenced once" from a scanner that can find nothing is a structural null wearing a pass. The control is now a **blitter VA (`0x7A6BD0`)** that check [2] has already proven is encoded as a literal `mov ecx, imm32`. Never re-point the control at a call target |
 | `Test-SubFlyoutPlacement.py` | no | instant | Sub-flyout birth-hook placement (`SubPlaceTopMb`, added 2026-08-23): every Civic Tools button (cnt 3/5/6/8) centers on its own toolbar button or shares the game's real bottom margin, matches 3 already-recorded native (f=1) measurements, and genuinely diverges from the two prior (broken) fix attempts. See `research\laws\project-sc4-flyout-bottom-anchor.md` "Attempt 4" |
+| `Test-SubBirthOwnsDock.py` | no | instant | **Sub-flyout: the sweep must not re-decide what birth decided** (v4.10.2). An OUTCOME model of `SubPlaceDetour` + the sweep's candidate loop: judges where the ring is drawn, which button the back-arrow forwards to, where the container rests. Reproduces 7 logged births and the old sweep's logged claims (incl. the 5-item power strip claimed by WATER), then 296 grid cases (f 1.5/2/3, 1-8 items, 7-button columns): the fix 0 wrong. **Teeth = 4 MUTANTS that must fail** - the old sweep (210 wrong), no anchor filter (272), a sign error in `st - sub->GetT()` (parent offset 40), and a record clear placed after `SubPlaceDetour`'s early return (review 2026-09-25). Scope: a model, not the binary - the in-game check is the `SUBOWN` / `SUBGEO2` lines below |
 | `..\tools\uimap\emu\emu_subplacetopmb_model.py` | no | seconds | **Ground-truth byte gate for the above** - feeds the REAL disassembled `sub_79AD00` under Unicorn the measured raw `mT=10`/`mB=1166` at each Civic Tools button's OWN real item count (not a fixed n=8 - the gap an adversarial review caught in the earlier `emu_subsharedbottom_model.py`), and asserts the emulated output matches `SubPlaceTopMb` bit-exact |
 | `Test-BootMatrix.ps1` | YES (kills/relaunches repeatedly, ~10 min) | ~10 min | Live tier decisions, package gating on disk, stock-tier inertness, 9/9 region panels at 2x, native restore |
 
@@ -355,6 +356,52 @@ mayor flyout 0xE992F711 at(22,544)                  Utilities  (button 0xE991EE2
   draws at half size in the wrong band (1x art + 1x imagerect in a 2x window).
   Zones/Transport/Utilities were added 2026-07-28; Landscape and Civic were
   already there from the god-cluster fix.
+
+### Sub-flyout: BIRTH OWNS THE DOCK (v4.10.2, 2026-09-25) — the ring that jumped a row
+
+**Symptom (user, 3x, 3840x2160):** Utilities -> Power -> the 5-item
+memo.submenus power submenu: the strip sits right, but the ring + red back
+arrow *sometimes* sit next to WATER (the row below). Seen in one session, not
+the next, with the same build and either submenus DLL.
+
+**Cause (measured, three sessions of logs):** two placers decided the same
+three things. Birth (`SubPlaceDetour`) anchors on the game's own Place() `cy`,
+places with `SubPlaceTopMb` and pins the ring (`gSubRingAutoY`). The sweep's
+candidate loop re-derived all three with the OLD `SubPlaceTop` minus the
+`SubContainerShiftFromGeo` SUBSHIFT and took the first button within +-3 px:
+Power's shifted target was 64 (no match), WATER's 214 against birth's 212 - so
+the sweep claimed Water and rewrote the pin 244 -> 392 (RINGa 567 -> 715) on
+every tick after the first. It shows only when the container repaints after
+that tick, hence "intermittent". Same root, other shapes: 6-7 item strips
+matched NO button (the dead back-arrow zone the bottom-anchor law file had as
+"CONFIRMED, NOT FIXED"); 1-3 items happened to be right.
+
+**Fix:** birth records its anchor, top and pin (`gSubBornWin` & co., cleared on
+EVERY sub-builder Place() BEFORE the early return); for a born container the
+sweep claims only the anchor's button, uses birth's top, keeps birth's pin, and
+skips the SUBSHIFT. The legacy formula now serves only containers birth did
+not dock (`SubBornDock=0` / `SubMath=0`).
+
+**Expected log, once per open** (the verdict - law 44):
+
+    UiSpike: SUBOWN birth btn=0x00000035 ctr(307,655) top=212 autoY=244 ringA=567 arrow(365,593)-(427,703) ...
+
+A `SUBOWN birth anchor cy=... matched no button` line means a born container
+was not claimed - investigate. `SUBSHIFT` lines should not appear for born
+containers at all.
+
+**✅ Verified in game (v4.10.2, 2026-09-25 08:59, 3x):** 14 opens across
+Power (1/3/5 items) and Water (1/6 items) - every `SUBOWN` names the spawn
+button; **all 180 `SUBGEO2` ticks of the 5-item strip read `RINGa 567 AUTO
+244`, zero at 715/392**; Water's 6-item strip (previously unclaimed) is now
+claimed with its ring on Water (717). Logs:
+`C:\dev\submenus-dll-pr\ingame\results\SC4UIScale.session{2,3,4}*.log` (bug)
+and `...session5-v4.10.2.log` (fixed). The red arrow is the submenus mod's
+frame art, cosmetic (user); `ArrowClick` forwarding is unchanged, its zone now
+simply lands on the right button.
+
+**Gate:** `Test-SubBirthOwnsDock.py`, plus `Test-SubRingLock.ps1` and
+`Test-SubFlyoutPlacement.py` unchanged and green.
 
 ### Shared sub-flyout container 0x8A6E61E0 — COMPLETE (v2.15.3, 2026-07-29)
 

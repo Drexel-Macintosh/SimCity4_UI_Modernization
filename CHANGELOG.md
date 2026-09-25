@@ -1,5 +1,29 @@
 # Changelog
 
+## 4.10.2 (2026-09-25) - submenu rings stay on the button that opened them
+
+**One line of behaviour: at a scaled tier, a second-level menu's ring (and the
+submenus mod's red back arrow drawn in it) now always sits on the button that
+opened the menu. Nothing else changes; the art and fonts are byte-identical to
+4.10.1.**
+
+- **The ring no longer jumps one row down.**
+  - Seen at 3x on the 5-item power submenu from memo's Submenus DLL: the ring
+    and back arrow sometimes sat next to Water instead of Power. It came and
+    went because it only showed after the menu happened to repaint.
+  - The mod positions these menus twice: once as the menu is built, and again
+    on its regular sweep. The sweep used an older placement formula to work
+    out which button the menu belonged to, and for that menu it picked the
+    neighbour.
+  - The sweep now reuses the build-time decision - the button the game itself
+    anchored the menu to, where it was placed, and the ring position - instead
+    of re-deriving them.
+- **The same mix-up is gone from larger submenus.** Menus with six or more
+  items matched no button at all, so the mod's back-arrow click zone never
+  lined up with them. They now find their button too.
+- Checked in the game: every sweep of the power submenu kept the ring on Power.
+  Offline gate: `_tests\Test-SubBirthOwnsDock.py`.
+
 ## 4.10.1 (2026-09-23) - bar charts fill the Graphs panel again, and Custom Tunes titles scale
 
 **One line of behaviour: at a scaled tier the three bar charts in the Graphs
