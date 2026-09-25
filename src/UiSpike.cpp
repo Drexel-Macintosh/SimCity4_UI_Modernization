@@ -7748,7 +7748,7 @@ void UiSpike::InstallSubFlyoutBornScale()
 	gSubBornScaleOn = settings.spikeSubFlyoutBornScale;
 	gSubBornDockOn = settings.spikeSubFlyoutBornDock;
 	if (gSubBornScaleOn <= 0) { return; }
-		if (gTierF <= 1.01f) { return; }        // stock tier stays inert
+	if (gTierF <= 1.01f) { return; }        // stock tier stays inert
 
 	const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 	void* place = reinterpret_cast<void*>(base - 0x400000 + 0x0079AD00);
@@ -8518,45 +8518,9 @@ void UiSpike::EarlyMinimapBake()
 		static_cast<void*>(pMM), pMM->GetW(), pMM->GetH(),
 		ok ? "SET + invalidated" : "FAULTED (unchanged)");
 
-	// ===== MODE 2: SCALE THE DOCK HERE, SO IT IS NEVER SEEN AT 1x =========
-	// User's question, 2026-08-01: "is there any way to load our map directly
-	// without first showing the unscaled map?" With mode 1 the dock is still
-	// 1x until the first sweep (+766..+2250ms measured), so the player watches a
-	// small dock, then a jump.
-	//
-	// WHAT MAKES THIS DEFENSIBLE NOW, when "scale it earlier" was refuted:
-	// that refutation was about the MESSAGE QUEUE - a posted WM_APP beat
-	// WM_TIMER by 15ms because the game does not pump during the load tail.
-	// This is not the queue. PostCityInit runs on the game's own call stack,
-	// and mode 1 has now demonstrated across several runs that a scoped lookup
-	// plus writes here is reachable and does not hang. The banned thing is the
-	// full tree WALK (ScaleAll, 456 windows); this is ONE subtree, ~25 windows.
-	//
-	// Safety properties, all pre-existing rather than invented here:
-	//  - ScalePanelRoot is the SAME function the sweep calls, so the geometry
-	//    is identical by construction - not a second implementation to drift.
-	//  - It records into scaleMap, so the later sweep classifies the dock
-	//    AlreadyScaled and skips it. No double-scale, no 4x.
-	//  - The factor comes from settings.spikeScaleFactor (what the sweep uses),
-	//    NOT gTierF - gTierF is still its compiled default this early, which
-	//    would silently be wrong at 1.5x/3x.
-	//  - EarlyBake=1 keeps the old flags-only behaviour; =0 is fully inert.
-	//
-	// The minimap SURFACE still catches up at the first sweep, which is where
-	// the capture/carry-over lives - so expect the map soft until then, not
-	// blank. Moving that here too is the next step if this proves sound.
-	if (settings.spikeEarlyBake >= 2)
-	{
-		const float f = settings.spikeScaleFactor;
-		const int32_t fw = pView->GetW(), fh = pView->GetH();
-		const int32_t beforeW = pDock->GetW();
-		const int n = ScalePanelRoot(pDock, fw, fh, f);
-		lg.WriteLine(LogLevel::Info,
-			"UiSpike: EARLYDOCK scaled dock 0x0987B48F x%.2f at PostCityInit - "
-			"%d window(s), %d -> %d wide. The dock should never be seen at 1x; "
-			"the sweep will find it AlreadyScaled and skip it.",
-			f, n, beforeW, pDock->GetW());
-	}
+	// (MODE 2 - scaling the dock itself here at PostCityInit - repeated the
+	// v2.41.15 crash shape one ini key away and was removed in the
+	// 2026-09-25 audit, B1. The dock is scaled early by EarlyDock instead.)
 }
 
 namespace
@@ -19123,12 +19087,12 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 	// region screen stays up.
 	ScalePanelsUnder(pRegion, "region");
 
-		// Transient dialogs are NOT docked at runtime. They carry game-generated
-		// scrolling lists (the Audio playlist), slider and radio-grid controls,
-		// and LIVE content the game re-lays-out every frame - tree-scaling them
-		// malformed the layout and fought the game's per-frame reset (jumpy).
-		// Static .UI script scaling is the shipping path. (The experimental
-		// DockDialogs=1 path was removed in the 2026-09-25 audit, B1.)
+	// Transient dialogs are NOT docked at runtime. They carry game-generated
+	// scrolling lists (the Audio playlist), slider and radio-grid controls,
+	// and LIVE content the game re-lays-out every frame - tree-scaling them
+	// malformed the layout and fought the game's per-frame reset (jumpy).
+	// Static .UI script scaling is the shipping path. (The experimental
+	// DockDialogs=1 path was removed in the 2026-09-25 audit, B1.)
 }
 
 void UiSpike::ScaleMenuFlyouts(cIGZWin* pMenu, int32_t screenW, int32_t screenH, float f)

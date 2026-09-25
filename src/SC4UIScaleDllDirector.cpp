@@ -1011,7 +1011,7 @@ public:
 		}
 		if (settings.spikeScaleAll && settings.spikeBudgetDeptPatch)
 		{
-						CodePatches::ApplyBudgetFamilyScale(settings.spikeScaleFactor);
+			CodePatches::ApplyBudgetFamilyScale(settings.spikeScaleFactor);
 		}
 		// v2.37.0 task #78: the Data Views legend is laid out by the game on
 		// EVERY view selection, so it must be born correct - a sweep pin can

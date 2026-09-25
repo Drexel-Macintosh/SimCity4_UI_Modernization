@@ -327,17 +327,14 @@ struct Settings
 	                                  // escape hatch is not a safe default).
 	                                  // Read the EARLYDOCK lines, THEN set 2.
 	int  spikeEarlyBake = 1;          // 0 = off, 1 = bake flags only (SHIPPING
-	                                  // DEFAULT), 2 = flags + scale the dock at
-	                                  // PostCityInit.
+	                                  // DEFAULT). Any value > 0 is mode 1.
 	                                  //
-	                                  // MODE 2 CRASHED AT CITY OPEN on its
-	                                  // first run (v2.41.15, 2026-08-01,
-	                                  // reported). It shipped defaulted to
-	                                  // 2, which would have crashed anyone
-	                                  // without the ini key - the ini protected
-	                                  // one machine, not the product. Default
-	                                  // is 1 and mode 2 stays OFF until a
-	                                  // different approach exists.
+	                                  // MODE 2 (flags + scale the dock at
+	                                  // PostCityInit) CRASHED AT CITY OPEN on
+	                                  // its first run (v2.41.15, 2026-08-01)
+	                                  // and was removed in the 2026-09-25
+	                                  // audit (B1); the dock is scaled early
+	                                  // by EarlyDock (default 2) instead.
 	                                  //
 	                                  // WHAT THE CRASH DISPROVED - my reasoning,
 	                                  // not the game's: I argued mode 2 was safe
