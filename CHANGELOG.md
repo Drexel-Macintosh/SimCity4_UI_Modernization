@@ -1,5 +1,35 @@
 # Changelog
 
+## 4.10.3 (not released) - less work per tick and at boot
+
+**Not released yet. The city dock is scaled before it first paints, the
+per-tick sweep and the boot do less work, and the release zip is about 27.6 MB
+smaller. The art and fonts are unchanged. The first three points below were
+checked in the game; the rest is built and tested offline, not yet in the
+game.**
+
+- **The city dock no longer paints at 1x first.** The early dock scaling,
+  half of an earlier fix, had shipped switched off. It is on by default now.
+  In the game, the dock was scaled a tenth to a third of a second after the
+  city opened, with no flash.
+- **Less work on every tick.** The per-tick sweep went from 0.81 to 0.68 ms in
+  the game.
+- **Less work at every boot.** The layout package is no longer re-copied, and
+  the state files are written only when they change.
+- **Fewer window-tree walks per tick.** Each list of window lookups now shares
+  one walk of the window tree.
+- **Boot reads less.** The settings file is read once instead of about 90
+  times, the display-mode list is cached (it took about 6 seconds to build),
+  and finding our folders takes one directory listing per folder instead of
+  eight. A package-manager install no longer gets an empty `010-SC4UIScale`
+  folder in Plugins.
+- **Quieter shutdown.** With the default settings the shutdown hang fix no
+  longer writes its probe diagnostics to the log.
+- **Safer patching.** Hooks check the game bytes they replace before
+  installing; the few with no recorded bytes yet log them so they can be
+  pinned. Code patches keep the code page executable.
+- **Smaller download.** The zip no longer carries a second copy of the 2x art.
+
 ## 4.10.2 (2026-09-25) - submenu rings stay on the button that opened them
 
 **One line of behaviour: at a scaled tier, a second-level menu's ring (and the

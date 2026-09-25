@@ -1,3 +1,51 @@
+SC4UIScale 4.10.3 (not released) - the efficiency and simplification audit
+================================================================================
+
+A build of the 2026-09-25 audit (research\AUDIT-2026-09-25-EFFICIENCY.md): less
+work per tick and at boot, a smaller release zip, and 2,088 fewer lines of
+source. NOT RELEASED. The first part was checked in the running game; the rest
+is built and gated but has not run in the game or on Windows yet. The audit's
+STATUS section lists every item with its commit, its proof and the checks
+still to run.
+
+Checked in the game (2026-09-25, 12:29-12:43):
+- The city dock is scaled before its first paint. EarlyDock now defaults to 2,
+  the half of the #89 fix that had shipped switched off. Two cities: the dock
+  scaled at +313 ms and +109 ms, no dock flash.
+- The per-tick sweep costs 0.68 ms instead of 0.81 ms (about 16% less; the two
+  sessions differed).
+- Boots no longer re-copy DialogStatic, and the STATE files are written only
+  when they change.
+- Writes into the game's code keep the page executable and flush the
+  instruction cache. The CsiCountPlate dev knob no longer writes code without
+  unprotecting it first (a boot crash if it was ever set).
+
+Built and gated, not yet run in the game:
+- The sweep answers each list of window lookups with one walk of the tree.
+- At boot: SC4UIScale.ini is parsed once, not about 90 times, and again only
+  when it changes. The display-mode list comes from a small cache file (the
+  enumeration took 5.9 s under the game). Folder discovery classifies each
+  folder with one listing instead of eight. An sc4pac install no longer gets an
+  empty Plugins\010-SC4UIScale. The boot-phases line counts the plugin walk
+  once.
+- At shutdown with the shipped settings, the #104 hang fix runs without the
+  diagnostics meant for probe runs.
+- Every hook checks the bytes it replaces, or logs them so they can be pinned.
+- The release zip seeds its live files with the inert .off stub instead of a
+  second copy of the 2x payload, which was 27.6 of the 123.7 MB v4.10.2 zip.
+- Removed: ScaleRemap, flags nothing ever set, and six retired paths
+  (SubFlyoutBorn2x, DockDialogs, EarlyBake mode 2, the derived disaster dock,
+  EdgeProbeTick, the region-camera probes).
+
+Also in the repository, not the bundle:
+- UiSpike.cpp is 18,167 lines (22,134 at the audit). The selector and the
+  region screen are in their own files, and 447 lines of history comments
+  moved word for word to _tests\REGRESSION.md.
+- _packaging\PackageFiles.psd1 is the one package list; Deploy-OnGameClose.ps1
+  and Build-Dist.ps1 both copy from it.
+- New offline checks in _tests\Run-OfflineGates.ps1: the batched-lookup model
+  test, the IniCache parity test and Test-PackageFiles.py.
+
 SC4UIScale 4.10.2 (2026-09-25) - submenu rings stay on the button that opened them
 ================================================================================
 

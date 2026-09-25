@@ -20,9 +20,11 @@ The evidence scripts are in `tools/research/audit-2026-09-25/`:
 - `zip_dups.py`: finds duplicate payloads in a bundle.
 - `enumdisp.ps1`: display-mode enumeration outside the game. Run it under 32-bit PowerShell to match the game.
 
-## STATUS (updated 2026-09-25 12:50) - read this first when resuming
+## STATUS (updated 2026-09-25, after the ordered list) - read this first when resuming
 
-**Done:** v4.10.3 build, not released. Every item was verified in game unless its row says otherwise.
+**v4.10.3 build, not released. The ordered list is done** (items 1-9, 23 commits, `05343c7` to `d6358db`). The first table was checked in the running game. The second has had a clang-cl build and link, the offline gates and the proof in its row, but has not run in the game or on Windows yet: see "Checks still to run".
+
+**Checked in the game** (session of 12:29-12:43):
 
 | Item | Commit | Evidence |
 |---|---|---|
@@ -41,29 +43,50 @@ The evidence scripts are in `tools/research/audit-2026-09-25/`:
 | A10: STATE files written only on change | `b42c5a2` | rewritten once for the new header |
 
 - **Timing after `b42c5a2`:** `tick.incr` = **0.68 ms per tick** (632 ticks, max 9.5), down from 0.81 ms (about 16% less). The two sessions differed, so this is a rough comparison.
-- **New tools:**
-  - `_tests/Run-OfflineGates.ps1` runs 25 offline gates. Two are known red: Test-ScaleDimParity is the documented register #7 item, and Test-DatIntegrity is red only between a build and its deploy.
-  - `tools/dev/remove_defs.py`
-  - `tools/dev/pe_section_diff.py`
 
-**Not done yet** (in this order):
-1. **A3, at the next release.** Seed the bundle's live `.dat` files with `.off` (`Build-Dist.ps1:359`, `Convert-ToPayloadLayout -Tier`). Then prove it: run `zip_dups.py` on the new zip (expect 0 duplicate payloads), and run Test-DatIntegrity and Test-Sc4pacInstall. v4.10.3 also needs its CHANGELOG and VERSION-HISTORY entries.
-2. **A1, the rest.** One multi-id walk for HookRuntimeBmpsUnder (16 searches), the flyout misses, and the kCityDialogIds walks. Also: the `0x4BCB938A` double lookup, and the two self-lookups of `0x9A47B417`. The `godParent` block must keep running, so replace those two with `pView`. Measure against 0.68 ms.
-3. **B1, the rest.** Remove the never-assigned flags and their branches. Then remove the settings-gated retired paths:
-   - SubFlyoutBorn2x, including `ApplySubFlyoutProviderScale`, which the director still calls;
-   - DockDialogs;
-   - EarlyBake mode 2;
-   - the disaster derived dock;
-   - EdgeProbeTick;
-   - REGIONCAM/REGIONWATCH, which still logs on every region visit.
+**Done since, not yet run in the game or on Windows:**
 
-   Also update `Test-SubFlyoutPlacement.py` check 2 and `emu_subsharedbottom_model.py`: the functions they describe are gone.
-4. **A9.** SpinProbe fix-only mode should skip its diagnostics.
-5. **A4.** Cache the display-mode list.
-6. **B5 and B6.** One hook helper, including prologue checks for the six unchecked hooks, and route the rest of the hand-rolled writes through VerifiedWrite.
-7. **B8.** Parse the ini once. Add a parity test against GetPrivateProfileString.
-8. **B9, B11, B10, B12.** Remove the duplication, split UiSpike (selector first), move the history comments to the ledger, and give Deploy and Build-Dist one shared package list.
-9. **Small items.** In MigrateRootLooseFiles, create the directory only when needed. Fix the boot TOTAL double count. A8: one directory listing per folder.
+| Item | Commit | Proof here |
+|---|---|---|
+| A3: the bundle seeds its live `.dat` files with the `.off` stub | `05343c7` | both scripts parse (pwsh 7.4); Build-Dist not run |
+| A1: one walk per lookup list (HookRuntimeBmpsUnder, the flyout loops, kCityDialogIds); the `0x9A47B417` self-lookups return `pView`; the dashboard hook runs only after a UDMAP hit | `ce44600` | `run_idwalk_test.py`: 3,000 random trees against a model of the engine lookup; an in-game positive control logs `IDWALK` |
+| B1/B3: never-assigned flags and never-read globals | `9d705c8` | per-function disassembly: only the functions edited on purpose changed |
+| B1: retired paths removed: SubFlyoutBorn2x, DockDialogs, EarlyBake mode 2, the derived disaster dock, EdgeProbeTick, REGIONCAM/REGIONWATCH; the tests and docs that described them | `ed763e9` `7f53d8a` `df35266` `8310fd3` `3e9ed8b` `cf62285` `24a1a06` `9964f55` | build clean; gates unchanged; gate_patch_families PASS |
+| A9: SpinProbe fix-only mode skips the diagnostics | `1dc0af6` | build |
+| A4: the display-mode list is cached on disk | `24bc5c9` | save/load round trip, key mismatch, truncation and missing file, offline |
+| B5: `HookVerified` for all 27 hooks; CSIDRAW's prologue pinned | `08a01e3` | gates; Test-PatchSiteBytes checks the new pin |
+| B6: every write into the game image through `WithCodeWritable` / `WithDataWritable` | `f897536` | the only `VirtualProtect` calls left are the two in the helper |
+| B8: the ini is parsed once (IniCache); SC4GraphicsOptions.ini in one reader | `d2e04b2` | `run_inicache_parity.py` under Wine: 271,638 comparisons, 0 mismatches |
+| B9: duplicated tables and loops; one `RoundHalfUp`; one strip-geometry sum | `0790456` `88a3fae` | per-function diffs; every float in [0, 2^20) for the rounding; 164M cases for the geometry |
+| B11: the selector and the region screen split out of UiSpike.cpp | `1d231a9` `661de3c` | pure moves: the function sets match the old object's |
+| B10: 23 history blocks (447 lines) moved word for word to REGRESSION.md, `[CC-nn]` pointers left | `7d3bea8` | `UiSpike.obj` byte-identical |
+| B12: one package list, `_packaging/PackageFiles.psd1`, for Deploy and Build-Dist | `2dd88d0` | the old scripts' file sets reproduced exactly (80 deploy rows, 77 bundle files); the new code run under pwsh on a fake tree in 3 scenarios; new gate Test-PackageFiles.py |
+| A8: folder discovery lists each folder once, not 8 times | `d6358db` | under Wine: the Test-FolderDiscovery trees give old = new, and a 436-folder differential has 0 mismatches |
+| A10: no stray `Plugins\010-SC4UIScale`; the boot TOTAL counts the walk once | `d6358db` | per-function diff |
+
+- **Size:** `src` went from 44,027 lines to 41,939 since `b3ebfdd`. UiSpike.cpp went from 22,134 to 18,167, with the selector (1,929 lines) and the region screen (586) in their own files.
+- **Tools:** `_tests/Run-OfflineGates.ps1` now also runs `run_idwalk_test.py`, `run_inicache_parity.py` and `Test-PackageFiles.py`. `tools/dev/find_cxx.py` finds a compiler for the C++ tests (MSVC through vswhere on Windows; MinGW + Wine elsewhere).
+
+**Checks still to run** (they need Windows and the game, which this container does not have):
+1. Build with MSVC. Run `_tests/Run-OfflineGates.ps1`: `run_inicache_parity.py` must exit 0 on Windows (exit 2 means "not proven here"). Run `_tests/Test-FolderDiscovery.ps1` against a built bundle.
+2. One play session at LogLevel=3, then read the log:
+   - `IDWALK ... 0 disagreed`, and `tick.incr` against 0.68 ms;
+   - the `boot phases` line: `discover` (15-19 ms before A8), and a TOTAL that counts the walk once;
+   - `SELRES`: the enumeration on the first launch, the cache after it;
+   - `prologue NOT PINNED ... live bytes` for REGIONTILE, REGIONZOOM, ARTFETCH, BALLOONKIND and BALLOONSPRITE, and the live bytes for VIEWOBJ, VIEWLIST and PICKPROBE: pin them from this log (B5);
+   - no `VirtualProtect refused` line, and every patch family applies as before;
+   - at shutdown with SpinProbe=0: the armed line says fix-only, with no FINAL tally, DumpLoopFields or StackScan;
+   - panels, flyouts, sub-flyouts, dialogs, the selector and the region screen look as before.
+3. Deploy with the new `Deploy-OnGameClose.ps1`, then run Test-DatIntegrity.
+4. At the release: Build-Dist.ps1, then `zip_dups.py` on the zip (expect no large duplicate payload) and Test-Sc4pacInstall. After a boot of an sc4pac install, there must be no empty `Plugins\010-SC4UIScale`.
+
+**Follow-ups found on the way** (not started):
+- **B10** was a first pass: notes about deleted code and refuted theories. Most of the remaining version-cited comments explain the current code; move more of them only function by function.
+- **B11:** the next splits are the ID tables, the minimap, the flyout hooks and the sub-flyouts. The knots are ScaleGodFlyouts, ScalePanelsUnder and IncrementalPass.
+- **B7** was in neither list: 63 `GetModuleHandleW(nullptr)` calls remain in CodePatches.cpp (76 at the audit).
+- `kCityDialogIds.designW` is read by no code (REGRESSION.md `[CC-23]`). Removing it rewrites every row of the table.
+- Test-DatIntegrity keeps its own per-package hash table, a third list beside PackageFiles.psd1.
+- Build-PublicRepo exports Deploy-OnGameClose.ps1 but not Convert-ToPayloadLayout.ps1, which Deploy calls.
 
 **Deliberately not planned:**
 - **A7** (icon index cache): a stale cache brings back the #149 doubled icons.

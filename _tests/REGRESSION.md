@@ -40,6 +40,10 @@ stale expectations are this runbook's only failure mode.
 | `Test-SubFlyoutPlacement.py` | no | instant | Sub-flyout birth-hook placement (`SubPlaceTopMb`, added 2026-08-23): every Civic Tools button (cnt 3/5/6/8) centers on its own toolbar button or shares the game's real bottom margin, matches 3 already-recorded native (f=1) measurements, and genuinely diverges from the two prior (broken) fix attempts. See `research\laws\project-sc4-flyout-bottom-anchor.md` "Attempt 4" |
 | `Test-SubBirthOwnsDock.py` | no | instant | **Sub-flyout: the sweep must not re-decide what birth decided** (v4.10.2). An OUTCOME model of `SubPlaceDetour` + the sweep's candidate loop: judges where the ring is drawn, which button the back-arrow forwards to, where the container rests. Reproduces 7 logged births and the old sweep's logged claims (incl. the 5-item power strip claimed by WATER), then 296 grid cases (f 1.5/2/3, 1-8 items, 7-button columns): the fix 0 wrong. **Teeth = 4 MUTANTS that must fail** - the old sweep (210 wrong), no anchor filter (272), a sign error in `st - sub->GetT()` (parent offset 40), and a record clear placed after `SubPlaceDetour`'s early return (review 2026-09-25). Scope: a model, not the binary - the in-game check is the `SUBOWN` / `SUBGEO2` lines below |
 | `..\tools\uimap\emu\emu_subplacetopmb_model.py` | no | seconds | **Ground-truth byte gate for the above** - feeds the REAL disassembled `sub_79AD00` under Unicorn the measured raw `mT=10`/`mB=1166` at each Civic Tools button's OWN real item count (not a fixed n=8 - the gap an adversarial review caught in the earlier `emu_subsharedbottom_model.py`), and asserts the emulated output matches `SubPlaceTopMb` bit-exact |
+| `Run-OfflineGates.ps1` | no | ~2 min | Runs every offline, fast gate in this table in one pass, one line each (audit 2026-09-25). Two have known states: Test-ScaleDimParity (register #7) and Test-DatIntegrity (red only between a build and its deploy). `run_inicache_parity.py` exits 2 off Windows: "not proven here", not a failure |
+| `..\tools\dev\idwalk\run_idwalk_test.py` | no | seconds | **The batched id walk** (audit A1). Builds the shipped IdWalk block against a mock tree and checks it against a model of `cGZWin::GetChildWindowFromIDRecursive` (post-order, children before self, first match wins): 3,000 random trees with duplicate ids, the kCityDialogIds collect walk, IdBatch across tree changes, and the in-game checker correcting a deliberately broken walk. In game the same checker also asks the engine, id by id, for the first 2,048 batched walks and logs one `IDWALK` line: expect "0 disagreed" |
+| `..\tools\dev\inicache\run_inicache_parity.py` | no (the verdict needs Windows) | seconds | **IniCache against the real profile API** (audit B8). Every lookup (names plus case, padding and missing variants, several defaults, buffer sizes 1..512; W, A and Int) over 24 edge cases, the shipped ini and the seeded starter ini, asked of both. Exit 0 = parity on Windows. Exit 2 = not proven here: off Windows it runs under Wine as a MODEL of Windows (271,638 comparisons, 0 mismatches on 2026-09-25, UTF-8 BOM cases excluded because Wine decodes a BOM and Windows does not) |
+| `Test-PackageFiles.py` | no | instant | **The one package list** (audit B12). Every row of `_packaging\PackageFiles.psd1` parses and the parsed count equals the rows in the file; no two rows write one destination; exactly one Selector row; 1.5x/3x tiers ship `.x1-disabled` and 2x ships armed (the CsiIcons rows once shipped inverted), with a NEGATIVE CONTROL that inverts one row and must fail; and Deploy-OnGameClose.ps1 and Build-Dist.ps1 both read the list, with no literal `Copy-Item "$proj\..."` package line of their own |
 | `Test-BootMatrix.ps1` | YES (kills/relaunches repeatedly, ~10 min) | ~10 min | Live tier decisions, package gating on disk, stock-tier inertness, 9/9 region panels at 2x, native restore |
 
 Every suite: PASS = exit 0 + "ALL PASS" (the python gates print
@@ -22281,6 +22285,26 @@ The user: "do it / I want the efficiency and simplification fixes done", then as
   - no errors.
 - **Measured:** `tick.incr` fell from **0.81 to 0.68 ms per tick** (-16%). Treat it as approximate, because the sessions differed.
 - **Next (after the reset):** A3 at the release, then the rest of A1, B1 and the others listed in that status table.
+
+### Later the same day - v4.10.3 BUILD (not released): the rest of the audit list
+
+The user: "The ordered list is at the top of research/AUDIT-2026-09-25-EFFICIENCY.md, so the next session picks up exactly there." All nine items are done, in 23 commits from `05343c7` to `d6358db`. The audit's STATUS section lists each item with its commit and proof.
+
+- **Nothing after `b42c5a2` has run in the game or on Windows yet.** This container has a clang-cl compile-and-link check, the Python gates, pwsh 7 and Wine 9.0 (running MinGW-built test programs). It has no MSVC and no game.
+- **How the changes were proven without the game:**
+  - per-function disassembly diffs against the parent build;
+  - byte-identical objects for the pure moves (B11) and the comment move (B10);
+  - exhaustive and large-grid equivalence checks for the rounding and geometry changes (B9);
+  - the IniCache parity test (B8) and an old-versus-new folder-discovery differential (A8), both under Wine;
+  - for the package list (B12), the old scripts' file sets reproduced exactly, and the new code run under pwsh against a fake tree.
+- **Checks to run next:** the audit STATUS list "Checks still to run". In short: an MSVC build; Run-OfflineGates on Windows; one LogLevel=3 play session (IDWALK, boot phases, SELRES, the unpinned prologue bytes, no VirtualProtect refusals, a fix-only SpinProbe shutdown); a deploy with the new Deploy-OnGameClose.ps1, then Test-DatIntegrity; and at the release, Build-Dist, zip_dups and Test-Sc4pacInstall.
+- **Found on the way and fixed:**
+  - Build-Dist's LAYOUT MIXTURE error printed `{0}`..`{3}` literally, because `-f` binds tighter than `+`.
+  - Deploy's ZCarbon comment said those files must never reach the bundle; they have shipped on purpose since v4.3.1.
+- **Found on the way, not fixed** (follow-ups in the audit STATUS):
+  - `kCityDialogIds.designW` is read by no code (`[CC-23]` below).
+  - Test-DatIntegrity's hash table is a third package list.
+  - The public export lacks Convert-ToPayloadLayout.ps1, which the exported Deploy calls.
 
 ## 2026-09-25: code-comment history moved out of UiSpike.cpp (audit B10)
 
