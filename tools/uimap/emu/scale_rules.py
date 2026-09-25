@@ -35,7 +35,7 @@ one.
 WHAT IS MIRRORED, AND FROM WHERE  (all quoted read-only; `--selftest` re-reads
 them and FAILS if the source text has moved - a tripwire, not a promise)
 
-  src\UiSpike.cpp   RoundHalfUp(double v)      -> floor(v + 0.5)
+  src\RoundHalfUp.h RoundHalfUp(double v)      -> floor(v + 0.5)
   src\UiSpike.cpp   ScaleRound(int32 v, float) -> RoundHalfUp(v * f)
   src\UiSpike.cpp   the edge-derived leaf rule -> R(l+w,f) - R(l,f)
   src\UiSpike.cpp   #161 parent-frame rounding -> R(pAbs+t,f) - R(pAbs,f)
@@ -676,7 +676,9 @@ def _s7_seam_algebra(v):
 
 
 _TRIPWIRES = [
-    (os.path.join(SRC, "UiSpike.cpp"),
+    # RoundHalfUp moved to its own header in the 2026-09-25 audit (B9): one
+    # definition shared by UiSpike and ScaleTier.
+    (os.path.join(SRC, "RoundHalfUp.h"),
      r"std::floor\(v \+ 0\.5\)", "RoundHalfUp body"),
     (os.path.join(SRC, "UiSpike.cpp"),
      r"RoundHalfUp\(static_cast<double>\(v\) \* static_cast<double>\(f\)\)",
