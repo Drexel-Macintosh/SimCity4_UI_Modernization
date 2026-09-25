@@ -1,4 +1,5 @@
 #include "CodePatches.h"
+#include "ExeBase.h"
 #include "IniCache.h"
 #include "RoundHalfUp.h"
 #include "ScaleTier.h"
@@ -3617,7 +3618,7 @@ namespace IconSynth
 	// 32-bit process runs out of.
 	void LogAddressSpace(const char* when)
 	{
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		bool laa = false;
 		if (base)
 		{

@@ -1,4 +1,5 @@
 #include "CodePatches.h"
+#include "ExeBase.h"
 #include "GdCap.h"
 #include "IniCache.h"
 #include "Logger.h"
@@ -49,8 +50,7 @@ namespace
 		void Resolve()
 		{
 			if (gImgHi != 0) { return; }
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const IMAGE_DOS_HEADER* dos =
 				reinterpret_cast<const IMAGE_DOS_HEADER*>(base);
 			const IMAGE_NT_HEADERS* nt =
@@ -106,7 +106,7 @@ namespace
 	bool HookVerified(const char* tag, uintptr_t va, const uint8_t* stock,
 		size_t n, void* detour, void** orig)
 	{
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		void* target = reinterpret_cast<void*>(va - kImageBase + base);
 		if (stock && n)
 		{
@@ -1207,7 +1207,7 @@ namespace CodePatches
 			return;
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		for (uintptr_t site : kRatingImulSites)
@@ -1241,7 +1241,7 @@ namespace CodePatches
 			return; // identity factor: nothing to do
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		for (uintptr_t site : kTipWrapSites)
@@ -1294,7 +1294,7 @@ namespace CodePatches
 			return;
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		uint8_t* pw = reinterpret_cast<uint8_t*>(kCostBoxWidthSite + delta);
 		uint8_t* ph = reinterpret_cast<uint8_t*>(kCostBoxHeightSite + delta);
@@ -1409,7 +1409,7 @@ namespace CodePatches
 			return 0; // stock tier: leave the game exactly as shipped
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		int patched = 0;
 
@@ -1782,7 +1782,7 @@ namespace CodePatches
 		}
 		if (factor < 0.25f) { factor = 0.25f; }
 		if (factor > 8.0f) { factor = 8.0f; }
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		for (int i = 0; i < kRegionIsoCount; i++)
 		{
@@ -2209,7 +2209,7 @@ namespace CodePatches
 		// whenever the player next switches view mode - nothing else rebuilds
 		// them. Do what the game does.
 		{
-			const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			ItemOverlayFn fn = reinterpret_cast<ItemOverlayFn>(
 				kRegionOverlayFn + (base - kImageBase));
 			fn(view, nullptr, it);
@@ -2449,7 +2449,7 @@ namespace CodePatches
 				gRegionZoomRebuilt, gRegionZoomSkipped);
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		// The pan clamp is derived from the basis and the cell bounding box,
@@ -2488,7 +2488,7 @@ namespace CodePatches
 			return 0; // reduces to stock at f=1, like every other patch here
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		// VERIFY ALL TEN BEFORE WRITING ANY. A partial write would shear the
@@ -2579,7 +2579,7 @@ namespace CodePatches
 		void ScaleSizeTable(
 			const char* name, uintptr_t siteVa, const uint32_t (&stock)[7], float factor)
 		{
-			const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			uint32_t* p = reinterpret_cast<uint32_t*>(siteVa + (base - kImageBase));
 
 			for (int i = 0; i < 7; i++)
@@ -2706,7 +2706,7 @@ namespace CodePatches
 	void InstallCustomTunesColumnScale()
 	{
 		if (gCustomTunesInstalled) { return; }
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		gCustomTunesRet = kCustomTunesRetVa + (base - kImageBase);   // read by the detour
 		if (!HookVerified("Custom Tunes SetColumnWidth", kSetColumnWidthVa,
 				kSetColumnWidthStock, sizeof(kSetColumnWidthStock),
@@ -2801,7 +2801,7 @@ namespace CodePatches
 				"fit imm8, skipped (box keeps its stock size).", factor, clear);
 			return 0;
 		}
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		uint8_t* pr = reinterpret_cast<uint8_t*>(kCheatRectSite + delta);
 		uint8_t* pc = reinterpret_cast<uint8_t*>(kCheatClearSite + delta);
@@ -2967,7 +2967,7 @@ namespace CodePatches
 				factor, y, x);
 			return 0;
 		}
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		uint8_t* p = reinterpret_cast<uint8_t*>(kRestoreToolbarsOriginSite + delta);
 		const uint8_t modrm = p[1];
@@ -3027,7 +3027,7 @@ namespace CodePatches
 			return;
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		int nSize = 0, nX = 0, nY = 0;
 
@@ -3123,7 +3123,7 @@ namespace CodePatches
 
 	void ApplyOrdinanceInsetScale(float factor)
 	{
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		const size_t cInset = sizeof(kOrdinanceInsetSites) / sizeof(kOrdinanceInsetSites[0]);
 		const size_t cName = sizeof(kOrdinanceNameXImm8Sites) / sizeof(kOrdinanceNameXImm8Sites[0]);
@@ -3183,7 +3183,7 @@ namespace CodePatches
 		}
 		const uint32_t imm = static_cast<uint32_t>(x);
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		// ---- PASS 1: verify BOTH windows before writing EITHER. ------------
@@ -3319,7 +3319,7 @@ namespace CodePatches
 			return 0; // identity factor: the stock origins are already right
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		int n = 0;
 
@@ -3429,7 +3429,7 @@ namespace CodePatches
 		const uint32_t swMarginCbox = static_cast<uint32_t>(strip - r16 - r2);
 		const uint32_t swMarginPlain = static_cast<uint32_t>(strip - r2);
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		// ---- PASS 1: verify EVERY site before writing ANY of them. --------
@@ -3670,7 +3670,7 @@ namespace CodePatches
 
 	void ApplyBudgetFamilyScale(float factor)
 	{
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 		int n8 = 0, n32 = 0, nBox = 0;
 
@@ -3927,7 +3927,7 @@ namespace CodePatches
 		ScaleSizeTable("HTML font-size", kHtmlFontSizeTable, kStockHtmlFontSizes, factor);
 		ScaleSizeTable("HTML heading", kHtmlHeadingSizeTable, kStockHtmlHeadingSizes, factor);
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		for (const GuidRetarget& r : kPopupStyleRetargets)
@@ -3985,7 +3985,7 @@ namespace CodePatches
 		{
 			return 0;
 		}
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		if (s <= 127)
@@ -4232,8 +4232,7 @@ namespace CodePatches
 			// f = 1 reduction in its strongest form: the exe is never written.
 			return;
 		}
-		const uintptr_t base =
-			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uintptr_t delta = base - kImageBase;
 
 		// PASS 1 - verify EVERYTHING before writing ANYTHING.
@@ -4379,8 +4378,7 @@ namespace CodePatches
 				const bool stale = (liveT != *cachedT);
 
 				int step = -1;
-				const uintptr_t d =
-					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr)) - kImageBase;
+				const uintptr_t d = ExeBase() - kImageBase;
 				const uint8_t* opc = reinterpret_cast<const uint8_t*>(kDeclineStepVa + d);
 				if (opc[0] == kImulOpcode) { step = opc[2]; }
 
@@ -4774,8 +4772,7 @@ namespace CodePatches
 		// assumptions. The logged VAs are EXECUTING code by construction.
 		void LogBubbleCallStack(void* frameAnchor)
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			// v4.10.0: the bound is the exe's REAL image span (the old
 			// `base + 0xA20000` overshot SizeOfImage by 2 MB and this scan
 			// faulted on it twice), and every read is SEH-guarded.
@@ -5210,8 +5207,7 @@ namespace CodePatches
 				// Alpha is read on EVERY call - it is the change detector, and
 				// the data view is opened long after the load burst has spent
 				// the ordinary line budget.
-				const uintptr_t base =
-					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				const uintptr_t base = ExeBase();
 				void* zm = *reinterpret_cast<void**>(
 					base - kImageBase + kZoneManagerPtr);
 				void** zvt = zm ? *reinterpret_cast<void***>(zm) : nullptr;
@@ -5446,8 +5442,7 @@ namespace CodePatches
 
 		void ApplyCsiIndicatorScale(float factor)
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const int n = static_cast<int>(
 				sizeof(kCsiQuad) / sizeof(kCsiQuad[0]));
 			// BOTH-OR-NEITHER. A partial application is the one outcome we
@@ -5576,8 +5571,7 @@ namespace CodePatches
 		void ApplyMySimMarkerTexSide(float factor)
 		{
 			const uintptr_t kVa = 0x0046CCCE;  // imm32 of the C7 at 0x0046CCCA
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			uint32_t* p =
 				reinterpret_cast<uint32_t*>(kVa + base - kImageBase);
 			if (*p != 64u)
@@ -5652,8 +5646,7 @@ namespace CodePatches
 
 			char buf[512] = {};
 			WideCharToMultiByte(CP_ACP, 0, spec, -1, buf, 512, nullptr, nullptr);
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 
 			int applied = 0, refused = 0;
 			char* ctx = nullptr;
@@ -5753,8 +5746,7 @@ namespace CodePatches
 
 		void ApplyCsiScale(float want)
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			// Verify EVERY entry before touching any (both-or-neither).
 			// COUNT DERIVED FROM THE ARRAY, NEVER TYPED. This loop said
 			// `k < 4` while the table had grown to 5, so the fifth constant was
@@ -5817,8 +5809,7 @@ namespace CodePatches
 
 		void ApplyPixelTable(float want)
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			float* t = reinterpret_cast<float*>(kPixTableVa + base - kImageBase);
 			for (int k = 0; k < 10; ++k)
 			{
@@ -5888,8 +5879,7 @@ namespace CodePatches
 			uint32_t fmt, uint32_t count, const float* verts)
 		{
 			InterlockedIncrement(&gDqSubmitCalls);
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uint32_t ret = static_cast<uint32_t>(
 				reinterpret_cast<uintptr_t>(_ReturnAddress())
 				- base + kImageBase);
@@ -5971,8 +5961,7 @@ namespace CodePatches
 			if (gDqAddLogs < 40)
 			{
 				++gDqAddLogs;
-				const uintptr_t base =
-					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				const uintptr_t base = ExeBase();
 				const uint32_t ret = static_cast<uint32_t>(
 					reinterpret_cast<uintptr_t>(_ReturnAddress())
 					- base + kImageBase);
@@ -5987,8 +5976,7 @@ namespace CodePatches
 		void InstallDispatchQuadProbe()
 		{
 			if (gDqInstalled) { return; }
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			// Never-repin: both prologues byte-verified before hooking.
 			// 0x7D2990: 8B 54 24 10 56 52 (mov edx,[esp+0x10]; push esi; push edx)
 			// 0x46F240: 81 EC 68 02 00 00 (sub esp,0x268)
@@ -6096,7 +6084,7 @@ namespace CodePatches
 
 		void ApplySignpostScale(float want)
 		{
-			const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uintptr_t delta = base - kImageBase;
 			uint8_t* ps = reinterpret_cast<uint8_t*>(kSignpostSizeSite + delta);
 			uint8_t* pr = reinterpret_cast<uint8_t*>(kSignpostRaiseSite + delta);
@@ -6226,8 +6214,7 @@ namespace CodePatches
 
 		void ApplyFontNameRedirectImpl()
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			// VERIFY ALL FOUR BEFORE WRITING ANY. A half-redirected pair hands the
 			// concat a begin from one string and an end from another - a length
 			// computed across unrelated memory.
@@ -6286,8 +6273,7 @@ namespace CodePatches
 					"half-patched state.");
 				return;
 			}
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uintptr_t delta = base - kImageBase;
 			uint8_t* pb = reinterpret_cast<uint8_t*>(kPinDigitSites[0] + delta);
 			uint8_t* pg = reinterpret_cast<uint8_t*>(kPinDigitSites[1] + delta);
@@ -6393,8 +6379,7 @@ namespace CodePatches
 
 		void ApplyMarkerZoomScale(float want)
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			uint8_t* pt = reinterpret_cast<uint8_t*>(base - kImageBase + kMarkerZoomTableVa);
 			if (memcmp(pt, kStockMarkerZoom, sizeof(kStockMarkerZoom)) != 0)
 			{
@@ -6492,8 +6477,7 @@ namespace CodePatches
 			const bool total = ((n % 100) == 0);
 			if (!detail && !total) { return; }
 			if (detail) { ++gSpStripLogs; }
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uintptr_t d = base - kImageBase;
 			// WHO CALLED. 0x5F5FB0 has five call sites in four functions, so
 			// without this the log cannot tell a sign from an offer balloon.
@@ -6584,8 +6568,7 @@ namespace CodePatches
 			InterlockedIncrement(&gSpAttachCalls);
 			if (gSpAttachLogs >= 24) { return; }
 			++gSpAttachLogs;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			uint32_t vtVa = 0;
 			uintptr_t vt = 0;   // v4.10.0: guarded read (Test-ProbeDerefGuards)
 			if (self && ProbeSafe::ReadPtr(self, &vt))
@@ -6788,8 +6771,7 @@ namespace CodePatches
 			// into an unexplained null.
 			if (gNborArrowLogs >= 64) { return; }
 			++gNborArrowLogs;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uint32_t retVa = static_cast<uint32_t>(
 				reinterpret_cast<uintptr_t>(retaddr) - base + kImageBase);
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -6866,8 +6848,7 @@ namespace CodePatches
 			InterlockedIncrement(&gSpTargetCalls);
 			if (gSpTargetLogs >= 8 || !occ) { return; }
 			++gSpTargetLogs;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			// v4.10.0 (S1): vptr and slots validated before any call.
 			void** vt = ProbeSafe::SafeVt(occ);
 			const uintptr_t getType = ProbeSafe::SafeSlot(vt, 0x1C / 4);
@@ -7015,8 +6996,7 @@ namespace CodePatches
 		{
 			SpCallerSlot* tab = which ? gSpGet38 : gSpGet30;
 			int* n = which ? &gSpGet38N : &gSpGet30N;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uint32_t retVa = static_cast<uint32_t>(
 				reinterpret_cast<uintptr_t>(retaddr) - base + kImageBase);
 			for (int k = 0; k < *n; ++k)
@@ -7109,8 +7089,7 @@ namespace CodePatches
 
 		void InstallProxyGetterProbe()
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uintptr_t delta = base - kImageBase;
 			// vtable 0xA87238 (the captured iface vtable): slot +0x4C must
 			// hold 0x6AAC50, +0x98 must hold 0x80BC00 - verify both, swap
@@ -7258,8 +7237,7 @@ namespace CodePatches
 			const bool say = (gMarkerSizeLogs < 20);
 			if (say) { ++gMarkerSizeLogs; }
 			uint8_t* obj = static_cast<uint8_t*>(occ) - 8;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			__try
 			{
 				void** vt0 = *reinterpret_cast<void***>(obj);
@@ -7352,8 +7330,7 @@ namespace CodePatches
 			if (gMarkerSizeHits < 24) { MarkerSizeApply(occ, gBubbleScale); }
 			if (gSpBindLogs >= 12) { return; }
 			++gSpBindLogs;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			uint32_t vtVa = 0;
 			uint32_t type = 0;
 			__try
@@ -7504,8 +7481,7 @@ namespace CodePatches
 			const uint32_t vtIdx = key >> 8;
 			const uint32_t slot = key & 0xFF;
 			if (vtIdx < 6 && slot < 64) { ++gVtCounts[vtIdx][slot]; }
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uint32_t retVa = static_cast<uint32_t>(
 				reinterpret_cast<uintptr_t>(retaddr) - base + kImageBase);
 			bool known = false;
@@ -7547,8 +7523,7 @@ namespace CodePatches
 
 		void InstallVtCap()
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			const uintptr_t delta = base - kImageBase;
 			// ALL SIX family vtables (ctor 0x5EE050 writes them): the
 			// renderer's 75x/cycle QI (caller 0x90E00D) returns one of the
@@ -7648,8 +7623,7 @@ namespace CodePatches
 			// log the first few, then one sample every 512 calls
 			if (!(n <= 6 || (n % 512) == 0) || gDrawLogs >= 14) { return; }
 			++gDrawLogs;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			char line[400];
 			int used = 0;
 			line[0] = 0;
@@ -7712,8 +7686,7 @@ namespace CodePatches
 			InterlockedIncrement(&gSpHoverCalls);
 			if (gSpHoverLogs >= 20 || !obj) { return; }
 			++gSpHoverLogs;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			// v4.10.0 (S1): vptr and slots validated before any call -
 			// an unreadable or out-of-image pointer logs and returns instead
 			// of jumping into heap data (the 2026-08-14 PRIV_INSTRUCTION shape).
@@ -7785,8 +7758,7 @@ namespace CodePatches
 				? *reinterpret_cast<const uint32_t*>(
 					static_cast<const uint8_t*>(self) + 0x70)
 				: 0xFFFFFFFFu;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			float imm = 0.0f;
 			memcpy(&imm, reinterpret_cast<const void*>(
 				base - kImageBase + kSignpostSizeSite + 1), 4);
@@ -8001,8 +7973,7 @@ namespace CodePatches
 
 		void DumpSpriteFields(void* sprite, uint32_t id)
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			static const char kHex[] = "0123456789ABCDEF";
 			__try
 			{
@@ -8212,8 +8183,7 @@ namespace CodePatches
 			if (gBuildLogs < 12)
 			{
 				++gBuildLogs;
-				const uintptr_t base =
-					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				const uintptr_t base = ExeBase();
 				uint32_t primaryVt = 0;
 				uint32_t slot3C = 0;
 				__try
@@ -8274,8 +8244,7 @@ namespace CodePatches
 		{
 			InstallArtFetchProbeImpl();
 			InstallBalloonSpriteProbe();
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 
 			// STRIPCOUNT's key. It belongs HERE and only here: it changes what
 			// the SPSTRIP logger prints, and that logger exists only if this
@@ -8438,8 +8407,7 @@ namespace CodePatches
 				if (gPickLogs >= 40) { break; }
 				++gPickLogs;
 				void* inst = *out;
-				const uintptr_t base =
-					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				const uintptr_t base = ExeBase();
 				uintptr_t vt = 0;
 				if (!ProbeSafe::ReadPtr(inst, &vt)) { break; }   // v4.10.0: guarded
 				const uint32_t vtVa =
@@ -8471,8 +8439,7 @@ namespace CodePatches
 			// log every spawn's name + call-site; offer-band call sites
 			// (0x490000-0x4B0000, where offer creation lives) logged on
 			// their own uncapped-ish channel.
-			const uintptr_t base0 =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base0 = ExeBase();
 			const uint32_t rv = static_cast<uint32_t>(
 				reinterpret_cast<uintptr_t>(_ReturnAddress())
 				- base0 + kImageBase);
@@ -8785,8 +8752,7 @@ namespace CodePatches
 			const LONG n = InterlockedIncrement(&gFgCalls);
 			if (n <= gFgMax)
 			{
-				const uintptr_t base =
-					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				const uintptr_t base = ExeBase();
 				const uint32_t ret = static_cast<uint32_t>(
 					reinterpret_cast<uintptr_t>(_ReturnAddress())
 					- base + kImageBase);
@@ -8980,8 +8946,7 @@ namespace CodePatches
 			"lines).", gFgMax);
 		if (gFgMax <= 0) { return; }
 
-		const uintptr_t base =
-			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		if (base != kImageBase)
 		{
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -9277,8 +9242,7 @@ namespace CodePatches
 		if (gAddViewLogs < 40 && obj)
 		{
 			++gAddViewLogs;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+			const uintptr_t base = ExeBase();
 			uint32_t vtVa = 0;
 			uint32_t f0 = 0, f4 = 0, f8 = 0, fc = 0;
 			__try
@@ -9319,8 +9283,7 @@ namespace CodePatches
 		{
 			__try
 			{
-				const uintptr_t base =
-					reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+				const uintptr_t base = ExeBase();
 				const uint32_t vtVa = static_cast<uint32_t>(
 					reinterpret_cast<uintptr_t>(*static_cast<void**>(obj))
 					- base + kImageBase);
@@ -9381,8 +9344,7 @@ namespace CodePatches
 
 	void DumpViewObjectLists(void* renderer)
 	{
-		const uintptr_t base =
-			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		const uint32_t offs[4] = { 0x188, 0x18C, 0x190, 0x194 };
 		const int layers[4] = { 3, 5, 0, 2 };
 		int grand = 0;
@@ -9589,8 +9551,7 @@ namespace CodePatches
 				}
 			}
 		}
-		const uintptr_t base =
-			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		void* svc = *reinterpret_cast<void**>(base - kImageBase + 0xB43DD0);
 		if (!svc)
 		{
@@ -9675,8 +9636,7 @@ namespace CodePatches
 	{
 		InstallViewObjProbe();
 		if (gPickInstalled) { return; }
-		const uintptr_t base =
-			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t base = ExeBase();
 		void* svc = *reinterpret_cast<void**>(base - kImageBase + 0xB43DD0);
 		if (!svc)
 		{

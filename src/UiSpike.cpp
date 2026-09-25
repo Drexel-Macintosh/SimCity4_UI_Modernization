@@ -33,6 +33,7 @@
 #include "CodePatches.h"  // v2.37.0 #78: is the Data Views legend born correct?
 #include "IniCache.h"     // audit B8: every read of our ini, one parse
 #include "RoundHalfUp.h"  // audit B9: the one rounding rule (law 89)
+#include "ExeBase.h"     // audit B7: the exe base, read once
 #include "UiSpikeInternal.h"  // audit B11: what the selector file shares
 #include "SpinProbe.h"    // #107: per-launch outcome recorder (was Budget opened?)
 
@@ -844,8 +845,7 @@ namespace
 	{
 		if (gChartBornInstalled) { return; }
 		gChartBornInstalled = true;
-		const uintptr_t delta = reinterpret_cast<uintptr_t>(
-			GetModuleHandleW(nullptr)) - 0x400000;
+		const uintptr_t delta = ExeBase() - 0x400000;
 		gChartStoreReal = 0x9B1F1D + delta;
 		gChartLineMainVt = 0xAB4D08 + delta;
 		static const uintptr_t kSlots[] = {
@@ -6181,8 +6181,7 @@ namespace
 		// into, and (b) let a foreign itemW become the latched 1x base for
 		// EVERY sub-flyout. 0x007EAEFA is the instruction after the
 		// sub-flyout builder's own `call [eax+0x30]`.
-		const uintptr_t modBase =
-			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t modBase = ExeBase();
 		// v2.39.1: the DISASTER twin's own call site (0x007E72AF = after
 		// sub_7E7270's `call [edx+0x30]`) is now accepted, into SEPARATE state.
 		// It was previously rejected, which was correct while nothing scaled
@@ -6249,8 +6248,7 @@ namespace
 		// skip the clear, and a recycled container address of the same height
 		// would inherit the last open's anchor and never dock (review 2026-09-25).
 		// It is set again only if this open's birth dock runs.
-		if (ret == reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr))
-			- 0x400000 + 0x007EB196)
+		if (ret == ExeBase() - 0x400000 + 0x007EB196)
 		{
 			gSubBornWin = nullptr;
 		}
@@ -6273,8 +6271,7 @@ namespace
 		// sub_7E7270 has exactly ONE caller (0x7F4D2C, gated on
 		// `cmp esi,0x69B9324A`) and ZERO raw-address occurrences image-wide, so
 		// the return address is a sound discriminator on its own.
-		const uintptr_t modBase =
-			reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		const uintptr_t modBase = ExeBase();
 		const uintptr_t retSub = modBase - 0x400000 + 0x007EB196;
 		const uintptr_t retDis = modBase - 0x400000 + 0x007E74D6;
 		const bool isDisaster = (ret == retDis);
@@ -7045,7 +7042,7 @@ void UiSpike::InstallFlyoutOpenHook()
 	if (gFlyoutOpenOn <= 0) { return; }
 	if (gTierF <= 1.01f) { return; }         // stock tier stays inert
 
-	const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+	const uintptr_t base = ExeBase();
 	void* target = reinterpret_cast<void*>(base - 0x400000 + 0x007E5C10);
 
 	const MH_STATUS init = MH_Initialize();
@@ -7353,7 +7350,7 @@ void UiSpike::InstallSubFlyoutBornScale()
 	if (gSubBornScaleOn <= 0) { return; }
 	if (gTierF <= 1.01f) { return; }        // stock tier stays inert
 
-	const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+	const uintptr_t base = ExeBase();
 	void* place = reinterpret_cast<void*>(base - 0x400000 + 0x0079AD00);
 	void* metrics = reinterpret_cast<void*>(base - 0x400000 + 0x0079A0E0);
 
@@ -7802,7 +7799,7 @@ void UiSpike::InstallShowHook()
 	if (gShowHookInstalled || (gShowHookMode <= 0 && gEarlyDockMode <= 0)) { return; }
 	if (gTierF <= 1.01f) { return; }   // stock tier stays inert
 
-	const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+	const uintptr_t base = ExeBase();
 	void* target = reinterpret_cast<void*>(base - 0x400000 + 0x0099DB6B);
 
 	const MH_STATUS init = MH_Initialize();
