@@ -18,14 +18,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <commctrl.h>
-#include <filesystem>
-#include <optional>
-#include <string>
-
-// sc4-dll-utilities (0xC0000054) - the ecosystem INI parser, a git submodule
-// under vendor\sc4-dll-utilities (LGPL-2.1, see that repo's LICENSE.txt).
-// Same parser Settings::Load uses for SC4UIScale.ini.
-#include "IniReader.h"
 
 #include "cIGZCOM.h"
 #include "cIGZFrameWork.h"
@@ -37,6 +29,7 @@
 #include "GZServPtrs.h"
 
 #include "CodePatches.h"
+#include "IniCache.h"
 #include "Logger.h"
 #include "ScaleTier.h"
 #include "WebRedirect.h"
@@ -75,31 +68,9 @@ namespace
 	// the city load tail, so there is no line to jump. Every message-queue
 	// lever dies on that one fact. See _tests\REGRESSION.md task #89.
 
-	// Parses another plugin's ini with the vendored ecosystem parser. A
-	// missing file constructs an empty reader; a malformed line aborts the
-	// whole parse and yields nullopt. Both fall back to the caller's
-	// defaults, exactly as when the file is absent.
-	// v4.2.0 (subfolder move): for files that belong to OTHER plugins -
-	// SC4GraphicsOptions.ini foremost - "beside our DLL" is no longer the
-	// Plugins root, so those reads resolve against the real root. (Our own
-	// ini's parser, TryParseOurIni, had no caller left and was removed in the
-	// 2026-09-25 audit.)
-	std::optional<IniReader> TryParsePluginsRootIni(const wchar_t* fileName)
-	{
-		std::optional<IniReader> reader;
-		try
-		{
-			wchar_t path[MAX_PATH] = {};
-			ScaleTier::GetPluginsRootW(path, MAX_PATH);
-			wcscat_s(path, MAX_PATH, fileName);
-			reader.emplace(std::filesystem::path(path));
-		}
-		catch (const std::exception&)
-		{
-			reader.reset();
-		}
-		return reader;
-	}
+	// (TryParsePluginsRootIni, the SC4GraphicsOptions.ini reader, moved to
+	// ScaleTier::ReadGraphicsOptions in the 2026-09-25 audit (B8): the
+	// selector parsed the same file with its own copy of the mode rules.)
 }
 
 // v4.10.0 (S1/R5): EVERY DEV-ONLY KEY THAT IS SET SAYS SO, in one line at
@@ -192,7 +163,7 @@ namespace
 		for (const DevKey& d : kDevKeys)
 		{
 			wchar_t raw[128] = {};
-			GetPrivateProfileStringW(d.section, d.key, L"", raw, 128, ini);
+			IniCache::ReadStringW(d.section, d.key, L"", raw, 128, ini);
 			if (raw[0] == 0) { continue; }
 			if (DevValueDiffers(d.key, raw, d.def)) { append(d.section, d.key, raw); }
 		}
@@ -397,11 +368,9 @@ public:
 		// resolution (not the requested one), enable/stash the static data
 		// layers to match - BEFORE the game loads dats or probes FontStyle.ini.
 		{
-			const std::optional<IniReader> gfxIni = TryParsePluginsRootIni(L"SC4GraphicsOptions.ini");
-			const std::optional<IniSection> gfxOpts =
-				gfxIni ? gfxIni->get_section_optional("GraphicsOptions") : std::nullopt;
-			const int reqW = gfxOpts ? gfxOpts->get_converted_value<int>("WindowWidth", 0) : 0;
-			const int reqH = gfxOpts ? gfxOpts->get_converted_value<int>("WindowHeight", 0) : 0;
+			const ScaleTier::GraphicsOptions gfx = ScaleTier::ReadGraphicsOptions();
+			const int reqW = gfx.width;
+			const int reqH = gfx.height;
 
 			// KEY: what the game actually RENDERS the UI at differs from the
 			// requested WindowWidth/Height. With DirectX + dgVoodoo in
@@ -415,19 +384,13 @@ public:
 			//   DirectX + FullScreen/Borderless -> render = monitor native
 			//   DirectX + Windowed              -> render = requested size
 			//   Software (any mode)             -> render = requested size
-			const std::string driver =
-				gfxOpts ? gfxOpts->get_value("Driver", "DirectX") : std::string("DirectX");
-			const bool software = _stricmp(driver.c_str(), "Software") == 0;
-
-			const std::string mode =
-				gfxOpts ? gfxOpts->get_value("WindowMode", "FullScreen") : std::string("FullScreen");
+			const bool software = gfx.software;
+			const char* mode = gfx.modeText;
 			// BORDERLESS covers the whole screen and the game's own ini says
 			// outright that WindowWidth/Height are "ignored for the borderless
 			// full screen mode" - so that mode, and only that mode, renders at
 			// the desktop's size no matter what was requested.
-			const bool borderless =
-				_stricmp(mode.c_str(), "Borderless") == 0
-				|| _stricmp(mode.c_str(), "BorderlessFullScreen") == 0;
+			const bool borderless = (gfx.mode == ScaleTier::WindowMode::Borderless);
 
 			int gfxW = reqW;
 			int gfxH = reqH;
@@ -460,7 +423,7 @@ public:
 					LogLevel::Info,
 					"AutoScale: DirectX %s - render res = desktop %dx%d "
 					"(requested %dx%d is ignored in borderless by the game's "
-					"own rule).", mode.c_str(), gfxW, gfxH, reqW, reqH);
+					"own rule).", mode, gfxW, gfxH, reqW, reqH);
 			}
 			else if (!software)
 			{
@@ -470,12 +433,12 @@ public:
 				logger.WriteLine(
 					LogLevel::Info,
 					"AutoScale: DirectX %s - render res = requested %dx%d.",
-					mode.c_str(), gfxW, gfxH);
+					mode, gfxW, gfxH);
 			}
 			else
 			{
 				logger.WriteLine(
-					LogLevel::Info, "AutoScale: Software %s - render res = requested %dx%d.", mode.c_str(), gfxW, gfxH);
+					LogLevel::Info, "AutoScale: Software %s - render res = requested %dx%d.", mode, gfxW, gfxH);
 			}
 
 			// SC4GraphicsOptions.ini BELONGS TO THE OPTIONAL SC4GraphicsOptions.dll
@@ -861,7 +824,7 @@ public:
 		{
 			wchar_t probeIni[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", probeIni, MAX_PATH);
-			if (GetPrivateProfileIntW(L"Probe", L"SegmentCensus", 0, probeIni) > 0)
+			if (IniCache::ReadIntW(L"Probe", L"SegmentCensus", 0, probeIni) > 0)
 			{
 				ScaleTier::SegmentCensus();
 			}

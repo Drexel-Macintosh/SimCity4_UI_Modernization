@@ -59,6 +59,7 @@ if ($destFull -match '(?i)onedrive|dropbox|google drive') {
 # version header, not a mention in a doc.
 $SRC = @(
     "CodePatches.cpp", "CodePatches.h",
+    "IniCache.cpp", "IniCache.h", "IniParse.h",
     "Logger.cpp", "Logger.h",
     "SC4UIScaleDllDirector.cpp",
     "SC4VersionDetection.cpp", "SC4VersionDetection.h",

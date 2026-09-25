@@ -5,7 +5,8 @@ BATCHED ID LOOKUPS block of src/UiSpike.cpp (audit A1, 2026-09-25).
 
 The block (IdCollectCtx through the "end BATCHED ID LOOKUPS" marker) is copied
 verbatim into a temp dir, so the test always runs the code that ships. Needs a
-C++20 compiler: g++ or clang++, or cl from a Visual Studio developer prompt.
+C++20 compiler, found by tools/dev/find_cxx.py: cl or clang-cl on PATH, Visual
+Studio through vswhere (a plain PowerShell is enough), or g++ / clang++.
 Exit 0 = PASS; 1 = FAIL; 2 = could not run (no compiler, or the markers moved).
 """
 import os
@@ -13,6 +14,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import find_cxx  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(HERE)))
@@ -39,19 +43,13 @@ def main():
             f.write(extract())
         test = os.path.join(HERE, "idwalk_test.cpp")
         exe = os.path.join(tmp, "idwalk_test.exe")
-        for cxx in ("g++", "clang++"):
-            if shutil.which(cxx):
-                cmd = [cxx, "-std=c++20", "-O1", "-I", tmp, test, "-o", exe]
-                break
-        else:
-            if not shutil.which("cl"):
-                print("NOT RUN: no g++, clang++ or cl on PATH.")
-                return 2
-            cmd = ["cl", "/nologo", "/std:c++20", "/EHsc", "/O1", "/I", tmp, test,
-                   "/Fe" + exe, "/Fo" + tmp + os.sep]
-        r = subprocess.run(cmd, capture_output=True, text=True)
+        cmd, how = find_cxx.build([test], exe, [tmp], want_win32=False)
+        if not cmd:
+            print("NOT RUN: %s." % how)
+            return 2
+        r = find_cxx.run_build(cmd)
         if r.returncode != 0:
-            print("BUILD FAILED:\n" + r.stdout + r.stderr)
+            print("BUILD FAILED (%s):\n%s%s" % (how, r.stdout, r.stderr))
             return 1
         return subprocess.run([exe]).returncode
     finally:

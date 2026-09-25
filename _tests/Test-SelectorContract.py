@@ -54,6 +54,7 @@ TICK_BANNED = [
     "EnumDisplaySettings",
     "GetPrivateProfile",
     "WritePrivateProfile",
+    "IniCache::",          # audit B8: the ini reads and writes, one parse
     "CreateFile",
     "GetFileAttributes",
     "RemoveAllStrings",
@@ -64,6 +65,11 @@ TICK_BANNED = [
 
 # Symbols a pure derivation must never contain (adds the engine-facing
 # mutations and the logger to the syscall list).
+# An ini write, either spelling. Since audit B8 (2026-09-25) every write goes
+# through IniCache::WriteStringW, which drops the cached parse of the file;
+# the raw API is still matched so a write that bypasses the cache is seen.
+INI_WRITE = r"(?:WritePrivateProfileStringW|IniCache::WriteStringW)\s*\("
+
 PURE_BANNED = TICK_BANNED + [
     "Logger::",
     "SetSelection",
@@ -262,7 +268,7 @@ def main():
     # gate), because a safety net that needs the player to open the dialog
     # is not a safety net.
     writes = [m.start() for m in
-              re.finditer(r"WritePrivateProfileStringW\s*\(", src)]
+              re.finditer(INI_WRITE, src)]
     if not writes:
         failures.append("WritePrivateProfileStringW appears NOWHERE - the "
                         "selector can no longer commit anything.")
@@ -284,7 +290,8 @@ def main():
         # the ServiceScaleSelector write is the RESMISMATCH rescue and must
         # precede the dialog gate
         svc = body_of(src, spans["ServiceScaleSelector"])
-        w_off = svc.find("WritePrivateProfileStringW")
+        w_m = re.search(INI_WRITE, svc)
+        w_off = w_m.start() if w_m else -1
         gate_off = svc.find("GetChildWindowFromIDRecursive(kSelDlgId)")
         if w_off == -1:
             notes.append("ServiceScaleSelector carries no write (the "

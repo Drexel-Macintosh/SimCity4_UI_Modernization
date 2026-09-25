@@ -1,4 +1,5 @@
 #include "CodePatches.h"
+#include "IniCache.h"
 #include "ScaleTier.h"
 #include "Logger.h"
 
@@ -28,6 +29,11 @@
 #include <string>
 #include <vector>      // v4.10.0: BootIndex
 #include <algorithm>   // v4.10.0: binary_search over our override TGIs
+#include <optional>    // audit B8: ReadGraphicsOptions
+
+// sc4-dll-utilities (0xC0000054) - the parser the SC4GraphicsOptions DLL uses
+// for SC4GraphicsOptions.ini, so ReadGraphicsOptions reads it the same way.
+#include "IniReader.h"
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -749,8 +755,8 @@ namespace
 		if (iniPath == nullptr || iniPath[0] == 0) { return; }
 		wchar_t val[32] = {};
 		swprintf_s(val, L"%.2f", tier);
-		WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1", iniPath);
-		WritePrivateProfileStringW(L"UiSpike", L"ScaleFactor", val, iniPath);
+		IniCache::WriteStringW(L"UiSpike", L"AutoScale", L"1", iniPath);
+		IniCache::WriteStringW(L"UiSpike", L"ScaleFactor", val, iniPath);
 	}
 
 	// Is this tier's art actually on disk? Decide() asks this to refuse a
@@ -3618,7 +3624,7 @@ namespace IconSynth
 	// both ways after a forced collection and prints sizes + wrap hits.
 	void GcProbe(cIGZPersistResourceManager* rm, float factor, const wchar_t* ini)
 	{
-		if (GetPrivateProfileIntW(L"Probe", L"IconSynthGcProbe", 0, ini) <= 0) { return; }
+		if (IniCache::ReadIntW(L"Probe", L"IconSynthGcProbe", 0, ini) <= 0) { return; }
 		const unsigned hitsBefore = gFacHits;
 		rm->ForceGarbageCollection();
 		Logger::Get().WriteLine(LogLevel::Info,
@@ -3688,9 +3694,9 @@ namespace IconSynth
 		wchar_t iniPath[MAX_PATH] = {};
 		OurIniPath(iniPath, MAX_PATH);
 		const bool noWrap =
-			GetPrivateProfileIntW(L"Probe", L"IconSynthNoWrap", 0, iniPath) > 0;
+			IniCache::ReadIntW(L"Probe", L"IconSynthNoWrap", 0, iniPath) > 0;
 		const unsigned budgetMb = static_cast<unsigned>(
-			GetPrivateProfileIntW(L"IconSynth", L"EagerBudgetMB", 256, iniPath));
+			IniCache::ReadIntW(L"IconSynth", L"EagerBudgetMB", 256, iniPath));
 		cIGZPersistResourceFactory* fac = nullptr;
 		const bool haveFac = !noWrap && rm->FindObjectFactory(kIconType, &fac);
 		Logger::Get().WriteLine(LogLevel::Info,
@@ -3763,8 +3769,8 @@ namespace IconSynth
 		// (2) The no-wrap loop is bounded three ways: bytes, fetch count and
 		// wall time. A fetch that misses costs the manager a cache entry too,
 		// so the count matters even when nothing is enlarged.
-		const int maxFetches = GetPrivateProfileIntW(L"IconSynth", L"EagerMaxFetches", 4096, iniPath);
-		const DWORD maxMs = static_cast<DWORD>(GetPrivateProfileIntW(L"IconSynth", L"EagerMaxMs", 2000, iniPath));
+		const int maxFetches = IniCache::ReadIntW(L"IconSynth", L"EagerMaxFetches", 4096, iniPath);
+		const DWORD maxMs = static_cast<DWORD>(IniCache::ReadIntW(L"IconSynth", L"EagerMaxMs", 2000, iniPath));
 		int fetches = 0;
 		const DWORD eagerT0 = GetTickCount();
 		const bool eagerAllowed = (gFacInstance == nullptr);
@@ -4027,6 +4033,43 @@ namespace ScaleTier
 	void GetPluginsRootW(wchar_t* out, size_t outLen)
 	{
 		PluginsRoot(out, outLen);
+	}
+
+	GraphicsOptions ReadGraphicsOptions()
+	{
+		GraphicsOptions g;
+		std::optional<IniReader> reader;
+		try
+		{
+			wchar_t path[MAX_PATH] = {};
+			PluginsRoot(path, MAX_PATH);
+			wcscat_s(path, MAX_PATH, L"SC4GraphicsOptions.ini");
+			reader.emplace(std::filesystem::path(path));
+		}
+		catch (const std::exception&)
+		{
+			reader.reset();   // malformed line: IniReader aborts the parse
+		}
+		const std::optional<IniSection> opts =
+			reader ? reader->get_section_optional("GraphicsOptions") : std::nullopt;
+		if (!opts) { return g; }
+		g.width = opts->get_converted_value<int>("WindowWidth", 0);
+		g.height = opts->get_converted_value<int>("WindowHeight", 0);
+		g.software = _stricmp(opts->get_value("Driver", "DirectX").c_str(), "Software") == 0;
+		const std::string mode = opts->get_value("WindowMode", "FullScreen");
+		strncpy_s(g.modeText, mode.c_str(), _TRUNCATE);
+		// BORDERLESS covers the whole screen; the game's own ini says
+		// WindowWidth/Height are "ignored for the borderless full screen mode".
+		if (_stricmp(mode.c_str(), "Windowed") == 0)
+		{
+			g.mode = WindowMode::Windowed;
+		}
+		else if (_stricmp(mode.c_str(), "Borderless") == 0
+			|| _stricmp(mode.c_str(), "BorderlessFullScreen") == 0)
+		{
+			g.mode = WindowMode::Borderless;
+		}
+		return g;
 	}
 
 	void GetOurFilePathW(const wchar_t* name, wchar_t* out, size_t outLen)

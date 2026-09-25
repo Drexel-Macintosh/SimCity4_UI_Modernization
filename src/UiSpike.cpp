@@ -31,6 +31,7 @@
 #include "cRZCOMDllDirector.h"
 #include "ScaleTier.h"   // the selector greys out tiers this resolution cannot carry
 #include "CodePatches.h"  // v2.37.0 #78: is the Data Views legend born correct?
+#include "IniCache.h"     // audit B8: every read of our ini, one parse
 #include "SpinProbe.h"    // #107: per-launch outcome recorder (was Budget opened?)
 
 #include "cIGZWin.h"
@@ -49,10 +50,6 @@
 #include "cISC4App.h"
 #include "GZServPtrs.h"
 #include "MinHook.h"   // v2.32.0 SHOWHOOK: trampoline on cGZWin::SetFlag
-// sc4-dll-utilities (0xC0000054) IniReader - the ecosystem INI parser, git
-// submodule under vendor\sc4-dll-utilities (LGPL-2.1). Reads the shared
-// SC4GraphicsOptions.ini; Settings::Load uses it for our own ini.
-#include "IniReader.h"
 
 #include <cmath>
 #include <cstdlib>     // atoi (live-tune ini re-read)
@@ -60,8 +57,6 @@
 #include <cstring>     // strchr/strlen (popup wrap idempotence)
 #include <algorithm>   // std::min (disaster rebuild NN sampling clamps)
 #include <cstdio>      // _snprintf_s (the DVLEG legend read-back line)
-#include <filesystem>  // IniReader path argument
-#include <optional>    // IniReader/IniSection optionals
 #include <string>      // the wrapped caption we build
 #include <set>         // #188 SMALLWIN per-epoch dedupe
 #include <Windows.h>   // SEH guard for probing hook return values
@@ -5844,7 +5839,7 @@ namespace
 		{
 			s_read = true;
 			char buf[32] = {};
-			GetPrivateProfileStringA("Probe", "ForceRuntimeScaleId", "0",
+			IniCache::ReadStringA("Probe", "ForceRuntimeScaleId", "0",
 				buf, sizeof(buf), LiveTuneIniPath());
 			s_id = static_cast<uint32_t>(strtoul(buf, nullptr, 16));
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -13255,6 +13250,9 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	// (so a user's ini overrides still take effect exactly as before) and keeps
 	// polling only when [UiSpike] LiveTune=1. Default off: read once, then
 	// never again. Turning it on restores the old behaviour verbatim.
+	// (Audit B8, 2026-09-25: the reads go through IniCache, so the whole
+	// block is answered from one parse of the file, re-read only when the
+	// file changes - a LiveTune edit is still seen on the next poll.)
 	{
 		static int s_poll = 0;
 		static bool s_readOnce = false;
@@ -13268,21 +13266,21 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			char b[32];
 			if (s_liveTune < 0)
 			{
-				GetPrivateProfileStringA("UiSpike", "LiveTune", "", b, sizeof(b), kIni);
+				IniCache::ReadStringA("UiSpike", "LiveTune", "", b, sizeof(b), kIni);
 				s_liveTune = b[0] ? atoi(b) : 0;
 			}
 			// (v4.0.41) DrawRebuild / RingDX / RingDY / RingUnderStrip /
 			// LayerFix ini keys DELETED with the legacy disaster path.
 			// BufDump=N writes N container-buffer dumps beside the DLL for
 			// offline pixel verification (render_disbuf.py).
-			GetPrivateProfileStringA("Disaster", "BufDump", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "BufDump", "", b, sizeof(b), kIni);
 			if (b[0]) gDisBufDump = atoi(b);
-			GetPrivateProfileStringA("Disaster", "DockX", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "DockX", "", b, sizeof(b), kIni);
 			if (b[0]) gRingDockX = atoi(b);
-			GetPrivateProfileStringA("Disaster", "DockY", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "DockY", "", b, sizeof(b), kIni);
 			if (b[0]) gRingDockY = atoi(b);
 			// v4.0.14: initial scroll (first-visible item) for the strip.
-			GetPrivateProfileStringA("Disaster", "InitScroll", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "InitScroll", "", b, sizeof(b), kIni);
 			if (b[0]) gDisInitScroll = atoi(b);
 			// v4.0.27: strip-shift lever for sub-flyout families whose stock
 			// attach point is not where the game-native layout puts it
@@ -13294,52 +13292,52 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// (v4.0.41) RingUnderStrip + LayerFix keys deleted with the
 			// legacy disaster path. BarDX/BarW stay: the SUB-FLYOUT family
 			// still consumes them (DrawBarScaled).
-			GetPrivateProfileStringA("Disaster", "BarDX", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "BarDX", "", b, sizeof(b), kIni);
 			if (b[0]) gBarDX = atoi(b);
-			GetPrivateProfileStringA("Disaster", "BarW", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "BarW", "", b, sizeof(b), kIni);
 			if (b[0]) gBarWiden = static_cast<float>(atof(b));   // v2.24.0: float (1.5 legal)
 			// v2.39.0 task #5: born-at-Place size for the first-level flyout.
 			// Live so a bad size can be switched off mid-session without a
 			// rebuild, and WITHOUT touching the sub-flyout's own lever.
-			GetPrivateProfileStringA("Disaster", "BornScale", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "BornScale", "", b, sizeof(b), kIni);
 			if (b[0]) gDisBornScaleOn = atoi(b);
-			GetPrivateProfileStringA("Disaster", "BornDock", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "BornDock", "", b, sizeof(b), kIni);
 			if (b[0]) gDisBornDockOn = atoi(b);
-			GetPrivateProfileStringA("Disaster", "BornMetrics", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "BornMetrics", "", b, sizeof(b), kIni);
 			if (b[0]) gDisBornMetricsOn = atoi(b);
-			GetPrivateProfileStringA("Disaster", "StripDump", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "StripDump", "", b, sizeof(b), kIni);
 			if (b[0]) gStripDump = atoi(b);
-			GetPrivateProfileStringA("Disaster", "StripHitW", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "StripHitW", "", b, sizeof(b), kIni);
 			if (b[0]) gStripHitW = atoi(b);
-			GetPrivateProfileStringA("Disaster", "ClickHook", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "ClickHook", "", b, sizeof(b), kIni);
 			if (b[0]) gClickHook = atoi(b);
-			GetPrivateProfileStringA("Disaster", "SelDL", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "SelDL", "", b, sizeof(b), kIni);
 			if (b[0]) gSelDL = atoi(b);
-			GetPrivateProfileStringA("Disaster", "SelDR", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "SelDR", "", b, sizeof(b), kIni);
 			if (b[0]) gSelDR = atoi(b);
-			GetPrivateProfileStringA("Disaster", "SelForce", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "SelForce", "", b, sizeof(b), kIni);
 			if (b[0]) gSelForce = atoi(b);
-			GetPrivateProfileStringA("Disaster", "ClaimScale", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "ClaimScale", "", b, sizeof(b), kIni);
 			if (b[0]) gClaimScale = atoi(b);
-			GetPrivateProfileStringA("Disaster", "FlashGuard", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Disaster", "FlashGuard", "", b, sizeof(b), kIni);
 			if (b[0]) gFlashGuard = atoi(b);
 			// [Probe]: aim the DPROBE geometry probe at whatever menu is under
 			// investigation (Mayor mode opens outside the god column).
-			GetPrivateProfileStringA("Probe", "Enabled", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "Enabled", "", b, sizeof(b), kIni);
 			if (b[0]) gProbeOn = atoi(b);
-			GetPrivateProfileStringA("Probe", "BandL", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "BandL", "", b, sizeof(b), kIni);
 			if (b[0]) gProbeL = atoi(b);
-			GetPrivateProfileStringA("Probe", "BandR", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "BandR", "", b, sizeof(b), kIni);
 			if (b[0]) gProbeR = atoi(b);
-			GetPrivateProfileStringA("Probe", "BandT", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "BandT", "", b, sizeof(b), kIni);
 			if (b[0]) gProbeT = atoi(b);
-			GetPrivateProfileStringA("Probe", "BandB", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "BandB", "", b, sizeof(b), kIni);
 			if (b[0]) gProbeB = atoi(b);
-			GetPrivateProfileStringA("Probe", "Max", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "Max", "", b, sizeof(b), kIni);
 			if (b[0]) gProbeMax = atoi(b);
-			GetPrivateProfileStringA("Probe", "VisTrace", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "VisTrace", "", b, sizeof(b), kIni);
 			if (b[0]) gVisTrace = atoi(b);
-			GetPrivateProfileStringA("Probe", "EdgeBlt", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "EdgeBlt", "", b, sizeof(b), kIni);
 			if (b[0]) gEdgeBltLog = atoi(b);   // = how many lines to log
 			// #162: [Probe] ThinBlt = how many thin-dst blits to log.
 			//
@@ -13355,11 +13353,11 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// when it actually meant "this code was never reached".
 			// Installed-not-executed is bad enough (#47); this was never even
 			// installed.
-			GetPrivateProfileStringA("Probe", "AdvisorShot", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "AdvisorShot", "", b, sizeof(b), kIni);
 			if (b[0]) gAdvisorShot = atoi(b);
-			GetPrivateProfileStringA("Probe", "DrawProbe", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "DrawProbe", "", b, sizeof(b), kIni);
 			if (b[0]) gDrawProbe = atoi(b);
-			GetPrivateProfileStringA("Probe", "ThinBlt", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Probe", "ThinBlt", "", b, sizeof(b), kIni);
 			if (b[0]) gThinBlt = atoi(b);
 			if (gThinBlt > 0)
 			{
@@ -13379,7 +13377,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				// [Probe] IconProbe (task #149): class census of everything
 				// visible, so a menu's item classes appear as NEW lines the
 				// moment that menu opens. Read-only. Default OFF.
-				GetPrivateProfileStringA("Probe", "IconProbe", "", b, sizeof(b), kIni);
+				IniCache::ReadStringA("Probe", "IconProbe", "", b, sizeof(b), kIni);
 				if (b[0]) gIconProbe = atoi(b);
 				// [Probe] SmallWin (#188): NAME the small floating windows over
 				// the 3D view - built to identify the U-Drive-It START bubbles
@@ -13388,17 +13386,17 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				// IconProbe cannot do this: it dedupes by CLASS and a bubble
 				// sharing GZWinBMP's vtable spends its 4 example slots on dock
 				// windows at load. Value = total lines to print. Default OFF.
-				GetPrivateProfileStringA("Probe", "SmallWin", "", b, sizeof(b), kIni);
+				IniCache::ReadStringA("Probe", "SmallWin", "", b, sizeof(b), kIni);
 				if (b[0]) gSmallWin = atoi(b);
-				GetPrivateProfileStringA("Probe", "IconFit", "", b, sizeof(b), kIni);
+				IniCache::ReadStringA("Probe", "IconFit", "", b, sizeof(b), kIni);
 				if (b[0]) gIconFit = atoi(b);
-				GetPrivateProfileStringA("Probe", "IconCover", "", b, sizeof(b), kIni);
+				IniCache::ReadStringA("Probe", "IconCover", "", b, sizeof(b), kIni);
 				if (b[0]) gIconCover = atoi(b);
-				GetPrivateProfileStringA("Probe", "IconCentreOff", "", b, sizeof(b), kIni);
+				IniCache::ReadStringA("Probe", "IconCentreOff", "", b, sizeof(b), kIni);
 				if (b[0]) gIconCentreOff = atoi(b);
-				GetPrivateProfileStringA("Probe", "IconHook", "", b, sizeof(b), kIni);
+				IniCache::ReadStringA("Probe", "IconHook", "", b, sizeof(b), kIni);
 				if (b[0]) gIconHook = atoi(b);
-				GetPrivateProfileStringA("Probe", "IconFitLog", "", b, sizeof(b), kIni);
+				IniCache::ReadStringA("Probe", "IconFitLog", "", b, sizeof(b), kIni);
 				if (b[0]) gIconFitLog = atoi(b);
 				// POSITIVE CONTROL (task #149). Announce UNCONDITIONALLY on the
 				// first pass so an empty ICONPROBE capture can be told apart from
@@ -13417,15 +13415,15 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					}
 				}
 			// [Flyout]: mayor-mode flyout docking (kMayorFlyoutDock).
-			GetPrivateProfileStringA("Flyout", "MayorDock", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "MayorDock", "", b, sizeof(b), kIni);
 			if (b[0]) gMayorDock = atoi(b);
 			// #95: MarkerAlarm - the god-path marker-drift diagnostic (MDRIFT).
 			// Diagnostic ONLY; it never moves a window. Default 1.
-			GetPrivateProfileStringA("Flyout", "MarkerAlarm", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "MarkerAlarm", "", b, sizeof(b), kIni);
 			if (b[0]) gMDockAlarm = atoi(b);
 			// #198: GodMarkerFix - derive the god dock when a mod moved the
 			// script's 0x0000AAAA marker. Identity on stock; default 1.
-			GetPrivateProfileStringA("Flyout", "GodMarkerFix", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "GodMarkerFix", "", b, sizeof(b), kIni);
 			if (b[0]) gGodMarkerFix = atoi(b);
 			// #95: SubMath - the sub-flyout placement model (validated 32/32 vs
 			// the game's own sub_79AD00). 1 = model (default), 0 = the legacy
@@ -13433,45 +13431,45 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// #57: ChartScale - scale the Graphs chart's frozen interior
 			// fields (legend band height, tick lengths). 1 = on (default),
 			// 0 = probe only, no writes. Instant revert, no rebuild.
-			GetPrivateProfileStringA("Flyout", "ChartScale", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "ChartScale", "", b, sizeof(b), kIni);
 			if (b[0]) gChartScale = atoi(b);
 			// #57 PHASE 1: ChartProbe - the repaint proof. Default 0.
 			// 1 = flood the plot area green and trigger the game's own
 			// SetDirty, ONCE per chart object. Diagnostic only; defaces the
 			// chart until set back to 0. See gChartProbe for the committed
 			// discriminator.
-			GetPrivateProfileStringA("Flyout", "ChartProbe", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "ChartProbe", "", b, sizeof(b), kIni);
 			if (b[0]) gChartProbe = atoi(b);
-			GetPrivateProfileStringA("Flyout", "SubMath", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "SubMath", "", b, sizeof(b), kIni);
 			if (b[0]) gSubMath = atoi(b);
-			GetPrivateProfileStringA("Flyout", "SubBltLog", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "SubBltLog", "", b, sizeof(b), kIni);
 			if (b[0]) gSubBltLog = atoi(b);
-			GetPrivateProfileStringA("Flyout", "RingCal", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "RingCal", "", b, sizeof(b), kIni);
 			if (b[0]) gRingCalLog = atoi(b);
-			GetPrivateProfileStringA("Flyout", "SubRingDX", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "SubRingDX", "", b, sizeof(b), kIni);
 			if (b[0]) gSubRingDX = atoi(b);   // #134: absent = derive per tier
-			GetPrivateProfileStringA("Flyout", "SubRingDY", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "SubRingDY", "", b, sizeof(b), kIni);
 			if (b[0]) gSubRingDY = atoi(b);   // #134: absent = derive per tier
-			GetPrivateProfileStringA("Flyout", "ArrowClick", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "ArrowClick", "", b, sizeof(b), kIni);
 			if (b[0]) gArrowClick = atoi(b);
-			GetPrivateProfileStringA("Flyout", "EmergLog", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "EmergLog", "", b, sizeof(b), kIni);
 			if (b[0]) gEmergLog = atoi(b);
-			GetPrivateProfileStringA("Flyout", "SubDockDX", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "SubDockDX", "", b, sizeof(b), kIni);
 			if (b[0]) gSubDockDX = atoi(b);
-			GetPrivateProfileStringA("Flyout", "SubDockDY", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "SubDockDY", "", b, sizeof(b), kIni);
 			if (b[0]) gSubDockDY = atoi(b);
 			// v2.36.0 born-scale: flip either half live, no rebuild. Size and
 			// dock are separable on purpose - if a menu ever lands in the
 			// wrong PLACE, SubBornDock=0 isolates that from the size half.
-			GetPrivateProfileStringA("Flyout", "SubBornScale", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "SubBornScale", "", b, sizeof(b), kIni);
 			if (b[0]) gSubBornScaleOn = atoi(b);
-			GetPrivateProfileStringA("Flyout", "SubBornDock", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "SubBornDock", "", b, sizeof(b), kIni);
 			if (b[0]) gSubBornDockOn = atoi(b);
-			GetPrivateProfileStringA("Flyout", "BornOnOpen", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "BornOnOpen", "", b, sizeof(b), kIni);
 			if (b[0]) gFlyoutOpenOn = atoi(b);
-			GetPrivateProfileStringA("Flyout", "ScaleGodPanelABB", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "ScaleGodPanelABB", "", b, sizeof(b), kIni);
 			if (b[0]) gScaleAbbPanel = atoi(b);
-			GetPrivateProfileStringA("Flyout", "AdvisorHeal", "", b, sizeof(b), kIni);
+			IniCache::ReadStringA("Flyout", "AdvisorHeal", "", b, sizeof(b), kIni);
 			if (b[0]) gAdvisorHeal = atoi(b);
 		}
 	}
@@ -19550,46 +19548,21 @@ namespace
 	// controls hide when it is absent. The scale selector is unaffected: it
 	// writes our own ini, which we own.
 	//
-	// Parsed with the vendored IniReader (same as Settings::Load). Missing
-	// file -> empty reader, malformed line -> parse aborts; both fall back
-	// to the same defaults GetPrivateProfile* used to supply. The whole-file
-	// parse costs microseconds at once-per-dialog-open frequency.
-	std::optional<IniSection> SelReadGfxSection(const wchar_t* p)
-	{
-		std::optional<IniReader> reader;
-		try
-		{
-			reader.emplace(std::filesystem::path(p));
-		}
-		catch (const std::exception&)
-		{
-			reader.reset();
-		}
-		return reader ? reader->get_section_optional("GraphicsOptions") : std::nullopt;
-	}
-
-	int SelReadGfxMode()
+	// Parsed by ScaleTier::ReadGraphicsOptions, the reader the boot tier
+	// decision uses (audit B8: this file used to carry its own copy of the
+	// mode rules and parsed the ini twice per open). Vendored IniReader, as
+	// the owning DLL; a missing file or a rejected line gives the defaults.
+	ScaleTier::GraphicsOptions SelReadGfx()
 	{
 		PerfProbe::Scope perf_("sel.iniRead");
-		wchar_t p[MAX_PATH] = {};
-		SelGfxIniPath(p, MAX_PATH);
-		const std::optional<IniSection> opts = SelReadGfxSection(p);
-		const std::string mode =
-			opts ? opts->get_value("WindowMode", "FullScreen") : std::string("FullScreen");
-		return (_stricmp(mode.c_str(), "Windowed") == 0) ? kModeWindowed
-			: (_stricmp(mode.c_str(), "Borderless") == 0
-				|| _stricmp(mode.c_str(), "BorderlessFullScreen") == 0)
-				? kModeBorderless : kModeFullscreen;
+		return ScaleTier::ReadGraphicsOptions();
 	}
 
-	void SelReadGfxRes(int* w, int* h)
+	int SelModeOf(const ScaleTier::GraphicsOptions& g)
 	{
-		PerfProbe::Scope perf_("sel.iniRead");
-		wchar_t p[MAX_PATH] = {};
-		SelGfxIniPath(p, MAX_PATH);
-		const std::optional<IniSection> opts = SelReadGfxSection(p);
-		*w = opts ? opts->get_converted_value<int>("WindowWidth", 0) : 0;
-		*h = opts ? opts->get_converted_value<int>("WindowHeight", 0) : 0;
+		return (g.mode == ScaleTier::WindowMode::Windowed) ? kModeWindowed
+			: (g.mode == ScaleTier::WindowMode::Borderless) ? kModeBorderless
+			: kModeFullscreen;
 	}
 
 	// Our own ini's scale keys. Defaults mirror Settings::Load's.
@@ -19598,9 +19571,9 @@ namespace
 		PerfProbe::Scope perf_("sel.iniRead");
 		wchar_t p[MAX_PATH] = {};
 		SelIniPath(p, MAX_PATH);
-		*autoScale = GetPrivateProfileIntW(L"UiSpike", L"AutoScale", 1, p) != 0;
+		*autoScale = IniCache::ReadIntW(L"UiSpike", L"AutoScale", 1, p) != 0;
 		wchar_t f[32] = {};
-		GetPrivateProfileStringW(L"UiSpike", L"ScaleFactor", L"2", f, 32, p);
+		IniCache::ReadStringW(L"UiSpike", L"ScaleFactor", L"2", f, 32, p);
 		*factor = static_cast<float>(_wtof(f));
 	}
 
@@ -19704,11 +19677,11 @@ namespace
 		if (w > 0 && h > 0)
 		{
 			swprintf_s(num, L"%d", w);
-			WritePrivateProfileStringW(L"GraphicsOptions", L"WindowWidth", num, p);
+			IniCache::WriteStringW(L"GraphicsOptions", L"WindowWidth", num, p);
 			swprintf_s(num, L"%d", h);
-			WritePrivateProfileStringW(L"GraphicsOptions", L"WindowHeight", num, p);
+			IniCache::WriteStringW(L"GraphicsOptions", L"WindowHeight", num, p);
 		}
-		WritePrivateProfileStringW(L"GraphicsOptions", L"WindowMode",
+		IniCache::WriteStringW(L"GraphicsOptions", L"WindowMode",
 			modeStr, p);
 		Logger::Get().WriteLine(LogLevel::Info,
 			"UiSpike: SELMODE SC4GraphicsOptions.ini -> WindowMode=%ls "
@@ -20338,10 +20311,10 @@ namespace
 		if (row != 1)
 		{
 			wchar_t cur[16] = {};
-			GetPrivateProfileStringW(L"UiSpike", L"ScaleAll", L"1", cur, 16, ini);
+			IniCache::ReadStringW(L"UiSpike", L"ScaleAll", L"1", cur, 16, ini);
 			if (_wtoi(cur) == 0)
 			{
-				WritePrivateProfileStringW(L"UiSpike", L"ScaleAll", L"1", ini);
+				IniCache::WriteStringW(L"UiSpike", L"ScaleAll", L"1", ini);
 				Logger::Get().WriteLine(LogLevel::Info,
 					"UiSpike: SELECTOR ScaleAll was %ls - written back as 1. "
 					"Without it the tier's art and fonts arm while every "
@@ -20351,7 +20324,7 @@ namespace
 		}
 		if (row == 0)
 		{
-			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"1", ini);
+			IniCache::WriteStringW(L"UiSpike", L"AutoScale", L"1", ini);
 			Logger::Get().WriteLine(LogLevel::Info,
 				"UiSpike: SELECTOR committed AutoScale=1 (Auto) to %ls. "
 				"Applies at the next launch.", ini);
@@ -20362,8 +20335,8 @@ namespace
 			// ini already carries and Set-Tier.ps1 writes.
 			wchar_t val[32] = {};
 			swprintf_s(val, L"%g", kSelFactors[row]);
-			WritePrivateProfileStringW(L"UiSpike", L"AutoScale", L"0", ini);
-			WritePrivateProfileStringW(L"UiSpike", L"ScaleFactor", val, ini);
+			IniCache::WriteStringW(L"UiSpike", L"AutoScale", L"0", ini);
+			IniCache::WriteStringW(L"UiSpike", L"ScaleFactor", val, ini);
 			Logger::Get().WriteLine(LogLevel::Info,
 				"UiSpike: SELECTOR committed AutoScale=0 ScaleFactor=%ls to "
 				"%ls. Applies at the next launch.", val, ini);
@@ -20499,12 +20472,14 @@ namespace
 		{
 			gSelState.pkg[k] = gSelPkg[k];
 		}
-		if (gSelLiveMode < 0) { gSelLiveMode = SelReadGfxMode(); }
+		const ScaleTier::GraphicsOptions gfx = SelReadGfx();
+		if (gSelLiveMode < 0) { gSelLiveMode = SelModeOf(gfx); }
 		gSelState.liveMode = gSelLiveMode;
 
 		// ---- visit facts: each read ONCE, here -------------------------
-		gSelState.iniMode = SelReadGfxMode();
-		SelReadGfxRes(&gSelState.iniW, &gSelState.iniH);
+		gSelState.iniMode = SelModeOf(gfx);
+		gSelState.iniW = gfx.width;
+		gSelState.iniH = gfx.height;
 		SelReadOurScale(&gSelState.ourAuto, &gSelState.ourFactor);
 		gSelState.dll = SelGraphicsDllPresent();
 		gSelState.liveW = gReadoutW;
@@ -21046,7 +21021,7 @@ void UiSpike::ServiceScaleSelector()
 					SelIniPath(iniP, MAX_PATH);
 					if (iniP[0] != 0)
 					{
-						WritePrivateProfileStringW(L"UiSpike", L"AutoScale",
+						IniCache::WriteStringW(L"UiSpike", L"AutoScale",
 							L"1", iniP);
 						Logger::Get().WriteLine(LogLevel::Info,
 							"UiSpike: RESMISMATCH wrote AutoScale=1 - a manual "

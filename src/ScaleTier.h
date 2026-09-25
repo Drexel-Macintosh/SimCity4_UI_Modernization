@@ -59,6 +59,22 @@ namespace ScaleTier
 	// scans) MUST use this, never the DLL sibling path.
 	void GetPluginsRootW(wchar_t* out, size_t outLen);
 
+	// SC4GraphicsOptions.ini [GraphicsOptions], at the Plugins root - the file
+	// the SC4GraphicsOptions DLL owns. ONE reader for the boot tier decision
+	// and the in-game selector (audit B8: its WindowMode rules were written
+	// twice). Parsed with the vendored IniReader, the parser that DLL uses; a
+	// missing file, or a line IniReader rejects, gives the defaults below.
+	enum class WindowMode { FullScreen, Windowed, Borderless };
+	struct GraphicsOptions
+	{
+		bool software = false;               // Driver=Software (default DirectX)
+		WindowMode mode = WindowMode::FullScreen;
+		char modeText[40] = "FullScreen";    // WindowMode as written, for logs
+		int width = 0;                       // WindowWidth
+		int height = 0;                      // WindowHeight
+	};
+	GraphicsOptions ReadGraphicsOptions();
+
 	// v4.4.0 ROOT CLEANUP: names a file inside Plugins/010-SC4UIScale/.
 	// The DLL is the only thing this mod leaves at the Plugins root (the
 	// game's DLL loader is top-level only, measured); the ini, log, gcap

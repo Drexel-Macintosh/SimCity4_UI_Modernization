@@ -106,6 +106,7 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="SC4VersionDetection.cpp" />
     <ClCompile Include="SpinProbe.cpp" />
+    <ClCompile Include="IniCache.cpp" />
     <ClCompile Include="..\tools\research\udriveit\gdcap.cpp" />
     <ClCompile Include="..\vendor\gzcom-dll\gzcom-dll\src\cRZCOMDllDirector.cpp" />
     <ClCompile Include="..\vendor\gzcom-dll\gzcom-dll\src\cRZBaseString.cpp" />
@@ -124,6 +125,8 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="SC4VersionDetection.h" />
     <ClInclude Include="SpinProbe.h" />
+    <ClInclude Include="IniCache.h" />
+    <ClInclude Include="IniParse.h" />
     <ClInclude Include="GdCap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

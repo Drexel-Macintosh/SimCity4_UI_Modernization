@@ -1,5 +1,6 @@
 #include "CodePatches.h"
 #include "GdCap.h"
+#include "IniCache.h"
 #include "Logger.h"
 #include "ScaleTier.h"   // v4.4.0: our ini lives in 010-SC4UIScale/, not beside the DLL
 #include "MinHook.h"
@@ -4670,16 +4671,16 @@ namespace CodePatches
 			wchar_t ini[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 
-			gEffectCensus = static_cast<int>(GetPrivateProfileIntW(
+			gEffectCensus = static_cast<int>(IniCache::ReadIntW(
 				L"Probe", L"EffectCensus", 40, ini));
 			if (gEffectCensus < 0) { gEffectCensus = 0; }
 
-			gCensusWindowMs = static_cast<int>(GetPrivateProfileIntW(
+			gCensusWindowMs = static_cast<int>(IniCache::ReadIntW(
 				L"Probe", L"CensusWindowSeconds", 0, ini)) * 1000;
 			if (gCensusWindowMs < 0) { gCensusWindowMs = 0; }
 
 			wchar_t raw[512] = {};
-			GetPrivateProfileStringW(L"UiSpike", L"EffectKill", L"",
+			IniCache::ReadStringW(L"UiSpike", L"EffectKill", L"",
 				raw, 512, ini);
 			gEffectKillCount = 0;
 			memset(gEffectKill, 0, sizeof(gEffectKill));
@@ -4730,7 +4731,7 @@ namespace CodePatches
 			// tool-cursor names. That zero said nothing about the game and
 			// everything about the instrument, and it cost a play session.
 			// A raised budget on a dead branch now announces itself.
-			const int fxMode = static_cast<int>(GetPrivateProfileIntW(
+			const int fxMode = static_cast<int>(IniCache::ReadIntW(
 				L"UiSpike", L"MissionBubbleFx", 2, ini));
 			if (gEffectCensus > 40 && fxMode < 3)
 			{
@@ -4967,7 +4968,7 @@ namespace CodePatches
 		{
 			wchar_t ini[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-			gCsiKill = static_cast<int>(GetPrivateProfileIntW(
+			gCsiKill = static_cast<int>(IniCache::ReadIntW(
 				L"UiSpike", L"CsiKill", 0, ini));
 			if (!always && gCsiKill == 0) { return; }
 			if (!HookVerified("CSIDRAW", kCsiDrawVa, kCsiDrawStock, sizeof(kCsiDrawStock),
@@ -5646,7 +5647,7 @@ namespace CodePatches
 			wchar_t ini[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 			wchar_t spec[512] = {};
-			GetPrivateProfileStringW(L"UiSpike", L"CsiAim", L"", spec, 512, ini);
+			IniCache::ReadStringW(L"UiSpike", L"CsiAim", L"", spec, 512, ini);
 			if (spec[0] == 0) { return; }
 
 			char buf[512] = {};
@@ -6703,7 +6704,7 @@ namespace CodePatches
 			wchar_t ini[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 			wchar_t dbuf[32] = {};
-			GetPrivateProfileStringW(L"UiSpike", L"DotSize", L"0",
+			IniCache::ReadStringW(L"UiSpike", L"DotSize", L"0",
 				dbuf, 32, ini);
 			const float raw = static_cast<float>(_wtof(dbuf));
 			gDotSize = 0.0f;
@@ -8284,7 +8285,7 @@ namespace CodePatches
 			{
 				wchar_t ini[MAX_PATH] = {};
 				ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-				gStripItems = static_cast<int>(GetPrivateProfileIntW(
+				gStripItems = static_cast<int>(IniCache::ReadIntW(
 					L"Probe", L"StripItems", 0, ini));
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: StripItems resolved to %d (read from "
@@ -8630,7 +8631,7 @@ namespace CodePatches
 	{
 		wchar_t dqIni[MAX_PATH] = {};
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", dqIni, MAX_PATH);
-		gDqOn = static_cast<int>(GetPrivateProfileIntW(
+		gDqOn = static_cast<int>(IniCache::ReadIntW(
 			L"Probe", L"DispatchQuad", 0, dqIni));
 		Logger::Get().WriteLine(LogLevel::Info,
 			"CodePatches: DispatchQuad resolved to %d "
@@ -8652,7 +8653,7 @@ namespace CodePatches
 	{
 		wchar_t ini[MAX_PATH] = {};
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-		gHighlightProbe = static_cast<int>(GetPrivateProfileIntW(
+		gHighlightProbe = static_cast<int>(IniCache::ReadIntW(
 			L"UiSpike", L"HighlightProbe", 0, ini));
 		if (gHighlightProbe < 0 || gHighlightProbe > 3)
 		{
@@ -8673,7 +8674,7 @@ namespace CodePatches
 	{
 		wchar_t ini[MAX_PATH] = {};
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-		gZoneQuadProbe = static_cast<int>(GetPrivateProfileIntW(
+		gZoneQuadProbe = static_cast<int>(IniCache::ReadIntW(
 			L"UiSpike", L"ZoneQuadProbe", 0, ini));
 		if (gZoneQuadProbe < 0 || gZoneQuadProbe > 2)
 		{
@@ -8728,7 +8729,7 @@ namespace CodePatches
 	{
 		wchar_t ini[MAX_PATH] = {};
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-		const int raw = static_cast<int>(GetPrivateProfileIntW(
+		const int raw = static_cast<int>(IniCache::ReadIntW(
 			L"UiSpike", L"NborArrow", 0, ini));
 		gNborArrow = raw;
 		// MODE 2 IS CLAMPED TO 1 ON PURPOSE. The plan's mode 2 is the
@@ -8834,7 +8835,7 @@ namespace CodePatches
 	{
 		wchar_t ini[MAX_PATH] = {};
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-		gGpuCapN = static_cast<int>(GetPrivateProfileIntW(
+		gGpuCapN = static_cast<int>(IniCache::ReadIntW(
 			L"Probe", L"GpuCap", 0, ini));
 		Logger::Get().WriteLine(LogLevel::Info,
 			"CodePatches: GpuCap resolved to %d (read from [Probe]; armed "
@@ -8971,7 +8972,7 @@ namespace CodePatches
 	{
 		wchar_t ini[MAX_PATH] = {};
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-		gFgMax = static_cast<int>(GetPrivateProfileIntW(
+		gFgMax = static_cast<int>(IniCache::ReadIntW(
 			L"Probe", L"FontGuid", 0, ini));
 		Logger::Get().WriteLine(LogLevel::Info,
 			"CodePatches: FontGuid resolved to %d (read from [Probe]; armed "
@@ -9103,7 +9104,7 @@ namespace CodePatches
 		{
 			wchar_t mzIni[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", mzIni, MAX_PATH);
-			const int mzWant = static_cast<int>(GetPrivateProfileIntW(
+			const int mzWant = static_cast<int>(IniCache::ReadIntW(
 				L"UiSpike", L"MarkerZoomScale", 0, mzIni));
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: MarkerZoomScale resolved to %d (read from "
@@ -9125,12 +9126,12 @@ namespace CodePatches
 		{
 			wchar_t iniPath[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", iniPath, MAX_PATH);
-			gSpriteOffset = static_cast<int>(GetPrivateProfileIntW(
+			gSpriteOffset = static_cast<int>(IniCache::ReadIntW(
 				L"UiSpike", L"BalloonSpriteOffset", 0, iniPath));
-			gSpriteKind = static_cast<int>(GetPrivateProfileIntW(
+			gSpriteKind = static_cast<int>(IniCache::ReadIntW(
 				L"UiSpike", L"BalloonSpriteKind", 0, iniPath));
 			wchar_t buf[32] = {};
-			GetPrivateProfileStringW(L"UiSpike", L"BalloonSpriteScale", L"0",
+			IniCache::ReadStringW(L"UiSpike", L"BalloonSpriteScale", L"0",
 				buf, 32, iniPath);
 			gSpriteScale = static_cast<float>(_wtof(buf));
 			// <= 0 means "follow the tier", matching MissionBubbleScale.
@@ -9140,7 +9141,7 @@ namespace CodePatches
 			// arm-before-the-consumer discipline the gBubbleScale comment
 			// upstream was written to enforce.
 			wchar_t cbuf[32] = {};
-			GetPrivateProfileStringW(L"UiSpike", L"CsiCountPlate", L"0",
+			IniCache::ReadStringW(L"UiSpike", L"CsiCountPlate", L"0",
 				cbuf, 32, iniPath);
 			gCsiCountPlate = static_cast<float>(_wtof(cbuf));
 			// ALWAYS log the resolved value. The first A/B launch was VOID
@@ -9524,9 +9525,9 @@ namespace CodePatches
 		{
 			wchar_t ini[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-			gViewSuppress = static_cast<int>(GetPrivateProfileIntW(
+			gViewSuppress = static_cast<int>(IniCache::ReadIntW(
 				L"UiSpike", L"BalloonViewSuppress", 0, ini));
-			const int vlrRaw = static_cast<int>(GetPrivateProfileIntW(
+			const int vlrRaw = static_cast<int>(IniCache::ReadIntW(
 				L"Probe", L"ViewListRepeat", 0, ini));
 			gViewListRepeat = vlrRaw;
 			if (gViewListRepeat > 0 && gViewListRepeat < 30)
@@ -9542,7 +9543,7 @@ namespace CodePatches
 				"from [Probe]; 0 = one-shot at frame 400, 1-29 clamps to 30 "
 				"to keep the diff readable).", gViewListRepeat, vlrRaw);
 			wchar_t kb[32] = {};
-			GetPrivateProfileStringW(L"UiSpike", L"BalloonViewKill", L"0",
+			IniCache::ReadStringW(L"UiSpike", L"BalloonViewKill", L"0",
 				kb, 32, ini);
 			gViewKill = static_cast<int>(wcstoul(kb, nullptr, 16));
 			// House law, applied here at last: this key was the one lever in
@@ -9572,7 +9573,7 @@ namespace CodePatches
 				for (int i = 0; i < 5; ++i)
 				{
 					wchar_t probe[32] = {};
-					GetPrivateProfileStringW(kOtherSections[i],
+					IniCache::ReadStringW(kOtherSections[i],
 						L"BalloonViewKill", L"", probe, 32, ini);
 					if (probe[0] != L'\0')
 					{
@@ -9667,7 +9668,7 @@ namespace CodePatches
 	{
 		wchar_t ini[MAX_PATH] = {};
 		ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
-		return GetPrivateProfileIntW(L"Probe", L"ViewListRepeat", 0, ini) > 0;
+		return IniCache::ReadIntW(L"Probe", L"ViewListRepeat", 0, ini) > 0;
 	}
 
 	void InstallPickProbe()

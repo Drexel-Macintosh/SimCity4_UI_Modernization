@@ -75,8 +75,9 @@ def keys_read_by_the_dll():
     for m in re.finditer(r'GetPrivateProfile\w*?W?\(\s*k(\w+)\s*,\s*L"(\w+)"', src):
         found.add((CONST_TO_SECTION.get(m.group(1), m.group(1)), m.group(2)))
 
-    # UiSpike's live-tune poll uses the ANSI form with literal section names.
-    for m in re.finditer(r'GetPrivateProfile\w*?A\(\s*"(\w+)"\s*,\s*"(\w+)"', src):
+    # UiSpike's live-tune poll uses the ANSI form with literal section names,
+    # through IniCache since audit B8 (2026-09-25).
+    for m in re.finditer(r'(?:GetPrivateProfile\w*?A|IniCache::Read\w*?A)\(\s*"(\w+)"\s*,\s*"(\w+)"', src):
         found.add((m.group(1), m.group(2)))
 
     # Settings.cpp's IniReader path: gi/gu/gf(sectionVar, "Key", ...).
