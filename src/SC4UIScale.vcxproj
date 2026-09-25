@@ -100,6 +100,7 @@
     <ClCompile Include="SC4UIScaleDllDirector.cpp" />
     <ClCompile Include="UiSpike.cpp" />
     <ClCompile Include="UiSpikeSelector.cpp" />
+    <ClCompile Include="UiSpikeRegion.cpp" />
     <ClCompile Include="CodePatches.cpp" />
     <ClCompile Include="ScaleTier.cpp" />
     <ClCompile Include="WebRedirect.cpp" />
