@@ -127,6 +127,7 @@
     <ClInclude Include="SpinProbe.h" />
     <ClInclude Include="IniCache.h" />
     <ClInclude Include="IniParse.h" />
+    <ClInclude Include="RoundHalfUp.h" />
     <ClInclude Include="GdCap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

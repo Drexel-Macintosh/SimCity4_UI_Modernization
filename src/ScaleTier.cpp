@@ -1,5 +1,6 @@
 #include "CodePatches.h"
 #include "IniCache.h"
+#include "RoundHalfUp.h"
 #include "ScaleTier.h"
 #include "Logger.h"
 
@@ -3099,10 +3100,9 @@ namespace IconSynth
 	int  gIconStepLog = 0;
 	const int kIconStepLogMax = 8;
 
-	int RoundHalfUp(float v)
-	{
-		return static_cast<int>(v + 0.5f);
-	}
+	// RoundHalfUp: RoundHalfUp.h (audit B9). This file had its own
+	// truncating (int)(v + 0.5f) under the same name; on the non-negative
+	// dimensions it rounds the two agree bit for bit (see the header).
 
 	// ---- ScaleDim: THE OFFLINE UPSCALER'S DIMENSION RULE, PORTED VERBATIM ---
 	// #158. Our runtime enlargement produced 264x66 at f=1.5 while our OWN

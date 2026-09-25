@@ -125,15 +125,17 @@ def runtime_cell_unit(v):
 
 
 def runtime_round_half_up(v):
-    """ScaleTier.cpp:1270 RoundHalfUp(float v) -> static_cast<int>(v+0.5f).
+    """src/RoundHalfUp.h RoundHalfUp(double v) -> floor(v + 0.5).
 
-    That is a TRUNCATING cast, not floor(). For every v this project ever
-    calls it with (v = dim*factor, dim >= 0, factor >= 1) the argument is
-    non-negative, where truncation and floor agree - so modelling it as
-    floor here is exact, not an approximation. float(32-bit) vs Python's
-    double: 1.5/2.0/3.0 are exactly representable in both, and v*factor
-    stays under 2**23 for every dimension this corpus contains, so no
-    precision gap opens between the two widths either.
+    Until the 2026-09-25 audit (B9) ScaleTier.cpp had its own TRUNCATING
+    RoundHalfUp(float v) -> static_cast<int>(v+0.5f). For every v this
+    project ever calls it with (v = dim*factor, dim >= 0, factor >= 1) the
+    argument is non-negative, where the two agree bit for bit (checked for
+    every float in [0, 2^20); the one exception, 0.49999997, is no size) -
+    so modelling it as floor here is exact, not an approximation. float
+    (32-bit) vs Python's double: 1.5/2.0/3.0 are exactly representable in
+    both, and v*factor stays under 2**23 for every dimension this corpus
+    contains, so no precision gap opens between the two widths either.
     """
     return int(math.floor(v + 0.5))
 

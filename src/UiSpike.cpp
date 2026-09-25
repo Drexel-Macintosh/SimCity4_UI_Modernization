@@ -32,6 +32,7 @@
 #include "ScaleTier.h"   // the selector greys out tiers this resolution cannot carry
 #include "CodePatches.h"  // v2.37.0 #78: is the Data Views legend born correct?
 #include "IniCache.h"     // audit B8: every read of our ini, one parse
+#include "RoundHalfUp.h"  // audit B9: the one rounding rule (law 89)
 #include "SpinProbe.h"    // #107: per-launch outcome recorder (was Budget opened?)
 
 #include "cIGZWin.h"
@@ -196,16 +197,8 @@ namespace
 	// so this initialiser should never be the value anything actually uses.
 	float gTierF = 1.0f;
 
-	// Round-half-up (floor(v + 0.5)) - the SAME rounding rule as the whole
-	// art pipeline (Upscale2x.exe dimensions, the .UI builders' scale_len),
-	// so runtime geometry and shipped art can never disagree by a rounding
-	// rule. NOTE: differs from llround/ScaleRound only at NEGATIVE half
-	// values (-49.5 -> -49 here, -50 there); the art pipeline convention
-	// wins for all tier-math forms.
-	inline int32_t RoundHalfUp(double v)
-	{
-		return static_cast<int32_t>(std::floor(v + 0.5));
-	}
+	// RoundHalfUp (floor(v + 0.5)) lives in RoundHalfUp.h, shared with
+	// ScaleTier's icon code (audit B9).
 
 	// A BLIT EXTENT MUST FLOOR, NEVER ROUND UP.
 	//
@@ -1312,38 +1305,64 @@ namespace
 	// kSubArmTargetBottom: armRow_fromBottom at 1x target. Measured as
 	// 1.50 (bottom of Tourist Trap in the 8-row Build menu).
 	const double kSubArmTargetBottom = 1.50;
+	// THE STRIP/CONTAINER GEOMETRY SUM, one copy (audit B9: it was written
+	// out here, in the SUBBORN log and in the SUBSHIFT log). Every input is
+	// already at the tier: ring and cap height, item height and spacing.
+	struct SubStripGeo
+	{
+		int32_t rowPitch;       // item height + spacing
+		int32_t visibleRows;    // min(cnt, 8)
+		int32_t stripH;         // cnt rows, less the trailing spacing
+		int32_t contentH;       // max(strip, ring) + both caps
+		int32_t stripTop;       // the strip centred in the content
+	};
+	inline SubStripGeo SubStripGeometry(int32_t ringHs, int32_t capHs,
+		int32_t sItemH, int32_t sSpacing, int32_t cnt)
+	{
+		SubStripGeo g;
+		g.rowPitch = sItemH + sSpacing;
+		g.visibleRows = cnt < 8 ? cnt : 8;
+		g.stripH = g.rowPitch * cnt - sSpacing;
+		g.contentH = (g.stripH > ringHs ? g.stripH : ringHs) + 2 * capHs;
+		g.stripTop = (g.contentH - g.stripH) / 2;
+		return g;
+	}
+
 	// Exact shift from measured ring position. Called at sweep time when
 	// gSubRingBltY and autoY0 are available.
 	//   ringBltY: ring's blit Y in the container buffer (gSubRingBltY)
 	//   autoY0:   gSubRingAutoY before the container shift (legT - tgtT)
 	//   cnt:      strip item count (for computing stripTop / visibleRows)
-	// Returns: shift in pixels (positive = container moves UP).
-	inline int32_t SubContainerShiftFromGeo(
+	// The terms are returned too, so the SUBSHIFT log prints the formula's
+	// own numbers instead of a second copy of it.
+	struct SubShiftTerms
+	{
+		int32_t ringHs;
+		int32_t stripTop;
+		double naturalRow;
+		double targetRow;
+		int32_t shift;          // pixels, positive = container moves UP
+	};
+	inline SubShiftTerms SubContainerShiftFromGeo(
 		int32_t ringBltY, int32_t autoY0, int32_t cnt)
 	{
-		if (gTierF <= 1.0f || cnt < 1) return 0;
 		const double f = static_cast<double>(gTierF);
-		// UNSCALED SetLayout constants (tall: ringH=53, capH=25)
-		const int32_t ringHs = RoundHalfUp(53.0 * f);
-		const int32_t capHs  = RoundHalfUp(25.0 * f);
-		// Scaled strip item dims (itemH=44, spacing=5 at 1x)
-		const int32_t sItemH   = RoundHalfUp(44.0 * f);
-		const int32_t sSpacing = RoundHalfUp(5.0 * f);
-		const int32_t rowPitch = sItemH + sSpacing;
-		const int32_t visibleRows = cnt < 8 ? cnt : 8;
-		const int32_t stripH = (sItemH + sSpacing) * cnt - sSpacing;
-		const int32_t contentH =
-			(stripH > ringHs ? stripH : ringHs) + 2 * capHs;
-		const int32_t stripTop = (contentH - stripH) / 2;
+		SubShiftTerms t;
+		// UNSCALED SetLayout constants (tall: ringH=53, capH=25) and the
+		// strip item dims (itemH=44, spacing=5 at 1x), at the tier
+		t.ringHs = RoundHalfUp(53.0 * f);
+		const SubStripGeo g = SubStripGeometry(t.ringHs, RoundHalfUp(25.0 * f),
+			RoundHalfUp(44.0 * f), RoundHalfUp(5.0 * f), cnt);
+		t.stripTop = g.stripTop;
 		// Natural armRow in the buffer (includes SubMath auto offset)
-		const double naturalRow =
-			static_cast<double>(ringBltY + autoY0 + ringHs / 2 - stripTop)
-			/ static_cast<double>(rowPitch);
-		const double targetRow =
-			static_cast<double>(visibleRows) - kSubArmTargetBottom;
-		const double needed = targetRow - naturalRow;
-		if (needed <= 0.0) return 0;
-		return static_cast<int32_t>(RoundHalfUp(needed * rowPitch));
+		t.naturalRow =
+			static_cast<double>(ringBltY + autoY0 + t.ringHs / 2 - g.stripTop)
+			/ static_cast<double>(g.rowPitch);
+		t.targetRow = static_cast<double>(g.visibleRows) - kSubArmTargetBottom;
+		const double needed = t.targetRow - t.naturalRow;
+		t.shift = (gTierF <= 1.0f || cnt < 1 || needed <= 0.0) ? 0
+			: static_cast<int32_t>(RoundHalfUp(needed * g.rowPitch));
+		return t;
 	}
 
 	// 0xABB26B0E treated as a god PANEL (scaled + bottom-anchor docked to
@@ -6883,21 +6902,15 @@ namespace
 					RoundHalfUp(ringH1x * gTierF);
 				const int32_t capHs =
 					RoundHalfUp(capH1x * gTierF);
-				const int32_t stripH =
-					(sItemH + sSpacing) * cnt - sSpacing;
-				const int32_t contentH =
-					(stripH > ringHs ? stripH : ringHs)
-					+ 2 * capHs;
-				const int32_t stripTop =
-					(contentH - stripH) / 2;
-				const int32_t rowPitch = sItemH + sSpacing;
+				const SubStripGeo g =
+					SubStripGeometry(ringHs, capHs, sItemH, sSpacing, cnt);
 				// armRow requires ringBltY from SUBGEO2; here we
 				// estimate assuming ring centred in container.
 				// Real armRow = (ringBltY + ringHs/2 - stripTop)
 				//               / rowPitch  [from SUBGEO2 data]
 				const float armRowEst =
-					static_cast<float>(contentH / 2 - stripTop)
-					/ static_cast<float>(rowPitch);
+					static_cast<float>(g.contentH / 2 - g.stripTop)
+					/ static_cast<float>(g.rowPitch);
 				Logger::Get().WriteLine(LogLevel::Info,
 					"UiSpike: SUBBORN strip=%p f=%.2f cnt=%d "
 					"firstV=%d  sW=%d sH=%d sSp=%d  "
@@ -6912,8 +6925,8 @@ namespace
 					barW1x, capH1x, midH1x, ringW1x, ringH1x,
 					overlap1x, xAnc1x, yAnc1x,
 					ringHs, capHs,
-					contentH, stripH, stripTop,
-					rowPitch, armRowEst,
+					g.contentH, g.stripH, g.stripTop,
+					g.rowPitch, armRowEst,
 					win->GetL(), win->GetT(),
 					newW, newH);
 			}
@@ -9082,9 +9095,9 @@ namespace
 					// overshoots and the draw stays at stock size.
 					constexpr int32_t kFitSlack = 2;
 					const int32_t wantW =
-						static_cast<int32_t>(cw * gGaugeScale + 0.5f);
+						RoundHalfUp(cw * gGaugeScale);
 					const int32_t wantH =
-						static_cast<int32_t>(ch * gGaugeScale + 0.5f);
+						RoundHalfUp(ch * gGaugeScale);
 					const bool sourceIsOneX = (wantW <= gGaugeWinW + kFitSlack)
 						&& (wantH <= gGaugeWinH + kFitSlack);
 					float m = 1.0f;
@@ -9111,8 +9124,8 @@ namespace
 					}
 					if (m > 1.001f)
 					{
-						dst[2] = static_cast<int32_t>(cw * m + 0.5f);
-						dst[3] = static_cast<int32_t>(ch * m + 0.5f);
+						dst[2] = RoundHalfUp(cw * m);
+						dst[3] = RoundHalfUp(ch * m);
 						if (gGaugeDrawLog < 12)
 						{
 							gGaugeDrawLog++;
@@ -9494,8 +9507,8 @@ namespace
 						m = static_cast<float>(gBmpWinH) / h;
 					if (m > 1.001f)
 					{
-						int32_t dw = static_cast<int32_t>(w * m + 0.5f);
-						int32_t dh = static_cast<int32_t>(h * m + 0.5f);
+						int32_t dw = RoundHalfUp(w * m);
+						int32_t dh = RoundHalfUp(h * m);
 						// #162 - CLOSE THE UNDERFILL, NOT JUST THE OVERFLOW.
 						//
 						// The two clamps above only fire when the scaled bitmap
@@ -14714,8 +14727,9 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 							if (cnt >= 1 && cnt <= 64)
 							{
 								const int32_t autoY0 = legT - tgtT;
-								const int32_t shiftPx = SubContainerShiftFromGeo(
+								const SubShiftTerms terms = SubContainerShiftFromGeo(
 									gSubRingBltY, autoY0, cnt);
+								const int32_t shiftPx = terms.shift;
 								if (shiftPx > 0)
 								{
 									tgtT -= shiftPx;
@@ -14724,28 +14738,14 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 								{
 									subShiftLoggedThisSweep = true;
 									gSubShiftLog++;
-									// Duplicate the formula inline for diagnostic
-									const double f = static_cast<double>(gTierF);
-									const int32_t ringHs = RoundHalfUp(53.0 * f);
-									const int32_t capHs = RoundHalfUp(25.0 * f);
-									const int32_t sItemH = RoundHalfUp(44.0 * f);
-									const int32_t sSp = RoundHalfUp(5.0 * f);
-									const int32_t rp = sItemH + sSp;
-									const int32_t vr = cnt < 8 ? cnt : 8;
-									const int32_t sH = rp * cnt - sSp;
-									const int32_t cH = (sH > ringHs ? sH : ringHs) + 2 * capHs;
-									const int32_t sT = (cH - sH) / 2;
-									const double natRow =
-										static_cast<double>(gSubRingBltY + autoY0 + ringHs / 2 - sT)
-										/ static_cast<double>(rp);
-									const double tgtRow =
-										static_cast<double>(vr) - kSubArmTargetBottom;
+									// The formula's own terms (SubContainerShiftFromGeo)
 									Logger::Get().WriteLine(LogLevel::Debug,
 										"UiSpike: SUBSHIFT cnt=%d "
 										"ringBltY=%d autoY0=%d gAutoY=%d shift=%d "
 										"natRow=%.2f tgtRow=%.2f ringHs=%d sT=%d f=%.2f",
 										cnt, gSubRingBltY, autoY0, gSubRingAutoY,
-										shiftPx, natRow, tgtRow, ringHs, sT, gTierF);
+										shiftPx, terms.naturalRow, terms.targetRow,
+										terms.ringHs, terms.stripTop, gTierF);
 								}
 							}
 						}
@@ -17398,7 +17398,7 @@ void UiSpike::IncrementalPass()
 			// 2026-08-06).
 			{
 				const int32_t comboW =
-					static_cast<int32_t>(std::lround(120.0 * settings.spikeScaleFactor));
+					RoundHalfUp(120.0 * settings.spikeScaleFactor);
 				const int32_t comboDy =
 					RoundHalfUp(settings.spikeScaleFactor)
 					- static_cast<int32_t>(std::floor(settings.spikeScaleFactor));
@@ -17472,10 +17472,10 @@ void UiSpike::IncrementalPass()
 			if (pBudgetDlg->GetChildWindowFromID(0x0ABCE400u))
 			{
 				const float mf = settings.spikeScaleFactor;
-				const int32_t capX = static_cast<int32_t>(std::lround(400.0 * mf));
-				const int32_t capW = static_cast<int32_t>(std::lround(120.0 * mf));
-				const int32_t monX = static_cast<int32_t>(std::lround(520.0 * mf));
-				const int32_t monW = static_cast<int32_t>(std::lround(85.0 * mf));
+				const int32_t capX = RoundHalfUp(400.0 * mf);
+				const int32_t capW = RoundHalfUp(120.0 * mf);
+				const int32_t monX = RoundHalfUp(520.0 * mf);
+				const int32_t monW = RoundHalfUp(85.0 * mf);
 				ChildSnapshot wp = {};
 				pPane->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &wp);
 				for (int i = 0; i < wp.count; i++)
@@ -17654,7 +17654,7 @@ void UiSpike::IncrementalPass()
 			// Each twin reduces to ITS OWN stock height at f=1.
 			const double stockPopH = ordinanceTwin ? 125.0 : 100.0;
 			const int32_t wantH =
-				static_cast<int32_t>(std::lround(stockPopH * pf));
+				RoundHalfUp(stockPopH * pf);
 			const int32_t haveH = pop->GetH();
 
 			// POPSEEN: the reachability line this pin never had. Unconditional,
