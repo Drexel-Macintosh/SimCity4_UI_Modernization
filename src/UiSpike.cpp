@@ -6242,19 +6242,11 @@ namespace
 	// has a new toolbar).
 	int32_t gDisDockL = 0, gDisDockT = 0;
 	bool    gDisDockValid = false;
-	// v4.0.10 (2026-08-22): DERIVED DISASTER DOCK. The stock docking math is
-	// MEASURED, not tuned: on every open SubPlaceDetour hands us the
-	// container's pristine birth rect (the game glued it there) and we store
-	// its delta against the live Disaster Tools button. The scaled target is
-	// then button-live + delta*f - a pure function of the game's own glue and
-	// the tier, with no constants to go stale across resolutions/DPI.
-	// Recaptured every open, so mode switches and city changes self-heal.
-	// gDisDockL/T above remain only as the fallback when the anchor button
-	// cannot be resolved.
-	int32_t gDisStockDX = 0, gDisStockDY = 0;
-	bool    gDisStockValid = false;
+	// GODDOCK born-dock log budget. (The v4.0.10-12 "derived" disaster dock
+	// - container target = disaster button + measured stock glue * f - was
+	// retired in v4.0.13 because it moved the RING off its button, and its
+	// capture/target code was removed in the 2026-09-25 audit, B1.)
 	int     gDisDerivedLogs = 0;
-	int     gDisCaptureLogs = 0;
 	// v2.39.4: container whose chrome-live repaint has already been
 	// forced. Pointer-keyed and one-shot: the block that sets it runs on
 	// every sweep tick while the flyout is open. Cleared in Disarm, and
@@ -6401,113 +6393,6 @@ namespace
 	}
 
 	// sub_79AD00  container->Place(w, h, cx, cy, margT, margB), ret 0x18.
-	// ---- DERIVED DISASTER DOCK (v4.0.10) -----------------------------------
-	// The UiSpike member definitions sit at FILE SCOPE directly below - they
-	// cannot be defined inside an anonymous namespace (C2888), and the anchor
-	// lookup reads the private lastView.
-}
-
-cIGZWin* UiSpike::DisDockAnchor()
-{
-	// 0x69B9324A - the disaster spawn button itself, from the vanilla
-	// full-tree dump (_vanilla-reference/FINDINGS.md): god toolbar
-	// 0xC991EDA8 children 74x58 at rel y 10/70/130/190/250, fourth is
-	// Disaster. These are LIVE window ids recorded at 1x, exactly the
-	// namespace GetChildWindowFromIDRecursive resolves. 0x0A41C7B2 (the
-	// .UI script-side container guess) kept as secondary - it never
-	// resolved under lastView in the field (v4.0.10 logs), wrong namespace.
-	if (!lastView) { return nullptr; }
-	cIGZWin* b = lastView->GetChildWindowFromIDRecursive(0x69B9324A);
-	return b ? b : lastView->GetChildWindowFromIDRecursive(0x0A41C7B2);
-}
-
-void UiSpike::DisDockCapture(int32_t stockL, int32_t stockT)
-{
-	cIGZWin* b = DisDockAnchor();
-	if (!b)
-	{
-		gDisStockValid = false;
-		// One-time ground-truth dump: which of the known rail windows
-		// exist under lastView, and where. Turns a silent anchor miss
-		// into one readable log block.
-		static bool dumped = false;
-		if (!dumped && lastView && gDisDerivedLogs < 6)
-		{
-			dumped = true;
-			const uint32_t cand[] = { 0x69B9324A, 0xA9ED5617, 0x49E95D2B,
-				0x8A32DDDB, 0x4A551A6B, 0xC991EDA8, 0x69E40A1F,
-				0x0A41C7B2 };
-			for (uint32_t id : cand)
-			{
-				cIGZWin* w = lastView->GetChildWindowFromIDRecursive(id);
-				if (w)
-				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"UiSpike: GODDOCKCAP miss - rail probe "
-						"id %08X live (%d,%d) %dx%d",
-						id, w->GetL(), w->GetT(),
-						w->GetW(), w->GetH());
-				}
-			}
-		}
-		return;
-	}
-	gDisStockDX = stockL - b->GetL();
-	gDisStockDY = stockT - b->GetT();
-	gDisStockValid = true;
-	// One-time sibling dump: proves WHICH rail window 0x69B9324A resolved
-	// to by showing all five known rail-button rects together. If the
-	// pattern (five buttons, uniform pitch, disaster 4th) does not hold,
-	// the anchor id is wrong and this log says so immediately.
-	static bool s_sibsDumped = false;
-	if (!s_sibsDumped)
-	{
-		s_sibsDumped = true;
-		const uint32_t rails[] = { 0x49E95D2B, 0x8A32DDDB, 0x4A551A6B,
-			0x69B9324A, 0xA9ED5617 };
-		for (uint32_t id : rails)
-		{
-			cIGZWin* w = lastView ? lastView->GetChildWindowFromIDRecursive(id)
-			                      : nullptr;
-			if (w)
-			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"UiSpike: GODDOCKCAP rail id %08X live (%d,%d) %dx%d",
-					id, w->GetL(), w->GetT(), w->GetW(), w->GetH());
-			}
-		}
-	}
-	if (gDisCaptureLogs < 4)
-	{
-		gDisCaptureLogs++;
-		Logger::Get().WriteLine(LogLevel::Info,
-			"UiSpike: GODDOCKCAP #%d stock glue (%d,%d) vs disaster "
-			"button live (%d,%d) %dx%d -> delta (%d,%d).",
-			gDisCaptureLogs, stockL, stockT,
-			b->GetL(), b->GetT(), b->GetW(), b->GetH(),
-			gDisStockDX, gDisStockDY);
-	}
-}
-
-bool UiSpike::DisDockTarget(int32_t& outL, int32_t& outT, float f)
-{
-	// RETIRED v4.0.13. The container is NOT the piece that was misaligned:
-	// the ring paints inside the container and docks on the button via the
-	// accepted tbLive + DockX/DockY scheme; the THUMBNAIL STRIP is a
-	// separate parentless window whose game glue does not follow the
-	// container's dock - THAT drift is the icons-off-the-ring defect, fixed
-	// by the strip-follow at the birth site. v4.0.10's glue-delta rule,
-	// v4.0.11's button-center rule (computed T=-20, flyout flashed and
-	// vanished) and v4.0.12's button+knob form all moved the container, i.e.
-	// moved the RING off its button. Every experiment in that family is
-	// dead; returning false routes both dock sites to the accepted paths.
-	(void)outL; (void)outT; (void)f;
-	return false;
-}
-
-namespace
-{
-
 	void __fastcall SubPlaceDetour(void* self, void* edx, int w, int h,
 		int cx, int cy, int mT, int mB)
 	{
@@ -6674,16 +6559,12 @@ namespace
 			void* dstrip = gDisLastStrip;
 			// DOCK AT BIRTH (v2.39.3). Target = the accepted scheme:
 			// toolbar-live + DockX/DockY (gDisDock cache, tick-computed).
-			// The v4.0.10-12 "derived" container targets are retired - they
-			// moved the RING off its button; see DisDockTarget's comment.
+			// (The v4.0.10-12 "derived" container targets moved the RING off
+			// its button - retired v4.0.13, removed 2026-09-25.)
 			// Absolute move - GZWinMoveTo takes a DELTA, hence target -
 			// current.
 			{
-				// MEASURE + LOG this open's pristine glue against the
-				// disaster button (diagnostics; drives no target any more).
-				if (gSpikeSelf) { gSpikeSelf->DisDockCapture(l, t); }
 				int32_t tgtL = 0, tgtT = 0;
-				if (gSpikeSelf) { gSpikeSelf->DisDockTarget(tgtL, tgtT, gTierF); }
 				if (gDisDockValid)
 				{
 					tgtL = gDisDockL; tgtT = gDisDockT;
@@ -8723,10 +8604,6 @@ void UiSpike::Disarm()
 	gSubLastStrip = nullptr;
 	gDisLastStrip = nullptr;
 	gDisDockValid = false;    // v2.39.3: new city, new toolbar
-	// v4.0.10: the derived dock re-measures on every open, so a stale stock
-	// delta cannot survive a city change - but clear it anyway so nothing
-	// consumes one across the Disarm boundary.
-	gDisStockValid = false;
 	gDisChromeHealed = nullptr;  // v2.39.4: heal again next city
 	gDisDockLogged = nullptr;    // v2.39.5: next open logs its dock line
 	// (v4.0.41) the bar-tile cache and its Disarm resets died with the
@@ -16197,15 +16074,11 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 						overBand ? " **OVER-DEAD-BAND**" : "");
 				}
 			}
-			// Dock the container. v4.0.10: DERIVED from the game's own stock
-			// glue (measured this open in SubPlaceDetour against the disaster
-			// button) - the tuned-constant path is the fallback only.
-			int32_t targetL = 0, targetT = 0;
-			if (!DisDockTarget(targetL, targetT, f))
-			{
-				targetL = tbLiveL + ScaleRound(DisDockXEff(), f);   // v2.10: live-tunable (ini [Disaster] DockX)
-				targetT = tbLiveT + ScaleRound(DisDockYEff(), f);   // v2.11.30: live-tunable (ini [Disaster] DockY)
-			}
+			// Dock the container: toolbar-live + DockX/DockY, the accepted
+			// scheme. (The v4.0.10-12 target derived from the game's stock
+			// glue moved the RING off its button; retired v4.0.13.)
+			const int32_t targetL = tbLiveL + ScaleRound(DisDockXEff(), f);   // v2.10: live-tunable (ini [Disaster] DockX)
+			const int32_t targetT = tbLiveT + ScaleRound(DisDockYEff(), f);   // v2.11.30: live-tunable (ini [Disaster] DockY)
 			// v2.39.5: the gDisDock cache write that lived here moved UP to
 			// right after tbLiveL/T are read (before the flyout even exists).
 			// Writing it only here was the first-open hole: the cache could
