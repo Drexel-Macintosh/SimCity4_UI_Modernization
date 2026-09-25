@@ -262,32 +262,62 @@ namespace
 	//   * `UncoveredIcons*` is synthesized at runtime and is not a shipped
 	//     file at all, so it can never classify a freshly installed tree.
 	// Replaced with names verified present in dist/SC4UIScale-v4.5.0/Plugins/.
+	//
+	// ONE LISTING PER FOLDER (audit A8, 2026-09-25). This used to call
+	// FindFirstFileW once per marker: 8 directory enumerations per folder,
+	// 768 across a 91-folder tree. It now lists `z_SC4UIScale_*` once - every
+	// marker starts with that prefix, so the listing holds every name any
+	// marker can match - and tests each name in memory by the rules
+	// FindFirstFileW applied to the old patterns:
+	//   * case-insensitive, through the OS uppercase table
+	//     (CompareStringOrdinal), as the file system compares names;
+	//   * `prefix*` matches every name that starts with prefix;
+	//   * `prefix.*` matches the name `prefix` itself or `prefix.<anything>`
+	//     (Win32 turns a `.` before `*` into DOS_DOT: a dot, or the end of the
+	//     name). That is what keeps ItemIcons.* off ItemIconsSub.
+	// The result is the same OR of marker bits, so the order does not matter;
+	// the listing stops once both bits are set.
 	int ClassifyDir(const wchar_t* dir)
 	{
-		// Longest marker below is 29 chars; a dir this close to MAX_PATH
+		// The listing pattern is 14 chars; a dir this close to MAX_PATH
 		// cannot be ours, and the secure-CRT concat would ABORT THE PROCESS
-		// on truncation rather than fail the match.
+		// on truncation rather than fail the match. (The guard is unchanged
+		// from the per-marker patterns, whose longest was 29.)
 		if (wcslen(dir) + 32 >= MAX_PATH) { return 0; }
-		struct Marker { const wchar_t* pat; int bit; };
+		struct Marker { const wchar_t* prefix; bool dotStar; int bit; };
 		const Marker markers[] = {
-			{ L"z_SC4UIScale_SelectiveArt*",    1 },
-			{ L"z_SC4UIScale_DialogStatic*",    1 },
-			{ L"z_SC4UIScale_ItemIcons.*",      1 },
-			{ L"z_SC4UIScale_ItemIcons-*",      1 },   // pre-4.5.0 trees
-			{ L"z_SC4UIScale_CamUI*",           2 },
-			{ L"z_SC4UIScale_ItemIconsSub*",    2 },
-			{ L"z_SC4UIScale_ThirdPartyUI*",    2 },
-			{ L"z_SC4UIScale_SelectorUI*",      2 },
+			{ L"z_SC4UIScale_SelectiveArt", false, 1 },   // SelectiveArt*
+			{ L"z_SC4UIScale_DialogStatic", false, 1 },   // DialogStatic*
+			{ L"z_SC4UIScale_ItemIcons",    true,  1 },   // ItemIcons.*
+			{ L"z_SC4UIScale_ItemIcons-",   false, 1 },   // ItemIcons-*, pre-4.5.0 trees
+			{ L"z_SC4UIScale_CamUI",        false, 2 },   // CamUI*
+			{ L"z_SC4UIScale_ItemIconsSub", false, 2 },   // ItemIconsSub*
+			{ L"z_SC4UIScale_ThirdPartyUI", false, 2 },   // ThirdPartyUI*
+			{ L"z_SC4UIScale_SelectorUI",   false, 2 },   // SelectorUI*
 		};
+		wchar_t pat[MAX_PATH];
+		swprintf_s(pat, L"%sz_SC4UIScale_*", dir);
+		WIN32_FIND_DATAW fd = {};
+		HANDLE h = FindFirstFileW(pat, &fd);
+		if (h == INVALID_HANDLE_VALUE) { return 0; }
 		int bits = 0;
-		for (const Marker& m : markers)
+		do
 		{
-			wchar_t pat[MAX_PATH];
-			swprintf_s(pat, L"%s%s", dir, m.pat);
-			WIN32_FIND_DATAW fd = {};
-			HANDLE h = FindFirstFileW(pat, &fd);
-			if (h != INVALID_HANDLE_VALUE) { bits |= m.bit; FindClose(h); }
-		}
+			const int nameLen = static_cast<int>(wcslen(fd.cFileName));
+			for (const Marker& m : markers)
+			{
+				if (bits & m.bit) { continue; }
+				const int len = static_cast<int>(wcslen(m.prefix));
+				if (nameLen < len
+					|| CompareStringOrdinal(fd.cFileName, len, m.prefix, len, TRUE) != CSTR_EQUAL)
+				{
+					continue;
+				}
+				if (m.dotStar && nameLen > len && fd.cFileName[len] != L'.') { continue; }
+				bits |= m.bit;
+			}
+		} while (bits != 3 && FindNextFileW(h, &fd));
+		FindClose(h);
 		return bits;
 	}
 
@@ -4130,9 +4160,20 @@ namespace ScaleTier
 	{
 		wchar_t root[MAX_PATH] = {};
 		PluginsRootQuiet(root, MAX_PATH);
-		wchar_t dir[MAX_PATH] = {};
-		swprintf_s(dir, L"%s010-SC4UIScale", root);
-		CreateDirectoryW(dir, nullptr);   // harmless if it already exists
+		// Our folder must exist before anything moves into it and before the
+		// log opens in it. When discovery found it, it exists and this is a
+		// no-op; only the FALLBACK (Plugins\010-SC4UIScale, when no folder of
+		// ours was found) can be missing. This used to create
+		// Plugins\010-SC4UIScale BY NAME, which on an sc4pac install - where our
+		// folder is the discovered package folder - left an empty stray folder
+		// at the root on every boot (audit A10, 2026-09-25).
+		{
+			wchar_t dir[MAX_PATH] = {};
+			wcscpy_s(dir, EarlyDirPtr());
+			const size_t n = wcslen(dir);
+			if (n > 0 && dir[n - 1] == L'\\') { dir[n - 1] = 0; }
+			if (dir[0]) { CreateDirectoryW(dir, nullptr); }   // harmless if it exists
+		}
 
 		struct Item { const wchar_t* name; const char* tag; bool keep; };
 		// v4.5.0 REVERSES v4.4.0 FOR THE INI ALONE. A 4.4.0 install has it in
@@ -4874,6 +4915,10 @@ namespace ScaleTier
 		static bool s_present = false;
 		if (s_checked) { return s_present; }
 		s_checked = true;
+		// The index is built BEFORE the scope starts: Ensure() times its walk as
+		// boot.walk, and LogBootPhases sums every boot.* row, so a first build
+		// inside this scope would count the walk twice (audit A10, 2026-09-25).
+		IconSynth::BootIndex::Ensure();
 		PerfProbe::Scope perf_("boot.pauseRemover");   // v4.10.0
 		wchar_t pluginsRoot[MAX_PATH] = {};
 		PluginsRoot(pluginsRoot, MAX_PATH);
@@ -4917,6 +4962,11 @@ namespace ScaleTier
 		// boot index (long-path safe, placeholders included), so this is a
 		// name scan over it, not a std::filesystem walk.
 		(void)pluginsDir;
+		// Built before the scope, which times the name scan alone: the first
+		// build used to run inside boot.webbtn, and the boot TOTAL counted the
+		// walk twice (boot.walk + boot.webbtn; audit A10, 2026-09-25).
+		IconSynth::BootIndex::Ensure();
+		PerfProbe::Scope perf_("boot.webbtn");
 		s_present = IconSynth::BootIndex::AnyNameContains(L"web button improvement mod");
 		return s_present;
 	}
@@ -5071,11 +5121,8 @@ namespace ScaleTier
 		// Runs before the factor guard below so it applies at every tier,
 		// including stock. (The ShellExecute redirect is gated separately in
 		// the director.)
-		bool webBtnPresent = false;
-		{
-			PerfProbe::Scope perf_("boot.webbtn");
-			webBtnPresent = WebButtonModPresent(pluginsRoot);
-		}
+		// Timed inside WebButtonModPresent (boot.webbtn), after the index walk.
+		const bool webBtnPresent = WebButtonModPresent(pluginsRoot);
 		SyncDat(docPlugins, L"z_SC4UIScale_WebText", L"", !webBtnPresent);
 
 		// #182 GUARD (adversarial review 2026-08-17): now that MANUAL factors
