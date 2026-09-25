@@ -147,6 +147,84 @@ namespace
 		return true;
 	}
 
+	// ONE BYTE WRITE (audit B6, 2026-09-25). Every write into the game image
+	// makes its span writable through one of these, so the protection rules
+	// live in one place instead of 23 hand-rolled copies:
+	//
+	//   WithCodeWritable  .text. The page stays EXECUTABLE while writable
+	//                     (PAGE_EXECUTE_READWRITE) and the instruction cache
+	//                     is flushed after. PAGE_READWRITE here would leave the
+	//                     whole 4 KB code page non-executable during the write,
+	//                     and a write with no VirtualProtect at all is an access
+	//                     violation (the CsiCountPlate override, fixed d70a139).
+	//   WithDataWritable  .rdata/.data tables and vtable slots, where
+	//                     PAGE_READWRITE is correct and nothing needs a flush.
+	//
+	// `write` runs while [p, p+n) is writable; the old protection is restored
+	// after. A refused VirtualProtect is logged here and nothing is written.
+	// The caller verifies first: VerifiedWrite below, or its own check where a
+	// family verifies all of its sites before writing any.
+	template <typename Fn>
+	bool WithWritable(const char* what, uintptr_t va, void* p, size_t n,
+		DWORD prot, Fn&& write)
+	{
+		DWORD old = 0;
+		if (!VirtualProtect(p, n, prot, &old))
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: %s VirtualProtect failed at 0x%08X - not written.",
+				what, static_cast<uint32_t>(va));
+			return false;
+		}
+		write();
+		VirtualProtect(p, n, old, &old);
+		if (prot == PAGE_EXECUTE_READWRITE)
+		{
+			FlushInstructionCache(GetCurrentProcess(), p, n);
+		}
+		return true;
+	}
+
+	template <typename Fn>
+	bool WithCodeWritable(const char* what, uintptr_t va, void* p, size_t n, Fn&& write)
+	{
+		return WithWritable(what, va, p, n, PAGE_EXECUTE_READWRITE, write);
+	}
+
+	template <typename Fn>
+	bool WithDataWritable(const char* what, uintptr_t va, void* p, size_t n, Fn&& write)
+	{
+		return WithWritable(what, va, p, n, PAGE_READWRITE, write);
+	}
+
+	// One verified in-place .text write. Returns false (with a log line naming
+	// the live and the expected bytes) on any mismatch - wrong exe build, or
+	// another mod got there first.
+	bool VerifiedWrite(
+		const char* what, uintptr_t site, uintptr_t delta,
+		const uint8_t* expect, const uint8_t* repl, size_t n)
+	{
+		uint8_t* p = reinterpret_cast<uint8_t*>(site + delta);
+		if (memcmp(p, expect, n) != 0)
+		{
+			char live[25] = {}, want[25] = {};
+			const size_t k = (n < 8) ? n : 8;
+			for (size_t i = 0; i < k; ++i)
+			{
+				sprintf_s(live + 3 * i, 4, "%02X ", p[i]);
+				sprintf_s(want + 3 * i, 4, "%02X ", expect[i]);
+			}
+			if (k > 0) { live[3 * k - 1] = '\0'; want[3 * k - 1] = '\0'; }
+			Logger::Get().WriteLine(
+				LogLevel::Info,
+				"CodePatches: %s site 0x%08X bytes unexpected - skipped (live %s%s, "
+				"want %s%s).", what, static_cast<uint32_t>(site),
+				live, (n > 8) ? " .." : "", want, (n > 8) ? " .." : "");
+			return false;
+		}
+		return WithCodeWritable(what, site, p, n, [&] { memcpy(p, repl, n); });
+	}
+
 	// TOOLTIP WRAP WIDTH (task #41, 2026-07-29). The tip layer (window
 	// 0x2AAB8CC1, class 0x00AB6770) code-paints the whole tooltip; its Plot
 	// override 0x798710 wraps/measures the tip text against a HARDCODED
@@ -1133,32 +1211,19 @@ namespace CodePatches
 
 		for (uintptr_t site : kRatingImulSites)
 		{
-			uint8_t* p = reinterpret_cast<uint8_t*>(site + delta);
+			const uint8_t* p = reinterpret_cast<const uint8_t*>(site + delta);
 
 			// Verify-before-write: opcode must be IMUL imm8 and the operand
-			// the stock 7. Anything else means a different exe build - leave
-			// the code alone (the arrows stay 1x garnish, nothing breaks).
-			if (p[0] != kImulOpcode || p[2] != kStockMultiplier)
+			// the stock 7. The modrm byte (the register pair) is not pinned,
+			// so it is taken from the live code. Anything else means a
+			// different exe build - leave the code alone (the arrows stay 1x
+			// garnish, nothing breaks).
+			const uint8_t expect[3] = { kImulOpcode, p[1], kStockMultiplier };
+			const uint8_t repl[3] = { kImulOpcode, p[1], static_cast<uint8_t>(scaled) };
+			if (!VerifiedWrite("rating arrow imul", site, delta, expect, repl, 3))
 			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: rating site 0x%08X bytes %02X %02X %02X unexpected - skipped.",
-					static_cast<uint32_t>(site), p[0], p[1], p[2]);
 				continue;
 			}
-
-			DWORD oldProtect = 0;
-			if (!VirtualProtect(p, 3, PAGE_EXECUTE_READWRITE, &oldProtect))
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - skipped.",
-					static_cast<uint32_t>(site));
-				continue;
-			}
-			p[2] = static_cast<uint8_t>(scaled);
-			VirtualProtect(p, 3, oldProtect, &oldProtect);
-			FlushInstructionCache(GetCurrentProcess(), p, 3);
 
 			Logger::Get().WriteLine(
 				LogLevel::Info,
@@ -1180,34 +1245,18 @@ namespace CodePatches
 
 		for (uintptr_t site : kTipWrapSites)
 		{
-			uint8_t* p = reinterpret_cast<uint8_t*>(site + delta);
-			uint32_t cur = 0;
-			memcpy(&cur, p + 1, 4);
 			// Verify-before-write: must be `push 250`. Anything else means a
 			// different exe build - leave it alone (tips stay narrow, nothing
 			// breaks).
-			if (p[0] != kPushImm32 || cur != kStockTipWrap)
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: tip wrap site 0x%08X bytes %02X imm %u unexpected - skipped.",
-					static_cast<uint32_t>(site), p[0], cur);
-				continue;
-			}
-
-			DWORD oldProtect = 0;
-			if (!VirtualProtect(p, 5, PAGE_EXECUTE_READWRITE, &oldProtect))
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - skipped.",
-					static_cast<uint32_t>(site));
-				continue;
-			}
 			const uint32_t val = static_cast<uint32_t>(scaled);
-			memcpy(p + 1, &val, 4);
-			VirtualProtect(p, 5, oldProtect, &oldProtect);
-			FlushInstructionCache(GetCurrentProcess(), p, 5);
+			uint8_t expect[5] = { kPushImm32, 0, 0, 0, 0 };
+			memcpy(expect + 1, &kStockTipWrap, 4);
+			uint8_t repl[5] = { kPushImm32, 0, 0, 0, 0 };
+			memcpy(repl + 1, &val, 4);
+			if (!VerifiedWrite("tip wrap", site, delta, expect, repl, 5))
+			{
+				continue;
+			}
 
 			Logger::Get().WriteLine(
 				LogLevel::Info,
@@ -1272,20 +1321,17 @@ namespace CodePatches
 		// signpost review, 2026-08-17, finding 2 - this was its twin).
 		uint8_t* lo = (pw < ph) ? pw : ph;
 		uint8_t* hi = (pw < ph) ? (ph + 2) : (pw + 5);
-		const SIZE_T span = static_cast<SIZE_T>(hi - lo);
-		DWORD oldProt = 0;
-		if (!VirtualProtect(lo, span, PAGE_EXECUTE_READWRITE, &oldProt))
+		const uint32_t wv = static_cast<uint32_t>(newW);
+		const auto writeBoth = [&]
 		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: VirtualProtect failed at 0x%08X - cost box skipped.",
-				static_cast<uint32_t>(kCostBoxWidthSite));
+			memcpy(pw + 1, &wv, 4);
+			ph[1] = static_cast<uint8_t>(newH);
+		};
+		if (!WithCodeWritable("cost box", kCostBoxWidthSite, lo,
+				static_cast<size_t>(hi - lo), writeBoth))
+		{
 			return;
 		}
-		const uint32_t wv = static_cast<uint32_t>(newW);
-		memcpy(pw + 1, &wv, 4);
-		ph[1] = static_cast<uint8_t>(newH);
-		VirtualProtect(lo, span, oldProt, &oldProt);
-		FlushInstructionCache(GetCurrentProcess(), lo, span);
 
 		Logger::Get().WriteLine(
 			LogLevel::Info,
@@ -1331,23 +1377,19 @@ namespace CodePatches
 			(kCostOriginBack + delta) - (reinterpret_cast<uintptr_t>(cave) + n + 5));
 		memcpy(cave + n + 1, &relBack, 4); n += 5;
 
-		DWORD oldO = 0;
-		if (!VirtualProtect(po, sizeof(kCostOriginStock),
-			PAGE_EXECUTE_READWRITE, &oldO))
-		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: VirtualProtect failed at 0x%08X - cost origin "
-				"skipped (buffer widened, text still clipped).",
-				static_cast<uint32_t>(kCostOriginSite));
-			return;
-		}
 		const int32_t relTo = static_cast<int32_t>(
 			reinterpret_cast<uintptr_t>(cave) - (kCostOriginSite + delta + 5));
-		po[0] = 0xE9;
-		memcpy(po + 1, &relTo, 4);
-		po[5] = 0x90; po[6] = 0x90; po[7] = 0x90;   // pad the 8-byte span
-		VirtualProtect(po, sizeof(kCostOriginStock), oldO, &oldO);
-		FlushInstructionCache(GetCurrentProcess(), po, sizeof(kCostOriginStock));
+		const auto writeJmp = [&]
+		{
+			po[0] = 0xE9;
+			memcpy(po + 1, &relTo, 4);
+			po[5] = 0x90; po[6] = 0x90; po[7] = 0x90;   // pad the 8-byte span
+		};
+		if (!WithCodeWritable("cost origin", kCostOriginSite, po,
+				sizeof(kCostOriginStock), writeJmp))
+		{
+			return;   // the buffer is widened, but the text still clips
+		}
 
 		Logger::Get().WriteLine(
 			LogLevel::Info,
@@ -1390,19 +1432,12 @@ namespace CodePatches
 			}
 
 			const long scaled = std::lround(s.stock * factor);
-			DWORD oldProtect = 0;
-			if (!VirtualProtect(p, 5, PAGE_EXECUTE_READWRITE, &oldProtect))
+			const uint32_t val = static_cast<uint32_t>(scaled);
+			if (!WithCodeWritable("intro video", s.va, p + 1, 4,
+					[&] { memcpy(p + 1, &val, 4); }))
 			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - skipped.",
-					static_cast<uint32_t>(s.va));
 				continue;
 			}
-			const uint32_t val = static_cast<uint32_t>(scaled);
-			memcpy(p + 1, &val, 4);
-			VirtualProtect(p, 5, oldProtect, &oldProtect);
-			FlushInstructionCache(GetCurrentProcess(), p, 5);
 			patched++;
 
 			Logger::Get().WriteLine(
@@ -1728,11 +1763,8 @@ namespace CodePatches
 		float stockVal = 0.0f;
 		memcpy(&stockVal, &stockBits, 4);
 		const float want = stockVal * factor;
-		DWORD oldProtect = 0;
-		if (!VirtualProtect(p, 4, PAGE_READWRITE, &oldProtect)) { return false; }
-		memcpy(p, &want, 4);
-		VirtualProtect(p, 4, oldProtect, &oldProtect);
-		return true;
+		return WithDataWritable("region iso float", va, p, 4,
+			[&] { memcpy(p, &want, 4); });
 	}
 
 	float SetRegionIsoScaleLive(float factor)
@@ -2504,8 +2536,8 @@ namespace CodePatches
 			{
 				Logger::Get().WriteLine(
 					LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - region iso basis"
-					" is now PARTIAL (%d of 4). Expect a skewed region.",
+					"CodePatches: region iso basis stopped at 0x%08X and is now"
+					" PARTIAL (%d of 4). Expect a skewed region.",
 					static_cast<uint32_t>(kRegionIsoSites[i]), gRegionIsoSitesApplied);
 				return gRegionIsoSitesApplied;
 			}
@@ -2518,9 +2550,9 @@ namespace CodePatches
 			{
 				Logger::Get().WriteLine(
 					LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - overlay basis is"
-					" now PARTIAL (%d of 6). Airport/seaport icons may sit off their"
-					" tiles in the non-default view modes.",
+					"CodePatches: overlay basis stopped at 0x%08X and is now PARTIAL"
+					" (%d of 6). Airport/seaport icons may sit off their tiles in the"
+					" non-default view modes.",
 					static_cast<uint32_t>(kRegionIso2Sites[i]), iso2Written);
 				break;
 			}
@@ -2561,58 +2593,23 @@ namespace CodePatches
 				}
 			}
 
-			DWORD oldProtect = 0;
-			if (!VirtualProtect(p, 7 * sizeof(uint32_t), PAGE_READWRITE, &oldProtect))
+			const auto writeTable = [&]
 			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: VirtualProtect failed for %s table - skipped.", name);
+				for (int i = 0; i < 7; i++)
+				{
+					p[i] = static_cast<uint32_t>(std::lround(stock[i] * factor));
+				}
+			};
+			if (!WithDataWritable(name, siteVa, p, 7 * sizeof(uint32_t), writeTable))
+			{
 				return;
 			}
-			for (int i = 0; i < 7; i++)
-			{
-				p[i] = static_cast<uint32_t>(std::lround(stock[i] * factor));
-			}
-			VirtualProtect(p, 7 * sizeof(uint32_t), oldProtect, &oldProtect);
 
 			Logger::Get().WriteLine(
 				LogLevel::Info,
 				"CodePatches: %s table x%.2f -> {%u,%u,%u,%u,%u,%u,%u} at 0x%08X.",
 				name, factor, p[0], p[1], p[2], p[3], p[4], p[5], p[6],
 				static_cast<uint32_t>(siteVa));
-		}
-	}
-
-	namespace
-	{
-		// One verified in-place write. Returns false (with a log line) on any
-		// byte mismatch - wrong exe build or another mod got there first.
-		bool VerifiedWrite(
-			const char* what, uintptr_t site, uintptr_t delta,
-			const uint8_t* expect, const uint8_t* repl, size_t n)
-		{
-			uint8_t* p = reinterpret_cast<uint8_t*>(site + delta);
-			if (memcmp(p, expect, n) != 0)
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: %s site 0x%08X bytes unexpected - skipped.",
-					what, static_cast<uint32_t>(site));
-				return false;
-			}
-			DWORD oldProtect = 0;
-			if (!VirtualProtect(p, n, PAGE_EXECUTE_READWRITE, &oldProtect))
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - skipped.",
-					static_cast<uint32_t>(site));
-				return false;
-			}
-			memcpy(p, repl, n);
-			VirtualProtect(p, n, oldProtect, &oldProtect);
-			FlushInstructionCache(GetCurrentProcess(), p, n);
-			return true;
 		}
 	}
 
@@ -3377,15 +3374,11 @@ namespace CodePatches
 					static_cast<uint32_t>(s.site), p[0], p[1], cur);
 				continue;
 			}
-			DWORD oldProtect = 0;
-			const size_t nb = static_cast<size_t>(s.immOff) + 4;
-			if (!VirtualProtect(p, nb, PAGE_EXECUTE_READWRITE, &oldProtect))
+			if (!WithCodeWritable("data-view legend imm32", s.site, p + s.immOff, 4,
+					[&] { memcpy(p + s.immOff, &v, 4); }))
 			{
 				continue;
 			}
-			memcpy(p + s.immOff, &v, 4);
-			VirtualProtect(p, nb, oldProtect, &oldProtect);
-			FlushInstructionCache(GetCurrentProcess(), p, nb);
 			n++;
 		}
 
@@ -3909,15 +3902,11 @@ namespace CodePatches
 					static_cast<uint32_t>(s.site), p[0], p[1], cur);
 				continue;
 			}
-			DWORD oldProtect = 0;
-			const size_t n = static_cast<size_t>(s.immOff) + 4;
-			if (!VirtualProtect(p, n, PAGE_EXECUTE_READWRITE, &oldProtect))
+			if (!WithCodeWritable("master notch", s.site, p + s.immOff, 4,
+					[&] { memcpy(p + s.immOff, &v, 4); }))
 			{
 				continue;
 			}
-			memcpy(p + s.immOff, &v, 4);
-			VirtualProtect(p, n, oldProtect, &oldProtect);
-			FlushInstructionCache(GetCurrentProcess(), p, n);
 			nRaw++;
 		}
 
@@ -3942,30 +3931,14 @@ namespace CodePatches
 
 		for (const GuidRetarget& r : kPopupStyleRetargets)
 		{
-			uint8_t* p = reinterpret_cast<uint8_t*>(r.site + delta);
-			uint32_t cur = 0;
-			memcpy(&cur, p + 1, 4);
-			if (p[0] != kPushImm32 || cur != r.from)
+			uint8_t expect[5] = { kPushImm32, 0, 0, 0, 0 };
+			memcpy(expect + 1, &r.from, 4);
+			uint8_t repl[5] = { kPushImm32, 0, 0, 0, 0 };
+			memcpy(repl + 1, &r.to, 4);
+			if (!VerifiedWrite("popup style", r.site, delta, expect, repl, 5))
 			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: popup style site 0x%08X bytes %02X imm 0x%08X unexpected - skipped.",
-					static_cast<uint32_t>(r.site), p[0], cur);
 				continue;
 			}
-
-			DWORD oldProtect = 0;
-			if (!VirtualProtect(p, 5, PAGE_EXECUTE_READWRITE, &oldProtect))
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - skipped.",
-					static_cast<uint32_t>(r.site));
-				continue;
-			}
-			memcpy(p + 1, &r.to, 4);
-			VirtualProtect(p, 5, oldProtect, &oldProtect);
-			FlushInstructionCache(GetCurrentProcess(), p, 5);
 
 			Logger::Get().WriteLine(
 				LogLevel::Info,
@@ -5534,17 +5507,11 @@ namespace CodePatches
 				// (2026-09-25 audit B6: the override above used to write with no
 				// VirtualProtect at all - an access violation at boot for anyone
 				// setting CsiCountPlate - and this path used PAGE_READWRITE.)
-				DWORD old = 0;
-				if (!VirtualProtect(p, sizeof(float), PAGE_EXECUTE_READWRITE, &old))
+				if (!WithCodeWritable("CSI quad", kCsiQuad[k].va, p, sizeof(float),
+						[&] { *p = value; }))
 				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"CodePatches: CSI VirtualProtect failed at 0x%08X.",
-						static_cast<unsigned>(kCsiQuad[k].va));
 					return;
 				}
-				*p = value;
-				VirtualProtect(p, sizeof(float), old, &old);
-				FlushInstructionCache(GetCurrentProcess(), p, sizeof(float));
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: CSI indicators x%.2f - icon+hitbox %.1f -> %.1f px "
@@ -5636,19 +5603,11 @@ namespace CodePatches
 					factor, w, h);
 				return;
 			}
-			DWORD old = 0;
-			// Executable-safe write (audit B6): the page stays executable while
-			// writable, then the instruction cache is flushed.
-			if (!VirtualProtect(p, sizeof(uint32_t), PAGE_EXECUTE_READWRITE, &old))
+			if (!WithCodeWritable("MYSIMTEX", kVa, p, sizeof(uint32_t),
+					[&] { *p = side; }))
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: MYSIMTEX VirtualProtect failed at 0x%08X - "
-					"skipped (#191).", static_cast<unsigned>(kVa));
 				return;
 			}
-			*p = side;
-			VirtualProtect(p, sizeof(uint32_t), old, &old);
-			FlushInstructionCache(GetCurrentProcess(), p, sizeof(uint32_t));
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: MYSIMTEX x%.2f - My Sim marker icon UV divisor "
 				"64 -> %u to match the staged %dx%d portrait's square texture "
@@ -5751,30 +5710,28 @@ namespace CodePatches
 				// floor(v*f+0.5) for the integer widths: ONE rounding
 				// convention across sweep, upscaler and builders (law #89).
 				const double want = cur * mult;
-				DWORD old = 0;
-				// CSIAIM targets may be code OR data: keep the page executable
-				// while writable and flush afterwards (audit B6).
-				if (!VirtualProtect(p, width, PAGE_EXECUTE_READWRITE, &old))
+				// CSIAIM targets may be code OR data: WithCodeWritable keeps the
+				// page executable while writable and flushes after, which is
+				// safe for both (audit B6).
+				const auto writeValue = [&]
 				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"CodePatches: CSIAIM VirtualProtect failed at 0x%08X.",
-						va);
+					switch (type)
+					{
+					case 'f': *static_cast<float*>(p) =
+						static_cast<float>(want); break;
+					case 'd': *static_cast<int*>(p) =
+						static_cast<int>(want + 0.5); break;
+					case 'w': *static_cast<short*>(p) =
+						static_cast<short>(want + 0.5); break;
+					case 'b': *static_cast<unsigned char*>(p) =
+						static_cast<unsigned char>(want + 0.5); break;
+					}
+				};
+				if (!WithCodeWritable("CSIAIM", va, p, width, writeValue))
+				{
 					++refused;
 					continue;
 				}
-				switch (type)
-				{
-				case 'f': *static_cast<float*>(p) =
-					static_cast<float>(want); break;
-				case 'd': *static_cast<int*>(p) =
-					static_cast<int>(want + 0.5); break;
-				case 'w': *static_cast<short*>(p) =
-					static_cast<short>(want + 0.5); break;
-				case 'b': *static_cast<unsigned char*>(p) =
-					static_cast<unsigned char>(want + 0.5); break;
-				}
-				VirtualProtect(p, width, old, &old);
-				FlushInstructionCache(GetCurrentProcess(), p, width);
 				double post = 0.0;
 				switch (type)
 				{
@@ -5823,14 +5780,6 @@ namespace CodePatches
 			{
 				float* p = reinterpret_cast<float*>(
 					kCsiConsts[k].va + base - kImageBase);
-				DWORD old = 0;
-				if (!VirtualProtect(p, sizeof(float), PAGE_READWRITE, &old))
-				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"CodePatches: CSI VirtualProtect failed at 0x%08X.",
-						static_cast<unsigned>(kCsiConsts[k].va));
-					return;
-				}
 				// ROUND TO THE PROJECT'S ONE CONVENTION (law 89,
 				// RoundHalfUp) instead of storing a raw product. These are
 				// SCREEN-PIXEL constants and 1.5x is the only tier that makes
@@ -5843,8 +5792,12 @@ namespace CodePatches
 				// every one of these stocks times 2 or 3 is already whole, so
 				// this cannot move 2x or 3x (law 95: a fractional-tier fix must
 				// read exactly zero at the integer tiers first).
-				*p = std::floor(kCsiConsts[k].stock * want + 0.5f);
-				VirtualProtect(p, sizeof(float), old, &old);
+				const float v = std::floor(kCsiConsts[k].stock * want + 0.5f);
+				if (!WithDataWritable("CSI constant", kCsiConsts[k].va, p, sizeof(float),
+						[&] { *p = v; }))
+				{
+					return;
+				}
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				// "leader 43" was wrong and is corrected here: 43 is the SLOT
@@ -5879,15 +5832,11 @@ namespace CodePatches
 					return;
 				}
 			}
-			DWORD old = 0;
-			if (!VirtualProtect(t, 10 * sizeof(float), PAGE_READWRITE, &old))
+			if (!WithDataWritable("PIXTABLE", kPixTableVa, t, 10 * sizeof(float),
+					[&] { for (int k = 0; k < 10; ++k) { t[k] = kPixStock[k] * want; } }))
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: PIXTABLE VirtualProtect failed.");
 				return;
 			}
-			for (int k = 0; k < 10; ++k) { t[k] = kPixStock[k] * want; }
-			VirtualProtect(t, 10 * sizeof(float), old, &old);
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: PIXTABLE 0x00A88170 x%d.%02d -> "
 				"{%d,%d,%d,%d,%d, %d,%d,%d,%d,%d} px.",
@@ -6180,19 +6129,16 @@ namespace CodePatches
 			// writable for the rest of the process (review 2026-08-17,
 			// finding 2 - the cost-box patch carried the same defect and
 			// was reshaped identically).
-			const SIZE_T span = static_cast<SIZE_T>((pr + 5) - ps);
-			DWORD oldProt = 0;
-			if (!VirtualProtect(ps, span, PAGE_EXECUTE_READWRITE, &oldProt))
+			const auto writeBoth = [&]
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - SIGNPOST skipped.",
-					static_cast<uint32_t>(kSignpostSizeSite));
+				memcpy(ps + 1, &sizeBits, 4);
+				memcpy(pr + 1, &raiseBits, 4);
+			};
+			if (!WithCodeWritable("SIGNPOST", kSignpostSizeSite, ps,
+					static_cast<size_t>((pr + 5) - ps), writeBoth))
+			{
 				return;
 			}
-			memcpy(ps + 1, &sizeBits, 4);
-			memcpy(pr + 1, &raiseBits, 4);
-			VirtualProtect(ps, span, oldProt, &oldProt);
-			FlushInstructionCache(GetCurrentProcess(), ps, span);
 
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: SIGNPOST balloon 44 -> %.1f px, raise 150 -> %.1f "
@@ -6311,18 +6257,12 @@ namespace CodePatches
 			{
 				uint8_t* q = reinterpret_cast<uint8_t*>(
 					kFontNameSites[i] + base - kImageBase);
-				DWORD old = 0;
-				if (!VirtualProtect(q, 5, PAGE_EXECUTE_READWRITE, &old))
+				const uint32_t v = (i == 0 || i == 2) ? e : b;
+				if (!WithCodeWritable("FONTNAME", kFontNameSites[i], q + 1, 4,
+						[&] { memcpy(q + 1, &v, 4); }))
 				{
-					Logger::Get().WriteLine(LogLevel::Info,
-						"CodePatches: FONTNAME VirtualProtect failed at 0x%08X.",
-						static_cast<uint32_t>(kFontNameSites[i]));
 					return;
 				}
-				const uint32_t v = (i == 0 || i == 2) ? e : b;
-				memcpy(q + 1, &v, 4);
-				VirtualProtect(q, 5, old, &old);
-				FlushInstructionCache(GetCurrentProcess(), q, 5);
 			}
 			gFontNameRedirected = true;
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -6370,18 +6310,16 @@ namespace CodePatches
 			memcpy(&seatBits, &newSeat, 4);
 			// One VirtualProtect spanning both sites (0x15 bytes, one page) -
 			// the same nested-protect-RWX-leak avoidance as SIGNPOST.
-			const SIZE_T span = static_cast<SIZE_T>((pg + 5) - pb);
-			DWORD oldProt = 0;
-			if (!VirtualProtect(pb, span, PAGE_EXECUTE_READWRITE, &oldProt))
+			const auto writeBoth = [&]
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: PINDIGIT VirtualProtect failed - skipped.");
+				memcpy(pb + 1, &boxBits, 4);
+				memcpy(pg + 1, &seatBits, 4);
+			};
+			if (!WithCodeWritable("PINDIGIT", kPinDigitSites[0], pb,
+					static_cast<size_t>((pg + 5) - pb), writeBoth))
+			{
 				return;
 			}
-			memcpy(pb + 1, &boxBits, 4);
-			memcpy(pg + 1, &seatBits, 4);
-			VirtualProtect(pb, span, oldProt, &oldProt);
-			FlushInstructionCache(GetCurrentProcess(), pb, span);
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: PINDIGIT box 14 -> %.1f px, seat 9 -> %.1f px "
 				"at 0x005F1EEC/0x005F1EFC (digit rides the tier; kind-4 "
@@ -6472,16 +6410,11 @@ namespace CodePatches
 				memcpy(&v, &kStockMarkerZoom[k], 4);
 				scaled[k] = v * want;
 			}
-			DWORD oldProt = 0;
-			if (!VirtualProtect(pt, sizeof(scaled), PAGE_READWRITE, &oldProt))
+			if (!WithDataWritable("MARKERZOOM", kMarkerZoomTableVa, pt, sizeof(scaled),
+					[&] { memcpy(pt, scaled, sizeof(scaled)); }))
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: VirtualProtect failed at 0x%08X - MARKERZOOM "
-					"skipped.", static_cast<uint32_t>(kMarkerZoomTableVa));
 				return;
 			}
-			memcpy(pt, scaled, sizeof(scaled));
-			VirtualProtect(pt, sizeof(scaled), oldProt, &oldProt);
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: MARKERZOOM table x%.2f -> {%.2f, %.3f, %.2f, "
 				"%.2f, %.2f} at 0x%08X.",
@@ -7198,20 +7131,18 @@ namespace CodePatches
 					static_cast<uint32_t>(*s38 - delta));
 				return;
 			}
-			DWORD oldProt = 0;
 			// one span covers both slots (+0x4C..+0x9C within one page)
 			uint8_t* lo = reinterpret_cast<uint8_t*>(s30);
-			const SIZE_T span = static_cast<SIZE_T>(
-				reinterpret_cast<uint8_t*>(s38) + 4 - lo);
-			if (!VirtualProtect(lo, span, PAGE_READWRITE, &oldProt))
+			const auto swapBoth = [&]
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: PROXYGET VirtualProtect failed - not installed.");
+				*s30 = reinterpret_cast<uintptr_t>(&SpGet30Detour);
+				*s38 = reinterpret_cast<uintptr_t>(&SpGet38Detour);
+			};
+			if (!WithDataWritable("PROXYGET", kProxyGetterVt + 0x4C, lo,
+					static_cast<size_t>(reinterpret_cast<uint8_t*>(s38) + 4 - lo), swapBoth))
+			{
 				return;
 			}
-			*s30 = reinterpret_cast<uintptr_t>(&SpGet30Detour);
-			*s38 = reinterpret_cast<uintptr_t>(&SpGet38Detour);
-			VirtualProtect(lo, span, oldProt, &oldProt);
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: PROXYGET armed (vtable 0xA87238 slots +0x4C/+0x98 "
 				"swapped). Idle with balloons on screen; per-frame callers "
@@ -7651,41 +7582,43 @@ namespace CodePatches
 				uintptr_t* vt = reinterpret_cast<uintptr_t*>(va);
 				int n = 0;
 				while (n < maxN && vt[n] >= txtLo && vt[n] < txtHi) { ++n; }
-				DWORD oldProt = 0;
-				if (!VirtualProtect(vt, n * 4, PAGE_READWRITE, &oldProt))
+				const auto thunkSlots = [&]
+				{
+					for (int s = 0; s < n; ++s)
+					{
+						gVtOrig[v][s] = reinterpret_cast<void*>(vt[s]);
+						uint8_t* t = pool + emitted * 30;
+						// pushad; pushfd; mov eax,[esp+40](arg1); push eax;
+						// mov eax,[esp+40](ret, esp moved); push eax;
+						// push key; call SpVtHit(3); popfd; popad; jmp [orig]
+						t[0] = 0x60; t[1] = 0x9C;
+						t[2] = 0x8B; t[3] = 0x44; t[4] = 0x24; t[5] = 0x28;
+						t[6] = 0x50;
+						t[7] = 0x8B; t[8] = 0x44; t[9] = 0x24; t[10] = 0x28;
+						t[11] = 0x50;
+						t[12] = 0x68;
+						const uint32_t key = (static_cast<uint32_t>(v) << 8)
+							| static_cast<uint32_t>(s);
+						memcpy(t + 13, &key, 4);
+						t[17] = 0xE8;
+						const int32_t rel = static_cast<int32_t>(
+							reinterpret_cast<uintptr_t>(&SpVtHit)
+							- reinterpret_cast<uintptr_t>(t + 17) - 5);
+						memcpy(t + 18, &rel, 4);
+						t[22] = 0x9D; t[23] = 0x61;
+						t[24] = 0xFF; t[25] = 0x25;
+						const uintptr_t slotAddr =
+							reinterpret_cast<uintptr_t>(&gVtOrig[v][s]);
+						memcpy(t + 26, &slotAddr, 4);
+						vt[s] = reinterpret_cast<uintptr_t>(t);
+						++emitted;
+					}
+				};
+				if (!WithDataWritable("VTCAP vtable", vts[v], vt,
+						static_cast<size_t>(n) * 4, thunkSlots))
 				{
 					continue;
 				}
-				for (int s = 0; s < n; ++s)
-				{
-					gVtOrig[v][s] = reinterpret_cast<void*>(vt[s]);
-					uint8_t* t = pool + emitted * 30;
-					// pushad; pushfd; mov eax,[esp+40](arg1); push eax;
-					// mov eax,[esp+40](ret, esp moved); push eax;
-					// push key; call SpVtHit(3); popfd; popad; jmp [orig]
-					t[0] = 0x60; t[1] = 0x9C;
-					t[2] = 0x8B; t[3] = 0x44; t[4] = 0x24; t[5] = 0x28;
-					t[6] = 0x50;
-					t[7] = 0x8B; t[8] = 0x44; t[9] = 0x24; t[10] = 0x28;
-					t[11] = 0x50;
-					t[12] = 0x68;
-					const uint32_t key = (static_cast<uint32_t>(v) << 8)
-						| static_cast<uint32_t>(s);
-					memcpy(t + 13, &key, 4);
-					t[17] = 0xE8;
-					const int32_t rel = static_cast<int32_t>(
-						reinterpret_cast<uintptr_t>(&SpVtHit)
-						- reinterpret_cast<uintptr_t>(t + 17) - 5);
-					memcpy(t + 18, &rel, 4);
-					t[22] = 0x9D; t[23] = 0x61;
-					t[24] = 0xFF; t[25] = 0x25;
-					const uintptr_t slotAddr =
-						reinterpret_cast<uintptr_t>(&gVtOrig[v][s]);
-					memcpy(t + 26, &slotAddr, 4);
-					vt[s] = reinterpret_cast<uintptr_t>(t);
-					++emitted;
-				}
-				VirtualProtect(vt, n * 4, oldProt, &oldProt);
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: VTCAP vt%d (0x%08X) %d slots thunked.",
 					v, static_cast<uint32_t>(vts[v]), n);
