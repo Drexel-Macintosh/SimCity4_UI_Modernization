@@ -23115,9 +23115,9 @@ Each left a pointer in the source that says what is true now.
 // instance (>=1000) is skipped.
 ```
 
-## 2026-09-25: two gates went blind when code moved (audit B9, B11)
+## 2026-09-25: three gates went blind when code moved (audit B9, B11)
 
-Both were caused in this audit's own cleanup commits, and neither turned a gate red where anyone would see it.
+All three were caused by this audit's own cleanup commits, and none turned a gate red where anyone would see it.
 
 **1. scale_rules.py.** `--selftest` checks the source text of the rules it mirrors. Its RoundHalfUp tripwire read `src/UiSpike.cpp`. B9 (`88a3fae`) moved the one RoundHalfUp into `src/RoundHalfUp.h`, and from then on the selftest reported "1 FAILED". Nobody saw it, because scale_rules.py was not in `_tests/Run-OfflineGates.ps1`. It was found when the B11 work re-ran every tool that reads the moved code.
 - `0db68df` points the tripwire at the header.
@@ -23129,6 +23129,16 @@ Both were caused in this audit's own cleanup commits, and neither turned a gate 
 - Positive controls: a write target planted in a split file fails CHECK C, and an ini key read only in a split file counts as read.
 - The per-file counts after each split add up to the totals before it. The only functions missing from the sum moved into `UiSpikeInternal.h`: SurfRetry's four members and ScaleRound.
 
+**3. coverage_rederive.py.** Section 5 counts a stock `.UI` root as covered when its root id, or any id in its subtree, appears anywhere in the UiSpike source as an 8-digit hex literal (comments included), and three floors fail the run if a count drops. It read `UiSpikeIds.h` and `UiSpike.cpp` by name. At `b3ebfdd` it counted 354 distinct ids; at `de03267`, 228.
+- 94 had only moved: 71 to UiSpikeFlyouts.cpp, 10 to UiSpikeSelector.cpp, 9 to UiSpikeMinimap.cpp (3 of them also in UiSpikeFlyouts.cpp), 3 to UiSpikeInternal.h (2 of them also in UiSpikeFlyouts.cpp) and 1 to UiSpikeRegion.cpp. The fix reads UiSpikeIds.h and UiSpike.cpp first, as before (the named lists come from them, and the lookups are unchanged), then every other `src/UiSpike*` file. It now counts 323: 322 of the 354, plus 1 new.
+- 32 are gone from every UiSpike file, and that loss is real. 26 went with the code B1 deleted: DockDialogs (`7f53d8a`, 11), the region-camera probes (`cf62285`, 10), the derived disaster dock (`8310fd3`, 3) and SubFlyoutBorn2x (`ed763e9`, 2); 7 of the 26 were named only in comments inside that code. B10 moved 5 comment-only ids into this file (`7d3bea8`, `3fb30d6`), and 1, in a comment citing sc4-dll-utilities' IniReader, went with B8 (`d2e04b2`).
+- **Expect its counts to fall below its floors on the next run with the corpus.** DockDialogs named the root ids of five stock dialogs: Play Options 0x2A57DB82, Audio Options 0xEA53F5DB, Create Region 0xEA5BA0D1, Delete Region 0x6A5BA20C and Load Region 0x4A5BA0E7. It defaulted to off, and DialogStatic is what scales those dialogs, so no runtime list reaches them now. None of the five is in its exclusion list, and the floors sit exactly at the measured counts. Re-measure the floors from that run, cite `7f53d8a`, and never add an id back to the source to satisfy the tool (its own rule).
+- Nothing showed here, because this container has no extracted corpus: section 5 has no roots to count, and the whole output is identical before and after.
+
 **What the later splits did instead.** Every tool that reads the moved source was run on HEAD and on the split tree, and its WHOLE output was compared, not only its last line. Only line numbers and paths differed. `tools/dev/split_proof.py` compares the objects, built unoptimized, symbol by symbol.
 
-**Lesson.** A gate that names the file it reads loses coverage silently when the code moves. When code moves, list every script that reads it before moving, and diff their whole output after.
+That output comparison had a hole, and item 3 went through it. In this container four of those tools stop at a missing game-derived input before they read any source: idcollide (`_work/wincensus.json`), id_collisions and art_coverage (the extracted corpus), and lookup.py (the game's Plugins folder). Identical output from them proves nothing. So their source-reading code was run by itself, each tree with its own version of the tool, on `0db68df` (before this pass's splits) and on `86a07fe` (after):
+- idcollide's 14 lists, id_collisions' 52 discovered lists, art_coverage's 2 lists and check_marker_fit's 8 dock rows are identical.
+- lookup.py finds the same source lines, plus one: it now reads every UiSpike* file, including UiSpike.h. One comment line changed owner in its report: ScaleRound's comment, now in UiSpikeInternal.h, is attributed to the `LiveTuneIniPath` prototype above it, because lookup's heuristic picks the nearest declaration above a line.
+
+**Lesson.** A gate that names the file it reads loses coverage silently when the code moves. When code moves, list every script that reads it before moving, and diff their whole output after. Then check that each one actually reached the code: a tool that stops at a missing input prints the same thing before and after.
