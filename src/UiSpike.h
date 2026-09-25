@@ -203,7 +203,6 @@ private:
 
 	const Settings& settings;
 	bool armed = false;
-	bool moveProbeLogged = false;
 	bool visibilityProbeOk = false;
 	bool visibilityProbeLogged = false;
 	bool continuous = false;      // incremental sweeps active (post initial scale)
@@ -268,11 +267,6 @@ private:
 	int32_t regionChildCountSeen = -1;
 	int regionStableTicks = 0;
 	bool regionActive = false;
-
-	// Per-dialog "docked this appearance" latches (indexed like the dock
-	// table in UiSpike.cpp); cleared when the dialog closes so a reopened
-	// dialog is re-scaled and re-docked.
-	bool dialogDocked[8] = {};
 
 	// Menu-container baseline (ptr -> id): direct children of 0xAA32BCE6
 	// present at capture time = the persistent fold-out machinery, never
