@@ -351,12 +351,19 @@ Write-Output "  copied      : $copied file(s)"
 # -Tier is EXPLICIT, not left to the converter's fallback. The bundle no
 # longer ships an ini, so there is no ScaleFactor for it to read, and an
 # unstated default is the kind of thing that is discovered a release later.
-# 2x is chosen because it is the common case; it only decides which bytes
-# the live files hold BEFORE the first launch. The DLL re-arms from the
-# player's actual resolution on that launch, so a 3x user is never served
-# 2x art - they are served it for the part of boot that precedes our own
-# arming pass, which is the same window the rename layout had.
-& (Join-Path $proj "_tests\Convert-ToPayloadLayout.ps1") -Tree $plugOut -Tier "2x"
+# It only decides which bytes the live files hold BEFORE the first launch:
+# the bundle ships no STATE file, so ArmOne has no row for any package and
+# copies the chosen payload over every live .dat on that launch (an sc4pac
+# update misses the stamp the same way).
+#
+# "off", not "2x" (audit A3, 2026-09-25). Seeded at 2x, 13 live files were
+# byte-identical to their .2x.uipay: 27.6 of the 123.7 MB zip was a second
+# copy of bytes the DLL overwrites anyway. The .off stubs are one-entry DBPFs
+# (25 of them, 4.6 KB in all), valid for sc4pac's DBPF parse. It is also the
+# safer wrong answer: when the DLL does not load, the install is stock-looking
+# (inert) instead of 2x art inside 1x windows - ArmOne's own rule, "inert is
+# the only safe wrong answer".
+& (Join-Path $proj "_tests\Convert-ToPayloadLayout.ps1") -Tree $plugOut -Tier "off"
 
 # ---- LAYOUT MIXTURE TRIPWIRE (v4.5.0) ---------------------------------------
 # The bundle must carry ONE arming layout, never both. This is a no-op under

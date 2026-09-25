@@ -1,8 +1,12 @@
-"""Which files in the release zip are byte-identical copies of each other (CRC32 + size)?"""
+"""Which files in the release zip are byte-identical copies of each other (CRC32 + size)?
+
+    python zip_dups.py [path\to\SC4UIScale-vX.Y.Z.zip]
+"""
 import collections
+import sys
 import zipfile
 
-ZIP = r"C:\dev\SC4UIScale\dist\SC4UIScale-v4.10.2.zip"
+ZIP = sys.argv[1] if len(sys.argv) > 1 else r"C:\dev\SC4UIScale\dist\SC4UIScale-v4.10.2.zip"
 z = zipfile.ZipFile(ZIP)
 groups = collections.defaultdict(list)
 for i in z.infolist():

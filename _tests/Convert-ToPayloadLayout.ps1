@@ -28,9 +28,11 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Tree,
-    # Which tier to seed the live files with. The DLL re-arms from its own
-    # fingerprint on the next boot regardless; seeding just means the tree is
-    # coherent BEFORE anything launches, so the gates can read it.
+    # Which payload to seed the live files with: a tier (15x/2x/3x/4x), or
+    # "off" for the inert stub (Build-Dist: the bundle ships inert). The DLL
+    # re-arms from its own fingerprint on the next boot regardless; seeding
+    # just means the tree is coherent BEFORE anything launches, so the gates
+    # can read it.
     [string]$Tier = '',
     [switch]$WhatIf
 )
