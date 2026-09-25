@@ -304,14 +304,19 @@ struct Settings
 	                                  // measured): cGZWin::SetFlag fires only on
 	                                  // a 0->1 transition and HUD windows are
 	                                  // BORN visible, so mode 2 never sees them
-	int  spikeEarlyDock = 1;          // v2.41.17 task #89: scale the dock from
+	int  spikeEarlyDock = 2;          // v2.41.17 task #89: scale the dock from
 	                                  // inside the cGZWin::SetFlag detour once
 	                                  // its subtree has STOPPED CHANGING, so it
 	                                  // is never painted at 1x.
 	                                  //   0 = off
 	                                  //   1 = LOG ONLY - report exactly when it
-	                                  //       WOULD scale (SHIPPING DEFAULT)
-	                                  //   2 = actually scale
+	                                  //       WOULD scale
+	                                  //   2 = actually scale (SHIPPING DEFAULT
+	                                  //       since v4.10.3: #89 closed at
+	                                  //       v2.41.19 tested at 2, but the
+	                                  //       default stayed 1, so every public
+	                                  //       build painted the dock 1x ~1 s on
+	                                  //       city open - audit C1, 2026-09-25)
 	                                  //
 	                                  // WHY THIS SITE, when two others failed:
 	                                  // the message queue is dead (the game does

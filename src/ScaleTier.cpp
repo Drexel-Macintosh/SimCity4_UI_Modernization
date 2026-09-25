@@ -1741,71 +1741,6 @@ namespace
 		return moved;
 	}
 
-	// One-time migration of a legacy (pre-multi-package) install: the
-	// original 2x package shipped UNTAGGED file names. Rename its dats to
-	// their -2x names (live or gated form) and derive the FontStyle-2x.ini
-	// package source from the legacy font file. Idempotent no-op afterward.
-	void MigrateLegacyUntagged2x(const wchar_t* dir)
-	{
-		// SelectiveArt REMOVED (v4.0.3): an untagged z_SC4UIScale_SelectiveArt
-		// .dat[.x1-disabled] is no longer a legacy artifact to migrate AWAY
-		// from - it is SyncDatStable's normal, current, content-swapped
-		// state (see its comment above). This function running on it would
-		// rename the stable file to -2x.dat every single boot, fighting
-		// SyncDatStable's own migration forever (each undoes the other's
-		// idempotence check). SyncDatStable owns SelectiveArt's migration
-		// now, including the ACTUALLY relevant case (a bare v4.0.0-4.0.2
-		// active-tier file), which this ancient pre-multi-package check
-		// never covered anyway.
-		const wchar_t* bases[] = {
-			L"z_SC4UIScale_DialogStatic",
-		};
-		for (int i = 0; i < 1; i++)
-		{
-			wchar_t legacy[MAX_PATH];
-			wchar_t tagged[MAX_PATH];
-			// live form
-			swprintf_s(legacy, L"%s%s.dat", dir, bases[i]);
-			swprintf_s(tagged, L"%s%s-2x.dat", dir, bases[i]);
-			if (FileExists(legacy) && !FileExists(tagged))
-			{
-				MoveFileExW(legacy, tagged, 0);
-				Logger::Get().WriteLine(
-					LogLevel::Info, "ScaleTier: migrated %ls.dat -> -2x tag.", bases[i]);
-			}
-			// gated form
-			swprintf_s(legacy, L"%s%s.dat%s", dir, bases[i], kDisabledSuffix);
-			swprintf_s(tagged, L"%s%s-2x.dat%s", dir, bases[i], kDisabledSuffix);
-			if (FileExists(legacy) && !FileExists(tagged))
-			{
-				MoveFileExW(legacy, tagged, 0);
-				Logger::Get().WriteLine(
-					LogLevel::Info, "ScaleTier: migrated %ls.dat (gated) -> -2x tag.", bases[i]);
-			}
-		}
-
-		// Font: the live FontStyle.ini (or its stashed form) IS the 2x
-		// table on a legacy install - copy it to the -2x package source if
-		// that source doesn't exist yet. The live file itself is left for
-		// SyncFont to manage.
-		wchar_t src2x[MAX_PATH];
-		swprintf_s(src2x, L"%sFontStyle-2x.ini", dir);
-		if (!FileExists(src2x))
-		{
-			wchar_t legacyFont[MAX_PATH];
-			swprintf_s(legacyFont, L"%sFontStyle.ini", dir);
-			if (!FileExists(legacyFont))
-			{
-				swprintf_s(legacyFont, L"%sFontStyle.ini%s", dir, kDisabledSuffix);
-			}
-			if (FileExists(legacyFont) && CopyFileW(legacyFont, src2x, TRUE))
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info, "ScaleTier: derived FontStyle-2x.ini package source.");
-			}
-		}
-	}
-
 	// The game's install Plugins folder (<install>\Plugins\), derived from
 	// the running exe path (<install>\Apps\SimCity 4.exe). Empty string on
 	// any parse failure. This is the folder the game ACTUALLY probes for
@@ -5135,9 +5070,13 @@ namespace ScaleTier
 		// Select exactly the chosen factor's package: gate every known
 		// package's dats (active only for the match), and install the
 		// matching font source as the live FontStyle.ini (or remove it at
-		// stock). Untagged legacy 2x names are migrated to -2x tags first
-		// so old installs keep working.
-		MigrateLegacyUntagged2x(docPlugins);
+		// stock).
+		// MigrateLegacyUntagged2x was REMOVED here (audit A2, 2026-09-25).
+		// Since v4.5.0 the untagged z_SC4UIScale_DialogStatic.dat IS the live
+		// stable-name file, so that pre-multi-package migration renamed it to
+		// -2x on EVERY boot and MigrateRenamesToPayloads copied it straight
+		// back - two 2.7 MB rewrites and a false "one-time migration" log line
+		// per launch. v4.0.3 removed SelectiveArt from it for the same fight.
 
 		// Resolve the third-party dependencies ONCE per boot (one directory
 		// walk each, not one per tier). A package whose owning mod is gone -

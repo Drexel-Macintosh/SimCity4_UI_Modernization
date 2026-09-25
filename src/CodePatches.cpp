@@ -1580,6 +1580,21 @@ namespace CodePatches
 			// The latter systematically displaces the whole image half a dest
 			// pixel up and left. Uniform across every buffer of every item, so
 			// no two tiles move relative to each other.
+			// The source column depends only on x, so it is computed once per
+			// column instead of once per pixel (audit A6: ~55M integer
+			// divisions per region zoom step). Same formula, same clamp, so
+			// the output is bit-identical.
+			int32_t* colSx = static_cast<int32_t*>(malloc(static_cast<size_t>(nw) * sizeof(int32_t)));
+			if (colSx)
+			{
+				for (int32_t x = 0; x < nw; x++)
+				{
+					int32_t sx = ((2 * (x - dx) + 1) * w) / (2 * nw);
+					if (sx < 0) { sx = 0; }
+					if (sx > w - 1) { sx = w - 1; }
+					colSx[x] = sx;
+				}
+			}
 			for (int32_t y = 0; y < nh; y++)
 			{
 				int32_t sy = ((2 * (y - dy) + 1) * h) / (2 * nh);
@@ -1588,6 +1603,11 @@ namespace CodePatches
 				const uint32_t* srow = reinterpret_cast<const uint32_t*>(
 					saved + static_cast<size_t>(sy) * w * 4);
 				uint32_t* drow = reinterpret_cast<uint32_t*>(nb + static_cast<size_t>(y) * np);
+				if (colSx)
+				{
+					for (int32_t x = 0; x < nw; x++) { drow[x] = srow[colSx[x]]; }
+					continue;
+				}
 				for (int32_t x = 0; x < nw; x++)
 				{
 					int32_t sx = ((2 * (x - dx) + 1) * w) / (2 * nw);
@@ -1596,6 +1616,7 @@ namespace CodePatches
 					drow[x] = srow[sx];
 				}
 			}
+			free(colSx);
 			free(saved);
 
 			if (!gRegionTileLoggedFirst)
@@ -5175,12 +5196,17 @@ namespace CodePatches
 			return gCsiDrawOrig(self, edx, a1);
 		}
 
-		void InstallCsiDrawProbe()
+		// `always` = MissionBubbleFx mode 3 (the live-probe mode). At the shipped
+		// mode 2 the hook only served the dev knob CsiKill, yet it sat on a draw
+		// that fires 23-98 times a second, so it now installs only when that
+		// knob is set (audit A11, 2026-09-25).
+		void InstallCsiDrawProbe(bool always)
 		{
 			wchar_t ini[MAX_PATH] = {};
 			ScaleTier::GetOurFilePathW(L"SC4UIScale.ini", ini, MAX_PATH);
 			gCsiKill = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"CsiKill", 0, ini));
+			if (!always && gCsiKill == 0) { return; }
 			const uintptr_t base =
 				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 			void* t = reinterpret_cast<void*>(base - kImageBase + kCsiDrawVa);
@@ -5739,28 +5765,33 @@ namespace CodePatches
 			{
 				float* p = reinterpret_cast<float*>(
 					kCsiQuad[k].va + base - kImageBase);
+				float value = kCsiQuad[k].stock * factor;
 				if (kCsiQuad[k].va == 0x0046CB09 && gCsiCountPlate > 0.0f)
 				{
-					*p = kCsiQuad[k].stock * gCsiCountPlate;
+					value = kCsiQuad[k].stock * gCsiCountPlate;
 					Logger::Get().WriteLine(LogLevel::Info,
 						"CodePatches: CSI count plate OVERRIDE x%.2f -> %.1f "
 						"px (tier would give %.1f). Centred quad: the plate "
 						"grows UP and down, so a smaller value pulls the digit "
 						"clear of the hat and a larger one clips it.",
-						gCsiCountPlate, kCsiQuad[k].stock * gCsiCountPlate,
-						kCsiQuad[k].stock * factor);
-					continue;
+						gCsiCountPlate, value, kCsiQuad[k].stock * factor);
 				}
+				// These are .text immediates: the page must stay EXECUTABLE while
+				// it is writable, and the instruction cache is flushed after.
+				// (2026-09-25 audit B6: the override above used to write with no
+				// VirtualProtect at all - an access violation at boot for anyone
+				// setting CsiCountPlate - and this path used PAGE_READWRITE.)
 				DWORD old = 0;
-				if (!VirtualProtect(p, sizeof(float), PAGE_READWRITE, &old))
+				if (!VirtualProtect(p, sizeof(float), PAGE_EXECUTE_READWRITE, &old))
 				{
 					Logger::Get().WriteLine(LogLevel::Info,
 						"CodePatches: CSI VirtualProtect failed at 0x%08X.",
 						static_cast<unsigned>(kCsiQuad[k].va));
 					return;
 				}
-				*p = kCsiQuad[k].stock * factor;
+				*p = value;
 				VirtualProtect(p, sizeof(float), old, &old);
+				FlushInstructionCache(GetCurrentProcess(), p, sizeof(float));
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: CSI indicators x%.2f - icon+hitbox %.1f -> %.1f px "
@@ -5853,7 +5884,9 @@ namespace CodePatches
 				return;
 			}
 			DWORD old = 0;
-			if (!VirtualProtect(p, sizeof(uint32_t), PAGE_READWRITE, &old))
+			// Executable-safe write (audit B6): the page stays executable while
+			// writable, then the instruction cache is flushed.
+			if (!VirtualProtect(p, sizeof(uint32_t), PAGE_EXECUTE_READWRITE, &old))
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: MYSIMTEX VirtualProtect failed at 0x%08X - "
@@ -5862,6 +5895,7 @@ namespace CodePatches
 			}
 			*p = side;
 			VirtualProtect(p, sizeof(uint32_t), old, &old);
+			FlushInstructionCache(GetCurrentProcess(), p, sizeof(uint32_t));
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: MYSIMTEX x%.2f - My Sim marker icon UV divisor "
 				"64 -> %u to match the staged %dx%d portrait's square texture "
@@ -5965,7 +5999,9 @@ namespace CodePatches
 				// convention across sweep, upscaler and builders (law #89).
 				const double want = cur * mult;
 				DWORD old = 0;
-				if (!VirtualProtect(p, width, PAGE_READWRITE, &old))
+				// CSIAIM targets may be code OR data: keep the page executable
+				// while writable and flush afterwards (audit B6).
+				if (!VirtualProtect(p, width, PAGE_EXECUTE_READWRITE, &old))
 				{
 					Logger::Get().WriteLine(LogLevel::Info,
 						"CodePatches: CSIAIM VirtualProtect failed at 0x%08X.",
@@ -5985,6 +6021,7 @@ namespace CodePatches
 					static_cast<unsigned char>(want + 0.5); break;
 				}
 				VirtualProtect(p, width, old, &old);
+				FlushInstructionCache(GetCurrentProcess(), p, width);
 				double post = 0.0;
 				switch (type)
 				{
@@ -8924,6 +8961,13 @@ namespace CodePatches
 				// routine lines share the cap (the RATEANCHOR idiom).
 				const bool pristine = (*flag == 0 && *scale == 1.0f);
 				const bool arm = (gBubbleScale > 1.01f) && pristine;
+				// A recycled effect instance still carrying OUR earlier write
+				// (flag untouched, scale == the tier factor) is not a foreign
+				// state: it shares the routine cap instead of the uncapped
+				// refusal channel, which logged it on every respawn (106 lines
+				// in 21 s on 2026-09-25; audit A5). Foreign scales stay uncapped.
+				const bool ours = !pristine && *flag == 0
+					&& gBubbleScale > 1.01f && *scale == gBubbleScale;
 				// THE CAP THAT BLINDED THE CLICK TEST (2026-08-17). This
 				// read `gBubbleLogs < 12`, and city load spawns EXACTLY 12
 				// pristine effects - so the budget was spent before the player
@@ -8940,7 +8984,7 @@ namespace CodePatches
 				// it is reporting nothing at all.
 				const bool clickEvent =
 					(strncmp(name, "mission_selection", 17) == 0);
-				if (!pristine || clickEvent || gBubbleLogs < 40)
+				if ((!pristine && !ours) || clickEvent || gBubbleLogs < 40)
 				{
 					if (!clickEvent) { ++gBubbleLogs; }
 					Logger::Get().WriteLine(LogLevel::Info,
@@ -8948,7 +8992,8 @@ namespace CodePatches
 						"flag=%u) %s.", name, *out,
 						static_cast<double>(*scale), *flag,
 						arm ? "-> scaled" : (pristine ? "log-only"
-							: "NOT PRISTINE, skipped"));
+							: (ours ? "already ours, skipped"
+								: "NOT PRISTINE, skipped")));
 				}
 				if (!arm) { break; }
 				*scale = gBubbleScale;
@@ -9563,7 +9608,7 @@ namespace CodePatches
 		// names an address, and it must be aimable without touching any
 		// other knob (that is the whole point - one launch, many candidates).
 		ApplyCsiAimList(factor > 1.01f ? factor : 1.5f);
-		if (mode >= 2) { InstallCsiDrawProbe(); }
+		if (mode >= 2) { InstallCsiDrawProbe(mode >= 3); }
 		// ARM THE SCALE BEFORE ANY HOOK THAT CONSUMES IT. This assignment
 		// used to sit AFTER the CreateEffectByName prologue check below, so
 		// an unrelated byte mismatch at 0x5939B0 would have left

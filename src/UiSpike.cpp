@@ -9489,6 +9489,9 @@ void UiSpike::TickCheck(unsigned int nowTickMs)
 		// scale before the player perceives a 1x flash. Crash-killer liveness
 		// re-checks in ScalePanelsUnder/ScaleMenuFlyouts guard menu churn.
 		++tickSerial;
+		// Timed (audit A1): the SELPERF table at shutdown reports the per-tick
+		// cost, which decides whether batching the tick's id lookups is worth it.
+		PerfProbe::Scope perf_("tick.incr");
 		IncrementalPass();
 	}
 
@@ -15129,7 +15132,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	// "mayor mode" actually means. Verified across all THREE states - the two
 	// that the enabled flag conflated (pre-founding god, founded god) plus
 	// mayor: vis=1 only in mayor mode.
-	cIGZWin* mayorBtn1 = pView->GetChildWindowFromIDRecursive(0x8991EE08);
 	cIGZWin* mayorHud = pView->GetChildWindowFromIDRecursive(0xE9889775);
 	const bool mayorModeActive = (mayorHud != nullptr && mayorHud->IsVisible());
 
@@ -15346,7 +15348,9 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					+ SubRingDXEff();
 				const int ringAbsY = st + gSubRingBltY + gSubRingAutoY
 					+ SubRingDYEff();
-				Logger::Get().WriteLine(LogLevel::Info,
+				// Debug, not Info (audit A5): up to 40 lines per submenu open
+				// was 14% of a play log at the shipped LogLevel=1 budget.
+				Logger::Get().WriteLine(LogLevel::Debug,
 					"UiSpike: SUBGEO2 CONT(%d,%d %dx%d)  RINGr(%d,%d)  "
 					"RINGa(%d,%d)  AUTO(%d,%d)  nudge(%d,%d)  "
 					"STRIP(%d,%d %dx%d)",
