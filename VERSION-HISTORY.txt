@@ -2,7 +2,7 @@ SC4UIScale 4.10.3 (not released) - the efficiency and simplification audit
 ================================================================================
 
 A build of the 2026-09-25 audit (research\AUDIT-2026-09-25-EFFICIENCY.md): less
-work per tick and at boot, a smaller release zip, and 2,088 fewer lines of
+work per tick and at boot, a smaller release zip, and 1,743 fewer lines of
 source. NOT RELEASED. The first part was checked in the running game; the rest
 is built and gated but has not run in the game or on Windows yet. The audit's
 STATUS section lists every item with its commit, its proof and the checks
@@ -31,6 +31,8 @@ Built and gated, not yet run in the game:
 - At shutdown with the shipped settings, the #104 hang fix runs without the
   diagnostics meant for probe runs.
 - Every hook checks the bytes it replaces, or logs them so they can be pinned.
+- The game's load address is read once, not separately at each of the 71
+  places that use it.
 - The release zip seeds its live files with the inert .off stub instead of a
   second copy of the 2x payload, which was 27.6 of the 123.7 MB v4.10.2 zip.
 - Removed: ScaleRemap, flags nothing ever set, and six retired paths
@@ -38,13 +40,18 @@ Built and gated, not yet run in the game:
   EdgeProbeTick, the region-camera probes).
 
 Also in the repository, not the bundle:
-- UiSpike.cpp is 18,167 lines (22,134 at the audit). The selector and the
-  region screen are in their own files, and 447 lines of history comments
+- UiSpike.cpp is 7,446 lines (22,134 at the audit). The selector, the region
+  screen, the window-id tables, the minimap and the flyouts are in their own
+  files; tools\dev\split_proof.py showed the minimap and flyout splits moved
+  code without changing it, symbol by symbol. 543 lines of history comments
   moved word for word to _tests\REGRESSION.md.
-- _packaging\PackageFiles.psd1 is the one package list; Deploy-OnGameClose.ps1
-  and Build-Dist.ps1 both copy from it.
+- _packaging\PackageFiles.psd1 is the one package list. Deploy-OnGameClose.ps1
+  and Build-Dist.ps1 copy from it. Test-DatIntegrity.ps1 reads it too, so it
+  now also checks 5 deployed files it had missed.
 - New offline checks in _tests\Run-OfflineGates.ps1: the batched-lookup model
-  test, the IniCache parity test and Test-PackageFiles.py.
+  test, the IniCache parity test, Test-PackageFiles.py and
+  scale_rules.py --selftest. The gates that read the UiSpike source read all
+  of the UiSpike*.cpp files.
 
 SC4UIScale 4.10.2 (2026-09-25) - submenu rings stay on the button that opened them
 ================================================================================

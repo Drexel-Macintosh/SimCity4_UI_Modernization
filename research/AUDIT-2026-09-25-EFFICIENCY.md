@@ -20,9 +20,9 @@ The evidence scripts are in `tools/research/audit-2026-09-25/`:
 - `zip_dups.py`: finds duplicate payloads in a bundle.
 - `enumdisp.ps1`: display-mode enumeration outside the game. Run it under 32-bit PowerShell to match the game.
 
-## STATUS (updated 2026-09-25, after the ordered list) - read this first when resuming
+## STATUS (updated 2026-09-25, after the follow-ups) - read this first when resuming
 
-**v4.10.3 build, not released. The ordered list is done** (items 1-9, 23 commits, `05343c7` to `d6358db`). The first table was checked in the running game. The second has had a clang-cl build and link, the offline gates and the proof in its row, but has not run in the game or on Windows yet: see "Checks still to run".
+**v4.10.3 build, not released. The ordered list is done** (items 1-9, 23 commits, `05343c7` to `d6358db`), **and so are the follow-ups it left** (10 commits, `6a163f6` to `ffb9383`). The first table was checked in the running game. The second has had a clang-cl build and link, the offline gates and the proof in its row, but has not run in the game or on Windows yet: see "Checks still to run".
 
 **Checked in the game** (session of 12:29-12:43):
 
@@ -55,7 +55,7 @@ The evidence scripts are in `tools/research/audit-2026-09-25/`:
 | A9: SpinProbe fix-only mode skips the diagnostics | `1dc0af6` | build |
 | A4: the display-mode list is cached on disk | `24bc5c9` | save/load round trip, key mismatch, truncation and missing file, offline |
 | B5: `HookVerified` for all 27 hooks; CSIDRAW's prologue pinned | `08a01e3` | gates; Test-PatchSiteBytes checks the new pin |
-| B6: every write into the game image through `WithCodeWritable` / `WithDataWritable` | `f897536` | the only `VirtualProtect` calls left are the two in the helper |
+| B6: every write into the game image from CodePatches.cpp goes through `WithCodeWritable` / `WithDataWritable` | `f897536` | the only `VirtualProtect` calls left in CodePatches.cpp are the two in the helper. (This row said "every write into the game image": the UiSpike files' vtable-slot writes still call `VirtualProtect` themselves, see Follow-ups) |
 | B8: the ini is parsed once (IniCache); SC4GraphicsOptions.ini in one reader | `d2e04b2` | `run_inicache_parity.py` under Wine: 271,638 comparisons, 0 mismatches |
 | B9: duplicated tables and loops; one `RoundHalfUp`; one strip-geometry sum | `0790456` `88a3fae` | per-function diffs; every float in [0, 2^20) for the rounding; 164M cases for the geometry |
 | B11: the selector and the region screen split out of UiSpike.cpp | `1d231a9` `661de3c` | pure moves: the function sets match the old object's |
@@ -63,12 +63,19 @@ The evidence scripts are in `tools/research/audit-2026-09-25/`:
 | B12: one package list, `_packaging/PackageFiles.psd1`, for Deploy and Build-Dist | `2dd88d0` | the old scripts' file sets reproduced exactly (80 deploy rows, 77 bundle files); the new code run under pwsh on a fake tree in 3 scenarios; new gate Test-PackageFiles.py |
 | A8: folder discovery lists each folder once, not 8 times | `d6358db` | under Wine: the Test-FolderDiscovery trees give old = new, and a 436-folder differential has 0 mismatches |
 | A10: no stray `Plugins\010-SC4UIScale`; the boot TOTAL counts the walk once | `d6358db` | per-function diff |
+| B7: the exe's base address is read once, by `ExeBase()` (`src/ExeBase.h`), at the 71 sites that called `GetModuleHandleW(nullptr)` (63 in CodePatches.cpp, 7 in UiSpike, 1 in ScaleTier.cpp) | `6a163f6` | per-function diff against the parent build: every function that called it changed and no other did, apart from two EH funclets that moved with their parents |
+| Test-DatIntegrity takes its deployed==built pairs from `PackageFiles.psd1`, no third list. That adds 5 deployed files it never hashed: ItemIcons and ItemIconsSub at 1.5x and 3x, and CamGraphLabels | `eff0cbf` | the derivation, run under pwsh, reproduces all 71 old pairs. Test-PackageFiles.py checks that the suite reads the list. In the suite, a count row for a package the list does not deploy is red (negative control, run under pwsh). The suite itself needs a deployed tree |
+| `scale_rules.py --selftest`: its RoundHalfUp tripwire had been red since `88a3fae` without anyone seeing it; it now reads `RoundHalfUp.h`, and Run-OfflineGates runs the selftest | `0db68df` `f189523` | 146,040 checks, 0 failed; a negative control fails. REGRESSION.md, "three gates went blind when code moved" |
+| B11 second pass: the window-id tables to `UiSpikeIds.h`, the minimap to `UiSpikeMinimap.cpp`, and the flyouts (ScaleGodFlyouts, its draw hooks, the sub-flyouts) to `UiSpikeFlyouts.cpp` | `6c5c215` `005058e` `86a07fe` | id tables: `UiSpike.obj` byte-identical. Minimap and flyouts: `tools/dev/split_proof.py` on /Od /Gw builds, 1,988 of 1,988 and 1,888 of 1,888 symbols byte-identical, every relocation to the same target; its two negative controls fail. Every script that reads the source gives the same full output apart from line numbers and paths. Four of them stop at a missing game-derived input here, so their source-reading code was run by itself on both trees: the same lists, dock rows and source lines (REGRESSION.md, 2026-09-25) |
+| The tools that read the UiSpike source read every `src/UiSpike*` file: Test-ProbeDerefGuards (the first split had dropped two files from its default scan), gate_patch_families CHECK C, Test-ShippingIniKeys, idcollide, and coverage_rederive, whose section 5 had lost 94 of the 354 ids it counts | `005058e` `86a07fe` `ffb9383` | positive controls planted in a split file are caught; the per-file counts add up to the totals before each split; coverage_rederive counts 322 of the 354 again (the other 32 went with deleted code and moved comments) |
+| B10 second pass: 7 more blocks (96 lines), `[CC-24]` to `[CC-30]` | `3fb30d6` | `UiSpike.obj` and `UiSpikeFlyouts.obj` byte-identical |
+| The audit's four dead links (ScaleRemap.cpp after B4, the A4 cache file) | `de03267` | `Test-NoDeadLinks.py --repo` is back to the 2 it had at `b3ebfdd`, see Follow-ups |
 
-- **Size:** `src` went from 44,027 lines to 41,939 since `b3ebfdd`. UiSpike.cpp went from 22,134 to 18,167, with the selector (1,929 lines) and the region screen (586) in their own files.
-- **Tools:** `_tests/Run-OfflineGates.ps1` now also runs `run_idwalk_test.py`, `run_inicache_parity.py` and `Test-PackageFiles.py`. `tools/dev/find_cxx.py` finds a compiler for the C++ tests (MSVC through vswhere on Windows; MinGW + Wine elsewhere).
+- **Size:** `src` went from 44,027 lines to 42,284 since `b3ebfdd` (41,939 after the ordered list; the three B11 splits added 440 lines of includes, shared declarations and pointer comments). UiSpike.cpp went from 22,134 lines to 7,446. Split out of it: the flyouts (`UiSpikeFlyouts.cpp`, 8,493 lines), the selector (1,929), the minimap (1,458), the region screen (586) and the id tables (`UiSpikeIds.h`, 983). `UiSpikeInternal.h` (226) holds what they share, and says for each file what the compiler asked for. B10 moved 543 lines of comments in two passes (447 + 96).
+- **Tools:** `_tests/Run-OfflineGates.ps1` now also runs `run_idwalk_test.py`, `run_inicache_parity.py`, `Test-PackageFiles.py` and `scale_rules.py --selftest`. `tools/dev/find_cxx.py` finds a compiler for the C++ tests (MSVC through vswhere on Windows; MinGW + Wine elsewhere). `tools/dev/split_proof.py` checks that a split moved code without changing it; its docstring has the recipe.
 
 **Checks still to run** (they need Windows and the game, which this container does not have):
-1. Build with MSVC. Run `_tests/Run-OfflineGates.ps1`: `run_inicache_parity.py` must exit 0 on Windows (exit 2 means "not proven here"). Run `_tests/Test-FolderDiscovery.ps1` against a built bundle.
+1. Build with MSVC. The split files have only been compiled by clang-cl. `UiSpikeMinimap.cpp` must keep its UTF-8 BOM, like UiSpike.cpp: one log string has an em dash, and without a BOM MSVC reads the file in the ANSI code page, which changes that string's bytes (clang-cl cannot see this). Run `_tests/Run-OfflineGates.ps1`: `run_inicache_parity.py` must exit 0 on Windows (exit 2 means "not proven here"). Run `_tests/Test-FolderDiscovery.ps1` against a built bundle.
 2. One play session at LogLevel=3, then read the log:
    - `IDWALK ... 0 disagreed`, and `tick.incr` against 0.68 ms;
    - the `boot phases` line: `discover` (15-19 ms before A8), and a TOTAL that counts the walk once;
@@ -76,16 +83,20 @@ The evidence scripts are in `tools/research/audit-2026-09-25/`:
    - `prologue NOT PINNED ... live bytes` for REGIONTILE, REGIONZOOM, ARTFETCH, BALLOONKIND and BALLOONSPRITE, and the live bytes for VIEWOBJ, VIEWLIST and PICKPROBE: pin them from this log (B5);
    - no `VirtualProtect refused` line, and every patch family applies as before;
    - at shutdown with SpinProbe=0: the armed line says fix-only, with no FINAL tally, DumpLoopFields or StackScan;
-   - panels, flyouts, sub-flyouts, dialogs, the selector and the region screen look as before.
+   - panels, flyouts, sub-flyouts, dialogs, the selector, the region screen and both minimaps look as before (the flyouts and the minimap now come from their own files).
 3. Deploy with the new `Deploy-OnGameClose.ps1`, then run Test-DatIntegrity.
-4. At the release: Build-Dist.ps1, then `zip_dups.py` on the zip (expect no large duplicate payload) and Test-Sc4pacInstall. After a boot of an sc4pac install, there must be no empty `Plugins\010-SC4UIScale`.
+4. With the game-derived inputs present (the extracted `.UI` corpus, `tools/uimap/_work/wincensus.json`, the game's Plugins folder), run the tools that stop without them here: `coverage_rederive.py`, `idcollide.py`, `id_collisions.py`, `art_coverage.py`, `lookup.py` and `check_marker_fit.py`. Expect coverage_rederive's section-5 counts to fall below its floors: B1's DockDialogs removal (`7f53d8a`) un-named the root ids of five stock dialogs that DialogStatic scales. Re-measure the floors from that run (REGRESSION.md, 2026-09-25, item 3).
+5. At the release: Build-Dist.ps1, then `zip_dups.py` on the zip (expect no large duplicate payload) and Test-Sc4pacInstall. After a boot of an sc4pac install, there must be no empty `Plugins\010-SC4UIScale`.
 
 **Follow-ups found on the way** (not started):
-- **B10** was a first pass: notes about deleted code and refuted theories. Most of the remaining version-cited comments explain the current code; move more of them only function by function.
-- **B11:** the next splits are the ID tables, the minimap, the flyout hooks and the sub-flyouts. The knots are ScaleGodFlyouts, ScalePanelsUnder and IncrementalPass.
-- **B7** was in neither list: 63 `GetModuleHandleW(nullptr)` calls remain in CodePatches.cpp (76 at the audit).
+- **B10:** two passes are done. The second read the seven functions with the most version-cited comment text; almost all of it explains the current code and stays. 28 comments cite source lines by number (`:NNNN`, not counting SDK headers and log excerpts); after the splits 15 of them point past the end of their file, and the rest are unchecked. Name the function instead.
+- **B11:** every split the audit listed is done; ScaleGodFlyouts, one of its three knots, moved whole into UiSpikeFlyouts.cpp. The other two, ScalePanelsUnder (1,870 lines) and IncrementalPass (1,232), stay in UiSpike.cpp. Shortening them means restructuring code, not moving it, so the byte-identical proof would not apply.
+- **B6, the rest:** the UiSpike files' 5 vtable-slot writes (1 in UiSpike.cpp, 4 in UiSpikeFlyouts.cpp) still call `VirtualProtect` themselves, outside `WithDataWritable`.
+- 8 packages that PackageFiles.psd1 deploys have no entry-count row in Test-DatIntegrity: NamIcons at 1.5x, 2x and 3x; ThirdPartyUI at 1.5x and 3x; WebButtonUI at 1.5x, 2x and 3x. Their counts need a measured build (Test-PackageFiles.py lists them).
+- `Test-NoDeadLinks.py --repo` still reports 2, both already there at `b3ebfdd`: REGRESSION.md names a capture CSV under _tests/captures and the saved v4.10.1 release notes under dist, and both folders are gitignored. Track the files, or say in the prose that they are local.
+- `86a07fe`'s message gets its seam arithmetic wrong (16 + 23 + 9 is not 46). `UiSpikeInternal.h` has the measured seam: UiSpike.cpp needs the 23 names of the flyout block, and the new file needs 9, of which 5 were new to the header.
+- lookup.py's report attributes ScaleRound's comment, now in `UiSpikeInternal.h`, to the `LiveTuneIniPath` prototype above it: its owner heuristic stops only at a closing brace.
 - `kCityDialogIds.designW` is read by no code (REGRESSION.md `[CC-23]`). Removing it rewrites every row of the table.
-- Test-DatIntegrity keeps its own per-package hash table, a third list beside PackageFiles.psd1.
 - Build-PublicRepo exports Deploy-OnGameClose.ps1 but not Convert-ToPayloadLayout.ps1, which Deploy calls.
 
 **Deliberately not planned:**
