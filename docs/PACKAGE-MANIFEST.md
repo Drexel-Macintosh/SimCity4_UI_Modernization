@@ -287,15 +287,11 @@ the stock script you are reading, a plugin has replaced it.
 
 ⛔ **The `-<tier>` names below are what the BUILDERS emit and what the deploy
 copies. They are not what an installed tree contains.** Both
-`_tests\Deploy-OnGameClose.ps1` and `_packaging\Build-Dist.ps1` still write the
-tier-tagged layout they always did, and both then call
-`_tests\Convert-ToPayloadLayout.ps1`, which turns whatever it finds into
-payloads plus one seeded live file per package. (One conversion, two callers,
-nothing to drift: Build-Dist derives most of its file list by regex-parsing
-Deploy's `Copy-Item` lines, but ~30 are invisible to that regex and are
-compensated by hardcoded blocks — converting the copy lines instead would have
-shipped payloads *and* tier-tagged live dats side by side, i.e. two live
-providers for every TGI, with an identical file count and nothing going red.)
+`_tests\Deploy-OnGameClose.ps1` and `_packaging\Build-Dist.ps1` copy the rows
+of `_packaging\PackageFiles.psd1`, which name the tier-tagged layout, and
+both then call `_tests\Convert-ToPayloadLayout.ps1`, which turns whatever it
+finds into payloads plus one seeded live file per package. One list, one
+conversion, two callers, nothing to drift.
 
 | File (as built / deployed) | Source in this project | Destination |
 |---|---|---|
@@ -349,9 +345,11 @@ with a `Plugins\` tree you copy straight in, plus `README.txt`,
 script ships from 4.7.0** - installing is copying two folders and two files,
 which the README states in five lines, and the script we used to ship was
 blamed for creating a file it had never touched.
-It derives its file list **by parsing `_tests\Deploy-OnGameClose.ps1`**
-rather than keeping a second copy of "what a working install contains": one
-manifest, one failure mode.
+It reads its file list from **`_packaging\PackageFiles.psd1`**, the same
+list `_tests\Deploy-OnGameClose.ps1` copies from, rather than keeping a second
+copy of "what a working install contains": one manifest, one failure mode.
+(Until audit B12, 2026-09-25, it regex-parsed Deploy's `Copy-Item` lines and
+re-listed the ~30 it could not see by hand.)
 
 ---
 

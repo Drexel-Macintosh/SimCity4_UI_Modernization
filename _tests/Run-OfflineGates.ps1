@@ -28,7 +28,9 @@ $py = @(
     '_tests\Test-ScaleDimParity.py', '_tests\Test-DisasterDrawRebuild.py',
     'tools\uimap\emu\emu_subplacetopmb_model.py', 'tools\uimap\crosscheck.py',
     # 2026-09-25 audit: the C++ block tests (find a compiler via tools\dev\find_cxx.py)
-    'tools\dev\idwalk\run_idwalk_test.py', 'tools\dev\inicache\run_inicache_parity.py'
+    'tools\dev\idwalk\run_idwalk_test.py', 'tools\dev\inicache\run_inicache_parity.py',
+    # audit B12: the one package list Deploy and Build-Dist both read
+    '_tests\Test-PackageFiles.py'
 )
 $ps = @('_tests\Test-ScaleTierDecide.ps1', '_tests\Test-SubRingLock.ps1',
         '_tests\Test-BornCorrectCoverage.ps1', '_tests\Test-ThirdPartyGates.ps1',

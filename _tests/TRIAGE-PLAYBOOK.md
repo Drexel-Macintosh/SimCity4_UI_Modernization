@@ -769,7 +769,8 @@ it relies on; and the **trap signature + revert** for each way it can go wrong.
 Then work it **one item per build** — after six missed fixes, a result that
 cannot be attributed is worth nothing (#162).
 
-**And a package is not finished until it is in BOTH `Deploy-OnGameClose.ps1` AND
+**And a package is not finished until it is in BOTH `_packaging\PackageFiles.psd1`
+(the list Deploy-OnGameClose and Build-Dist copy from) AND
 `Test-DatIntegrity.ps1`.** Three packages have rotted from exactly that omission,
 and every one of them looked green.
 

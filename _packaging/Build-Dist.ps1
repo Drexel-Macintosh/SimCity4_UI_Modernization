@@ -1,18 +1,15 @@
 # Build-Dist.ps1 - assemble a plug-and-play SC4UIScale bundle.
 #
-# WHY THIS PARSES Deploy-OnGameClose.ps1 INSTEAD OF LISTING FILES ITSELF:
-# a second hand-maintained copy of "what a working install contains" is a
-# slow-acting bug generator, and this project has already been bitten twice by
-# exactly that. Task #58: ThirdPartyUI was never in the deploy list, so the
-# live copy froze at an old build epoch and shipped dangling clone refs. Task
-# #116: ItemIcons and ItemIconsSub had the same omission for the whole life of
-# the script. Both looked green the entire time.
-#
-# So the deploy script is the ONE manifest. It is the thing that produces a
-# known-good install - the one the user actually tests against - and this
-# packager derives from it. Add a package there and it appears here for free;
-# forget to, and the bundle is wrong in the same way the install is, which is
-# at least a single failure instead of two that disagree.
+# THE FILE LIST IS _packaging\PackageFiles.psd1, the same list
+# _tests\Deploy-OnGameClose.ps1 copies from (audit B12, 2026-09-25). A second
+# hand-maintained copy of "what a working install contains" is a slow-acting
+# bug generator, and this project has been bitten by exactly that: task #58
+# (ThirdPartyUI was never in the deploy list) and task #116 (ItemIcons and
+# ItemIconsSub). Until B12 this script REGEX-PARSED Deploy's Copy-Item lines,
+# could not see the 30 written another way, and re-listed those by hand;
+# bundles shipped without SelectorUI and without CsiIcons through that gap.
+# One list read by both scripts removes the class: a package is in the
+# install and the bundle, or in neither.
 #
 # Usage:   .\_packaging\Build-Dist.ps1              (build into dist\)
 #          .\_packaging\Build-Dist.ps1 -IncludeUnbuildable
@@ -27,8 +24,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $proj = Split-Path -Parent $PSScriptRoot
-$deployScript = Join-Path $proj "_tests\Deploy-OnGameClose.ps1"
-if (-not (Test-Path $deployScript)) { throw "deploy manifest not found: $deployScript" }
+$listFile = Join-Path $proj "_packaging\PackageFiles.psd1"
+if (-not (Test-Path $listFile)) { throw "package list not found: $listFile" }
 
 # --- version comes from the code, never from a doc ---------------------------
 $verSrc = Get-Content (Join-Path $proj "src\SC4UIScaleDllDirector.cpp") -Raw
@@ -49,25 +46,15 @@ $zzzOut = Join-Path $plugOut "zzz-SC4UIScale"
 
 Write-Output "SC4UIScale v$version  ->  $bundle"
 
-# --- parse the deploy manifest ----------------------------------------------
-$lines = Get-Content $deployScript
-$rx = '^\s*Copy-Item\s+"\$proj\\([^"]+)"\s+"\$(plug|our|zzz)\\([^"]+)"'
-$items = @()
-foreach ($l in $lines) {
-    if ($l -match $rx) {
-        $items += [pscustomobject]@{
-            Src  = $Matches[1]
-            Dest = $Matches[2]      # "plug" or "zzz"
-            Name = $Matches[3]
-        }
-    }
+# --- the package list -------------------------------------------------------
+# Every row except DeployOnly (UncoveredIcons: rebuilt per install from the
+# player's own Plugins tree, so a shipped copy would be someone else's).
+$items = @(@((Import-PowerShellDataFile $listFile).Files) | Where-Object { -not $_.DeployOnly })
+if ($items.Count -lt 40) {
+    throw ("the package list gave only $($items.Count) bundle file(s) - refusing to " +
+           "ship a partial bundle (the floor is 40)")
 }
-if ($items.Count -lt 10) {
-    throw ("parsed only $($items.Count) Copy-Item entries from the deploy script - " +
-           "the manifest format changed and this packager is now blind. Fix the regex " +
-           "rather than shipping a partial bundle.")
-}
-Write-Output "  parsed $($items.Count) file(s) from the deploy manifest"
+Write-Output "  $($items.Count) file(s) from the package list"
 
 # --- assemble ----------------------------------------------------------------
 if (Test-Path $bundle) { Remove-Item $bundle -Recurse -Force }
@@ -79,130 +66,34 @@ $missing = @()
 $copied = 0
 foreach ($it in $items) {
     $src = Join-Path $proj $it.Src
-    if (-not (Test-Path $src)) { $missing += $it.Src; continue }
-    $dstDir = switch ($it.Dest) { "zzz" { $zzzOut } "our" { $ourOut } default { $plugOut } }
+    if (-not (Test-Path $src)) { $missing += $it; continue }
+    $dstDir = switch ($it.Dir) { "zzz" { $zzzOut } "our" { $ourOut } default { $plugOut } }
     Copy-Item $src (Join-Path $dstDir $it.Name) -Force
     $copied++
 }
 if ($missing.Count -gt 0) {
     Write-Output ""
-    Write-Output "FAIL: $($missing.Count) source file(s) named by the deploy manifest do not exist:"
-    $missing | ForEach-Object { Write-Output "    $_" }
+    Write-Output "FAIL: $($missing.Count) source file(s) named by the package list do not exist:"
+    $missing | ForEach-Object { Write-Output "    $($_.Src)" }
+    if (@($missing | Where-Object { $_.Carbon }).Count) {
+        Write-Output ("  ZCarbon: build all three tiers (_tests\Test-Builders.ps1 -Factor 1.5 / 2 / 3); " +
+                      "without them reskin users get 1x art in a scaled UI")
+    }
+    if (@($missing | Where-Object { $_.Selector }).Count) {
+        Write-Output ("  SelectorUI-1x: run tools\dialog-static\build_selector_1x.py; without it " +
+                      "a bundle install cannot leave 1x from inside the game")
+    }
     throw "refusing to ship a partial bundle"
 }
 
-# --- INVISIBLE TO THE PARSER, AND THAT IS THE BUG IT CLOSES -----------------
-# The deploy script copies SelectorUI-1x through VARIABLES:
-#     Copy-Item $selSrc (Join-Path $zzz ("z_SC4UIScale_SelectorUI-1x.dat" + $selSuffix))
-# so the literal-path regex above cannot see it and the bundle shipped WITHOUT
-# the stock-tier scale selector. That made 1x a ONE-WAY DOOR for anyone
-# installing from a bundle: at stock every other package is stashed, and the
-# only control that could raise the tier again lives in that dat.
-#
-# ⭐ THE PARSER IS A DERIVED LIST, WHICH IS THE RIGHT SHAPE - but a derived
-# list only sees what it can parse, and "not matched" is indistinguishable
-# from "not present". The assertion below is what makes that difference
-# visible, because the next package copied through a variable will be invisible
-# in exactly the same way.
-$selectorSrc = Join-Path $proj ("tools" + [IO.Path]::DirectorySeparatorChar + "packages" + [IO.Path]::DirectorySeparatorChar + "1x" + [IO.Path]::DirectorySeparatorChar + "z_SC4UIScale_SelectorUI-1x.dat")
-if (-not (Test-Path $selectorSrc)) {
-    throw ("the stock-tier selector package is missing: $selectorSrc - " +
-           "without it a bundle install cannot leave 1x from inside the game")
-}
-Copy-Item $selectorSrc (Join-Path $zzzOut "z_SC4UIScale_SelectorUI-1x.dat") -Force
-$copied++
-Write-Output "  + z_SC4UIScale_SelectorUI-1x.dat (stock-tier selector; the DLL arms or stashes it at boot)"
-
-# CsiIcons: SAME parser blindness, found 2026-08-24 - the deploy copies it
-# through an expression-built loop, so the regex never saw it and it was
-# ABSENT FROM EVERY DIST BUNDLE since 2026-08-18. Rescued exactly like
-# SelectorUI: explicit copies + a hard assert. (UncoveredIcons is the loop's
-# other member and stays OUT by design - it is rebuilt per-install from the
-# player's own Plugins tree, so a shipped copy would be someone else's.)
-foreach ($t in @(@("2x",""), @("15x",".x1-disabled"), @("3x",".x1-disabled"))) {
-    $csiSrc = Join-Path $proj ("tools\packages\" + $t[0] + "\z_SC4UIScale_CsiIcons-" + $t[0] + ".dat")
-    if (-not (Test-Path $csiSrc)) {
-        throw "CsiIcons source missing: $csiSrc - the U-Drive-It offer-balloon icons would silently drop out of the bundle again"
-    }
-    Copy-Item $csiSrc (Join-Path $zzzOut ("z_SC4UIScale_CsiIcons-" + $t[0] + ".dat" + $t[1])) -Force
-    $copied++
-}
-Write-Output "  + z_SC4UIScale_CsiIcons tiers (rescued from the parser blind spot - see comment)"
-
-# --- ZCarbon INCLUSION (v4.3.1) ---------------------------------------------
-# These ship, exactly like CamUI / NamIcons / WarriorUI / ThirdPartyUI /
-# SaveWarningUI / WebButtonUI already do. They are the SAME KIND OF THING: a
-# mod's own artwork and layouts, enlarged to the player's factor, gated on that
-# mod being installed. Excluding only these was an inconsistency, not a policy.
-# Attribution is in THIRD-PARTY-NOTICES.md; the packages are inert without the
-# Scoty Carbon Skin because every one carries a kThirdPartyDeps row.
-#
-# Copied explicitly, not via the manifest parser: the deploy uses the
-# named-parameter Copy-Item form for these (a parser blind spot), so this block
-# is the SelectorUI/CsiIcons rescue pattern - explicit copies plus a hard
-# assert, so a silent drop goes red instead of shipping a bundle that leaves
-# reskin users broken.
-$zcarbonSrc = @(
-    @{ b = "tools/dialog-static/z_SC4UIScale_ZCarbonUI.dat";            n = "z_SC4UIScale_ZCarbonUI-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonUI-15x.dat";         n = "z_SC4UIScale_ZCarbonUI-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonUI-3x.dat";           n = "z_SC4UIScale_ZCarbonUI-3x.dat.x1-disabled" },
-    @{ b = "tools/dialog-static/z_SC4UIScale_ZCarbonCamUI.dat";         n = "z_SC4UIScale_ZCarbonCamUI-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonCamUI-15x.dat";      n = "z_SC4UIScale_ZCarbonCamUI-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonCamUI-3x.dat";        n = "z_SC4UIScale_ZCarbonCamUI-3x.dat.x1-disabled" },
-    @{ b = "tools/dialog-static/z_SC4UIScale_ZCarbonSaveWarning.dat";   n = "z_SC4UIScale_ZCarbonSaveWarning-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonSaveWarning-15x.dat"; n = "z_SC4UIScale_ZCarbonSaveWarning-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonSaveWarning-3x.dat";   n = "z_SC4UIScale_ZCarbonSaveWarning-3x.dat.x1-disabled" },
-    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonArt.dat";          n = "z_SC4UIScale_ZCarbonArt-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonArt-15x.dat";        n = "z_SC4UIScale_ZCarbonArt-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonArt-3x.dat";          n = "z_SC4UIScale_ZCarbonArt-3x.dat.x1-disabled" },
-    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonNam.dat";          n = "z_SC4UIScale_ZCarbonNam-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonNam-15x.dat";        n = "z_SC4UIScale_ZCarbonNam-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonNam-3x.dat";          n = "z_SC4UIScale_ZCarbonNam-3x.dat.x1-disabled" },
-    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonStyles.dat";       n = "z_SC4UIScale_ZCarbonStyles-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonStyles-15x.dat";     n = "z_SC4UIScale_ZCarbonStyles-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonStyles-3x.dat";       n = "z_SC4UIScale_ZCarbonStyles-3x.dat.x1-disabled" },
-    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonGodMod.dat";       n = "z_SC4UIScale_ZCarbonGodMod-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonGodMod-15x.dat";     n = "z_SC4UIScale_ZCarbonGodMod-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonGodMod-3x.dat";       n = "z_SC4UIScale_ZCarbonGodMod-3x.dat.x1-disabled" },
-    @{ b = "tools/research/carbon/z_SC4UIScale_ZCarbonIcons.dat";      n = "z_SC4UIScale_ZCarbonIcons-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonIcons-15x.dat";      n = "z_SC4UIScale_ZCarbonIcons-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonIcons-3x.dat";        n = "z_SC4UIScale_ZCarbonIcons-3x.dat.x1-disabled" },
-    # v4.5.8: Scoty's COMPOSED Carbon+Raise scripts - the layout neither
-    # RaiseUI nor ZCarbonArt can produce (his c973b411 root is 263 tall; the
-    # other three are 223 / 255 / 228). Built by selective-safe.
-    @{ b = "tools/selective-safe/z_SC4UIScale_ZCarbonRaiseUI.dat";       n = "z_SC4UIScale_ZCarbonRaiseUI-2x.dat" },
-    @{ b = "tools/packages/15x/z_SC4UIScale_ZCarbonRaiseUI-15x.dat";     n = "z_SC4UIScale_ZCarbonRaiseUI-15x.dat.x1-disabled" },
-    @{ b = "tools/packages/3x/z_SC4UIScale_ZCarbonRaiseUI-3x.dat";       n = "z_SC4UIScale_ZCarbonRaiseUI-3x.dat.x1-disabled" },
-    # v4.5.9: the transparent sheet that stops OUR carbon gold pause border
-    # overriding the player's own remover - including Scoty's own, which ships
-    # inside the skin. Armed only when a remover is installed.
-    @{ b = "tools/itemicons/out/z_SC4UIScale_ZCarbonPauseOff-2x.dat";    n = "z_SC4UIScale_ZCarbonPauseOff-2x.dat" },
-    @{ b = "tools/itemicons/out/z_SC4UIScale_ZCarbonPauseOff-15x.dat";   n = "z_SC4UIScale_ZCarbonPauseOff-15x.dat.x1-disabled" },
-    @{ b = "tools/itemicons/out/z_SC4UIScale_ZCarbonPauseOff-3x.dat";    n = "z_SC4UIScale_ZCarbonPauseOff-3x.dat.x1-disabled" }
-)
-foreach ($zc in $zcarbonSrc) {
-    $zsrc = Join-Path $proj $zc.b
-    if (-not (Test-Path $zsrc)) {
-        throw ("ZCarbon source missing: " + $zc.b + " - reskin users would install a " +
-               "bundle that leaves them with 1x art in a scaled UI. Build all three " +
-               "tiers (_tests\Test-Builders.ps1 -Factor 1.5 / 2 / 3) before packaging.")
-    }
-    Copy-Item $zsrc (Join-Path $zzzOut $zc.n) -Force
-    $copied++
-}
+# ZCarbon: Scoty Carbon Skin support, shipped since v4.3.1 and inert without
+# the skin (see its rows in the package list and THIRD-PARTY-NOTICES.md).
+$zcWant = @($items | Where-Object { $_.Name -match 'ZCarbon' }).Count
 $zcShipped = @(Get-ChildItem $zzzOut -File | Where-Object { $_.Name -match 'ZCarbon' })
-if ($zcShipped.Count -ne $zcarbonSrc.Count) {
-    throw ("expected $($zcarbonSrc.Count) ZCarbon files in the bundle, found $($zcShipped.Count)")
+if ($zcShipped.Count -ne $zcWant) {
+    throw ("expected $zcWant ZCarbon files in the bundle, found $($zcShipped.Count)")
 }
 Write-Output ("  + " + $zcShipped.Count + " ZCarbon file(s) (Scoty Carbon Skin support; gated, inert without the skin - see THIRD-PARTY-NOTICES.md)")
-
-# PARSED-COUNT GATE: the next expression-built Copy-Item drops a package
-# invisibly; keep a floor under the total so the drop goes red not silent.
-if ($copied -lt 40) {
-    throw ("bundle holds only $copied files - the deploy manifest parse has gone " +
-           "blind to something (floor is 40). Diff the deploy script against the " +
-           "parse before shipping.")
-}
 
 # the shipping user ini - the packaging copy, not the developer one.
 # v4.4.0 ROOT CLEANUP: it goes in 010-SC4UIScale/ with the rest of our
@@ -278,10 +169,11 @@ Write-Output ("  + z_SC4UIScale_FontStyle.ini (empty placeholder, so sc4pac can 
     "uninstall a file of ours - never the live FontStyle.ini the DLL generates, per #182)")
 
 # --- the two files with no build source --------------------------------------
-# Deploy-OnGameClose deliberately does not touch these; neither can be rebuilt,
+# The package list deliberately does not name these; neither can be rebuilt,
 # so a bundle that silently contains them is unreproducible.
-# WebText moved into the deploy manifest 2026-08-05 and now arrives through the
-# normal parse, from tools\webtext\ - it was never actually unbuildable.
+# WebText moved into the deploy manifest 2026-08-05 and now arrives with the
+# package list's other rows, from tools\webtext\ - it was never actually
+# unbuildable.
 # MenuFix stays out: it rewrites CAM's gameplay data, so shipping it is a
 # decision about a third-party mod's content, not about this one.
 $unbuildable = @(
@@ -344,10 +236,9 @@ foreach ($f in @("README.txt")) {
 Write-Output ""
 Write-Output "  copied      : $copied file(s)"
 # ---- v4.5.0: NORMALISE TO THE PAYLOAD LAYOUT ------------------------------
-# The SAME converter the deploy script calls, for the same reason: this file
-# regex-parses Deploy for most of the bundle but hand-writes three blocks it
-# cannot parse, so editing copy lines on either side alone ships a mixture.
-# Neither side edits them; both convert at the end.
+# The SAME converter the deploy script calls. Both copy the package list's
+# tier-tagged rows and convert at the end, so the install and the bundle
+# cannot be converted differently.
 # -Tier is EXPLICIT, not left to the converter's fallback. The bundle no
 # longer ships an ini, so there is no ScaleFactor for it to read, and an
 # unstated default is the kind of thing that is discovered a release later.
@@ -370,27 +261,28 @@ Write-Output "  copied      : $copied file(s)"
 # the rename scheme and under the payload scheme; it fires only on a MIXTURE,
 # which is the one state that ships silently broken.
 #
-# WHY IT EXISTS. This script derives most of its contents by REGEX-PARSING
-# _tests\Deploy-OnGameClose.ps1, but 30 of Deploy's Copy-Item lines are invisible
-# to that regex (named-parameter form, expression-built paths, Join-Path) and are
-# compensated by HARDCODED blocks in this file. Convert Deploy alone and the
-# parsed lines emit payloads while the hardcoded blocks still emit tier-tagged
-# live dats - so the zip would carry a stable z_SC4UIScale_ZCarbonUI.dat AND a
-# live z_SC4UIScale_ZCarbonUI-2x.dat: two live providers of all 197 TGIs. The
-# existing $copied floor cannot see it, because the count is identical either
-# way.
+# WHY IT EXISTS. Before audit B12 this script re-listed 30 files by hand beside
+# the rows it regex-parsed out of Deploy, and converting one set without the
+# other would have put a stable z_SC4UIScale_ZCarbonUI.dat AND a live
+# z_SC4UIScale_ZCarbonUI-2x.dat in the zip: two live providers of all 197 TGIs,
+# at an identical file count. One shared list removes that route, but a row
+# written in the payload layout would still produce a mixture, and this check
+# costs nothing.
 $bundleFiles = @(Get-ChildItem $plugOut -Recurse -File)
 $oldLayout = @($bundleFiles | Where-Object {
     $_.Name -like '*.x1-disabled' -or
     ($_.Extension -eq '.dat' -and $_.BaseName -match '-(15x|2x|3x|4x|1x)$') })
 $newLayout = @($bundleFiles | Where-Object { $_.Extension -eq '.uipay' })
 if ($oldLayout.Count -and $newLayout.Count) {
-    throw ("LAYOUT MIXTURE: the bundle carries {0} rename-layout file(s) AND " +
-           "{1} payload file(s). Every package present under both names has TWO " +
-           "live providers for every TGI it owns. First of each: {2} / {3}. " +
-           "Convert Deploy-OnGameClose.ps1 and this file's hardcoded blocks " +
-           "TOGETHER - they cannot be split." -f $oldLayout.Count, $newLayout.Count,
-           $oldLayout[0].Name, $newLayout[0].Name)
+    # The concatenation is parenthesised BEFORE -f: -f binds tighter than +,
+    # and without the parentheses it formatted only the last string, so the
+    # {0}..{3} above printed literally.
+    throw (("LAYOUT MIXTURE: the bundle carries {0} rename-layout file(s) AND " +
+            "{1} payload file(s). Every package present under both names has TWO " +
+            "live providers for every TGI it owns. First of each: {2} / {3}. " +
+            "Every row of _packaging\PackageFiles.psd1 must use the rename layout; " +
+            "Convert-ToPayloadLayout.ps1 alone writes payloads.") -f $oldLayout.Count,
+           $newLayout.Count, $oldLayout[0].Name, $newLayout[0].Name)
 }
 Write-Output ("  layout      : {0} (mixture tripwire clear)" -f
     $(if ($newLayout.Count) { 'payload' } else { 'rename' }))

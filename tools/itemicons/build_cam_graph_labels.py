@@ -56,7 +56,7 @@ preference - it is what our row's own siblings do.
 
     python build_cam_graph_labels.py [--out <dir>]
 
-Then: add it to BOTH `_tests\Deploy-OnGameClose.ps1` AND
+Then: add it to BOTH `_packaging\PackageFiles.psd1` AND
 `_tests\Test-DatIntegrity.ps1`. A package is not finished until it is in both -
 three packages have rotted from exactly that omission and every one looked
 green.

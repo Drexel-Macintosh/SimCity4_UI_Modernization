@@ -75,7 +75,8 @@ generator; do not hand-edit them, and do not treat them as sources of truth.
    resource is in one of our packages". Root files load before subfolders;
    overriding another mod requires a folder that sorts after it
    (`zzz-SC4UIScale\`).
-10. **A package is not finished until it is in `Deploy-OnGameClose.ps1` AND
+10. **A package is not finished until it is in `_packaging\PackageFiles.psd1`
+    (the one list Deploy-OnGameClose and Build-Dist both copy from) AND
     `Test-DatIntegrity.ps1`.** Packages have rotted from exactly this
     omission while every gate stayed green.
 11. **The docs are the SDK.** Consult in order: our docs → the SDK headers in

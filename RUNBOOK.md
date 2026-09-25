@@ -142,15 +142,15 @@ _tests\Set-Tier.ps1 -Tier 1            # 1x baseline control - all packages off
 _tests\Set-Tier.ps1 -Status            # report only
 ```
 
-`Deploy-OnGameClose.ps1` **is the manifest — with three exceptions.** A package
-that is not copied there does not ship, and the release builder parses that
-same file to assemble the distribution; three packages have rotted by being
-hand-placed into the Plugins folder and never wired in. If you add a package,
-add it there. But `Build-Dist.ps1` cannot regex-parse ~30 of Deploy's copy
-lines (named-parameter form, expression-built paths) and compensates with
-hardcoded blocks — SelectorUI, CsiIcons and the ZCarbon set — so a package
-added in one of those shapes must be wired in BOTH files, and the bundle's
-layout-mixture tripwire is what catches a half-edit.
+`_packaging\PackageFiles.psd1` **is the manifest.** Every file a working
+install holds is one row there (source, folder, name). `Deploy-OnGameClose.ps1`
+copies the rows into Plugins and `Build-Dist.ps1` copies the same rows into the
+release bundle, so a package that is not listed there neither deploys nor
+ships. Three packages have rotted by being hand-placed into the Plugins folder
+and never wired in. If you add a package, add its rows there (and its hash pair
+to `Test-DatIntegrity.ps1`). Until audit B12 (2026-09-25) Build-Dist
+regex-parsed Deploy's copy lines instead, and the ~30 it could not see had to
+be wired in both files.
 
 Preserve `SC4UIScale.log` before relaunching; it is recreated on every launch.
 

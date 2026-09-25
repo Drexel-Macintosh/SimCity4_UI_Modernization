@@ -197,6 +197,9 @@ foreach ($f in $TESTS) { Add-Item2 (Join-Path $proj "_tests\$f") "_tests\$f" }
 # cold clone without it fails that gate on the first run - which is exactly
 # what the cold-clone test exists to catch.
 Add-Item2 (Join-Path $proj "_packaging\SC4UIScale.ini") "_packaging\SC4UIScale.ini"
+# The package list: _tests\Deploy-OnGameClose.ps1 (exported above) copies
+# its rows, so the export is broken without it (audit B12).
+Add-Item2 (Join-Path $proj "_packaging\PackageFiles.psd1") "_packaging\PackageFiles.psd1"
 foreach ($f in $SRC)  { Add-Item2 (Join-Path $proj "src\$f") "src\$f" }
 foreach ($f in $TOOLS){ Add-Item2 (Join-Path $proj "tools\$f") "tools\$f" }
 # sc4-dll-utilities (0xC0000054) - the INI parser Settings.cpp now uses. Shipped

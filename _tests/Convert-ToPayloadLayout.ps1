@@ -3,19 +3,14 @@
 # ONE script, called from BOTH _tests\Deploy-OnGameClose.ps1 and
 # _packaging\Build-Dist.ps1 — and that is the entire point of it existing.
 #
-# WHY NOT EDIT THE COPY LINES IN BOTH. Build-Dist derives most of the bundle by
-# REGEX-PARSING Deploy's Copy-Item lines, but 30 of them are invisible to that
-# regex (named-parameter form, expression-built paths, Join-Path) and are
-# compensated by HARDCODED blocks inside Build-Dist. Convert Deploy's copy
-# lines alone and the parsed ones would emit payloads while the hardcoded
-# blocks still emit tier-tagged live dats — a bundle carrying both
-# z_SC4UIScale_ZCarbonUI.dat AND z_SC4UIScale_ZCarbonUI-2x.dat, i.e. TWO LIVE
-# PROVIDERS of all 197 TGIs that package owns. Nothing would go red: the file
-# count is identical either way.
-#
-# So neither caller's copy lines change at all. Both keep writing the
-# tier-tagged layout they always did, and both then call THIS, which converts
-# whatever it finds. Two callers, one conversion, nothing to drift.
+# Both callers copy the rows of _packaging\PackageFiles.psd1, which name the
+# tier-tagged RENAME layout, and both then call THIS, which converts whatever
+# it finds. One list, one conversion, nothing to drift. (Before audit B12,
+# 2026-09-25, Build-Dist regex-parsed Deploy's Copy-Item lines and re-listed
+# the 30 it could not see by hand, so converting inside either caller alone
+# would have shipped a bundle carrying both z_SC4UIScale_ZCarbonUI.dat AND
+# z_SC4UIScale_ZCarbonUI-2x.dat: TWO LIVE PROVIDERS of all 197 TGIs that
+# package owns, at an identical file count.)
 #
 # WHAT THE LAYOUT IS:
 #   LIVE     z_SC4UIScale_<Pkg>.dat            the only thing SC4 loads; the
