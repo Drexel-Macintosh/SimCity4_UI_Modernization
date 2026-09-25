@@ -44,6 +44,7 @@ stale expectations are this runbook's only failure mode.
 | `..\tools\dev\idwalk\run_idwalk_test.py` | no | seconds | **The batched id walk** (audit A1). Builds the shipped IdWalk block against a mock tree and checks it against a model of `cGZWin::GetChildWindowFromIDRecursive` (post-order, children before self, first match wins): 3,000 random trees with duplicate ids, the kCityDialogIds collect walk, IdBatch across tree changes, and the in-game checker correcting a deliberately broken walk. In game the same checker also asks the engine, id by id, for the first 2,048 batched walks and logs one `IDWALK` line: expect "0 disagreed" |
 | `..\tools\dev\inicache\run_inicache_parity.py` | no (the verdict needs Windows) | seconds | **IniCache against the real profile API** (audit B8). Every lookup (names plus case, padding and missing variants, several defaults, buffer sizes 1..512; W, A and Int) over 24 edge cases, the shipped ini and the seeded starter ini, asked of both. Exit 0 = parity on Windows. Exit 2 = not proven here: off Windows it runs under Wine as a MODEL of Windows (271,638 comparisons, 0 mismatches on 2026-09-25, UTF-8 BOM cases excluded because Wine decodes a BOM and Windows does not) |
 | `Test-PackageFiles.py` | no | instant | **The one package list** (audit B12). Every row of `_packaging\PackageFiles.psd1` parses and the parsed count equals the rows in the file; no two rows write one destination; exactly one Selector row; 1.5x/3x tiers ship `.x1-disabled` and 2x ships armed (the CsiIcons rows once shipped inverted), with a NEGATIVE CONTROL that inverts one row and must fail; and Deploy-OnGameClose.ps1 and Build-Dist.ps1 both read the list, with no literal `Copy-Item "$proj\..."` package line of their own. Also: Test-DatIntegrity.ps1 derives its DEPLOYED==BUILT pairs from the list (no hand-written pair table), and every entry-count row it keeps names a package the list deploys; listed packages without a count row are reported |
+| `..\tools\uimap\emu\scale_rules.py --selftest` | no | seconds | **The one scaling model** that every gate in `tools\uimap\emu` imports. Re-derives each rounding rule with exact fractions (146,040 checks, including the integer-tier control: at 2x and 3x every rule must be a no-op), plus 9 text tripwires on the source it mirrors (`RoundHalfUp.h`, `UiSpikeInternal.h`, `UiSpike.cpp`, `Upscale2x.cs`): if a mirrored line moves or changes, it fails. Added to `Run-OfflineGates.ps1` on 2026-09-25, after one tripwire had been red and unseen since B9 moved RoundHalfUp (section of that date at the end) |
 | `Test-BootMatrix.ps1` | YES (kills/relaunches repeatedly, ~10 min) | ~10 min | Live tier decisions, package gating on disk, stock-tier inertness, 9/9 region panels at 2x, native restore |
 
 Every suite: PASS = exit 0 + "ALL PASS" (the python gates print
@@ -23113,3 +23114,21 @@ Each left a pointer in the source that says what is true now.
 // threshold (700) tolerates 1x widths up to ~700 while any scaled
 // instance (>=1000) is skipped.
 ```
+
+## 2026-09-25: two gates went blind when code moved (audit B9, B11)
+
+Both were caused in this audit's own cleanup commits, and neither turned a gate red where anyone would see it.
+
+**1. scale_rules.py.** `--selftest` checks the source text of the rules it mirrors. Its RoundHalfUp tripwire read `src/UiSpike.cpp`. B9 (`88a3fae`) moved the one RoundHalfUp into `src/RoundHalfUp.h`, and from then on the selftest reported "1 FAILED". Nobody saw it, because scale_rules.py was not in `_tests/Run-OfflineGates.ps1`. It was found when the B11 work re-ran every tool that reads the moved code.
+- `0db68df` points the tripwire at the header.
+- `86a07fe` moved ScaleRound's tripwire along with ScaleRound, to `UiSpikeInternal.h`.
+- The runner now runs `scale_rules.py --selftest`; an entry in its list can carry arguments. The selftest ends with its verdict, `OVERALL: PASS (146040 checks)`, because the runner shows each gate's last line. A negative control (RoundHalfUp's body edited in a copy of the tree) prints `OVERALL: FAIL (1 of 146040 checks)` and exits 1.
+
+**2. Test-ProbeDerefGuards.** By default it scanned `CodePatches.cpp` and `UiSpike.cpp`. The first B11 pass (`1d231a9`, `661de3c`) moved the selector and the region screen into their own files, so both dropped out of the default scan with no line saying so. Scanned by name, both are GREEN (the region file's 4 vptr reads are outside probe scope), so nothing was hidden, but nothing would have been caught either.
+- `005058e`: the gate reads every `src/UiSpike*.cpp`, and so do gate_patch_families CHECK C and Test-ShippingIniKeys. `86a07fe` did the same for idcollide.
+- Positive controls: a write target planted in a split file fails CHECK C, and an ini key read only in a split file counts as read.
+- The per-file counts after each split add up to the totals before it. The only functions missing from the sum moved into `UiSpikeInternal.h`: SurfRetry's four members and ScaleRound.
+
+**What the later splits did instead.** Every tool that reads the moved source was run on HEAD and on the split tree, and its WHOLE output was compared, not only its last line. Only line numbers and paths differed. `tools/dev/split_proof.py` compares the objects, built unoptimized, symbol by symbol.
+
+**Lesson.** A gate that names the file it reads loses coverage silently when the code moves. When code moves, list every script that reads it before moving, and diff their whole output after.

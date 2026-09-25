@@ -30,7 +30,11 @@ $py = @(
     # 2026-09-25 audit: the C++ block tests (find a compiler via tools\dev\find_cxx.py)
     'tools\dev\idwalk\run_idwalk_test.py', 'tools\dev\inicache\run_inicache_parity.py',
     # audit B12: the one package list Deploy and Build-Dist both read
-    '_tests\Test-PackageFiles.py'
+    '_tests\Test-PackageFiles.py',
+    # the scaling rules' own model, re-derived, plus the tripwires on the
+    # source text it mirrors. It was missing here, so a tripwire stayed red
+    # unseen after RoundHalfUp moved (REGRESSION.md, 2026-09-25).
+    'tools\uimap\emu\scale_rules.py --selftest'
 )
 $ps = @('_tests\Test-ScaleTierDecide.ps1', '_tests\Test-SubRingLock.ps1',
         '_tests\Test-BornCorrectCoverage.ps1', '_tests\Test-ThirdPartyGates.ps1',
@@ -44,7 +48,8 @@ function Show($name, $code, $lines) {
     '{0,-4} {1,-44} {2}' -f $(if ($code -eq 0) { 'ok' } else { 'RED' }), (Split-Path $name -Leaf), $last
 }
 foreach ($t in $py) {
-    $o = & python $t 2>&1; $c = $LASTEXITCODE; if ($c -ne 0) { $red++ }; Show $t $c $o
+    $a = $t -split ' '   # an entry may carry arguments; no repo path has a space
+    $o = & python @a 2>&1; $c = $LASTEXITCODE; if ($c -ne 0) { $red++ }; Show $a[0] $c $o
 }
 foreach ($t in $ps) {
     $o = & powershell -NoProfile -ExecutionPolicy Bypass -File $t 2>&1; $c = $LASTEXITCODE

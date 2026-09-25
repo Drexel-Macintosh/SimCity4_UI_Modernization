@@ -720,7 +720,7 @@ def _s8_tripwire(v):
             "that has been changed" % (os.path.basename(path), pat))
         if v:
             out("      tripwire ok: %-28s in %s" % (what, os.path.basename(path)))
-    out("  S8 source tripwires on UiSpike.cpp + Upscale2x.cs %5d checks"
+    out("  S8 tripwires on the DLL source + Upscale2x.cs     %5d checks"
         % len(_TRIPWIRES))
 
 
@@ -834,11 +834,14 @@ def _selftest(v):
         out("\n[STOP] the shared model disagrees with itself or with its sources:")
         for f in _FAILS[:30]:
             out("   " + f)
+        # the verdict last: Run-OfflineGates.ps1 shows each gate's last line
+        out("\nOVERALL: FAIL (%d of %d checks)" % (len(_FAILS), _CHECKS[0]))
         return 1
     out("\nEvery rule re-derived, including the INTEGER-TIER CONTROL: at f=2 and "
         "f=3\nrounding, edge-derivation, art sizing, offset survival and tiled "
         "seam drift\nare all provably no-ops. Any metric built on this file that "
         "reads nonzero\nthere is measuring itself, not the game.")
+    out("\nOVERALL: PASS (%d checks)" % _CHECKS[0])
     return 0
 
 
