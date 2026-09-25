@@ -1,10 +1,13 @@
 # Law: Sub-flyout placement is bottom-anchored, and the anchor is a MEASURED game parameter, never inferred
 
 **Date:** 2026-08-23
-**Status:** ROOT-CAUSE FIX IMPLEMENTED, offline-verified, NOT YET live-tested
-(see "Attempt 4" below — this supersedes "The fix: SubSharedBottom()" as
-what actually ships; disaster twin still NOT fixed — see "What is still
-open")
+**Status:** ROOT-CAUSE FIX SHIPPED and LIVE-TESTED (v4.10.2, 2026-09-25:
+14 opens in game, every SUBOWN verdict names the spawn button — see
+`_tests\REGRESSION.md` "BIRTH OWNS THE DOCK"). "Attempt 4" below supersedes
+"The fix: SubSharedBottom()" as what actually ships; the retired
+`SubSharedBottom`/`SubBarClampsAt8Rows`/`SubContainerShiftPx` chain was
+deleted from `src/UiSpike.cpp` in the 2026-09-25 audit (no caller). The
+disaster twin is still out of scope — see "What is still open".
 **Scope:** Sub-flyout `0x8A6E61E0` (shared second-level menu, builder `sub_7EAEB0`,
 `SubPlaceDetour` in `src/UiSpike.cpp`); the same defect shape — and this same
 method — applies to any other menu family where content of varying size
@@ -318,9 +321,10 @@ resolved solo.
 
 **What this retires, and what it does not touch:** `SubSharedBottom`,
 `SubBarClampsAt8Rows`, and the `SubContainerShiftPx()` bornshift are no
-longer called from the regular sub-flyout birth path. They are left
-defined (dead code, not deleted) so a fallback costs a one-line revert,
-not a re-derivation, until this fix is live-verified.
+longer called from the regular sub-flyout birth path. They were left
+defined (dead code) as a one-line fallback until this fix was live-verified;
+it was (v4.10.2), and the audit of 2026-09-25 deleted them. The formulas
+survive in this file and in `_tests\Test-SubFlyoutPlacement.py`.
 
 **CORRECTION (adversarial review, 2026-08-23, same session as the fix):**
 the paragraph that used to be here claimed "the disaster twin is

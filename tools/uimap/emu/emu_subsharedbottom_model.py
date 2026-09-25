@@ -7,11 +7,11 @@ SubPlaceTop/SubPlaceLeft against, not a second, independent re-derivation.
 RETIRED, 2026-08-23 (same day, later pass): SubSharedBottom/
 SubBarClampsAt8Rows are no longer called from the live birth-hook path -
 see SubPlaceTopMb's comment in src/UiSpike.cpp for why (their margin
-source, gLastViewH, was itself wrong). They are kept as dead code, not
-deleted, so this file still validates something real (the retired
-formulas still exist in the binary and this still proves they were never
-internally inconsistent) - but it is NOT the load-bearing proof for what
-ships any more. That is emu_subplacetopmb_model.py, which also fixes this
+source, gLastViewH, was itself wrong). The C++ functions were DELETED as
+dead code in the 2026-09-25 audit, so this file now checks only its own
+transcription of them against the emulated game function - a historical
+record that the retired formulas were never internally inconsistent. It is
+NOT the proof for what ships. That is emu_subplacetopmb_model.py, which also fixes this
 file's own gap (an adversarial review caught it): every case below is
 hardcoded to n=8, so none of it ever emulated the ACTUAL content height of
 the four short-count buttons (cnt=5/3/6/3) the whole fix exists for.

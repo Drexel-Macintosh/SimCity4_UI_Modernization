@@ -62,9 +62,11 @@ WHAT THIS ASSERTS
      future reader can see exactly what the old chain produced and why a
      16px difference from the new one is an EXPECTED, understood change,
      not a silent drift.
-  2. SubContainerShiftPx() still reproduces the measured 232px shift at
-     f=2.0 the OLD chain carried - unchanged, still used by the disaster
-     twin, which this fix does not touch.
+  2. The OLD chain's bornshift, SubContainerShiftPx(), reproduces the
+     measured 232px shift at f=2.0. HISTORICAL: the C++ function had no
+     caller and was deleted in the 2026-09-25 audit (it was never used by
+     the disaster twin either - that branch was unreachable). Kept because
+     check 1's historical numbers are built on it.
   3. full8H equals 874 at 2x - the height every cnt>=8 container measures
      at, confirmed against tools/uimap/SUBFLYOUT-BUILDER.md's own
      independently-derived height table.
@@ -153,9 +155,9 @@ def sub_place_top_mb(content_h, cy, mT, mB, f):
 
 
 def sub_container_shift_px(f):
-    """Transcribed from UiSpike.cpp SubContainerShiftPx() (~line 1279).
-    Still used by the disaster twin only - the regular sub-flyout path no
-    longer calls this."""
+    """Transcribed from the deleted UiSpike.cpp SubContainerShiftPx() (no
+    caller since the SubPlaceTopMb fix; removed 2026-09-25). A historical
+    anchor for check 1 only."""
     if f <= 1.0:
         return 0
     est = f * f * 73.0 - 60.0
@@ -252,7 +254,7 @@ def main():
         print("  [full8H matches measured 874]                        ok")
 
     shift = sub_container_shift_px(F)
-    print("  SubContainerShiftPx(f=%.1f) = %d (disaster twin only)" % (F, shift))
+    print("  SubContainerShiftPx(f=%.1f) = %d (historical, deleted in C++)" % (F, shift))
     if shift != 232:
         failures.append(
             "SubContainerShiftPx(2.0) = %d, expected 232 (f*f*73-60 at "
