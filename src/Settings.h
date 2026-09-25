@@ -239,13 +239,6 @@ struct Settings
 	                                  // many seconds and log a histogram. #104's
 	                                  // spin starts exactly there, so a hot EIP
 	                                  // NAMES the loop instead of us deducing it.
-	int  spikeSubFlyoutBorn2x = 0;    // task #50: build nested sub-flyouts at
-	                                  // round(stock*f) so their PAINT BUFFER is
-	                                  // allocated correct on Plot #1 (the flash
-	                                  // is the buffer, not the sweep). Fuses the
-	                                  // constant patch AND neutralising our own
-	                                  // runtime doubling - neither half is
-	                                  // shippable alone. 0 = off (escape hatch)
 	int  spikeSubFlyoutBornScale = 1; // v2.36.0 task #50: scale the nested
 	                                  // sub-flyout's FINISHED rects in a
 	                                  // detour on its Place (0x0079AD00), so

@@ -364,7 +364,9 @@ population, so a scan and a registry can no longer disagree:
 > the cheat dialog (`kCheatRectSite` 32 bytes, `kCheatClearSite` 39) and the
 > restore-toolbars origin (`kRestoreToolbarsOriginSite`, one 6-byte block
 > holding both placement constants deliberately, so a half-applied state is
-> unreachable).
+> unreachable). The 2026-09-25 audit removed `kSubFlyoutProviderSites` (3
+> sites) with the retired SubFlyoutBorn2x path; the table below keeps the
+> 274 snapshot.
 >
 > The gate had been failing this whole time, and long enough that the
 > composition of its redness drifted unnoticed — the failure its own header

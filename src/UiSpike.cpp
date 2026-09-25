@@ -6159,154 +6159,27 @@ struct UiSpikeEnumCtx
 	}
 };
 
-// ============ SUB-FLYOUT BORN-2x (v2.34.0, task #50) ============
-// THE DEFECT, measured across 6 opens / 3 menus: nested plop sub-flyouts
-// render 1x for 1-2 frames on EVERY open, at every depth. Three facts settle
-// the mechanism, none of them guessed:
+// ============ SUB-FLYOUT GEOMETRY (measured for v2.34.0, task #50) ==========
+// Three facts about the nested plop sub-flyouts, measured across 6 opens /
+// 3 menus, that the born-scale path below builds on:
 //
 //  1. The ITEMS ARE NOT WINDOWS. The whole assembly is container 0x8A6E61E0 ->
 //     strip 0x8A2CAD8B -> a degenerate tip layer. Menu items are BLITS into
-//     the container's paint buffer. No window sweep can ever reach them - which
-//     is why pre-scale-while-hidden, the SetFlag show hook and data pre-scale
-//     all failed here: every one of them operates on windows.
+//     the container's paint buffer. No window sweep can ever reach them.
 //  2. THE FLASH IS THE BUFFER. The window rect is corrected within ~1ms, but
 //     the paint buffer was already allocated from the 1x rect, so Plot #1 fills
-//     a 2x window from a 1x buffer (20-36ms at the measured 54.5fps). Same law
-//     as the U-Drive-It gauges. NO sweep cadence can fix this.
-//  3. THE GEOMETRY IS CODE-DERIVED, not art-derived (the bitmap is loaded but
-//     never read for the rect):
+//     a 2x window from a 1x buffer (20-36ms at the measured 54.5fps).
+//  3. THE GEOMETRY IS CODE-DERIVED (vf10 0x0079AC60 stores the fields):
 //         W = [+0xf0] - [+0xf8] + [+0xe4]        = 80 - 4 + 53 = 129
 //         H = max(stripH, [+0xf4]) + 2*[+0xe8]   = max(stripH,53) + 50
 //         stripH = count*(cell 44 + gap 5) - 5   = 49n - 5, n clamped [1,8]
-//     This reproduces 8/8 observed container heights and 4/4 strip heights with
-//     zero fudge - including Freight's 206, the one size that fits no
-//     progression: 1 item -> 44 < the 53 floor -> 53+50=103, x2 = 206.
+//     This reproduces 8/8 observed container heights and 4/4 strip heights.
 //
-// CURE: build them at round(stock*f) so the buffer is allocated correct on
-// Plot #1. The three provider constants are byte-patched (they fit imm8); the
-// seven container fields are written HERE, in a trampoline on their setter
-// vf10 (0x0079AC60), because [+0xf0] = 80 -> 160 cannot encode as imm8 and
-// compensating with the other terms would corrupt their meaning (the 53 is
-// also the IsPointInMe claim width).
-//
-// AND we must stop doing it twice: our own gStripFieldScale=2 and the sweep's
-// subtree scale exist precisely to double these windows AFTER birth. Born-2x
-// plus those still active = 4x. The lever fuses both halves for that reason -
-// neither is shippable alone.
-namespace
-{
-	typedef void(__fastcall* SubVf10Fn)(void*, void*, void*, int, int, int, int, int, int, int);
-	SubVf10Fn gOrigSubVf10 = nullptr;
-	bool      gSubBornInstalled = false;
-	int       gSubBornLogged = 0;
-
-	// The seven fields vf10 stores, with their stock values (art-verdict
-	// table, roles taken from the stores inside vf10 - not from push order).
-	struct SubField { int off; int stock; const char* what; };
-	const SubField kSubFields[] = {
-		{ 0xE4, 53, "bar width (also the hit-claim)" },
-		{ 0xE8, 25, "end cap (x2 = the +50)" },
-		{ 0xF0, 80, "ring-sprite width term" },   // <- cannot encode as imm8
-		{ 0xF4, 53, "minimum content extent (Freight floor)" },
-		{ 0xF8,  4, "overlap subtracted from W" },
-		{ 0xFC, 27, "anchor offset (cross axis)" },
-		{ 0x100,29, "anchor offset (long axis)" },
-	};
-
-	void __fastcall SubVf10Detour(void* self, void* edx, void* bmp,
-		int a2, int a3, int a4, int a5, int a6, int a7, int a8)
-	{
-		// Let the game store its stock values first, then overwrite - the
-		// original also stores the bitmap and computes [+0xec] from it, and
-		// we must not disturb either.
-		// TWIN GUARD - the single most important line here. vf10 is a SHARED
-		// class method: sub_7EAEB0 builds the NESTED sub-flyout (ours) and
-		// sub_7E7270 builds the FIRST-LEVEL flyout from the same two classes
-		// with its own copies of every constant. The first-level one is
-		// already scaled after birth (gStripFieldScale / gBarDX / ClaimScale /
-		// the god pre-scale), so promoting its fields here would double-scale
-		// the flyouts that currently WORK. Discriminate by return address:
-		// 0x007EB171 is the instruction after the sub-flyout builder's
-		// `call [eax+0x10]`; the only other caller returns to 0x007E74B1.
-		const uintptr_t ret = reinterpret_cast<uintptr_t>(_ReturnAddress());
-		const uintptr_t modBase = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-		const uintptr_t kSubBuilderRet = modBase - 0x400000 + 0x007EB171;
-		gOrigSubVf10(self, edx, bmp, a2, a3, a4, a5, a6, a7, a8);
-		if (!self || gTierF <= 1.01f) { return; }
-		if (ret != kSubBuilderRet)
-		{
-			if (gSubBornLogged < 6)
-			{
-				gSubBornLogged++;
-				Logger::Get().WriteLine(LogLevel::Debug,
-					"UiSpike: SUBLAY ret=0x%08X - NOT the sub-flyout builder "
-					"(expected 0x%08X); left at stock (twin guard).",
-					static_cast<uint32_t>(ret - (modBase - 0x400000)),
-					static_cast<uint32_t>(0x007EB171));
-			}
-			return;
-		}
-		char* obj = reinterpret_cast<char*>(self);
-		for (const SubField& fld : kSubFields)
-		{
-			int32_t* p = reinterpret_cast<int32_t*>(obj + fld.off);
-			// Idempotent: only promote a value still at its stock reading, so
-			// a second call (or a re-populate) cannot compound.
-			if (*p == fld.stock)
-			{
-				*p = static_cast<int32_t>(std::lround(fld.stock * gTierF));
-			}
-		}
-		if (gSubBornLogged < 6)
-		{
-			gSubBornLogged++;
-			Logger::Get().WriteLine(LogLevel::Debug,
-				"UiSpike: SUBBORN fields x%.2f -> bar %d cap %d ring %d min %d "
-				"overlap %d (W should be born %d).",
-				gTierF,
-				*reinterpret_cast<int32_t*>(obj + 0xE4),
-				*reinterpret_cast<int32_t*>(obj + 0xE8),
-				*reinterpret_cast<int32_t*>(obj + 0xF0),
-				*reinterpret_cast<int32_t*>(obj + 0xF4),
-				*reinterpret_cast<int32_t*>(obj + 0xF8),
-				*reinterpret_cast<int32_t*>(obj + 0xF0)
-					- *reinterpret_cast<int32_t*>(obj + 0xF8)
-					+ *reinterpret_cast<int32_t*>(obj + 0xE4));
-		}
-	}
-}
-
-void UiSpike::InstallSubFlyoutBorn()
-{
-	if (gSubBornInstalled || settings.spikeSubFlyoutBorn2x <= 0) { return; }
-	if (gTierF <= 1.01f) { return; }   // stock tier stays inert
-
-	const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-	void* target = reinterpret_cast<void*>(base - 0x400000 + 0x0079AC60);
-
-	const MH_STATUS init = MH_Initialize();
-	if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
-	{
-		Logger::Get().WriteLine(LogLevel::Error,
-			"UiSpike: SUBBORN MH_Initialize failed (%d).", init);
-		return;
-	}
-	if (MH_CreateHook(target, reinterpret_cast<void*>(&SubVf10Detour),
-			reinterpret_cast<void**>(&gOrigSubVf10)) != MH_OK
-		|| MH_EnableHook(target) != MH_OK)
-	{
-		Logger::Get().WriteLine(LogLevel::Error,
-			"UiSpike: SUBBORN failed to hook sub-flyout vf10 at %p.", target);
-		return;
-	}
-	gSubBornInstalled = true;
-	// STAGE 2, fused: stop our own post-birth doubling of the same windows.
-	gStripFieldScale = 1;
-	Logger::Get().WriteLine(LogLevel::Info,
-		"UiSpike: SUBBORN installed on vf10 %p - sub-flyouts born x%.2f; "
-		"gStripFieldScale forced to 1 (was 2) so they are not doubled twice.",
-		target, gTierF);
-}
+// The v2.34.0 cure built them at round(stock*f) from the CONSTANTS (a vf10
+// trampoline promoting the seven fields, plus three imm8 provider sites in
+// sub_7EAEB0). It broke the UI twice, stayed behind [UiSpike] SubFlyoutBorn2x
+// (default 0) after the born-scale path replaced it, and was removed in the
+// 2026-09-25 audit (B1). History: REGRESSION.md, VERSION-HISTORY.txt v2.34.0.
 
 // ============ SUB-FLYOUT BORN-SCALED (v2.36.0, task #50) ================
 // THE USER'S REPORT: "It's not a flash it shows the prescaled version for a
@@ -7897,17 +7770,7 @@ void UiSpike::InstallSubFlyoutBornScale()
 	gSubBornScaleOn = settings.spikeSubFlyoutBornScale;
 	gSubBornDockOn = settings.spikeSubFlyoutBornDock;
 	if (gSubBornScaleOn <= 0) { return; }
-	if (gTierF <= 1.01f) { return; }        // stock tier stays inert
-	if (settings.spikeSubFlyoutBorn2x > 0)
-	{
-		// The two mechanisms both make the window born 2x - together they
-		// would double it twice. The constants path is the one that broke the
-		// UI twice; refuse rather than stack them.
-		Logger::Get().WriteLine(LogLevel::Info,
-			"UiSpike: SUBBORN2 NOT installed - SubFlyoutBorn2x (the DEAD "
-			"constants path) is enabled. Turn that off to use born-scale.");
-		return;
-	}
+		if (gTierF <= 1.01f) { return; }        // stock tier stays inert
 
 	const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
 	void* place = reinterpret_cast<void*>(base - 0x400000 + 0x0079AD00);
@@ -8443,7 +8306,6 @@ void UiSpike::ArmDeferred(unsigned int fireAtTickMs)
 	// v2.32.0: install the show hook here, not in the ctor - by PostCityInit
 	// the tier is decided and gTierF is live, so a stock tier stays inert.
 	InstallShowHook();
-	InstallSubFlyoutBorn();
 	InstallSubFlyoutBornScale();
 	InstallFlyoutOpenHook();
 	// 2026-08-23 (user-reported: disaster flyout "isn't born correctly,

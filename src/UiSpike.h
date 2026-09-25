@@ -38,7 +38,6 @@ public:
 	// v2.34.0 task #50: trampoline the sub-flyout layout setter so the nested
 	// menus are BORN at f (their paint buffer is then allocated correct on
 	// Plot #1 - the flash is the buffer, not the sweep).
-	void InstallSubFlyoutBorn();
 	// v2.36.0 task #50: scale the nested sub-flyout at CONSTRUCTION (a detour
 	// on its Place), so its first paint is already correct instead of one
 	// sweep tick late. DrainBornScaleRecords hands those windows to scaleMap

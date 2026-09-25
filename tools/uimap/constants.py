@@ -37,7 +37,8 @@ import common as C
 import argscan as A
 
 # "gap" joins the set for task #96: SetItemMetrics(w, h, gap) - the strip
-# row spacing is a patched geometry constant (kSubFlyoutProviderSites) and
+# row spacing is a geometry constant (patched by kSubFlyoutProviderSites
+# until that retired path was removed, 2026-09-25) and
 # the strip height is literally count*(cellH+gap)-gap, so a model that
 # holds w and h but not gap cannot predict the strip.
 GEOM_ROLES = {"x", "y", "w", "h", "l", "t", "r", "b", "gap"}

@@ -100,7 +100,6 @@ void Settings::Load(const wchar_t* iniPath)
 	spikeShowHook = gi(spike, "ShowHook", spikeShowHook);
 	spikeEarlyBake = gi(spike, "EarlyBake", spikeEarlyBake);
 	spikeEarlyDock = gi(spike, "EarlyDock", spikeEarlyDock);
-	spikeSubFlyoutBorn2x = gi(spike, "SubFlyoutBorn2x", spikeSubFlyoutBorn2x);
 	spikeSubFlyoutBornScale = gi(spike, "SubFlyoutBornScale", spikeSubFlyoutBornScale);
 	spikeSubFlyoutBornDock = gi(spike, "SubFlyoutBornDock", spikeSubFlyoutBornDock);
 	spikeFlyoutBornOnOpen = gi(spike, "FlyoutBornOnOpen", spikeFlyoutBornOnOpen);

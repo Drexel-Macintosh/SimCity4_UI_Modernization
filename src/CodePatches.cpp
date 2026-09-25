@@ -601,19 +601,6 @@ namespace
 	// the Business Deals empty box (record-free: SetSize(300,100) x5 +
 	// close-X at (269,11) - kCityDialogIds is BANNED for its window id).
 	struct Imm8Site { uintptr_t site; uint8_t stock; };
-	// v2.34.0 SUB-FLYOUT PROVIDER METRICS (task #50). The nested sub-flyout's
-	// strip height is stripH = count*(cellH + gap) - gap, and that feeds the
-	// container height H = max(stripH, 53) + 50. So the container cannot be
-	// BORN at the right height unless the cell and gap are scaled too.
-	// These three sites are inside sub_7EAEB0 ONLY - the first-level flyout
-	// builder sub_7E7270 carries its OWN copies and must NOT be patched (it is
-	// already scaled after birth; patching both double-scales it). Patch by
-	// VA, never by pattern - sub_7F4690 calls both builders.
-	const Imm8Site kSubFlyoutProviderSites[] = {
-		{ 0x7EAEF3, 0x2C }, // cell W  (44)
-		{ 0x7EAEF1, 0x2C }, // cell H  (44)
-		{ 0x7EAEEF, 0x05 }, // row gap (5)
-	};
 
 	const Imm8Site kDeptImm8Sites[] = {
 		{ 0x788395, 0x14 }, // department title x (20)
@@ -3291,35 +3278,6 @@ namespace CodePatches
 		return n;
 	}
 
-	void ApplySubFlyoutProviderScale(float factor)
-	{
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-		const uintptr_t delta = base - kImageBase;
-		int n = 0;
-		for (const Imm8Site& s : kSubFlyoutProviderSites)
-		{
-			long v = std::lround(s.stock * factor);
-			if (v == s.stock) continue;
-			if (v < 1 || v > 127)
-			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: sub-flyout provider %ld at 0x%08X will not fit "
-					"imm8 - skipped.", v, static_cast<uint32_t>(s.site));
-				continue;
-			}
-			const uint8_t expect[2] = { 0x6A, s.stock };
-			const uint8_t repl[2] = { 0x6A, static_cast<uint8_t>(v) };
-			if (VerifiedWrite("sub-flyout provider", s.site, delta, expect, repl, 2)) n++;
-		}
-		if (n)
-		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: sub-flyout provider metrics x%.2f (%d of %d sites) "
-				"- strip born %g*n-%g.",
-				factor, n, static_cast<int>(sizeof(kSubFlyoutProviderSites) / sizeof(kSubFlyoutProviderSites[0])),
-				std::lround(44 * factor) + std::lround(5 * factor), (double)std::lround(5 * factor));
-		}
-	}
 
 	// v2.37.0 task #78. Scale the four Data Views legend ORIGINS inside the
 	// game's own re-lay sub_007A04F0, so the legend is laid down already

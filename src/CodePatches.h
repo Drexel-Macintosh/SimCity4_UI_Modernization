@@ -179,11 +179,6 @@ namespace CodePatches
 
 	int ApplyRegionIsoScale(float factor);
 
-	// v2.34.0 task #50: scale the NESTED sub-flyout builder's provider metrics
-	// (cell 44/44, gap 5) so its strip - and therefore its container - is BORN
-	// at round(stock*f). sub_7EAEB0 sites ONLY; the first-level twin sub_7E7270
-	// must stay stock or it double-scales.
-	void ApplySubFlyoutProviderScale(float factor);
 
 	// v2.37.0 task #78: the Data Views legend. The game re-lays it on EVERY
 	// view selection (sub_007A04F0 - the one choke point in the image) from

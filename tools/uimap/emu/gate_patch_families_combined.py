@@ -63,7 +63,6 @@ WIDTHS = {
     "kBudgetBtnXSites":          (6, "81 e9 c3 00 00 00 (sub ecx,195)"),
     "kBudgetBtnYSites":          (3, "83 /5 28 (sub r32,40)"),
     "kOrdinanceInsetSites":      (3, "6a <stock> <ctx> - imm8 pinned by next opcode"),
-    "kSubFlyoutProviderSites":   (2, "6a <stock>"),
     "kDeptImm8Sites":            (2, "6a <stock>"),
     "kDeptImm32Sites":           (5, "68 + dword"),
     "kBudgetSubImm8Sites":       (3, "83 <modrm> <stock>"),
@@ -111,7 +110,6 @@ WIDTHS = {
     # the x8 family above). Registered now.
     "kRegionIsoSites":           (4, "float32 isometric basis in .rdata - DATA, excluded"),
     "kRegionIso2Sites":          (4, "float32 L2 overlay basis in .rdata - DATA, excluded"),
-    "kRegionCamScaleSite":       (5, "push imm32 (0.25f) at 0x7AD0BB"),
     # #138 intro video (v2.93.0). Two opcodes, both 5 bytes: `68 imm32`
     # (push, the SetArea w/h) and `2D imm32` (sub eax, the centring
     # subtrahends). Registered the day the table was written - the anti-rot
