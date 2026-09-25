@@ -162,8 +162,12 @@ def report_source(forms):
     """Which of OUR lists claim this id, with the surrounding comment."""
     section("1. OUR SOURCE - which lists claim it, and what the comment says")
     found = False
-    for fname in ("UiSpike.cpp", "ScaleTier.cpp", "CodePatches.cpp",
-                  "Settings.h", "SC4UIScaleDllDirector.cpp"):
+    # Every UiSpike source first (the id tables live in UiSpikeIds.h since the
+    # audit B11 split, 2026-09-25), then the rest.
+    uis = sorted(f for f in os.listdir(SRC)
+                 if f.startswith("UiSpike") and f.endswith((".cpp", ".h")))
+    for fname in uis + ["ScaleTier.cpp", "CodePatches.cpp",
+                        "Settings.h", "SC4UIScaleDllDirector.cpp"]:
         path = os.path.join(SRC, fname)
         text = _read(path)
         if not text:

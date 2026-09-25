@@ -37,7 +37,8 @@ PROJ = os.path.abspath(os.path.join(HERE, "..", ".."))
 # scripts we modify, so indexing it would silently miss most flyouts.
 STAGE = os.path.join(PROJ, "tools", "uiscripts", "extracted")
 MODDIR = os.path.join(PROJ, "tools", "selective-safe", "thirdparty-ui", "WarriorUI")
-SRC = os.path.join(PROJ, "src", "UiSpike.cpp")
+# kMayorFlyoutDock moved to its own header in the 2026-09-25 audit (B11).
+SRC = os.path.join(PROJ, "src", "UiSpikeIds.h")
 
 MARKER_ID = 0x0000AAAA
 

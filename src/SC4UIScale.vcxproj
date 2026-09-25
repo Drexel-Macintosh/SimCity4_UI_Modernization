@@ -123,6 +123,7 @@
   <ItemGroup>
     <ClInclude Include="UiSpike.h" />
     <ClInclude Include="UiSpikeInternal.h" />
+    <ClInclude Include="UiSpikeIds.h" />
     <ClInclude Include="CodePatches.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Logger.h" />

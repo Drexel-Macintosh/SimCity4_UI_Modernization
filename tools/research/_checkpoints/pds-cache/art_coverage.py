@@ -50,9 +50,10 @@ def dialog_static_instances():
 
 
 def uispike_id_list(name):
-    """Pull an id list out of UiSpike.cpp by name (comment-stripped)."""
-    src = open(os.path.join(PROJ, "src", "UiSpike.cpp"), encoding="utf-8",
-               errors="replace").read()
+    """Pull an id list out of the UiSpike sources by name (comment-stripped).
+    The tables moved to UiSpikeIds.h in the audit B11 split (2026-09-25)."""
+    src = "\n".join(open(os.path.join(PROJ, "src", f), encoding="utf-8",
+                         errors="replace").read() for f in ("UiSpikeIds.h", "UiSpike.cpp"))
     i = src.index(name + "[] = {")
     j = src.index("};", i)
     body = re.sub(r"//[^\n]*", "", src[i:j])

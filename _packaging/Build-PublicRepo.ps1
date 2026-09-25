@@ -66,7 +66,7 @@ $SRC = @(
     "ScaleTier.cpp", "ScaleTier.h",
     "Settings.cpp", "Settings.h",
     "SpinProbe.cpp", "SpinProbe.h",
-    "UiSpike.cpp", "UiSpike.h", "UiSpikeInternal.h", "UiSpikeSelector.cpp", "UiSpikeRegion.cpp",
+    "UiSpike.cpp", "UiSpike.h", "UiSpikeInternal.h", "UiSpikeIds.h", "UiSpikeSelector.cpp", "UiSpikeRegion.cpp",
     "WebRedirect.cpp", "WebRedirect.h",
     "SC4UIScale.vcxproj", "SC4UIScale.sln"
 )

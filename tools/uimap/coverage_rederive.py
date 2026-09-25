@@ -152,6 +152,8 @@ REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
 SCRIPTS_GAME    = os.path.join(REPO, "tools", "uiscripts", "extracted")
 SCRIPTS_PLUGINS = os.path.join(REPO, "tools", "uiscripts", "extracted-plugins")
 UISPIKE         = os.path.join(REPO, "src", "UiSpike.cpp")
+# The id tables moved to UiSpikeIds.h in the audit B11 split (2026-09-25).
+UISPIKE_IDS     = os.path.join(REPO, "src", "UiSpikeIds.h")
 
 # A layout script is a TEXT .UI written by one of the UI-editor/extractor tools.
 # TWO banner spellings exist in this corpus and BOTH are real (see header):
@@ -1371,20 +1373,29 @@ def main():
                       "restore src\\UiSpike.cpp, then re-run"))
         cpp = ""
     else:
-        with open(UISPIKE, "r", encoding="latin-1") as f:
-            cpp = f.read()
+        texts = []
+        for path in (UISPIKE_IDS, UISPIKE):
+            if os.path.isfile(path):
+                with open(path, "r", encoding="latin-1") as f:
+                    texts.append((os.path.basename(path), f.read()))
+        cpp = "\n".join(t for _, t in texts)
         for name in ("kNeverScaleIds", "kDataScaledSubtreeIds", "kAlwaysScaleCityIds",
                      "kCityDialogIds", "SCALED_WINDOW_IDS", "kSkipScaleIds"):
-            ids, line = cpp_id_list(cpp, name)
+            ids, line, where = None, None, None
+            for fname, text in texts:
+                ids, line = cpp_id_list(text, name)
+                if ids is not None:
+                    where = fname
+                    break
             if ids is None:
                 print("  %-24s : (not found as an array)" % name)
                 skips.append(("UiSpike list %s" % name,
-                              "no `const uint32_t %s[]` array in UiSpike.cpp" % name,
+                              "no `const uint32_t %s[]` array in UiSpikeIds.h or UiSpike.cpp" % name,
                               "confirm the list was renamed/removed, then update this "
                               "tool's list of array names"))
                 continue
             lists[name] = ids
-            print("  %-24s : %3d ids   (UiSpike.cpp:%d)" % (name, len(set(ids)), line))
+            print("  %-24s : %3d ids   (%s:%d)" % (name, len(set(ids)), where, line))
     checks += 1
 
     # every id mentioned anywhere in UiSpike.cpp as a 0x........ literal

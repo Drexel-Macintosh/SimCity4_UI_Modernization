@@ -52,7 +52,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 CORPUS = os.path.join(ROOT, "tools", "uiscripts", "extracted")
 PLUGCORPUS = os.path.join(ROOT, "tools", "uiscripts", "extracted-plugins")
 SRC = os.path.join(ROOT, "src")
-SRC_FILES = ["UiSpike.cpp", "CodePatches.cpp"]
+# Every UiSpike source (the id tables moved to UiSpikeIds.h in the audit B11
+# split, 2026-09-25), then CodePatches.cpp.
+SRC_FILES = sorted(f for f in os.listdir(SRC)
+                   if f.startswith("UiSpike") and f.endswith((".cpp", ".h"))) + ["CodePatches.cpp"]
 BASELINE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                         "id_collisions.baseline.json")
 

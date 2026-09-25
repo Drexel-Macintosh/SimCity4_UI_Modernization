@@ -39,8 +39,9 @@ $ErrorActionPreference = "Stop"
 $proj = Split-Path $PSScriptRoot -Parent
 $pyFile  = Join-Path $proj "tools\selective-safe\build_selective_safe.py"
 $cppFile = Join-Path $proj "src\UiSpike.cpp"
+$idsFile = Join-Path $proj "src\UiSpikeIds.h"   # audit B11: the id tables live here
 
-foreach ($f in @($pyFile, $cppFile)) {
+foreach ($f in @($pyFile, $cppFile, $idsFile)) {
     if (-not (Test-Path $f)) { Write-Output "FAIL: $f not found"; exit 1 }
 }
 
@@ -79,8 +80,10 @@ if ($scaled.Count -lt 40) {
 }
 Write-Output ("Parsed SCALED_WINDOW_IDS: {0} ids (python AST)" -f $scaled.Count)
 
-# --- 2. UiSpike.cpp id arrays ----------------------------------------------
-$cpp = Get-Content $cppFile -Raw
+# --- 2. UiSpike id arrays ---------------------------------------------------
+# The tables moved to src\UiSpikeIds.h (audit B11, 2026-09-25). UiSpike.cpp is
+# read too, so an array defined in either file is found.
+$cpp = (Get-Content $idsFile -Raw) + "`n" + (Get-Content $cppFile -Raw)
 
 function Get-CppArrayIds {
     param([string]$Name, [switch]$FirstPerRow)
@@ -95,7 +98,7 @@ function Get-CppArrayIds {
     if (-not $m -or -not $m.Success) {
         $m = [regex]::Match($script:cpp, [regex]::Escape($Name) + '\[\]\s*=\s*\{(?<body>.*?)\};', 'Singleline')
     }
-    if (-not $m -or -not $m.Success) { Write-Output "FAIL: could not find array $Name in UiSpike.cpp"; exit 1 }
+    if (-not $m -or -not $m.Success) { Write-Output "FAIL: could not find array $Name in UiSpikeIds.h or UiSpike.cpp"; exit 1 }
     if ($m.Groups['body'].Value -match '\[\]\s*=\s*\{') { Write-Output "FAIL: parse of $Name overran into another array"; exit 1 }
     $ids = @()
     foreach ($line in ($m.Groups['body'].Value -split "`n")) {
