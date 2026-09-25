@@ -252,7 +252,6 @@ namespace
 	SlotFn gOrigSlot[128] = {};
 	int gSlotHits[128] = {};
 	void* gVtCopy[256] = {};
-	int gPaintHits = 0;
 	int gForceInvalidate = 0;
 
 	// Second vtable copy for the disaster STRIP window (vtable 0x00AB6D88).
@@ -296,11 +295,6 @@ namespace
 	// to MEASURE the ~45px offset that shifts the hit-test right of the draw.
 	typedef bool(__fastcall* XformFn)(void*, void*, int32_t*, int32_t*);
 	XformFn gOrigSlot59 = nullptr;
-	int     gStripForceX = 0;         // if >0, force the click X passed to the list's
-	                                  // GZOnMouseDownL to this value, so a click
-	                                  // anywhere in the 2x cell registers as a hit
-	                                  // (the FIX, once the diagnostic confirms the list
-	                                  // handler is what rejects the left half).
 	// ⭐ DEFAULT FLIPPED TO ON (this build). Originally 0 pending verification -
 	// "SDK vtable slot numbers past ~97 may not match the game and CRASHED" -
 	// but the DVT dump DID verify them (see the install site's own later
@@ -316,9 +310,6 @@ namespace
 	// Still overridable via [Disaster] ClickHook= in the ini if a future
 	// game patch ever moves these vtable slots again.
 	int     gClickHook = 1;           // installs the 62/59/136/138/121/149 click hooks
-	int     gMouseSlot = 133;         // DEAD: no install site reads this any more (the
-	                                  // fix moved to slots 136/138 - see gClickHook).
-	                                  // Kept only so old ini overrides do not error.
 	// THE CLICK GATE (v2.11.24, found by full offline disasm): the CONTAINER
 	// overrides IsPointInMe (0x0079A180) to tail-call its slot 121 (0x0079AE30),
 	// which claims the point ONLY when x >= (width - [this+0xe0]) - i.e. the
@@ -436,7 +427,6 @@ namespace
 	// Counters cannot saturate the way a line budget can (law 41).
 	unsigned gTalStrip = 0;   // every 4-state strip blit seen
 	unsigned gTalCut   = 0;   // ... that we re-cut
-	unsigned gTalSkip  = 0;   // ... that we left alone
 	unsigned gTalCover = 0;   // pre-fill blits issued
 	unsigned gTalDump  = 0;
 	// ICONWATCH (task #149): the plaza cell is drawn by SOMETHING we do not
@@ -486,7 +476,6 @@ namespace
 	// stack pass through byte-identical. Same pattern as X8DispatchStub in
 	// CodePatches.cpp. We read the dest rect from [esp+8] (arg2, the rect
 	// pointer per the call site) WITHOUT disturbing the frame.
-	void* gS20Rect = nullptr;
 	void S20Note(void* rect)
 	{
 		gS20Any++;
@@ -914,7 +903,7 @@ namespace
 	// dials), so it re-renders only when its data changes -
 	// InvalidateSelfAndParents is not enough. That is the #47 lesson exactly
 	// ("an installed hook is not an executed hook"), and the established
-	// lever is the buffer force-recreate (SlotThunk<88> + gForceRecreate)
+	// lever is the buffer force-recreate (SlotThunk<88>)
 	// already used for the sub-flyout and the dials. If the buffer is the
 	// blocker, EVERY field-level fix above would look inert exactly as it
 	// did - which is why they must not be re-tried before that is settled.
@@ -1046,15 +1035,10 @@ namespace
 	// the dock/ring never moves; the strip and icons move to meet it.
 	// Build Park: stock arm meets row 7 ("Tourist Trap"); unpinned layout
 	// put row 5 ("Marina") -> shift = -2 rows. ini [SubFlyout]
-	// StripShiftRows: RETIRED (v4.0.30). Moving the strip independently
-	// breaks bar+strip alignment. Kept as an ini variable but never applied.
-	int     gSubStripShiftRows = 0;
-	// ContainerShiftRows (v4.0.31): RETIRED (v4.0.33). Replaced by the
-	// mathematical formula in SubContainerShiftFromGeo() which computes the
-	// exact shift from ring geometry at all scales and all counts.
-	int     gSubContainerShiftRows = 0;
-	// Fine-tune pixel offset added to the row-based shift (positive = more UP).
-	int     gSubContainerShiftFine = 0;
+	// StripShiftRows: RETIRED (v4.0.30) - moving the strip independently
+	// breaks bar+strip alignment. ContainerShiftRows/Fine (v4.0.31): RETIRED
+	// (v4.0.33), replaced by SubContainerShiftFromGeo(). Their never-read
+	// globals and ini reads were removed in the 2026-09-25 audit (B1).
 	// #134: SUBGEO sits AFTER the atNative/atTarget gate, so a container the
 	// sweep does not recognise logs nothing at all - which is exactly the case
 	// that needs explaining. SUBCAND logs every candidate button BEFORE that
@@ -1728,11 +1712,8 @@ namespace
 	int gEltLog = 0;         // v2.8.6: log the first N element blits (src+dst) into
 	                         // the buffer so we can see WHY the ring renders 1x while
 	                         // the bar renders 2x in the SAME 2x buffer.
-	int gCtxHalve = 0;       // v2.8.3: OFF. Only needed when fields were doubled
-	                         // (to halve the doubled src back to 1x). With natural
-	                         // fields (gFieldMask=0) the srcs are already 1x; halving
-	                         // them would show half the texture. Buffer size is the
-	                         // 2x lever now, so leave the element draws untouched.
+	// (gCtxHalve, a src-halving switch hardwired OFF since v2.8.3, was removed
+	// with its branch in the 2026-09-25 audit, B1: buffer size is the 2x lever.)
 
 	int __fastcall BltThunkCtx(void* self, void* /*edx*/,
 		void* a1, void* a2, void* a3, void* a4)
@@ -1749,96 +1730,37 @@ namespace
 				s[0], s[1], s[2], s[3], s[2] - s[0], s[3] - s[1],
 				d[0], d[1], d[2], d[3], d[2] - d[0], d[3] - d[1]);
 		}
-		if (gCtxHalve && a2)
-		{
-			int32_t* r = reinterpret_cast<int32_t*>(a2);   // srcRect (l,t,r,b)
-			const int w = r[2] - r[0], h = r[3] - r[1];
-			// ONLY halve the doubled CONTAINER-element srcs (bar caps ~106w,
-			// ring ~188w). The thumbnail blits go through this same buffer but
-			// were NOT dst-doubled, so halving their (small) src showed 1/4 of
-			// the picture. Guard on size so thumbnails render full.
-			if ((w > 80 || h > 80) && w < 8000 && h < 8000)
-			{
-				r[0] /= 2; r[1] /= 2; r[2] /= 2; r[3] /= 2;
-			}
-		}
 		return gCtxOrigBlt ? gCtxOrigBlt(self, a1, a2, a3, a4) : 0;
 	}
 
-	// BUFFER RESIZE hook (v2.8.0). Offline RE proved: on-screen flyout size ==
-	// the source buffer's PHYSICAL size (141), and the buffer is (re)created inside
-	// Plot via buffer->Init(w,h,f0,f1) — class vtable 0x00AC1400 slot 3 (0x008269B0),
-	// where w,h come from the WINDOW size (282x678) but a runtime 0.5 makes the
-	// physical buffer 141x339. Hooking Init (NOT the window) to enlarge the buffer
-	// leaves the window at 282, so it should not fly the strip or trip the parent-
-	// clip like the window-resize did (v2.7.96). We patch the SHARED class vtable
-	// slot, but ONLY around the disaster container's Plot call (restored right
-	// after), so no other buffer in the game is affected. gInitLog also finally
-	// records the REAL Init args (resolves the static 282-vs-141 contradiction).
-	typedef int(__thiscall* InitFn)(void* self, int w, int h, int f0, int f1);
-	InitFn gCtxOrigInit = nullptr;
-	int    gInitScale = 1;               // Init passthrough: recreate buffer at the
-	                                     // CURRENT window (282) = 2x the stale 141;
-	                                     // no doubling needed (composite clips to
-	                                     // r24=282). >1 overshoots + loops forever.
-	int    gHideRing = 0;                // v2.8.4 test CONFIRMED the visible orange
-	                                     // circle is the BUTTON's selection ring (it
-	                                     // stayed when the container ring was hidden),
-	                                     // NOT a flyout element. Also 0xec/0xf0 are
-	                                     // shared with the bar, so hiding broke it.
-	                                     // Leave OFF. Scaling the circle = god-toolbar
-	                                     // button work, separate from the flyout.
-	int    gForceRecreate = 1;           // corrupt the buffer's cached width so
-	                                     // Plot's validity check fails -> it
-	                                     // releases + recreates the buffer -> Init
-	                                     // fires -> InitThunk doubles it. (Init is
-	                                     // otherwise never called on static frames.)
+	// BUFFER RECREATE (v2.8.0/v2.8.1). Offline RE proved: on-screen flyout size
+	// == the source buffer's PHYSICAL size, and the buffer is (re)created inside
+	// Plot via buffer->Init(w,h,f0,f1) — class vtable 0x00AC1400 slot 3
+	// (0x008269B0) - with w,h from the WINDOW size. A stale 141-wide buffer left
+	// from an early small window is forced to recreate at the current window
+	// (the SlotThunk<88> Plot hook corrupts its cached width); no Init hook is
+	// needed for that. (The Init hook, its x2 scale knob and the ring-hiding and
+	// src-halving switches were all hardwired off or inert and were removed in
+	// the 2026-09-25 audit, B1.)
 	void** const kBufClassVt = reinterpret_cast<void**>(0x00AC1400);
-	void*  gBufSavedInit = nullptr;
 	bool   gBufVtWritable = false;
-	int    gInitLog = 0;
-
-	int __fastcall InitThunk(void* self, void* /*edx*/, int w, int h, int f0, int f1)
-	{
-		if (gInitLog < 6)
-		{
-			gInitLog++;
-			Logger::Get().WriteLine(LogLevel::Debug,
-				"UiSpike: DINIT in w=%d h=%d f0=%d f1=%d -> req %dx%d",
-				w, h, f0, f1, w * gInitScale, h * gInitScale);
-		}
-		return gCtxOrigInit
-			? gCtxOrigInit(self, w * gInitScale, h * gInitScale, f0, f1) : 0;
-	}
 
 	// CLASS-level buffer Blt hook (v2.8.7). Because the buffer is force-recreated,
 	// the instance vtable swap (BltThunkCtx) is dead; to see/adjust the element
-	// draws we must hook the class vtable's Blt slot (0x00AC1400[29]=0x74),
-	// patched only around the disaster Plot. Logs each draw; can also halve large
-	// srcs (to stretch a field-doubled ring).
+	// draws we must hook the class vtable's Blt slot (0x00AC1400[29]=0x74).
+	// v2.9.4: it also draws the sub-flyout ring at 2x (CODE-ONLY: read the ring
+	// from the atlas (a1), nearest-upscale, write into the container at the
+	// ring pos, color-keying magenta, and skip the game's 1x ring blit).
 	typedef int(__thiscall* CBltFn)(void* self, void* a1, void* a2, void* a3, void* a4);
 	CBltFn gClassBltOrig = nullptr;
-	void*  gClassBltSaved = nullptr;
 	int    gStripDump = 0;               // DIAGNOSTIC (ini StripDump): declared here
 	                                     // (before BltClassThunk) so the ring/bar draw
 	                                     // logger can see it. See fuller note at the
 	                                     // strip globals. No visual effect. Live-tunable.
 	int    gClassBltLog = 0;             // log first N class-Blt draws
-	int    gClassHalveRing = 0;          // halve srcs >80 (stretch a doubled ring)
-	int    gRingScale = 1;               // v2.9.0 dst-enlarge: DEAD (blit clips, no
-	                                     // stretch - confirmed in 0x826ad0+0x826210).
-	                                     // Ring needs 2x ART, not geometry.
 	int    gDrawCtxLog = 0;              // v2.9.2: probe the ring draw's SOURCE
 	                                     // (drawContext a1) = the art atlas, to find
 	                                     // where the 2x ring/picture art must go.
-	int    gDumpAtlas = 0;               // v2.9.3: dump the 306x62 atlas pixels (done)
-	int    gAtlasDumped = 0;
-	int    gRing2xBlit = 1;              // v2.9.4: CODE-ONLY 2x ring. Read the 94x62
-	                                     // ring from the atlas (a1), nearest-upscale
-	                                     // 2x -> 188x124, write into the container
-	                                     // (self) at the ring pos, color-keying
-	                                     // magenta. Skips the game's 1x ring blit.
-	                                     // Both buffers are the same readable class.
 	// (v4.0.41) gRingDX/gRingDY (the hand-tuned f=2 ring seat) and
 	// gRingUnderStrip are DELETED with the legacy disaster path - the
 	// rebuild's stock-proportional geometry needs no seat nudge and no
@@ -2680,21 +2602,6 @@ namespace
 					self, s[2] - s[0], s[3] - s[1], s[0], s[1], s[2], s[3],
 					d[2] - d[0], d[3] - d[1], d[0], d[1], d[2], d[3]);
 			}
-			if (gClassHalveRing)
-			{
-				const int w = s[2] - s[0], h = s[3] - s[1];
-				if ((w > 80 || h > 80) && w < 8000 && h < 8000)
-				{ s[0] /= 2; s[1] /= 2; s[2] /= 2; s[3] /= 2; }
-			}
-			if (gRingScale > 1 && d[0] == 0)
-			{
-				const int rw = d[2] - d[0], rh = d[3] - d[1];
-				if (rw > 40 && rw < 160)
-				{
-					d[2] = d[0] + rw * gRingScale;
-					d[3] = d[1] + rh * gRingScale;
-				}
-			}
 			// PROBE the ring draw's SOURCE (a1 = drawContext / art atlas). Log its
 			// vtable + (if it is the buffer class) its internal area rect
 			// [0x14..0x20], so we know what/where the atlas is for the 2x art.
@@ -2715,22 +2622,13 @@ namespace
 			}
 			// ATLAS PIXEL DUMP — REMOVED v2.66.0 (release hygiene, #112).
 			// The v2.9.3 one-shot that dumped the 306x62 atlas to
-			// atlas_dump.bin lived here. It was DEAD CODE: `gDumpAtlas` is a
-			// hardcoded 0 (:1345, its own comment already said "(done)"),
-			// nothing writes it, and there is no ini key for it — so the
-			// block could not execute. It is removed rather than repaired
-			// because it carried an ABSOLUTE MACHINE PATH into the shipped
-			// binary:
+			// atlas_dump.bin lived here. It was DEAD CODE (gDumpAtlas was a
+			// hardcoded 0 with no ini key) and it carried an ABSOLUTE MACHINE
+			// PATH into the shipped binary:
 			//     C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\...
-			// A byte scan of build\Release\SC4UIScale.dll found that string
-			// in the artifact we were about to publish. It would also have
-			// silently failed for every user but us.
-			// gDumpAtlas / gAtlasDumped are DELIBERATELY KEPT declared: two
-			// live conditions (:2583, :2603) still read them, and with
-			// gDumpAtlas == 0 those short-circuit exactly as before, so this
-			// removal is behaviour-neutral by construction.
 			// If the dump is ever needed again, derive the path at runtime
-			// beside the log — never hardcode one.
+			// beside the log — never hardcode one. (gDumpAtlas itself went in
+			// the 2026-09-25 audit, B1.)
 			// CODE-ONLY 2x RING: read the 94x62 ring from the atlas (a1),
 			// nearest-upscale 2x, write into the container (self) at the ring's
 			// dst origin, color-keying magenta. Skip the game's 1x ring blit.
@@ -2776,7 +2674,7 @@ namespace
 			// 80x53 -> 160x106, and (0,94) -> (0,188). No hand-tuned offset is
 			// needed or wanted here - unlike disaster's RingDX/RingDY, this is
 			// just "the whole thing is twice as big in a twice-as-big buffer".
-			if (gRing2xBlit && a1 && destIsSubContainer)
+			if (a1 && destIsSubContainer)
 			{
 				const int sw = s[2] - s[0], sh = s[3] - s[1];
 				if (sw >= 70 && sw <= 140 && sh >= 35 && sh <= 100)
@@ -2952,8 +2850,6 @@ namespace
 	// window (#59) and settle whether the U-Drive-It map marker is a window
 	// at all (#60). Logs only when the observed SET changes, capped at 40.
 	int    gEdgeDump = 0;
-	int    gStripHitDX = 0;              // (confirmed no-op: [0xA8]/[0xB0] is a
-	                                     // recomputed cache) - left for reference.
 	int    gStripHitW = 0;              // if >0, force the strip item's [0xEC]/[0xF0]
 	                                     // fields (currently -1 = "use natural ~44 size"
 	                                     // -> only the right half is clickable) to this
@@ -3338,7 +3234,7 @@ namespace
 		// NO RUNTIME UPSCALER: a runtime upscaler
 		// would be unbounded and would end the property that every scaled
 		// pixel comes from a diffable build step. AND THIS BLT CANNOT
-		// STRETCH ANYWAY - see gBltScale below: a 2538x6102 dest changed
+		// STRETCH ANYWAY - the removed gBltScale test: a 2538x6102 dest changed
 		// nothing, so Blt is a 1:1 copy clipped to dest and on-screen size
 		// is the SOURCE size. Re-cutting SRC alone would therefore leave a
 		// small icon jammed in the top-left - the ORIGINAL symptom.
@@ -3524,9 +3420,9 @@ namespace
 	// (v2.7.96/97: composite clips to the PARENT's notion of child size).
 	// Deleted so a re-enable cannot resurrect 2x-only code at another tier.)
 	int gBltLog = 0;
-	int gBltScale = 0;   // DISABLED: a3 (dest rect) proved NOT the size lever -
-	                     // a 2538x6102 dest gave zero change => Blt is a 1:1 copy
-	                     // clipped to dest; on-screen size = SOURCE buffer size.
+	// (gBltScale removed, audit B1: a3 (dest rect) proved NOT the size lever -
+	// a 2538x6102 dest gave zero change => Blt is a 1:1 copy clipped to dest;
+	// on-screen size = SOURCE buffer size.)
 
 	bool SafeRead4(void* p, int* out4)
 	{
@@ -3542,22 +3438,7 @@ namespace
 	int __fastcall BltThunk(void* self, void* /*edx*/,
 		void* a1, void* a2, void* a3, void* a4)
 	{
-		// SCALE FIRST, then log the MODIFIED a3 so we prove the write reaches the
-		// real Blt. TEST at 3x so any real effect is unmistakable (2x could grow
-		// mostly off the bottom of the screen and look "unchanged"). If a3 logs
-		// as 3x here but the screen is still 1x, the dest is being CLIPPED to the
-		// window bounds and the window size (parent clip) is the true clamp.
-		int before2 = -1, before3 = -1;
-		if (gBltScale && a3)
-		{
-			int32_t* r = reinterpret_cast<int32_t*>(a3);
-			if (r[2] > 0 && r[3] > 0 && r[2] < 4000 && r[3] < 4000)
-			{
-				before2 = r[2]; before3 = r[3];
-				r[2] *= 3;
-				r[3] *= 3;
-			}
-		}
+		// Log-only: the first few composite Blts' rects.
 		if (gBltLog < 8)
 		{
 			gBltLog++;
@@ -3567,10 +3448,9 @@ namespace
 			const bool ok3 = SafeRead4(a4, r3);
 			Logger::Get().WriteLine(LogLevel::Debug,
 				"UiSpike: DBLT this=%p a1=%p srcA2=(%d,%d,%d,%d ok%d) "
-				"dstA3_before=(%d,%d) dstA3_now=(%d,%d,%d,%d ok%d) a4=%p(%d,%d,%d,%d ok%d)",
+				"dstA3=(%d,%d,%d,%d ok%d) a4=%p(%d,%d,%d,%d ok%d)",
 				self, a1,
 				r1[0], r1[1], r1[2], r1[3], ok1 ? 1 : 0,
-				before2, before3,
 				r2[0], r2[1], r2[2], r2[3], ok2 ? 1 : 0,
 				a4, r3[0], r3[1], r3[2], r3[3], ok3 ? 1 : 0);
 		}
@@ -4465,16 +4345,8 @@ namespace
 			// FORCE BUFFER RECREATION (v2.8.1). The [0xdc] buffer is created once
 			// and reused, so Init never fires on static frames (DINIT was empty).
 			// Corrupt the buffer's cached width field [buf+0x1c] so Plot's validity
-			// check (GetWidth vs window) fails -> Plot releases + recreates it ->
-			// Init runs -> InitThunk doubles the physical size. Plot re-Inits with
+			// check (GetWidth vs window) fails -> Plot releases + recreates it at
 			// the real window size, so the 0x1c corruption is transient.
-			if (gHideRing)
-			{
-				mm[0x3b] = 0;   // [0xec] ring width  -> 0 (ring not drawn)
-				mm[0x3c] = 0;   // [0xf0] ring height -> 0
-				reinterpret_cast<uint8_t*>(self)[0x114] |= 1;
-			}
-			if (gForceRecreate)
 			{
 				void* buf = reinterpret_cast<void*>(static_cast<uintptr_t>(
 					static_cast<uint32_t>(mm[0x37])));
@@ -4484,7 +4356,7 @@ namespace
 				// Corrupt [0x1c] so Plot's validity fails -> it recreates at the 282
 				// window -> buffer becomes 282 (2x the stale 141). Once it matches,
 				// stop -> validity passes -> stable (no per-frame recreate loop).
-				if (buf && reinterpret_cast<int32_t*>(buf)[7] != winW * gInitScale)
+				if (buf && reinterpret_cast<int32_t*>(buf)[7] != winW)
 				{
 					reinterpret_cast<int32_t*>(buf)[7] = 0x7FFF;   // [0x1c] bogus
 					reinterpret_cast<uint8_t*>(self)[0x114] |= 1;  // dirty
@@ -4532,13 +4404,12 @@ namespace
 			}
 		}
 
-		// Patch the buffer CLASS vtable's Init slot for the DURATION of this Plot
-		// only (restored immediately after), so buffer (re)creation inside Plot
-		// allocates at gInitScale x. Scoped to the disaster container (IDX==88).
-		if (IDX == 88 &&
-			(gInitScale != 1 || gClassBltLog < 20 || gClassHalveRing ||
-			 gRingScale > 1 || gDrawCtxLog < 3 || (gDumpAtlas && !gAtlasDumped) ||
-			 gRing2xBlit))
+		// Patch the buffer CLASS vtable for the disaster container (IDX==88):
+		// the class Blt (slot 29) and, with IconFit, the present watch (slot 20).
+		// (Until the 2026-09-25 audit this also held the Init-slot patch and a
+		// condition built from knobs that were all hardwired off, plus
+		// gRing2xBlit = 1, which made it always true.)
+		if (IDX == 88)
 		{
 			if (!gBufVtWritable)
 			{
@@ -4549,60 +4420,49 @@ namespace
 			}
 			if (gBufVtWritable)
 			{
-				if (gInitScale != 1)
+				// v2.11.2: PERMANENT patch. Leave the class Blt hooked (do NOT
+				// restore after this Plot) so the ring/bar scaler also fires
+				// during the scroll-arrow repaint, which runs OUTSIDE this Plot
+				// and was collapsing the flyout to 1x. Transforms are gated to
+				// the container buffer (destIsContainer) inside BltClassThunk,
+				// so other UI sharing this buffer class is untouched.
+				if (!gClassBltOrig)
+					gClassBltOrig = reinterpret_cast<CBltFn>(kBufClassVt[29]);
+				if (kBufClassVt[29] != reinterpret_cast<void*>(&BltClassThunk))
+					kBufClassVt[29] = reinterpret_cast<void*>(&BltClassThunk);
+				// PRESENTWATCH install (task #149). Same permanent-class-patch
+				// discipline as the Blt above, but slot 20 (+0x50) - the present
+				// path that copies a window's PRIVATE BUFFER out, which never
+				// routes through slot 29 and so was invisible to every probe we
+				// built. Patched on BOTH known buffer classes: 0x00AC1400 and
+				// 0x00ADB418 (its slot 29 is 0x00991BA0 and can take a renderer
+				// path under dgVoodoo). LOG ONLY - it calls through.
+				if (gIconFit)
 				{
-					if (!gCtxOrigInit)
-						gCtxOrigInit = reinterpret_cast<InitFn>(kBufClassVt[3]);
-					gBufSavedInit = kBufClassVt[3];
-					kBufClassVt[3] = reinterpret_cast<void*>(&InitThunk);
-				}
-				if (gClassBltLog < 20 || gClassHalveRing || gRingScale > 1 ||
-					gDrawCtxLog < 3 || (gDumpAtlas && !gAtlasDumped) || gRing2xBlit)
-				{
-					// v2.11.2: PERMANENT patch. Leave the class Blt hooked (do NOT
-					// restore after this Plot) so the ring/bar scaler also fires
-					// during the scroll-arrow repaint, which runs OUTSIDE this Plot
-					// and was collapsing the flyout to 1x. Transforms are gated to
-					// the container buffer (destIsContainer) inside BltClassThunk,
-					// so other UI sharing this buffer class is untouched.
-					if (!gClassBltOrig)
-						gClassBltOrig = reinterpret_cast<CBltFn>(kBufClassVt[29]);
-					if (kBufClassVt[29] != reinterpret_cast<void*>(&BltClassThunk))
-						kBufClassVt[29] = reinterpret_cast<void*>(&BltClassThunk);
-					// PRESENTWATCH install (task #149). Same permanent-class-patch
-					// discipline as the Blt above, but slot 20 (+0x50) - the present
-					// path that copies a window's PRIVATE BUFFER out, which never
-					// routes through slot 29 and so was invisible to every probe we
-					// built. Patched on BOTH known buffer classes: 0x00AC1400 and
-					// 0x00ADB418 (its slot 29 is 0x00991BA0 and can take a renderer
-					// path under dgVoodoo). LOG ONLY - it calls through.
-					if (gIconFit)
+					InstallWideWatch();
+					if (!gS20Orig0)
 					{
-						InstallWideWatch();
-						if (!gS20Orig0)
+						gS20Orig0 = kBufClassVt[20];
+						kBufClassVt[20] = reinterpret_cast<void*>(&Slot20Thunk0);
+					}
+					if (!gS20Orig1)
+					{
+						DWORD oldP = 0;
+						if (VirtualProtect(&kBufClassVt2[20], sizeof(void*),
+							PAGE_EXECUTE_READWRITE, &oldP))
 						{
-							gS20Orig0 = kBufClassVt[20];
-							kBufClassVt[20] = reinterpret_cast<void*>(&Slot20Thunk0);
+							gS20Orig1 = kBufClassVt2[20];
+							kBufClassVt2[20] = reinterpret_cast<void*>(&Slot20Thunk1);
+							VirtualProtect(&kBufClassVt2[20], sizeof(void*), oldP, &oldP);
 						}
-						if (!gS20Orig1)
-						{
-							DWORD oldP = 0;
-							if (VirtualProtect(&kBufClassVt2[20], sizeof(void*),
-								PAGE_EXECUTE_READWRITE, &oldP))
-							{
-								gS20Orig1 = kBufClassVt2[20];
-								kBufClassVt2[20] = reinterpret_cast<void*>(&Slot20Thunk1);
-								VirtualProtect(&kBufClassVt2[20], sizeof(void*), oldP, &oldP);
-							}
-						}
-						static unsigned s20Dump = 0;
-						if (++s20Dump % 40 == 0)
-						{
-							Logger::Get().WriteLine(LogLevel::Info,
-								"UiSpike: PRESENTWATCH tally anySlot20=%u plazaCell=%u "
-								"(anySlot20==0 means the thunk never ran - instrument "
-								"failure, NOT a finding)", gS20Any, gS20Cell);
-						}
+					}
+					static unsigned s20Dump = 0;
+					if (++s20Dump % 40 == 0)
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"UiSpike: PRESENTWATCH tally anySlot20=%u plazaCell=%u "
+							"(anySlot20==0 means the thunk never ran - instrument "
+							"failure, NOT a finding)", gS20Any, gS20Cell);
 					}
 				}
 			}
@@ -4610,16 +4470,6 @@ namespace
 
 		const uintptr_t ret = gOrigSlot[IDX](self);
 
-		if (IDX == 88 && gBufSavedInit)
-		{
-			kBufClassVt[3] = gBufSavedInit;   // restore Init immediately
-			gBufSavedInit = nullptr;
-		}
-		if (IDX == 88 && gClassBltSaved)
-		{
-			kBufClassVt[29] = gClassBltSaved; // restore class Blt immediately
-			gClassBltSaved = nullptr;
-		}
 		if (IDX == 88 && bltDst && bltSavedVt)
 		{
 			*reinterpret_cast<void***>(bltDst) = bltSavedVt;
@@ -8204,8 +8054,6 @@ namespace
 	int       gMayorRebirthLogs = 0;   // #194
 	int       gArtSizedRefusals = 0;     // #197
 	int32_t   gReadoutW = 0, gReadoutH = 0;   // #192, set by the director
-	bool      gReqResIgnored = false;   // wrapper overrides the resolution
-	int       gReadoutLogs = 0;
 	bool      gBudgetTickAnnounced = false;
 	int       gBudgetShowOpens = 0;
 	bool      gShowHookInstalled = false;
@@ -8231,7 +8079,6 @@ namespace
 		{ 0x8A2CAD8B,  44, 191, "disaster strip"     },
 	};
 	int       gGodShowLog = 0;
-	int       gGodFixLogs = 0;
 
 	// EARLYDOCK (v2.41.17, task #89). State for scaling the dock from inside
 	// this detour once its subtree has settled. All per-city; all cleared in
@@ -8392,7 +8239,6 @@ namespace
 					const int32_t nw = wg->GetW(), nh = wg->GetH();
 					if (nw != lw || nh != lh)
 					{
-						gGodFixLogs++;
 						Logger::Get().WriteLine(LogLevel::Info,
 							"UiSpike: GODFIX 0x%08X (%s) %dx%d -> %dx%d at "
 							"SHOW, before first paint - the funnel never saw "
@@ -9252,8 +9098,6 @@ void UiSpike::LiveViewDump()
 	cIGZWin* pMainWindow = pSC4App ? pSC4App->GetMainWindow() : nullptr;
 	cIGZWin* pAppWin = pMainWindow
 		? pMainWindow->GetChildWindowFromID(kGZWin_WinSC4App) : nullptr;
-	cIGZWin* pView = pAppWin
-		? pAppWin->GetChildWindowFromID(kGZWin_SC4View3DWin) : nullptr;
 	if (!pAppWin)
 	{
 		return;
@@ -13896,8 +13740,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// v4.0.33: ContainerShiftRows/Fine RETIRED — replaced by the
 			// mathematical formula in SubContainerShiftFromGeo() which
 			// computes the exact shift from ring geometry at all scales.
-			GetPrivateProfileStringA("SubFlyout", "StripShiftRows", "", b, sizeof(b), kIni);
-			if (b[0]) gSubStripShiftRows = atoi(b);
 			// (v4.0.41) RingUnderStrip + LayerFix keys deleted with the
 			// legacy disaster path. BarDX/BarW stay: the SUB-FLYOUT family
 			// still consumes them (DrawBarScaled).
@@ -13916,16 +13758,10 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			if (b[0]) gDisBornMetricsOn = atoi(b);
 			GetPrivateProfileStringA("Disaster", "StripDump", "", b, sizeof(b), kIni);
 			if (b[0]) gStripDump = atoi(b);
-			GetPrivateProfileStringA("Disaster", "StripHitDX", "", b, sizeof(b), kIni);
-			if (b[0]) gStripHitDX = atoi(b);
 			GetPrivateProfileStringA("Disaster", "StripHitW", "", b, sizeof(b), kIni);
 			if (b[0]) gStripHitW = atoi(b);
-			GetPrivateProfileStringA("Disaster", "StripForceX", "", b, sizeof(b), kIni);
-			if (b[0]) gStripForceX = atoi(b);
 			GetPrivateProfileStringA("Disaster", "ClickHook", "", b, sizeof(b), kIni);
 			if (b[0]) gClickHook = atoi(b);
-			GetPrivateProfileStringA("Disaster", "MouseSlot", "", b, sizeof(b), kIni);
-			if (b[0]) gMouseSlot = atoi(b);
 			GetPrivateProfileStringA("Disaster", "SelDL", "", b, sizeof(b), kIni);
 			if (b[0]) gSelDL = atoi(b);
 			GetPrivateProfileStringA("Disaster", "SelDR", "", b, sizeof(b), kIni);
@@ -14782,7 +14618,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 							gVtCopy[96] = reinterpret_cast<void*>(&SlotThunk<96>);
 							gVtCopy[97] = reinterpret_cast<void*>(&SlotThunk<97>);
 							*reinterpret_cast<void***>(w) = gVtCopy;
-							gPaintHits = 0;
 							gForceInvalidate = 20;
 							// The DISASTER container is the hooked instance now,
 							// so its measured ring/bar offsets apply again.
@@ -15323,7 +15158,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					const int32_t natT =
 						bt + kid->GetH() / 2 - gSubRingBltY - kSubPlaceBias;
 					// #95: the model, or the legacy constant when SubMath=0.
-					const int32_t bcx = bl + kid->GetW() / 2;
 					const int32_t bcy = bt + kid->GetH() / 2;
 					// BIRTH OWNS THE DOCK: only the button birth was anchored to
 					// may claim a born container - never a neighbour whose
@@ -15588,7 +15422,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 		// its strip child is 0x00AB6D88 - the SAME concrete classes as the
 		// disaster flyout. So the two fixes already written for those classes
 		// apply verbatim, and nothing new has to be reverse-engineered:
-		//   SlotThunk<88>  + gForceRecreate  -> corrupts the buffer's cached
+		//   SlotThunk<88> (force-recreate)   -> corrupts the buffer's cached
 		//       width so Plot recreates it at the CURRENT (2x) window size.
 		//       That is the "bar is still 1x" fix: for code-painted controls
 		//       the lever is the BUFFER, not the window.
@@ -15782,7 +15616,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 		// bar). If these are the same concrete classes as the disaster
 		// container (0x00AB6AA8) and strip (0x00AB6D88), then the fixes already
 		// exist and are already patched into those class vtables
-		// (gForceRecreate for the stale 1x buffer, gStripFieldScale for the
+		// (the SlotThunk<88> force-recreate for the stale 1x buffer, gStripFieldScale for the
 		// item size/spacing fields) - they are merely gated to the disaster
 		// window. That would turn this into a gating change instead of a fresh
 		// disassembly job, so establish it before building anything.
@@ -16706,10 +16540,6 @@ void UiSpike::SetRenderResForReadout(int32_t w, int32_t h)
 	gReadoutH = h;
 }
 
-void UiSpike::SetRequestedResIgnored(bool ignored)
-{
-	gReqResIgnored = ignored;
-}
 
 // Push the RESOLVED tier factor into the hook-visible mirror, from the one
 // place that knows it, at the moment it is known - and UNCONDITIONALLY,

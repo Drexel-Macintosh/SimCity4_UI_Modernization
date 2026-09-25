@@ -236,61 +236,11 @@ namespace
 		{ 0x79D0A4, kSubEaxImm32, 768, "centre-X subtrahend" },
 	};
 
-	// REGION-VIEW CAMERA SCALE (#131, 2026-08-04). The region terrain is NOT
-	// drawn through the cIGZWin tree: cSC4WinRegionView's own draw slot
-	// (vt 0x00AB9658, slot 88 = vt+0x160 -> 0x00648F00) is literally
-	// `B0 01 C3` = `mov al,1 / ret`, a no-op stub followed by int3 padding.
-	// The slab is drawn by the 3D renderer under an ORTHOGRAPHIC projection
-	// built in sub_7CBE40:
-	//     worldUnitsPerPixel = R / (Z * camScale)        -> [cam+0x134]
-	//     pixelsPerWorldUnit = (Z * camScale) / R        -> [cam+0x138]
-	//     halfW = 0.5 * viewportW * worldUnitsPerPixel   (0x007CBF61..0x007CBF6D)
-	//     halfH = 0.5 * viewportH * worldUnitsPerPixel   (0x007CBF7B..0x007CBF85)
-	// R = 16*(sin|T|+cos|T|) = 20.905007 and is CONSTANT (the tilt table at
-	// 0x00ABCFC4 holds -0.392699 at every level); Z = 8 at the region's zoom
-	// level 0 (table 0x00ABACE0 = {8,16,32,73,146}).
-	//
-	// THERE IS NO RESOLUTION TERM IN worldUnitsPerPixel. That is the defect:
-	// the region draws at a fixed 1024 world-units-per-cell / 10.4525
-	// units-per-pixel = 98 px per region cell at EVERY resolution, so at 3840
-	// wide the camera simply shows 3.75x more empty sea around the same slab.
-	//
-	// cSC4WinRegionScreen::Init (sub_7B1900) builds the region scene through
-	// sub_7ACC90, which sets the camera scale ONCE via
-	//     0x007AD0BB  68 00 00 80 3E   push 0.25f
-	//     0x007AD0C0  E8 1B 06 02 00   call 0x7CD6E0   (cSC4CameraControl::SetScale)
-	// Scaling that ONE immediate is the entire fix. SetScale recomputes
-	// [cam+0x134] AND its inverse [cam+0x138] in the same call
-	// (0x007CD73D -> sub_7CBE40), so PICKING FOLLOWS THE PICTURE - the hit
-	// box cannot drift from the sprite (law 43, the coupled pair). It also
-	// dedups on equality (fucompp at 0x007CD6ED) and re-broadcasts
-	// 0xA6B79621 camera-updated, so nothing is left stale.
-	//
-	// We patch the ARGUMENT, never the shared setter: sub_7CD6E0, sub_7CBE40,
-	// the Z table and the tilt table are all shared with the CITY camera
-	// (which drives the same setter at 0.9f), and touching any of them would
-	// change the city view too. 0.25*f stays well inside the band the engine
-	// already uses on this very camera.
-	//
-	// Positive identification is BOTH halves (law 3: never act on a class or
-	// a constant alone) - the push imm32 must carry exactly 0.25f AND the
-	// call that consumes it must resolve to SetScale. A bare `push 0.25f`
-	// occurs elsewhere in the image; this pair does not.
-	const uintptr_t kRegionCamScaleSite = 0x7AD0BB;      // push imm32 (0.25f)
-	const uint32_t kRegionCamScaleStock = 0x3E800000;    // 0.25f
-	const uintptr_t kRegionCamSetScale = 0x7CD6E0;       // cSC4CameraControl::SetScale
-	const uint8_t kCallRel32 = 0xE8;
-	// SetScale's range guard reads the CURRENT value, not the incoming one
-	// (0x007CD6FA loads [cam+0xF0] BEFORE the store at 0x007CD72C), so it
-	// will not catch a wild argument. The clamp has to be ours.
-	const float kRegionCamScaleMin = 0.05f;
-	const float kRegionCamScaleMax = 8.0f;
-	// Geometry of the region mesh, for the log line only: 1 region cell = 16
-	// samples * 64.0 world units (sub_7AACE0 stores 64.0f at [grid+0x20]).
-	const float kRegionWorldUnitsPerCell = 1024.0f;
-	const float kRegionCamR = 20.905007f;   // 16*(sin|T|+cos|T|), T = -0.392699
-	const float kRegionCamZ = 8.0f;         // zoom level 0
-	float gRegionCamScaleApplied = 0.0f;
+	// REGION-VIEW CAMERA SCALE (#131, 2026-08-04): patching the region
+	// camera's SetScale argument (push 0.25f at 0x007AD0BB) reprojected the
+	// camera and changed nothing on screen - MEASURED DEAD. The engine notes
+	// and the measurement are in _tests/REGRESSION.md ("THE LEVER THAT DOES
+	// NOT WORK"); the code and its constants were removed (audit B3).
 
 	// ============================================================
 	// #131 THE REAL LEVER — THE REGION ISOMETRIC BASIS
@@ -491,7 +441,6 @@ namespace
 	const int kAdviceGlyphStockPx = 18;           // both hard-coded glyph columns
 	const int kAdviceScrollbarStockPx = 16;       // a6 cell = art width / 12; SCALES
 	const int kAdviceRowFixedPx = 9;              // 61 - 18 - 18 - 16; does NOT scale
-	const float kAdviceXScaleMaxFactor = 2.0f;    // above this the X stays stock
 
 	// BUDGET DETAIL-DIALOG BUTTONS (2026-07-30). The five department
 	// builders (Ordinances/Neighbor Deals/Transportation/Taxes families,

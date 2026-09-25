@@ -75,33 +75,15 @@ namespace
 	// the city load tail, so there is no line to jump. Every message-queue
 	// lever dies on that one fact. See _tests\REGRESSION.md task #89.
 
-	// Parses one of OUR OWN ini files with the vendored ecosystem parser. A
+	// Parses another plugin's ini with the vendored ecosystem parser. A
 	// missing file constructs an empty reader; a malformed line aborts the
 	// whole parse and yields nullopt. Both fall back to the caller's
 	// defaults, exactly as when the file is absent.
-	//
-	// v4.4.0: resolves inside 010-SC4UIScale/, NOT beside the DLL - our ini
-	// no longer sits at the Plugins root. For ANOTHER mod's ini, use
-	// TryParsePluginsRootIni below; the two are not interchangeable.
-	std::optional<IniReader> TryParseOurIni(const wchar_t* fileName)
-	{
-		std::optional<IniReader> reader;
-		try
-		{
-			wchar_t path[MAX_PATH] = {};
-			ScaleTier::GetOurFilePathW(fileName, path, MAX_PATH);
-			reader.emplace(std::filesystem::path(path));
-		}
-		catch (const std::exception&)
-		{
-			reader.reset();
-		}
-		return reader;
-	}
-
 	// v4.2.0 (subfolder move): for files that belong to OTHER plugins -
 	// SC4GraphicsOptions.ini foremost - "beside our DLL" is no longer the
-	// Plugins root, so those reads resolve against the real root.
+	// Plugins root, so those reads resolve against the real root. (Our own
+	// ini's parser, TryParseOurIni, had no caller left and was removed in the
+	// 2026-09-25 audit.)
 	std::optional<IniReader> TryParsePluginsRootIni(const wchar_t* fileName)
 	{
 		std::optional<IniReader> reader;
@@ -439,7 +421,6 @@ public:
 
 			const std::string mode =
 				gfxOpts ? gfxOpts->get_value("WindowMode", "FullScreen") : std::string("FullScreen");
-			const bool windowed = _stricmp(mode.c_str(), "Windowed") == 0;
 			// BORDERLESS covers the whole screen and the game's own ini says
 			// outright that WindowWidth/Height are "ignored for the borderless
 			// full screen mode" - so that mode, and only that mode, renders at
@@ -525,12 +506,6 @@ public:
 			// after the wrapper has had its say - not the requested size the
 			// game's own resolution list shows.
 			UiSpike::SetRenderResForReadout(gfxW, gfxH);
-			// The same condition the branch above already decided on: when
-			// the wrapper renders at the monitor's mode, the game's own
-			// WindowWidth/Height are ignored, so Graphic Options' four
-			// resolution rows are inert controls. Told once, here, because
-			// this is the only place that works it out.
-			UiSpike::SetRequestedResIgnored(!software && borderless);
 
 			// CAPTURED BEFORE ANYTHING FORCES IT. spikeScaleAll is set to
 			// false in two places below (the auto-path's !tierActive block and
