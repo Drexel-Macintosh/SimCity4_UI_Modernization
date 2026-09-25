@@ -22949,3 +22949,167 @@ The efficiency audit (`research/AUDIT-2026-09-25-EFFICIENCY.md`, B10) found that
 // resize. See the block comment on 0xAA921F4F below.
 ```
 
+## 2026-09-25: code-comment history, second pass (audit B10)
+
+The first pass (the section above) took the clearest cases. This pass read, function by function, the functions that carry the most version-cited comment text: `ScaleGodFlyouts`, `ScalePanelsUnder`, `IncrementalPass`, `SubPlaceDetour`, `BltClassThunk`, `TryRecreateMinimapSurface` and `SnapMiniMapToBake`. Almost all of that text explains why the current code is the way it is, and it stays. Seven blocks did not, and they are here word for word (96 lines):
+- a retired lever;
+- two diagnoses that measurement refuted;
+- a skip that was removed;
+- two comments that later measurement corrected;
+- one note that a later version falsified.
+
+Each left a pointer in the source that says what is true now.
+
+**How to read an entry.** As in the first pass: the file, the line numbers at commit `86a07fe` (the last commit before the move), and the first line of code after the comment. Since the audit B11 split the sources are `UiSpike.cpp` and the `UiSpike*.cpp` files split out of it, so each entry names its file.
+
+**Proof it is a comment-only change.** `UiSpike.obj` and `UiSpikeFlyouts.obj`, compiled with clang-cl before and after the move, are byte-identical.
+
+**Claims in the moved text that were already out of date.** They are kept below as written. The pointers in the source say what is true now:
+- **[CC-25]** "Binary-patching Plot() is the next approach". The project hooked the blits instead (`BltClassThunk`), and the disaster flyout is now redrawn element by element from the stock draw list (DISASTER FLYOUT REBUILD, in `UiSpikeFlyouts.cpp`).
+- **[CC-27]** "(see the block after ScaleGodFlyouts)". The DVMAP surface recreate is in `ScalePanelsUnder`, after the dock minimap's.
+- **[CC-28]** "It is printed now, AND it is a GATE ... Scoping is no longer held by the search alone". v2.41.7 corrected this: the descent check is very nearly a tautology, and the scoped search is what keeps the dashboard's twin out (the note in `TryRecreateMinimapSurface`).
+
+### [CC-24] STRIP SHIFT and ContainerShift: the retired levers (v4.0.27-v4.0.33)
+
+`src/UiSpikeFlyouts.cpp` lines 675-684 at `86a07fe`, above `int     gSubCandLog = 0;  // #134: pre-gate candidate dump, 24 lines max`:
+
+```text
+// STRIP SHIFT (v4.0.27): vertical shift of the sub-flyout strip window
+// (and its icons) inside the container, in DESIGN ROWS (1 row = 49px:
+// item 44 + spacing 5). Negative = up. This is the disaster-arc pattern:
+// the dock/ring never moves; the strip and icons move to meet it.
+// Build Park: stock arm meets row 7 ("Tourist Trap"); unpinned layout
+// put row 5 ("Marina") -> shift = -2 rows. ini [SubFlyout]
+// StripShiftRows: RETIRED (v4.0.30) - moving the strip independently
+// breaks bar+strip alignment. ContainerShiftRows/Fine (v4.0.31): RETIRED
+// (v4.0.33), replaced by SubContainerShiftFromGeo(). Their never-read
+// globals and ini reads were removed in the 2026-09-25 audit (B1).
+```
+
+### [CC-25] The disaster container: window SetW/SetH and the CAA hook, both failed (v2.7.75)
+
+`src/UiSpikeFlyouts.cpp` lines 8428-8433 at `86a07fe`, above `if (*reinterpret_cast<void***>(c) == gVtCopy && gOrigSlot2[88])`:
+
+```text
+// NOTE (v2.7.75): window SetW/SetH scaling REVERTED. It caused
+// regressions (ring disappeared, bar stretched, strip flew right)
+// because the painted art uses hardcoded 1x pixel offsets that
+// don't follow the window rect. The CAA hook also failed:
+// CalcAbsoluteArea returns 0x06752001 (a packed value, not a
+// rect pointer). Binary-patching Plot() is the next approach.
+```
+
+### [CC-26] The chrome-heal repaint: v2.39.4's diagnosis of the missing arrow
+
+`src/UiSpikeFlyouts.cpp` lines 8448-8458 at `86a07fe`, above `if (c != gDisChromeHealed)`:
+
+```text
+// v2.39.4's DIAGNOSIS WAS WRONG (measured 2026-07-31,
+// session 17:21): this repaint fired correctly, once, and the
+// arrow stayed missing - even after a hover repaint with all
+// hooks live. The arrow was never "unpainted": the container's
+// Plot READS byte flags [0x118]/[0x119] to choose plain-cap vs
+// arrow-cap atlas cells, and the open flow had computed
+// "nothing to scroll" from MIXED units (2x strip window, 1x
+// item pitch), so the flags were 0 and no repaint could help.
+// Real cure: born item metrics in SubPlaceDetour (v2.39.5).
+// TRIAGE rule: a stale frame that survives a REPAINT is a
+// stale DECISION - check what the draw computes from.
+```
+
+### [CC-27] 0xAA32BCE6, the Data Views panel: the skip removed in v2.21.0, and the crash
+
+`src/UiSpike.cpp` lines 3460-3478 at `86a07fe`, above `if (p.w >= screenW * 9 / 10 && p.h >= screenH * 9 / 10)`:
+
+```text
+// 0xAA32BCE6 - the DATA VIEWS panel (task #45), NOT "plop-menu
+// machinery" as the original spike-era label claimed: the full tree
+// dump (userclickthrough log line 606+) shows its 8 children are the
+// Data Views fold-out - compact bar 0x8A2871B1/B2, expanded pages
+// 0x8A2871C3/D4/D5, list flyout 0x8A2871C4, hidden Map View
+// 0x00004200. Live script I-2bc9060f (rect-matched;
+// I-ea287193/I-0b72f276 are stale copies).
+//
+// v2.21.0 removed the historical skip here and shipped 2x art: the
+// COMPACT panel rendered correctly (confirmed on screen) but EXPAND
+// crashed. v2.21.1 reverted; the offline disassembly then proved the
+// crash was NOT the expand geometry (the state-flip helpers
+// 0x79DF10/0x79DFB0 are pure show/hide via sub_9AFCFE - no moves, no
+// resizes) but the map child 0x00004203: a second cSC4WinMiniMap
+// instance whose one-shot display surface stayed 256 while the
+// data-view renderer sub_7A2F60 built window-sized (512) buffers.
+// v2.21.2 re-lands the scaling WITH the DVMAP surface recreate
+// (see the block after ScaleGodFlyouts) - the same lever that has
+// protected the dock minimap since it was scaled.
+```
+
+### [CC-28] The dock minimap search: the v2.41.0 comment correction
+
+`src/UiSpike.cpp` lines 3590-3596 at `86a07fe`, above `cIGZWin* pDock = pRoot->GetChildWindowFromIDRecursive(0x0987B48F);`:
+
+```text
+// v2.41.0 CORRECTION (task #89): the comment used to end "the parent id
+// is now printed". It was not - the line printed only win/blitSize/ptr,
+// so the single fact that would have identified the wrong twin was
+// still missing. It is printed now, AND it is a GATE: the instance must
+// prove it descends from the dock before we touch its surface. Scoping
+// is no longer held by the search alone. (Standing law: your own
+// comment is an instrument, and this one was lying about its scope.)
+```
+
+### [CC-29] kCityDialogIds 0xAA921F4F: the missing fourth base (#102, v2.64.0)
+
+`src/UiSpike.cpp` lines 5613-5647 at `86a07fe`, above `{ 0xAA921F4F, 330, { 330, 270, 270, 330 }, { 157, 161, 162, 109 } },`:
+
+```text
+// #102 COMMENT-ONLY CORRECTION (2026-08-03) - THIS BLOCK USED
+// TO SAY "the confirm FAMILY's three ... Both ids carry all
+// three", i.e. it CLAIMED THE SET WAS COMPLETE. IT IS NOT.
+// THIS EDIT CHANGES NO CODE AND NO DATA - the table still holds
+// the same three bases and the guard still reads bw[0..2].
+// The stock extraction declares 0xAA921F4F as a ROOT in THREE
+// scripts, not two (id_collisions.py grades it CRITICAL):
+//   I-0a55161d area=(332,232,662,389) = 330x157  <- in the table
+//              "Save and Quit"/"Quit without Save"/"Cancel"
+//   I-6a553aa4 area=(332,232,602,393) = 270x161  <- in the table
+//              "Save and Exit to Region"/"Exit Without Saving"/
+//              "Cancel"
+//   I-4a551b4c area=(332,170,662,279) = 330x109  <- *** MISSING ***
+//              "Quit SimCity 4"/"Cancel" - the region-screen quit,
+//              a TWO-button member, which is also why the header
+//              comment's "(3-btn)" never described the family.
+// Our own build_dialog_static.py:19/:289 has named I-4a551b4c and
+// its shared root id since it was written, and STAGES it at every
+// tier: stage 660x218, stage-15x 495x164, stage-3x 990x327. So a
+// data-born 660x218 arrival is a thing WE ship.
+// FIXED v2.64.0 (2026-08-03). The consequence WAS: the
+// exact-product guard loops over bw[]/bh[], so a data-born
+// 660x218 matched no product, dataBorn stayed false, and the
+// block fell through to SetW/SetH -> 1320x436. That is the
+// v2.39.14 4x shape, inside the guard whose own note says "the
+// data must be complete". Cure applied exactly as drafted here:
+// bw[]/bh[] widened 3 -> 4, 330x109 added, loop bound now
+// kCityDialogBases. Arithmetically safe - 330x109's products
+// (495x164 / 660x218 / 990x327) collide with no 1x base, so no
+// existing member can start matching the new slot.
+// THIS IS HARDENING, NOT A VISIBLE FIX. Per the reachability
+// note below the variant is LATENT, so there is nothing to
+// eyes-on: correct behaviour before and after is identical on
+// every path we have ever observed. What changes is what happens
+// IF that path is ever raised - 660x218 instead of 1320x436.
+```
+
+### [CC-30] The Save City status box: the v2.25.9 note, falsified by v2.39.13
+
+`src/UiSpike.cpp` lines 5696-5703 at `86a07fe`, above `{ 0xAA8DEF97, 560, { 300, 500, 0 }, { 166, 175, 0 } },`:
+
+```text
+// v2.25.9: the Save City status box, identity MEASURED by MWKID
+// (2026-07-30 01:57:58): root 0xAA8DEF97 vt=00ADC678, 500x175,
+// with ANONYMOUS children (OK 150x30, body BMP 468x98, title BMP
+// 473x25) - fully code-laid at 1x metrics, in NO .UI script,
+// which is why the three script-based fixes could never reach it.
+// designW 560: the box may auto-fit the filename, so the guard
+// threshold (700) tolerates 1x widths up to ~700 while any scaled
+// instance (>=1000) is skipped.
+```

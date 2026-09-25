@@ -3457,25 +3457,9 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		{
 			continue;
 		}
-		// 0xAA32BCE6 - the DATA VIEWS panel (task #45), NOT "plop-menu
-		// machinery" as the original spike-era label claimed: the full tree
-		// dump (userclickthrough log line 606+) shows its 8 children are the
-		// Data Views fold-out - compact bar 0x8A2871B1/B2, expanded pages
-		// 0x8A2871C3/D4/D5, list flyout 0x8A2871C4, hidden Map View
-		// 0x00004200. Live script I-2bc9060f (rect-matched;
-		// I-ea287193/I-0b72f276 are stale copies).
-		//
-		// v2.21.0 removed the historical skip here and shipped 2x art: the
-		// COMPACT panel rendered correctly (confirmed on screen) but EXPAND
-		// crashed. v2.21.1 reverted; the offline disassembly then proved the
-		// crash was NOT the expand geometry (the state-flip helpers
-		// 0x79DF10/0x79DFB0 are pure show/hide via sub_9AFCFE - no moves, no
-		// resizes) but the map child 0x00004203: a second cSC4WinMiniMap
-		// instance whose one-shot display surface stayed 256 while the
-		// data-view renderer sub_7A2F60 built window-sized (512) buffers.
-		// v2.21.2 re-lands the scaling WITH the DVMAP surface recreate
-		// (see the block after ScaleGodFlyouts) - the same lever that has
-		// protected the dock minimap since it was scaled.
+		// (0xAA32BCE6, the DATA VIEWS panel, was skipped here until v2.21.0. It is
+		// scaled like any panel since v2.21.2, with the DVMAP surface recreate
+		// further down this function: REGRESSION.md [CC-27].)
 		// Skip full-screen overlay layers (they already cover the view).
 		if (p.w >= screenW * 9 / 10 && p.h >= screenH * 9 / 10)
 		{
@@ -3587,13 +3571,10 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		// got its recreate at all. Both log lines also read "128x128" (both are
 		// 64x64 design), so the log could not tell them apart.
 		//
-		// v2.41.0 CORRECTION (task #89): the comment used to end "the parent id
-		// is now printed". It was not - the line printed only win/blitSize/ptr,
-		// so the single fact that would have identified the wrong twin was
-		// still missing. It is printed now, AND it is a GATE: the instance must
-		// prove it descends from the dock before we touch its surface. Scoping
-		// is no longer held by the search alone. (Standing law: your own
-		// comment is an instrument, and this one was lying about its scope.)
+		// The scoped search is what keeps the dashboard's twin out. The descent
+		// check in TryRecreateMinimapSurface only catches the engine's tree links
+		// disagreeing (see its note there); the v2.41.0 comment that first called
+		// it a gate: REGRESSION.md [CC-28].
 		cIGZWin* pDock = pRoot->GetChildWindowFromIDRecursive(0x0987B48F);
 		// v2.41.19: the whole recreate lives in TryRecreateMinimapSurface now
 		// (shared with EarlyDockTick mode 2 - see the note on the function).
@@ -5610,41 +5591,10 @@ void UiSpike::IncrementalPass()
 			// exactly RoundHalfUp(base*f), verified at 1.5x/2x/3x). Listed
 			// here: stock 330x157, stock 270x161, save-warning mod 270x162.
 			//
-			// #102 COMMENT-ONLY CORRECTION (2026-08-03) - THIS BLOCK USED
-			// TO SAY "the confirm FAMILY's three ... Both ids carry all
-			// three", i.e. it CLAIMED THE SET WAS COMPLETE. IT IS NOT.
-			// THIS EDIT CHANGES NO CODE AND NO DATA - the table still holds
-			// the same three bases and the guard still reads bw[0..2].
-			// The stock extraction declares 0xAA921F4F as a ROOT in THREE
-			// scripts, not two (id_collisions.py grades it CRITICAL):
-			//   I-0a55161d area=(332,232,662,389) = 330x157  <- in the table
-			//              "Save and Quit"/"Quit without Save"/"Cancel"
-			//   I-6a553aa4 area=(332,232,602,393) = 270x161  <- in the table
-			//              "Save and Exit to Region"/"Exit Without Saving"/
-			//              "Cancel"
-			//   I-4a551b4c area=(332,170,662,279) = 330x109  <- *** MISSING ***
-			//              "Quit SimCity 4"/"Cancel" - the region-screen quit,
-			//              a TWO-button member, which is also why the header
-			//              comment's "(3-btn)" never described the family.
-			// Our own build_dialog_static.py:19/:289 has named I-4a551b4c and
-			// its shared root id since it was written, and STAGES it at every
-			// tier: stage 660x218, stage-15x 495x164, stage-3x 990x327. So a
-			// data-born 660x218 arrival is a thing WE ship.
-			// FIXED v2.64.0 (2026-08-03). The consequence WAS: the
-			// exact-product guard loops over bw[]/bh[], so a data-born
-			// 660x218 matched no product, dataBorn stayed false, and the
-			// block fell through to SetW/SetH -> 1320x436. That is the
-			// v2.39.14 4x shape, inside the guard whose own note says "the
-			// data must be complete". Cure applied exactly as drafted here:
-			// bw[]/bh[] widened 3 -> 4, 330x109 added, loop bound now
-			// kCityDialogBases. Arithmetically safe - 330x109's products
-			// (495x164 / 660x218 / 990x327) collide with no 1x base, so no
-			// existing member can start matching the new slot.
-			// THIS IS HARDENING, NOT A VISIBLE FIX. Per the reachability
-			// note below the variant is LATENT, so there is nothing to
-			// eyes-on: correct behaviour before and after is identical on
-			// every path we have ever observed. What changes is what happens
-			// IF that path is ever raised - 660x218 instead of 1320x436.
+			// The fourth base, 330x109, is the two-button region-screen quit
+			// (I-4a551b4c), which we stage at every tier. Without it (before v2.64.0,
+			// #102) a data-born 660x218 arrival fell through to SetW/SetH and came
+			// out 1320x436: REGRESSION.md [CC-29].
 			// REACHABILITY, STATED HONESTLY: LATENT, not live. Disarm() on
 			// kSC4MessagePreCityShutdown sets continuous=false and
 			// IncrementalPass() (which owns this block) only runs while
@@ -5693,14 +5643,9 @@ void UiSpike::IncrementalPass()
 			// needs a record-free one-shot mechanism if it is ever fixed -
 			// never this list. LAW: a width guard cannot gate a window that
 			// REPOPULATES - the record outlives the state that matched.
-			// v2.25.9: the Save City status box, identity MEASURED by MWKID
-			// (2026-07-30 01:57:58): root 0xAA8DEF97 vt=00ADC678, 500x175,
-			// with ANONYMOUS children (OK 150x30, body BMP 468x98, title BMP
-			// 473x25) - fully code-laid at 1x metrics, in NO .UI script,
-			// which is why the three script-based fixes could never reach it.
-			// designW 560: the box may auto-fit the filename, so the guard
-			// threshold (700) tolerates 1x widths up to ~700 while any scaled
-			// instance (>=1000) is skipped.
+			// (The v2.25.9 note on the Save City status box - "in NO .UI script"
+			// and the designW-560 width guard - was falsified by v2.39.13, below:
+			// REGRESSION.md [CC-30].)
 			// v2.39.13 (#85 mapping): TWO bases - stock script 300x166 AND
 			// CAM's replacement 500x175 (CAM owns the TGI when installed; our
 			// CamUI package rebuilds CAM's at 1000x350, our root DialogStatic

@@ -672,16 +672,9 @@ namespace
 	// (both hit the shared cap after ~4 lines each). Separate counter,
 	// same per-open reset site (SubPlaceDetour's birth hook).
 	int     gSubGeo2Log = 0;  // SUBGEO2 dump, independent of gSubGeoLog, 40 lines max
-	// STRIP SHIFT (v4.0.27): vertical shift of the sub-flyout strip window
-	// (and its icons) inside the container, in DESIGN ROWS (1 row = 49px:
-	// item 44 + spacing 5). Negative = up. This is the disaster-arc pattern:
-	// the dock/ring never moves; the strip and icons move to meet it.
-	// Build Park: stock arm meets row 7 ("Tourist Trap"); unpinned layout
-	// put row 5 ("Marina") -> shift = -2 rows. ini [SubFlyout]
-	// StripShiftRows: RETIRED (v4.0.30) - moving the strip independently
-	// breaks bar+strip alignment. ContainerShiftRows/Fine (v4.0.31): RETIRED
-	// (v4.0.33), replaced by SubContainerShiftFromGeo(). Their never-read
-	// globals and ini reads were removed in the 2026-09-25 audit (B1).
+	// (The retired STRIP SHIFT levers, v4.0.27-v4.0.33 - StripShiftRows and
+	// ContainerShiftRows/Fine - moved the strip or its container by design
+	// rows; SubContainerShiftFromGeo() replaced them: REGRESSION.md [CC-24].)
 	// #134: SUBGEO sits AFTER the atNative/atTarget gate, so a container the
 	// sweep does not recognise logs nothing at all - which is exactly the case
 	// that needs explaining. SUBCAND logs every candidate button BEFORE that
@@ -8425,12 +8418,8 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				}
 			}
 
-			// NOTE (v2.7.75): window SetW/SetH scaling REVERTED. It caused
-			// regressions (ring disappeared, bar stretched, strip flew right)
-			// because the painted art uses hardcoded 1x pixel offsets that
-			// don't follow the window rect. The CAA hook also failed:
-			// CalcAbsoluteArea returns 0x06752001 (a packed value, not a
-			// rect pointer). Binary-patching Plot() is the next approach.
+			// (What v2.7.75 tried here - window SetW/SetH on this container and a
+			// CalcAbsoluteArea hook - and why both failed: REGRESSION.md [CC-25].)
 
 			// COMMENT CORRECTED v2.39.5 (the old text here was the premise
 			// v2.39.4 was mis-reasoned from). It said "until both vtable
@@ -8445,17 +8434,9 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			if (*reinterpret_cast<void***>(c) == gVtCopy && gOrigSlot2[88])
 			{
 				AddReadyWin(c);
-				// v2.39.4's DIAGNOSIS WAS WRONG (measured 2026-07-31,
-				// session 17:21): this repaint fired correctly, once, and the
-				// arrow stayed missing - even after a hover repaint with all
-				// hooks live. The arrow was never "unpainted": the container's
-				// Plot READS byte flags [0x118]/[0x119] to choose plain-cap vs
-				// arrow-cap atlas cells, and the open flow had computed
-				// "nothing to scroll" from MIXED units (2x strip window, 1x
-				// item pitch), so the flags were 0 and no repaint could help.
-				// Real cure: born item metrics in SubPlaceDetour (v2.39.5).
-				// TRIAGE rule: a stale frame that survives a REPAINT is a
-				// stale DECISION - check what the draw computes from.
+				// (v2.39.4 added this repaint for the missing scroll arrow. The arrow was
+				// a scroll decision made from mixed units, cured by born item metrics in
+				// SubPlaceDetour (v2.39.5): REGRESSION.md [CC-26], and TRIAGE.md.)
 				//
 				// This one-shot stays: it is still the correct belt-and-braces
 				// for the first frames painted before the sweep's vtable
