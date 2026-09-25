@@ -11960,7 +11960,12 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 	// #127: table-driven panel docking, EVERY incremental tick. The Graphs pair
 	// only exists once the player OPENS the panel, long after the load-time sweep
 	// - putting this in ScaleAll alone (v2.75.1) meant it never fired once.
-	ApplyPanelDocks(pRoot, f);
+	// City passes ("city"/"incremental") get it from ScaleGodFlyouts two
+	// statements below, whose first act (after two inert probes) is
+	// ApplyPanelDocks on this same root - so running it here too was a second
+	// full dock pass every tick (audit A1, 2026-09-25). The region pass has no
+	// ScaleGodFlyouts and keeps this call.
+	if (rootTag[0] == 'r') { ApplyPanelDocks(pRoot, f); }
 
 	// God-mode tool flyouts: dock them for the CITY view on BOTH the initial
 	// "city" pass AND every "incremental" pass (that's the continuous sweep

@@ -1625,11 +1625,9 @@ namespace
 		// this one off".
 		wchar_t p[MAX_PATH];
 		swprintf_s(p, L"%s%s", dir, kStateFile);
-		FILE* f = nullptr;
-		if (_wfopen_s(&f, p, L"w") != 0 || !f) { return; }
-		fputs("# SC4UIScale arming state. Rewritten every boot; the game never"
-			" reads it.\n# base\ttag\treason\tpaySize\tpayTime\tliveSize"
-			"\tliveTime\n", f);
+		std::string out = "# SC4UIScale arming state. Rewritten when it changes; the"
+			" game never reads it.\n# base\ttag\treason\tpaySize\tpayTime\tliveSize"
+			"\tliveTime\n";
 		for (int i = 0; i < gArmRowCount; i++)
 		{
 			const ArmRow& r = gArmRows[i];
@@ -1642,10 +1640,28 @@ namespace
 				nullptr, nullptr);
 			WideCharToMultiByte(CP_UTF8, 0, r.tag, -1, t, sizeof(t),
 				nullptr, nullptr);
-			fprintf(f, "%s\t%s\t%s\t%llu\t%llu\t%llu\t%llu\n", b, t, r.reason,
-				r.stamp.paySize, r.stamp.payTime,
+			char line[512];
+			snprintf(line, sizeof(line), "%s\t%s\t%s\t%llu\t%llu\t%llu\t%llu\n",
+				b, t, r.reason, r.stamp.paySize, r.stamp.payTime,
 				r.stamp.liveSize, r.stamp.liveTime);
+			out += line;
 		}
+		// Steady state writes nothing (audit A10, 2026-09-25): both STATE
+		// files used to be rewritten on every boot, inside a Documents folder
+		// OneDrive syncs. Text mode on both sides, so CRLF compares as LF.
+		FILE* f = nullptr;
+		if (_wfopen_s(&f, p, L"r") == 0 && f)
+		{
+			std::string cur;
+			char buf[4096];
+			size_t n = 0;
+			while ((n = fread(buf, 1, sizeof(buf), f)) > 0) { cur.append(buf, n); }
+			fclose(f);
+			f = nullptr;
+			if (cur == out) { return; }
+		}
+		if (_wfopen_s(&f, p, L"w") != 0 || !f) { return; }
+		fputs(out.c_str(), f);
 		fclose(f);
 	}
 
