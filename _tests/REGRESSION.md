@@ -22248,3 +22248,14 @@ The user: "Yes push our release".
   - `Test-ChannelYaml` is clear on both files, with the upstream checks on the lean one. The asset answers HTTP 200 at the exact size.
   - ⚠ `Check-ChannelYaml.ps1` run directly prints NOTHING: it only DEFINES the function. Dot-source it and call `Test-ChannelYaml`, as its two callers do.
   - Negative control: a copy with placeholder hashes is refused.
+
+### 11:02 - AUDIT: efficiency + simplification, no code changed (`research/AUDIT-2026-09-25-EFFICIENCY.md`)
+
+The user asked whether the plugin as a whole could be more efficient or simpler. Four read-only Opus reviews (the tick, CodePatches, UiSpike dead code, startup/I/O) were each checked against the source and today's v4.10.2 log. Evidence scripts are in `tools/research/audit-2026-09-25/`.
+
+- **Every boot re-copies DialogStatic.** `MigrateLegacyUntagged2x` (a v2.x migration) renames the live stable-name file, then the payload migration copies it back. Today's boot logged the false "one-time migration" again. It is the same fight v4.0.3 removed for SelectiveArt.
+- **The tick** runs at about 35 Hz and makes about 46 whole-tree id searches per pass, estimated at 1-3 ms and NOT yet measured. One of those lookups is never read (`mayorBtn1`), two search the view for its own id, and `ApplyPanelDocks` runs twice. Timing scopes come first.
+- **The bundle ships the 2x payload twice.** That is 27.6 of 123.7 MB (22%). The live copy is overwritten at first boot anyway, so seed it with the `.off` stub.
+- **Info-level floods.** SUBGEO2 is 14% of today's log. BUBBLEFX "NOT PRISTINE" is 106 lines in 21 s, each our own earlier write.
+- **Part of #89 is off.** The #89 EARLYDOCK half ships LOG ONLY (compiled default 1; it was tested at 2). Today's log shows `FLASHSET city 0x0987B48F ... THIS ONE FLASHED, +1125ms`. The user decides.
+- **Simplification.** About 2,400 lines of verified-dead code across UiSpike and CodePatches, plus the 619-line rejected ScaleRemap. One hook helper and one write helper would replace hand-rolled copies. Six hooks skip the prologue check. The CsiCountPlate dev override writes `.text` with no `VirtualProtect`. About 2,500-3,000 lines of history comments belong in this ledger.
