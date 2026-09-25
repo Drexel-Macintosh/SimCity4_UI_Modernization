@@ -260,7 +260,7 @@ sites*, not hooks installed at runtime — every one is behind a gate.
 |---|---|---|
 | `src\CodePatches.cpp` | **22** | Game-exe functions. 19 resolve a fixed VA; **3 resolve through a live vtable** (`vt[0x80/4]` at `:8083`, `vt[0x54/4]` at `:8100`, and `:8164`) and are bounds-checked to `0x401000..0xA80000` before use |
 | `src\UiSpike.cpp` | **7** | Game-exe functions, all fixed VAs |
-| `src\ScaleRemap.cpp` | **1** | A loop over a **9-row** `HookSpecEx` table (`:430-439`) of `user32`/`gdi32` exports — `GetCursorPos`, `SetCursorPos`, `ClipCursor`, `GetSystemMetrics`, `GetDeviceCaps`, `GetClientRect`, `GetWindowRect`, `SetWindowPos`, `MoveWindow`. **9 hooks from 1 site** |
+| src\ScaleRemap.cpp (removed 2026-09-25) | **1** | A loop over a **9-row** `HookSpecEx` table (`:430-439`) of `user32`/`gdi32` exports — `GetCursorPos`, `SetCursorPos`, `ClipCursor`, `GetSystemMetrics`, `GetDeviceCaps`, `GetClientRect`, `GetWindowRect`, `SetWindowPos`, `MoveWindow`. **9 hooks from 1 site** |
 | `src\WebRedirect.cpp` | **2** | `shell32!ShellExecuteA` / `ShellExecuteW` |
 | `src\ScaleTier.cpp` | **0** | *Positive control:* the same grep returns 22 for `CodePatches.cpp` in the same invocation, so a zero here is a real zero. `ScaleTier.cpp` is the tier/data layer and installs no detours |
 | **Total static sites** | **32** | of which **29 target game-engine functions** and **11 target OS exports** (9 + 2) |
@@ -294,7 +294,7 @@ sites*, not hooks installed at runtime — every one is behind a gate.
 
 ⚠ **§4.1 SUPERSEDED 2026-08-31 — THE COUNTS AND 20 OF THE 27 LINE NUMBERS ABOVE ARE WRONG. Re-run the method before quoting any number here.** The counts and citations above were correct against `5df8663` (2026-08-30) and were overtaken by the next day's eight commits; this page was itself edited on 2026-08-31 without re-running its own stated method. **Kept, not deleted — they are the evidence for the law below.**
 
-**MEASURED 2026-08-31 by `grep -c "MH_CreateHook("`:** `CodePatches.cpp` **26** (was 22), `UiSpike.cpp` **7**, `ScaleRemap.cpp` **1** (still a 9-row `HookSpecEx` table), `WebRedirect.cpp` **2**, `ScaleTier.cpp` **0** (positive control: the same invocation returns 26 for `CodePatches.cpp`, so the zero is real). **Total static sites 36** (was 32), of which **33 target game-engine functions** (was 29) and 11 target OS exports.
+**MEASURED 2026-08-31 by `grep -c "MH_CreateHook("`:** `CodePatches.cpp` **26** (was 22), `UiSpike.cpp` **7**, ScaleRemap.cpp **1** (still a 9-row `HookSpecEx` table; the file was removed 2026-09-25), `WebRedirect.cpp` **2**, `ScaleTier.cpp` **0** (positive control: the same invocation returns 26 for `CodePatches.cpp`, so the zero is real). **Total static sites 36** (was 32), of which **33 target game-engine functions** (was 29) and 11 target OS exports.
 
 **The four detours the old count of 29 was missing**, VA constants read from source, roles taken from each installer's own miss-log string: `0x5E90E0` occupant highlight (`kHighlightVa` / `HighlightDetour`); `0x6CC970` zone display-quad builder (`kZoneQuadVa` / `ZoneQuadDetour`, same VA as census row 13 of `SC4-WORLD-OVERLAYS.md`); `0x5F7810` UDI route-dot size (`kDotSizeVa` / `DotSizeDetour`); `0x6D4860` neighbour-connection arrows (`kNborArrowVa` / `NborArrowDetour`). ⚠ These are MEASURED **present in `src`** and have **never been observed running** — under §0's own bar they are PARTIAL, not DOCUMENTED. The tree is also not the shipped v4.7.0 DLL: `CHANGELOG.md` carries an **Unreleased** section.
 
@@ -403,7 +403,7 @@ and `//` comments.
 | `src\CodePatches.cpp` | **380** (`0x7xxxxx` 296, `0xAxxxxx` 25, `0x4xxxxx` 22, `0x5xxxxx` 19, `0xBxxxxx` 13, other 5) |
 | `src\UiSpike.cpp` | **40** |
 | `src\SpinProbe.cpp` | **5** |
-| `src\ScaleTier.cpp`, `WebRedirect.cpp`, `ScaleRemap.cpp` | **0** each |
+| `src\ScaleTier.cpp`, `WebRedirect.cpp`, ScaleRemap.cpp (removed 2026-09-25) | **0** each |
 
 For scale: `SC4-UI-ENGINE.md` tabulates **272 distinct VAs in §8** and **490
 across the whole document** (CARRIED from a §8-range scan of

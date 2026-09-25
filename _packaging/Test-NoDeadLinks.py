@@ -50,11 +50,12 @@ RX_MD = re.compile(r"\[[^\]]*\]\(([^)\s#]+)(?:#[^)]*)?\)")
 # `path\to\file.ext` or `path/to/file.ext` - backticked repo paths
 RX_TICK = re.compile(r"`([A-Za-z_][\w./\\-]*\.(?:md|py|ps1|cpp|h|cs|txt|csv|sln|vcxproj))`")
 
-# Paths that name things outside the repository on purpose.
+# Paths that name things outside the repository on purpose. The DLL writes
+# the display-mode cache beside its log at run time (audit A4, 2026-09-25).
 EXTERNAL = re.compile(
     r"^(?:https?:|mailto:|#)|"
     r"SimCity 4\.exe|FontStyle\.ini|SC4GraphicsOptions\.ini|dgVoodoo|"
-    r"SC4UIScale\.(?:ini|log)|Plugins\\|Documents\\", re.I)
+    r"SC4UIScale\.(?:ini|log)|SC4UIScale-DisplayModes\.txt|Plugins\\|Documents\\", re.I)
 
 # --repo mode only. Three kinds of reference that are correct precisely
 # BECAUSE the file is absent from the tracked set - flagging them would train

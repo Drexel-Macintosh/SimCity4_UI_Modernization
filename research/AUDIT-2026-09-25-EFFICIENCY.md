@@ -291,7 +291,7 @@ Today's boot logged it:
 - `ApplySubFlyoutProviderScale` (3450), which `UiSpike.cpp:8354` calls the "DEAD constants path".
 - Keep PIXTABLE (6074) until an A/B test.
 
-### B4. `ScaleRemap.cpp` (619 lines) is the REJECTED whole-frame approach
+### B4. ScaleRemap.cpp (619 lines) is the REJECTED whole-frame approach
 - `Settings.h:127` records it, and it defaults to off.
 - Removing it is a decision, not a cleanup.
 
