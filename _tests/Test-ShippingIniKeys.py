@@ -14,7 +14,7 @@ WHY THIS EXISTS
 
 WHAT IT CHECKS
     Every key=value line in _packaging/SC4UIScale.ini resolves to a real read in
-    src/Settings.cpp or src/UiSpike.cpp, under the SAME section name.
+    src/Settings.cpp or a src/UiSpike*.cpp, under the SAME section name.
 
     Covers five read paths - the two Win32 wide entry points, the ANSI one
     UiSpike's live-tune poll uses, Settings.cpp's own float helper
@@ -40,7 +40,10 @@ import sys
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INI = os.path.join(REPO, "_packaging", "SC4UIScale.ini")
-SOURCES = ("Settings.cpp", "UiSpike.cpp")
+# Settings.cpp and EVERY UiSpike*.cpp: UiSpike.cpp was split into several
+# files (audit B11, 2026-09-25), and a key read in a split file must still count.
+SOURCES = ("Settings.cpp",) + tuple(sorted(
+    f for f in os.listdir(os.path.join(REPO, "src")) if f.startswith("UiSpike") and f.endswith(".cpp")))
 
 # Settings.cpp names its sections with local constants; map them to the literal
 # section names that actually appear in the ini file.

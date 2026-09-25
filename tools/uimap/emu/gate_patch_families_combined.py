@@ -326,9 +326,10 @@ def sweep_inline_write_targets(paths):
       * MinHook detour targets are NOT write targets in this sense - MinHook
         rewrites a prologue through its own API and the project classifies
         those under NON_SITE_SCALARS. They are excluded by the same convention.
-      * It reads BOTH source files. The gate had only ever read CodePatches.cpp
-        and the director, so every write target in UiSpike.cpp - the larger of
-        the two files - was outside every check this file makes.
+      * It reads CodePatches.cpp AND every UiSpike*.cpp. The gate had only ever
+        read CodePatches.cpp and the director, so every write target in
+        UiSpike.cpp - the larger of the two files - was outside every check
+        this file makes.
     """
     reported = []
     for path in paths:
@@ -599,8 +600,11 @@ def main():
     print("  Flagging is not proof: confirm on screen before changing anything.")
 
     # ---- CHECK C: exe addresses typed inline and used as write targets ----
-    UISPIKE = os.path.join(ROOT, "src", "UiSpike.cpp")
-    inline = sweep_inline_write_targets([CODEPATCHES, UISPIKE])
+    # Every UiSpike*.cpp: UiSpike.cpp was split into several files (audit
+    # B11, 2026-09-25), and a sweep of the first one alone would lose the rest.
+    uispike = [os.path.join(ROOT, "src", f) for f in sorted(os.listdir(os.path.join(ROOT, "src")))
+               if f.startswith("UiSpike") and f.endswith(".cpp")]
+    inline = sweep_inline_write_targets([CODEPATCHES] + uispike)
     print("\nCHECK C - inline write targets (addresses no name can be checked against)")
     if inline:
         for f, ln, va in sorted(inline):

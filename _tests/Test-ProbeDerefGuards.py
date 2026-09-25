@@ -74,7 +74,7 @@ SELF-TEST (--selftest)
     brace. A gate that has never rejected anything is not evidence.
 
 USAGE
-    python _tests\Test-ProbeDerefGuards.py            # scan src\CodePatches.cpp + src\UiSpike.cpp
+    python _tests\Test-ProbeDerefGuards.py            # scan src\CodePatches.cpp + every src\UiSpike*.cpp
     python _tests\Test-ProbeDerefGuards.py --selftest
     python _tests\Test-ProbeDerefGuards.py --info     # also list rebase + out-of-scope sites
     python _tests\Test-ProbeDerefGuards.py --allow SafeVt --file src\Other.cpp
@@ -92,10 +92,13 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
-DEFAULT_FILES = [
-    os.path.join("src", "CodePatches.cpp"),
-    os.path.join("src", "UiSpike.cpp"),
-]
+def default_files(repo):
+    """CodePatches.cpp and EVERY src/UiSpike*.cpp. UiSpike.cpp was split into
+    several files (audit B11, 2026-09-25); until this read the directory, the
+    selector and region-screen files had silently dropped out of the scan."""
+    return [os.path.join("src", "CodePatches.cpp")] + [
+        os.path.join("src", f) for f in sorted(os.listdir(os.path.join(repo, "src")))
+        if f.startswith("UiSpike") and f.endswith(".cpp")]
 
 PROBE_NAME = re.compile(r"(Log|Detour|Thunk|Probe|Cap|Census|Scan)|^Sp")
 RETADDR = re.compile(r"\b_ReturnAddress\s*\(")
@@ -577,7 +580,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--selftest", action="store_true", help="prove the gate can go red and green")
     ap.add_argument("--repo", default=REPO, help="repo root (default: parent of _tests)")
-    ap.add_argument("--file", action="append", help="source file(s) to scan, relative to --repo (default: the two probe files)")
+    ap.add_argument("--file", action="append", help="source file(s) to scan, relative to --repo (default: CodePatches.cpp and every UiSpike*.cpp)")
     ap.add_argument("--allow", action="append", default=[], help="helper whose body is treated as guarded (e.g. SafeVt)")
     ap.add_argument("--info", action="store_true", help="also list rebase sites and out-of-scope shapes")
     args = ap.parse_args(argv)
@@ -585,7 +588,7 @@ def main(argv=None):
     if args.selftest:
         return selftest()
 
-    files = args.file or DEFAULT_FILES
+    files = args.file or default_files(args.repo)
     total_red = 0
     for rel in files:
         path = os.path.join(args.repo, rel)

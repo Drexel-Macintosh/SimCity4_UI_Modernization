@@ -398,7 +398,7 @@ namespace
 	// True if this id takes part in kPanelDock (either side). Lets the SHOWHOOK
 	// dock a pair the instant either member becomes visible, so the panel is
 	// BORN seated - the same born-correct discipline as #50/#76.
-	bool IsPanelDockMember(uint32_t id)
+	inline bool IsPanelDockMember(uint32_t id)
 	{
 		for (int i = 0; i < kPanelDockCount; i++)
 		{
