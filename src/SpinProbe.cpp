@@ -120,6 +120,13 @@ namespace
 	bool     gLaunchValid  = false;
 	bool     gBudgetSeen   = false;
 	bool     gSpunWritten  = false;   // one spun row per launch, not per sweep
+	// Audit A9 (2026-09-25): the sampler runs in two modes. [UiSpike]
+	// SpinProbe > 0 is the DIAGNOSTIC run (per-second tallies, #104ORDER, the
+	// loop-field dump, the stack scan). SpinFix alone - the shipped setting -
+	// only needs SampleOnce, the 3-sample spin test that gates the fix, and
+	// the SPINFIX lines; before this it printed the whole diagnostic set at
+	// every shutdown (56-58 lines in a session that spun).
+	bool     gDiagnostics  = false;
 	char     gLaunchId[32] = {};
 	wchar_t  gCsvPath[MAX_PATH] = {};
 
@@ -1252,10 +1259,12 @@ namespace
 		const int first = SampleOnce(t, selfTid, selfPid);
 		Logger::Get().WriteLine(
 			LogLevel::Info,
-			"SPINPROBE armed for %ds at %dHz - self-test sweep captured %d "
+			"SPINPROBE armed for %ds at %dHz (%s) - self-test sweep captured %d "
 			"sample(s) from %d thread(s). Sampling begins now; the game's own "
 			"teardown is what runs from here.",
-			seconds, 1000 / kSampleIntervalMs, first, t.threadCount);
+			seconds, 1000 / kSampleIntervalMs,
+			gDiagnostics ? "diagnostics" : "SpinFix only, no reports",
+			first, t.threadCount);
 
 		const DWORD started = GetTickCount();
 		const DWORD deadline = started + static_cast<DWORD>(seconds) * 1000u;
@@ -1268,7 +1277,7 @@ namespace
 			{
 				// Emit as we go: if the process does manage to exit, the
 				// evidence is already on disk.
-				ReportTally(t, "partial");
+				if (gDiagnostics) { ReportTally(t, "partial"); }
 				nextPartial += kPartialEverySec * 1000u;
 
 				// Record the SPIN verdict the moment it is unambiguous, not
@@ -1288,7 +1297,7 @@ namespace
 				// spin began (window outlived the manager). Draining across
 				// samples => it is being emptied while we watch, and the race is
 				// visible.
-				if (gLoopThis != 0)
+				if (gDiagnostics && gLoopThis != 0)
 				{
 					uint32_t owner = 0, begin = 0, end = 0;
 					if (Peek(gLoopThis + 4, &owner) && owner &&
@@ -1338,8 +1347,12 @@ namespace
 							hot->tid, hot->gameSamples, static_cast<uint32_t>(va));
 						WriteCsvRow("spun", detail);
 						gSpunWritten = true;
+						// The CSV is written only in diagnostic runs
+						// (gLaunchValid); say which, so the line is true.
 						Logger::Get().WriteLine(LogLevel::Info,
-							"SPINPROBE recorded verdict=spun to SC4UIScale-104.csv (%s).",
+							gDiagnostics
+								? "SPINPROBE recorded verdict=spun to SC4UIScale-104.csv (%s)."
+								: "SPINPROBE shutdown spin detected (%s) - SpinFix may act now.",
 							detail);
 					}
 				}
@@ -1431,6 +1444,9 @@ namespace
 			Sleep(kSampleIntervalMs);
 		}
 
+		// Fix-only runs end here: the SPINFIX lines above are their report.
+		if (!gDiagnostics) { return 0; }
+
 		ReportTally(t, "FINAL");
 
 		// v2: the caller chain. Do this AFTER the sampling loop so the scan's
@@ -1504,10 +1520,11 @@ namespace SpinProbe
 			info.probeSeconds);
 	}
 
-	bool Arm(int seconds)
+	bool Arm(int seconds, bool diagnostics)
 	{
 		if (seconds <= 0) { return false; }
 		if (seconds > 120) { seconds = 120; } // hard cap: it is a probe
+		gDiagnostics = diagnostics;           // read by the thread started below
 
 		HANDLE h = CreateThread(
 			nullptr, 0, SamplerProc,

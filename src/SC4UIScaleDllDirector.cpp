@@ -1293,7 +1293,8 @@ public:
 			: (settings.spikeSpinFix != 0 ? kFixOnlySeconds : 0);
 		if (probeSecs > 0)
 		{
-			SpinProbe::Arm(probeSecs);
+			// Audit A9: the diagnostic reports run only for SpinProbe > 0.
+			SpinProbe::Arm(probeSecs, settings.spikeSpinProbe > 0);
 		}
 		return true;
 	}

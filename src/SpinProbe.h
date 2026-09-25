@@ -35,7 +35,9 @@ namespace SpinProbe
 	// Spawn the sampler. seconds <= 0 is a no-op. Returns true if the
 	// sampler thread started. Call at the very end of PreAppShutdown: the
 	// spin is measured to begin only AFTER our cleanup returns.
-	bool Arm(int seconds);
+	// diagnostics = the SpinProbe run (tallies, #104ORDER, loop fields, stack
+	// scan); false = SpinFix only (sampling, the spin test and the fix).
+	bool Arm(int seconds, bool diagnostics);
 
 	// ---------------------------------------------------------------------
 	// OUTCOME RECORDER (task #107)
