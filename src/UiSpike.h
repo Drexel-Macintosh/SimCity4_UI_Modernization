@@ -209,9 +209,6 @@ private:
 	void PurgeSubtreeRecords(class cIGZWin* win, int depth);
 	void DumpTree(class cIGZWin* win, int depth, int* totalCount);
 	void LiveViewDump(); // diagnostic: dump visible transient panels live
-	                     // (captures an open query/tool panel). Gated by
-	                     // settings.spikeLiveDumpMs.
-	void LiveDumpChildren(class cIGZWin* parent, uint32_t skipId, const char* tag);
 	void ScaleTarget(class cIGZWin* pMainWindow);
 	// pAbsL/pAbsT: the PARENT's absolute DESIGN origin (#161). Edge-derived
 	// rounding makes a scaled size depend on position, so a child's local

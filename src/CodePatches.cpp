@@ -1791,10 +1791,6 @@ namespace CodePatches
 	}
 
 	void SetRegionTileSharp(bool on) { gRegionTileSharp = on; }
-	bool RegionTileSharp() { return gRegionTileSharp; }
-
-	float RegionTileFactor() { return gRegionTileFactor; }
-
 	// ============================================================
 	// #132 REGION ZOOM v2.83.0 — TRIGGER THE REBUILD, NEVER RESIZE
 	// ============================================================
@@ -2558,123 +2554,6 @@ namespace CodePatches
 		return gRegionIsoSitesApplied;
 	}
 
-	int RegionIsoPatchedSites()
-	{
-		return gRegionIsoSitesApplied;
-	}
-
-	int ApplyRegionCameraScale(float factor)
-	{
-		gRegionCamScaleApplied = 0.0f;
-
-		// DISARMED 2026-08-04, v2.78.4. MEASURED DEAD, do not re-arm.
-		// The patch WORKED as a patch - the camera held our 0.7500, its
-		// [cam+0x134] held the correctly recomputed 3.4842, and its device
-		// ortho frustum held OUR halfW 6689.6 (stock 20068.8), all held
-		// steady across 20 samples / 5s while the region was on screen
-		// (v2.78.3 REGIONWATCH STEADY) - AND THE SCREEN NEVER CHANGED.
-		// The region slab is not drawn through that camera at all; it is
-		// laid out from the .data isometric basis that ApplyRegionIsoScale
-		// now patches. Kept as a tombstone so the four builds it cost are
-		// not spent again: this lever is measured dead.
-		return 0;
-
-#if 0
-		// Identity tier: leave the stock camera exactly alone. "Reduces to
-		// stock at f=1" applies to this patch like every other.
-		if (factor <= 1.001f)
-		{
-			return 0;
-		}
-
-		float want = 0.25f * factor;
-		if (want < kRegionCamScaleMin) { want = kRegionCamScaleMin; }
-		if (want > kRegionCamScaleMax) { want = kRegionCamScaleMax; }
-
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-		const uintptr_t delta = base - kImageBase;
-		uint8_t* p = reinterpret_cast<uint8_t*>(kRegionCamScaleSite + delta);
-
-		// HALF ONE of the identification: `push imm32` carrying exactly 0.25f.
-		uint32_t cur = 0;
-		memcpy(&cur, p + 1, 4);
-		if (p[0] != kPushImm32 || cur != kRegionCamScaleStock)
-		{
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"CodePatches: region camera site 0x%08X bytes %02X imm 0x%08X unexpected"
-				" - skipped (region map stays stock).",
-				static_cast<uint32_t>(kRegionCamScaleSite), p[0], cur);
-			return 0;
-		}
-
-		// HALF TWO: the call that CONSUMES that push must resolve to
-		// cSC4CameraControl::SetScale. A bare `push 0.25f` is not rare; this
-		// pair is unique. Without this check we could scale some unrelated
-		// constant and never know (law 3 - never act on one signal alone).
-		if (p[5] != kCallRel32)
-		{
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"CodePatches: region camera site 0x%08X not followed by a call (%02X)"
-				" - skipped.",
-				static_cast<uint32_t>(kRegionCamScaleSite), p[5]);
-			return 0;
-		}
-		int32_t rel = 0;
-		memcpy(&rel, p + 6, 4);
-		const uintptr_t targetVa =
-			reinterpret_cast<uintptr_t>(p + 10) + static_cast<uintptr_t>(rel) - delta;
-		if (targetVa != kRegionCamSetScale)
-		{
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"CodePatches: region camera site 0x%08X calls 0x%08X, expected SetScale"
-				" 0x%08X - skipped.",
-				static_cast<uint32_t>(kRegionCamScaleSite),
-				static_cast<uint32_t>(targetVa),
-				static_cast<uint32_t>(kRegionCamSetScale));
-			return 0;
-		}
-
-		DWORD oldProtect = 0;
-		if (!VirtualProtect(p, 5, PAGE_EXECUTE_READWRITE, &oldProtect))
-		{
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"CodePatches: VirtualProtect failed at 0x%08X - region camera skipped.",
-				static_cast<uint32_t>(kRegionCamScaleSite));
-			return 0;
-		}
-		uint32_t bits = 0;
-		memcpy(&bits, &want, 4);
-		memcpy(p + 1, &bits, 4);
-		VirtualProtect(p, 5, oldProtect, &oldProtect);
-		FlushInstructionCache(GetCurrentProcess(), p, 5);
-
-		gRegionCamScaleApplied = want;
-
-		// Report the EFFECT, not just the constant: px-per-region-cell is the
-		// number a human can check against the screen. Stock is 98 px at every
-		// resolution, which is the whole defect in one figure.
-		const float stockPx =
-			kRegionWorldUnitsPerCell * kRegionCamZ * 0.25f / kRegionCamR;
-		const float wantPx =
-			kRegionWorldUnitsPerCell * kRegionCamZ * want / kRegionCamR;
-		Logger::Get().WriteLine(
-			LogLevel::Info,
-			"CodePatches: REGIONCAM scale 0.2500 -> %.4f at 0x%08X"
-			" (region cell %.0f px -> %.0f px, factor %.2f).",
-			want, static_cast<uint32_t>(kRegionCamScaleSite), stockPx, wantPx, factor);
-		return 1;
-#endif
-	}
-
-	float RegionCameraScaleApplied()
-	{
-		return gRegionCamScaleApplied;
-	}
-
 	namespace
 	{
 		// Scale one 7-dword .rdata size table in place. Verify-before-write
@@ -2937,11 +2816,6 @@ namespace CodePatches
 	const int kStockCheatRect[4] = { 4, 6, 308, 26 }; // l, t, r, b
 	const uint8_t kStockCheatClear = 8;
 	int gCheatDialogPatched = 0;
-
-	int CheatDialogPatched()
-	{
-		return gCheatDialogPatched;
-	}
 
 	int ApplyCheatDialogScale(float factor)
 	{
@@ -3850,11 +3724,6 @@ namespace CodePatches
 		return n;
 	}
 
-	int GraphLegendPatchedSites()
-	{
-		return gGraphLegendPatched;
-	}
-
 	int GraphLegendPlotRightMargin(float factor)
 	{
 		// The coupled half of the pair. Returns 0 unless the FULL set of eight
@@ -4697,8 +4566,6 @@ namespace CodePatches
 			"mode %d: %s).", target, static_cast<double>(factor), mode,
 			wantFix ? "log + re-anchor" : "log only");
 	}
-
-	int RatingArrowAnchorArms() { return gAnchorArms; }
 
 	// ============ #188 U-DRIVE-IT START-BUBBLE SCALE =====================
 	// The start bubbles are the mission_selection_* SWARM EFFECTS, spawned
@@ -9661,8 +9528,6 @@ namespace CodePatches
 			static_cast<double>(want), mode,
 			wantFix ? "log + scale" : "log only");
 	}
-
-	int MissionBubbleFxHits() { return gBubbleHits; }
 
 	// Public forwarder: the impl lives in the anonymous namespace with the
 	// rest of the #188 probes, but the DIRECTOR CONSTRUCTOR needs to arm this

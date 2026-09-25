@@ -95,30 +95,6 @@ namespace CodePatches
 	// counts, sliders, Subtotal label) and the 300x100 box by the factor.
 	void ApplyBudgetFamilyScale(float factor);
 
-	// #131: the REGION MAP itself. Unlike every other patch in this header
-	// this one has nothing to do with 2x art - the region terrain has no art
-	// and is not drawn through the cIGZWin tree at all. cSC4WinRegionView's
-	// draw slot (0x00648F00) is `mov al,1 / ret`, a no-op stub; the slab is
-	// drawn by the 3D renderer under an orthographic projection whose
-	// world-units-per-pixel = R / (Z * camScale) carries NO RESOLUTION TERM.
-	// The region therefore draws at a fixed 98 px per region cell at EVERY
-	// resolution, so 3840-wide shows 3.75x more sea around the same slab and
-	// the city tiles become too small to click.
-	//
-	// Scales the ONE immediate that seeds it - `push 0.25f` at 0x007AD0BB,
-	// the argument to cSC4CameraControl::SetScale inside the region screen's
-	// own Init. SetScale recomputes the projection AND its inverse in the
-	// same call, so the hit mask moves with the picture; there is no second
-	// half to keep in sync (contrast law 43's usual coupled pairs).
-	// Verify-before-write identifies the site by the push imm32 AND the call
-	// target that consumes it. Never writes at factor 1. Returns 1 if it took.
-	// DISARMED v2.78.4 - MEASURED DEAD, returns 0 without writing. The
-	// camera at [regionScreen+0x164] accepted our scale, recomputed its
-	// projection, and pushed OUR frustum to its device - and the screen never
-	// moved across 20 samples / 5s. The region slab is not drawn through it.
-	// Kept only as a tombstone. Use ApplyRegionIsoScale instead.
-	int ApplyRegionCameraScale(float factor);
-
 	// #131 THE REAL LEVER. The region lays its city tiles out from a 2x2
 	// ISOMETRIC BASIS of four .data floats - pixels per region cell:
 	//   0xB0DBA4 = +90.51 (= 64*sqrt2)   0xB0DBAC = -37.49
@@ -170,9 +146,6 @@ namespace CodePatches
 	// DEST pixels, which is finer than the source pixel it worked in.
 	// Off restores v2.83.1 byte-for-byte. [UiSpike] RegionTileSharp.
 	void SetRegionTileSharp(bool on);
-	bool RegionTileSharp();
-	float RegionTileFactor();
-
 	// #132 THE ZOOM MECHANISM. Two crashes proved an item's seven structures
 	// cannot be kept consistent by resizing anything: the click mask [+0x44]
 	// is only ever rebuilt inside sub_7AE510, so a zoom must TRIGGER THAT
@@ -205,13 +178,6 @@ namespace CodePatches
 	bool RegionZoomOperable();
 
 	int ApplyRegionIsoScale(float factor);
-	// How many of the four are live. 0 = the region map is stock.
-	int RegionIsoPatchedSites();
-	// The camera scale we actually wrote, or 0 if the patch declined. Stock
-	// is 0.25. INSTALLED != EXECUTED (law 47): non-zero here means the byte
-	// went in, not that a region screen has been built since.
-	float RegionCameraScaleApplied();
-
 
 	// v2.34.0 task #50: scale the NESTED sub-flyout builder's provider metrics
 	// (cell 44/44, gap 5) so its strip - and therefore its container - is BORN
@@ -243,8 +209,6 @@ namespace CodePatches
 	// only lever that can reach it. Returns 1 if it took; verifies BOTH blocks
 	// before writing EITHER, and rolls the first back if the second fails.
 	int ApplyCheatDialogScale(float factor);
-	int CheatDialogPatched();
-
 	// v4.5.3: the RESTORE-TOOLBARS button, born below the bottom of the
 	// screen at every scaled tier. The game builds it and never sizes it -
 	// its rect comes entirely from its four-frame art strip, which we ship
@@ -291,9 +255,6 @@ namespace CodePatches
 	// column. Arm both halves together or neither.
 	// Returns the number of sites that took; 8 = fully born correct.
 	int ApplyGraphLegendBudgetScale(float factor);
-	// How many of those eight are live. UiSpike reads this to decide whether
-	// to run its LEGENDFIX sweep fallback at all.
-	int GraphLegendPatchedSites();
 	// The plot's right margin that goes with the patched budget, or 0 if the
 	// full set did not take. EARLYCHART's ChartStoreThunk reads this: a non-zero
 	// value is the ONLY thing that lets it abandon its proportional margin, so
@@ -344,11 +305,6 @@ namespace CodePatches
 	// mode: 0 = off, 1 = log only (inert at any tier), 2 = log + re-anchor,
 	// and mode 2 is REFUSED below factor 2.5 so f=2.00 installs nothing.
 	void InstallRatingArrowAnchor(float factor, int mode);
-	// INSTALLED != EXECUTED (law 47): how many times the anchor was actually
-	// rewritten. 0 with the hook installed means the arrow was never scaled,
-	// which relocates the bug to sweep coverage instead of the anchor.
-	int RatingArrowAnchorArms();
-
 	// #188: the U-Drive-It start bubbles (mission_selection_* Swarm effects,
 	// spawned by name at five exe sites) get the tier scale written into the
 	// effect INSTANCE's transform block right after CreateEffectByName
@@ -369,13 +325,6 @@ namespace CodePatches
 	bool FontNameRedirected();
 	// The filename the redirect installs, so exactly one place defines it.
 	const char* OurFontFileName();
-	// INSTALLED != EXECUTED (law 47): how many instances were actually
-	// SCALED. Equals "no mission_selection spawn ran" only in mode 2 with
-	// every spawn pristine: mode 1 (log-only) always reads 0, and a
-	// non-pristine refusal also leaves it 0 (refusals are always logged,
-	// uncapped, so the log adjudicates which case a 0 is).
-	int MissionBubbleFxHits();
-
 	// #188 elimination instrument (MissionBubbleFx=3): hooks the renderer's
 	// Pick at PostCityInit (runtime-resolved from the [0xB43DD0] singleton)
 	// and logs every hit's model-instance VTABLE - the hovered/clicked

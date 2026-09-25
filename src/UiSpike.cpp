@@ -1181,35 +1181,6 @@ namespace
 	                                // matched the born native Y to the pixel,
 	                                // so the Y law needed no change at all)
 
-	// Effective sub-flyout dock delta (audit B6): ini override wins, else the
-	// derived form above. f=2 reduces to the shipped (-53,-24) exactly.
-	// ---- #95 PHASE 2: THE GAME'S OWN PLACEMENT, EVALUATED AT SCALE -------
-	// The deltas below are CONSTANTS, and the true correction is not: the
-	// container is centred on its button, so the term grows with the item
-	// count. MEASURED with the game's own sub_79AD00 under Unicorn (the
-	// existing emu_subflyout harness), stock vs every-metric-scaled:
-	//     n:      1     2     3     4     5     6     7     8
-	//     delta -54   -74   -98  -123  -147  -172  -196  -221   (f=2)
-	//     fixed -24   -24   -24   -24   -24   -24   -24   -24
-	// i.e. the error runs from 30px at n=1 to 197px at n=8 - which is the
-	// 8-item aircraft picker hanging into the bottom HUD. Horizontally the
-	// fixed -53 should be -27, so it also sits 26px too far left.
-	//
-	// MY FIRST CLOSED FORM WAS WRONG BY EXACTLY -2 AT EVERY n. The game
-	// does (F4>>1) - (contentH>>1), and (53*f)>>1 != (53>>1)*f - the
-	// truncation differs per factor. So this reproduces the game's INTEGER
-	// expression, it does not re-derive it. Validated 32/32 exact against the
-	// real machine code at n=1..8 x f=1/1.5/2/3, INCLUDING the clamps (at f=3
-	// the top margin fires for n>=7). f=1 reproduces stock exactly, which is
-	// the regression guard.
-	//
-	// contentH is taken from the container's LIVE height - never a recomputed
-	// item count. The container IS contentH, so this cannot disagree with what
-	// is on screen.
-	inline int32_t SubPlaceLeft(int32_t cx, float f)
-	{
-		return cx - RoundHalfUp(27 * f);            // [0xFC] x anchor
-	}
 	inline int32_t SubPlaceTop(int32_t contentH, int32_t cy, int32_t viewH,
 		float f)
 	{
@@ -1362,19 +1333,6 @@ namespace
 	// kSubArmTargetBottom: armRow_fromBottom at 1x target. Measured as
 	// 1.50 (bottom of Tourist Trap in the 8-row Build menu).
 	const double kSubArmTargetBottom = 1.50;
-	inline int32_t SubContainerShiftPx()
-	{
-		if (gTierF <= 1.0f) return 0;
-		// Empirical fallback for birth path (ringBltY unknown).
-		// At f=1.5 natural armRow≈2.70, at f=2.0≈3.52.
-		// shift = (natural - 1.50) * rowPitch
-		// f=1.5: (2.70-1.50)*73=88, f=2.0: (3.52-1.50)*98=198
-		const double f = static_cast<double>(gTierF);
-		if (f <= 1.0) return 0;
-		const double est = f * f * 73.0 - 60.0;
-		if (est <= 0.0) return 0;
-		return static_cast<int32_t>(RoundHalfUp(est));
-	}
 	// Exact shift from measured ring position. Called at sweep time when
 	// gSubRingBltY and autoY0 are available.
 	//   ringBltY: ring's blit Y in the container buffer (gSubRingBltY)
@@ -1407,117 +1365,6 @@ namespace
 		const double needed = targetRow - naturalRow;
 		if (needed <= 0.0) return 0;
 		return static_cast<int32_t>(RoundHalfUp(needed * rowPitch));
-	}
-
-	// RETIRED FROM THE BIRTH HOOK (2026-08-23, third pass) - superseded by
-	// SubPlaceTopMb (see its comment). This whole mB-clamp-gate +
-	// hypothetical-8-row apparatus was compensating for SubPlaceTop's own
-	// wrong margin (viewH-derived, not the real mB); once that root cause
-	// is fixed the shared-bottom property falls out of the plain formula
-	// for free, on every bar's own real content height, no gate needed.
-	// Left defined (dead code, no current caller) rather than deleted
-	// until the new formula is live-verified on screen, so a fallback
-	// costs a one-line revert instead of a re-derivation.
-	//
-	// SubSharedBottom: the bottom-anchor law (2026-08-23, live-measured).
-	// Every sub-flyout spawned from the SAME first-level flyout button
-	// shares ONE bottom edge regardless of its own row count - the
-	// user's law, stated twice: "The bottom part of the flyout should be
-	// identical in all of these menus... build from that bottom and
-	// fill in above it."
-	//
-	// MEASURED (SUBPLACE log, 2x): the raw Place() parameters cy=997,
-	// mT=10, mB=1166 are IDENTICAL across every sub-flyout spawned from
-	// a given first-level flyout, regardless of item count - they
-	// belong to the flyout BAR, not to the individual clicked button.
-	// The approved 8-row containers (Build Park cnt=11, Green Spaces
-	// cnt=12) sit with their NATIVE (1x) top at EXACTLY mB - full8H_1x
-	// (1166 - 437 = 729, bit-identical to the measured native CONT
-	// top) - i.e. mB IS the native bottom margin the game's own
-	// Place() clamps a tall-enough container to. This reproduces that
-	// SAME clamp for an 8-row-EQUIVALENT container through the
-	// EXISTING (proven) SubPlaceTop + bornshift chain, giving the
-	// shared SCALED bottom every sub-flyout should target - regardless
-	// of its OWN actual row count.
-	//
-	// For an ACTUAL 8-row container this is mathematically a no-op:
-	// its own native top already equals mB - full8H_1x by
-	// construction, so this makes ZERO change to the already-approved
-	// cnt>=8 result (verified: reproduces Build Park/Green Spaces'
-	// measured dy=-453 and bottom=1150 at 2x exactly - see
-	// _tests/Test-SubFlyoutPlacement.py). For cnt<8 it gives the SAME
-	// shared bottom instead of the container's own (shorter, higher)
-	// native clamp - predicted Sports Grounds result (top=570,
-	// bottom=1150) matches the independent estimate already on record
-	// in research/laws/project-sc4-flyout-bottom-anchor.md, derived before
-	// this measurement existed.
-	// SubBarClampsAt8Rows: does THIS first-level flyout bar's own raw `cy`
-	// put an 8-row-equivalent container's NATIVE top past the game's own
-	// bottom margin `mB`? Used by SubSharedBottom below to choose which
-	// reference anchor a bar's 8-row-equivalent container actually uses -
-	// the mB-clamped one, or the bar's own raw cy.
-	//
-	// MEASURED (2026-08-23, live SUBPLACE capture, two rounds): round 1
-	// (Build Park's bar): cy=997 clamps; 895/797/697/595/497/397/
-	// 679/799/919 (nine other bars, one launch each) do NOT. Round 2 (all
-	// SEVEN buttons on ONE bar - "Civic Tools" - walked one at a time,
-	// confirmed by the user): cy 397/497/595/697/797/895/997, monotonic
-	// top-to-bottom down the button column - only the LAST (bottom, 997)
-	// clamps; the other six do not. This check is entirely in NATIVE (1x)
-	// terms - no scaling, no per-menu name, no hardcoded cy - so it
-	// generalizes to every tier and every bar automatically.
-	inline bool SubBarClampsAt8Rows(int32_t cy, int32_t mB)
-	{
-		const int32_t full8H_1x = 2 * 25 + 8 * (44 + 5) - 5;   // = 437
-		const int32_t hypNativeTop8 = 26 - (full8H_1x >> 1) + cy - 29;
-		return hypNativeTop8 > (mB - full8H_1x);
-	}
-
-	// SubSharedBottom: the bottom-anchor law, generalized per-bar
-	// (2026-08-23, second pass - see the law file's "generalizing past
-	// one bar" section for the full derivation and the regression this
-	// replaces).
-	//
-	// EVERY first-level flyout bar has its OWN natural "8-row-equivalent
-	// bottom" - the scaled position an 8-row container FROM THAT BAR's
-	// button would land at. For a bar whose cy clamps against mB (only
-	// one measured so far: the Build Park/Green Spaces/Sports
-	// Grounds/Plazas bar), that natural bottom is the mB-derived one. For
-	// every other bar (confirmed: 9 distinct cy values across two
-	// measurement rounds, including all six OTHER buttons on the SAME
-	// "Civic Tools" bar as the clamping one), it is simply that bar's own
-	// unclamped position - so cyRef below is the bar's own raw `cy`
-	// whenever SubBarClampsAt8Rows says no clamp applies.
-	//
-	// Applying THIS bottom to every sub-flyout on a bar (not just its
-	// short ones) is PROVABLY a no-op for that bar's own cnt>=8 members:
-	// substituting cyRef=cy (the unclamped case) makes
-	// `top = SubSharedBottom(...) - newH` reduce algebraically to EXACTLY
-	// the existing per-button recovered-cy chain those containers already
-	// used (both take the SAME cy, feed the SAME SubPlaceTop, subtract
-	// the SAME bornshift) - there is no second formula to keep in sync,
-	// just one law applied to every count on every bar.
-	inline int32_t SubSharedBottom(int32_t cy, int32_t mB, int32_t viewH,
-		float f)
-	{
-		// UNSCALED SetLayout constants for the tall sub-flyout picker -
-		// the same literals SubContainerShiftFromGeo above already
-		// trusts (capH=25, itemH=44, spacing=5 at 1x).
-		const int32_t full8H_1x = 2 * 25 + 8 * (44 + 5) - 5;   // = 437
-		int32_t cyRef = cy;
-		if (SubBarClampsAt8Rows(cy, mB))
-		{
-			const int32_t hypotheticalNativeT8 = mB - full8H_1x;
-			cyRef = hypotheticalNativeT8 + (full8H_1x >> 1) + 3;
-		}
-		const int32_t capHs = RoundHalfUp(25.0 * f);
-		const int32_t itemHs = RoundHalfUp(44.0 * f);
-		const int32_t spacingS = RoundHalfUp(5.0 * f);
-		const int32_t full8H_scaled =
-			2 * capHs + 8 * (itemHs + spacingS) - spacingS;
-		const int32_t modelTop8 =
-			SubPlaceTop(full8H_scaled, cyRef, viewH, f);
-		return modelTop8 - SubContainerShiftPx() + full8H_scaled;
 	}
 
 	// 0xABB26B0E treated as a god PANEL (scaled + bottom-anchor docked to
@@ -1690,126 +1537,6 @@ namespace
 		}
 	}
 
-	// Objectively locate the orange ring/bar inside a REGION of a buffer.
-	// Pure C + SEH only (no C++ unwinding objects) so a bad GetPixel can't
-	// crash the game. Subsamples on a 2px grid. Centroid/bbox are returned in
-	// the buffer's own coordinate space (= absolute screen coords here).
-	// A pixel is "orange" if it is bright, red-dominant, mid green, low blue.
-	// Diagnostic fields describing what a region actually contains, so we can
-	// see the ring's TRUE color instead of guessing the threshold again.
-	struct RegionStats
-	{
-		int lockOk;
-		int lockFlag;    // which lock flag succeeded (0, 0x8000, or -1 none)
-		unsigned int bitsAddr;   // GetColorSurfaceBits
-		int stride;      // GetColorSurfaceStride
-		int bpp;
-		int usedRaw;     // 1 if scanned via raw bits, 0 if via GetPixel
-		int sampled;     // total pixels sampled
-		int nonBlack;    // pixels not near-black
-		int orange;      // pixels matching the orange predicate
-		int ocx, ocy;    // orange centroid (buffer/screen coords)
-		int omnx, omny, omxx, omxy;   // orange bbox
-		int mrb;         // best (R-B) seen
-		int mr, mg, mb;  // that pixel's RGB
-		int mx, my;      // that pixel's location
-	};
-
-	bool ScanRegion(cIGZBuffer* buf, int x0, int y0, int x1, int y1,
-		RegionStats* s)
-	{
-		__try
-		{
-			const int bw = buf->Width();
-			const int bh = buf->Height();
-			if (bw <= 0 || bh <= 0 || bw > 8192 || bh > 8192)
-			{
-				s->orange = -2;             // bad buffer dims
-				return true;
-			}
-			if (x0 < 0) x0 = 0;
-			if (y0 < 0) y0 = 0;
-			if (x1 > bw) x1 = bw;
-			if (y1 > bh) y1 = bh;
-			// Hardware surfaces read back blank via GetPixel unless synced.
-			// IsDirtyUpdate (0x8000) is the documented flag that forces it.
-			int lockFlag = -1;
-			if (buf->Lock(0x8000)) { lockFlag = 0x8000; }
-			else if (buf->Lock(0)) { lockFlag = 0; }
-			s->lockOk = (lockFlag >= 0) ? 1 : 0;
-			s->lockFlag = lockFlag;
-			s->bpp = static_cast<int>(buf->GetBitsPerPixel());
-			const unsigned int bitsAddr = buf->GetColorSurfaceBits();
-			const int stride = static_cast<int>(buf->GetColorSurfaceStride());
-			s->bitsAddr = bitsAddr;
-			s->stride = stride;
-			const bool useRaw = (bitsAddr != 0 && stride > 0 && s->bpp == 32);
-			s->usedRaw = useRaw ? 1 : 0;
-			const uint8_t* bits = reinterpret_cast<const uint8_t*>(
-				static_cast<uintptr_t>(bitsAddr));
-
-			long long sx = 0, sy = 0;
-			int count = 0, sampled = 0, nonBlack = 0;
-			int minX = x1, minY = y1, maxX = -1, maxY = -1;
-			int mrb = -999, mr = 0, mg = 0, mb = 0, mx = -1, my = -1;
-			for (int y = y0; y < y1; y += 2)
-			{
-				for (int x = x0; x < x1; x += 2)
-				{
-					uint8_t r = 0, g = 0, b = 0;
-					if (useRaw)
-					{
-						const uint32_t px = *reinterpret_cast<const uint32_t*>(
-							bits + static_cast<size_t>(y) * stride + x * 4);
-						r = static_cast<uint8_t>((px >> 16) & 0xFF);
-						g = static_cast<uint8_t>((px >> 8) & 0xFF);
-						b = static_cast<uint8_t>(px & 0xFF);
-					}
-					else
-					{
-						const uint32_t px = buf->GetPixel(
-							static_cast<uint32_t>(x), static_cast<uint32_t>(y));
-						buf->ConvertNativeValueToRGB(px, r, g, b);
-					}
-					sampled++;
-					if (r > 24 || g > 24 || b > 24) nonBlack++;
-					const int rb = static_cast<int>(r) - static_cast<int>(b);
-					if (rb > mrb) { mrb = rb; mr = r; mg = g; mb = b; mx = x; my = y; }
-					if (r >= 170 && g >= 45 && g <= 180 && b <= 110
-						&& (r - b) >= 90 && (r - g) >= 35)
-					{
-						sx += x;
-						sy += y;
-						count++;
-						if (x < minX) minX = x;
-						if (y < minY) minY = y;
-						if (x > maxX) maxX = x;
-						if (y > maxY) maxY = y;
-					}
-				}
-			}
-			if (lockFlag >= 0)
-			{
-				buf->Unlock(static_cast<uint32_t>(lockFlag));
-			}
-			s->sampled = sampled;
-			s->nonBlack = nonBlack;
-			s->orange = count;
-			s->mrb = mrb; s->mr = mr; s->mg = mg; s->mb = mb; s->mx = mx; s->my = my;
-			if (count > 0)
-			{
-				s->ocx = static_cast<int>(sx / count);
-				s->ocy = static_cast<int>(sy / count);
-				s->omnx = minX; s->omny = minY; s->omxx = maxX; s->omxy = maxY;
-			}
-			return true;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			return false;
-		}
-	}
-
 	// SEH-guarded identity check for a candidate buffer pointer: does it answer
 	// to cIGZBuffer, and what are its dims/depth? Pure C only (no C++ unwind).
 	bool SafeBufProbe(void* bufPtr, int* outQi, int* outW, int* outH, int* outBpp)
@@ -1973,28 +1700,6 @@ namespace
 				}
 				pBuf->SetPixel(x, y, out);
 			}
-		}
-	}
-
-	void LogBufCandidate(const char* label, void* bufPtr)
-	{
-		if (bufPtr == nullptr)
-		{
-			Logger::Get().WriteLine(LogLevel::Debug,
-				"UiSpike: DBUF %-10s = null", label);
-			return;
-		}
-		int qi = -1, w = -1, h = -1, bpp = -1;
-		if (SafeBufProbe(bufPtr, &qi, &w, &h, &bpp))
-		{
-			Logger::Get().WriteLine(LogLevel::Debug,
-				"UiSpike: DBUF %-10s ptr%p qiBuf=%d %dx%d bpp=%d",
-				label, bufPtr, qi, w, h, bpp);
-		}
-		else
-		{
-			Logger::Get().WriteLine(LogLevel::Debug,
-				"UiSpike: DBUF %-10s ptr%p FAULT", label, bufPtr);
 		}
 	}
 
@@ -6399,8 +6104,6 @@ namespace
 	const int kDialogDockCount =
 		static_cast<int>(sizeof(kRegionDialogDocks) / sizeof(kRegionDialogDocks[0]));
 
-	inline int32_t Abs32(int32_t v) { return v < 0 ? -v : v; }
-
 	// Rounding-correct scaling. Truncation happens to be exact at f=2.0
 	// (bit-identical results) but drifts at non-integer factors (1.5x).
 	//
@@ -9542,53 +9245,6 @@ void UiSpike::TickCheck(unsigned int nowTickMs)
 	// inPass is cleared by passGuard's destructor.
 }
 
-namespace
-{
-	struct LiveSnap
-	{
-		cIGZWin** out; int* n; int max;
-		static bool Callback(cIGZWin* parent, uint32_t childID, void* child, void* pContext)
-		{
-			LiveSnap* s = static_cast<LiveSnap*>(pContext);
-			if (*s->n < s->max) { s->out[(*s->n)++] = static_cast<cIGZWin*>(child); }
-			return true;
-		}
-	};
-}
-
-// Dump the visible direct children (+ subtrees) of `parent`, skipping any
-// child whose id == skipId (used to skip the giant 3D-view subtree). Tagged
-// by `tag` so the two roots are distinguishable in the log.
-void UiSpike::LiveDumpChildren(cIGZWin* parent, uint32_t skipId, const char* tag)
-{
-	if (!parent)
-	{
-		return;
-	}
-	Logger& logger = Logger::Get();
-	cIGZWin* kids[256] = {};
-	int nKids = 0;
-	LiveSnap snap{ kids, &nKids, 256 };
-	parent->EnumChildren(GZIID_cIGZWin, LiveSnap::Callback, &snap);
-
-	logger.WriteLine(LogLevel::Debug,
-		"UiSpike: ==== LIVE dump [%s] parent 0x%08X: %d children ====",
-		tag, parent->GetID(), nKids);
-	for (int i = 0; i < nKids; i++)
-	{
-		cIGZWin* k = kids[i];
-		if (!k || !k->IsVisible() || k->GetID() == skipId)
-		{
-			continue;
-		}
-		logger.WriteLine(LogLevel::Debug,
-			"UiSpike: -- [%s] visible child 0x%08X (%d,%d %dx%d) --",
-			tag, k->GetID(), k->GetL(), k->GetT(), k->GetW(), k->GetH());
-		int total = 0;
-		DumpTree(k, 1, &total);
-	}
-	logger.WriteLine(LogLevel::Debug, "UiSpike: ==== LIVE dump [%s] end ====", tag);
-}
 
 void UiSpike::LiveViewDump()
 {
