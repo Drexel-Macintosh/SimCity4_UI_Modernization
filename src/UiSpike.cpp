@@ -14368,12 +14368,22 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				const uint32_t id = w->GetID();
 				PGeom now = { ax, ay, w->GetW(), w->GetH(), w->IsVisible() ? 1 : 0 };
 				void* key = static_cast<void*>(w);
-				std::map<void*, PGeom>::iterator it = prevGeom.find(key);
-				const bool isNew = (it == prevGeom.end());
-				const bool changed = isNew
-					|| it->second.l != now.l || it->second.t != now.t
-					|| it->second.w != now.w || it->second.h != now.h
-					|| it->second.vis != now.vis;
+				// The geometry diff feeds ONLY the gProbeOn log below; the hook
+				// installs further down never read it. So with the probe off
+				// the map is neither searched nor written (audit A1, 2026-09-25:
+				// ~1,700 map operations per tick, in a map that also grew with
+				// every transient window). The walk itself stays - it re-installs
+				// the disaster draw hooks (the v2.69.3 note above).
+				bool isNew = true, changed = true;
+				if (gProbeOn)
+				{
+					std::map<void*, PGeom>::iterator it = prevGeom.find(key);
+					isNew = (it == prevGeom.end());
+					changed = isNew
+						|| it->second.l != now.l || it->second.t != now.t
+						|| it->second.w != now.w || it->second.h != now.h
+						|| it->second.vis != now.vis;
+				}
 				// Band the probe on the area under investigation - the bottom
 				// query panels animate constantly and drown the signal if the
 				// whole frame is logged. Live-tunable via ini [Probe] so the
@@ -14685,8 +14695,12 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					}
 				}
 
-				prevGeom[key] = now;
-				ChildSnapshot snap = {};
+				if (gProbeOn) { prevGeom[key] = now; }
+				// Only `count` needs clearing: the callback appends and the loop
+				// below reads wins[0..count). This runs for every view window
+				// every tick, so the 1 KB zero-fill was ~860 KB a tick.
+				ChildSnapshot snap;
+				snap.count = 0;
 				w->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &snap);
 				for (int i = 0; i < snap.count && sp < 500; i++)
 				{
@@ -19096,7 +19110,19 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 
 	// Recursive lookup: tolerant of the region screen being a direct child
 	// of the main window or one level down.
-	cIGZWin* pRegion = pMainWindow->GetChildWindowFromIDRecursive(kGZWin_RegionScreen);
+	// Inside a city this search always MISSES (the region screen is torn down
+	// and only returns after Disarm), and a miss walks the whole main tree -
+	// every tick. So one confirmed miss while `continuous` latches for the
+	// rest of that city: gGaugeEpoch changes at Disarm, which re-opens the
+	// search. A region window that merely exists hidden is found, never
+	// latched, so the present=false path below is unchanged (audit A1).
+	static int s_regionMissEpoch = -1;
+	cIGZWin* pRegion = nullptr;
+	if (!(continuous && s_regionMissEpoch == gGaugeEpoch))
+	{
+		pRegion = pMainWindow->GetChildWindowFromIDRecursive(kGZWin_RegionScreen);
+		if (!pRegion && continuous) { s_regionMissEpoch = gGaugeEpoch; }
+	}
 	const bool present = (pRegion != nullptr) && pRegion->IsVisible();
 
 	// RGKID (v2.26.7, measurement): change-only dump of the region screen's

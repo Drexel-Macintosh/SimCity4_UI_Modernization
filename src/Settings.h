@@ -124,13 +124,6 @@ struct Settings
 	                                  // slot (for 1x art that cannot grow);
 	                                  // flyout scaling always does this
 	int spikeCenterLeafMaxPx = 48;    // "small" threshold (original W and H)
-	bool useScaleRemap = false;       // ScaleRemap = the REJECTED whole-frame
-	                                  // approach (internal!=present metric
-	                                  // lies). Default OFF: the game renders
-	                                  // at its TRUE resolution, the UI scaler
-	                                  // enlarges elements, dgVoodoo presents
-	                                  // the frame. Active ScaleRemap garbles
-	                                  // (proven 1600x1200: giant blurry UI).
 	bool spikeAutoScale = true;       // pick the scale factor from the
 	                                  // resolution via the ScaleTier fit
 	                                  // function (and enable/stash the

@@ -78,7 +78,6 @@ void Settings::Load(const wchar_t* iniPath)
 	spikeCenterSmallLeaves = gi(spike, "CenterSmallLeaves", spikeCenterSmallLeaves ? 1 : 0) != 0;
 	spikeCenterLeafMaxPx = gi(spike, "CenterLeafMaxPx", spikeCenterLeafMaxPx);
 	spikeAutoScale = gi(spike, "AutoScale", spikeAutoScale ? 1 : 0) != 0;
-	useScaleRemap = gi(scaling, "UseScaleRemap", useScaleRemap ? 1 : 0) != 0;
 	spikeSelectorAtStock = gi(spike, "SelectorAtStock", spikeSelectorAtStock ? 1 : 0) != 0;
 	spikeRatingArrowPatch = gi(spike, "RatingArrowPatch", spikeRatingArrowPatch ? 1 : 0) != 0;
 	spikeRatingArrowAnchor = gi(spike, "RatingArrowAnchor", spikeRatingArrowAnchor);

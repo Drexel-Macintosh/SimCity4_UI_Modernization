@@ -41,7 +41,6 @@
 #include "ScaleTier.h"
 #include "WebRedirect.h"
 #include "SC4VersionDetection.h"
-#include "ScaleRemap.h"
 #include "Settings.h"
 #include "SpinProbe.h"
 #include "UiSpike.h"
@@ -236,8 +235,7 @@ class SC4UIScaleDllDirector final : public cRZMessage2COMDirector
 {
 public:
 	SC4UIScaleDllDirector()
-		: remap(settings)
-		, uiSpike(settings)
+		: uiSpike(settings)
 		, gameWindow(nullptr)
 		, subclassed(false)
 		, tierActive(false)
@@ -819,32 +817,10 @@ public:
 		ScaleTier::LogBootPhases();
 		ScaleTier::ReleaseBootIndex();
 
-		// ScaleRemap installs ONLY if explicitly opted in (default off). Its
-		// internal!=present metric lies are the rejected whole-frame approach;
-		// with UI-element scaling + dgVoodoo present-scaling they double-
-		// transform and garble. (DPI awareness was already set above.)
-		if (settings.scalingEnabled && tierActive)
-		{
-			if (settings.useScaleRemap)
-			{
-				int internalW = settings.internalWidth;
-				int internalH = settings.internalHeight;
-				if (internalW <= 0 || internalH <= 0)
-				{
-					const std::optional<IniReader> gfxIni =
-						TryParsePluginsRootIni(L"SC4GraphicsOptions.ini");
-					const std::optional<IniSection> gfxOpts =
-						gfxIni ? gfxIni->get_section_optional("GraphicsOptions") : std::nullopt;
-					internalW = gfxOpts ? gfxOpts->get_converted_value<int>("WindowWidth", 0) : 0;
-					internalH = gfxOpts ? gfxOpts->get_converted_value<int>("WindowHeight", 0) : 0;
-				}
-				remap.EarlyInstall(internalW, internalH);
-			}
-			else
-			{
-				logger.WriteLine(LogLevel::Info, "ScaleRemap disabled (UI-element scaling only).");
-			}
-		}
+		// ScaleRemap (the REJECTED whole-frame approach: its internal!=present
+		// metric lies double-transform under UI-element scaling + dgVoodoo and
+		// garble) was REMOVED in v4.10.3 (audit B4). It was off by default and
+		// hooked nothing unless UseScaleRemap=1 opted in.
 	}
 
 	uint32_t GetDirectorID() const override
@@ -1208,11 +1184,6 @@ public:
 
 			if (gameWindow)
 			{
-				if (settings.useScaleRemap)
-				{
-					remap.AttachWindow(gameWindow);
-				}
-
 				if (SetWindowSubclass(gameWindow, SubclassProc, kSubclassId,
 					reinterpret_cast<DWORD_PTR>(this)))
 				{
@@ -1285,8 +1256,9 @@ public:
 		// the closeout itself logs nothing unless the probe installed.
 		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 1.5/3 gpucap write");
 		CodePatches::WriteGpuCapCloseout();
-		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 2/3 remap.Uninstall");
-		remap.Uninstall();
+		// Stage 2/3 was remap.Uninstall(); ScaleRemap is gone (v4.10.3). The
+		// marker stays so the stage legend in the shutdown notes still reads.
+		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 2/3 (no ScaleRemap since v4.10.3)");
 		Logger::Get().WriteLine(LogLevel::Info, "SHUTDOWN 3/3 ResetTracking");
 		uiSpike.ResetTracking(); // full forget is safe only at APP shutdown
 		// FONT REVERT (v4.0.4): the last chance to prevent a leftover scaled
@@ -1456,38 +1428,10 @@ private:
 			}
 		}
 
-		// Dormant wrapper-path input remap (identity/no-op at native res).
-		if (self->remap.IsActive())
-		{
-			switch (msg)
-			{
-			case WM_MOUSEMOVE:
-			case WM_LBUTTONDOWN: case WM_LBUTTONUP: case WM_LBUTTONDBLCLK:
-			case WM_RBUTTONDOWN: case WM_RBUTTONUP: case WM_RBUTTONDBLCLK:
-			case WM_MBUTTONDOWN: case WM_MBUTTONUP: case WM_MBUTTONDBLCLK:
-			case WM_XBUTTONDOWN: case WM_XBUTTONUP: case WM_XBUTTONDBLCLK:
-				return DefSubclassProc(hwnd, msg, wParam,
-					self->remap.TransformClientLParam(lParam));
-
-			case WM_MOUSEWHEEL:
-			case WM_MOUSEHWHEEL:
-				return DefSubclassProc(hwnd, msg, wParam,
-					self->remap.TransformScreenLParam(lParam));
-
-			default:
-				break;
-			}
-		}
-		if (msg == WM_SIZE)
-		{
-			self->remap.OnWindowSizeChanged();
-		}
-
 		return DefSubclassProc(hwnd, msg, wParam, lParam);
 	}
 
 	Settings settings;
-	ScaleRemap remap;
 	UiSpike uiSpike;
 	HWND gameWindow;
 	bool subclassed;

@@ -62,7 +62,6 @@ $SRC = @(
     "Logger.cpp", "Logger.h",
     "SC4UIScaleDllDirector.cpp",
     "SC4VersionDetection.cpp", "SC4VersionDetection.h",
-    "ScaleRemap.cpp", "ScaleRemap.h",
     "ScaleTier.cpp", "ScaleTier.h",
     "Settings.cpp", "Settings.h",
     "SpinProbe.cpp", "SpinProbe.h",
