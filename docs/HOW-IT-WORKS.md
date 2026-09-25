@@ -92,4 +92,6 @@ won anyway.
   the game shipped, and never anything another mod installed.
 - It writes `SC4UIScale.log` into `Plugins\010-SC4UIScale\` (v4.4.0; it used
   to sit beside the DLL) — the first thing to attach to a bug
-  report.
+  report. Beside it, `SC4UIScale-DisplayModes.txt` caches the display's
+  mode list (a hash of the display ids, never the ids) so Graphic Options
+  never waits for the ~6 s enumeration; delete it to force a fresh one.

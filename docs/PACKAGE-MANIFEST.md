@@ -314,6 +314,7 @@ Plugins\
   SC4UIScale.dll                                  <- the only root file
   010-SC4UIScale\
     SC4UIScale.ini  SC4UIScale.log  SC4UIScale.gcap
+    SC4UIScale-DisplayModes.txt                   <- display-mode cache (A4)
     FontStyle-15x.ini  FontStyle-2x.ini  FontStyle-3x.ini    <- copied, not payloads
     z_SC4UIScale_SelectiveArt.dat                 <- LIVE, name never changes
     z_SC4UIScale_SelectiveArt.15x.uipay

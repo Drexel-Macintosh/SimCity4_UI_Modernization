@@ -19285,16 +19285,126 @@ namespace
 	// ---- SESSION FACTS: the display, enumerated ONCE -------------------
 	// EnumDisplaySettingsW costs 3,264ms on this machine (dgVoodoo sits
 	// between us and the driver) - measured by the v3.13.2 instrument, all
-	// of it on the first click. The warm thread kicks it at DLL load
-	//; the tri-state handshake keeps the UI
-	// thread safe at any moment.
+	// of it on the first click. The warm thread kicks it at DLL load, the
+	// tri-state handshake keeps the UI thread safe at any moment, and since
+	// the 2026-09-25 audit (A4) a disk cache skips the enumeration entirely
+	// while the display is unchanged.
 	SelRes gSelModeCache[64];
 	int  gSelModeCacheN = 0;
 	volatile LONG gSelEnumState = 0;   // 0 = idle, 1 = enumerating, 2 = done
 	int  gSelCapW = 0, gSelCapH = 0;   // largest mode the panel reports
 	int  gSelDeskW = 0, gSelDeskH = 0; // the registry desktop mode
 
-	void SelEnumOnce()
+	// ---- A4 (audit 2026-09-25): THE MODE LIST IS CACHED ON DISK ------------
+	// MEASURED in game: "SELRES display enumerated ONCE in 5901ms - 31
+	// distinct mode(s)" - ~655 EnumDisplaySettingsW calls at 4-14 ms each
+	// under the game (37-101 ms for all of them in a clean 32-bit process).
+	// The warm thread hid most of that, but a Graphic Options open inside the
+	// first ~6 s still waited on it, and it competed with boot for all 6 s.
+	//
+	// The list only changes when the display does, so it is cached in
+	// SC4UIScale-DisplayModes.txt (our folder), keyed by a hash of the primary
+	// adapter's and monitor's device ids plus the desktop mode (w, h, bpp,
+	// Hz). The desktop mode itself is always read live - one call, the same
+	// ENUM_REGISTRY_SETTINGS read the key needs. A miss enumerates in full
+	// (never stopping early: the largest mode needs the whole list), and the
+	// warm thread drops to low priority first. Deleting the file just forces
+	// one re-enumeration.
+	const wchar_t kSelModeCacheFile[] = L"SC4UIScale-DisplayModes.txt";
+
+	void SelHashW(uint64_t& h, const wchar_t* s)
+	{
+		for (; *s; s++)
+		{
+			h ^= static_cast<uint64_t>(*s);
+			h *= 1099511628211ull;   // FNV-1a 64
+		}
+		h ^= 0xFF;
+		h *= 1099511628211ull;       // field separator
+	}
+
+	// Hash, not the ids: the cache file never holds hardware identifiers.
+	uint64_t SelDisplayKey(const DEVMODEW& desk)
+	{
+		uint64_t h = 1469598103934665603ull;
+		DISPLAY_DEVICEW ad = {};
+		ad.cb = sizeof(ad);
+		for (DWORD i = 0; EnumDisplayDevicesW(nullptr, i, &ad, 0); i++)
+		{
+			if (ad.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) { break; }
+			ad = {};
+			ad.cb = sizeof(ad);
+		}
+		SelHashW(h, ad.DeviceID);
+		SelHashW(h, ad.DeviceString);
+		DISPLAY_DEVICEW mon = {};
+		mon.cb = sizeof(mon);
+		if (ad.DeviceName[0] && EnumDisplayDevicesW(ad.DeviceName, 0, &mon, 0))
+		{
+			SelHashW(h, mon.DeviceID);
+		}
+		wchar_t modeStr[64];
+		swprintf_s(modeStr, L"%lux%lux%lu@%lu",
+			desk.dmPelsWidth, desk.dmPelsHeight, desk.dmBitsPerPel,
+			desk.dmDisplayFrequency);
+		SelHashW(h, modeStr);
+		return h;
+	}
+
+	// True when the file holds a complete list for this key.
+	bool SelLoadModeCache(uint64_t key)
+	{
+		wchar_t path[MAX_PATH];
+		ScaleTier::GetOurFilePathW(kSelModeCacheFile, path, MAX_PATH);
+		FILE* f = nullptr;
+		if (!path[0] || _wfopen_s(&f, path, L"r") != 0 || !f) { return false; }
+		char line[128];
+		unsigned long long fileKey = 0;
+		bool keyOk = false, ended = false;
+		int capW = 0, capH = 0, n = 0;
+		SelRes modes[64] = {};
+		while (fgets(line, sizeof(line), f))
+		{
+			int w = 0, h = 0;
+			if (sscanf_s(line, "key=%llx", &fileKey) == 1) { keyOk = (fileKey == key); }
+			else if (sscanf_s(line, "cap=%dx%d", &w, &h) == 2) { capW = w; capH = h; }
+			else if (sscanf_s(line, "mode=%dx%d", &w, &h) == 2)
+			{
+				if (w > 0 && h > 0 && n < 64) { modes[n].w = w; modes[n].h = h; n++; }
+			}
+			else if (strncmp(line, "end", 3) == 0) { ended = true; }
+		}
+		fclose(f);
+		// "end" proves the file is whole: a write cut short misses, it never
+		// hands out half a list.
+		if (!keyOk || !ended || n <= 0 || capW <= 0 || capH <= 0) { return false; }
+		for (int k = 0; k < n; k++) { gSelModeCache[k] = modes[k]; }
+		gSelModeCacheN = n;
+		gSelCapW = capW;
+		gSelCapH = capH;
+		return true;
+	}
+
+	void SelSaveModeCache(uint64_t key)
+	{
+		wchar_t path[MAX_PATH];
+		ScaleTier::GetOurFilePathW(kSelModeCacheFile, path, MAX_PATH);
+		FILE* f = nullptr;
+		if (!path[0] || _wfopen_s(&f, path, L"w") != 0 || !f) { return; }
+		fprintf(f, "# SC4UIScale display-mode cache (audit A4). Rebuilt when the "
+			"display changes; safe to delete.\nkey=%016llx\ncap=%dx%d\n",
+			static_cast<unsigned long long>(key), gSelCapW, gSelCapH);
+		for (int k = 0; k < gSelModeCacheN; k++)
+		{
+			fprintf(f, "mode=%dx%d\n", gSelModeCache[k].w, gSelModeCache[k].h);
+		}
+		fputs("end\n", f);
+		fclose(f);
+	}
+
+	// lowerOnMiss: the warm thread's call - a miss drops that thread to low
+	// priority before the long enumeration. Never set from the UI thread.
+	void SelEnumOnce(bool lowerOnMiss = false)
 	{
 		if (gSelEnumState == 2) { return; }
 		const LONG prev = InterlockedCompareExchange(&gSelEnumState, 1, 0);
@@ -19310,37 +19420,51 @@ namespace
 			return;
 		}
 		const unsigned long long t0 = PerfProbe::NowUs();
-		DEVMODEW dm = {};
-		dm.dmSize = sizeof(dm);
-		for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm); i++)
-		{
-			const int mw = static_cast<int>(dm.dmPelsWidth);
-			const int mh = static_cast<int>(dm.dmPelsHeight);
-			if (mw <= 0 || mh <= 0) { continue; }
-			if (mw * mh > gSelCapW * gSelCapH) { gSelCapW = mw; gSelCapH = mh; }
-			bool dup = false;
-			for (int k = 0; k < gSelModeCacheN; k++)
-			{
-				if (gSelModeCache[k].w == mw && gSelModeCache[k].h == mh)
-				{
-					dup = true;
-					break;
-				}
-			}
-			if (!dup && gSelModeCacheN < 64)
-			{
-				gSelModeCache[gSelModeCacheN].w = mw;
-				gSelModeCache[gSelModeCacheN].h = mh;
-				gSelModeCacheN++;
-			}
-		}
+		// The desktop mode, live, in one call - the key needs it and the
+		// selector's desktop row is always the current one.
 		DEVMODEW rd = {};
 		rd.dmSize = sizeof(rd);
-		if (EnumDisplaySettingsW(nullptr, ENUM_REGISTRY_SETTINGS, &rd)
-			&& rd.dmPelsWidth > 0)
+		const bool haveDesk = EnumDisplaySettingsW(nullptr, ENUM_REGISTRY_SETTINGS, &rd)
+			&& rd.dmPelsWidth > 0;
+		if (haveDesk)
 		{
 			gSelDeskW = static_cast<int>(rd.dmPelsWidth);
 			gSelDeskH = static_cast<int>(rd.dmPelsHeight);
+		}
+		const uint64_t key = SelDisplayKey(rd);
+		const bool cached = haveDesk && SelLoadModeCache(key);
+		if (!cached)
+		{
+			if (lowerOnMiss)
+			{
+				SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+			}
+			DEVMODEW dm = {};
+			dm.dmSize = sizeof(dm);
+			for (DWORD i = 0; EnumDisplaySettingsW(nullptr, i, &dm); i++)
+			{
+				const int mw = static_cast<int>(dm.dmPelsWidth);
+				const int mh = static_cast<int>(dm.dmPelsHeight);
+				if (mw <= 0 || mh <= 0) { continue; }
+				if (mw * mh > gSelCapW * gSelCapH) { gSelCapW = mw; gSelCapH = mh; }
+				bool dup = false;
+				for (int k = 0; k < gSelModeCacheN; k++)
+				{
+					if (gSelModeCache[k].w == mw && gSelModeCache[k].h == mh)
+					{
+						dup = true;
+						break;
+					}
+				}
+				if (!dup && gSelModeCacheN < 64)
+				{
+					gSelModeCache[gSelModeCacheN].w = mw;
+					gSelModeCache[gSelModeCacheN].h = mh;
+					gSelModeCacheN++;
+				}
+			}
+			// Only a real list with a real key is worth keeping.
+			if (haveDesk && gSelModeCacheN > 0 && gSelCapW > 0) { SelSaveModeCache(key); }
 		}
 		if (gSelCapW <= 0)
 		{
@@ -19352,17 +19476,18 @@ namespace
 		// complete before anyone is allowed to see them.
 		InterlockedExchange(&gSelEnumState, 2);
 		Logger::Get().WriteLine(LogLevel::Info,
-			"UiSpike: SELRES display enumerated ONCE in %llums - %d distinct "
-			"mode(s), panel max %dx%d, desktop %dx%d. This ran on the warm "
-			"thread at DLL load unless the time above is part of a SELPERF "
-			"pass - v3.13.2 measured it at 3,264ms ON THE FIRST CLICK.",
+			"UiSpike: SELRES display modes %s in %llums - %d distinct "
+			"mode(s), panel max %dx%d, desktop %dx%d.%s",
+			cached ? "read from SC4UIScale-DisplayModes.txt" : "enumerated",
 			(PerfProbe::NowUs() - t0) / 1000ull,
-			gSelModeCacheN, gSelCapW, gSelCapH, gSelDeskW, gSelDeskH);
+			gSelModeCacheN, gSelCapW, gSelCapH, gSelDeskW, gSelDeskH,
+			cached ? "" : " Cached for the next launch (a full enumeration"
+				" measured 5,901 ms in game).");
 	}
 
 	DWORD WINAPI SelEnumWarmThread(LPVOID)
 	{
-		SelEnumOnce();
+		SelEnumOnce(true);
 		return 0;
 	}
 
