@@ -169,6 +169,57 @@ function Resolve-LiveFile {
 }
 
 # ---------------------------------------------------------------------------
+# THE PACKAGE LIST (audit B12 follow-up, 2026-09-25). _packaging\PackageFiles.psd1
+# names every file a working install holds; Deploy-OnGameClose.ps1 and
+# Build-Dist.ps1 copy from it. This suite derives its DEPLOYED == BUILT pairs
+# and its font sources from the same rows instead of keeping a third copy. The
+# hand-kept pairs table had already drifted: it lacked ItemIcons and
+# ItemIconsSub at 1.5x and 3x, and CamGraphLabels, all of which the deploy
+# copies.
+# ---------------------------------------------------------------------------
+$PKG_ROWS = @((Import-PowerShellDataFile (Join-Path $proj "_packaging\PackageFiles.psd1")).Files)
+if ($PKG_ROWS.Count -lt 40) {
+  Write-Output ("FAIL: _packaging\PackageFiles.psd1 gave " + $PKG_ROWS.Count + " row(s), " +
+    "and every deployed==built check below derives from it. REFUSAL, not a pass.")
+  exit 1
+}
+function Get-PkgFolder([string]$Dir) {
+  switch ($Dir) { "our" { return "010-SC4UIScale" } "zzz" { return "zzz-SC4UIScale" } default { return "" } }
+}
+# One list row -> one deployed==built pair, or $null for a row with no fixed
+# deployed bytes: Optional (UncoveredIcons exists only when the player has
+# third-party icons we do not cover, so a row would fail on a correct machine)
+# and Live (the stable SelectiveArt .dat, which the DLL rewrites at every boot).
+#   rel/tag = a package payload;  file = a literal deployed path (DLL, fonts).
+function ConvertTo-ListPair($row) {
+  if ($row.Optional -or $row.Live) { return $null }
+  $folder = Get-PkgFolder $row.Dir
+  if ($row.Name -notlike 'z_SC4UIScale_*') {
+    if ($folder) { $file = $folder + "\" + $row.Name } else { $file = $row.Name }
+    return @{ b = $row.Src; file = $file }
+  }
+  $m = [regex]::Match($row.Name, '^(z_SC4UIScale_[A-Za-z0-9]+?)(?:-(15x|2x|3x|1x))?\.dat(?:\.x1-disabled)?$')
+  if (-not $m.Success) { return @{ b = $row.Src; bad = $row.Name } }
+  # An untagged package (WebText, CamGraphLabels) is TIER-INDEPENDENT:
+  # build_payloads.py invents no tier payload for it, so the resolver falls
+  # through to the plain .dat under both layouts.
+  if ($m.Groups[2].Success) { $tag = $m.Groups[2].Value } else { $tag = "on" }
+  $pair = @{ b = $row.Src; rel = $folder + "\" + $m.Groups[1].Value; tag = $tag }
+  # SelectorUI: ScaleTier.cpp asks ArmOne for `1x` and build_payloads.py emits
+  # `on`, so the pair accepts either name. The disagreement itself is gated in
+  # PAYLOAD TAG COVERAGE below; this pair measures stale bytes only.
+  if ($tag -eq "1x") { $pair.tagAlt = "on" }
+  return $pair
+}
+$LIST_PAIRS = @($PKG_ROWS | ForEach-Object { ConvertTo-ListPair $_ } | Where-Object { $_ })
+foreach ($lp in $LIST_PAIRS) {
+  if ($lp.bad) {
+    $failures += ("_packaging\PackageFiles.psd1 row " + $lp.bad + ": not a package name " +
+      "this suite can resolve (z_SC4UIScale_<Pkg>[-<tier>].dat[.x1-disabled])")
+  }
+}
+
+# ---------------------------------------------------------------------------
 # rel = folder + package base (NO tier tag, NO extension - the tag is its own
 # column now, because it is no longer part of any filename in the target
 # layout). tag: 15x/2x/3x/1x/on, or "plain" for a package the arming pass
@@ -575,8 +626,36 @@ $EXPECTED = @(
 )
 # Font package sources must exist beside the DLL. NOT renamed by anything -
 # SyncFont copies a tier's table ONTO the live FontStyle.ini, so these three
-# are ordinary files under both layouts.
-$FONT_SOURCES = @("010-SC4UIScale\FontStyle-2x.ini", "010-SC4UIScale\FontStyle-15x.ini", "010-SC4UIScale\FontStyle-3x.ini")
+# are ordinary files under both layouts. They are the list's FontStyle rows.
+$FONT_SOURCES = @($PKG_ROWS | Where-Object { $_.Name -like 'FontStyle-*.ini' } |
+  ForEach-Object { (Get-PkgFolder $_.Dir) + "\" + $_.Name })
+if ($FONT_SOURCES.Count -eq 0) {
+  $failures += "_packaging\PackageFiles.psd1 has no FontStyle rows - the font-source check examined nothing"
+}
+
+# THE COUNT ROWS AND THE PACKAGE LIST MUST AGREE (audit B12 follow-up). The
+# entry counts stay in this file: they are this suite's expectations, and the
+# history above each number is what the next person to change it must read.
+# But a count row must name a package the list deploys (anything else can only
+# be stale), and a package the list deploys should have a count row (without
+# one its entry count is unchecked; deployed==built still covers its bytes).
+$listKeys = @{}
+foreach ($lp in $LIST_PAIRS) { if ($lp.rel) { $listKeys[$lp.rel + "|" + $lp.tag] = $true } }
+$countKeys = @{}
+foreach ($e in $EXPECTED) {
+  if ($e.tag -eq 'plain') { $t = 'on' } else { $t = $e.tag }
+  $countKeys[$e.rel + "|" + $t] = $true
+  if (-not $listKeys.ContainsKey($e.rel + "|" + $t)) {
+    $failures += ("entry-count row " + $e.rel + " [" + $e.tag + "] names a package " +
+      "_packaging\PackageFiles.psd1 does not deploy: the row is stale, or the list lost a package")
+  }
+}
+$uncounted = @($listKeys.Keys | Where-Object { -not $countKeys.ContainsKey($_) } | Sort-Object)
+if ($uncounted.Count) {
+  Write-Host ("  note: " + $uncounted.Count + " package file(s) in the list have no entry-count " +
+    "row, so their counts are unchecked (deployed==built still covers them): " +
+    (($uncounted | ForEach-Object { ($_ -replace '\|', ' [') + ']' }) -join ", "))
+}
 
 # ZCarbon* ARE ABSENT BY DESIGN ON A NORMAL INSTALL (2026-08-25). They are
 # built from another author's skin on the player's own machine, so the
@@ -824,8 +903,7 @@ if ($nOverlapChecked -eq 0 -and $nOurFiles -gt 0) {
 # shipped anywhere = the grey radio rows. Entry COUNTS and byte SIZES were
 # both identical between stale and fresh (the rewrite swaps equal-length hex
 # strings), so only a content hash catches this class. Every package with a
-# canonical build output is asserted here; add a row whenever a new package
-# is added to the deploy script.
+# canonical build output is asserted here.
 #
 # v4.5.0: THE DEPLOYED SIDE NOW POINTS AT THE PAYLOAD, NOT THE LIVE .dat -
 # AND THAT IS AN IMPROVEMENT, not a translation.
@@ -841,128 +919,16 @@ if ($nOverlapChecked -eq 0 -and $nOurFiles -gt 0) {
 # ALL THREE TIERS AT ONCE rather than only for whichever one is armed.
 # Under the rename layout the resolver falls back to the tier-tagged file, which
 # is the same bytes, so one row shape works on both.
-#   rel/tag = a package payload;  file = a literal deployed path (DLL, fonts).
-$BUILT_PAIRS = @(
-  @{ b = "build\Release\SC4UIScale.dll";                              file = "SC4UIScale.dll" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_SelectiveArt.dat";        rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_SelectiveArt-15x.dat";      rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat";        rel = "010-SC4UIScale\z_SC4UIScale_SelectiveArt"; tag = "3x" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_DialogStatic.dat";         rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat";      rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_DialogStatic-3x.dat";        rel = "010-SC4UIScale\z_SC4UIScale_DialogStatic"; tag = "3x" }
-  # SelectorUI: the inverse-gated package. Its payload tag is the one place the
-  # two halves of the project disagree (ScaleTier.cpp asks ArmOne for `1x`,
-  # build_payloads.py emits `on`), so the row carries BOTH candidate names and
-  # the disagreement itself is gated separately below. Resolving either here
-  # keeps THIS row measuring what it is for - stale bytes - instead of failing
-  # for the naming reason.
-  @{ b = "tools\packages\1x\z_SC4UIScale_SelectorUI-1x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_SelectorUI"; tag = "1x"; tagAlt = "on" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_SaveWarningUI.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_SaveWarningUI-15x.dat";     rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_SaveWarningUI-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI"; tag = "3x" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_CamUI.dat";                rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_CamUI-15x.dat";             rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_CamUI-3x.dat";               rel = "zzz-SC4UIScale\z_SC4UIScale_CamUI"; tag = "3x" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ThirdPartyUI.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ThirdPartyUI-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ThirdPartyUI-3x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ThirdPartyUI"; tag = "3x" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_WarriorUI.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_WarriorUI-15x.dat";         rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_WarriorUI-3x.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_WarriorUI"; tag = "3x" }
-  # NamIcons (task #139, 2026-08-05). Hand-placed on the day they were built
-  # and therefore absent from BOTH manifests until Build-Dist noticed the
-  # bundle was missing them - the #58 / #116 shape a third time. All three
-  # tiers come out of tools\itemicons\out\.
-  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-2x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_NamIcons"; tag = "2x" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-15x.dat";         rel = "zzz-SC4UIScale\z_SC4UIScale_NamIcons"; tag = "15x" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_NamIcons-3x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_NamIcons"; tag = "3x" }
-  # WebButtonUI (2026-08-21): cyclone-boom Web Button Improvement Mod's web
-  # button bitmap, gated on the mod's presence. All three tiers from
-  # tools\itemicons\out\ (generator rebuild_webbutton.py).
-  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-2x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "2x" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "15x" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_WebButtonUI-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_WebButtonUI"; tag = "3x" }
-  # CsiIcons (v4.5.2): hand-rescued in Build-Dist (parser blind spot) and
-  # hand-copied in Deploy, but tracked by NEITHER manifest gate until the
-  # 2026-08-30 audit - for the package that shipped the wrong tier twice
-  # (#196). All three tiers from tools\packages\<tier>\.
-  @{ b = "tools\dialog-static\z_SC4UIScale_RegionCensusUI.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_RegionCensusUI-15x.dat";    rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_RegionCensusUI-3x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_RegionCensusUI"; tag = "3x" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-2x.dat";   rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "2x" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-15x.dat";  rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "15x" }
-  @{ b = "tools\itemicons\out\z_SC4UIScale_ZCarbonPauseOff-3x.dat";   rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonPauseOff"; tag = "3x" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonRaiseUI.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonRaiseUI-15x.dat";    rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonRaiseUI-3x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonRaiseUI"; tag = "3x" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_RaiseUI.dat";             rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_RaiseUI-15x.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_RaiseUI-3x.dat";             rel = "zzz-SC4UIScale\z_SC4UIScale_RaiseUI"; tag = "3x" }
-  @{ b = "tools\packages\2x\z_SC4UIScale_CsiIcons-2x.dat";            rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_CsiIcons-15x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_CsiIcons-3x.dat";            rel = "zzz-SC4UIScale\z_SC4UIScale_CsiIcons"; tag = "3x" }
-  # UncoveredIcons ROWS DELIBERATELY ABSENT FROM THIS LIST.
-  # Unlike every other package here, this one only EXISTS when the player has
-  # third-party icons we do not cover. On a clean install there is nothing to
-  # build and nothing to deploy - a built-vs-deployed row would then fail on a
-  # correct machine, which is how a gate teaches people to ignore it.
-  # Its correctness is asserted where it can be: build_uncovered_icons.py
-  # refuses to pack unless every strip measures zero drift and carries the
-  # hover border, and tools\uimap\emu\sim_itemicon_states.py sweeps whatever
-  # IS deployed across tier x icon x state.
-  @{ b = "tools\itemicons\z_SC4UIScale_ItemIcons.dat";                rel = "010-SC4UIScale\z_SC4UIScale_ItemIcons"; tag = "2x" }
-  @{ b = "tools\itemicons\_work\z_SC4UIScale_ItemIconsSub-2x.dat";    rel = "zzz-SC4UIScale\z_SC4UIScale_ItemIconsSub"; tag = "2x" }
-  # WebText is TIER-INDEPENDENT: build_payloads.py invents no payload for it, so
-  # the resolver falls through to the plain `.dat` under both layouts. That file
-  # IS however a SyncDat target in ScaleTier.cpp (inverse gate on the web button
-  # mod), which is the disagreement the PAYLOAD TAG COVERAGE gate reports - not
-  # this row's business.
-  @{ b = "tools\webtext\z_SC4UIScale_WebText.dat";                    rel = "010-SC4UIScale\z_SC4UIScale_WebText"; tag = "on" }
-  # FONTS (#57 phase 4, 2026-08-02). Fonts were the ONE asset family with no
-  # deployed-vs-built assertion - existence-checked only, a few lines above -
-  # and that is precisely why they drifted unnoticed: the deployed 1.5x/3x
-  # files were the raw .gen.ini side-outputs (62 styles, no HTML clone
-  # styles) while the repo packages carried a stale ChartTickText. Same
-  # lesson as #58, one family later.
-  # 2x builds from tools\fonts\FontStyle.candidate.ini - there is no
-  # tools\packages\2x\. Do NOT add a row for the live FontStyle.ini: the DLL
-  # writes that at boot from the active tier's file (ScaleTier::SyncFont), so
-  # it is a runtime product, not a deployed artifact - the same reason the live
-  # `.dat` files and SC4UIScale.ini are not rows here.
-  @{ b = "tools\fonts\FontStyle.candidate.ini";                       file = "010-SC4UIScale\FontStyle-2x.ini" }
-  @{ b = "tools\packages\15x\FontStyle-15x.ini";                      file = "010-SC4UIScale\FontStyle-15x.ini" }
-  @{ b = "tools\packages\3x\FontStyle-3x.ini";                        file = "010-SC4UIScale\FontStyle-3x.ini" }
-  # ---- ZCarbon* (v4.3.0): carbon-sourced, gated, local-only (never in the
-  # public bundle - Build-Dist asserts that). 2x untagged from the emitting
-  # builder's dir, 15x/3x from tools\packages\<tag>\, same as their siblings.
-  # NOTE the DbpfPack timestamp law (REGRESSION.md 2026-08-25): these hashes
-  # match only because deploy COPIES the built file; any rebuild must be
-  # redeployed before this suite runs.
-  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonUI.dat";            rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonUI-15x.dat";         rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonUI-3x.dat";           rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonUI"; tag = "3x" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonCamUI.dat";         rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonCamUI-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonCamUI-3x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonCamUI"; tag = "3x" }
-  @{ b = "tools\dialog-static\z_SC4UIScale_ZCarbonSaveWarning.dat";   rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonSaveWarning-15x.dat"; rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonSaveWarning-3x.dat";  rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonSaveWarning"; tag = "3x" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonArt.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonArt-15x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonArt-3x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonArt"; tag = "3x" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonNam.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonNam-15x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonNam-3x.dat";          rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonNam"; tag = "3x" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonStyles.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonStyles-15x.dat";     rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonStyles-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonStyles"; tag = "3x" }
-  @{ b = "tools\selective-safe\z_SC4UIScale_ZCarbonGodMod.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonGodMod-15x.dat";     rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonGodMod-3x.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonGodMod"; tag = "3x" }
-  @{ b = "tools\research\carbon\z_SC4UIScale_ZCarbonIcons.dat";       rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "2x" }
-  @{ b = "tools\packages\15x\z_SC4UIScale_ZCarbonIcons-15x.dat";      rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "15x" }
-  @{ b = "tools\packages\3x\z_SC4UIScale_ZCarbonIcons-3x.dat";        rel = "zzz-SC4UIScale\z_SC4UIScale_ZCarbonIcons"; tag = "3x" }
-)
+# THE PAIRS ARE THE PACKAGE LIST'S ROWS (audit B12 follow-up, 2026-09-25) -
+# see ConvertTo-ListPair near the top. A package added to
+# _packaging\PackageFiles.psd1 is covered here with no edit to this file, and a
+# package the list drops stops being asserted instead of going red for a file
+# nobody deploys. Rows with no fixed deployed bytes are skipped there: Optional
+# (UncoveredIcons) and Live (the stable SelectiveArt .dat).
+# NOTE the DbpfPack timestamp law (REGRESSION.md 2026-08-25): the ZCarbon hashes
+# match only because the deploy COPIES the built file; any rebuild must be
+# redeployed before this suite runs.
+$BUILT_PAIRS = @($LIST_PAIRS | Where-Object { -not $_.bad })
 $nHash = 0
 $nHashRows = 0
 foreach ($pair in $BUILT_PAIRS) {

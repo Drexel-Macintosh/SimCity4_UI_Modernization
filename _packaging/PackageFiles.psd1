@@ -1,10 +1,11 @@
 # PackageFiles.psd1 - THE list of files a working install holds (audit B12,
-# 2026-09-25). Two scripts read it and nothing else lists these files:
+# 2026-09-25). Two scripts copy from it and nothing else lists these files:
 #   _tests\Deploy-OnGameClose.ps1   copies every row into the live Plugins tree
 #   _packaging\Build-Dist.ps1       copies every row except DeployOnly into the
 #                                   release bundle
 # Both then call _tests\Convert-ToPayloadLayout.ps1, which turns the
-# tier-tagged names below into the payload layout.
+# tier-tagged names below into the payload layout. _tests\Test-DatIntegrity.ps1
+# derives its deployed == built pairs and font sources from these rows too.
 #
 # WHY A DATA FILE. Until B12, Build-Dist regex-parsed Deploy's Copy-Item lines.
 # 30 of those lines were invisible to the regex (named-parameter form,
@@ -30,6 +31,8 @@
 #                       on this machine; Build-Dist always requires it
 #   Selector   = $true  Deploy's SelectorUI block decides armed or stashed
 #   DeployOnly = $true  never in the release bundle
+#   Live       = $true  the DLL rewrites this file at boot, so its deployed bytes
+#                       are not a build output (Test-DatIntegrity skips its hash)
 #
 # NOT LISTED: z_SC4UIScale_MenuFix.dat. It rewrites CAM's gameplay submenu data
 # rather than scaling any UI, so shipping it is a decision about a third-party
@@ -48,8 +51,9 @@
         @{ Src = 'tools\packages\3x\z_SC4UIScale_SelectiveArt-3x.dat';    Dir = 'our'; Name = 'z_SC4UIScale_SelectiveArt-3x.dat.x1-disabled' }
         # The STABLE file itself: ships as the 2x content by default (today's
         # out-of-the-box tier), and SyncDatStable rewrites it to match whatever the
-        # player's own AutoScale/selector choice resolves to on next boot.
-        @{ Src = 'tools\selective-safe\z_SC4UIScale_SelectiveArt.dat';    Dir = 'our'; Name = 'z_SC4UIScale_SelectiveArt.dat' }
+        # player's own AutoScale/selector choice resolves to on next boot. Live:
+        # the DLL rewrites it, so Test-DatIntegrity does not hash it against a build.
+        @{ Src = 'tools\selective-safe\z_SC4UIScale_SelectiveArt.dat';    Dir = 'our'; Name = 'z_SC4UIScale_SelectiveArt.dat'; Live = $true }
 
         @{ Src = 'tools\dialog-static\z_SC4UIScale_DialogStatic.dat';     Dir = 'our'; Name = 'z_SC4UIScale_DialogStatic-2x.dat' }
         @{ Src = 'tools\packages\15x\z_SC4UIScale_DialogStatic-15x.dat';  Dir = 'our'; Name = 'z_SC4UIScale_DialogStatic-15x.dat.x1-disabled' }

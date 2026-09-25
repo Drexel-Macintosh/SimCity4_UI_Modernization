@@ -15,7 +15,13 @@ This gate checks:
      SelectiveArt tier sources are the documented exception: all three ship
      suffixed and the DLL copies one onto the stable name;
   4. both scripts read the list, and neither carries a literal
-     `Copy-Item "$proj\\...` package line that would bypass it.
+     `Copy-Item "$proj\\...` package line that would bypass it;
+  5. _tests/Test-DatIntegrity.ps1 reads the list too: it derives its
+     deployed == built pairs from the rows (no hand-written pair table), and
+     every entry-count row it keeps names a package the list deploys - the
+     same check that suite makes at run time, made here without a Plugins tree.
+     A Live row (the DLL rewrites it at boot) must be an untagged .dat with a
+     tier-tagged sibling.
 A negative control re-runs check 3 on a copy with one row inverted and must
 see it fail.
 """
@@ -27,10 +33,11 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LIST = os.path.join(REPO, "_packaging", "PackageFiles.psd1")
 DEPLOY = os.path.join(REPO, "_tests", "Deploy-OnGameClose.ps1")
 BUILD = os.path.join(REPO, "_packaging", "Build-Dist.ps1")
+DATINT = os.path.join(REPO, "_tests", "Test-DatIntegrity.ps1")
 
 ROW = re.compile(r"@\{\s*Src\s*=\s*'([^']+)';\s*Dir\s*=\s*'([^']+)';\s*Name\s*=\s*'([^']+)'"
                  r"((?:\s*;\s*\w+\s*=\s*\$true)*)\s*\}")
-FLAGS = {"Optional", "Carbon", "Selector", "DeployOnly"}
+FLAGS = {"Optional", "Carbon", "Selector", "DeployOnly", "Live"}
 # SelectiveArt: all three tier sources are permanently suffixed (v4.0.3 stable
 # filename); the DLL's SyncDatStable copies the right one onto the stable name.
 SUFFIXED_2X = {"z_SC4UIScale_SelectiveArt-2x.dat.x1-disabled"}
@@ -42,6 +49,24 @@ def parse(text):
         flags = set(re.findall(r"(\w+)\s*=\s*\$true", m.group(4)))
         rows.append({"Src": m.group(1), "Dir": m.group(2), "Name": m.group(3), "flags": flags})
     return rows
+
+
+PKG = re.compile(r"^(z_SC4UIScale_[A-Za-z0-9]+?)(?:-(15x|2x|3x|1x))?\.dat(?:\.x1-disabled)?$")
+FOLDER = {"our": "010-SC4UIScale", "zzz": "zzz-SC4UIScale"}
+
+
+def list_keys(rows):
+    """The (folder\\base, tag) packages Test-DatIntegrity derives from the rows
+    (its ConvertTo-ListPair): Optional and Live rows have no fixed deployed
+    bytes, an untagged package is tag 'on'."""
+    keys = set()
+    for r in rows:
+        if r["flags"] & {"Optional", "Live"} or not r["Name"].startswith("z_SC4UIScale_"):
+            continue
+        m = PKG.match(r["Name"])
+        if m:
+            keys.add((FOLDER.get(r["Dir"], "") + "\\" + m.group(1), m.group(2) or "on"))
+    return keys
 
 
 def tier_errors(rows):
@@ -107,13 +132,48 @@ def main():
         if lit:
             fails.append("%s has %d literal Copy-Item \"$proj\\...\" line(s): add the "
                          "file to _packaging/PackageFiles.psd1 instead" % (rel, len(lit)))
+    # 5. Test-DatIntegrity reads the list; its count rows name listed packages
+    for r in rows:
+        if "Live" in r["flags"]:
+            m = PKG.match(r["Name"])
+            if not m or m.group(2):
+                fails.append("%s: a Live row must be an untagged .dat" % r["Name"])
+            elif not any(PKG.match(o["Name"]) and PKG.match(o["Name"]).group(1) == m.group(1)
+                         and PKG.match(o["Name"]).group(2) for o in rows):
+                fails.append("%s: a Live row needs a tier-tagged sibling" % r["Name"])
+        if r["Name"].startswith("z_SC4UIScale_") and not PKG.match(r["Name"]):
+            fails.append("%s: not a package name Test-DatIntegrity can resolve" % r["Name"])
+    di = open(DATINT, encoding="utf-8").read()
+    if "PackageFiles.psd1" not in di or "Import-PowerShellDataFile" not in di:
+        fails.append("_tests/Test-DatIntegrity.ps1 does not read _packaging/PackageFiles.psd1")
+    hand = re.findall(r'^\s*@\{\s*b\s*=\s*"', di, re.M)
+    if hand:
+        fails.append("_tests/Test-DatIntegrity.ps1 has %d hand-written deployed==built row(s): "
+                     "they derive from _packaging/PackageFiles.psd1 now" % len(hand))
+    exp = re.findall(r'@\{\s*rel\s*=\s*"([^"]+)";\s*tag\s*=\s*"([^"]+)"', di)
+    exp_declared = len(re.findall(r'^\s*@\{\s*rel\s*=', di, re.M))
+    if not exp or len(exp) != exp_declared:
+        fails.append("parsed %d of %d entry-count rows in Test-DatIntegrity.ps1" % (len(exp), exp_declared))
+    keys = list_keys(rows)
+    stale = sorted("%s [%s]" % (rel, tag) for rel, tag in exp
+                   if (rel, "on" if tag == "plain" else tag) not in keys)
+    if stale:
+        fails.append("Test-DatIntegrity.ps1 entry-count row(s) for packages the list does not "
+                     "deploy: " + ", ".join(stale))
+    counted = {(rel, "on" if tag == "plain" else tag) for rel, tag in exp}
+    uncounted = sorted("%s [%s]" % k for k in keys - counted)
+    print("Test-DatIntegrity: %d entry-count row(s), all name listed packages: %s; "
+          "%d listed package file(s) without a count row%s"
+          % (len(exp), "yes" if not stale else "NO", len(uncounted),
+             (" (" + ", ".join(uncounted) + ")") if uncounted else ""))
+
     counts = (len(rows), sum(1 for r in rows if "DeployOnly" not in r["flags"]),
               sum(1 for r in rows if "Carbon" in r["flags"]))
     if fails:
         print("\n".join("FAIL: " + f for f in fails))
         print("OVERALL: FAIL")
         return 1
-    print("OVERALL: PASS (%d rows, %d in the bundle, %d Carbon; one list, both scripts read it)" % counts)
+    print("OVERALL: PASS (%d rows, %d in the bundle, %d Carbon; one list, read by Deploy, Build-Dist and Test-DatIntegrity)" % counts)
     return 0
 
 

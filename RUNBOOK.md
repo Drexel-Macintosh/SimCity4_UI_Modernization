@@ -147,7 +147,7 @@ install holds is one row there (source, folder, name). `Deploy-OnGameClose.ps1`
 copies the rows into Plugins and `Build-Dist.ps1` copies the same rows into the
 release bundle, so a package that is not listed there neither deploys nor
 ships. Three packages have rotted by being hand-placed into the Plugins folder
-and never wired in. If you add a package, add its rows there (and its hash pair
+and never wired in. If you add a package, add its rows there (and its entry-count rows
 to `Test-DatIntegrity.ps1`). Until audit B12 (2026-09-25) Build-Dist
 regex-parsed Deploy's copy lines instead, and the ~30 it could not see had to
 be wired in both files.

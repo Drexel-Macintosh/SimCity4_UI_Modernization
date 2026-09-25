@@ -76,9 +76,9 @@ generator; do not hand-edit them, and do not treat them as sources of truth.
    overriding another mod requires a folder that sorts after it
    (`zzz-SC4UIScale\`).
 10. **A package is not finished until it is in `_packaging\PackageFiles.psd1`
-    (the one list Deploy-OnGameClose and Build-Dist both copy from) AND
-    `Test-DatIntegrity.ps1`.** Packages have rotted from exactly this
-    omission while every gate stayed green.
+    (the one list Deploy-OnGameClose, Build-Dist and Test-DatIntegrity all
+    read) AND has its entry-count rows in `Test-DatIntegrity.ps1`.** Packages
+    have rotted from exactly this omission while every gate stayed green.
 11. **The docs are the SDK.** Consult in order: our docs → the SDK headers in
     `vendor\gzcom-dll\` → the live instruments → the disassembler → a shipped
     experiment. An answer already in this repo is not allowed to be

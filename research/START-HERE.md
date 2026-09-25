@@ -161,9 +161,10 @@ generator; do not hand-edit them, and do not treat them as sources of truth.
    resource is in one of our packages". Root files load before subfolders.
    Those two questions disagreed for exactly 1 icon in 392.
 5. **A package is not finished until it is in `_packaging\PackageFiles.psd1`
-   (the one list Deploy-OnGameClose and Build-Dist both copy from) AND
-   `Test-DatIntegrity.ps1`.** Three packages have rotted from this exact
-   omission; every one of them looked green.
+   (the one list Deploy-OnGameClose, Build-Dist and Test-DatIntegrity all
+   read) AND has its entry-count rows in `Test-DatIntegrity.ps1`.** Three
+   packages have rotted from this exact omission; every one of them looked
+   green.
 6. **Never write an ini with a BOM.**
 7. **Prove the branch executes before improving what it does.** Read the mode
    out of the live ini and the `installed ... (mode N)` log line, never the
