@@ -99,6 +99,7 @@
   <ItemGroup>
     <ClCompile Include="SC4UIScaleDllDirector.cpp" />
     <ClCompile Include="UiSpike.cpp" />
+    <ClCompile Include="UiSpikeSelector.cpp" />
     <ClCompile Include="CodePatches.cpp" />
     <ClCompile Include="ScaleTier.cpp" />
     <ClCompile Include="WebRedirect.cpp" />
@@ -120,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UiSpike.h" />
+    <ClInclude Include="UiSpikeInternal.h" />
     <ClInclude Include="CodePatches.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Logger.h" />

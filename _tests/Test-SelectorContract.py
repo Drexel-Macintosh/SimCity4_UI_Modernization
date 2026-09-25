@@ -46,6 +46,11 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 UISPIKE = os.path.join(REPO, "src", "UiSpike.cpp")
+# Audit B11 (2026-09-25): the selector lives in its own file. Both are read,
+# selector first, so every check that scans the whole source (ini writes
+# only in sanctioned writers, RemoveAllStrings only in the diff-apply) still
+# covers all of UiSpike.
+SELECTOR = os.path.join(REPO, "src", "UiSpikeSelector.cpp")
 
 # Symbols the tick path must never contain. These are the APIs that cost
 # milliseconds through the OneDrive sync filter or the display driver -
@@ -149,15 +154,17 @@ def main():
     failures = []
     notes = []
 
-    if not os.path.isfile(UISPIKE):
-        print("FAIL: %s not found" % UISPIKE)
-        return 1
+    for path in (SELECTOR, UISPIKE):
+        if not os.path.isfile(path):
+            print("FAIL: %s not found" % path)
+            return 1
 
-    src = strip_comments(open(UISPIKE, encoding="utf-8",
-                              errors="replace").read())
+    src = "\n".join(strip_comments(open(path, encoding="utf-8",
+                                        errors="replace").read())
+                    for path in (SELECTOR, UISPIKE))
 
     print("Test-SelectorContract")
-    print("  src/UiSpike.cpp (comments stripped)")
+    print("  src/UiSpikeSelector.cpp + src/UiSpike.cpp (comments stripped)")
     print()
 
     # ---- locate every function the contract names -------------------------
