@@ -882,63 +882,9 @@ namespace
 		}
 	}
 	// #57: scale the chart's frozen interior fields. ini [Flyout] ChartScale.
-	// v2.52.0: BACK ON (default 1) with the mechanism corrected - the write
-	// now scales the game's own MARGINS in place and does NOT re-arm the
-	// sentinel. History of the two failed attempts is kept below because each
-	// one killed a theory that looked right on paper.
-	// v2.50.0's version (re-arm the sentinel) IS THE ONE THAT FAILED
-	// THE SAME SESSION. It did exactly what it said (log: "CHARTSCALE band
-	// 32->64 tick 4->8 ... sentinel re-armed") and the screen did not change,
-	// because re-arming ONLY the plot sentinel [0xE0] is a half measure: the
-	// legend rect at [0x108] has its OWN sentinel, was never re-armed, and
-	// kept its 32-tall rect - so bandH=64 had nothing to act on. Worse, the
-	// re-lay recomputed the plot as (16,16,960,496), the FLAT 16px DEFAULTS,
-	// throwing away the text-derived left gutter (45) the game had worked out.
-	// Net: numbers moved, pixels did not, and the margins got worse.
-	// MEASURED TARGET, for whoever finishes this (stock capture
-	// _tests\captures\graphs-stock-ref.png, chart-local, 488x256 window):
-	//     stock plot (78,21,408,234)  ->  x2 = (156,42,816,468) in 976x512
-	// i.e. left gutter 156 (room for 20pt ticks), top 42 (room for the
-	// title), right 816 leaving a 160px legend gap (26pt "Expenses" needs
-	// ~113 and currently wraps in 110). Do NOT hard-code that rect for
-	// every chart: the bar charts (Population by Age) carry NO legend and
-	// their plot legitimately runs wider. The margins are text-derived, so
-	// the honest lever is to scale the TEXT and let the game re-derive them.
-	//
-	// AND THAT SECOND THEORY DIED TOO (v2.51.0 -> v2.51.1, same hour).
-	// Unpinning ChartTickText 10 -> 20 did NOT move the gutter by one pixel:
-	//     10pt -> CHARTGEO PLOT(45,20,866,492)   gutter 45
-	//     20pt -> CHARTGEO PLOT(45,20,866,492)   gutter 45   (byte-identical)
-	// and the player's screen showed "8000"/"4000" sheared in half. The gutter
-	// is INVARIANT to the font, because the plot rect is computed ONCE per
-	// chart object and nothing ever re-arms its sentinel - so no font change
-	// can reach it. Fonts re-pinned; the lever is GEOMETRY.
-	// v2.52.0 therefore wrote the rect DIRECTLY (margins x f, once per
-	// object, no re-arm).
-	//
-	// AND THAT DIED TOO - THIRD THEORY, SAME SESSION. The write STICKS:
-	//     CHARTSCALE plot (45,20,866,492) -> (90,40,756,472)  sane=1
-	//     CHARTGEO   PLOT[0xE0](90,40,756,472)   <- three ticks later, held
-	// and the screen did not change by one pixel. So chart+0xE0..0xEF is a
-	// rect the chart KEEPS but not the one it DRAWS FROM.
-	//
-	// THREE LEVERS, THREE REFUTATIONS, ALL MEASURED:
-	//   1. re-arm the sentinel  -> recomputes to flat 16px defaults, no
-	//                              visual change (v2.50.0)
-	//   2. scale the tick font  -> gutter byte-identical, digits sheared
-	//                              (v2.51.0)
-	//   3. write the rect       -> field holds, pixels do not move (v2.52.0)
-	//
-	// LEADING SURVIVOR, NOT YET TESTED: the chart is code-painted into its
-	// own CACHED BUFFER (SC4-UI-ENGINE.md classifies it beside the gauge
-	// dials), so it re-renders only when its data changes -
-	// InvalidateSelfAndParents is not enough. That is the #47 lesson exactly
-	// ("an installed hook is not an executed hook"), and the established
-	// lever is the buffer force-recreate (SlotThunk<88>)
-	// already used for the sub-flyout and the dials. If the buffer is the
-	// blocker, EVERY field-level fix above would look inert exactly as it
-	// did - which is why they must not be re-tried before that is settled.
-	// DEFAULT 0: none of the three writes earns its place until then.
+	// Three earlier levers failed on screen: re-arm the sentinel (v2.50.0),
+	// scale the tick font (v2.51.0), write the rect (v2.52.0). Their
+	// measurements: REGRESSION.md [CC-01].
 	// v2.53.1: DEFAULT 1 - the missing half was found by the green-box proof
 	// (2026-08-03). All three earlier "failures" shared one cause: the value
 	// writes landed but nothing ever DIRTIED the window, because the chart's
@@ -1456,19 +1402,11 @@ namespace
 	// Pointer-keyed latch => cleared in Disarm beside its two siblings
 	// (the #92 second-city law).
 	cIGZWin* gDvMapVisibleKick = nullptr;     // set on recreate, fired on first visible
-	// v2.71.4 RETIREMENT (tombstone): the v2.69.5 ZOOM-CLIFF dock-seed and the
-	// v2.69.6/v2.70.0 per-sweep heal are DELETED here, not gated. They existed
-	// because the game's terrain bake silently produces nothing at zoom=-3
-	// (stock can never need it: 256 surface / 64-cell smallest tile = -2; our
-	// 512 surface pushes SMALL tiles past the bake ceiling), and they were the
-	// workaround of record until the x8 bake patch (#121, v2.71.1) made the
-	// game itself bake a real base there. v2.71.2 measured the seed actively
-	// HURTING once the bake was live: on open it overwrote a correct hidden
-	// bake with a blurry 128->512 dock upscale. With a real bake there is
-	// nothing to seed and nothing to heal, and a fallback that can only fight
-	// the primary path is a bug, not a safety net. The clamp below is the
-	// surviving fallback - it engages only when the x8 patch declines
-	// on an unexpected exe build.
+	// The v2.69.5 dock-seed and the v2.69.6/v2.70.0 per-sweep heal were
+	// deleted in v2.71.4, once the x8 bake patch (#121) let the game bake a
+	// real base at zoom -3 (REGRESSION.md [CC-02]). What remains is the clamp
+	// below; since v2.72.0 it is the sizing policy at every tier (the Data
+	// Views block in ScalePanelsUnder).
 	// v2.69.10: the clamp and DVPIN are a COUPLED PAIR (law 43) and v2.69.8/9
 	// split them - DVPIN's table pins the map picture to 256*f = 512 EVERY
 	// sweep, so the clamp and the pin fought at ~30 Hz (the CLAMPED log line
@@ -1793,11 +1731,8 @@ namespace
 	int    gDrawCtxLog = 0;              // v2.9.2: probe the ring draw's SOURCE
 	                                     // (drawContext a1) = the art atlas, to find
 	                                     // where the 2x ring/picture art must go.
-	// (v4.0.41) gRingDX/gRingDY (the hand-tuned f=2 ring seat) and
-	// gRingUnderStrip are DELETED with the legacy disaster path - the
-	// rebuild's stock-proportional geometry needs no seat nudge and no
-	// viewport clip (the strip window occludes via normal z-order, as at
-	// stock). The dock (DisDockXEff/DisDockYEff) is the only position lever.
+	// The dock (DisDockXEff/DisDockYEff) is the only position lever: the ring
+	// seat globals were deleted in v4.0.41 (REGRESSION.md [CC-03]).
 	// v4.0.16: initial scroll (first-visible ITEM index) written to the
 	// disaster strip once per open. Measured 2026-08-22: the strip draws 6
 	// rows of pitch 98 at dst-Y 0/98/196/294/392/490 and the ring centre
@@ -1823,14 +1758,8 @@ namespace
 	//     2026-07-28 seat at f=2 - cross-checked in the plan - while
 	//     being fully derived, so 1.5x/3x follow with no per-tier tuning
 	//     (closes #123).
-	//   (The legacy values -2 / 40 died with the legacy path, v4.0.41.)
-	//
-	// The old hand-tuned history (kept for the record): DockY=40 was the
-	// stock-parity correction of a 130 that sat ~180px too low; RingDY
-	// (screen px) had to move in lockstep with DockY (1x units) - that
-	// coupling is exactly the two-knobs-one-position disease the rebuild
-	// removes (the dock is now the ONLY position lever; RingDX/RingDY are
-	// dead under the rebuild).
+	//   (The legacy values -2 / 40 and their hand-tuned history:
+	//   REGRESSION.md [CC-04].)
 	int    gRingDockX = kIniAuto;         // disaster container dock X (ini DockX)
 	int    gRingDockY = kIniAuto;         // disaster container dock Y (ini DockY)
 	// v2.24.0 (audit B2/B3): the bar widen is the TIER FACTOR (float - an int
@@ -1857,23 +1786,14 @@ namespace
 			? gBarDX : 53 - RoundHalfUp(53.0 * BarWidenEff());
 	}
 
-	// (v4.0.41) The LAYER FIX bar-tile cache (BarTile/gBarCache/
-	// BarCachePush, v2.11..v4.0.21) and the ring seat-scaling helpers were
-	// DELETED with the legacy disaster path: the cache's only drain was the
-	// disaster ring block's replay (retired 2026-08-23, deleted v4.0.41),
-	// so the fill was pure waste for both families. History: REGRESSION.md
-	// "DISASTER FLYOUT REBUILD" + VERSION-HISTORY.txt v4.0.40.
+	// (The LAYER FIX bar-tile cache and the ring seat-scaling helpers were
+	// deleted in v4.0.41 with the legacy disaster path: REGRESSION.md [CC-05].)
 
 	// Draw one BAR tile: read the atlas (a1), x-upscale by gBarWiden, write into
-	// the container (self) at (d[0]+gBarDX, d[1]), color-keying magenta. Shared by
-	// the live draw and the post-ring replay so both paint identically.
+	// the container (self) at (d[0]+gBarDX, d[1]), color-keying magenta.
 	// (v4.0.41) SUB-FLYOUT ONLY since the disaster rebuild: the disaster
 	// family's bar draws are reconstructed by DrawDisasterElementScaled
-	// below and never reach this function. The 2026-08-23 per-mode
-	// copy/over variants that briefly lived here (three rejected
-	// compositing experiments on the disaster junction) are recorded in
-	// VERSION-HISTORY.txt v4.0.40 - the junction was a LAYER-ORDER +
-	// geometry problem no compositing mode could fix.
+	// below and never reach this function. History: REGRESSION.md [CC-06].
 	void DrawBarScaled(void* self, void* a1, const int32_t* s, const int32_t* d)
 	{
 		int32_t* af = reinterpret_cast<int32_t*>(a1);
@@ -2652,18 +2572,10 @@ namespace
 						af[5], af[6], af[7], af[8]);
 				}
 			}
-			// ATLAS PIXEL DUMP — REMOVED v2.66.0 (release hygiene, #112).
-			// The v2.9.3 one-shot that dumped the 306x62 atlas to
-			// atlas_dump.bin lived here. It was DEAD CODE (gDumpAtlas was a
-			// hardcoded 0 with no ini key) and it carried an ABSOLUTE MACHINE
-			// PATH into the shipped binary:
-			//     C:\Users\<user>\OneDrive\Documents\SimCity 4\Plugins\...
-			// If the dump is ever needed again, derive the path at runtime
-			// beside the log — never hardcode one. (gDumpAtlas itself went in
-			// the 2026-09-25 audit, B1.)
-			// CODE-ONLY 2x RING: read the 94x62 ring from the atlas (a1),
-			// nearest-upscale 2x, write into the container (self) at the ring's
-			// dst origin, color-keying magenta. Skip the game's 1x ring blit.
+			// (The v2.9.3 atlas pixel dump, removed in v2.66.0, and the header of the
+			// deleted legacy disaster ring block lived here: REGRESSION.md [CC-07].
+			// The dump carried an absolute machine path into the shipped binary; if a
+			// dump is ever needed again, derive its path at runtime beside the log.)
 			// DJUNC (v4.0.17): the dock-tail overlap survives PicsOnTop, so
 			// the tail pixels come from a draw none of the scoped probes
 			// watch. Log EVERY blit - any surface, any class state - whose
@@ -2687,14 +2599,8 @@ namespace
 						d[0], d[1], d[2], d[3], jw, jh, a1);
 				}
 			}
-			// (v4.0.41) The LEGACY disaster ring block - seat-scaling
-			// (RingDX/RingDY + v2.71.8 extrapolation), the RingUnderStrip
-			// viewport clip, the neck-penetration clip, the retired LayerFix
-			// replay and its diagnostics (DISRING/RINGVERIFY/BARSEAM) - was
-			// DELETED after one release behind [Disaster] DrawRebuild=0, per
-			// the approved rebuild plan. The dispatch above owns every
-			// disaster element draw. History: VERSION-HISTORY.txt v4.0.40
-			// and REGRESSION.md "DISASTER FLYOUT REBUILD".
+			// (The legacy disaster ring block was deleted in v4.0.41; the dispatch
+			// above owns every disaster element draw. History: REGRESSION.md [CC-08].)
 			// ---- SUB-FLYOUT RING 2x (v2.15.0, derived from the RCAL trace) ----
 			// The shared sub-flyout container paints its circle as an 80x53
 			// sprite at dst(0,94) into a 258x482 buffer - measured, not guessed:
@@ -5008,23 +4914,9 @@ namespace
 	// belt-and-braces that covers a package-load failure - do not do it as a
 	// tidy-up.
 	const uint32_t kNeverScaleIds[] = {
-		// zoning/utilities flyout columns REMOVED 2026-07-22: their item
-		// icons now ship 2x via z_SC4UIScale_ItemIcons-2x.dat (266 icons,
-		// property 0x8A2602B8 art), so the doubled slots get doubled art.
-		// 0x698894D3 My Sims strip - REMOVED from this list in v2.22.0
-		// (2026-07-29 night, user report "MySims menus corrupted and
-		// crashing", blocking U-Drive-It). The deferral had become the BUG:
-		// the sweep scaled the sibling content panel 0xCA1F1D9C (log:
-		// (149,1413 861x134) -> (298,1226 1722x268)) while this root stayed
-		// 1x, so the composed pair (glued by the 0x0000AAAA marker inside
-		// 0x698894D3) tore apart - scattered title band + detached slot
-		// blocks. Three of the family's arts were ALREADY 2x-in-place
-		// (ABB172FA/FB + 8BB230D4, shared with swept Sim-mode panels), so
-		// pure-1x was no longer reachable either. Full family treatment:
-		// SCALED_WINDOW_IDS (art) + kAlwaysScaleCityIds (pre-scale while
-		// hidden). Watch on verify: the PORTRAITS are runtime-generated
-		// images - if they tile/repeat inside doubled slots, that is the
-		// original deferral concern and needs a slot-pitch code hook.
+		// Removed from this list, with the reasons: the zoning/utilities flyout
+		// columns (2026-07-22) and 0x698894D3 My Sims (v2.22.0) -
+		// REGRESSION.md [CC-09].
 		// STATIC-DAT DIALOGS inside the swept tree (2026-07-28). Establish City
 		// is the Mayor-mode entry popup. Runtime-scaling it gives the right
 		// SIZE but renders its GZWinText nodes (title/labels/warning) in a
@@ -5198,20 +5090,11 @@ namespace
 	// Two of four are NESTED (not direct view children) so they are found by
 	// GetChildWindowFromIDRecursive.
 	const uint32_t kGodToolFlyoutIds[] = {
-		// v2.39.5: these two comments were SWAPPED for weeks (every other site
-		// in the file has them the right way round - kGodFlyoutDock :7008-7009,
-		// GOD-MODE-FLYOUTS.md). Caught by the exe re-verification 2026-07-31.
 		0xCA35CBED, // terrain-effect flyout   (direct view child)
 		0x49923239, // terraform tool flyout   (direct view child)
-		// 0x0A78827A REMOVED v2.12.2: it is the FOUNDED-CITY GOD TOOLBAR (see
-		// kGodPanelIds), not a flyout. Listing it here made the city sweep skip
-		// it, so it rendered at dead stock 74x291 while everything around it
-		// was 2x.
-		// 0xABB26B0E REMOVED v2.12.1: it is a bottom-anchored god PANEL (see
-		// kGodPanelIds), not a flyout. Listing it here made the city sweep skip
-		// it, so it only ever got the size-only treatment that pushed it off
-		// the bottom of the screen in a founded city. Day/Night rendering rides
-		// on 0xCA35CBED and is unaffected by this move.
+		// NOT flyouts, do not add: 0x0A78827A (the founded-city god toolbar,
+		// v2.12.2) and 0xABB26B0E (a bottom-anchored god panel, v2.12.1); both
+		// are in kGodPanelIds. History: REGRESSION.md [CC-10].
 	};
 	inline bool IsGodToolFlyoutId(uint32_t id)
 	{
@@ -5610,14 +5493,9 @@ namespace
 		0x8A8B5B72, // graphs/data panel MIDDLE root (v2.22.3 art fix)
 		0x0A4A8176, // graphs/data panel root C
 		0xC98F49F1, // city panel variant
-		// #95 PHASE 4: 0x699306ED (civic) and 0xCA35CBED (terrain-fx /
-		// day-night) REMOVED - they were dead entries advertising coverage
-		// they could not deliver. Both are `continue`d earlier in the same
-		// loop (IsMayorOnlyFlyoutId / IsGodToolFlyoutId), so they could
-		// never reach this list's visibility exception. Each is really
-		// covered by its OWN mechanism (kMayorFlyoutDock / kGodFlyoutDock),
-		// and Test-BornCorrectCoverage now reports them that way instead of
-		// being told a comforting falsehood by this list.
+		// Not listed: 0x699306ED (civic) and 0xCA35CBED (terrain-fx / day-night).
+		// Each is covered by its own mechanism (kMayorFlyoutDock / kGodFlyoutDock)
+		// and is skipped earlier in the loop. #95 phase 4, REGRESSION.md [CC-11].
 		0x4BCB938A, // U-Drive-It dashboard console (43 vehicle scripts)
 		0xABB26B0E, // Sim-mode left sidebar
 		// #90 (v2.42.0): ships 2x art (SCALED_WINDOW_IDS) but had NO
@@ -6052,25 +5930,11 @@ namespace
 	}
 
 	// ---- #94 v2.47.0: THE MARKER'S UNIT SYSTEM IS MEASURED, NOT ASSUMED ---
-	// v2.43.1/.2 docked from the live marker on the written premise that "the
-	// marker is scaled with the subtree we just scaled, so its live L/T are
-	// already in screen units". THE LOG REFUTED THAT, and it cost the
-	// Landscape dock: with WarriorUI installed the two mod flyouts disagree
-	// permanently, not transiently -
-	//     0xAB954023 S&L        script (4, 5)  read live (8,10) = SCALED
-	//     0x49923239 LANDSCAPE  script (3,59)  read live (3,59) = DESIGN
-	// and Landscape still read (3,59) a full second and many sweep ticks
-	// later, so this is not an ordering race that waiting would fix - that
-	// subtree scale simply never reaches this child. Docking design units as
-	// if they were screen units left the ring 59px low, on the WRONG BUTTON.
-	//
-	// THE FIRST FIX FOR THIS WAS A SIZE HEURISTIC, AND THE OFFLINE GATE
-	// KILLED IT BEFORE IT SHIPPED. The idea was to use the spawn button as a
-	// ruler, since the alignment-marker rule says the marker is "sized like
-	// the spawn button". MEASURED: that premise does not hold. S&L's marker
-	// is 64 wide against a 47-design (94-live) button, so the two hypotheses
-	// score 34 vs 30 - it would have guessed WRONG, and the guess would have
-	// been invisible until some future mod tripped it.
+	// A live marker can be in SCREEN units (scaled with its subtree) or still
+	// in DESIGN units (the subtree scale never reached it). Both were measured
+	// with WarriorUI installed, and it is not a race that waiting fixes. The
+	// marker's size cannot tell them apart reliably either. History
+	// (v2.43.1-v2.47.0): REGRESSION.md [CC-12].
 	//
 	// The authoritative answer is not geometric at all: WE record every
 	// window we scale. See UiSpike::MarkerIsDesignUnits (a PURE READ of
@@ -6955,12 +6819,8 @@ namespace
 			// per-tier constant to keep in sync, and no assumption that
 			// needs revisiting if a 4x tier is ever added.
 			//
-			// (v4.0.41) An `else if (isDisaster)` branch that lived here for
-			// years was UNREACHABLE dead code (control-flow proven,
-			// adversarial review 2026-08-23: the disaster twin fully docks
-			// and returns from the GODDOCK block far above) and has been
-			// DELETED. The disaster twin's real path is GODDOCK + the
-			// v4.0.40 rebuild dispatch in BltClassThunk.
+			// No disaster branch here: the disaster twin docks and returns in the
+			// GODDOCK block far above (REGRESSION.md [CC-13]).
 			//
 			// FIXED 2026-09-25 FOR BORN CONTAINERS ("birth owns the dock",
 			// see gSubBornWin). The sweep-time mirror (search
@@ -10507,17 +10367,8 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 			}
 		}
 	}
-	// v2.72.3's ancestor private-paint-buffer probe lived here. DELETED in
-	// v2.73.0: it was an INVALID INSTRUMENT. All four ancestors reported the
-	// SAME pointer (030D8C14) with cachedW=0, which is impossible for four
-	// distinct windows - `[win+0x6c]` is not the per-window buffer field on a
-	// cIGZWin (that offset was lifted from the gauge draw path, where `self`
-	// is a different object). Its plausibility guard is the only reason it
-	// never wrote into unknown memory. Deleted rather than left in place: a
-	// broken instrument that prints confident lines is worse than none, and
-	// the pbuff hypothesis is MOOT anyway - the recess geometry (dock art
-	// recess = 64*f = 192 against a 128 image) explains the symptom without
-	// it. See #126.
+	// (The v2.72.3 ancestor paint-buffer probe was deleted in v2.73.0 as an
+	// invalid instrument: REGRESSION.md [CC-14].)
 	Logger::Get().WriteLine(LogLevel::Info,
 		"UiSpike: %s window SNAPPED %dx%d -> %d (terrain %d, largest exact "
 		"power-of-two multiple within the x%d bake ceiling; window==surface "
@@ -10850,15 +10701,9 @@ void UiSpike::TryRecreateMinimapSurface(cIGZWin* pDock)
 			static_cast<void*>(pMM), ParentIdOf(pMM));
 		pMM = nullptr;
 	}
-	// v2.73.0 (#126): the dock minimap is NO LONGER SNAPPED. v2.72.1 shrank its
-	// window to the image size, which was correct-but-pointless: it never was on
-	// the #109 crash path (that chain resolves id 0x4203 exclusively), and
-	// shrinking the window did nothing about the real defect - the dock ART's
-	// recess is 64*f = 192 while the image can only be 128, leaving a 64px band
-	// of bare recess. Let the window keep its full scaled size and hook the draw
-	// instead, so the game's own stretch blit fills it from the 128 image.
-	// v2.73.3: the SNAP is back. The stretch was refuted on screen (see the
-	// tombstone in MmDrawThunk), and a correct 128 map in a 192 recess beats a
+	// v2.73.3 (#126): the dock minimap is SNAPPED to the bake size. The
+	// v2.73.0 stretch was refuted on screen (see the tombstone in MmDrawThunk
+	// and REGRESSION.md [CC-15]), and a correct 128 map in a 192 recess beats a
 	// torn 192 one. The remaining 32px ring of BAKED FAKE MAP in the dock
 	// artwork is an ART defect and gets an ART fix - see #126.
 	if (pMM && pMM->GetW() > 64) { SnapMiniMapToBake(pMM, "MINIMAP"); }
@@ -11644,48 +11489,8 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		cIGZWin* pDVRoot = pRoot->GetChildWindowFromID(kGZWin_MenuContainer);
 		cIGZWin* pDVMap = pDVRoot
 			? pDVRoot->GetChildWindowFromIDRecursive(0x00004203) : nullptr;
-		// v2.70.0: THE CLAMP IS OFF (user decision - "we need this map to
-		// scale"). It shipped in v2.69.8-10 and works, but the trade it makes
-		// (a 256 map centered in the 512 slot on small tiles) is the thing
-		// the player rejected. The FULL-SIZE path below is v2.69.5's - which
-		// the player confirmed looked right. (Its later add-on, the per-sweep
-		// heal, was retired with the dock-seed in v2.71.4 - the x8 bake patch
-		// made both obsolete; see the tombstone at the latch declarations.)
-		// The clamp code is kept below, gated, as the emergency fallback; the
-		// DVPIN coupling is inert while gDvMapClampBlit stays 0.
-		//
-		// (v2.69.8's original rationale, kept for the record): the game's
-		// terrain bake fills this map only while
-		// surface <= terrain*4 (zoom >= -2) and produces NOTHING past it, AND
-		// it re-clears the surface to 0xFF000000 every sim-day tick - so any
-		// content we inject is wiped ~1x/second and a heal loop at the OLD
-		// 30-sweep cadence would flicker. (At per-sweep cadence the gap is
-		// one 16 ms frame, which is why the heal is viable after all.) On
-		// tiles too small for the full 2x map it
-		// CLAMPed the window to terrain*4 and centered it in its slot. The
-		// surface then never leaves the game's design range, the bake works,
-		// and the map draws CORRECT at reduced size - small city, smaller
-		// map. Bigger tiles are untouched (their zoom stays >= -2 at 512).
-		// The scaleMap record is written as AlreadyScaled at the clamped size
-		// so the sweep never re-doubles it (no tug-of-war, no tombstone
-		// flicker). The renderer builds WINDOW-sized buffers (#45), so a
-		// clamped window keeps buffer==surface==256 - full stock behavior.
-		// v2.70.1: CLAMP BACK ON as the stable interim. v2.70.0's per-sweep
-		// heal produced WRONG CELL COLORS + a per-day flash, and the player's
-		// screenshot proves WHY the whole heal family is unfixable: the game
-		// ALPHA-BLENDS data cells onto whatever base is under them AT PAINT
-		// TIME. Refresh order is clear -> bake (nothing at zoom=-3) -> blend
-		// cells onto BLACK, so the cells are born dark and no later base
-		// repair can un-blend them. The base must exist BEFORE the cell
-		// paint - i.e. the game's own bake must work at -3. That is the
-		// CodePatches x8 bake extension being derived offline (#121); until
-		// it ships, the clamp (correct, stable, smaller map on small tiles
-		// only) is the honest state. Flip to false ONLY with the bake patch.
-		// v2.71.0: the clamp is now the FALLBACK, not the policy. When the
-		// x8 bake patch is live the game can bake a real terrain base at
-		// zoom -3, so the map runs FULL SIZE and nothing needs clamping. If
-		// the patch declined (wrong exe build, another mod got the site
-		// first), we fall back to the clamp - correct, stable, smaller.
+		// The clamp's history before v2.72.0 (off in v2.70.0, back on in v2.70.1,
+		// the fallback in v2.71.0): REGRESSION.md [CC-16].
 		// v2.72.0 (#109 CLOSED - THE FRACTIONAL-TIER CRASH): this block is no
 		// longer a fallback for a declined bake. It is the SIZING POLICY, and
 		// it runs at every tier.
@@ -12096,9 +11901,9 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 						(int)reinterpret_cast<uint8_t*>(pKick)[0xfd],
 						(int)reinterpret_cast<uint8_t*>(pKick)[0xfe]);
 					// v2.69.5 armed the dock-seed here when zoom <= -3; it was
-					// retired in v2.71.4 (see the tombstone at the latch
-					// declarations). The kick now just re-fires the recompute
-					// and the synchronous bake - at every zoom.
+					// retired in v2.71.4 (REGRESSION.md [CC-02]). The kick now
+					// just re-fires the recompute and the synchronous bake - at
+					// every zoom.
 				}
 				__except (EXCEPTION_EXECUTE_HANDLER)
 				{
@@ -13260,8 +13065,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// overrides its global only when it is present in the ini.
 			struct LiveKey { const char* section; const char* key; int* target; };
 			static const LiveKey kLiveKeys[] = {
-				// (v4.0.41) DrawRebuild / RingDX / RingDY / RingUnderStrip /
-				// LayerFix ini keys DELETED with the legacy disaster path.
 				// BufDump=N writes N container-buffer dumps beside the DLL for
 				// offline pixel verification (render_disbuf.py).
 				{ "Disaster", "BufDump", &gDisBufDump },
@@ -13269,16 +13072,8 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				{ "Disaster", "DockY", &gRingDockY },
 				// v4.0.14: initial scroll (first-visible item) for the strip.
 				{ "Disaster", "InitScroll", &gDisInitScroll },
-				// v4.0.27: strip-shift lever for sub-flyout families whose stock
-				// attach point is not where the game-native layout puts it
-				// (Build Park et al). Replaces the retired InitScroll write.
-				// v4.0.30: StripShiftRows RETIRED — breaks bar+strip alignment.
-				// v4.0.33: ContainerShiftRows/Fine RETIRED — replaced by the
-				// mathematical formula in SubContainerShiftFromGeo() which
-				// computes the exact shift from ring geometry at all scales.
-				// (v4.0.41) RingUnderStrip + LayerFix keys deleted with the
-				// legacy disaster path. BarDX/BarW stay: the SUB-FLYOUT family
-				// still consumes them (DrawBarScaled).
+				// BarDX/BarW stay: the SUB-FLYOUT family still consumes them
+				// (DrawBarScaled). Deleted [Disaster] keys: REGRESSION.md [CC-17].
 				{ "Disaster", "BarDX", &gBarDX },
 				// v2.39.0 task #5: born-at-Place size for the first-level flyout.
 				// Live so a bad size can be switched off mid-session without a
@@ -14349,20 +14144,9 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	// kMayorFlyoutDock now lives at namespace scope (see the alignment-marker
 	// rule up there) because ScalePanelsUnder needs it too.
 
-	// kSizeOnlyIds REMOVED (v2.12.1, founded-city god mode). It held exactly one
-	// id, 0xABB26B0E, on the belief that it was "a frozen hidden template at
-	// Y1045" that day/night merely rode on - true in the PRE-FOUNDING god mode
-	// where all the flyout work was done, and FALSE in a founded city, where
-	// 0xABB26B0E is the god panel that god mode actually shows (live dump: two
-	// real 148x116 god buttons under it, everything else vis=0).
-	// Size-only scaling never moves the root, and this panel's stock rect
-	// (3,1045) 157x488 is BOTTOM-anchored, so doubling it in place grew it from
-	// y=1045 to y=2021 on a 1600px screen - 421px off the bottom. That was the
-	// user's "God Mode never loads, the UI stays crushed".
-	// It is now a god PANEL: same treatment as its twin 0x69E40A1F, which has
-	// the IDENTICAL stock size (157x488) and is already transformed correctly.
-	// The panel transform y' = f*y - (f-1)*frameH yields 2*1045-1600 = 490, i.e.
-	// (6,490) - exactly the dock position recorded for this id on 2026-07-24.
+	// 0xABB26B0E is a god PANEL (kGodPanelIds, gated by gScaleAbbPanel), never
+	// a size-only window: the kSizeOnlyIds list and its size-only pass were
+	// removed in v2.12.1 (REGRESSION.md [CC-18]).
 
 	cIGZWin* dnTool = pView->GetChildWindowFromIDRecursive(0xCA35CB74);
 	const bool dayNightActive = (dnTool != nullptr && dnTool->IsVisible());
@@ -14383,8 +14167,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	// mayor: vis=1 only in mayor mode.
 	cIGZWin* mayorHud = pView->GetChildWindowFromIDRecursive(0xE9889775);
 	const bool mayorModeActive = (mayorHud != nullptr && mayorHud->IsVisible());
-
-	// (the size-only pass that lived here is gone - see kSizeOnlyIds note above)
 
 	// Dock + scale the dialed-in flyouts. Needs the scaled toolbar strip as
 	// the anchor; if it isn't scaled yet this cycle, dock next tick.
@@ -14563,14 +14345,8 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// whether the attach row is wrong because of a bad ring pin
 			// (AutoY from an inverted-clamped cy) or something else.
 			//
-			// v4.0.25: the v4.0.24 RingRowDesign pin is RETIRED here - it
-			// moved the RING down to meet the strip, which is backwards and
-			// repeated the disaster-arc mistake (the dock never moves).
-			// SUBSCROLL proved both tiers show identical lots (Green Spaces
-			// top, 8 visible of count=11, firstVisible=0); stock simply has
-			// firstVisible=2, putting Tourist Trap (full-list #7) at the
-			// ring's row. The fix is the guarded scroll write below at the
-			// born path - same pattern as the disaster InitScroll.
+			// (The v4.0.24 RingRowDesign pin, retired in v4.0.25: REGRESSION.md
+			// [CC-19].)
 			if (ringFresh && gSubGeo2Log < 40)
 			{
 				gSubGeo2Log++;
@@ -14594,14 +14370,10 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 					stl, stt, stw ? stw->GetW() : 0,
 					stw ? stw->GetH() : 0);
 			}
-			// STRIP SHIFT (v4.0.27): RETIRED. Moving the strip child window
-			// independently of the container breaks bar+strip alignment —
-			// the bar art is painted into the container buffer at the
-			// builder-computed positions and covers the full container
-			// height. Every working flyout (mayor, god tools, first-level)
-			// keeps the strip and bar in their builder positions and never
-			// shifts the strip independently. The ring arm alignment should
-			// be fixed by adjusting gSubRingAutoY, not by shifting the strip.
+			// Never shift the strip child independently of its container: the bar art
+			// is painted into the container buffer at the builder's positions, so that
+			// breaks bar+strip alignment (STRIP SHIFT, v4.0.27, retired; REGRESSION.md
+			// [CC-20]).
 			// BIRTH OWNS THE DOCK (2026-09-25): a container that SubPlaceDetour
 			// docked THIS open is claimed by birth's own anchor (the game's
 			// Place() cy = the spawn button's centre) and target, and keeps
@@ -16476,66 +16248,26 @@ void UiSpike::IncrementalPass()
 	//                "(3-btn)" alone described only two of this id's three
 	//                stock scripts. See the kCityDialogIds table below.
 	//   0x6AAEEC4A - "Exit to Region" / "Exit and Play City" (3-btn)
-	// Guard: only scale if the root width is still at 1x design size
-	// (< 400 px); if the static override ever starts working the root
-	// arrives at ~540-660 px and this skip keeps us from double-scaling.
+	// Guard: a dialog that arrives already scaled by data is left alone (the
+	// data-born exact-match guard below; history REGRESSION.md [CC-23]).
 	{
-		// v2.25.6: + the "Text Entry" prompt (Save City confirm, I-e9263d4c)
-		// and Set Lot Size (I-e9263de5). The Batch-C static override shipped
-		// in v2.25.5 and the box STILL rendered collapsed (user screenshot)
-		// - the same bypass the two quit confirms have: the game builds
-		// these through a code path the DBPF override never reaches. The
-		// w >= 400 guard below keeps this harmless if the static override
-		// ever does take effect.
-		// Per-id DESIGN width (tier-math law: the old flat `w >= 400` guard
-		// was a 2x-era constant - at 1.5x a scaled 249-wide Set Lot Size is
-		// 374 px and would slip past 400 and re-scale). "Still at 1x" is now
-		// w < designW*1.25: exact design width passes, any scaled instance
-		// (factor >= 1.5) is skipped. f=2 identity: quit confirms 330 -> 412
-		// threshold; unscaled 330 < 412 scales, doubled 660 >= 412 skips -
-		// same behavior as the old 400 for every pre-existing id.
+		// Also scaled at runtime: the "Text Entry" prompt (Save City confirm,
+		// I-e9263d4c) and Set Lot Size (I-e9263de5), which the game builds
+		// through the same bypass as the two quit confirms (v2.25.6).
 		//
-		// v2.39.13 - PER-ID 1x BASE SIZES for the data-born EXACT-MATCH guard
-		// (bases2W/H = 0 means one base). The #85 mapping falsified the single
-		// threshold for the Save box: its 1x candidate set {300 stock, 500 CAM}
-		// OVERLAPS its scaled set {450 stock-1.5x, 600 stock-2x}, so NO width
-		// threshold can separate "arrived 1x" from "arrived data-born" - the
-		// designW-560/threshold-700 pair was derived from CAM's script and left
-		// the CAM-ABSENT config re-scaling our own 600x332 to 1200x664 (a 4x of
-		// stock design; the mirror image of the bug v2.39.9 fixed). The guard
-		// now skips iff the arrived (w,h) EQUALS round(base*f) (+-1) for one of
-		// the id's known 1x bases - precise at every tier, no overlap possible.
-		// Both live arrivals ever recorded for the Save box (500x175 on
-		// 2026-07-30 pre-CamUI, 1000x350 on 2026-07-31) are EXACT script sizes;
-		// the "auto-fits the filename" claim traced back to the falsified
-		// v2.25.9 note and has never been observed.
-		// v2.39.14: THREE candidate bases per id (0 = unused). v2.39.13 had
-		// two and MIS-ASSIGNED which confirm script owns which id - MEASURED
-		// FAILURE, mod-removed state, task #83:
-		//   "in-city dialog 0xAA921F4F scaled (930,426 540x322) -> 1080x644"
-		// i.e. 0xAA921F4F actually arrives at 2x of 270x161 (the size I had
-		// filed under the OTHER id), so no product matched and the guard
-		// re-scaled a data-born dialog to 4x on screen.
-		// THE LESSON (law 23 again, in its own fix): I scoped each id to the
-		// mapping I believed, and the belief was wrong. The two confirms are
-		// ONE FAMILY whose script<->id mapping varies with package and mod
-		// state, so every member now carries EVERY candidate base and the
-		// mapping stops mattering. Safe by arithmetic: at f=1.5/2/3 the
-		// products {495x236, 405x242, 405x243}, {660x314, 540x322, 540x324},
-		// {990x471, 810x483, 810x486} never collide with any 1x base
-		// (330x157 / 270x161 / 270x162), so a genuinely-1x arrival still
-		// scales.
-		// HONEST NOTE: v2.39.11's width threshold would have SKIPPED this
-		// case correctly (540 >= 412). The exact-match guard is stricter and
-		// therefore fails LOUDLY when its data is wrong instead of silently
-		// getting it right - which is why the data must be complete, not why
-		// the guard is wrong (the threshold had its own hole: the CAM-absent
-		// 600x332 arrival, which is what motivated the product match).
-		// v2.64.0 (#102): widened 3 -> 4. The confirm family has a FOURTH
-		// stock base (330x109, the region-screen two-button quit) that we
-		// already SHIP staged at every tier; with only three slots its
-		// data-born arrival matched no product and fell through to a 4x
-		// resize. See the block comment on 0xAA921F4F below.
+		// bw/bh: up to FOUR measured 1x base sizes per id (0 = unused), read by
+		// the data-born EXACT-MATCH guard below. The quit/exit confirms are ONE
+		// FAMILY whose script<->id mapping varies with package and mod state, so
+		// every member carries EVERY candidate base and the mapping stops
+		// mattering (v2.39.14). Safe by arithmetic: at f=1.5/2/3 the products
+		// {495x236, 405x242, 405x243}, {660x314, 540x322, 540x324} and
+		// {990x471, 810x483, 810x486} never collide with a 1x base (330x157 /
+		// 270x161 / 270x162), nor do the fourth base's (330x109, v2.64.0:
+		// 495x164, 660x218, 990x327). The exact match fails LOUDLY when a base
+		// is missing (a 4x resize on screen), so the table must be complete.
+		// designW is read by no code: the width guard it was declared for was
+		// replaced by the exact match.
+		// History (v2.25.6-v2.64.0): REGRESSION.md [CC-23].
 		struct CityDialog { uint32_t id; int32_t designW;
 			int32_t bw[4]; int32_t bh[4]; };
 		const CityDialog kCityDialogIds[] = {
@@ -16603,31 +16335,9 @@ void UiSpike::IncrementalPass()
 			{ 0x6AAEEC4A, 330, { 330, 270, 270,   0 }, { 157, 161, 162,   0 } },
 			{ 0xC9264BE2, 319, { 319,   0,   0 }, { 113,   0,   0 } },
 			{ 0x8926EEBE, 249, { 249,   0,   0 }, {  92,   0,   0 } },
-			// v2.25.17: the v2.25.16 entries 0x4A9DB60C/0xEBB16D71/0x0423278F
-			// are REVERTED - they were identified by MWKID TIMING correlation,
-			// not content, and were actually the ADVISOR TOAST family (already
-			// static-doubled: 900x492 = the doubled 450x246 toast!), so the
-			// runtime entry double-doubled every toast (user screenshot:
-			// giant corrupted toast) while the real budget sub-dialogs stayed
-			// 1x. Identity for this list must be CONTENT-matched, never
-			// inferred from which dialog the player "should" have had open.
-			// v2.25.20 - THE BUDGET MASTERS, with the REAL flaw fixed: their
-			// ids exist TWICE (a permanent hidden template + the open
-			// instance), so every earlier runtime pass found the TEMPLATE,
-			// failed IsVisible(), and skipped the real dialog. The loop now
-			// iterates EVERY instance of each id (IdCollectCtx). Static
-			// double was separately PROVEN bypassed (deployed 1000x404 data
-			// vs live 500x464 template), so runtime is the only lever -
-			// exactly the Save-box treatment, per instance. designW 500 =
-			// the script width (the game content-fits HEIGHT only).
-			// v2.25.23: the budget masters LEFT this list for good - they are
-			// data-doubled now (DialogStatic wins the load race after the
-			// SelectiveArt emit fix) with their roots in kNeverScaleIds;
-			// runtime scaling of a data-doubled dialog would be 4x.
-			// 0x0423278F (Ordinances) also REMOVED: both runtime attempts
-			// tore it (v2.25.21 off-screen, v2.25.22 row interleave) - the
-			// revert law. It gets its own measured pass; it may be an
-			// embedded master-B composition rather than a plain dialog.
+			// Tried in this list and removed: 0x4A9DB60C and 0xEBB16D71 (v2.25.17),
+			// the budget masters (v2.25.23: data-doubled, roots in kNeverScaleIds)
+			// and 0x0423278F (banned below). History: REGRESSION.md [CC-21].
 			// 0x4C30E4FA = the Business Deals empty-state box - VWKID caught
 			// it view-parented at 272x200, parking off-screen at (-272,-200)
 			// when closed (still "visible", which is harmless here).
@@ -16820,80 +16530,26 @@ void UiSpike::IncrementalPass()
 			// cannot exist because nothing moves at birth.
 			const bool modalConfirm =
 				(dlgId == 0xAA921F4F || dlgId == 0x6AAEEC4A);
-			// ---- v2.38.0 (task #79c): THE DATA-BORN GUARD --------------
-			// `designW` has been declared in this table since v2.25.6 and three
-			// comment blocks describe a `w < designW*5/4` guard - but NOTHING
-			// EVER READ IT. Consequence, latent to this day: 0x6AAEEC4A IS
-			// data-doubled by the root DialogStatic package (660x314), so this
-			// block would have scaled it AGAIN to 1320x628 the first time
-			// anyone opened that variant.
+			// ---- THE DATA-BORN GUARD (v2.38.0 #79c; exact match since v2.39.13) ----
+			// A dialog in this table can arrive already scaled BY DATA (the root
+			// DialogStatic package, or our SaveWarningUI / CamUI rebuild of a mod's
+			// script). Such a window must not be scaled again, and it is not moved
+			// either (see "NOTHING MOVES HERE" below).
 			//
-			// Now that the two modal confirms are born correct from data - via
-			// zzz-SC4UIScale\z_SC4UIScale_SaveWarningUI when the save-warning
-			// mod owns their scripts, or the root DialogStatic copy when it
-			// does not - this block must not touch their SIZE at all. It still
-			// centres them, which is idempotent and drift-proof.
-			//
-			// KEYING ON THE ARRIVED SIZE IS THE POINT: this guard does not
-			// know or care WHICH package supplied the script. Mod installed,
-			// mod removed, mod updated - a 1x birth still gets scaled exactly
-			// as before, a 2x birth is left alone. That is what makes all
-			// three states correct without a single state test.
-			//
-			// v2.39.9 - THE SCOPING ABOVE WAS THE BUG, AND IT SHIPPED.
-			// v2.38.0 scoped this guard to the two confirm ids "on purpose
-			// (law 29 - blast radius)", documenting the Save box 0xAA8DEF97
-			// as untested - and the "Saving Disabled" box arrived data-born
-			// at 1000x350 and this block scaled it AGAIN. MEASURED:
-			// `MWKID 0xAA8DEF97 (200,241 2000x700)` = 4x of the winning
-			// script's 500x175 design, frame art tiling (user screenshot).
-			// `newW > scrW` could never catch it: 2000 < 2400.
-			// (v2.39.13 correction of the v2.39.9 causal note that stood
-			// here: the doubled arrival was CAM's replacement script
-			// rebuilt by OUR CamUI package - 2 x 1000x350 - NOT the
-			// 6a553aa4 confirm-family reuse; that story came from the
-			// v2.25.9 note, which the #85 mapping FALSIFIED node-for-node.)
-			//
-			// LAW 23 (the reason this sat latent for a day): SCOPING A GUARD
-			// TO THE CASE YOU TESTED LEAVES THE UNTESTED CASES UNGUARDED.
-			// When the guard's own test is on MEASURED STATE rather than
-			// identity, narrowing it by id adds risk instead of removing it.
-			//
-			// v2.39.13 - AND A THRESHOLD IS THE WRONG SHAPE OF STATE TEST.
-			// The #85 mapping proved no width threshold can work for the Save
-			// box: its 1x candidate set {300 stock, 500 CAM} OVERLAPS its
-			// scaled set {450 stock-1.5x, 600 stock-2x}. The v2.39.9
-			// designW-560/threshold-700 pair (derived from CAM's script) left
-			// the CAM-ABSENT config re-scaling our own 600x332 root arrival
-			// to 1200x664 - the mirror image of the bug it fixed. The guard
-			// is now an EXACT PRODUCT MATCH: skip iff the arrived (w,h)
-			// equals RoundHalfUp(base * f) +-1px for one of the id's
-			// measured 1x bases (kCityDialogIds carries them; every staged
-			// tier was verified to equal that product). A 1x arrival matches
-			// no product and is scaled; a data-born arrival matches its
-			// package's product exactly, from EITHER package, at EVERY tier.
-			// Residual accepted: a foreign mod shipping this id at exactly
-			// one of our product sizes would be wrongly skipped - that case
-			// is undecidable by size alone and was equally wrong before.
-			//
-			// v2.39.11 - AND THE WIDTH TEST ALONE IS NOT "ARRIVED SCALED".
-			// v2.39.9 fixed the 4x (confirmed on screen) but a 3-lens adversarial
-			// review caught what the eyes-on could not see: `w >= designW*5/4`
-			// is ALSO true of a window WE scaled on an earlier sweep. From the
-			// next tick on, every id in this table would take this branch and
-			// `continue` BEFORE the AlreadyScaled/Unrecognized child re-pass
-			// below - dead-coding the very law written above it ("Any dialog
-			// with a scale RECORD is OURS: run the idempotent child pass BEFORE
-			// the width guard, every sweep while visible", v2.25.18, the
-			// Health & Education row-overlap fix). It would also poison
-			// DLGBORN, which is once-per-id: a false "data-scaled" line for a
-			// window we scaled ourselves would block the real birth from ever
-			// logging.
-			// Classify IS the arrived-vs-ours test - it returns Fresh only when
-			// no scale record of ours exists (and it erases stale/address-reused
-			// records first). So: Fresh AND already-wide == genuinely born
-			// scaled by DATA. Everything else falls through to the machinery
-			// that has been correct since v2.25.18.
+			// The test is on the ARRIVED SIZE, never on which package supplied the
+			// script, and it applies to every id in this table (LAW 23: scoping a
+			// guard to the case you tested leaves the untested cases unguarded). Both
+			// conditions are required:
+			//   - Classify() == Fresh: no scale record of ours exists, so the window
+			//     is not one WE scaled on an earlier sweep. A window with a record
+			//     must go on to the child re-pass below (v2.25.18). Classify also
+			//     erases stale and address-reused records.
+			//   - EXACT PRODUCT MATCH: the arrived (w,h) is RoundHalfUp(base * f)
+			//     +-1px for one of the id's measured 1x bases. No width threshold can
+			//     work: the Save box's 1x and scaled candidate sets overlap.
+			// Residual accepted: a foreign mod shipping one of these ids at exactly
+			// one of our product sizes would be wrongly skipped; that is undecidable
+			// by size alone. History (v2.38.0-v2.39.13): REGRESSION.md [CC-22].
 			const ScaleState dlgState = Classify(pDlg);
 			// v2.39.13: EXACT PRODUCT MATCH against the id's measured 1x
 			// bases (see the table comments). RoundHalfUp mirrors both the
