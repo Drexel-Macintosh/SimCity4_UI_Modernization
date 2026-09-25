@@ -20,6 +20,56 @@ The evidence scripts are in `tools/research/audit-2026-09-25/`:
 - `zip_dups.py`: finds duplicate payloads in a bundle.
 - `enumdisp.ps1`: display-mode enumeration outside the game. Run it under 32-bit PowerShell to match the game.
 
+## STATUS (updated 2026-09-25 12:50) - read this first when resuming
+
+**Done:** v4.10.3 build, not released. Every item was verified in game unless its row says otherwise.
+
+| Item | Commit | Evidence |
+|---|---|---|
+| A2: every-boot DialogStatic re-copy removed | `d70a139` | CommitArming has no migration line; 0 FAILED |
+| A5: SUBGEO2 moved to Debug; BUBBLEFX "already ours" | `d70a139` | 0 NOT PRISTINE lines, 1 "already ours" |
+| A6: region tile grow, one division per column | `d70a139` | REGIONZOOM grew 40 tiles, declined 0 |
+| A11: CSIDRAW installs only for CsiKill or mode 3 | `d70a139` | CSIDRAW 0 |
+| B6 (critical part): `.text` writes keep the page executable and flush the cache; the CsiCountPlate override no longer writes without VirtualProtect | `d70a139` | no errors; CSI patch applied |
+| C1: `EarlyDock` default 2 | `d70a139` | two cities, dock scaled at +313 ms and +109 ms, no dock FLASHSET |
+| A1: `tick.incr` PerfProbe scope; dead `mayorBtn1` lookup removed | `d70a139` | baseline **0.81 ms per tick** (1,385 ticks, max 9.4) |
+| B1/B3 first pass: 29 dead definitions, 533 lines | `ca71cfc` | `.text` byte-identical to the tested DLL (`tools/dev/pe_section_diff.py`) |
+| A1: probe-only geometry map skipped; ChildSnapshot clears only `count` | `155caa0` | see the timing below |
+| A1: in-city region miss latched until Disarm | `155caa0` | region screen re-found after exiting the city |
+| B4: ScaleRemap removed (619 lines) | `155caa0` | clean boot and shutdown |
+| A1: one ApplyPanelDocks per city tick | `b42c5a2` | the user saw the Graphs and other panels in place |
+| A10: STATE files written only on change | `b42c5a2` | rewritten once for the new header |
+
+- **Timing after `b42c5a2`:** `tick.incr` = **0.68 ms per tick** (632 ticks, max 9.5), down from 0.81 ms (about 16% less). The two sessions differed, so this is a rough comparison.
+- **New tools:**
+  - `_tests/Run-OfflineGates.ps1` runs 25 offline gates. Two are known red: Test-ScaleDimParity is the documented register #7 item, and Test-DatIntegrity is red only between a build and its deploy.
+  - `tools/dev/remove_defs.py`
+  - `tools/dev/pe_section_diff.py`
+
+**Not done yet** (in this order):
+1. **A3, at the next release.** Seed the bundle's live `.dat` files with `.off` (`Build-Dist.ps1:359`, `Convert-ToPayloadLayout -Tier`). Then prove it: run `zip_dups.py` on the new zip (expect 0 duplicate payloads), and run Test-DatIntegrity and Test-Sc4pacInstall. v4.10.3 also needs its CHANGELOG and VERSION-HISTORY entries.
+2. **A1, the rest.** One multi-id walk for HookRuntimeBmpsUnder (16 searches), the flyout misses, and the kCityDialogIds walks. Also: the `0x4BCB938A` double lookup, and the two self-lookups of `0x9A47B417`. The `godParent` block must keep running, so replace those two with `pView`. Measure against 0.68 ms.
+3. **B1, the rest.** Remove the never-assigned flags and their branches. Then remove the settings-gated retired paths:
+   - SubFlyoutBorn2x, including `ApplySubFlyoutProviderScale`, which the director still calls;
+   - DockDialogs;
+   - EarlyBake mode 2;
+   - the disaster derived dock;
+   - EdgeProbeTick;
+   - REGIONCAM/REGIONWATCH, which still logs on every region visit.
+
+   Also update `Test-SubFlyoutPlacement.py` check 2 and `emu_subsharedbottom_model.py`: the functions they describe are gone.
+4. **A9.** SpinProbe fix-only mode should skip its diagnostics.
+5. **A4.** Cache the display-mode list.
+6. **B5 and B6.** One hook helper, including prologue checks for the six unchecked hooks, and route the rest of the hand-rolled writes through VerifiedWrite.
+7. **B8.** Parse the ini once. Add a parity test against GetPrivateProfileString.
+8. **B9, B11, B10, B12.** Remove the duplication, split UiSpike (selector first), move the history comments to the ledger, and give Deploy and Build-Dist one shared package list.
+9. **Small items.** In MigrateRootLooseFiles, create the directory only when needed. Fix the boot TOTAL double count. A8: one directory listing per folder.
+
+**Deliberately not planned:**
+- **A7** (icon index cache): a stale cache brings back the #149 doubled icons.
+- **B2** (sub-flyout legacy fallback): it is the safety net for the just-fixed v4.10.2 path.
+- **B13** (old migrations): they cost about 1 ms and still serve old installs.
+
 ## Recommended order
 
 1. **Safe wins, one release:**

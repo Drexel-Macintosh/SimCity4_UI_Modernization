@@ -22259,3 +22259,25 @@ The user asked whether the plugin as a whole could be more efficient or simpler.
 - **Info-level floods.** SUBGEO2 is 14% of today's log. BUBBLEFX "NOT PRISTINE" is 106 lines in 21 s, each our own earlier write.
 - **Part of #89 is off.** The #89 EARLYDOCK half ships LOG ONLY (compiled default 1; it was tested at 2). Today's log shows `FLASHSET city 0x0987B48F ... THIS ONE FLASHED, +1125ms`. The user decides.
 - **Simplification.** About 2,400 lines of verified-dead code across UiSpike and CodePatches, plus the 619-line rejected ScaleRemap. One hook helper and one write helper would replace hand-rolled copies. Six hooks skip the prologue check. The CsiCountPlate dev override writes `.text` with no `VirtualProtect`. About 2,500-3,000 lines of history comments belong in this ledger.
+### 12:50 - v4.10.3 BUILD (not released): audit fixes, two in-game checks
+
+The user: "do it / I want the efficiency and simplification fixes done", then asked for a clean stopping point near the weekly limit. Weekly usage was at 93-94%, so the work was done directly, as small verified commits, with no worker fleet. The status table is at the top of `research/AUDIT-2026-09-25-EFFICIENCY.md`.
+
+- **Commits:**
+  - `d70a139`: A2, A5, A6, A11, B6 (the `.text` writes), C1 (`EarlyDock` default 2), plus the `tick.incr` timer.
+  - `ca71cfc`: 29 dead definitions removed; `.text` byte-identical to the tested DLL.
+  - `155caa0`: the DPROBE map is skipped with the probe off; the in-city region miss is latched; ScaleRemap is removed.
+  - `b42c5a2`: one dock pass per city tick; STATE files written only on change.
+- **In game, session 1 (12:29):**
+  - no DialogStatic migration line;
+  - two cities, with the dock scaled at +313 ms and +109 ms and no dock FLASHSET;
+  - 24 SUBOWN;
+  - REGIONZOOM declined 0;
+  - clean shutdown;
+  - Test-DatIntegrity ALL PASS after boot.
+- **In game, session 2 (12:43):**
+  - the region screen was re-found after exiting the city;
+  - the user saw the Graphs panel and other panels in place ("Looks good");
+  - no errors.
+- **Measured:** `tick.incr` fell from **0.81 to 0.68 ms per tick** (-16%). Treat it as approximate, because the sessions differed.
+- **Next (after the reset):** A3 at the release, then the rest of A1, B1 and the others listed in that status table.
