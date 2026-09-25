@@ -4932,6 +4932,18 @@ namespace
 	// compass, hidden flyouts). 0x2AAB8CC1 exists there but is empty+hidden.
 	const uint32_t kGZWin_RegionScreen = 0xEA659793;
 
+	// Is `id` one of `table`? The one membership loop every Is...Id
+	// predicate below shares (audit B9).
+	template <size_t N>
+	inline bool IdIn(const uint32_t (&table)[N], uint32_t id)
+	{
+		for (uint32_t known : table)
+		{
+			if (id == known) { return true; }
+		}
+		return false;
+	}
+
 	// Region panels scaled even while HIDDEN: the flyouts (0x09EBEE45 top
 	// menu, 0x09EBEE60 options) and the mini button are pre-scaled before
 	// they ever show, so opening them cannot pop from 1x to 2x on screen.
@@ -4943,11 +4955,7 @@ namespace
 	};
 	inline bool IsRegionPanelId(uint32_t id)
 	{
-		for (uint32_t known : kRegionPanelIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kRegionPanelIds, id);
 	}
 
 	// NEVER scaled (user click-through 2026-07-21): windows whose content is
@@ -5179,11 +5187,7 @@ namespace
 	};
 	inline bool IsGodToolFlyoutId(uint32_t id)
 	{
-		for (uint32_t known : kGodToolFlyoutIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kGodToolFlyoutIds, id);
 	}
 
 	// GOD-MODE TOOLBAR TWINS (2026-07-23, user-diagnosed duplication): the
@@ -5235,11 +5239,7 @@ namespace
 		{
 			return false;
 		}
-		for (uint32_t known : kGodPanelIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kGodPanelIds, id);
 	}
 
 	// ---- MAYOR-MODE FLYOUT DOCK TABLE ------------------------------------
@@ -5476,11 +5476,7 @@ namespace
 	const uint32_t kSubFlyoutIds[] = { 0x8A6E61E0 };
 	inline bool IsSubFlyoutId(uint32_t id)
 	{
-		for (uint32_t known : kSubFlyoutIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kSubFlyoutIds, id);
 	}
 
 	// CITY panels that must be scaled BY ID even while they report vis=0 -
@@ -5632,11 +5628,7 @@ namespace
 	};
 	inline bool IsAlwaysScaleCityId(uint32_t id)
 	{
-		for (uint32_t known : kAlwaysScaleCityIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kAlwaysScaleCityIds, id);
 	}
 	// DATA-PRE-SCALED SUBTREES (task #43, v2.20.0): scale the ROOT at runtime
 	// (so its HUD edge-anchoring keeps working at any resolution) but NEVER
@@ -5808,19 +5800,11 @@ namespace
 	};
 	inline bool IsFontSizedId(uint32_t id)
 	{
-		for (uint32_t known : kFontSizedIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kFontSizedIds, id);
 	}
 	inline bool IsDataScaledSubtreeId(uint32_t id)
 	{
-		for (uint32_t known : kDataScaledSubtreeIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kDataScaledSubtreeIds, id);
 	}
 	// [Probe] ForceRuntimeScaleId - Build 1 (2026-08-24) dev repro lever for
 	// register row #24. A nonzero id is EXCLUDED from kNeverScaleIds at every
@@ -5855,11 +5839,7 @@ namespace
 	inline bool IsNeverScaleId(uint32_t id)
 	{
 		if (id != 0 && id == ForceRuntimeScaleId()) { return false; }
-		for (uint32_t known : kNeverScaleIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kNeverScaleIds, id);
 	}
 
 	// ADVICELIST (cSC4WinAdviceList, clsid 0xca1492ac) windows: scale the
@@ -5894,11 +5874,7 @@ namespace
 	};
 	inline bool IsAdviceListScaleSelfId(uint32_t id)
 	{
-		for (uint32_t known : kAdviceListScaleSelfIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kAdviceListScaleSelfIds, id);
 	}
 	// The ticker MARQUEE is an AdviceList the game re-imposes geometry on
 	// EVERY roll tick from values cached at ticker init (0x77258B) - a
@@ -5915,11 +5891,7 @@ namespace
 	};
 	inline bool IsAdviceListNeverTouchId(uint32_t id)
 	{
-		for (uint32_t known : kAdviceListNeverTouchIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kAdviceListNeverTouchIds, id);
 	}
 
 
@@ -6029,12 +6001,12 @@ namespace
 	};
 	inline bool IsCityHudFamilyId(uint32_t id)
 	{
-		for (uint32_t known : kCityHudFamilyIds)
-		{
-			if (id == known) { return true; }
-		}
-		return false;
+		return IdIn(kCityHudFamilyIds, id);
 	}
+
+	// The three cSC4WinRCI demand columns, logged by the RCI diagnostics
+	// at city init and again ~30 s later (one table, audit B9).
+	const uint32_t kRciColumnIds[] = { 0x09D27EB0, 0x29D27EC0, 0x49D27ED0 };
 
 	// The leader's scaled x, clamped ONCE for the whole family. Members are
 	// never clamped individually: individual clamping is exactly what shears
@@ -6112,6 +6084,25 @@ namespace
 			return true;
 		}
 	};
+
+	// CRASH KILLER, one copy (audit B9): is `child` still in `parent`'s LIVE
+	// child list? Mutating an earlier sibling can make the game destroy a
+	// later one (reactive menu layouts during rapid switching), so a sweep
+	// re-checks before touching the next snapshot entry. The check proves
+	// the liveness of THIS pointer only, never of the rest of the snapshot
+	// (v2.69.3 - see ScaleSubtree). Only [0, count) is read, so only count
+	// needs clearing.
+	bool StillChildOf(cIGZWin* parent, cIGZWin* child)
+	{
+		ChildSnapshot verify;
+		verify.count = 0;
+		parent->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &verify);
+		for (int j = 0; j < verify.count; j++)
+		{
+			if (verify.wins[j] == child) { return true; }
+		}
+		return false;
+	}
 }
 
 struct UiSpikeEnumCtx
@@ -6200,8 +6191,10 @@ namespace
 	typedef void(__fastcall* SubMetricsFn)(void*, void*, int, int, int);
 	SubPlaceFn   gOrigSubPlace = nullptr;
 	SubMetricsFn gOrigSubMetrics = nullptr;
-	// Set in ArmDeferred. The detours are free functions; the treatments they
-	// need (the sweep pass, the draw-hook install) are members.
+	// The one UiSpike, for the free-function detours whose treatments are
+	// members. Set by InstallShowHook and InstallFlyoutOpenHook, which
+	// ArmDeferred calls back to back (audit B9: the show hook kept its own
+	// copy, gSpikeForHook, holding the same pointer).
 	UiSpike* gSpikeSelf = nullptr;
 	bool gSubBornScaleInstalled = false;
 	int  gSubBornScaleOn = 1;      // [Flyout] SubBornScale - live-tunable
@@ -7265,21 +7258,36 @@ void UiSpike::InstallFlyoutOpenHook()
 // validated only on the known parent menus; when U-Drive-It -> Earned Cars
 // (an 88-WIDE strip, a foreign layout) received them the game died. Positive
 // identification only.
-void UiSpike::InstallSubFlyoutHooksNow(cIGZWin* sub, cIGZWin* strip)
+namespace
 {
-	if (!sub || !strip || !lastView || gClaimScale <= 1) { return; }
-
-	bool knownMenuOpen = false;
-	const uint32_t kHookParents[] = {
+	// The parent menus whose sub-flyouts the claim/strip hooks were validated
+	// on, in the order the dock code tries them (audit B9: this table was
+	// written three times). Positive identification only (law 3, v2.22.1):
+	// U-Drive-It -> Earned Cars, an 88-WIDE strip, crashed the game when it
+	// got the hooks. v2.25.3 (task #48) opted in the two tool-flyout COLUMNS,
+	// the same 258-wide architecture as the five originals (live log
+	// 2026-07-30: "SUBSKIP container 0x8A6E61E0 258x874"), which is why the
+	// gate stays an id list, never a width test alone.
+	const uint32_t kSubFlyoutParents[] = {
 		0x49923239, 0x69923479, 0xC99237A0, 0xE992F711, 0x699306ED,
 		0x8BB27C12, 0xAB954023
 	};
-	for (uint32_t pid : kHookParents)
+
+	bool KnownSubFlyoutParentOpen(cIGZWin* root)
 	{
-		cIGZWin* par = lastView->GetChildWindowFromIDRecursive(pid);
-		if (par && par->IsVisible()) { knownMenuOpen = true; break; }
+		for (uint32_t pid : kSubFlyoutParents)
+		{
+			cIGZWin* par = root->GetChildWindowFromIDRecursive(pid);
+			if (par && par->IsVisible()) { return true; }
+		}
+		return false;
 	}
-	if (!knownMenuOpen) { return; }
+}
+
+void UiSpike::InstallSubFlyoutHooksNow(cIGZWin* sub, cIGZWin* strip)
+{
+	if (!sub || !strip || !lastView || gClaimScale <= 1) { return; }
+	if (!KnownSubFlyoutParentOpen(lastView)) { return; }
 
 	void** subVt = *reinterpret_cast<void***>(sub);
 	if (subVt != reinterpret_cast<void**>(0x00AB6AA8)) { return; }
@@ -7567,7 +7575,6 @@ namespace
 {
 	typedef bool(__fastcall* SetFlagFn)(void*, void*, uint32_t, bool);
 	SetFlagFn gOrigSetFlag = nullptr;
-	UiSpike*  gSpikeForHook = nullptr;
 	int       gShowHookMode = 0;
 	bool      gInShowHook = false;
 	int       gShowHookLogged = 0;
@@ -7697,12 +7704,12 @@ namespace
 		// and a mask on the overwhelming majority of calls. We only pay for a
 		// tree lookup once every kEarlyDockEvery calls, and only until the
 		// dock has been dealt with once this city.
-		if (gEarlyDockPending && !gInEarlyDock && gSpikeForHook)
+		if (gEarlyDockPending && !gInEarlyDock && gSpikeSelf)
 		{
 			if (((++gEarlyDockCalls) & (kEarlyDockEvery - 1)) == 0)
 			{
 				gInEarlyDock = true;      // our own SetW/SetH re-enter SetFlag
-				gSpikeForHook->EarlyDockTick();
+				gSpikeSelf->EarlyDockTick();
 				gInEarlyDock = false;
 			}
 		}
@@ -7719,7 +7726,7 @@ namespace
 		// EARLYDOCK at v2.41.17. ShowHook stays 0 - scale-at-show is refuted
 		// for the city HUD and this must not depend on reviving it.
 		if (flag == 1u && value && self && !gInShowHook && !gInEarlyDock
-			&& gSpikeForHook && gTierF > 1.01f)
+			&& gSpikeSelf && gTierF > 1.01f)
 		{
 			// Same transition test as below: [this+0xC8] & 1 is what
 			// IsVisible() reads, and it is still 0 here - which is exactly why
@@ -7740,7 +7747,7 @@ namespace
 						if (!parent || parent == scope) { break; }
 						scope = parent;
 					}
-					gSpikeForHook->ApplyPanelDocks(
+					gSpikeSelf->ApplyPanelDocks(
 						scope ? scope : w0, gTierF, true);
 					gInShowHook = false;
 				}
@@ -7797,7 +7804,7 @@ namespace
 		// BUDGETSHOW: [this+0xC8] & 1 is still 0 here, i.e. genuinely hidden
 		// -> visible, and scaling now lands BEFORE the first paint.
 		if (flag == 1u && value && self && !gInShowHook && !gInEarlyDock
-			&& gSpikeForHook && gTierF > 1.01f && gGodShowLog < 16)
+			&& gSpikeSelf && gTierF > 1.01f && gGodShowLog < 16)
 		{
 			const uint32_t bitsG =
 				*reinterpret_cast<const uint32_t*>(
@@ -7823,7 +7830,7 @@ namespace
 							: (lw == gr.w && lh == gr.h)
 								? "STILL 1x - scaling NOW pre-paint"
 								: "NEITHER design nor expected - read the numbers");
-					gSpikeForHook->ScaleOnShow(wg);
+					gSpikeSelf->ScaleOnShow(wg);
 					const int32_t nw = wg->GetW(), nh = wg->GetH();
 					if (nw != lw || nh != lh)
 					{
@@ -7925,9 +7932,9 @@ namespace
 						w->GetID(), w->GetW(), w->GetH(), w->GetChildCount(),
 						gShowHookMode >= 2 ? "scaling now" : "log only");
 				}
-				if (gShowHookMode >= 2 && gSpikeForHook)
+				if (gShowHookMode >= 2 && gSpikeSelf)
 				{
-					gSpikeForHook->ScaleOnShow(w);
+					gSpikeSelf->ScaleOnShow(w);
 				}
 				gInShowHook = false;
 			}
@@ -7938,7 +7945,7 @@ namespace
 
 void UiSpike::InstallShowHook()
 {
-	gSpikeForHook = this;
+	gSpikeSelf = this;
 	gShowHookMode = settings.spikeShowHook;
 	gEarlyDockMode = settings.spikeEarlyDock;
 	// v2.41.17: the trampoline now serves TWO consumers, so it must install if
@@ -8896,8 +8903,7 @@ void UiSpike::ScaleAllPanels(cIGZWin* pMainWindow)
 	// window rect, so a doubled column doubles the graph for free - but the
 	// research suspects these three escaped the sweep. Log their post-pass
 	// geometry once per city so the next session's log settles it.
-	const uint32_t rciColumns[] = { 0x09D27EB0, 0x29D27EC0, 0x49D27ED0 };
-	for (uint32_t id : rciColumns)
+	for (uint32_t id : kRciColumnIds)
 	{
 		cIGZWin* pCol = pView->GetChildWindowFromIDRecursive(id);
 		if (pCol)
@@ -11407,17 +11413,10 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 			// CRASH KILLER: earlier panel mutations can trigger game-side
 			// destruction of later panels (rapid menu switching). Verify the
 			// pointer is still in the live child list before touching it.
-			ChildSnapshot verify = {};
-			pRoot->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &verify);
 			// v2.69.3: the reset that used to sit here was UNSOUND - a verify
 			// proves liveness of THIS pointer only, never of the remainder,
 			// so the signal must stay latched once anything has mutated.
-			bool alive = false;
-			for (int j = 0; j < verify.count; j++)
-			{
-				if (verify.wins[j] == p.win) { alive = true; break; }
-			}
-			if (!alive)
+			if (!StillChildOf(pRoot, p.win))
 			{
 				continue;
 			}
@@ -13269,76 +13268,122 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 				IniCache::ReadStringA("UiSpike", "LiveTune", "", b, sizeof(b), kIni);
 				s_liveTune = b[0] ? atoi(b) : 0;
 			}
-			// (v4.0.41) DrawRebuild / RingDX / RingDY / RingUnderStrip /
-			// LayerFix ini keys DELETED with the legacy disaster path.
-			// BufDump=N writes N container-buffer dumps beside the DLL for
-			// offline pixel verification (render_disbuf.py).
-			IniCache::ReadStringA("Disaster", "BufDump", "", b, sizeof(b), kIni);
-			if (b[0]) gDisBufDump = atoi(b);
-			IniCache::ReadStringA("Disaster", "DockX", "", b, sizeof(b), kIni);
-			if (b[0]) gRingDockX = atoi(b);
-			IniCache::ReadStringA("Disaster", "DockY", "", b, sizeof(b), kIni);
-			if (b[0]) gRingDockY = atoi(b);
-			// v4.0.14: initial scroll (first-visible item) for the strip.
-			IniCache::ReadStringA("Disaster", "InitScroll", "", b, sizeof(b), kIni);
-			if (b[0]) gDisInitScroll = atoi(b);
-			// v4.0.27: strip-shift lever for sub-flyout families whose stock
-			// attach point is not where the game-native layout puts it
-			// (Build Park et al). Replaces the retired InitScroll write.
-			// v4.0.30: StripShiftRows RETIRED — breaks bar+strip alignment.
-			// v4.0.33: ContainerShiftRows/Fine RETIRED — replaced by the
-			// mathematical formula in SubContainerShiftFromGeo() which
-			// computes the exact shift from ring geometry at all scales.
-			// (v4.0.41) RingUnderStrip + LayerFix keys deleted with the
-			// legacy disaster path. BarDX/BarW stay: the SUB-FLYOUT family
-			// still consumes them (DrawBarScaled).
-			IniCache::ReadStringA("Disaster", "BarDX", "", b, sizeof(b), kIni);
-			if (b[0]) gBarDX = atoi(b);
+			// One table instead of 53 copies of read + atoi (audit B9). A key
+			// overrides its global only when it is present in the ini.
+			struct LiveKey { const char* section; const char* key; int* target; };
+			static const LiveKey kLiveKeys[] = {
+				// (v4.0.41) DrawRebuild / RingDX / RingDY / RingUnderStrip /
+				// LayerFix ini keys DELETED with the legacy disaster path.
+				// BufDump=N writes N container-buffer dumps beside the DLL for
+				// offline pixel verification (render_disbuf.py).
+				{ "Disaster", "BufDump", &gDisBufDump },
+				{ "Disaster", "DockX", &gRingDockX },
+				{ "Disaster", "DockY", &gRingDockY },
+				// v4.0.14: initial scroll (first-visible item) for the strip.
+				{ "Disaster", "InitScroll", &gDisInitScroll },
+				// v4.0.27: strip-shift lever for sub-flyout families whose stock
+				// attach point is not where the game-native layout puts it
+				// (Build Park et al). Replaces the retired InitScroll write.
+				// v4.0.30: StripShiftRows RETIRED — breaks bar+strip alignment.
+				// v4.0.33: ContainerShiftRows/Fine RETIRED — replaced by the
+				// mathematical formula in SubContainerShiftFromGeo() which
+				// computes the exact shift from ring geometry at all scales.
+				// (v4.0.41) RingUnderStrip + LayerFix keys deleted with the
+				// legacy disaster path. BarDX/BarW stay: the SUB-FLYOUT family
+				// still consumes them (DrawBarScaled).
+				{ "Disaster", "BarDX", &gBarDX },
+				// v2.39.0 task #5: born-at-Place size for the first-level flyout.
+				// Live so a bad size can be switched off mid-session without a
+				// rebuild, and WITHOUT touching the sub-flyout's own lever.
+				{ "Disaster", "BornScale", &gDisBornScaleOn },
+				{ "Disaster", "BornDock", &gDisBornDockOn },
+				{ "Disaster", "BornMetrics", &gDisBornMetricsOn },
+				{ "Disaster", "StripDump", &gStripDump },
+				{ "Disaster", "StripHitW", &gStripHitW },
+				{ "Disaster", "ClickHook", &gClickHook },
+				{ "Disaster", "SelDL", &gSelDL },
+				{ "Disaster", "SelDR", &gSelDR },
+				{ "Disaster", "SelForce", &gSelForce },
+				{ "Disaster", "ClaimScale", &gClaimScale },
+				{ "Disaster", "FlashGuard", &gFlashGuard },
+				// [Probe]: aim the DPROBE geometry probe at whatever menu is under
+				// investigation (Mayor mode opens outside the god column).
+				{ "Probe", "Enabled", &gProbeOn },
+				{ "Probe", "BandL", &gProbeL },
+				{ "Probe", "BandR", &gProbeR },
+				{ "Probe", "BandT", &gProbeT },
+				{ "Probe", "BandB", &gProbeB },
+				{ "Probe", "Max", &gProbeMax },
+				{ "Probe", "VisTrace", &gVisTrace },
+				{ "Probe", "EdgeBlt", &gEdgeBltLog },   // = how many lines to log
+				{ "Probe", "AdvisorShot", &gAdvisorShot },
+				{ "Probe", "DrawProbe", &gDrawProbe },
+				// #162: how many thin-dst blits to log (armed below the table).
+				{ "Probe", "ThinBlt", &gThinBlt },
+				// [Probe] IconProbe (task #149): class census of everything
+				// visible, so a menu's item classes appear as NEW lines the
+				// moment that menu opens. Read-only. Default OFF.
+				{ "Probe", "IconProbe", &gIconProbe },
+				// [Probe] SmallWin (#188): NAME the small floating windows over
+				// the 3D view - built to identify the U-Drive-It START bubbles
+				// the player clicks (the #186 pin hit the DURING-mission marker;
+				// the start bubbles are a different, unidentified window).
+				// IconProbe cannot do this: it dedupes by CLASS and a bubble
+				// sharing GZWinBMP's vtable spends its 4 example slots on dock
+				// windows at load. Value = total lines to print. Default OFF.
+				{ "Probe", "SmallWin", &gSmallWin },
+				{ "Probe", "IconFit", &gIconFit },
+				{ "Probe", "IconCover", &gIconCover },
+				{ "Probe", "IconCentreOff", &gIconCentreOff },
+				{ "Probe", "IconHook", &gIconHook },
+				{ "Probe", "IconFitLog", &gIconFitLog },
+				// [Flyout]: mayor-mode flyout docking (kMayorFlyoutDock).
+				{ "Flyout", "MayorDock", &gMayorDock },
+				// #95: MarkerAlarm - the god-path marker-drift diagnostic (MDRIFT).
+				// Diagnostic ONLY; it never moves a window. Default 1.
+				{ "Flyout", "MarkerAlarm", &gMDockAlarm },
+				// #198: GodMarkerFix - derive the god dock when a mod moved the
+				// script's 0x0000AAAA marker. Identity on stock; default 1.
+				{ "Flyout", "GodMarkerFix", &gGodMarkerFix },
+				// #57: ChartScale - scale the Graphs chart's frozen interior
+				// fields (legend band height, tick lengths). 1 = on (default),
+				// 0 = probe only, no writes. Instant revert, no rebuild.
+				{ "Flyout", "ChartScale", &gChartScale },
+				// #57 PHASE 1: ChartProbe - the repaint proof. Default 0.
+				// 1 = flood the plot area green and trigger the game's own
+				// SetDirty, ONCE per chart object. Diagnostic only; defaces the
+				// chart until set back to 0. See gChartProbe for the committed
+				// discriminator.
+				{ "Flyout", "ChartProbe", &gChartProbe },
+				// #95: SubMath - the sub-flyout placement model (validated 32/32 vs
+				// the game's own sub_79AD00). 1 = model (default), 0 = the legacy
+				// fixed delta, which is wrong by up to 197px at 8 items.
+				{ "Flyout", "SubMath", &gSubMath },
+				{ "Flyout", "SubBltLog", &gSubBltLog },
+				{ "Flyout", "RingCal", &gRingCalLog },
+				{ "Flyout", "SubRingDX", &gSubRingDX },   // #134: absent = derive per tier
+				{ "Flyout", "SubRingDY", &gSubRingDY },   // #134: absent = derive per tier
+				{ "Flyout", "ArrowClick", &gArrowClick },
+				{ "Flyout", "EmergLog", &gEmergLog },
+				{ "Flyout", "SubDockDX", &gSubDockDX },
+				{ "Flyout", "SubDockDY", &gSubDockDY },
+				// v2.36.0 born-scale: flip either half live, no rebuild. Size and
+				// dock are separable on purpose - if a menu ever lands in the
+				// wrong PLACE, SubBornDock=0 isolates that from the size half.
+				{ "Flyout", "SubBornScale", &gSubBornScaleOn },
+				{ "Flyout", "SubBornDock", &gSubBornDockOn },
+				{ "Flyout", "BornOnOpen", &gFlyoutOpenOn },
+				{ "Flyout", "ScaleGodPanelABB", &gScaleAbbPanel },
+				{ "Flyout", "AdvisorHeal", &gAdvisorHeal },
+			};
+			for (const LiveKey& k : kLiveKeys)
+			{
+				IniCache::ReadStringA(k.section, k.key, "", b, sizeof(b), kIni);
+				if (b[0]) { *k.target = atoi(b); }
+			}
+			// [Disaster] BarW is the one float (v2.24.0: 1.5 is legal).
 			IniCache::ReadStringA("Disaster", "BarW", "", b, sizeof(b), kIni);
-			if (b[0]) gBarWiden = static_cast<float>(atof(b));   // v2.24.0: float (1.5 legal)
-			// v2.39.0 task #5: born-at-Place size for the first-level flyout.
-			// Live so a bad size can be switched off mid-session without a
-			// rebuild, and WITHOUT touching the sub-flyout's own lever.
-			IniCache::ReadStringA("Disaster", "BornScale", "", b, sizeof(b), kIni);
-			if (b[0]) gDisBornScaleOn = atoi(b);
-			IniCache::ReadStringA("Disaster", "BornDock", "", b, sizeof(b), kIni);
-			if (b[0]) gDisBornDockOn = atoi(b);
-			IniCache::ReadStringA("Disaster", "BornMetrics", "", b, sizeof(b), kIni);
-			if (b[0]) gDisBornMetricsOn = atoi(b);
-			IniCache::ReadStringA("Disaster", "StripDump", "", b, sizeof(b), kIni);
-			if (b[0]) gStripDump = atoi(b);
-			IniCache::ReadStringA("Disaster", "StripHitW", "", b, sizeof(b), kIni);
-			if (b[0]) gStripHitW = atoi(b);
-			IniCache::ReadStringA("Disaster", "ClickHook", "", b, sizeof(b), kIni);
-			if (b[0]) gClickHook = atoi(b);
-			IniCache::ReadStringA("Disaster", "SelDL", "", b, sizeof(b), kIni);
-			if (b[0]) gSelDL = atoi(b);
-			IniCache::ReadStringA("Disaster", "SelDR", "", b, sizeof(b), kIni);
-			if (b[0]) gSelDR = atoi(b);
-			IniCache::ReadStringA("Disaster", "SelForce", "", b, sizeof(b), kIni);
-			if (b[0]) gSelForce = atoi(b);
-			IniCache::ReadStringA("Disaster", "ClaimScale", "", b, sizeof(b), kIni);
-			if (b[0]) gClaimScale = atoi(b);
-			IniCache::ReadStringA("Disaster", "FlashGuard", "", b, sizeof(b), kIni);
-			if (b[0]) gFlashGuard = atoi(b);
-			// [Probe]: aim the DPROBE geometry probe at whatever menu is under
-			// investigation (Mayor mode opens outside the god column).
-			IniCache::ReadStringA("Probe", "Enabled", "", b, sizeof(b), kIni);
-			if (b[0]) gProbeOn = atoi(b);
-			IniCache::ReadStringA("Probe", "BandL", "", b, sizeof(b), kIni);
-			if (b[0]) gProbeL = atoi(b);
-			IniCache::ReadStringA("Probe", "BandR", "", b, sizeof(b), kIni);
-			if (b[0]) gProbeR = atoi(b);
-			IniCache::ReadStringA("Probe", "BandT", "", b, sizeof(b), kIni);
-			if (b[0]) gProbeT = atoi(b);
-			IniCache::ReadStringA("Probe", "BandB", "", b, sizeof(b), kIni);
-			if (b[0]) gProbeB = atoi(b);
-			IniCache::ReadStringA("Probe", "Max", "", b, sizeof(b), kIni);
-			if (b[0]) gProbeMax = atoi(b);
-			IniCache::ReadStringA("Probe", "VisTrace", "", b, sizeof(b), kIni);
-			if (b[0]) gVisTrace = atoi(b);
-			IniCache::ReadStringA("Probe", "EdgeBlt", "", b, sizeof(b), kIni);
-			if (b[0]) gEdgeBltLog = atoi(b);   // = how many lines to log
+			if (b[0]) gBarWiden = static_cast<float>(atof(b));
 			// #162: [Probe] ThinBlt = how many thin-dst blits to log.
 			//
 			// ARM THE HOOK HERE, OR THE PROBE IS A GUARANTEED NULL.
@@ -13353,12 +13398,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			// when it actually meant "this code was never reached".
 			// Installed-not-executed is bad enough (#47); this was never even
 			// installed.
-			IniCache::ReadStringA("Probe", "AdvisorShot", "", b, sizeof(b), kIni);
-			if (b[0]) gAdvisorShot = atoi(b);
-			IniCache::ReadStringA("Probe", "DrawProbe", "", b, sizeof(b), kIni);
-			if (b[0]) gDrawProbe = atoi(b);
-			IniCache::ReadStringA("Probe", "ThinBlt", "", b, sizeof(b), kIni);
-			if (b[0]) gThinBlt = atoi(b);
 			if (gThinBlt > 0)
 			{
 				static bool s_thinArmed = false;
@@ -13374,103 +13413,22 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 						gClassBltOrig);
 				}
 			}
-				// [Probe] IconProbe (task #149): class census of everything
-				// visible, so a menu's item classes appear as NEW lines the
-				// moment that menu opens. Read-only. Default OFF.
-				IniCache::ReadStringA("Probe", "IconProbe", "", b, sizeof(b), kIni);
-				if (b[0]) gIconProbe = atoi(b);
-				// [Probe] SmallWin (#188): NAME the small floating windows over
-				// the 3D view - built to identify the U-Drive-It START bubbles
-				// the player clicks (the #186 pin hit the DURING-mission marker;
-				// the start bubbles are a different, unidentified window).
-				// IconProbe cannot do this: it dedupes by CLASS and a bubble
-				// sharing GZWinBMP's vtable spends its 4 example slots on dock
-				// windows at load. Value = total lines to print. Default OFF.
-				IniCache::ReadStringA("Probe", "SmallWin", "", b, sizeof(b), kIni);
-				if (b[0]) gSmallWin = atoi(b);
-				IniCache::ReadStringA("Probe", "IconFit", "", b, sizeof(b), kIni);
-				if (b[0]) gIconFit = atoi(b);
-				IniCache::ReadStringA("Probe", "IconCover", "", b, sizeof(b), kIni);
-				if (b[0]) gIconCover = atoi(b);
-				IniCache::ReadStringA("Probe", "IconCentreOff", "", b, sizeof(b), kIni);
-				if (b[0]) gIconCentreOff = atoi(b);
-				IniCache::ReadStringA("Probe", "IconHook", "", b, sizeof(b), kIni);
-				if (b[0]) gIconHook = atoi(b);
-				IniCache::ReadStringA("Probe", "IconFitLog", "", b, sizeof(b), kIni);
-				if (b[0]) gIconFitLog = atoi(b);
-				// POSITIVE CONTROL (task #149). Announce UNCONDITIONALLY on the
-				// first pass so an empty ICONPROBE capture can be told apart from
-				// "this build never loaded" and "the key was never read". A null
-				// is not evidence until the probe is proven able to fire - the
-				// first capture returned 0 lines and was uninterpretable because
-				// this line did not exist.
+			// POSITIVE CONTROL (task #149). Announce UNCONDITIONALLY on the
+			// first pass so an empty ICONPROBE capture can be told apart from
+			// "this build never loaded" and "the key was never read". A null
+			// is not evidence until the probe is proven able to fire - the
+			// first capture returned 0 lines and was uninterpretable because
+			// this line did not exist.
+			{
+				static bool s_iconAnnounced = false;
+				if (!s_iconAnnounced)
 				{
-					static bool s_iconAnnounced = false;
-					if (!s_iconAnnounced)
-					{
-						s_iconAnnounced = true;
-						Logger::Get().WriteLine(LogLevel::Info,
-							"UiSpike: ICONPROBE build present; gIconProbe=%d (ini %s).",
-							gIconProbe, kIni);
-					}
+					s_iconAnnounced = true;
+					Logger::Get().WriteLine(LogLevel::Info,
+						"UiSpike: ICONPROBE build present; gIconProbe=%d (ini %s).",
+						gIconProbe, kIni);
 				}
-			// [Flyout]: mayor-mode flyout docking (kMayorFlyoutDock).
-			IniCache::ReadStringA("Flyout", "MayorDock", "", b, sizeof(b), kIni);
-			if (b[0]) gMayorDock = atoi(b);
-			// #95: MarkerAlarm - the god-path marker-drift diagnostic (MDRIFT).
-			// Diagnostic ONLY; it never moves a window. Default 1.
-			IniCache::ReadStringA("Flyout", "MarkerAlarm", "", b, sizeof(b), kIni);
-			if (b[0]) gMDockAlarm = atoi(b);
-			// #198: GodMarkerFix - derive the god dock when a mod moved the
-			// script's 0x0000AAAA marker. Identity on stock; default 1.
-			IniCache::ReadStringA("Flyout", "GodMarkerFix", "", b, sizeof(b), kIni);
-			if (b[0]) gGodMarkerFix = atoi(b);
-			// #95: SubMath - the sub-flyout placement model (validated 32/32 vs
-			// the game's own sub_79AD00). 1 = model (default), 0 = the legacy
-			// fixed delta, which is wrong by up to 197px at 8 items.
-			// #57: ChartScale - scale the Graphs chart's frozen interior
-			// fields (legend band height, tick lengths). 1 = on (default),
-			// 0 = probe only, no writes. Instant revert, no rebuild.
-			IniCache::ReadStringA("Flyout", "ChartScale", "", b, sizeof(b), kIni);
-			if (b[0]) gChartScale = atoi(b);
-			// #57 PHASE 1: ChartProbe - the repaint proof. Default 0.
-			// 1 = flood the plot area green and trigger the game's own
-			// SetDirty, ONCE per chart object. Diagnostic only; defaces the
-			// chart until set back to 0. See gChartProbe for the committed
-			// discriminator.
-			IniCache::ReadStringA("Flyout", "ChartProbe", "", b, sizeof(b), kIni);
-			if (b[0]) gChartProbe = atoi(b);
-			IniCache::ReadStringA("Flyout", "SubMath", "", b, sizeof(b), kIni);
-			if (b[0]) gSubMath = atoi(b);
-			IniCache::ReadStringA("Flyout", "SubBltLog", "", b, sizeof(b), kIni);
-			if (b[0]) gSubBltLog = atoi(b);
-			IniCache::ReadStringA("Flyout", "RingCal", "", b, sizeof(b), kIni);
-			if (b[0]) gRingCalLog = atoi(b);
-			IniCache::ReadStringA("Flyout", "SubRingDX", "", b, sizeof(b), kIni);
-			if (b[0]) gSubRingDX = atoi(b);   // #134: absent = derive per tier
-			IniCache::ReadStringA("Flyout", "SubRingDY", "", b, sizeof(b), kIni);
-			if (b[0]) gSubRingDY = atoi(b);   // #134: absent = derive per tier
-			IniCache::ReadStringA("Flyout", "ArrowClick", "", b, sizeof(b), kIni);
-			if (b[0]) gArrowClick = atoi(b);
-			IniCache::ReadStringA("Flyout", "EmergLog", "", b, sizeof(b), kIni);
-			if (b[0]) gEmergLog = atoi(b);
-			IniCache::ReadStringA("Flyout", "SubDockDX", "", b, sizeof(b), kIni);
-			if (b[0]) gSubDockDX = atoi(b);
-			IniCache::ReadStringA("Flyout", "SubDockDY", "", b, sizeof(b), kIni);
-			if (b[0]) gSubDockDY = atoi(b);
-			// v2.36.0 born-scale: flip either half live, no rebuild. Size and
-			// dock are separable on purpose - if a menu ever lands in the
-			// wrong PLACE, SubBornDock=0 isolates that from the size half.
-			IniCache::ReadStringA("Flyout", "SubBornScale", "", b, sizeof(b), kIni);
-			if (b[0]) gSubBornScaleOn = atoi(b);
-			IniCache::ReadStringA("Flyout", "SubBornDock", "", b, sizeof(b), kIni);
-			if (b[0]) gSubBornDockOn = atoi(b);
-			IniCache::ReadStringA("Flyout", "BornOnOpen", "", b, sizeof(b), kIni);
-			if (b[0]) gFlyoutOpenOn = atoi(b);
-			IniCache::ReadStringA("Flyout", "ScaleGodPanelABB", "", b, sizeof(b), kIni);
-			if (b[0]) gScaleAbbPanel = atoi(b);
-			IniCache::ReadStringA("Flyout", "AdvisorHeal", "", b, sizeof(b), kIni);
-			if (b[0]) gAdvisorHeal = atoi(b);
+			}
 		}
 	}
 	passScreenW = pView->GetW();
@@ -14551,21 +14509,9 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 		// (and verify its strip) to opt it in.
 		bool knownMenuOpen = false;
 		{
-			// v2.25.3 (task #48): the two tool-flyout COLUMNS opted in. Their
-			// sub-flyout is the SAME 258-wide architecture the five originals
-			// use (live log 2026-07-30: "SUBSKIP container 0x8A6E61E0 258x874"
-			// - the strip-width family the disaster hooks were built for).
-			// The Earned Cars crash strip was 88 WIDE - a different layout -
-			// which is why the gate stays an id list, never a width test alone.
-			const uint32_t kHookParents[] = {
-				0x49923239, 0x69923479, 0xC99237A0, 0xE992F711, 0x699306ED,
-				0x8BB27C12, 0xAB954023
-			};
-			for (uint32_t pid : kHookParents)
-			{
-				cIGZWin* par = pView->GetChildWindowFromIDRecursive(pid);
-				if (par && par->IsVisible()) { knownMenuOpen = true; break; }
-			}
+			// kSubFlyoutParents: the v2.25.3 column opt-in and why the gate is
+			// an id list are recorded at the table.
+			knownMenuOpen = KnownSubFlyoutParentOpen(pView);
 			if (!knownMenuOpen)
 			{
 				static int skipLog = 0;
@@ -14594,10 +14540,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 		{
 			int32_t sl = 0, st = 0;
 			AbsoluteTopLeft(sub, sl, st);
-			const uint32_t kParents[] = {
-				0x49923239, 0x69923479, 0xC99237A0, 0xE992F711, 0x699306ED,
-				0x8BB27C12, 0xAB954023   // v2.25.3: the two tool-flyout columns
-			};
 			// The law needs THIS menu's ringBltY. If the recorded blit is not
 			// for this buffer size, the menu just switched and its ring has not
 			// painted yet - skip; blits fire every frame vs this 4x/sec sweep,
@@ -14687,7 +14629,7 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			const int32_t bornTopAbs = gSubBornTopRel + parentAbsT;
 			bool done = false;
 			bool subShiftLoggedThisSweep = false;
-			for (uint32_t pid : kParents)
+			for (uint32_t pid : kSubFlyoutParents)
 			{
 				if (done || !ringFresh) { break; }
 				cIGZWin* par = pView->GetChildWindowFromIDRecursive(pid);
@@ -16504,15 +16446,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 			if (i > 0 && count != verifiedAtCount)
 			{
 				// CRASH KILLER: re-verify liveness (see ScaleSubtree).
-				ChildSnapshot verify = {};
-				win->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &verify);
-				// v2.69.3: mid-loop signal reset REMOVED (unsound - see ScaleSubtree).
-				bool alive = false;
-				for (int j = 0; j < verify.count; j++)
-				{
-					if (verify.wins[j] == snap.wins[i]) { alive = true; break; }
-				}
-				if (!alive)
+				if (!StillChildOf(win, snap.wins[i]))
 				{
 					continue;
 				}
@@ -17901,8 +17835,7 @@ void UiSpike::IncrementalPass()
 	// exists; this one runs after the HUD has been up for ~30s.
 	if (rciRecheckCountdown > 0 && --rciRecheckCountdown == 0)
 	{
-		const uint32_t rciColumns[] = { 0x09D27EB0, 0x29D27EC0, 0x49D27ED0 };
-		for (uint32_t id : rciColumns)
+		for (uint32_t id : kRciColumnIds)
 		{
 			cIGZWin* pCol = pView->GetChildWindowFromIDRecursive(id);
 			if (pCol)
@@ -18518,15 +18451,7 @@ void UiSpike::ScaleMenuFlyouts(cIGZWin* pMenu, int32_t screenW, int32_t screenH,
 		{
 			// CRASH KILLER: re-verify liveness before touching (menus churn
 			// hard during rapid clicking - the exact crash scenario).
-			ChildSnapshot verify = {};
-			pMenu->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &verify);
-			// v2.69.3: mid-loop signal reset REMOVED (unsound - see ScaleSubtree).
-			bool alive = false;
-			for (int j = 0; j < verify.count; j++)
-			{
-				if (verify.wins[j] == child) { alive = true; break; }
-			}
-			if (!alive)
+			if (!StillChildOf(pMenu, child))
 			{
 				continue;
 			}
@@ -19114,16 +19039,8 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 				// CRASH KILLER: mutating an earlier sibling can make the game
 				// destroy a later one (reactive menu layouts during rapid
 				// menu switching). Re-verify this pointer is still in the
-				// LIVE child list before touching it.
-				ChildSnapshot verify = {};
-				win->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &verify);
-				// v2.69.3: mid-loop signal reset REMOVED (unsound - see ScaleSubtree).
-				bool alive = false;
-				for (int j = 0; j < verify.count; j++)
-				{
-					if (verify.wins[j] == snap.wins[i]) { alive = true; break; }
-				}
-				if (!alive)
+				// LIVE child list before touching it (StillChildOf).
+				if (!StillChildOf(win, snap.wins[i]))
 				{
 					continue;
 				}

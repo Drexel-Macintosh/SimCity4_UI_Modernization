@@ -80,7 +80,12 @@ def keys_read_by_the_dll():
     for m in re.finditer(r'(?:GetPrivateProfile\w*?A|IniCache::Read\w*?A)\(\s*"(\w+)"\s*,\s*"(\w+)"', src):
         found.add((m.group(1), m.group(2)))
 
-    # Settings.cpp's IniReader path: gi/gu/gf(sectionVar, "Key", ...).
+        # UiSpike's LiveTune table (audit B9, 2026-09-25): one entry per key,
+        # { "Section", "Key", &gTarget }, read in a loop.
+        for m in re.finditer(r'\{\s*"(\w+)"\s*,\s*"(\w+)"\s*,\s*&g\w+\s*\}', src):
+            found.add((m.group(1), m.group(2)))
+
+        # Settings.cpp's IniReader path: gi/gu/gf(sectionVar, "Key", ...).
     for m in re.finditer(r'\b(?:gi|gu|gf)\(\s*(\w+)\s*,\s*"(\w+)"', src):
         found.add((VAR_TO_SECTION.get(m.group(1), m.group(1)), m.group(2)))
 
