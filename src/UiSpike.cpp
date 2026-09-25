@@ -17921,110 +17921,11 @@ void UiSpike::IncrementalPass()
 
 namespace
 {
-	// #131 PROBE (v2.78.1). The REGIONCAM byte patch TOOK - its log line
-	// prints `0.2500 -> 0.7500` - and the region did not move on screen, so
-	// the question is no longer "is the value right" but "is this the
-	// camera that draws the slab, and does our value survive to draw time".
-	// Reasoning further from the disassembly would be guessing; this reads
-	// the live object instead.
-	//
-	// WE DO NOT TRUST A HARD-CODED FIELD OFFSET. The disassembly says the
-	// camera lands at `esi+0x164` where esi is cSC4WinRegionScreen's `this`,
-	// but our cIGZWin* may be a SUB-OBJECT pointer, so +0x164 from OUR
-	// pointer need not be the same field. Instead we scan a bounded window
-	// of the object for a pointer whose [+0x12C]/[+0x130] read as the LIVE
-	// SCREEN SIZE - that pair is the camera's viewport (sub_7CB9B0 stores
-	// GetW()/GetH() there) and it doubles as the POSITIVE CONTROL: if
-	// nothing in range carries the screen size, this object does not own the
-	// camera and the whole lever is misattributed. A zero here is then a
-	// real measurement, not a structural null (law: state the positive
-	// control before believing a null).
-	const int kCamViewportW = 0x12C;
-	const int kCamViewportH = 0x130;
-	const int kCamScale     = 0x0F0;
-	const int kCamWuPerPx   = 0x134;
-	const int kCamZoomIdx   = 0x108;
-	// v2.78.2, one hop further. MEASURED at 21:45:36: the camera holds
-	// scale=0.7500 and wu/px=3.4842 - exactly our value and exactly the
-	// derived reprojection - while the screen still draws the stock ~98 px
-	// per region cell. So the camera OBJECT is right and the RENDER does not
-	// follow it. The next link is the device: sub_7CBE40 computes
-	// halfW = 0.5*viewportW*wuPerPx and pushes it through sub_7FF2E0 into
-	// device[+0x18C..+0x198], but ONLY if [cam+0x0C] is non-null - and
-	// SetScale stores [cam+0xF0] at 0x007CD72C BEFORE that null check at
-	// 0x007CD735. A camera with no device attached would therefore report
-	// exactly what we see: our value stored, nothing on screen.
-	const int kCamDevice    = 0x00C;
-	const int kDevDirtyCnt  = 0x17C;
-	const int kDevNear      = 0x184;
-	const int kDevFar       = 0x188;
-	const int kDevLeft      = 0x18C;
-	const int kDevRight     = 0x190;
-	const int kDevTop       = 0x194;
-	const int kDevBottom    = 0x198;
-
-	struct CamRead
-	{
-		int32_t vw;
-		int32_t vh;
-		int32_t zoomIdx;
-		float scale;
-		float wuPerPx;
-		bool ok;
-	};
-
-	// Per-candidate SEH: one bad pointer must not abort the whole scan.
-	CamRead TryReadCam(const void* p)
-	{
-		CamRead r;
-		r.vw = 0; r.vh = 0; r.zoomIdx = 0; r.scale = 0.0f; r.wuPerPx = 0.0f; r.ok = false;
-		__try
-		{
-			const uint8_t* b = static_cast<const uint8_t*>(p);
-			r.vw      = *reinterpret_cast<const int32_t*>(b + kCamViewportW);
-			r.vh      = *reinterpret_cast<const int32_t*>(b + kCamViewportH);
-			r.zoomIdx = *reinterpret_cast<const int32_t*>(b + kCamZoomIdx);
-			r.scale   = *reinterpret_cast<const float*>(b + kCamScale);
-			r.wuPerPx = *reinterpret_cast<const float*>(b + kCamWuPerPx);
-			r.ok = true;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			r.ok = false;
-		}
-		return r;
-	}
-
-	struct DevRead
-	{
-		float left, right, top, bottom, nearZ, farZ;
-		int32_t dirtyCnt;
-		bool ok;
-	};
-
-	DevRead TryReadDev(const void* p)
-	{
-		DevRead d;
-		d.left = d.right = d.top = d.bottom = d.nearZ = d.farZ = 0.0f;
-		d.dirtyCnt = 0; d.ok = false;
-		__try
-		{
-			const uint8_t* b = static_cast<const uint8_t*>(p);
-			d.left     = *reinterpret_cast<const float*>(b + kDevLeft);
-			d.right    = *reinterpret_cast<const float*>(b + kDevRight);
-			d.top      = *reinterpret_cast<const float*>(b + kDevTop);
-			d.bottom   = *reinterpret_cast<const float*>(b + kDevBottom);
-			d.nearZ    = *reinterpret_cast<const float*>(b + kDevNear);
-			d.farZ     = *reinterpret_cast<const float*>(b + kDevFar);
-			d.dirtyCnt = *reinterpret_cast<const int32_t*>(b + kDevDirtyCnt);
-			d.ok = true;
-		}
-		__except (EXCEPTION_EXECUTE_HANDLER)
-		{
-			d.ok = false;
-		}
-		return d;
-	}
+	// (#131 REGIONCAM/REGIONWATCH, the read-only probes of the region camera
+	// and its device frustum, lived here. They proved the camera lever DEAD -
+	// our scale reached the device and the screen ignored it - and were
+	// removed in the 2026-09-25 audit, B1. The measurements and the offsets
+	// are in _tests/REGRESSION.md, "THE LEVER THAT DOES NOT WORK".)
 
 	// (#132's TryClearBuiltLatch lived here until v2.83.0. It belonged to the
 	// in-place resize that crashed twice: clearing byte[item+0x34] regenerates
@@ -18042,77 +17943,6 @@ namespace
 		__except (EXCEPTION_EXECUTE_HANDLER)
 		{
 			return false;
-		}
-	}
-
-	// v2.78.3 CHANGE-WATCH. MEASURED 21:48:26 - camera scale 0.7500, device
-	// frustum halfW 6689.6: OUR values, all the way to the device, pushed
-	// (dirtyCnt=16). The screen nonetheless kept drawing the stock ~98 px per
-	// region cell, whose frustum would be halfW 20068.8 (and 8192/40137 = 20%
-	// of screen width, which is exactly what the screenshot shows).
-	//
-	// The one-shot probe fires when the region screen COMES UP, 3.6s after
-	// boot. The user's screenshot is later. So the gap left in my own
-	// instrument is: does something reconfigure the scene when the region is
-	// SHOWN rather than CONSTRUCTED? A periodic re-read that logs ONLY ON
-	// CHANGE answers that without spamming, and an explicit "steady" line
-	// after N unchanged samples keeps a null affirmative rather than silent
-	// (law 54: absence of a line must never be the evidence).
-	void* gWatchCam = nullptr;
-	float gWatchScale = -1.0f;
-	float gWatchHalfW = -1.0f;
-	int gWatchChanges = 0;
-	int gWatchSamples = 0;
-	bool gWatchSteadySaid = false;
-	unsigned int gWatchLastMs = 0;
-	const int kWatchMaxChanges = 24;
-	const int kWatchSteadyAfter = 20;
-	const unsigned int kWatchPeriodMs = 250;
-
-	void WatchRegionCamera(unsigned int nowTickMs)
-	{
-		if (!gWatchCam) { return; }
-		if (gWatchLastMs != 0 && (nowTickMs - gWatchLastMs) < kWatchPeriodMs) { return; }
-		gWatchLastMs = nowTickMs;
-
-		const CamRead c = TryReadCam(gWatchCam);
-		if (!c.ok) { return; }
-
-		float halfW = -1.0f;
-		void* dev = nullptr;
-		if (TryReadSlot(gWatchCam, kCamDevice, &dev) && dev)
-		{
-			const DevRead d = TryReadDev(dev);
-			if (d.ok) { halfW = (d.right - d.left) * 0.5f; }
-		}
-
-		gWatchSamples++;
-		const bool changed =
-			(c.scale != gWatchScale) ||
-			(halfW < 0.0f) != (gWatchHalfW < 0.0f) ||
-			(halfW >= 0.0f && gWatchHalfW >= 0.0f && fabs(halfW - gWatchHalfW) > 1.0);
-
-		if (changed && gWatchChanges < kWatchMaxChanges)
-		{
-			gWatchChanges++;
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"UiSpike: REGIONWATCH change #%d at sample %d - scale %.4f -> %.4f,"
-				" device halfW %.1f -> %.1f (ours 6689.6, stock 20068.8).",
-				gWatchChanges, gWatchSamples, gWatchScale, c.scale, gWatchHalfW, halfW);
-			gWatchScale = c.scale;
-			gWatchHalfW = halfW;
-			gWatchSteadySaid = false;
-		}
-		else if (!changed && !gWatchSteadySaid && gWatchSamples >= kWatchSteadyAfter)
-		{
-			gWatchSteadySaid = true;
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"UiSpike: REGIONWATCH STEADY - %d samples over ~%dms, scale held %.4f"
-				" and device halfW held %.1f. Nothing resets them while the region is"
-				" on screen, so the visible slab is NOT drawn through this frustum.",
-				gWatchSamples, gWatchSamples * kWatchPeriodMs, c.scale, halfW);
 		}
 	}
 
@@ -18272,193 +18102,13 @@ namespace
 		}
 	}
 
-	// ============================================================
-	// #131 v2.79.0 — REGIONTILE: make the composite buffer f-times bigger.
-	// ============================================================
-	// The tile's drawn SIZE is the composite buffer's pixel size, full stop:
-	// sub_7AE510 Inits [item+0x2C] from the SOURCE thumbnail's rect
-	// (0x007AE6D9..0x007AE706, byte-verified), sub_7B3300 copies into it with
-	// `rep movsd` 1:1, sub_7B2A30 blits it to screen 1:1, and sub_7B3110
-	// takes the tile's screen rect from its bounds. No stage resamples.
-	//
-	// So: resize the composite and refill it ourselves. Everything downstream
-	// follows, because everything downstream reads the buffer.
-	//
-	// WHY NOT A DETOUR ON sub_7B3300: it takes its source in EAX with an
-	// unread stack cleanup, so hooking it needs naked asm built on a
-	// guess. This runs in our own region tick in plain C++ and SELF-GATES ON
-	// THE DEFECT (law 56) - it acts only when the composite is not already
-	// the size we want, so a re-run by the game is simply re-fixed on the
-	// next tick and our own work is never redone.
-	//
-	// CORRECTED v2.83.1. This block used to state that [item+0x1C] and
-	// [item+0x2C] "are both cIGZBuffer, vtable 0x00ADB418, verified on BOTH
-	// before any write". THAT IS FALSE AND WAS NEVER TRUE. The region tile
-	// buffers carry vtable **0x00AC1400** - measured on all nine items in
-	// every capture ("sprite=... vt=00AC1400" in the REGIONTILE dump below,
-	// and again in the v2.83.0 run). 0x00ADB418 is a DIFFERENT buffer class,
-	// constructed at exactly one site (0x00990B7C) into a device member.
-	// The claim survived because nothing in this file ever compared against
-	// it; CodePatches::GrowTileBitmap has always used 0x00AC1400 and is what
-	// actually ships. Left as a named correction rather than deleted, because
-	// this comment was cited as evidence during the #132 design and a
-	// contradicted invariant that is merely erased tends to come back.
-	//   vt+0x04 AddRef      vt+0x08 Release     vt+0x0C Init(w,h,fmt,bpp)
-	//   vt+0x10 Deinit      vt+0x24 GetWidth    vt+0x28 GetHeight
-	//   vt+0x88 GetBits     vt+0x8C GetStride
-	// Those getters are shared game-wide - we CALL them, never patch them.
-	const uintptr_t kIGZBufferVt = 0x00AC1400;
-	const int kItemComposite = 0x2C;
-	const int kItemStride = 0x80;      // 0x007B1528 add [esi+4],0x80
-	const int kBufInit = 0x0C / 4;
-	const int kBufGetW = 0x24 / 4;
-	const int kBufGetH = 0x28 / 4;
-	const int kBufGetBits = 0x88 / 4;
-	const int kBufGetStride = 0x8C / 4;
-	const int32_t kMaxDim = 8192;
+	// (#131 v2.79.0 REGIONTILE, the per-tick composite resize, is gone: the
+	// growth happens inside the game's own rebuild via the sub_7AE3D0 hook,
+	// CodePatches::ApplyRegionTileScale / GrowTileBitmap. Its leftover buffer
+	// constants were removed in the 2026-09-25 audit; the engine facts - the
+	// 0x00AC1400 vtable correction, Init's four args and its ready latch -
+	// are in tools/research/REGION-SCREEN.md and REGRESSION.md.)
 
-	// v2.80.0 — CORRECTED SIGNATURES, decompiled from the exe (not inferred).
-	//   vt[3]  +0x0C  0x008269B0  bool Init(w,h,colorType,bpp)   ret 0x10  (FOUR args)
-	//   vt[4]  +0x10  0x00825CE0  bool Shutdown()                (0 args)
-	//   vt[8]  +0x20  0x008268B0  bool IsLocked()  -> word[+0x38]
-	//   vt[9]  +0x24  Width   vt[10] +0x28  Height
-	//   vt[34] +0x88  GetBits vt[35] +0x8C  GetStride
-	//
-	// v2.79.x called Init with THREE args plus a pointer to a {9,0x20} pair.
-	// The real function is __thiscall with FOUR dword args and cleans 0x10 -
-	// so every call popped 4 bytes more than we pushed. Nine per tick, and it
-	// never crashed only because Init bailed at its first instruction.
-	//
-	// THE LATCH: Init's first test is `mov al,[esi+8]; cmp al,0; jne ->ret 0`.
-	// byte[buf+0x08] is a READY flag (slot +0x9C is literally `return
-	// byte[this+8]`). Our live dump read +0x08 = 1, so Init refused every
-	// time and wrote nothing - that IS the initFailed=9. Shutdown() at slot
-	// +0x10 frees the bits AND clears the latch; FreeBits alone does NOT
-	// clear it and leaves Init still refusing.
-	typedef int32_t(__thiscall* BufGetIntFn)(void*);
-	typedef void*(__thiscall* BufGetPtrFn)(void*);
-	typedef char(__thiscall* BufInitFn)(void*, uint32_t, uint32_t, uint32_t, uint32_t);
-	typedef char(__thiscall* BufVoidFn)(void*);
-	const int kBufShutdown = 0x10 / 4;
-	const int kBufIsLocked = 0x20 / 4;
-	const int kBufFmtType = 0x0C;   // colorType (9 = ARGB8888)
-	const int kBufFmtBpp = 0x10;    // 0x20
-	const int kBufReadyLatch = 0x08;
-	const int kBufHwCache = 0x48;
-	const int kItemBuiltLatch = 0x34; // byte: "composite already filled"
-
-	int gTileScaled = 0;
-	int gTileSkipped = 0;
-	bool gTileLoggedFirst = false;
-
-	void ProbeRegionCamera(int32_t screenW, int32_t screenH, const void* regionObj)
-	{
-		// Is our patched immediate still live in memory? If another mod (or a
-		// second copy of us) rewrote it, the byte we logged is not the byte
-		// the game read. Cheap, and it separates "we never wrote" from "we
-		// wrote and it was undone".
-		float liveImm = 0.0f;
-		{
-			const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			const uint8_t* site = reinterpret_cast<const uint8_t*>(0x7AD0BC + (base - 0x400000));
-			__try { liveImm = *reinterpret_cast<const float*>(site); }
-			__except (EXCEPTION_EXECUTE_HANDLER) { liveImm = -1.0f; }
-		}
-
-		int hits = 0;
-		for (int off = 0; off <= 0x400; off += 4)
-		{
-			void* p = nullptr;
-			if (!TryReadSlot(regionObj, off, &p) || !p) { continue; }
-			const uintptr_t pv = reinterpret_cast<uintptr_t>(p);
-			if (pv < 0x10000 || (pv & 3) != 0) { continue; }
-
-			const CamRead c = TryReadCam(p);
-			if (!c.ok) { continue; }
-			if (c.vw != screenW || c.vh != screenH) { continue; }
-
-			hits++;
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"UiSpike: [dbg] REGIONCAM probe HIT at +0x%03X obj=%p scale=%.4f wu/px=%.4f"
-				" viewport=%dx%d zoomIdx=%d (cell would be %.0f px).",
-				off, p, c.scale, c.wuPerPx, c.vw, c.vh, c.zoomIdx,
-				(c.wuPerPx > 0.0001f) ? (1024.0f / c.wuPerPx) : 0.0f);
-
-			// Reject the known false positive before following any pointer out
-			// of it: a real camera has a sane zoom index and a positive scale.
-			// (+0x06C matched the viewport test at 21:45:36 with scale=0 and a
-			// garbage zoomIdx - that offset is the draw CONTEXT, not a camera.)
-			if (c.zoomIdx < 0 || c.zoomIdx > 4 || c.scale <= 0.0f || c.scale > 1000.0f)
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"UiSpike:   ^ rejected as a camera (zoomIdx/scale implausible)"
-					" - not following its device pointer.");
-				continue;
-			}
-
-			// THE LINK UNDER TEST. If the device frustum still carries the
-			// STOCK half-extents, the camera was reconfigured and never
-			// re-pushed, and the fix is to force the push. If it carries OUR
-			// half-extents, the device is right too and the region slab is not
-			// drawn through this frustum at all - which sends us back to the
-			// draw path with the camera lever eliminated.
-			void* dev = nullptr;
-			if (!TryReadSlot(p, kCamDevice, &dev) || !dev)
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info,
-					"UiSpike:   ^ NO DEVICE at [cam+0x0C]. SetScale stores the scale"
-					" BEFORE its device null-check (0x007CD72C vs 0x007CD735), so the"
-					" reprojection never reached a device. That is the defect.");
-				continue;
-			}
-
-			// Arm the change-watch on the plausible camera.
-			gWatchCam = p;
-			gWatchScale = c.scale;
-			gWatchHalfW = -1.0f;
-			gWatchChanges = 0;
-			gWatchSamples = 0;
-			gWatchSteadySaid = false;
-			gWatchLastMs = 0;
-
-			DevRead d = TryReadDev(dev);
-			if (!d.ok)
-			{
-				Logger::Get().WriteLine(
-					LogLevel::Info, "UiSpike:   ^ device %p unreadable.", dev);
-				continue;
-			}
-			// What the two hypotheses predict, so the numbers adjudicate
-			// themselves in the log instead of needing a second pass.
-			const float halfWNow  = 0.5f * static_cast<float>(c.vw) * c.wuPerPx;
-			const float halfWStock = 0.5f * static_cast<float>(c.vw) * 10.4525f;
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"UiSpike:   ^ DEVICE %p frustum L=%.1f R=%.1f T=%.1f B=%.1f"
-				" near=%.1f far=%.1f dirtyCnt=%d | halfW: live=%.1f ours=%.1f stock=%.1f",
-				dev, d.left, d.right, d.top, d.bottom, d.nearZ, d.farZ, d.dirtyCnt,
-				(d.right - d.left) * 0.5f, halfWNow, halfWStock);
-			gWatchHalfW = (d.right - d.left) * 0.5f;
-		}
-
-		Logger::Get().WriteLine(
-			LogLevel::Info,
-			"UiSpike: REGIONCAM probe done - %d candidate(s) with viewport %dx%d;"
-			" live patched immediate at 0x007AD0BC reads %.4f (expect 0.7500).",
-			hits, screenW, screenH, liveImm);
-		if (hits == 0)
-		{
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"UiSpike: REGIONCAM probe found NO camera under the region screen."
-				" The scan CAN see the screen size (that is its positive control),"
-				" so this is a measured null: the region camera is not reachable"
-				" from this object and 0x007AD0BB is the wrong lever.");
-		}
-	}
 }
 
 // #132 REGION ZOOM.
@@ -18728,9 +18378,6 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 		regionChildCountSeen = -1;
 		regionStableTicks = 0;
 		regionActive = false;
-		// Drop the camera watch: the object is rebuilt with the screen, so a
-		// stale pointer here would be read across a teardown.
-		gWatchCam = nullptr;
 		// #132: release our refs on the pristine bitmaps - but ONLY when the
 		// window is really gone, not merely hidden. Dropping them on every
 		// hide would leave zoom dead on the second visit if the screen is
@@ -18780,12 +18427,8 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 			"UiSpike: region screen up (%dx%d) - scaling.",
 			pRegion->GetW(), pRegion->GetH());
 
-		// #131: one-shot, read-only. Fires once per region arrival so a
-		// city->region return re-measures; nothing here writes.
-		ProbeRegionCamera(pRegion->GetW(), pRegion->GetH(), pRegion);
-		// v2.79.1: and dump the tile items + their sprite bounds. Written in
-		// v2.78.5 and never wired up - which is why we are guessing about the
-		// item list instead of reading it.
+		// v2.79.1: dump the tile items + their sprite bounds, once per region
+		// arrival (read-only).
 		ProbeRegionTiles(pRegion);
 
 		// Recon: dump the region tree once on activation (autonomous test
@@ -18800,9 +18443,6 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 		}
 	}
 
-	// #131 v2.78.3: sample the region camera + its device every 250ms while
-	// the region is up, change-only. Read-only; writes nothing.
-	WatchRegionCamera(nowTickMs);
 
 	// #132: at most ONE zoom change per settled gesture, however many wheel
 	// notches arrived. This is the rate limit that stops a fast scroll hanging
