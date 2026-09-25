@@ -22221,3 +22221,30 @@ The user: "Okay let's file the issue and open the pull request".
 - **PR #39.** `Drexel-Macintosh:fix-vtable-order` → `nsgomez:master`, 3 commits. The body is plain English, says "Fixes #38", carries the GZWinMoveTo behaviour-change warning and the checks (MSVC slots and argument sizes, src still compiles, in-game 51/0).
 - **CI:** upstream has no Actions workflows, so there is nothing to monitor.
 - **Posted as** the Drexel-Macintosh account.
+
+## 2026-09-25: the submenu ring that jumped a row (v4.10.2); memo33/submenus-dll#2; v4.10.2 released
+
+### Found while testing a pull request for memo33's Submenus DLL
+
+- **The PR.** A review of memo.submenus.dll 2.1.0 against the exe found crash and memory bugs in its init code. The fixes were tested side by side, in a load test and in game, then opened as **https://github.com/memo33/submenus-dll/pull/2**: 5 commits, posted as Drexel-Macintosh on the user's "retest the submenu and then push". The record is in `C:\dev\submenus-dll-pr\`.
+- **Our bug, surfaced by that test.** In the PR test session the user saw the 5-item power submenu's ring "jump" to the Water row. Three logged sessions made **byte-identical docking decisions with either submenus DLL**, so the defect was ours. The eyes disagreed between sessions only because the wrong pin shows up after a repaint.
+- **Mechanism, fix and in-game verification:** the "Sub-flyout: BIRTH OWNS THE DOCK (v4.10.2, 2026-09-25)" section above. Release commit `80667a7`. The user's retest log, 08:59: 180/180 ticks at RINGa 567 (Power), none at 715.
+
+### 09:16 - RELEASED: v4.10.2 (https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/tag/v4.10.2)
+
+The user: "Yes push our release".
+
+- **Crash gate.** No exception report is newer than the v4.10.1 entry. The newest is 2026-09-01, already censused.
+- **Build.** Release commit `80667a7` (macro 4.10.2, CHANGELOG, VERSION-HISTORY). The DLL is 949,248 B, sha256 3A86B4F1...952CE3, and carries the version string. It is DEPLOYED == BUILT and is **the exact DLL the user retested in game**.
+- **Bundle.** `SC4UIScale-v4.10.2.zip`: 123,775,948 B, sha256 9B052BD4...105286, published 2026-09-25T13:15:58Z, marked Latest. The uploaded asset's digest equals the local sha256.
+- **What changed vs 4.10.1, measured.** 127/127 manifest rows. **The DLL is the only content change.** The other 25 changed rows are `.off.uipay` stubs that differ only in the DBPF created/modified dates (bytes 0x18-0x1F), compared byte by byte across the two zips.
+- **Bundle gates.**
+  - Build-Dist PASS on hard patterns. The 6 soft lines are the word "touch", unchanged.
+  - Test-BinaryPii CLEAN (131 files).
+  - Test-DatIntegrity ALL PASS (127 rows re-verified, 71 deployed==built).
+  - Sync-Check PASS (1010 tracked files, clean, pushed).
+- **Previous release.** v4.10.1 was deleted after publishing, per the user's standing order. Its tag `v4.10.1` (3ee2485) stays. Before the delete, the local `dist\SC4UIScale-v4.10.1.zip` was hash-matched to the hosted asset and its notes saved to `dist\RELEASE-NOTES-v4.10.1.md`, so it can be re-created exactly.
+- **sc4pac channel.** `gen_channel.py --publish --last-modified 2026-09-25T13:15:58Z` re-verified 102/102 hashes in both yamls, bundle stable at 127 files, all 208 comments preserved.
+  - `Test-ChannelYaml` is clear on both files, with the upstream checks on the lean one. The asset answers HTTP 200 at the exact size.
+  - ⚠ `Check-ChannelYaml.ps1` run directly prints NOTHING: it only DEFINES the function. Dot-source it and call `Test-ChannelYaml`, as its two callers do.
+  - Negative control: a copy with placeholder hashes is refused.
