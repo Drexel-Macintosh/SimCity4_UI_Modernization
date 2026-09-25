@@ -2846,10 +2846,6 @@ namespace
 	{
 		return static_cast<int>(std::floor(base * f));
 	}
-	// v2.36.4 diagnostic ([Probe] EdgeDump): name the screen-edge border
-	// window (#59) and settle whether the U-Drive-It map marker is a window
-	// at all (#60). Logs only when the observed SET changes, capped at 40.
-	int    gEdgeDump = 0;
 	int    gStripHitW = 0;              // if >0, force the strip item's [0xEC]/[0xF0]
 	                                     // fields (currently -1 = "use natural ~44 size"
 	                                     // -> only the right half is clickable) to this
@@ -7383,31 +7379,10 @@ void UiSpike::InstallSubFlyoutHooksNow(cIGZWin* sub, cIGZWin* strip)
 	}
 }
 
-// ============ EDGE PROBE (v2.36.4, tasks #59 + #60) =====================
-// TWO COLD DEFECTS, ONE SESSION. Both first moves are measurements, per
-// METHOD.md: identify the window before choosing a cure (ENGINE §4.7), and
-// never guess a lever for a window that has never been named.
-//
-// (A) #59 THE SCREEN-EDGE BORDER. Narrowed offline to eight full-screen
-//     windows, two of which are ANONYMOUS (id 0, vt 0x00AB8CD0 / 0x00AB8F50)
-//     — the shape of a frame overlay. This logs the full-screen SET whenever
-//     it changes, so pausing (or switching mode) names the one that appears.
-//
-// (B) #60 THE U-DRIVE-IT MAP MARKER. The 4x-art attempt at {46a006b0,
-//     094ac89a} shipped in v2.25.17 and did nothing — that TGI is not the
-//     marker. Offline this session also killed the second lead: the
-//     "15-entry glyph table" at 0x44DEC1 is a RESOURCE REGISTRATION table
-//     whose every consumer (0x9970A0, 0x9C85B3, ...) sits in the UI-window
-//     code region — spinner/slider art, not a world billboard. So the open
-//     question is binary and this answers it: **is the marker a cIGZWin at
-//     all?** If bubble 0x48E945B4 is absent or vis=0 while markers are on
-//     screen, it is a 3D/world billboard and no window or art lever can
-//     reach it — which redirects the whole task.
-//
-// Live-tunable: [Probe] EdgeDump=1. Costs nothing when off.
 // ============ VISIBILITY TRACE (v2.36.8, task #59) ======================
 // THE INSTRUMENT THE BORDER ACTUALLY NEEDS, after two of mine failed for the
-// same reason: EdgeProbeTick walked one root, then two levels. The two
+// same reason: the v2.36.4 EdgeDump probe walked one root, then two levels
+// (that probe was removed in the 2026-09-25 audit once #59/#60 closed). The two
 // anonymous full-screen candidates (vt 0x00AB8CD0 / 0x00AB8F50) came from the
 // FULL tree dump, so they live deeper than that, and pausing added no
 // full-screen window at either shallow depth.
@@ -7498,110 +7473,6 @@ void UiSpike::VisTraceTick()
 			"at full depth. From here only visibility CHANGES print (cap 300). "
 			"PAUSE now: whatever the border is, it must appear as SHOWN.",
 			gVisSeenN);
-	}
-}
-
-void UiSpike::EdgeProbeTick(cIGZWin* pView)
-{
-	if (gEdgeDump <= 0 || !pView) { return; }
-	const int32_t sw = pView->GetW(), sh = pView->GetH();
-	if (sw <= 0 || sh <= 0) { return; }
-
-	static uint32_t lastSig = 0;
-	static int edgeLogged = 0;
-	uint32_t sig = 0;
-	struct Hit { uint32_t id; void* vt; int32_t l, t, w, h; int vis; char root; };
-	Hit hits[24] = {};
-	int n = 0;
-	int smallWins = 0;   // 16..96px square candidates anywhere under the view
-
-	// v2.36.5 CORRECTION TO THIS PROBE'S FIRST VERSION. It walked the VIEW
-	// only and found 2 windows; the eight-window list that motivated it came
-	// from the view dump AND the MAIN-WINDOW dump, and the two anonymous
-	// prime suspects (vt 0x00AB8CD0 / 0x00AB8F50) are not under the view. The
-	// instrument was structurally blind to exactly what it was built to find
-	// - the FLASHSET mistake, repeated. Walk BOTH roots.
-	cISC4AppPtr pSC4App;
-	cIGZWin* pMainWindow = pSC4App ? pSC4App->GetMainWindow() : nullptr;
-	cIGZWin* roots[2] = { pView, pMainWindow };
-	for (int r = 0; r < 2; r++)
-	{
-		if (!roots[r]) { continue; }
-		ChildSnapshot lvl1 = {};
-		roots[r]->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &lvl1);
-		for (int i = 0; i < lvl1.count && n < 24; i++)
-		{
-			cIGZWin* a = lvl1.wins[i];
-			if (!a) { continue; }
-			cIGZWin* level[1 + 64] = {};
-			int levelN = 0;
-			level[levelN++] = a;
-			ChildSnapshot lvl2 = {};
-			a->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &lvl2);
-			for (int j = 0; j < lvl2.count && levelN < 65; j++)
-			{
-				if (lvl2.wins[j]) { level[levelN++] = lvl2.wins[j]; }
-			}
-			for (int k = 0; k < levelN && n < 24; k++)
-			{
-				cIGZWin* w = level[k];
-				const int32_t ww = w->GetW(), wh = w->GetH();
-				// marker-sized census (B): a world billboard has NO window,
-				// so "markers on screen but zero small windows" is the proof.
-				if (r == 0 && ww >= 16 && ww <= 96 && wh >= 16 && wh <= 96
-					&& w->IsVisible())
-				{
-					smallWins++;
-				}
-				if (ww < sw * 9 / 10 || wh < sh * 9 / 10) { continue; }
-				const int vis = w->IsVisible() ? 1 : 0;
-				hits[n].id = w->GetID();
-				// deref-ok: w is a walked live cIGZWin* (GetID/IsVisible beside it)
-				hits[n].vt = *reinterpret_cast<void**>(w);
-				hits[n].l = w->GetL(); hits[n].t = w->GetT();
-				hits[n].w = ww; hits[n].h = wh;
-				hits[n].vis = vis;
-				hits[n].root = (r == 0) ? 'V' : 'M';
-				sig = sig * 31u + hits[n].id + static_cast<uint32_t>(vis) * 7u
-					+ static_cast<uint32_t>(r) * 3u;
-				n++;
-			}
-		}
-	}
-	sig = sig * 31u + static_cast<uint32_t>(smallWins);
-
-	// (B) is the U-Drive-It bubble a window at all right now?
-	cIGZWin* bub = pView->GetChildWindowFromIDRecursive(0x48E945B4);
-	const uint32_t bubSig = bub
-		? (0xB0000000u + static_cast<uint32_t>(bub->GetW()) * 3u
-			+ (bub->IsVisible() ? 1u : 0u))
-		: 0xB0FFFFFFu;
-	sig = sig * 31u + bubSig;
-
-	if (sig == lastSig || edgeLogged >= 40) { return; }
-	lastSig = sig;
-	edgeLogged++;
-	for (int i = 0; i < n; i++)
-	{
-		Logger::Get().WriteLine(LogLevel::Debug,
-			"UiSpike: EDGE [%c] full-screen win #%d id=0x%08X vt=%p "
-			"(%d,%d %dx%d) vis=%d  [screen %dx%d]",
-			hits[i].root, i, hits[i].id, hits[i].vt, hits[i].l, hits[i].t,
-			hits[i].w, hits[i].h, hits[i].vis, sw, sh);
-	}
-	Logger::Get().WriteLine(LogLevel::Debug,
-		"UiSpike: EDGE bubble 0x48E945B4 %s | marker-sized visible windows "
-		"under the view: %d | roots walked: view=%s main=%s (change #%d of 40)",
-		bub ? "PRESENT" : "ABSENT", smallWins,
-		pView ? "yes" : "no", pMainWindow ? "yes" : "NO - could not reach it",
-		edgeLogged);
-	if (bub)
-	{
-		Logger::Get().WriteLine(LogLevel::Debug,
-			"UiSpike: EDGE   bubble rect (%d,%d %dx%d) vis=%d vt=%p",
-			bub->GetL(), bub->GetT(), bub->GetW(), bub->GetH(),
-			// deref-ok: bub is a live cIGZWin* the walk returned
-			bub->IsVisible() ? 1 : 0, *reinterpret_cast<void**>(bub));
 	}
 }
 
@@ -13345,7 +13216,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	// v2.36.1: remember the view so the flyout-OPEN hook can run this very
 	// pass at the moment a flyout is built, instead of up to a tick later.
 	lastView = pView;
-	EdgeProbeTick(pView);   // v2.36.4: inert unless [Probe] EdgeDump=1
 	VisTraceTick();         // v2.36.8: inert unless [Probe] VisTrace=1
 	// #137: run the panel docks on the TICK, not only from ScaleAllPanels /
 	// ScalePanelsUnder / the show hook. MEASURED: those three fire on scale and
@@ -13467,8 +13337,6 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 			if (b[0]) gProbeB = atoi(b);
 			GetPrivateProfileStringA("Probe", "Max", "", b, sizeof(b), kIni);
 			if (b[0]) gProbeMax = atoi(b);
-			GetPrivateProfileStringA("Probe", "EdgeDump", "", b, sizeof(b), kIni);
-			if (b[0]) gEdgeDump = atoi(b);
 			GetPrivateProfileStringA("Probe", "VisTrace", "", b, sizeof(b), kIni);
 			if (b[0]) gVisTrace = atoi(b);
 			GetPrivateProfileStringA("Probe", "EdgeBlt", "", b, sizeof(b), kIni);

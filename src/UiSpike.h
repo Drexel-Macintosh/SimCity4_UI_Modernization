@@ -48,9 +48,6 @@ public:
 	// crash guard, same order as the sweep's - the container thunks MUST go in
 	// before the [0xE0] promotion (dual-use field; see the note at the body).
 	void InstallSubFlyoutHooksNow(class cIGZWin* sub, class cIGZWin* strip);
-	// v2.36.4 tasks #59/#60: name the screen-edge border window, and settle
-	// whether the U-Drive-It map marker is a cIGZWin at all. [Probe] EdgeDump.
-	void EdgeProbeTick(class cIGZWin* pView);
 	// v2.36.8 task #59: full-depth visibility-change trace from the MAIN
 	// window. Prints only windows whose vis flipped, so pausing names the
 	// border whatever its depth or owner. [Probe] VisTrace.
