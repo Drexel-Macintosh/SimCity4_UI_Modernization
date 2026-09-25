@@ -10500,6 +10500,239 @@ namespace
 		}
 	};
 
+	// ---- BATCHED ID LOOKUPS (audit A1, 2026-09-25) --------------------------
+	// An idle city tick cost ~46 whole-tree walks, most of them
+	// GetChildWindowFromIDRecursive calls that MISS - and a miss walks the
+	// whole subtree. These answer a list
+	// of ids in ONE walk with the engine's own order (decompiled 0x0099DEC4:
+	// post-order, EnumChildren order, children before self, the root last,
+	// first match wins), keeping the first match per id. That gives each id
+	// the answer its own call would have given, as long as nothing changes the
+	// tree between the walk and the use of an answer - callers that do change
+	// it re-walk the ids still to come (IdBatch::Touched).
+	//
+	// POSITIVE CONTROL. The first kIdWalkChecks walks are re-asked of the
+	// engine (or, for the collect walk, of IdCollectCtx), id by id. A
+	// disagreement is logged and the engine's answer is used; the IDWALK
+	// summary line reports the result either way.
+	const unsigned kIdWalkChecks = 2048;
+	unsigned gIdWalkChecked = 0;
+	unsigned gIdWalkIds = 0;
+	unsigned gIdWalkHits = 0;
+	unsigned gIdWalkBad = 0;
+
+	void NoteIdWalkChecked()
+	{
+		if (++gIdWalkChecked != kIdWalkChecks) { return; }
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: IDWALK %u batched walk(s) checked against the per-id "
+			"lookups they replace (%u id answer(s), %u hit(s)): %u disagreed%s. "
+			"Checking stops here.",
+			gIdWalkChecked, gIdWalkIds, gIdWalkHits, gIdWalkBad,
+			gIdWalkBad ? " - READ THE IDWALK DISAGREES LINES ABOVE" : "");
+	}
+
+	void NoteIdWalkDisagrees(uint32_t id, cIGZWin* root, const char* what,
+		const void* batched, const void* engine)
+	{
+		if (++gIdWalkBad > 8) { return; }
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: IDWALK DISAGREES for 0x%08X under 0x%08X (%s): batched "
+			"%p, per-id %p - using the per-id answer.",
+			id, root ? root->GetID() : 0u, what, batched, engine);
+	}
+
+	struct IdFindCtx
+	{
+		const uint32_t* ids;
+		cIGZWin** out;
+		int n;
+		int left;
+
+		static void Match(cIGZWin* win, IdFindCtx* ctx)
+		{
+			const uint32_t id = win->GetID();
+			for (int k = 0; k < ctx->n; k++)
+			{
+				if (!ctx->out[k] && ctx->ids[k] == id)
+				{
+					ctx->out[k] = win;
+					ctx->left--;
+				}
+			}
+		}
+
+		static bool Callback(cIGZWin* /*parent*/, uint32_t /*childID*/,
+			void* child, void* pContext)
+		{
+			IdFindCtx* ctx = static_cast<IdFindCtx*>(pContext);
+			cIGZWin* win = static_cast<cIGZWin*>(child);
+			if (!win || ctx->left <= 0) { return true; }
+			win->EnumChildren(GZIID_cIGZWin, IdFindCtx::Callback, ctx);
+			Match(win, ctx);
+			return true;
+		}
+	};
+
+	// out[k] = root->GetChildWindowFromIDRecursive(ids[k]), for every k.
+	void FindIdsRecursive(cIGZWin* root, const uint32_t* ids, int n,
+		cIGZWin** out)
+	{
+		for (int k = 0; k < n; k++) { out[k] = nullptr; }
+		if (!root || n <= 0) { return; }
+		IdFindCtx ctx = { ids, out, n, n };
+		root->EnumChildren(GZIID_cIGZWin, IdFindCtx::Callback, &ctx);
+		if (ctx.left > 0) { IdFindCtx::Match(root, &ctx); }
+
+		if (gIdWalkChecked >= kIdWalkChecks) { return; }
+		for (int k = 0; k < n; k++)
+		{
+			cIGZWin* engine = root->GetChildWindowFromIDRecursive(ids[k]);
+			gIdWalkIds++;
+			if (engine) { gIdWalkHits++; }
+			if (engine != out[k])
+			{
+				NoteIdWalkDisagrees(ids[k], root, "find", out[k], engine);
+				out[k] = engine;
+			}
+		}
+		NoteIdWalkChecked();
+	}
+
+	// w->GetChildWindowFromIDRecursive(w's own id) walks all of w's subtree,
+	// finds no descendant with that id, and returns w itself (self last).
+	// Checked against that lookup during the IDWALK window like the walks.
+	cIGZWin* SelfLookup(cIGZWin* w, uint32_t id)
+	{
+		if (w && gIdWalkChecked < kIdWalkChecks)
+		{
+			cIGZWin* engine = w->GetChildWindowFromIDRecursive(id);
+			gIdWalkIds++;
+			if (engine) { gIdWalkHits++; }
+			if (engine != w)
+			{
+				NoteIdWalkDisagrees(id, w, "self", w, engine);
+				return engine;
+			}
+		}
+		return w;
+	}
+
+	// A fixed list of lookups that a loop consumes IN ORDER, answered by one
+	// walk. The loop calls Touched() once it has done anything that may change
+	// the tree (scaled, moved or rebuilt what it found); the ids still to come
+	// are then re-walked before the next answer is handed out. Asked for an id
+	// out of sequence, it falls back to the engine's own lookup - so a future
+	// edit of the loop's gates cannot make it hand out a wrong answer.
+	struct IdBatch
+	{
+		static const int kMax = 16;
+		cIGZWin* root = nullptr;
+		uint32_t ids[kMax] = {};
+		cIGZWin* wins[kMax] = {};
+		int n = 0;
+		int next = 0;
+		bool walked = false;
+		bool stale = false;
+
+		void Add(uint32_t id) { if (n < kMax) { ids[n++] = id; } }
+
+		cIGZWin* Next(uint32_t id)
+		{
+			if (next >= n || ids[next] != id)
+			{
+				return root ? root->GetChildWindowFromIDRecursive(id) : nullptr;
+			}
+			if (!walked || stale)
+			{
+				FindIdsRecursive(root, ids + next, n - next, wins + next);
+				walked = true;
+				stale = false;
+			}
+			return wins[next++];
+		}
+
+		void Touched() { stale = true; }
+	};
+
+	// IdCollectCtx for several ids in ONE walk: the same pre-order, depth-8
+	// walk, keeping up to 4 matches per id in walk order. It descends while
+	// ANY id is below its cap - a superset of each single walk's nodes - and
+	// an id at its cap takes no more, so every id's list comes out identical
+	// to its own walk's.
+	struct IdCollectManyCtx
+	{
+		const uint32_t* ids;
+		int n;
+		cIGZWin* (*out)[4];
+		int* counts;
+		int* open;   // ids still below the cap
+		int depth;
+
+		static bool Callback(cIGZWin* /*parent*/, uint32_t /*childID*/,
+			void* child, void* pContext)
+		{
+			IdCollectManyCtx* ctx = static_cast<IdCollectManyCtx*>(pContext);
+			cIGZWin* win = static_cast<cIGZWin*>(child);
+			if (!win) { return true; }
+			const uint32_t id = win->GetID();
+			for (int k = 0; k < ctx->n; k++)
+			{
+				if (ctx->ids[k] == id && ctx->counts[k] < 4)
+				{
+					ctx->out[k][ctx->counts[k]++] = win;
+					if (ctx->counts[k] == 4) { (*ctx->open)--; }
+				}
+			}
+			if (ctx->depth < 8 && *ctx->open > 0)
+			{
+				IdCollectManyCtx sub = *ctx;
+				sub.depth = ctx->depth + 1;
+				win->EnumChildren(GZIID_cIGZWin, IdCollectManyCtx::Callback, &sub);
+			}
+			return true;
+		}
+	};
+
+	void CollectIdsUnder(cIGZWin* root, const uint32_t* ids, int n,
+		cIGZWin* (*out)[4], int* counts)
+	{
+		for (int k = 0; k < n; k++)
+		{
+			counts[k] = 0;
+			for (int i = 0; i < 4; i++) { out[k][i] = nullptr; }
+		}
+		if (!root || n <= 0) { return; }
+		int open = n;
+		IdCollectManyCtx ctx = { ids, n, out, counts, &open, 0 };
+		root->EnumChildren(GZIID_cIGZWin, IdCollectManyCtx::Callback, &ctx);
+
+		if (gIdWalkChecked >= kIdWalkChecks) { return; }
+		for (int k = 0; k < n; k++)
+		{
+			cIGZWin* single[4] = {};
+			int nSingle = 0;
+			IdCollectCtx one = { ids[k], single, 4, &nSingle, 0 };
+			root->EnumChildren(GZIID_cIGZWin, IdCollectCtx::Callback, &one);
+			gIdWalkIds++;
+			if (nSingle > 0) { gIdWalkHits++; }
+			bool same = (nSingle == counts[k]);
+			for (int i = 0; same && i < nSingle; i++)
+			{
+				same = (single[i] == out[k][i]);
+			}
+			if (!same)
+			{
+				NoteIdWalkDisagrees(ids[k], root, "collect",
+					counts[k] ? out[k][0] : nullptr, nSingle ? single[0] : nullptr);
+				counts[k] = nSingle;
+				for (int i = 0; i < 4; i++) { out[k][i] = single[i]; }
+			}
+		}
+		NoteIdWalkChecked();
+	}
+	// ---- end BATCHED ID LOOKUPS (tools/dev/idwalk tests this block) --------
+
 	// v2.42.3 (#47): ONE summary line per panel open, emitted when the NEXT
 	// open of any tracked root starts (and at Disarm). Counts only, so it can
 	// never saturate - the whole point is that a FAILING open must leave a
@@ -10531,9 +10764,16 @@ namespace
 	{
 		if (!pSearchRoot || f <= 1.01f) return;
 		gBmpScale = f;
+		// Every root in ONE walk (audit A1): 16 lookups a tick, 5 of them
+		// misses. Nothing in this loop changes the tree - it swaps vtables and
+		// invalidates - so the answers hold for the whole loop.
+		cIGZWin* roots[32] = {};
+		const int nBatch = (nIds < 32) ? nIds : 32;
+		FindIdsRecursive(pSearchRoot, ids, nBatch, roots);
 		for (int k = 0; k < nIds; k++)
 		{
-			cIGZWin* root = pSearchRoot->GetChildWindowFromIDRecursive(ids[k]);
+			cIGZWin* root = (k < nBatch) ? roots[k]
+				: pSearchRoot->GetChildWindowFromIDRecursive(ids[k]);
 			if (!root) continue;
 			// v2.42.1: log when the resolved root pointer CHANGES between
 			// passes - on a reopen this answers whether the id resolved to a
@@ -12714,7 +12954,10 @@ int UiSpike::ScalePanelsUnder(cIGZWin* pRoot, const char* rootTag)
 		// the long note on the GAUGE namespace above ScalePanelsUnder for the
 		// measurement. Hook is scoped under 0x4BCB938A, class-verified per
 		// instance, per-instance vtable copy, pointer-latched.
-		HookDashboardGauges(pRoot, f);
+		// Only when UDMAP's lookup of that root hit (audit A1): on a miss
+		// nothing above has run, so its own lookup of 0x4BCB938A would miss
+		// too - and a miss returns before any of its state is touched.
+		if (pUdRoot) { HookDashboardGauges(pRoot, f); }
 
 		// RUNTIME-SUPPLIED GZWinBMP IMAGES (task #47, v2.25.0): the My Sims
 		// family's portraits are Path-4 runtime bitmaps (36x41, in no dat) -
@@ -14351,7 +14594,10 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 		// Disarm() already uses for the gauge latches, and it cannot get stuck.
 		static int prevGeomEpoch = -1;
 		if (prevGeomEpoch != gGaugeEpoch) { prevGeom.clear(); prevGeomEpoch = gGaugeEpoch; }
-		cIGZWin* probeRoot = pView->GetChildWindowFromIDRecursive(0x9A47B417);
+		// pView IS 0x9A47B417 (kGZWin_SC4View3DWin, the god-flyout parent).
+		// This used to be pView->GetChildWindowFromIDRecursive(0x9A47B417): a
+		// whole-view walk to get pView back (audit A1; see SelfLookup).
+		cIGZWin* probeRoot = SelfLookup(pView, 0x9A47B417);
 		if (probeRoot)
 		{
 			struct Frame { cIGZWin* win; uint32_t parentId; int index; int32_t ax, ay; int depth; };
@@ -15628,13 +15874,26 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	// user's "completely broken" screenshot; log proof: zero "mayor flyout
 	// 0x8BB27C12" lines in the whole session). Their state gate is the
 	// flyout+button search itself: neither exists outside their mode.
+	//
+	// Both loops' flyout lookups in ONE walk (audit A1): in mayor mode with
+	// nothing open that was nine whole-view misses a tick. Same gates, same
+	// order as the loops; a flyout that is found gets scaled and docked, so
+	// the loop calls Touched() and the ids after it are walked again.
+	IdBatch flyouts;
+	flyouts.root = pView;
+	for (const MayorFlyoutDock& m : kMayorFlyoutDock)
+	{
+		if (m.mayorOnly && (mayorModeActive || m.anyMode)) { flyouts.Add(m.flyoutId); }
+	}
+	for (const GodFlyoutDock& d : kGodFlyoutDock) { flyouts.Add(d.id); }
 	{
 		for (const MayorFlyoutDock& m : kMayorFlyoutDock)
 		{
 			if (!m.mayorOnly) { continue; }
 			if (!mayorModeActive && !m.anyMode) { continue; }
-			cIGZWin* win = pView->GetChildWindowFromIDRecursive(m.flyoutId);
+			cIGZWin* win = flyouts.Next(m.flyoutId);
 			if (!win || win->GetW() <= 0 || win->GetH() <= 0) { continue; }
+			flyouts.Touched();
 
 			// ============ #194 REBIRTH PURGE ============================
 			// USER: in mayor mode the Emergency flyout, opened FIRST after a
@@ -15834,11 +16093,12 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 
 	for (const GodFlyoutDock& d : kGodFlyoutDock)
 	{
-		cIGZWin* win = pView->GetChildWindowFromIDRecursive(d.id);
+		cIGZWin* win = flyouts.Next(d.id);
 		if (!win || win->GetW() <= 0 || win->GetH() <= 0)
 		{
 			continue;
 		}
+		flyouts.Touched();
 		PatchFlashGuardClass(*reinterpret_cast<void***>(win));
 
 		// PRE-SCALE WHILE HIDDEN (v2.11.29) - the REGION-SCREEN fix, applied to
@@ -16175,7 +16435,8 @@ void UiSpike::ScaleGodFlyouts(cIGZWin* pView, float f)
 	//   terraform-on-btn1 relationship the player set as the acceptance test.
 	// NO ScaleSubtree (it doubles child positions and flings the strip); dock
 	// first, scale later.
-	cIGZWin* godParent = pView->GetChildWindowFromIDRecursive(0x9A47B417);
+	// pView itself - the same self-lookup as the DPROBE root above (audit A1).
+	cIGZWin* godParent = SelfLookup(pView, 0x9A47B417);
 	if (godParent)
 	{
 		ChildSnapshot snap = {};
@@ -17217,19 +17478,32 @@ void UiSpike::IncrementalPass()
 		const float f = settings.spikeScaleFactor;
 		const int32_t scrW = pMainWindow->GetW();
 		const int32_t scrH = pMainWindow->GetH();
-		for (const CityDialog& dlg : kCityDialogIds)
+		// v2.25.20: collect EVERY instance of each id - the single-find
+		// returned the hidden TEMPLATE for the budget masters and the
+		// visibility check then skipped the real open dialog.
+		// All six ids in ONE walk (audit A1; it was six walks of the main
+		// window a tick). A visible instance gets scaled and moved, so once
+		// one has been handled the ids after it are collected again.
+		const int kDlgN = static_cast<int>(
+			sizeof(kCityDialogIds) / sizeof(kCityDialogIds[0]));
+		uint32_t dlgIds[kDlgN] = {};
+		for (int k = 0; k < kDlgN; k++) { dlgIds[k] = kCityDialogIds[k].id; }
+		cIGZWin* dlgFound[kDlgN][4] = {};
+		int dlgCount[kDlgN] = {};
+		CollectIdsUnder(pMainWindow, dlgIds, kDlgN, dlgFound, dlgCount);
+		bool dlgTouched = false;
+		for (int di = 0; di < kDlgN; di++)
 		{
+			const CityDialog& dlg = kCityDialogIds[di];
 			const uint32_t dlgId = dlg.id;
-			// v2.25.20: collect EVERY instance of the id - the single-find
-			// returned the hidden TEMPLATE for the budget masters and the
-			// visibility check then skipped the real open dialog.
-			cIGZWin* found[4] = {};
-			int nFound = 0;
+			if (dlgTouched)
 			{
-				IdCollectCtx cctx = { dlgId, found, 4, &nFound, 0 };
-				pMainWindow->EnumChildren(GZIID_cIGZWin,
-					IdCollectCtx::Callback, &cctx);
+				CollectIdsUnder(pMainWindow, dlgIds + di, kDlgN - di,
+					dlgFound + di, dlgCount + di);
+				dlgTouched = false;
 			}
+			cIGZWin** found = dlgFound[di];
+			const int nFound = dlgCount[di];
 			for (int inst = 0; inst < nFound; inst++)
 			{
 			cIGZWin* pDlg = found[inst];
@@ -17237,6 +17511,7 @@ void UiSpike::IncrementalPass()
 			{
 				continue;
 			}
+			dlgTouched = true;
 			const int32_t w = pDlg->GetW();
 			// The two MODAL confirms. The rest of this list keeps
 			// preserve-the-old-centre.
