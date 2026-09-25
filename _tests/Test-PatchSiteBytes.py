@@ -123,6 +123,16 @@ SITES = [
         "cGZWinGrid::SetColumnWidth prologue - the Custom Tunes hook's "
         "verify-before-write bytes (kSetColumnWidthStock).",
     ),
+    (
+        "kCsiDrawVa (prologue)",
+        0x0046D990,
+        bytes([0x81, 0xEC, 0x7C, 0x02, 0x00, 0x00]),
+        bytes([0xFF] * 6),
+        "sub esp,0x27C - cSC4DispatchVehicleView::Draw, the CSIDRAW hook's "
+        "verify-before-write bytes (kCsiDrawStock). Measured out of the exe "
+        "2026-08-31 (research/UNKNOWNS-AND-NEXT-TARGETS.md); pinned in code "
+        "by the 2026-09-25 audit (B5), before which this hook had no check.",
+    ),
 ]
 
 

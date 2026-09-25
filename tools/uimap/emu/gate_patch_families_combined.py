@@ -224,7 +224,10 @@ NON_SITE_TABLES = {"kGraphLegendStrips", "kStockHtmlFontSizes", "kStockHtmlHeadi
                    "kDotSizeStock",                          # DOTSIZE    0x5F7810
                    # v4.10.1 Custom Tunes column: the SetColumnWidth prologue
                    # the MinHook install verifies (byte values, not a site).
-                   "kSetColumnWidthStock"}
+                   "kSetColumnWidthStock",
+                   # 2026-09-25 audit B5: the CSIDRAW prologue (sub esp,0x27C),
+                   # pinned when HookVerified replaced the hand-rolled install.
+                   "kCsiDrawStock"}
 # Scalars that are NOT patch sites: the module base every site is expressed
 # against, and stock-value constants. Excluded by NAME so the anti-rot sweep
 # still shouts about anything genuinely new.
@@ -266,7 +269,10 @@ NON_SITE_SCALARS = {"kImageBase", "kX8DispatchSite", "kX8StubBlock",
                     # ADDRESS that picks the one call it acts on (0x4F4B52).
                     # No immediate is edited - the byte patch these replaced
                     # was retired the same day (it assumed our dialog copy).
-                    "kSetColumnWidthVa", "kCustomTunesRetVa"}
+                    "kSetColumnWidthVa", "kCustomTunesRetVa",
+                    # 2026-09-25 audit B5: the DISPATCHQUAD detour targets,
+                    # named when HookVerified replaced the hand-rolled pair.
+                    "kDqSubmitVa", "kDqAddVa"}
 
 # --------------------------------------------------------------------------
 FAILURES = []
@@ -353,12 +359,15 @@ def sweep_inline_write_targets(paths):
                 body):
             var = m.group(1)
             # A TYPED POINTER IS STILL NOT A WRITE TARGET IF ITS ONLY JOB IS TO
-            # BE HOOKED. DISPATCHQUAD builds uint8_t* p1/p2, memcmp's the stock
-            # prologue through them, then passes them straight to MH_CreateHook
-            # - MinHook does the writing, through its own API, and the project
-            # classifies detour targets under NON_SITE_SCALARS. Flagging those
-            # would have made this check 4 false positives out of 6 on its
-            # first tuned run.
+            # BE HOOKED. DISPATCHQUAD used to build uint8_t* p1/p2, memcmp the
+            # stock prologue through them, then pass them straight to
+            # MH_CreateHook - MinHook does the writing, through its own API, and
+            # the project classifies detour targets under NON_SITE_SCALARS.
+            # Flagging those would have made this check 4 false positives out
+            # of 6 on its first tuned run. (Since audit B5, 2026-09-25, every
+            # CodePatches hook goes through HookVerified(tag, VA, ...) and
+            # DISPATCHQUAD reads through const pointers; the exclusion stays for
+            # any direct MH_CreateHook elsewhere.)
             scope = body[m.end():m.end() + 4000]
             if re.search(r"MH_CreateHook\s*\(\s*%s\b" % re.escape(var), scope):
                 continue

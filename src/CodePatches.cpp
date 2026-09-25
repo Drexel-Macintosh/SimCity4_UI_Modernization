@@ -86,6 +86,67 @@ namespace
 		}
 	}
 
+	// ONE DETOUR INSTALL (audit B5, 2026-09-25). The header's rule - every
+	// site is byte-verified before writing - applies to a MinHook detour too:
+	// it overwrites the target's first bytes with a jmp. 27 installs used to
+	// hand-roll the prologue compare, MH_Initialize (three different failure
+	// treatments) and CreateHook + EnableHook; six skipped the compare.
+	//
+	//   stock, n   the bytes the target must start with. A mismatch means a
+	//              different exe build or another mod's detour already there:
+	//              refuse, never chain blind.
+	//   nullptr    prologue NOT PINNED yet (no one has read it off the exe).
+	//              The hook installs exactly as before, and the live bytes are
+	//              logged so they can be pinned - read them off that line,
+	//              never guess them.
+	//
+	// Returns true when the detour is live. Every failure is logged here, so
+	// callers only undo their own state.
+	bool HookVerified(const char* tag, uintptr_t va, const uint8_t* stock,
+		size_t n, void* detour, void** orig)
+	{
+		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+		void* target = reinterpret_cast<void*>(va - kImageBase + base);
+		if (stock && n)
+		{
+			if (memcmp(target, stock, n) != 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: %s prologue mismatch at 0x%08X - not hooked "
+					"(a different exe build, or another mod hooked it first).",
+					tag, static_cast<uint32_t>(va));
+				return false;
+			}
+		}
+		else
+		{
+			uint8_t live[8] = {};
+			ProbeSafe::ReadBytes(target, live, sizeof(live));
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: %s prologue NOT PINNED at 0x%08X - live bytes "
+				"%02X %02X %02X %02X %02X %02X %02X %02X. Pin them in its install "
+				"(audit B5) so a changed exe is refused instead of hooked.",
+				tag, static_cast<uint32_t>(va), live[0], live[1], live[2], live[3],
+				live[4], live[5], live[6], live[7]);
+		}
+		const MH_STATUS init = MH_Initialize();
+		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
+		{
+			Logger::Get().WriteLine(LogLevel::Error,
+				"CodePatches: %s MH_Initialize failed (%d) - not hooked.", tag, init);
+			return false;
+		}
+		if (MH_CreateHook(target, detour, orig) != MH_OK
+			|| MH_EnableHook(target) != MH_OK)
+		{
+			Logger::Get().WriteLine(LogLevel::Error,
+				"CodePatches: %s failed to hook 0x%08X (%p).",
+				tag, static_cast<uint32_t>(va), target);
+			return false;
+		}
+		return true;
+	}
+
 	// TOOLTIP WRAP WIDTH (task #41, 2026-07-29). The tip layer (window
 	// 0x2AAB8CC1, class 0x00AB6770) code-paints the whole tooltip; its Plot
 	// override 0x798710 wraps/measures the tip text against a HARDCODED
@@ -1633,27 +1694,20 @@ namespace CodePatches
 		if (factor <= 1.001f) { return 0; }
 		gRegionTileFactor = factor;
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-		void* target = reinterpret_cast<void*>(kRegionBuildFn + (base - kImageBase));
-
-		MH_Initialize(); // harmless if already initialised
-		if (MH_CreateHook(target, reinterpret_cast<void*>(&RegionBuildThunk),
-				reinterpret_cast<void**>(&gRegionBuildOrig)) != MH_OK ||
-			MH_EnableHook(target) != MH_OK)
+		// Prologue not pinned yet (audit B5): the install logs the live bytes.
+		if (!HookVerified("REGIONTILE sub_7AE3D0", kRegionBuildFn, nullptr, 0,
+				reinterpret_cast<void*>(&RegionBuildThunk),
+				reinterpret_cast<void**>(&gRegionBuildOrig)))
 		{
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"CodePatches: REGIONTILE failed to hook sub_7AE3D0 at %p - region"
-				" tiles stay stock.", target);
-			gRegionTileFactor = 0.0f;
+			gRegionTileFactor = 0.0f;   // region tiles stay stock
 			return 0;
 		}
 		Logger::Get().WriteLine(
 			LogLevel::Info,
-			"CodePatches: REGIONTILE hook installed on sub_7AE3D0 %p (factor %.2f)."
+			"CodePatches: REGIONTILE hook installed on sub_7AE3D0 (factor %.2f)."
 			" Tiles grow inside the game's own rebuild, so the composite and the"
 			" click mask are generated at the new size too.",
-			target, factor);
+			factor);
 		return 1;
 	}
 
@@ -2032,25 +2086,19 @@ namespace CodePatches
 
 	int ApplyRegionZoomHook()
 	{
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-		void* target = reinterpret_cast<void*>(kRegionItemBuildFn + (base - kImageBase));
-		MH_Initialize(); // harmless if already initialised
-		if (MH_CreateHook(target, reinterpret_cast<void*>(&ItemBuildThunk),
-				reinterpret_cast<void**>(&gItemBuildOrig)) != MH_OK ||
-			MH_EnableHook(target) != MH_OK)
+		// Prologue not pinned yet (audit B5): the install logs the live bytes.
+		if (!HookVerified("REGIONZOOM sub_7AE510", kRegionItemBuildFn, nullptr, 0,
+				reinterpret_cast<void*>(&ItemBuildThunk),
+				reinterpret_cast<void**>(&gItemBuildOrig)))
 		{
-			Logger::Get().WriteLine(
-				LogLevel::Info,
-				"CodePatches: REGIONZOOM failed to hook sub_7AE510 at %p - zoom"
-				" stays off (the tier scale is unaffected).", target);
-			gItemBuildOrig = nullptr;
+			gItemBuildOrig = nullptr;   // zoom stays off; the tier scale is unaffected
 			return 0;
 		}
 		Logger::Get().WriteLine(
 			LogLevel::Info,
-			"CodePatches: REGIONZOOM hook installed on sub_7AE510 %p. It snapshots"
+			"CodePatches: REGIONZOOM hook installed on sub_7AE510. It snapshots"
 			" each item's four pristine bitmaps so every zoom level rebuilds from"
-			" the same origin instead of compounding.", target);
+			" the same origin instead of compounding.");
 		return 1;
 	}
 
@@ -2661,37 +2709,19 @@ namespace CodePatches
 	{
 		if (gCustomTunesInstalled) { return; }
 		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-		const uintptr_t delta = base - kImageBase;
-		void* target = reinterpret_cast<void*>(kSetColumnWidthVa + delta);
-		if (memcmp(target, kSetColumnWidthStock, sizeof(kSetColumnWidthStock)) != 0)
+		gCustomTunesRet = kCustomTunesRetVa + (base - kImageBase);   // read by the detour
+		if (!HookVerified("Custom Tunes SetColumnWidth", kSetColumnWidthVa,
+				kSetColumnWidthStock, sizeof(kSetColumnWidthStock),
+				reinterpret_cast<void*>(&SetColumnWidthDetour),
+				reinterpret_cast<void**>(&gSetColumnWidthOrig)))
 		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: Custom Tunes - SetColumnWidth prologue mismatch at "
-				"%p - skipped (the column stays stock).", target);
-			return;
-		}
-		gCustomTunesRet = kCustomTunesRetVa + delta;
-		const MH_STATUS init = MH_Initialize();
-		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
-		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: Custom Tunes MH_Initialize failed (%d).", init);
-			return;
-		}
-		if (MH_CreateHook(target, reinterpret_cast<void*>(&SetColumnWidthDetour),
-				reinterpret_cast<void**>(&gSetColumnWidthOrig)) != MH_OK
-			|| MH_EnableHook(target) != MH_OK)
-		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: Custom Tunes failed to hook SetColumnWidth at %p.",
-				target);
-			return;
+			return;   // the column stays stock
 		}
 		gCustomTunesInstalled = true;
 		Logger::Get().WriteLine(LogLevel::Info,
 			"CodePatches: Custom Tunes column hook installed on SetColumnWidth "
-			"%p (acts only for the call returning to 0x%08X; the width follows "
-			"the loaded grid, 255 of 289).", target,
+			"0x%08X (acts only for the call returning to 0x%08X; the width follows "
+			"the loaded grid, 255 of 289).", static_cast<uint32_t>(kSetColumnWidthVa),
 			static_cast<uint32_t>(kCustomTunesRetVa));
 	}
 
@@ -4441,36 +4471,17 @@ namespace CodePatches
 			return;
 		}
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-		void* target = reinterpret_cast<void*>(base - kImageBase + kRatingUpdateVa);
-
-		// Verify-before-write, same law as every byte patch in this file.
-		if (memcmp(target, kRatingUpdateStock, sizeof(kRatingUpdateStock)) != 0)
+		if (!HookVerified("RATEANCHOR sub_7E8510", kRatingUpdateVa,
+				kRatingUpdateStock, sizeof(kRatingUpdateStock),
+				reinterpret_cast<void*>(&RatingUpdateDetour),
+				reinterpret_cast<void**>(&gRatingUpdateOrig)))
 		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: RATEANCHOR prologue mismatch at %p - skipped.", target);
-			return;
-		}
-
-		const MH_STATUS init = MH_Initialize();
-		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
-		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: RATEANCHOR MH_Initialize failed (%d).", init);
-			return;
-		}
-		if (MH_CreateHook(target, reinterpret_cast<void*>(&RatingUpdateDetour),
-				reinterpret_cast<void**>(&gRatingUpdateOrig)) != MH_OK
-			|| MH_EnableHook(target) != MH_OK)
-		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: RATEANCHOR failed to hook sub_7E8510 at %p.", target);
 			return;
 		}
 		gAnchorWrite = wantFix;
 		Logger::Get().WriteLine(LogLevel::Info,
-			"CodePatches: RATEANCHOR installed on sub_7E8510 %p (factor %.2f, "
-			"mode %d: %s).", target, static_cast<double>(factor), mode,
+			"CodePatches: RATEANCHOR installed on sub_7E8510 (factor %.2f, "
+			"mode %d: %s).", static_cast<double>(factor), mode,
 			wantFix ? "log + re-anchor" : "log only");
 	}
 
@@ -4956,6 +4967,11 @@ namespace CodePatches
 		volatile LONG gCsiDrawCalls = 0;
 		int gCsiKill = 0;
 		const uintptr_t kCsiDrawVa = 0x0046D990;
+		// sub esp, 0x27C - MEASURED out of the shipped exe 2026-08-31
+		// (research/UNKNOWNS-AND-NEXT-TARGETS.md) and pinned by
+		// _tests/Test-PatchSiteBytes.py. Until the 2026-09-25 audit (B5)
+		// this hook was the one live install with no prologue check.
+		const uint8_t kCsiDrawStock[6] = { 0x81, 0xEC, 0x7C, 0x02, 0x00, 0x00 };
 
 		bool __fastcall CsiDrawDetour(void* self, void* edx, void* a1)
 		{
@@ -4981,17 +4997,10 @@ namespace CodePatches
 			gCsiKill = static_cast<int>(GetPrivateProfileIntW(
 				L"UiSpike", L"CsiKill", 0, ini));
 			if (!always && gCsiKill == 0) { return; }
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void* t = reinterpret_cast<void*>(base - kImageBase + kCsiDrawVa);
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
-			if (MH_CreateHook(t, reinterpret_cast<void*>(&CsiDrawDetour),
-					reinterpret_cast<void**>(&gCsiDrawOrig)) != MH_OK
-				|| MH_EnableHook(t) != MH_OK)
+			if (!HookVerified("CSIDRAW", kCsiDrawVa, kCsiDrawStock, sizeof(kCsiDrawStock),
+					reinterpret_cast<void*>(&CsiDrawDetour),
+					reinterpret_cast<void**>(&gCsiDrawOrig)))
 			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: CSIDRAW failed to hook 0x0046D990.");
 				return;
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -5124,29 +5133,14 @@ namespace CodePatches
 
 		void InstallHighlightProbe()
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void* t = reinterpret_cast<void*>(base - kImageBase + kHighlightVa);
 			// VERIFY BEFORE HOOK. 53 55 57 8B F9 is exactly 5 bytes with no
 			// relative operands, so the jmp rel32 patch and the relocated
 			// prologue are both clean - but only if the bytes are ours.
-			if (memcmp(t, kHighlightStock, sizeof(kHighlightStock)) != 0)
+			if (!HookVerified("HIGHLIGHT", kHighlightVa, kHighlightStock,
+					sizeof(kHighlightStock), reinterpret_cast<void*>(&HighlightDetour),
+					reinterpret_cast<void**>(&gHighlightOrig)))
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: HIGHLIGHT prologue mismatch at 0x%08X - "
-					"NOT installed, occupant highlighting stays stock.",
-					static_cast<unsigned>(kHighlightVa));
-				return;
-			}
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
-			if (MH_CreateHook(t, reinterpret_cast<void*>(&HighlightDetour),
-					reinterpret_cast<void**>(&gHighlightOrig)) != MH_OK
-				|| MH_EnableHook(t) != MH_OK)
-			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: HIGHLIGHT failed to hook 0x005E90E0.");
-				return;
+				return;   // occupant highlighting stays stock
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: HIGHLIGHT armed on occupant SetHighlight "
@@ -5316,26 +5310,11 @@ namespace CodePatches
 
 		void InstallZoneQuadProbe()
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void* t = reinterpret_cast<void*>(base - kImageBase + kZoneQuadVa);
-			if (memcmp(t, kZoneQuadStock, sizeof(kZoneQuadStock)) != 0)
+			if (!HookVerified("ZONEQUAD", kZoneQuadVa, kZoneQuadStock,
+					sizeof(kZoneQuadStock), reinterpret_cast<void*>(&ZoneQuadDetour),
+					reinterpret_cast<void**>(&gZoneQuadOrig)))
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: ZONEQUAD prologue mismatch at 0x%08X - "
-					"NOT installed, the zone wash stays stock.",
-					static_cast<unsigned>(kZoneQuadVa));
-				return;
-			}
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
-			if (MH_CreateHook(t, reinterpret_cast<void*>(&ZoneQuadDetour),
-					reinterpret_cast<void**>(&gZoneQuadOrig)) != MH_OK
-				|| MH_EnableHook(t) != MH_OK)
-			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: ZONEQUAD failed to hook 0x006CC970.");
-				return;
+				return;   // the zone wash stays stock
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: ZONEQUAD armed on the lot-display cell-quad "
@@ -6063,10 +6042,14 @@ namespace CodePatches
 			// Never-repin: both prologues byte-verified before hooking.
 			// 0x7D2990: 8B 54 24 10 56 52 (mov edx,[esp+0x10]; push esi; push edx)
 			// 0x46F240: 81 EC 68 02 00 00 (sub esp,0x268)
-			uint8_t* p1 = reinterpret_cast<uint8_t*>(
-				base - kImageBase + 0x007D2990);
-			uint8_t* p2 = reinterpret_cast<uint8_t*>(
-				base - kImageBase + 0x0046F240);
+			// Both are checked here BEFORE either is hooked, so a half-armed
+			// pair is unreachable; HookVerified then checks each again.
+			const uintptr_t kDqSubmitVa = 0x007D2990;
+			const uintptr_t kDqAddVa = 0x0046F240;
+			const uint8_t* p1 = reinterpret_cast<const uint8_t*>(
+				base - kImageBase + kDqSubmitVa);
+			const uint8_t* p2 = reinterpret_cast<const uint8_t*>(
+				base - kImageBase + kDqAddVa);
 			static const uint8_t kSub[6] = { 0x8B, 0x54, 0x24, 0x10, 0x56, 0x52 };
 			static const uint8_t kAdd[6] = { 0x81, 0xEC, 0x68, 0x02, 0x00, 0x00 };
 			if (memcmp(p1, kSub, 6) != 0 || memcmp(p2, kAdd, 6) != 0)
@@ -6077,14 +6060,12 @@ namespace CodePatches
 					p1[0], p1[1], p2[0], p2[1]);
 				return;
 			}
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
-			if (MH_CreateHook(p1, reinterpret_cast<void*>(&DqSubmitDetour),
-					reinterpret_cast<void**>(&gDqSubmitOrig)) != MH_OK
-				|| MH_EnableHook(p1) != MH_OK
-				|| MH_CreateHook(p2, reinterpret_cast<void*>(&DqAddDetour),
-					reinterpret_cast<void**>(&gDqAddOrig)) != MH_OK
-				|| MH_EnableHook(p2) != MH_OK)
+			if (!HookVerified("DISPATCHQUAD submit", kDqSubmitVa, kSub, sizeof(kSub),
+					reinterpret_cast<void*>(&DqSubmitDetour),
+					reinterpret_cast<void**>(&gDqSubmitOrig))
+				|| !HookVerified("DISPATCHQUAD add", kDqAddVa, kAdd, sizeof(kAdd),
+					reinterpret_cast<void*>(&DqAddDetour),
+					reinterpret_cast<void**>(&gDqAddOrig)))
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: DISPATCHQUAD hook install FAILED.");
@@ -6812,31 +6793,10 @@ namespace CodePatches
 				static_cast<double>(gDotSize), static_cast<double>(raw));
 			if (gDotSize <= 0.0f) { return; }
 
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void* ds = reinterpret_cast<void*>(base - kImageBase + kDotSizeVa);
-			if (memcmp(ds, kDotSizeStock, sizeof(kDotSizeStock)) != 0)
+			if (!HookVerified("DOTSIZE", kDotSizeVa, kDotSizeStock, sizeof(kDotSizeStock),
+					reinterpret_cast<void*>(&DotSizeDetour), &gDotSizeTramp))
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: DOTSIZE prologue mismatch at 0x%08X - NOT "
-					"installed, the route dots stay stock.",
-					static_cast<unsigned>(kDotSizeVa));
-				return;
-			}
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
-			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: DOTSIZE MH_Initialize failed (%d).", init);
-				return;
-			}
-			if (MH_CreateHook(ds, reinterpret_cast<void*>(&DotSizeDetour),
-					&gDotSizeTramp) != MH_OK
-				|| MH_EnableHook(ds) != MH_OK)
-			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: DOTSIZE failed to hook 0x005F7810.");
-				return;
+				return;   // the route dots stay stock
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
 				"CodePatches: DOTSIZE armed on the class-B rebuild 0x005F7810, "
@@ -6936,24 +6896,10 @@ namespace CodePatches
 
 		void InstallNborArrowProbe()
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void* t = reinterpret_cast<void*>(base - kImageBase + kNborArrowVa);
-			if (memcmp(t, kNborArrowStock, sizeof(kNborArrowStock)) != 0)
+			if (!HookVerified("NBORARROW", kNborArrowVa, kNborArrowStock,
+					sizeof(kNborArrowStock), reinterpret_cast<void*>(&NborArrowDetour),
+					&gNborArrowTramp))
 			{
-				Logger::Get().WriteLine(LogLevel::Info,
-					"CodePatches: NBORARROW prologue mismatch at 0x%08X - "
-					"NOT installed.", static_cast<unsigned>(kNborArrowVa));
-				return;
-			}
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
-			if (MH_CreateHook(t, reinterpret_cast<void*>(&NborArrowDetour),
-					&gNborArrowTramp) != MH_OK
-				|| MH_EnableHook(t) != MH_OK)
-			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: NBORARROW failed to hook 0x006D4860.");
 				return;
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -8074,22 +8020,10 @@ namespace CodePatches
 		{
 			if (gArtFetchArmed) { return; }   // constructor + PostAppInit both call
 			gArtFetchArmed = true;
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void* f = reinterpret_cast<void*>(base - kImageBase + kArtFetchVa);
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
+			// Prologue not pinned yet (audit B5): the install logs the live bytes.
+			if (!HookVerified("ARTFETCH", kArtFetchVa, nullptr, 0,
+					reinterpret_cast<void*>(&ArtFetchDetour), &gArtFetchTramp))
 			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: ARTFETCH MH_Initialize failed (%d).", init);
-				return;
-			}
-			if (MH_CreateHook(f, reinterpret_cast<void*>(&ArtFetchDetour),
-					&gArtFetchTramp) != MH_OK
-				|| MH_EnableHook(f) != MH_OK)
-			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: ARTFETCH failed to hook 0x00602B70.");
 				return;
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -8373,18 +8307,11 @@ namespace CodePatches
 
 		void InstallBalloonBuildProbe()
 		{
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void* f = reinterpret_cast<void*>(
-				base - kImageBase + kBalloonBuildVa);
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
-			if (MH_CreateHook(f, reinterpret_cast<void*>(&BalloonBuildDetour),
-					reinterpret_cast<void**>(&gBalloonBuildOrig)) != MH_OK
-				|| MH_EnableHook(f) != MH_OK)
+			// Prologue not pinned yet (audit B5): the install logs the live bytes.
+			if (!HookVerified("BALLOONKIND", kBalloonBuildVa, nullptr, 0,
+					reinterpret_cast<void*>(&BalloonBuildDetour),
+					reinterpret_cast<void**>(&gBalloonBuildOrig)))
 			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: BALLOONKIND failed to hook 0x004FBFE0.");
 				return;
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -8395,24 +8322,11 @@ namespace CodePatches
 		void InstallBalloonSpriteProbe()
 		{
 			InstallBalloonBuildProbe();
-			const uintptr_t base =
-				reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-			void* f = reinterpret_cast<void*>(
-				base - kImageBase + kSpriteFactoryVa);
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
+			// Prologue not pinned yet (audit B5): the install logs the live bytes.
+			if (!HookVerified("BALLOONSPRITE", kSpriteFactoryVa, nullptr, 0,
+					reinterpret_cast<void*>(&SpriteFactoryDetour),
+					reinterpret_cast<void**>(&gSpriteFactoryOrig)))
 			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: BALLOONSPRITE MH_Initialize failed (%d).",
-					init);
-				return;
-			}
-			if (MH_CreateHook(f, reinterpret_cast<void*>(&SpriteFactoryDetour),
-					reinterpret_cast<void**>(&gSpriteFactoryOrig)) != MH_OK
-				|| MH_EnableHook(f) != MH_OK)
-			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: BALLOONSPRITE failed to hook 0x00505370.");
 				return;
 			}
 			Logger::Get().WriteLine(LogLevel::Info,
@@ -8460,19 +8374,10 @@ namespace CodePatches
 					"CodePatches: SPPROBE prologue mismatch - not installed.");
 				return;
 			}
-			const MH_STATUS init = MH_Initialize();
-			if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
-			{
-				Logger::Get().WriteLine(LogLevel::Error,
-					"CodePatches: SPPROBE MH_Initialize failed (%d).", init);
-				return;
-			}
-			if (MH_CreateHook(q, reinterpret_cast<void*>(&SpQuadDetour),
-					&gSpQuadTramp) != MH_OK
-				|| MH_EnableHook(q) != MH_OK
-				|| MH_CreateHook(t, reinterpret_cast<void*>(&SpTexDetour),
-					&gSpTexTramp) != MH_OK
-				|| MH_EnableHook(t) != MH_OK)
+			if (!HookVerified("SPPROBE quad", kSpQuadVa, kSpQuadStock, sizeof(kSpQuadStock),
+					reinterpret_cast<void*>(&SpQuadDetour), &gSpQuadTramp)
+				|| !HookVerified("SPPROBE tex", kSpTexVa, kSpTexStock, sizeof(kSpTexStock),
+					reinterpret_cast<void*>(&SpTexDetour), &gSpTexTramp))
 			{
 				Logger::Get().WriteLine(LogLevel::Error,
 					"CodePatches: SPPROBE failed to hook - probe absent "
@@ -8484,11 +8389,8 @@ namespace CodePatches
 			// Per-slot capture on the captured balloon class vtables.
 			InstallVtCap();
 			// The drawable's draw forwarder - hooked directly.
-			void* dw = reinterpret_cast<void*>(base - kImageBase + kDrawVa);
-			if (memcmp(dw, kDrawStock, sizeof(kDrawStock)) == 0
-				&& MH_CreateHook(dw, reinterpret_cast<void*>(&SpDrawDetour),
-					&gDrawTramp) == MH_OK
-				&& MH_EnableHook(dw) == MH_OK)
+			if (HookVerified("DRAWCAP", kDrawVa, kDrawStock, sizeof(kDrawStock),
+					reinterpret_cast<void*>(&SpDrawDetour), &gDrawTramp))
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: DRAWCAP armed on 0x005FD2D0 (vt4+0x18 draw "
@@ -8500,11 +8402,8 @@ namespace CodePatches
 					"CodePatches: DRAWCAP NOT armed.");
 			}
 			// The prop binder - the balloon prop names itself at city load.
-			void* bd = reinterpret_cast<void*>(base - kImageBase + kSpBindVa);
-			if (memcmp(bd, kSpBindStock, sizeof(kSpBindStock)) == 0
-				&& MH_CreateHook(bd, reinterpret_cast<void*>(&SpBindDetour),
-					&gSpBindTramp) == MH_OK
-				&& MH_EnableHook(bd) == MH_OK)
+			if (HookVerified("SPPROBE bind", kSpBindVa, kSpBindStock, sizeof(kSpBindStock),
+					reinterpret_cast<void*>(&SpBindDetour), &gSpBindTramp))
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: SPPROBE bind hook armed on 0x00496950.");
@@ -8516,11 +8415,8 @@ namespace CodePatches
 			}
 			// SetTrackedTarget - the STACK-PROVEN click threshold; the
 			// clicked occupant names its class here on every click.
-			void* tg = reinterpret_cast<void*>(base - kImageBase + kSpTargetVa);
-			if (memcmp(tg, kSpTargetStock, sizeof(kSpTargetStock)) == 0
-				&& MH_CreateHook(tg, reinterpret_cast<void*>(&SpTargetDetour),
-					&gSpTargetTramp) == MH_OK
-				&& MH_EnableHook(tg) == MH_OK)
+			if (HookVerified("SPPROBE target", kSpTargetVa, kSpTargetStock, sizeof(kSpTargetStock),
+					reinterpret_cast<void*>(&SpTargetDetour), &gSpTargetTramp))
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: SPPROBE target hook armed on 0x00528580.");
@@ -8533,11 +8429,8 @@ namespace CodePatches
 			// The mayor hover handler - GUARANTEED-LIVE path (proven by the
 			// resolved balloon clicks); hovering the balloon logs its
 			// drawable's class.
-			void* hv = reinterpret_cast<void*>(base - kImageBase + kSpHoverVa);
-			if (memcmp(hv, kSpHoverStock, sizeof(kSpHoverStock)) == 0
-				&& MH_CreateHook(hv, reinterpret_cast<void*>(&SpHoverDetour),
-					&gSpHoverTramp) == MH_OK
-				&& MH_EnableHook(hv) == MH_OK)
+			if (HookVerified("SPPROBE hover", kSpHoverVa, kSpHoverStock, sizeof(kSpHoverStock),
+					reinterpret_cast<void*>(&SpHoverDetour), &gSpHoverTramp))
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: SPPROBE hover hook armed on 0x004D7950.");
@@ -8549,11 +8442,8 @@ namespace CodePatches
 			}
 			// The marker ATTACH choke point - fires at city load for every
 			// marker; the balloon's view class names itself in the log.
-			void* at = reinterpret_cast<void*>(base - kImageBase + kSpAttachVa);
-			if (memcmp(at, kSpAttachStock, sizeof(kSpAttachStock)) == 0
-				&& MH_CreateHook(at, reinterpret_cast<void*>(&SpAttachDetour),
-					&gSpAttachTramp) == MH_OK
-				&& MH_EnableHook(at) == MH_OK)
+			if (HookVerified("SPPROBE attach", kSpAttachVa, kSpAttachStock, sizeof(kSpAttachStock),
+					reinterpret_cast<void*>(&SpAttachDetour), &gSpAttachTramp))
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: SPPROBE attach hook armed on 0x005F7C80.");
@@ -8565,11 +8455,8 @@ namespace CodePatches
 			}
 			// The LIVE balloon builder (the strip at 0x5F5FB0) - the probe
 			// that adjudicates the MARKERZOOM lever.
-			void* st = reinterpret_cast<void*>(base - kImageBase + kMarkerStripVa);
-			if (memcmp(st, kMarkerStripStock, sizeof(kMarkerStripStock)) == 0
-				&& MH_CreateHook(st, reinterpret_cast<void*>(&SpStripDetour),
-					&gSpStripTramp) == MH_OK
-				&& MH_EnableHook(st) == MH_OK)
+			if (HookVerified("SPPROBE strip", kMarkerStripVa, kMarkerStripStock, sizeof(kMarkerStripStock),
+					reinterpret_cast<void*>(&SpStripDetour), &gSpStripTramp))
 			{
 				Logger::Get().WriteLine(LogLevel::Info,
 					"CodePatches: SPPROBE strip hook armed on 0x005F5FB0.");
@@ -9182,31 +9069,11 @@ namespace CodePatches
 		// mov esi,ecx - dumped from the exe 2026-08-24).
 		static const uint8_t kProlog[7] =
 			{ 0x8B, 0x44, 0x24, 0x04, 0x56, 0x8B, 0xF1 };
-		if (memcmp(reinterpret_cast<const void*>(kSetFontStyleByGuid),
-				kProlog, sizeof(kProlog)) != 0)
-		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: FONTGUID REFUSED (prologue mismatch at "
-				"0x009C16FD) - nothing armed.");
-			return;
-		}
-		const MH_STATUS init = MH_Initialize();
-		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
-		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: FONTGUID REFUSED (MinHook init %d) - nothing "
-				"armed.", static_cast<int>(init));
-			return;
-		}
-		if (MH_CreateHook(reinterpret_cast<void*>(kSetFontStyleByGuid),
+		if (!HookVerified("FONTGUID", kSetFontStyleByGuid, kProlog, sizeof(kProlog),
 				reinterpret_cast<void*>(&FontGuidDetour),
-				reinterpret_cast<void**>(&gFontGuidOrig)) != MH_OK
-			|| MH_EnableHook(
-				reinterpret_cast<void*>(kSetFontStyleByGuid)) != MH_OK)
+				reinterpret_cast<void**>(&gFontGuidOrig)))
 		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: FONTGUID failed to hook 0x009C16FD.");
-			return;
+			return;   // nothing armed
 		}
 		Logger::Get().WriteLine(LogLevel::Info,
 			"CodePatches: FONTGUID armed on SetFontStyleByGUID 0x009C16FD "
@@ -9403,35 +9270,17 @@ namespace CodePatches
 		// as it does today.
 		LoadEffectFilterConfig();
 
-		const uintptr_t base = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
-		void* target = reinterpret_cast<void*>(base - kImageBase + kCreateEffectVa);
-		if (memcmp(target, kCreateEffectStock, sizeof(kCreateEffectStock)) != 0)
+		if (!HookVerified("BUBBLEFX CreateEffectByName", kCreateEffectVa,
+				kCreateEffectStock, sizeof(kCreateEffectStock),
+				reinterpret_cast<void*>(&CreateEffectDetour),
+				reinterpret_cast<void**>(&gCreateEffectOrig)))
 		{
-			Logger::Get().WriteLine(LogLevel::Info,
-				"CodePatches: BUBBLEFX prologue mismatch at %p - skipped.",
-				target);
-			return;
-		}
-		const MH_STATUS init = MH_Initialize();
-		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
-		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: BUBBLEFX MH_Initialize failed (%d).", init);
-			return;
-		}
-		if (MH_CreateHook(target, reinterpret_cast<void*>(&CreateEffectDetour),
-				reinterpret_cast<void**>(&gCreateEffectOrig)) != MH_OK
-			|| MH_EnableHook(target) != MH_OK)
-		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: BUBBLEFX failed to hook CreateEffectByName at "
-				"%p.", target);
 			return;
 		}
 		gBubbleStack = (mode >= 3);
 		Logger::Get().WriteLine(LogLevel::Info,
-			"CodePatches: BUBBLEFX installed on CreateEffectByName %p "
-			"(scale %.2f, mode %d: %s).", target,
+			"CodePatches: BUBBLEFX installed on CreateEffectByName 0x%08X "
+			"(scale %.2f, mode %d: %s).", static_cast<uint32_t>(kCreateEffectVa),
 			static_cast<double>(want), mode,
 			wantFix ? "log + scale" : "log only");
 	}
@@ -9840,15 +9689,12 @@ namespace CodePatches
 				static_cast<unsigned>(tva));
 			return;
 		}
-		const MH_STATUS init = MH_Initialize();
-		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED) { return; }
-		if (MH_CreateHook(target, reinterpret_cast<void*>(&AddViewObjDetour),
-				reinterpret_cast<void**>(&gAddViewOrig)) != MH_OK
-			|| MH_EnableHook(target) != MH_OK)
+		// The slot is resolved at run time, so the prologue is logged, not
+		// pinned: the bound check above is what refuses a wrong slot.
+		if (!HookVerified("VIEWOBJ AddViewObject", tva, nullptr, 0,
+				reinterpret_cast<void*>(&AddViewObjDetour),
+				reinterpret_cast<void**>(&gAddViewOrig)))
 		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: VIEWOBJ failed to hook AddViewObject at "
-				"0x%08X.", static_cast<unsigned>(tva));
 			return;
 		}
 		// The list ENUMERATOR, driven off Draw (vt+0x54) - this is the one
@@ -9859,9 +9705,9 @@ namespace CodePatches
 			const uintptr_t dva =
 				reinterpret_cast<uintptr_t>(dr) - base + kImageBase;
 			if (dva >= 0x401000 && dva <= 0xA80000
-				&& MH_CreateHook(dr, reinterpret_cast<void*>(&RenderDrawDetour),
-					reinterpret_cast<void**>(&gRenderDrawOrig)) == MH_OK
-				&& MH_EnableHook(dr) == MH_OK)
+				&& HookVerified("VIEWLIST Draw", dva, nullptr, 0,
+					reinterpret_cast<void*>(&RenderDrawDetour),
+					reinterpret_cast<void**>(&gRenderDrawOrig)))
 			{
 				gDrawHooked = true;
 				Logger::Get().WriteLine(LogLevel::Info,
@@ -9923,20 +9769,10 @@ namespace CodePatches
 				"(0x%08X) - not installed.", static_cast<uint32_t>(tva));
 			return;
 		}
-		const MH_STATUS init = MH_Initialize();
-		if (init != MH_OK && init != MH_ERROR_ALREADY_INITIALIZED)
+		if (!HookVerified("PICKPROBE Pick", tva, nullptr, 0,
+				reinterpret_cast<void*>(&PickDetour),
+				reinterpret_cast<void**>(&gPickOrig)))
 		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: PICKPROBE MH_Initialize failed (%d).", init);
-			return;
-		}
-		if (MH_CreateHook(target, reinterpret_cast<void*>(&PickDetour),
-				reinterpret_cast<void**>(&gPickOrig)) != MH_OK
-			|| MH_EnableHook(target) != MH_OK)
-		{
-			Logger::Get().WriteLine(LogLevel::Error,
-				"CodePatches: PICKPROBE failed to hook Pick at 0x%08X.",
-				static_cast<uint32_t>(tva));
 			return;
 		}
 		gPickInstalled = true;

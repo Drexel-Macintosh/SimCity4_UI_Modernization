@@ -4,7 +4,10 @@
 // Targeted byte patches into SimCity 4.exe (1.1.641) for controls whose
 // geometry is hardcoded in the drawing code and unreachable through the
 // cIGZWin tree or data files. Every site is byte-verified before writing;
-// a mismatch (wrong exe build) skips that patch with a log line.
+// a mismatch (wrong exe build) skips that patch with a log line. MinHook
+// detours install through HookVerified (CodePatches.cpp), which compares the
+// pinned prologue first; the eight whose prologue is not pinned yet (five
+// fixed VAs, three vtable-resolved probe slots) log their live bytes instead.
 namespace CodePatches
 {
 	// v4.10.0: SEH-guarded pointer read for hooked-slot probes in other
