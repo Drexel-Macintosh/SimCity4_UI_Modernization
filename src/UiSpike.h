@@ -219,8 +219,6 @@ private:
 	void ScaleGodFlyouts(class cIGZWin* pView, float f);
 	int ScalePanelRoot(class cIGZWin* win, int32_t frameW, int32_t frameH, float f);
 	void RegionWatchTick(unsigned int nowTickMs);
-	void DialogDockTick(class cIGZWin* pMainWindow, class cIGZWin* pRegion,
-		int32_t screenW, int32_t screenH);
 	void ScaleMenuFlyouts(class cIGZWin* pMenu, int32_t screenW, int32_t screenH, float f);
 
 	const Settings& settings;

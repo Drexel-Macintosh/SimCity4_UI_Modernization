@@ -106,7 +106,6 @@ void Settings::Load(const wchar_t* iniPath)
 	spikeCheatDialogPatch = gi(spike, "CheatDialogPatch", spikeCheatDialogPatch);
 	spikeRestoreToolbarsPatch = gi(spike, "RestoreToolbarsPatch", spikeRestoreToolbarsPatch);
 	spikeDataViewLegendPatch = gi(spike, "DataViewLegendPatch", spikeDataViewLegendPatch);
-	spikeDockDialogs = gi(spike, "DockDialogs", spikeDockDialogs ? 1 : 0) != 0;
 
 	logLevel = gi(logging, "LogLevel", logLevel);
 	if (logLevel < 0) { logLevel = 0; }

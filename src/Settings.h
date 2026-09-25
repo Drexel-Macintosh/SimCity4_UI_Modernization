@@ -390,10 +390,6 @@ struct Settings
 	                                  // ourselves (cIGZFont) - the engine
 	                                  // lays that text out once, at creation,
 	                                  // against an unscaled 1000px bound
-	bool spikeDockDialogs = false;    // EXPERIMENTAL runtime region-dialog
-	                                  // scale+dock; malforms list/slider
-	                                  // dialogs (proven) - static .UI scaling
-	                                  // is the shipping path
 
 	// ---- DEV-ONLY PROBE KEYS - deliberately NOT members of this struct ----
 	// Every probe key in this project is resolved by the code that installs

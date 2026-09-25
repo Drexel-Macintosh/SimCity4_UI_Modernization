@@ -5931,28 +5931,6 @@ namespace
 		return false;
 	}
 
-	// Region DIALOG DOCKING (user feedback 2026-07-21): these transients are
-	// .UI-placed at fixed 800x600-era design coords, so at native res they
-	// open small and detached from the buttons that spawn them. Each one is
-	// scaled 2x once per appearance and MOVED under its spawn button
-	// (position computed from the live, already-doubled flyout geometry).
-	// Dialog root ids recovered from the .UI scripts by caption.
-	struct DialogDock
-	{
-		uint32_t dialogId;
-		uint32_t flyoutId;  // region-host child hosting the spawn button
-		uint32_t buttonId;
-	};
-	const DialogDock kRegionDialogDocks[] = {
-		{ 0x4A5BA0E7, 0x09EBEE45, 0x2A5B0001 }, // Load Region   <- open-folder
-		{ 0xEA5BA0D1, 0x09EBEE45, 0x2A5B0000 }, // Create Region <- new-region
-		{ 0x6A5BA20C, 0x09EBEE45, 0x2A5B0002 }, // Delete Region <- trash
-		{ 0x2A57DB82, 0x09EBEE60, 0x0A5510A9 }, // Play Options  <- gears
-		{ 0xEA53F5DB, 0x09EBEE60, 0xA98F4F88 }, // Audio Options <- speaker
-		{ 0x2A57CB82, 0x09EBEE60, 0x098F4F6C }, // Graphic Opts  <- monitor
-	};
-	const int kDialogDockCount =
-		static_cast<int>(sizeof(kRegionDialogDocks) / sizeof(kRegionDialogDocks[0]));
 
 	// Rounding-correct scaling. Truncation happens to be exact at f=2.0
 	// (bit-identical results) but drifts at non-integer factors (1.5x).
@@ -18238,152 +18216,6 @@ void UiSpike::IncrementalPass()
 
 namespace
 {
-	// Absolute-position lookup: DFS from `root` (whose absolute origin is
-	// baseX/baseY), accumulating child offsets. Read-only, safe calls only.
-	bool FindAbsolute(cIGZWin* root, uint32_t id, int32_t baseX, int32_t baseY,
-		int depth, cIGZWin** out, int32_t* absX, int32_t* absY)
-	{
-		if (depth > 4)
-		{
-			return false;
-		}
-		ChildSnapshot snap = {};
-		root->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &snap);
-		for (int i = 0; i < snap.count; i++)
-		{
-			cIGZWin* c = snap.wins[i];
-			const int32_t cx = baseX + c->GetL();
-			const int32_t cy = baseY + c->GetT();
-			if (c->GetID() == id)
-			{
-				*out = c;
-				*absX = cx;
-				*absY = cy;
-				return true;
-			}
-			if (FindAbsolute(c, id, cx, cy, depth + 1, out, absX, absY))
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-}
-
-void UiSpike::DialogDockTick(cIGZWin* pMainWindow, cIGZWin* pRegion,
-	int32_t screenW, int32_t screenH)
-{
-	const float f = settings.spikeScaleFactor;
-
-	for (int i = 0; i < kDialogDockCount; i++)
-	{
-		const DialogDock& d = kRegionDialogDocks[i];
-		cIGZWin* pDlg = pMainWindow->GetChildWindowFromIDRecursive(d.dialogId);
-		if (!pDlg || !pDlg->IsVisible())
-		{
-			dialogDocked[i] = false; // closed: re-scale + re-dock on reopen
-			continue;
-		}
-
-		// Scale 2x, idempotent (same record machinery as panels). The game
-		// recreates/resets dialogs at design size each open; the origin-
-		// anchored records prevent compounding.
-		const ScaleState state = Classify(pDlg);
-		if (state == ScaleState::Fresh)
-		{
-			// Same recycled-address hazard as panel roots (REGION-SWITCH.md:
-			// dialog descendant counts rot 8/7/6 across reopens without this).
-			PurgeSubtreeRecords(pDlg, 0);
-		}
-		bool newlyScaled = false;
-		if (state == ScaleState::Fresh || state == ScaleState::ResetToOriginal)
-		{
-			const int32_t l = pDlg->GetL();
-			const int32_t t = pDlg->GetT();
-			const int32_t w = pDlg->GetW();
-			const int32_t h = pDlg->GetH();
-			const int32_t newW = ScaleRound(l + w, f) - ScaleRound(l, f);
-			const int32_t newH = ScaleRound(t + h, f) - ScaleRound(t, f);
-			if (newW > screenW || newH > screenH)
-			{
-				ScaleRecord dead = { pDlg->GetID(), w, h, w, h, 0, true };
-				scaleMap[pDlg] = dead;
-				continue;
-			}
-			passScreenW = screenW;
-			passScreenH = screenH;
-			pDlg->SetW(newW);
-			pDlg->SetH(newH);
-
-			ScaleRecord rec = { pDlg->GetID(), w, h, newW, newH, 0, false };
-			rec.origL = l;
-			rec.origT = t;
-			rec.hasOrigPos = true;
-			StoreScaleRecord(pDlg, rec);
-
-			int cnt = 0;
-			ChildSnapshot snap = {};
-			pDlg->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &snap);
-			int verifiedAtCnt = cnt;   // #117: see ScaleSubtree's child loop
-			for (int j = 0; j < snap.count; j++)
-			{
-				if (j > 0 && cnt != verifiedAtCnt)
-				{
-					ChildSnapshot verify = {};
-					pDlg->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &verify);
-					// v2.69.3: mid-loop signal reset REMOVED (unsound - see ScaleSubtree).
-					bool alive = false;
-					for (int k = 0; k < verify.count; k++)
-					{
-						if (verify.wins[k] == snap.wins[j]) { alive = true; break; }
-					}
-					if (!alive)
-					{
-						continue;
-					}
-				}
-				ScaleSubtree(snap.wins[j], f, 1, &cnt);
-			}
-			newlyScaled = true;
-			Logger::Get().WriteLine(
-				LogLevel::Debug,
-				"UiSpike: dialog 0x%08X scaled (%d,%d %dx%d) -> %dx%d, %d descendants.",
-				d.dialogId, l, t, w, h, newW, newH, cnt);
-		}
-
-		if (newlyScaled || !dialogDocked[i])
-		{
-			// Dock under the spawn button: centered on it, just below, on
-			// screen. Button absolute position comes from the LIVE flyout
-			// geometry (already doubled; valid even while the flyout is
-			// hidden - region flyouts are pre-scaled).
-			cIGZWin* pFly = pRegion->GetChildWindowFromID(d.flyoutId);
-			cIGZWin* pBtn = nullptr;
-			int32_t bx = 0;
-			int32_t by = 0;
-			if (pFly && FindAbsolute(pFly, d.buttonId,
-				pFly->GetL(), pFly->GetT(), 0, &pBtn, &bx, &by))
-			{
-				int32_t tx = bx + pBtn->GetW() / 2 - pDlg->GetW() / 2;
-				int32_t ty = by + pBtn->GetH() + 8;
-				if (tx + pDlg->GetW() > screenW) tx = screenW - pDlg->GetW();
-				if (tx < 0) tx = 0;
-				if (ty + pDlg->GetH() > screenH) ty = screenH - pDlg->GetH();
-				if (ty < 0) ty = 0;
-				pDlg->GZWinMoveTo(tx - pDlg->GetL(), ty - pDlg->GetT());
-				pDlg->InvalidateSelfAndParents();
-				dialogDocked[i] = true;
-				Logger::Get().WriteLine(
-					LogLevel::Debug,
-					"UiSpike: dialog 0x%08X docked at (%d,%d) under button 0x%08X.",
-					d.dialogId, tx, ty, d.buttonId);
-			}
-		}
-	}
-}
-
-namespace
-{
 	// #131 PROBE (v2.78.1). The REGIONCAM byte patch TOOK - its log line
 	// prints `0.2500 -> 0.7500` - and the region did not move on screen, so
 	// the question is no longer "is the value right" but "is this the
@@ -19291,18 +19123,12 @@ void UiSpike::RegionWatchTick(unsigned int nowTickMs)
 	// region screen stays up.
 	ScalePanelsUnder(pRegion, "region");
 
-	// Transient dialogs: RUNTIME docking is off by default. These dialogs
-	// carry game-generated scrolling lists (the Audio playlist), slider and
-	// radio-grid controls, and LIVE content the game re-lays-out every frame -
-	// tree-scaling them malforms the internal layout and fights the game's
-	// per-frame reset (jumpy). The correct path is STATIC .UI script scaling
-	// (double area=/imagerect in the dialog scripts, ship in the art dat, let
-	// the game create + place them). Docking code kept for that positioning
-	// work; enable with [UiSpike] DockDialogs=1 only for experiments.
-	if (settings.spikeDockDialogs)
-	{
-		DialogDockTick(pMainWindow, pRegion, pRegion->GetW(), pRegion->GetH());
-	}
+		// Transient dialogs are NOT docked at runtime. They carry game-generated
+		// scrolling lists (the Audio playlist), slider and radio-grid controls,
+		// and LIVE content the game re-lays-out every frame - tree-scaling them
+		// malformed the layout and fought the game's per-frame reset (jumpy).
+		// Static .UI script scaling is the shipping path. (The experimental
+		// DockDialogs=1 path was removed in the 2026-09-25 audit, B1.)
 }
 
 void UiSpike::ScaleMenuFlyouts(cIGZWin* pMenu, int32_t screenW, int32_t screenH, float f)

@@ -3260,10 +3260,11 @@ def main():
     a("  every clone IID here was collision-checked against its planned clones (%d fell"
       % len(fallback_clones))
     a("  back to `^ 0x53430002` for exactly that reason). The two dats coexist.")
-    a("- Runtime scaling/docking of the region-dialog roots (UiSpike kRegionDialogDocks:")
+    a("- Runtime scaling/docking of the region-dialog roots (")
     a("  " + ", ".join(sorted({fmt_id(d["root_id"]) for d in per_dialog
                                if d["root_id"] is not None})) + ")")
-    a("  must remain disabled, or the dialogs get doubled twice.")
+    a("  would double them twice; the DLL's experimental DockDialogs path that")
+    a("  did it was removed (audit 2026-09-25), so nothing can re-enable it.")
     a("- The doubled FontStyle.ini must be deployed (it is) for the font step to show.")
     a("")
     a("## Revert")
