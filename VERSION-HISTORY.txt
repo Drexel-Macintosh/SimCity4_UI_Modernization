@@ -1,12 +1,15 @@
-SC4UIScale 4.10.3 (not released) - the efficiency and simplification audit
+SC4UIScale 4.10.3 (2026-09-25) - the efficiency and simplification audit
 ================================================================================
 
-A build of the 2026-09-25 audit (research\AUDIT-2026-09-25-EFFICIENCY.md): less
-work per tick and at boot, a smaller release zip, and 1,743 fewer lines of
-source. NOT RELEASED. The first part was checked in the running game; the rest
-is built and gated but has not run in the game or on Windows yet. The audit's
-STATUS section lists every item with its commit, its proof and the checks
-still to run.
+The 2026-09-25 audit (research\AUDIT-2026-09-25-EFFICIENCY.md): less work per
+tick and at boot, a smaller release zip, and 1,743 fewer lines of source.
+RELEASED 2026-09-25 after a Windows run of the whole audit branch (MSVC build
+clean; 30 offline gates, 2 known reds; three gate fixes, commit 5ce5b8d) and
+two in-game sessions at 3x (20:26 on the branch, 20:32 an A/B on the pre-merge
+main): IDWALK 2,048 batched walks, 0 disagreed; tick 0.54 ms (0.81 at the
+start of the day); SpinProbe fix-only at shutdown; the user checked panels,
+dialogs, Graphic Options and Data Views. The audit's STATUS section lists every
+item with its commit and proof.
 
 Checked in the game (2026-09-25, 12:29-12:43):
 - The city dock is scaled before its first paint. EarlyDock now defaults to 2,

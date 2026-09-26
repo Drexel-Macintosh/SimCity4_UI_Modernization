@@ -1,18 +1,16 @@
 # Changelog
 
-## 4.10.3 (not released) - less work per tick and at boot
+## 4.10.3 (2026-09-25) - less work per tick and at boot
 
-**Not released yet. The city dock is scaled before it first paints, the
-per-tick sweep and the boot do less work, and the release zip is about 27.6 MB
-smaller. The art and fonts are unchanged. The first three points below were
-checked in the game; the rest is built and tested offline, not yet in the
-game.**
+**The city dock is scaled before it first paints, the per-tick sweep and the
+boot do less work, and the release zip is about 27.6 MB smaller. The art and
+fonts are unchanged. Checked in the game on Windows at 3x and 2x.**
 
 - **The city dock no longer paints at 1x first.** The early dock scaling,
   half of an earlier fix, had shipped switched off. It is on by default now.
   In the game, the dock was scaled a tenth to a third of a second after the
   city opened, with no flash.
-- **Less work on every tick.** The per-tick sweep went from 0.81 to 0.68 ms in
+- **Less work on every tick.** The per-tick sweep went from 0.81 to 0.54 ms in
   the game.
 - **Less work at every boot.** The layout package is no longer re-copied, and
   the state files are written only when they change.
@@ -29,6 +27,10 @@ game.**
   installing; the few with no recorded bytes yet log them so they can be
   pinned. Code patches keep the code page executable.
 - **Smaller download.** The zip no longer carries a second copy of the 2x art.
+- **A quieter log.** The city minimap no longer writes the same line on every
+  tick (about 35 lines a second before).
+- **Known, unchanged:** at 3x the Data Views map is 512 px inside its 768 px
+  frame (the engine only bakes it at power-of-two sizes); 2x fills it.
 
 ## 4.10.2 (2026-09-25) - submenu rings stay on the button that opened them
 
