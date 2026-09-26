@@ -23142,3 +23142,40 @@ That output comparison had a hole, and item 3 went through it. In this container
 - lookup.py finds the same source lines, plus one: it now reads every UiSpike* file, including UiSpike.h. One comment line changed owner in its report: ScaleRound's comment, now in UiSpikeInternal.h, is attributed to the `LiveTuneIniPath` prototype above it, because lookup's heuristic picks the nearest declaration above a line.
 
 **Lesson.** A gate that names the file it reads loses coverage silently when the code moves. When code moves, list every script that reads it before moving, and diff their whole output after. Then check that each one actually reached the code: a tool that stops at a missing input prints the same thing before and after.
+
+### 20:45 - RELEASED: v4.10.3 (https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/tag/v4.10.3)
+
+The user: "merge all changes and cut the release".
+
+- **Merge.** `claude/laughing-wright-xzzreh` was fast-forwarded into main at `5ce5b8d`. That covers the cloud session's 34 audit commits, plus this machine's Windows-run fixes:
+  - IniCache now copies quoted values as real Windows does, not as Wine does;
+  - the parity gate is scoped, and `check_call_sites.py` proves the DLL issues none of the waived queries;
+  - the crosscheck and id_collisions gates follow two renames.
+- **In game, at 3x:**
+  - **The branch session (20:26):**
+    - IDWALK: 2,048 batched walks, 0 disagreed.
+    - `tick.incr`: 0.54 ms (0.81 at the start of the day).
+    - SpinProbe ran fix-only.
+  - **The A/B on the pre-merge main (20:32):**
+    - the 3x Data Views fill is identical, `DVMAP 768x768 -> 512`. It is pre-existing, and the user shelved it.
+    - the per-tick MINIMAP snap flood is identical. It is pre-existing and fixed in `dd72ba6`.
+  - **The user:** "All radio buttons work"; at 2x the map fills.
+- **Crash gate.** No exception report since the v4.10.2 release.
+- **Build.** Release commit `61542f4`. The DLL is DEPLOYED == BUILT.
+- **Bundle.**
+  - `SC4UIScale-v4.10.3.zip`: 96,177,900 B, sha256 4EC68524...695B0, published 2026-09-26T00:42:29Z, marked Latest. The uploaded digest equals the local one.
+  - That is 27.6 MB smaller than 4.10.2: `zip_dups.py` finds 0 MB of duplicate payload.
+- **Gates.**
+  - Build-Dist PASS on hard patterns. The 6 soft lines are the word "touch", unchanged.
+  - Test-BinaryPii CLEAN.
+  - Test-FolderDiscovery -Bundle PASS.
+  - Test-DatIntegrity ALL PASS.
+  - Offline gates 28/30: register #7, and DEPLOYED != BUILT before the final copy.
+  - Test-Sc4pacInstall NOT RUN: there is no sc4pac CLI on this machine.
+- **Previous release.** v4.10.2 was deleted per the standing order, and its tag is kept. Before the delete, its local zip was hash-matched to the hosted asset (9b052bd4...); its notes are in `dist\RELEASE-NOTES-v4.10.2.md`.
+- **sc4pac channel.** `gen_channel.py --publish --last-modified 2026-09-26T00:42:29Z` re-hashed 102/102 entries, found 128 files stable, and kept all 208 comment lines. `Test-ChannelYaml` is clear on both files, and the asset answers HTTP 200 at the exact size.
+  - ⚠ Its `-Repo` is the LOCAL repo root: it reads `UISCALE_VERSION_STR` from `<Repo>\src`. The function returns an array, so `@(...)` around it counts an empty result as 1.
+- **Follow-ups.**
+  - Pin the REGIONTILE (`83 EC 20 53 56 57 8B 7C`) and REGIONZOOM (`55 8B EC 83 E4 F8 83 EC`) prologues from the 20:26 log.
+  - The 3x Data Views fill, which is shelved.
+  - Two pre-audit dead links in this file: a capture CSV and the v4.10.1 notes, both local-only. That one is the user's call.
