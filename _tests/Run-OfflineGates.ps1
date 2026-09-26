@@ -29,6 +29,9 @@ $py = @(
     'tools\uimap\emu\emu_subplacetopmb_model.py', 'tools\uimap\crosscheck.py',
     # 2026-09-25 audit: the C++ block tests (find a compiler via tools\dev\find_cxx.py)
     'tools\dev\idwalk\run_idwalk_test.py', 'tools\dev\inicache\run_inicache_parity.py',
+    # the parity gate WAIVES five query classes where IniCache follows Wine, not
+    # Windows; this proves no DLL call site issues one (2026-09-25, Windows run)
+    'tools\dev\inicache\check_call_sites.py',
     # audit B12: the one package list Deploy and Build-Dist both read
     '_tests\Test-PackageFiles.py',
     # the scaling rules' own model, re-derived, plus the tripwires on the

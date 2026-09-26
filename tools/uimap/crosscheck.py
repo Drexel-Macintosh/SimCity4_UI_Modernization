@@ -476,7 +476,11 @@ _V459_HOOKS = ("kCsiDrawVa", "kSpAttachVa", "kSpBindVa", "kSpHoverVa",
                # WRITES, but it writes a float into an OBJECT FIELD ([ecx+0x80])
                # at run time, never into .text - so there is still no patch site
                # here for a constant model to hold.
-               "kHighlightVa", "kZoneQuadVa", "kNborArrowVa", "kDotSizeVa")
+               "kHighlightVa", "kZoneQuadVa", "kNborArrowVa", "kDotSizeVa",
+               # 2026-09-25 (audit B5, 08a01e3): HookVerified gave the
+               # draw-queue probe hooks named VAs. Same shape as every VA
+               # above - a MinHook prologue, no immediate edited.
+               "kDqSubmitVa", "kDqAddVa")
 for _name in _V459_HOOKS:
     SKIPPED[_name] = SKIPPED["_V459_HOOK_VA_DOC"]
 del SKIPPED["_V459_HOOK_VA_DOC"]

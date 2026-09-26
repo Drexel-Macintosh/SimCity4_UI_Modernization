@@ -280,8 +280,10 @@ def main():
                  any(k.split(":")[-1].startswith("kRegionPanelIds@") for k in lists)))
     ctrl.append(("list scan reaches CodePatches.cpp",
                  any(k.startswith("CodePatches.cpp:") for k in lists)))
-    ctrl.append(("list scan finds kHookParents - which idcollide.py never checked",
-                 any(k.split(":")[-1].startswith("kHookParents@") for k in lists)))
+    # The sub-flyout hook-parent list: kHookParents (declared twice) until the
+    # audit B9 dedup (0790456) made it one kSubFlyoutParents, 2026-09-25.
+    ctrl.append(("list scan finds kSubFlyoutParents - which idcollide.py never checked",
+                 any(k.split(":")[-1].startswith("kSubFlyoutParents@") for k in lists)))
     anomalies = cross_group_anomalies(decls)
     ctrl.append(("instance-collapse is sound: no instance spans groups outside "
                  "%s (%d anomalies)" % (sorted(RES_VARIANT_GROUPS), len(anomalies)),

@@ -181,24 +181,22 @@ namespace IniParse
 	}
 
 	// The copy-out: one pair of matching quotes removed, then truncation.
-	// When the buffer is exactly one short of the unquoted value plus its
-	// closing quote, the real API drops the closing quote AND one more
-	// character; that is kept, it is what GetPrivateProfileString returns.
+	// MEASURED ON REAL WINDOWS (2026-09-25): a quoted value "dq" read into
+	// size 3 returns "dq". Wine instead drops one more character when the
+	// buffer is exactly one short of the value plus its closing quote, and
+	// this function used to copy that Wine quirk - the parity harness passed
+	// under Wine and failed on Windows. The quote is stripped first, then
+	// the copy is truncated, as Windows does.
 	inline unsigned long CopyEntry(const wchar_t* value, wchar_t* out, unsigned long size)
 	{
 		if (!out || size == 0) { return 0; }
-		wchar_t quote = 0;
-		if ((value[0] == L'\'' || value[0] == L'"') && value[1] != 0
-			&& value[wcslen(value) - 1] == value[0])
+		size_t len = wcslen(value);
+		if (len >= 2 && (value[0] == L'\'' || value[0] == L'"') && value[len - 1] == value[0])
 		{
-			quote = *value++;
+			std::wstring inner(value + 1, len - 2);
+			return CopyTruncated(inner.c_str(), out, size);
 		}
-		unsigned long got = CopyTruncated(value, out, size);
-		if (quote && size >= wcslen(value) && got > 0)
-		{
-			out[--got] = L'\0';
-		}
-		return got;
+		return CopyTruncated(value, out, size);
 	}
 
 	// The default as the API uses it: trailing spaces removed.
