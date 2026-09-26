@@ -712,10 +712,34 @@ int UiSpike::SnapMiniMapToBake(cIGZWin* pMap, const char* who)
 	// Law 54: say which branch ran and what it chose, every time. A snap that
 	// silently picks the same value it always did is indistinguishable in a log
 	// from one that never ran.
-	Logger::Get().WriteLine(LogLevel::Info,
-		"UiSpike: %s snap terrainDim=%ld slot=%ldx%ld ceiling=%ld -> %ld (%s)",
-		who, (long)terrainDim, (long)curW, (long)curH, (long)ceiling, (long)snap,
-		terrainDim <= want ? "multiple" : "DIVISOR");
+	// ...but the sweep re-checks the dock map on EVERY tick (TryRecreate-
+	// MinimapSurface runs each pass), so an IDENTICAL repeat - same window,
+	// terrain, slot and result - is counted instead of printed, and the count
+	// rides on the next line that does print. Every snap that changes anything
+	// still logs its branch. Before this, ~35 Info lines a second in every city
+	// at the shipped LogLevel=1 (measured 2026-09-25: 382 lines in 380 ticks).
+	struct SnapSeen { cIGZWin* map; int32_t dim, w, h, snap; unsigned repeats; };
+	static SnapSeen s_seen[2] = {};
+	SnapSeen& seen = s_seen[strcmp(who, "UDMAP") == 0 ? 1 : 0];
+	if (seen.map == pMap && seen.dim == terrainDim && seen.w == curW
+		&& seen.h == curH && seen.snap == snap)
+	{
+		++seen.repeats;
+	}
+	else
+	{
+		char rep[64] = "";
+		if (seen.repeats)
+		{
+			snprintf(rep, sizeof(rep), " [previous result repeated %u time(s)]", seen.repeats);
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: %s snap terrainDim=%ld slot=%ldx%ld ceiling=%ld -> %ld (%s)%s",
+			who, (long)terrainDim, (long)curW, (long)curH, (long)ceiling, (long)snap,
+			terrainDim <= want ? "multiple" : "DIVISOR", rep);
+		seen.map = pMap; seen.dim = terrainDim; seen.w = curW; seen.h = curH;
+		seen.snap = snap; seen.repeats = 0;
+	}
 
 	// LEAVING THE WINDOW OVERSIZED IS NOT AN OPTION. Tried 2026-08-06: skip
 	// the resize when only a divisor fits, on the theory that slot 88's stretch
