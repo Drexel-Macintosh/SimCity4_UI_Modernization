@@ -1749,6 +1749,26 @@ namespace CodePatches
 
 	int RegionTileGrown() { return gRegionTileGrown; }
 	float RegionIsoLiveFactor() { return gRegionIsoLiveFactor; }
+
+	float RegionBasisMeasured()
+	{
+		const uintptr_t delta = ExeBase() - kImageBase;
+		float stockVal = 0.0f;
+		memcpy(&stockVal, &kRegionIsoStock[0], 4);
+		uint32_t curBits = 0;
+		// A fixed .data address of the 641 image; the read is guarded anyway,
+		// because the one failure this ruler must never cause is a crash.
+		if (!ProbeSafe::ReadBytes(
+				reinterpret_cast<const void*>(kRegionIsoSites[0] + delta),
+				&curBits, 4)
+			|| stockVal == 0.0f)
+		{
+			return -1.0f;
+		}
+		float cur = 0.0f;
+		memcpy(&cur, &curBits, 4);
+		return cur / stockVal;
+	}
 	int RegionTileDeclined() { return gRegionTileDeclined; }
 
 	// #132 ZOOM: write the isometric basis as stock*factor, ALWAYS.

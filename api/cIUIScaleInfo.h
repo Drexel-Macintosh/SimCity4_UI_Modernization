@@ -17,6 +17,11 @@
 //     }
 //     // false: SC4UIScale is not installed (or older than 4.11.0) - use 1.0.
 //
+// Look it up when you need it and release it straight away. Never hold the
+// pointer past your director's PreAppShutdown: at exit the game unloads every
+// plugin DLL in path order, and a pointer held past SC4UIScale's unload points
+// at code that is gone.
+//
 // THE CONTRACT IS FROZEN. The methods below, their order and their meaning never
 // change. Anything new goes in a new interface with a new IID, so a DLL built
 // against this header keeps working with every later SC4UIScale.
@@ -49,7 +54,8 @@ public:
 	// The region view's map scale right now: screen pixels per stock pixel of the
 	// region map, the player's region zoom included. One region cell, 128 pixels
 	// wide in the stock game, is 128 * this wide on screen. 1.0 when SC4UIScale
-	// does not scale the region view. Changes while the region view is open (the
-	// mouse-wheel zoom), so read it when you need it rather than caching it.
+	// does not scale the region view. First set during SC4UIScale's own
+	// PostAppInit (which may run after yours) and changed by the mouse-wheel
+	// zoom, so read it each time you lay something out on the region view.
 	virtual float GetRegionMapScale() = 0;
 };

@@ -39,10 +39,15 @@ one at a time and registers each DLL's classes when it loads, so a lookup made
 from your constructor or `OnStart` can fail only because SC4UIScale has not
 been loaded yet.
 
+Look the object up when you need it and release it straight away, as the
+sample does; a lookup is cheap. Do not keep the pointer past your director's
+`PreAppShutdown`. At exit the game unloads every plugin DLL in path order
+without asking them first, so a pointer still held when SC4UIScale's DLL is
+unloaded points at code that no longer exists, and releasing it then crashes.
+
 The object is a single static instance inside SC4UIScale. `AddRef` and
-`Release` keep a count but never free it, so an unbalanced `Release` cannot
-pull it out from under another DLL. Release what you get anyway, as GZCOM
-expects.
+`Release` keep a count but never free it, so one `Release` too many cannot
+free an object another DLL holds.
 
 ## The methods
 
@@ -51,7 +56,7 @@ expects.
 | `GetModVersion()` | The SC4UIScale version as `(major << 16) \| (minor << 8) \| patch`. For example, `0x040B00` is 4.11.0. |
 | `GetUIScaleFactor()` | The factor the game's UI is enlarged by: `1.0` when SC4UIScale is not scaling, otherwise the tier (1.5, 2.0 or 3.0 today; treat it as any float). It is fixed for the session, because a new tier takes effect only after a restart. |
 | `IsAutoScale()` | `true` when the factor was picked from the render resolution, `false` when the player set it by hand. |
-| `GetRegionMapScale()` | Screen pixels per stock pixel of the region map, including the player's region zoom. A region cell that is 128 px wide in the stock game is `128 * scale` px wide on screen. `1.0` when SC4UIScale does not scale the region view. It changes when the player zooms the region view, so read it when you need it rather than caching it. |
+| `GetRegionMapScale()` | Screen pixels per stock pixel of the region map, including the player's region zoom. A region cell that is 128 px wide in the stock game is `128 * scale` px wide on screen. `1.0` when SC4UIScale does not scale the region view. It is first set during SC4UIScale's own `PostAppInit`, which may run after yours, and it changes when the player zooms the region view. Read it each time you lay something out on the region view, not once at startup. |
 
 SC4UIScale reports `1.0` in these cases:
 
@@ -98,6 +103,9 @@ is written to `SC4UIScale.log` in SC4UIScale's folder (by default
 ```
 API: cIUIScaleInfo answered through the game's COM (CLSID 0xB54643B5, IID 0xA9885499): version 4.11.0, UI factor 2.00 (auto), region map 2.00. Unknown IID refused: yes.
 ```
+
+The line after it checks those answers against what the session actually
+applied, and reads `API: the answers MATCH this session` when they agree.
 
 A lookup that asks for an interface ID the class does not implement is
 refused. The refusal is logged with that ID (the first eight refusals), so a

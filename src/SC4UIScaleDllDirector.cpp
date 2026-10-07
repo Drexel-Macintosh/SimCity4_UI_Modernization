@@ -1079,8 +1079,18 @@ public:
 		// v4.11.0: prove the cIUIScaleInfo lookup another DLL will make -
 		// through the GAME's COM, after the region basis above is written so
 		// the line names the live region factor. Every tier, stock included:
-		// a stock-tier answer of 1.0 is part of the contract.
-		UIScaleInfo::SelfCheck();
+		// a stock-tier answer of 1.0 is part of the contract. (Never reached
+		// on an unsupported build: OnStart registers no hooks there.)
+		//
+		// The answers are checked against rulers that do not go through
+		// Publish (adversarial review 2026-10-07, finding 3): the UI factor
+		// is the one the geometry patches above are GATED on (spikeScaleAll,
+		// not tierActive), and the region factor is the basis float MEASURED
+		// in the exe, not the bookkeeping GetRegionMapScale reads.
+		UIScaleInfo::SelfCheck(
+			settings.spikeScaleAll ? settings.spikeScaleFactor : 1.0f,
+			settings.spikeAutoScale,
+			CodePatches::RegionBasisMeasured());
 
 		// Stock tier: nothing else runs - no window attach, no subclass,
 		// no timer, no message hooks. The game must be indistinguishable

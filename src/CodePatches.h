@@ -183,9 +183,16 @@ namespace CodePatches
 	int ApplyRegionIsoScale(float factor);
 
 	// The region factor last WRITTEN into the basis (the tier, then each zoom
-	// step and rollback); 0 while the basis is stock. What the region map is
-	// laid out with right now - cIUIScaleInfo::GetRegionMapScale reads it.
+	// step and rollback); 0 until all four basis floats have been written once.
+	// What the region map is laid out with right now - cIUIScaleInfo::
+	// GetRegionMapScale reads it.
 	float RegionIsoLiveFactor();
+
+	// The same factor MEASURED: the first basis float as it sits in the exe
+	// right now, divided by its stock value. Independent of the bookkeeping
+	// above, so it can check it. 1.641 layout only - the caller gates on the
+	// game version; a faulting read returns a negative value.
+	float RegionBasisMeasured();
 
 
 	// v2.37.0 task #78: the Data Views legend. The game re-lays it on EVERY

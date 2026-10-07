@@ -23236,3 +23236,32 @@ IID refused: yes.` - every value matches the boot's own decision
 (`BootState: COHERENT (manual 2.00 ...)`, `REGIONISO x2.00`). Clean shutdown;
 no new exception report. (An earlier launch at 06:14 ran 4.10.3: the deploy had
 not happened yet, so that log has no API line - not a failure.)
+
+**Adversarial review (opus-reviewer; the DeepSeek lane is gone, so one
+vendor).** Nothing blocking; the registration order, the published UI factor
+in every boot configuration (auto, manual, ScaleAll=0 via C1, stock, C0-C7
+repairs, RESMISMATCH), the region value through zoom/clamp/rollback, the COM
+rules and the ABI were checked clean. Four findings, all verified against the
+code and all acted on:
+1. **Exit lifetime.** `cGZCOM::FreeAllLibraries` FreeLibrary's every plugin in
+   path order inside a `__try`, without calling the director - so a consumer
+   that holds our pointer past our unload calls `Release` into unmapped code.
+   Docs (header + `api\README.md`): look it up when needed, release at once,
+   never hold it past your `PreAppShutdown` (directors' hooks run while every
+   plugin is loaded; ours does its own cleanup there).
+2. **Region value timing.** `gRegionIsoLiveFactor` is first written in OUR
+   PostAppInit, whose order against another DLL's is not ours. Docs: read it
+   when laying something out on the region view, not once at startup.
+3. **The self-check could not fail on a wrong value** (the harness covers only
+   the 1.0 row; SelfCheck only proved reachability). SelfCheck now compares the
+   answers with rulers that bypass Publish: the factor the geometry patches are
+   GATED on (`spikeScaleAll ? factor : 1.0`, not `tierActive`), AutoScale, and
+   `CodePatches::RegionBasisMeasured()` - the first basis float read from the
+   exe (through `ProbeSafe::ReadBytes`) divided by its stock value.
+4. A comment claimed the live factor is "0 while the basis is stock"; it is 0
+   until all four floats are written. Reworded.
+
+**In the game again (06:27, the rebuilt DLL, sha256 0f72d65d...b061d0):**
+`API: the answers MATCH this session - UI factor yes (geometry gate applies
+2.00), auto yes, region yes (basis measured x2.000).` Clean shutdown, no new
+exception report.

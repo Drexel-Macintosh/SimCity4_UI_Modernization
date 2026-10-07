@@ -16,7 +16,13 @@ so this is the unsupported-build row), and checks registration, the values,
 QueryInterface and reference counting; a wrong-version run must fail
 (mutation control), and the header must match the frozen contract (a
 reordered copy must fail). In the game: the startup self-check line
-"API: cIUIScaleInfo answered through the game's COM" in SC4UIScale.log.
+"API: cIUIScaleInfo answered through the game's COM" in SC4UIScale.log, and
+the line after it checks the answers against the factor the geometry patches
+are gated on and the region basis measured in the exe ("the answers MATCH this
+session"; 2x manual, 2400x1600). An adversarial review found nothing blocking;
+its four minor findings (exit lifetime and region-value timing in the docs, a
+self-check that could not fail on a wrong value, one comment) were fixed
+before release.
 
 SC4UIScale 4.10.3 (2026-09-25) - the efficiency and simplification audit
 ================================================================================

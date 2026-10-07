@@ -16,6 +16,10 @@ namespace UIScaleInfo
 	void Publish(uint32_t modVersion, float uiFactor, bool autoScale);
 
 	// POSITIVE CONTROL, run once at PostAppInit: look the class up through the
-	// GAME's COM - the exact path another DLL takes - and log what came back.
-	void SelfCheck();
+	// GAME's COM - the exact path another DLL takes - and check what comes back
+	// against rulers that do NOT go through Publish: the UI factor the geometry
+	// patches are gated on, the session's AutoScale, and the region basis float
+	// measured in the exe (pass a negative regionMeasured when it cannot be
+	// read). A mismatch is logged as an error, never as a healthy line.
+	void SelfCheck(float appliedUi, bool appliedAuto, float regionMeasured);
 }

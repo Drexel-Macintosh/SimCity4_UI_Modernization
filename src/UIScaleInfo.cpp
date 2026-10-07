@@ -11,6 +11,8 @@
 #include "CodePatches.h"
 #include "Logger.h"
 
+#include <cstdio>
+
 namespace
 {
 	volatile uint32_t gModVersion = 0;
@@ -25,6 +27,10 @@ namespace
 	// STATIC LIFETIME. The count is kept so AddRef/Release answer like any
 	// other GZCOM object, but nothing is ever deleted: a caller that releases
 	// one time too many must not be able to free an object other DLLs hold.
+	// What this does NOT cover is process exit: the game FreeLibrary's every
+	// plugin in path order without asking, so a pointer another DLL still holds
+	// when ours is unloaded points into unmapped code. api\README.md tells
+	// callers to release by their PreAppShutdown (adversarial review 2026-10-07).
 	class UIScaleInfoImpl final : public cIUIScaleInfo
 	{
 	public:
@@ -111,7 +117,7 @@ namespace UIScaleInfo
 		gAutoScale = autoScale;
 	}
 
-	void SelfCheck()
+	void SelfCheck(float appliedUi, bool appliedAuto, float regionMeasured)
 	{
 		Logger& logger = Logger::Get();
 		cIGZFrameWork* fw = RZGetFrameWork();
@@ -155,14 +161,45 @@ namespace UIScaleInfo
 		if (wrong) { static_cast<cIGZUnknown*>(wrong)->Release(); }
 
 		const uint32_t v = p->GetModVersion();
+		const float ui = p->GetUIScaleFactor();
+		const bool autoScale = p->IsAutoScale();
+		const float region = p->GetRegionMapScale();
 		logger.WriteLine(LogLevel::Info,
 			"API: cIUIScaleInfo answered through the game's COM (CLSID 0x%08X, "
 			"IID 0x%08X): version %u.%u.%u, UI factor %.2f (%s), region map "
 			"%.2f. Unknown IID refused: %s.",
 			GZCLSID_cIUIScaleInfo, GZIID_cIUIScaleInfo,
 			(v >> 16) & 0xFFu, (v >> 8) & 0xFFu, v & 0xFFu,
-			p->GetUIScaleFactor(), p->IsAutoScale() ? "auto" : "manual",
-			p->GetRegionMapScale(), wrongRefused ? "yes" : "NO - DEFECT");
+			ui, autoScale ? "auto" : "manual",
+			region, wrongRefused ? "yes" : "NO - DEFECT");
 		p->Release();
+
+		// THE VALUES, not just the reachability (adversarial review
+		// 2026-10-07, finding 3): every ruler below is independent of Publish,
+		// so a deleted or mis-fed Publish reads as a MISMATCH here instead of a
+		// healthy "UI factor 1.00" line.
+		const auto closeTo = [](float a, float b) {
+			const float d = a - b;
+			return d < 0.001f && d > -0.001f;
+		};
+		const bool uiOk = closeTo(ui, appliedUi);
+		const bool autoOk = autoScale == appliedAuto;
+		const bool regionOk = regionMeasured < 0.0f || closeTo(region, regionMeasured);
+		char regionText[64] = {};
+		if (regionMeasured < 0.0f)
+		{
+			sprintf_s(regionText, "not measurable on this build");
+		}
+		else
+		{
+			sprintf_s(regionText, "%s (basis measured x%.3f)",
+				regionOk ? "yes" : "NO", regionMeasured);
+		}
+		logger.WriteLine((uiOk && autoOk && regionOk) ? LogLevel::Info : LogLevel::Error,
+			"API: %s this session - UI factor %s (geometry gate applies %.2f), "
+			"auto %s, region %s.",
+			(uiOk && autoOk && regionOk) ? "the answers MATCH"
+			                             : "the answers DO NOT MATCH",
+			uiOk ? "yes" : "NO", appliedUi, autoOk ? "yes" : "NO", regionText);
 	}
 }
