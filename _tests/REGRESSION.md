@@ -23179,3 +23179,60 @@ The user: "merge all changes and cut the release".
   - Pin the REGIONTILE (`83 EC 20 53 56 57 8B 7C`) and REGIONZOOM (`55 8B EC 83 E4 F8 83 EC`) prologues from the 20:26 log.
   - The 3x Data Views fill, which is shelved.
   - Two pre-audit dead links in this file: a capture CSV and the v4.10.1 notes, both local-only. That one is the user's call.
+
+## 2026-10-07: cIUIScaleInfo - other DLLs can ask for the scale (v4.11.0)
+
+**The request.** A plugin DLL author asked whether other DLLs can query the
+scaling mode, for example through a GZCOM interface: a DLL that builds its own
+windows has to size them like the game's. Until now the DLL exposed nothing but
+its own message target.
+
+**What was built.**
+- `api\cIUIScaleInfo.h`, the public header: CLSID `0xB54643B5`, IID
+  `0xA9885499`, four methods in a FROZEN order: `GetModVersion`,
+  `GetUIScaleFactor`, `IsAutoScale`, `GetRegionMapScale`. Anything new gets a
+  new IID. `api\README.md` is the how-to for DLL authors.
+- `src\UIScaleInfo.cpp`: ONE static object. AddRef/Release keep a count and
+  never free it (the asker's own advice: a static field takes GZCOM lifetime out
+  of the equation; `cRZBaseUnknown` is not needed).
+- Registration: `AddCls` is the FIRST statement of the director constructor.
+  The game registers a library's classes right after constructing its director
+  (`cGZCOMLibrary::Load` -> `cGZCOM::UpdateClassRegistry` ->
+  `EnumClassObjects`), and the version gate returns early - so a refused build
+  still answers 1.0 instead of looking uninstalled.
+- Values: published at the tier tail beside `SetTierMirror` - UI factor =
+  `tierActive ? ScaleFactor : 1.0`. Region = `CodePatches::RegionIsoLiveFactor()`,
+  the factor last WRITTEN into the region basis (tier, then every zoom step and
+  rollback), 1.0 while the basis is stock. The version is parsed from
+  `UISCALE_VERSION_STR` by a constexpr, so the two cannot disagree.
+- `UIScaleInfo::SelfCheck` at PostAppInit, every tier: the lookup through the
+  GAME's `cIGZCOM` (the path another DLL takes), plus a negative control (an
+  unknown IID must be refused). One log line either way.
+- The two SDK slots it relies on were checked against the exe's vtables:
+  `cIGZFrameWork::GetCOMObject` = slot 23 (`0x008793F9`),
+  `cIGZCOM::GetClassObject` = slot 3 (`0x0087BE75`).
+
+**Offline proof.** `_tests\Test-UIScaleInfoApi.ps1` PASS: harness built against
+the public header only; DLL loaded in a non-SC4 host (the gate refuses = the
+unsupported-build row); 12 checks (registered once, lookup, version 0x040B00,
+1.0 / manual / region 1.0, QI identity and refusals, refcount, over-release,
+one static object); MUTATION CONTROL (wrong version) FAILS as it must; the
+frozen-contract check passes and catches a reordered copy. Build: 0 warnings.
+ProbeDerefGuards, ShippingIniKeys, StockTierContract, PatchSiteBytes: PASS.
+NoDeadLinks: the 3 pre-existing ledger links only.
+
+**What our sweep already enlarges** (told to DLL authors in `api\README.md`;
+read from the source, not yet tested with a foreign window): every visible
+direct child of the city view it does not skip; main-window dialogs and region
+panels only from fixed lists of the game's own ids; fonts through the scaled
+FontStyle table.
+
+**In the game (06:16-06:17, manual 2x at 2400x1600, region screen, no city).**
+Deployed == built (Test-DatIntegrity ALL PASS, DLL sha256 1d2de21d...bf7702a).
+The self-check line, through the game's own COM:
+`API: cIUIScaleInfo answered through the game's COM (CLSID 0xB54643B5, IID
+0xA9885499): version 4.11.0, UI factor 2.00 (manual), region map 2.00. Unknown
+IID refused: yes.` - every value matches the boot's own decision
+(`BootState: COHERENT (manual 2.00 ...)`, `REGIONISO x2.00`). Clean shutdown;
+no new exception report. (An earlier launch at 06:14 ran 4.10.3: the deploy had
+not happened yet, so that log has no API line - not a failure.)

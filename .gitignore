@@ -29,6 +29,8 @@
 !/tools/
 !/_packaging/
 !/_tests/
+# v4.11.0: the PUBLIC interface other plugin DLLs compile against.
+!/api/
 
 # ---- 3. re-include root documents ----------------------------------
 !/README.md

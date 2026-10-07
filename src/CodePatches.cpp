@@ -1748,6 +1748,7 @@ namespace CodePatches
 	}
 
 	int RegionTileGrown() { return gRegionTileGrown; }
+	float RegionIsoLiveFactor() { return gRegionIsoLiveFactor; }
 	int RegionTileDeclined() { return gRegionTileDeclined; }
 
 	// #132 ZOOM: write the isometric basis as stock*factor, ALWAYS.

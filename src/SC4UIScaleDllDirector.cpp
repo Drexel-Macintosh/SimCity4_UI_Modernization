@@ -36,7 +36,9 @@
 #include "SC4VersionDetection.h"
 #include "Settings.h"
 #include "SpinProbe.h"
+#include "UIScaleInfo.h"
 #include "UiSpike.h"
+#include "../api/cIUIScaleInfo.h"
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -44,7 +46,25 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.10.3"
+#define UISCALE_VERSION_STR "4.11.0"
+
+// cIUIScaleInfo::GetModVersion, derived FROM the string above so the two can
+// never disagree: (major << 16) | (minor << 8) | patch.
+constexpr uint32_t ParseModVersion(const char* s)
+{
+	uint32_t parts[3] = { 0, 0, 0 };
+	int k = 0;
+	for (; *s != 0 && k < 3; ++s)
+	{
+		if (*s == '.') { ++k; continue; }
+		if (*s < '0' || *s > '9') { break; }
+		parts[k] = parts[k] * 10 + static_cast<uint32_t>(*s - '0');
+	}
+	return (parts[0] << 16) | (parts[1] << 8) | parts[2];
+}
+static_assert(ParseModVersion("4.11.0") == 0x040B00, "version packing");
+static_assert(ParseModVersion("4.10.3") == 0x040A03, "version packing");
+constexpr uint32_t kModVersion = ParseModVersion(UISCALE_VERSION_STR);
 
 extern "C" IMAGE_DOS_HEADER __ImageBase;
 
@@ -194,6 +214,15 @@ public:
 		, tierActive(false)
 		, gameVersion(0)
 	{
+		// v4.11.0 cIUIScaleInfo: OTHER DLLs ASK US FOR THE SCALE. Registered
+		// FIRST, before anything in this constructor can return: the game
+		// enumerates our class objects right after this constructor, and a
+		// DLL that refuses to scale (unsupported build, stock tier) must still
+		// answer "1.0" rather than look uninstalled. The values are published
+		// below at the tier tail; until then the object answers 1.0.
+		AddCls(GZCLSID_cIUIScaleInfo, &UIScaleInfo::Factory);
+		UIScaleInfo::Publish(kModVersion, 1.0f, false);
+
 		// v4.4.0 ROOT CLEANUP: move any pre-4.4.0 loose files out of the
 		// Plugins root FIRST - before the ini is read, before the log
 		// exists. See ScaleTier::MigrateRootLooseFiles for why that order
@@ -585,6 +614,13 @@ public:
 			// baseline was not inert: sub-flyouts were born x2.00 inside a 1x
 			// layout (log, 2026-08-19).
 			UiSpike::SetTierMirror(settings.spikeScaleFactor);
+			// cIUIScaleInfo: the same moment, the same values. tierActive is
+			// final here (the stock-factor block above is its last writer),
+			// and it is the one flag that means "this session's UI is being
+			// enlarged" for both the auto and the manual branch.
+			UIScaleInfo::Publish(kModVersion,
+				tierActive ? settings.spikeScaleFactor : 1.0f,
+				settings.spikeAutoScale);
 
 			// DISPATCHQUAD probe - armed HERE, on the one path that runs at
 			// EVERY factor, because its whole purpose includes measuring the
@@ -1039,6 +1075,12 @@ public:
 				"SC4UIScale: WebRedirect declined by ini - the region website "
 				"button keeps its original (dead) EA URL.");
 		}
+
+		// v4.11.0: prove the cIUIScaleInfo lookup another DLL will make -
+		// through the GAME's COM, after the region basis above is written so
+		// the line names the live region factor. Every tier, stock included:
+		// a stock-tier answer of 1.0 is part of the contract.
+		UIScaleInfo::SelfCheck();
 
 		// Stock tier: nothing else runs - no window attach, no subclass,
 		// no timer, no message hooks. The game must be indistinguishable

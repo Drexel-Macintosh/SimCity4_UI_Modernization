@@ -182,6 +182,11 @@ namespace CodePatches
 
 	int ApplyRegionIsoScale(float factor);
 
+	// The region factor last WRITTEN into the basis (the tier, then each zoom
+	// step and rollback); 0 while the basis is stock. What the region map is
+	// laid out with right now - cIUIScaleInfo::GetRegionMapScale reads it.
+	float RegionIsoLiveFactor();
+
 
 	// v2.37.0 task #78: the Data Views legend. The game re-lays it on EVERY
 	// view selection (sub_007A04F0 - the one choke point in the image) from

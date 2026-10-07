@@ -111,6 +111,7 @@
     <ClCompile Include="SC4VersionDetection.cpp" />
     <ClCompile Include="SpinProbe.cpp" />
     <ClCompile Include="IniCache.cpp" />
+    <ClCompile Include="UIScaleInfo.cpp" />
     <ClCompile Include="..\tools\research\udriveit\gdcap.cpp" />
     <ClCompile Include="..\vendor\gzcom-dll\gzcom-dll\src\cRZCOMDllDirector.cpp" />
     <ClCompile Include="..\vendor\gzcom-dll\gzcom-dll\src\cRZBaseString.cpp" />
@@ -132,6 +133,8 @@
     <ClInclude Include="SC4VersionDetection.h" />
     <ClInclude Include="SpinProbe.h" />
     <ClInclude Include="IniCache.h" />
+    <ClInclude Include="UIScaleInfo.h" />
+    <ClInclude Include="..\api\cIUIScaleInfo.h" />
     <ClInclude Include="IniParse.h" />
     <ClInclude Include="RoundHalfUp.h" />
     <ClInclude Include="ExeBase.h" />

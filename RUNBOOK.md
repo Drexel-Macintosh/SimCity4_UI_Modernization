@@ -168,6 +168,7 @@ _tests\Test-FolderDiscovery.ps1              # the DLL's discovery code, compile
   shipped for several releases while the README promised otherwise.
 _tests\Sync-Check.ps1                        # repo vs GitHub; user paths + binary art BY CONTENT
 python _tests\Test-PatchSiteBytes.py         # byte-patch sites still hold their expected bytes
+_tests\Test-UIScaleInfoApi.ps1               # the cIUIScaleInfo contract other DLLs depend on, incl. the frozen vtable
 python _tests\Test-ProbeDerefGuards.py       # no raw vptr / vtable-slot / stack-peek read in probe or detour code outside __try or a ProbeSafe helper (--selftest proves red AND green)
 _tests\Verify-Arming.ps1                     # after a boot: content-swap arming, STATE.txt
 python _tests\Test-PackageGating.py          # SyncDat sites vs dep rows, both directions

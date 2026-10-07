@@ -114,6 +114,13 @@ on disk is touched except the mod's own files. Full detail:
 Known limitations are listed in
 [research/KNOWN-LIMITATIONS.md](research/KNOWN-LIMITATIONS.md).
 
+## For plugin DLL authors
+
+Another DLL can ask SC4UIScale how much the UI and the region map are
+enlarged, through the game's COM (class `cIUIScaleInfo`, 4.11.0 and later).
+The header to copy, a code sample and what SC4UIScale already enlarges are
+in [api/README.md](api/README.md).
+
 ## Engine documentation
 
 Scaling this interface meant reverse-engineering it first. Maxis shipped no UI
@@ -141,6 +148,7 @@ byte patch the DLL installs.
 | `src/` | The DLL: director, window-tree scaler (`UiSpike.cpp`, with the flyouts, minimap, region screen and scale selector split into the `UiSpike*.cpp` files beside it), executable patches (`CodePatches.cpp`), tier/package logic (`ScaleTier.cpp`) |
 | `tools/` | Package builders — every shipped `.dat` is generated, never hand-edited — plus the research corpus and the offline model |
 | `docs/`, `research/` | Product documentation and the distilled research tier (laws, unknowns register) |
+| `api/` | The public `cIUIScaleInfo` header other plugin DLLs compile against |
 | `_tests/` | Gates, deploy scripts and the regression ledger |
 | `vendor/` | The third-party libraries the DLL links — gzcom-dll, MinHook and sc4-dll-utilities, each a **git submodule** pinned to a specific upstream commit (fetch with `git submodule update --init`) |
 

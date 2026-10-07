@@ -1,3 +1,23 @@
+SC4UIScale 4.11.0 (2026-10-07) - cIUIScaleInfo: other DLLs can ask for the scale
+================================================================================
+
+Requested by a plugin DLL author: a DLL that builds its own windows needs the
+scale to size them like the game's. New public GZCOM class cIUIScaleInfo
+(api\cIUIScaleInfo.h, api\README.md): CLSID 0xB54643B5, IID 0xA9885499;
+GetModVersion, GetUIScaleFactor (1.0 unless a tier is active), IsAutoScale,
+GetRegionMapScale (the factor last written into the region basis, zoom
+included). One static object; registered with AddCls at the top of the
+director constructor so even a refused game build answers 1.0; values
+published at the tier tail beside SetTierMirror.
+
+Checked offline: _tests\Test-UIScaleInfoApi.ps1 builds a harness against the
+public header only, loads the DLL in a non-SC4 host (the version gate refuses,
+so this is the unsupported-build row), and checks registration, the values,
+QueryInterface and reference counting; a wrong-version run must fail
+(mutation control), and the header must match the frozen contract (a
+reordered copy must fail). In the game: the startup self-check line
+"API: cIUIScaleInfo answered through the game's COM" in SC4UIScale.log.
+
 SC4UIScale 4.10.3 (2026-09-25) - the efficiency and simplification audit
 ================================================================================
 

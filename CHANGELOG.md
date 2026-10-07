@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.11.0 (2026-10-07) - other DLLs can ask for the UI scale
+
+**A plugin DLL can now ask SC4UIScale, through the game's COM, how much the
+UI and the region map are enlarged. Nothing on screen changes.**
+
+- **New: `cIUIScaleInfo`.** Other plugin DLLs look it up by class ID
+  `0xB54643B5` and get the session's UI factor (1.0 when not scaling), whether
+  it was picked automatically, the live region-map scale (zoom included) and
+  the SC4UIScale version. The header and a how-to for DLL authors are in
+  [`api/`](api/README.md). The interface is frozen: anything new will get a
+  new interface ID.
+- **The log says whether it works.** At startup SC4UIScale makes the same
+  lookup through the game's COM and writes the answer to its log; a lookup
+  for an interface the class does not implement is logged with its ID.
+
 ## 4.10.3 (2026-09-25) - less work per tick and at boot
 
 **The city dock is scaled before it first paints, the per-tick sweep and the
