@@ -23265,3 +23265,26 @@ code and all acted on:
 `API: the answers MATCH this session - UI factor yes (geometry gate applies
 2.00), auto yes, region yes (basis measured x2.000).` Clean shutdown, no new
 exception report.
+
+### 10:30 UTC - RELEASED: v4.11.0 (https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/tag/v4.11.0)
+
+- **Build.** Commits `9120040` (the feature) and `9d9e9ad` (review fixes, tag
+  `v4.11.0`). The bundle's DLL is the one that passed in the game (sha256
+  0f72d65d...b061d0); DEPLOYED == BUILT.
+- **Bundle.** `SC4UIScale-v4.11.0.zip`: 96,179,935 B, sha256 4579259E...5190B3,
+  published 2026-10-07T10:30:22Z, marked Latest, not a pre-release. The
+  uploaded digest equals the local one.
+- **Gates.** Build-Dist PASS on hard patterns (the 6 soft lines are the word
+  "touch", unchanged). Test-BinaryPii CLEAN. Test-FolderDiscovery -Bundle PASS.
+  Test-DatIntegrity ALL PASS (128 SHA256SUMS rows). Test-UIScaleInfoApi PASS
+  (mutation and freeze controls fired). ProbeDerefGuards GREEN.
+  ShippingIniKeys, StockTierContract, PatchSiteBytes PASS. NoDeadLinks: the 3
+  pre-existing ledger links only.
+- **Crash gate.** No exception report since 2026-09-01.
+- **Previous release.** v4.10.3 deleted per the standing order, its tag kept;
+  before the delete its local zip was hash-matched to the hosted asset
+  (4ec68524...).
+- **sc4pac channel.** `gen_channel.py --bundle dist/SC4UIScale-v4.11.0
+  --publish --last-modified 2026-10-07T10:30:22Z`: 102/102 entries re-hashed
+  and matched, 128 files stable, all 208 comment lines kept. Test-ChannelYaml
+  clear on both files; the asset answers HTTP 200 at the exact size.
