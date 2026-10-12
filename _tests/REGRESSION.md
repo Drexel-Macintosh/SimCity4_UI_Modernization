@@ -23288,3 +23288,73 @@ exception report.
   --publish --last-modified 2026-10-07T10:30:22Z`: 102/102 entries re-hashed
   and matched, 128 files stable, all 208 comment lines kept. Test-ChannelYaml
   clear on both files; the asset answers HTTP 200 at the exact size.
+
+## 2026-10-12: the animation recorder and the cheat box (v4.11.1)
+
+**Report (owner, screenshots).** At 3x the animation recorder (Ctrl+X
+"Recorder") had 10 px labels in a scaled panel and an Output row whose buttons
+took Start's clicks; the Ctrl+X cheat box was drawn open at the bottom.
+
+**Recorder labels.** cSC4WinAnimationRecorder::Init (0x00796630) builds the
+panel in code and acquires its own label font: `push 1; push 0; push 10;
+push 0; ...; push "Arial MT"; call [ebx+0x2C]` = cIGZFontSys::FontAcquire(name,
+0, size, style, cache) (the 5-argument overload, by arity). A font acquired by
+name never meets the FontStyle table. Fix: the size byte (0x00796658) becomes
+round(10*f). In the game: `animation recorder label font Arial MT 10 -> 30`,
+labels at full size.
+
+**Recorder buttons - two rounds.** The Output row is a cGZWinOptGrp (vtable
+0x00AE1300; CreateOptGrp via the control manager, three OptBtnAdd). Its SetArea
+override (0x009C81F7) clamps to GetMinMaxInfo and re-flows the buttons
+(0x009C8002); for fill type 0 the minimum comes from the buttons (0x009C7E26),
+which already carry the scaled font.
+1. Not recursing into the group was not enough: in the game the group came out
+   942x156 (log `OPTGRP id=0x00000000 (159,132 942x156)`, buttons stacked at
+   (4,4) (4,48) (4,92)) and lay over Start/Close/Snap. The group had already
+   sized itself from its 3x-font buttons, and the sweep multiplied that by 3.
+2. Fix: the group is font-sized - moved, size kept, buttons left to it. In the
+   game: `(159,132 314x52)`, buttons at (4,4) (88,4) (172,4), Start works.
+The adversarial review noted the rule had been proven on one group; it is now
+scoped to fill type 0 with the recorder as parent. The one .UI option group in
+the stock corpus (I-49d55c68) was not examined and keeps the normal sweep.
+
+**Cheat box - one wrong theory, then the measurement.** A probe on the 16 ms
+timer read the live dialog: `(8,8 936x84)`, field `(12,18 912x60)` - exactly
+the v4.5.6 rect. The first theory (the field draws a frame twice its font size,
+centred) was REFUTED in the game: a 78 px field drew the same. The text edit
+paints no background at all (its art path needs flag 0x20 at +0x128, not set
+by 0x17C1). The frame is the DIALOG's: cGZWinGenDlg::GZPaint (0x009C2BA6),
+mode 0, nine-slices SystemBMP 0xC8963ED3 = {0x856DDBAC,0x46A006B0,0x46A006A4}
+through 0x008D8800 with the static cell rect .data 0x00B17C24 = (0,0,24,24).
+The probe: `frame mode 0, image 216x216, 9-slice source (0,0,24,24)` - a 24 px
+cell on 216 px art, so the bottom and right pieces were interior grey. Fix: the
+call at 0x009C2C1F goes through a thunk that passes a 24*f cell only when the
+image is exactly round(72*f) square. In the game: `GENDLG FRAME first scaled
+draw - image 216x216, cell 24 -> 72`, the owner: "It's Fixed!".
+
+**Review (opus-reviewer; one vendor).** Nothing blocking; the font site, the
++0xE4 offset, the nine-slice argument order and cdecl arity, and the shipped
+frame sizes (108/144/216, cells 36/48/72) were checked. Acted on: the radio
+group scope, the per-open OPTGRP log, a log line that claimed a counter
+nobody read, line endings, stray blank lines. REJECTED after it failed in the
+game: a gate requiring the box to be two cells each way. The cheat box is 84
+px against 144, so the fix stopped firing (09:42, no "first scaled draw"
+line); the stock box is 28 px with 24 px cells, so overlapping corners are the
+game's design. Noted, not acted on: GZPaint's caption band height is a second
+static (0x00B17C38 = 23); no captioned GenDlg has been seen at a scaled tier.
+
+**Crash census before release (three reports newer than the 10-07 entry; all
+with SC4UIScale.dll loaded at the 4.11.0 image size, none faulting in it):**
+- 2026-10-07 15:38:51 - AV in SimCity 4.exe 0x007B06C6,
+  cSC4WinRegionScreen::LoadGUI: FindWindow(0x09EBE9EE) returned null and the
+  result is used unchecked (`mov edx,[edi]`, EDI=0). The region screen was
+  built without its bottom-left panel. OPEN, and possibly ours: we replace
+  region .UI layouts. Not reproduced - every region load on 2026-10-12 found
+  and scaled 0x09EBE9EE. Next step: which region .UI was loaded at the time.
+- 2026-10-07 15:44:10 - BREAKPOINT executing heap 0x231D0EA0 (EAX = EIP: a call
+  through a dangling pointer), frame cSC4View3DWin::RemoveGUI (city exit).
+  Unattributed; our window vtable copies are static, not heap.
+- 2026-10-11 19:32:06 - AV in ntdll RtlSizeHeap via AcLayers, from
+  cSC4LotBaseTextureOccupant::UpdateExistingModels: heap damage found in lot
+  models. Unattributed; not a UI path.
+None of the three touches the code 4.11.1 changes.

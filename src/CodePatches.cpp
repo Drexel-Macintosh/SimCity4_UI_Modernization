@@ -3,6 +3,8 @@
 #include "GdCap.h"
 #include "IniCache.h"
 #include "Logger.h"
+#include "cIGZBuffer.h"
+#include "RoundHalfUp.h"
 #include "ScaleTier.h"   // v4.4.0: our ini lives in 010-SC4UIScale/, not beside the DLL
 #include "MinHook.h"
 
@@ -1263,6 +1265,56 @@ namespace CodePatches
 				LogLevel::Info,
 				"CodePatches: tooltip wrap %u -> %ld at 0x%08X.",
 				kStockTipWrap, scaled, static_cast<uint32_t>(site));
+		}
+	}
+
+	// ANIMATION RECORDER LABELS (2026-10-12; the cheat dialog, Ctrl+X
+	// "Recorder"). cSC4WinAnimationRecorder::Init (0x00796630) builds its
+	// panel in code, not from a .UI, and gives its five labels (Name, Rate,
+	// Time, Output, the status line) a font it acquires itself:
+	//   00796654  6A 01 6A 00 6A 0A 6A 00 8B F8 8B 1F 68 CC 26 AA 00
+	//             push 1; push 0; push 10; push 0; mov edi,eax;
+	//             mov ebx,[edi]; push "Arial MT"
+	//   00796671  call [ebx+0x2C]   ; cIGZFontSys::FontAcquire(name, 0,
+	//                               ;   size, style, addToCache) - 5 args
+	// A font acquired by name and size never goes through the FontStyle
+	// table, so at a scaled tier the sweep enlarged the panel and every box
+	// (log: "panel 0x6ACB1AF1 (4,4 284x99) -> (12,12 852x297)") while the
+	// labels kept their 10-pixel glyphs. The size is a `push imm8`; the
+	// scaled sizes (15/20/30, and 40 at 4x) all fit it.
+	const uintptr_t kRecorderFontSite = 0x00796654;
+	const uint8_t kRecorderFontStock[] = {
+		0x6A, 0x01, 0x6A, 0x00, 0x6A, 0x0A, 0x6A, 0x00, 0x8B, 0xF8, 0x8B, 0x1F,
+		0x68, 0xCC, 0x26, 0xAA, 0x00 };
+	const size_t kRecorderFontSizeOff = 5;   // the 0x0A of `push 10`
+
+	void ApplyRecorderFontScale(float factor)
+	{
+		const int32_t stock = kRecorderFontStock[kRecorderFontSizeOff];
+		const int32_t scaled = RoundHalfUp(stock * static_cast<double>(factor));
+		if (scaled == stock)
+		{
+			return; // identity factor: nothing to do
+		}
+		if (scaled < 1 || scaled > 127)
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: recorder label font %d -> %d does not fit a push "
+				"imm8 - not written.", stock, scaled);
+			return;
+		}
+
+		const uintptr_t delta = ExeBase() - kImageBase;
+		uint8_t repl[sizeof(kRecorderFontStock)];
+		memcpy(repl, kRecorderFontStock, sizeof(repl));
+		repl[kRecorderFontSizeOff] = static_cast<uint8_t>(scaled);
+		if (VerifiedWrite("recorder label font", kRecorderFontSite, delta,
+				kRecorderFontStock, repl, sizeof(repl)))
+		{
+			Logger::Get().WriteLine(LogLevel::Info,
+				"CodePatches: animation recorder label font Arial MT %d -> %d at "
+				"0x%08X.", stock, scaled,
+				static_cast<uint32_t>(kRecorderFontSite + kRecorderFontSizeOff));
 		}
 	}
 
@@ -2904,6 +2956,105 @@ namespace CodePatches
 			v[0], v[1], v[2], v[3], clear,
 			v[2] - v[0] + clear, v[3] - v[1] + clear,
 			std::lround(13.0 * factor));
+		return 1;
+	}
+
+	// ============ GZWinGenDlg FRAME CELL (2026-10-12) =====================
+	// THE Ctrl+X BOX DREW WITH NO BOTTOM OR RIGHT EDGE AT 3x (user screenshots
+	// 2026-10-12). cGZWinGenDlg::GZPaint (0x009C2BA6), frame mode 0, nine-
+	// slices its frame image [this+0xE8] through 0x008D8800:
+	//   009C2C0B  push 1 / push &rect / push 0x00B17C24 / push [esi+0xE8] /
+	//             push [esi+0x6C] / call 0x008D8800 / add esp,0x14
+	// and 0x00B17C24 is a STATIC .data rect (0,0,24,24): one CELL of the 3x3
+	// grid, sized for the stock 72x72 frame (GZWinBMP's edge mode gets the same
+	// cell as imagerect/3). The probe read the live box: image 216x216, cell
+	// still 24 - so the frame was cut from the image's top-left third and the
+	// bottom and right pieces were plain interior grey.
+	//
+	// THE CURE IS GATED ON WHAT LOADED, NOT ON THE TIER: the call is routed
+	// through a thunk that passes a cell of image/3 ONLY when the image is
+	// exactly round(72 * factor) square - our scaled default frame. Anything
+	// else gets the stock 24, unchanged. The .data rect itself is never
+	// written.
+	//
+	// NO "AT LEAST TWO CELLS" GATE ON THE BOX. One was added after review and
+	// it switched the fix off for the very dialog it exists for: the cheat
+	// box is 84 px tall against a 144 px two-cell minimum (in the game,
+	// 2026-10-12 09:42, no "first scaled draw" line). The stock box already
+	// overlaps its corners - 28 px tall with 24 px cells - so overlapping
+	// corners are the game's own design, not a defect to guard against.
+	const uintptr_t kGenDlgFrameCallSite = 0x009C2C1F;   // E8 rel32 -> 0x008D8800
+	const uintptr_t kNineSliceVa = 0x008D8800;
+	const int32_t kStockGenDlgFrame = 72;
+	int32_t gGenDlgFrameScaled = 0;      // round(72 * f); 0 = not installed
+	int32_t gGenDlgCell[4] = { 0, 0, 24, 24 };
+	bool gGenDlgFrameLogged = false;
+
+	typedef int(__cdecl* NineSliceFn)(void* ctx, void* img, const int32_t* cell,
+		const int32_t* dst, int flag);
+
+	bool GenDlgImageIsOurs(void* img)
+	{
+		if (!img || gGenDlgFrameScaled <= 0) { return false; }
+		__try
+		{
+			cIGZBuffer* b = static_cast<cIGZBuffer*>(img);
+			return static_cast<int32_t>(b->Width()) == gGenDlgFrameScaled
+				&& static_cast<int32_t>(b->Height()) == gGenDlgFrameScaled;
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER) { return false; }
+	}
+
+	int __cdecl GenDlgNineSliceThunk(void* ctx, void* img, const int32_t* cell,
+		const int32_t* dst, int flag)
+	{
+		const NineSliceFn orig = reinterpret_cast<NineSliceFn>(
+			kNineSliceVa - kImageBase + ExeBase());
+		const int32_t cellPx = gGenDlgCell[2];
+		if (GenDlgImageIsOurs(img))
+		{
+			if (!gGenDlgFrameLogged)
+			{
+				gGenDlgFrameLogged = true;
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: GENDLG FRAME first scaled draw - image %dx%d, cell "
+					"24 -> %d.", gGenDlgFrameScaled, gGenDlgFrameScaled, cellPx);
+			}
+			return orig(ctx, img, gGenDlgCell, dst, flag);
+		}
+		return orig(ctx, img, cell, dst, flag);
+	}
+
+	int InstallGenDlgFrameScale(float factor)
+	{
+		const int32_t scaled = RoundHalfUp(kStockGenDlgFrame * static_cast<double>(factor));
+		if (scaled == kStockGenDlgFrame || scaled % 3 != 0)
+		{
+			return 0;   // stock, or a size with no whole cell
+		}
+		const uintptr_t delta = ExeBase() - kImageBase;
+		uint8_t expect[5] = { 0xE8, 0, 0, 0, 0 };
+		const int32_t relStock = static_cast<int32_t>(
+			kNineSliceVa - (kGenDlgFrameCallSite + 5));
+		memcpy(expect + 1, &relStock, 4);
+		uint8_t repl[5] = { 0xE8, 0, 0, 0, 0 };
+		const int32_t relNew = static_cast<int32_t>(
+			reinterpret_cast<uintptr_t>(&GenDlgNineSliceThunk)
+			- (kGenDlgFrameCallSite + delta + 5));
+		memcpy(repl + 1, &relNew, 4);
+		gGenDlgFrameScaled = scaled;
+		gGenDlgCell[2] = scaled / 3;
+		gGenDlgCell[3] = scaled / 3;
+		if (!VerifiedWrite("gendlg frame", kGenDlgFrameCallSite, delta, expect,
+				repl, sizeof(repl)))
+		{
+			gGenDlgFrameScaled = 0;
+			return 0;
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: GENDLG FRAME x%.2f - a %dx%d frame image is nine-sliced "
+			"with a %d px cell (stock 72x72 / 24); any other frame keeps the stock "
+			"cell.", static_cast<double>(factor), scaled, scaled, scaled / 3);
 		return 1;
 	}
 

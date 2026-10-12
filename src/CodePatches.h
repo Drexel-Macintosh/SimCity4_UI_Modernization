@@ -23,6 +23,10 @@ namespace CodePatches
 	// 0x798710, two `push 0xfa` sites). Verify-before-write; skips itself
 	// on any unexpected exe bytes.
 	void ApplyTooltipWrapScale(float factor);
+	// The animation recorder's labels (cheat "Recorder") use a font its Init
+	// acquires by name at size 10, outside the FontStyle table. Scales that
+	// one `push 10` (0x00796658). Verify-before-write.
+	void ApplyRecorderFontScale(float factor);
 	void InstallCustomTunesColumnScale();
 
 	// #159: the placement cost readout is rasterised into a 128x32 runtime
@@ -219,6 +223,9 @@ namespace CodePatches
 	// only lever that can reach it. Returns 1 if it took; verifies BOTH blocks
 	// before writing EITHER, and rolls the first back if the second fails.
 	int ApplyCheatDialogScale(float factor);
+	// cGZWinGenDlg frame: nine-slice our scaled 72*f frame with a 24*f cell
+	// (the game's cell is a static 24). Gated on the loaded image size.
+	int InstallGenDlgFrameScale(float factor);
 	// v4.5.3: the RESTORE-TOOLBARS button, born below the bottom of the
 	// screen at every scaled tier. The game builds it and never sizes it -
 	// its rect comes entirely from its four-frame art strip, which we ship

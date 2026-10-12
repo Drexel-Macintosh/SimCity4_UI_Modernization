@@ -46,7 +46,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.11.0"
+#define UISCALE_VERSION_STR "4.11.1"
 
 // cIUIScaleInfo::GetModVersion, derived FROM the string above so the two can
 // never disagree: (major << 16) | (minor << 8) | patch.
@@ -917,6 +917,12 @@ public:
 		{
 			CodePatches::ApplyTooltipWrapScale(settings.spikeScaleFactor);
 		}
+		// The animation recorder (cheat "Recorder"): the sweep scales its
+		// panel, and this scales the one font its code picks by size.
+		if (settings.spikeScaleAll)
+		{
+			CodePatches::ApplyRecorderFontScale(settings.spikeScaleFactor);
+		}
 		// #159 placement cost readout. Its own key, not TooltipWrapPatch's:
 		// the two are different constants in different subsystems, and the
 		// tooltip wrap was already applied while this box still clipped -
@@ -1033,15 +1039,25 @@ public:
 			CodePatches::ApplyRestoreToolbarsOrigin(settings.spikeScaleFactor);
 		}
 		// v4.5.6 CHEAT DIALOG. Gated on spikeScaleAll and the factor, NOT on
-		// ScaledArtArmed(): this box has no art at all - it is a fill-colour
-		// rect - and what oversizes its text is the scaled FONT, which follows
-		// the tier directly. Gating it on the art packages would tie it to a
+		// ScaledArtArmed(): what oversizes its text is the scaled FONT, which
+		// follows the tier directly. (Its frame IS art - a nine-sliced image,
+		// not the fill-colour rect this note once claimed - and that part is
+		// handled by InstallGenDlgFrameScale below, gated on the image.) Gating it on the art packages would tie it to a
 		// condition it does not depend on, which is the mistake the
 		// restore-toolbars comment above exists to avoid in the other
 		// direction.
 		if (settings.spikeScaleAll && settings.spikeCheatDialogPatch > 0)
 		{
 			CodePatches::ApplyCheatDialogScale(settings.spikeScaleFactor);
+		}
+		// 2026-10-12: every cGZWinGenDlg nine-slices its frame with a static
+		// 24 px cell, so our 72*f frame art lost its bottom and right edges
+		// (first seen on the cheat box above). Its own block: it applies to
+		// every such dialog, and its gate is the frame image actually
+		// loaded (checked per draw), not the cheat-box key or the tier.
+		if (settings.spikeScaleAll)
+		{
+			CodePatches::InstallGenDlgFrameScale(settings.spikeScaleFactor);
 		}
 		// v2.55.0 task #57: the GRAPHS legend budget is NOT armed here. It is
 		// one half of a coupled pair with EARLYCHART's plot right margin, and

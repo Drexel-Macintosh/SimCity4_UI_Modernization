@@ -133,6 +133,28 @@ SITES = [
         "2026-08-31 (research/UNKNOWNS-AND-NEXT-TARGETS.md); pinned in code "
         "by the 2026-09-25 audit (B5), before which this hook had no check.",
     ),
+    (
+        "kRecorderFontSite",
+        0x00796654,
+        bytes([0x6A, 0x01, 0x6A, 0x00, 0x6A, 0x0A, 0x6A, 0x00, 0x8B, 0xF8,
+               0x8B, 0x1F, 0x68, 0xCC, 0x26, 0xAA, 0x00]),
+        bytes([0xFF] * 17),
+        "push 1 / push 0 / push 10 / push 0 / mov edi,eax / mov ebx,[edi] / "
+        "push \"Arial MT\" - the animation recorder's label font, "
+        "FontAcquire(name, 0, size 10, style 0, cache) in "
+        "cSC4WinAnimationRecorder::Init (2026-10-12). The patch rewrites the "
+        "0x0A at +5; the whole span is pinned, as in kRecorderFontStock.",
+    ),
+    (
+        "kGenDlgFrameCallSite",
+        0x009C2C1F,
+        bytes([0xE8, 0xDC, 0x5B, 0xF1, 0xFF, 0x83, 0xC4, 0x14]),
+        bytes([0xFF] * 8),
+        "call 0x008D8800 / add esp,0x14 - cGZWinGenDlg::GZPaint's nine-slice "
+        "of its frame image with the static 24 px cell at 0x00B17C24 "
+        "(2026-10-12). The patch reroutes the call through a thunk that "
+        "passes a 24*f cell for our 72*f frame; cdecl, 5 args, caller pops.",
+    ),
 ]
 
 

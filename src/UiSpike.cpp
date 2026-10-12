@@ -5527,6 +5527,7 @@ int UiSpike::ScalePanelRoot(cIGZWin* win, int32_t frameW, int32_t frameH, float 
 	return count;
 }
 
+
 void UiSpike::IncrementalPass()
 {
 	cISC4AppPtr pSC4App;
@@ -7005,6 +7006,73 @@ namespace
 	}
 }
 
+namespace
+{
+	// cGZWinOptGrp, read off the object as stripBtnClass reads 0x00ADDAF0:
+	// the class's cGZWin vtable (docs: classes/cGZWinOptGrp.md, CLSID
+	// 0xA1336CC1) and the fill type at +0xE4 (GetMinMaxInfo 0x009C83C2 and
+	// the flow 0x009C8002 both branch on it).
+	//
+	// SCOPED TO THE ONE GROUP THIS WAS PROVEN ON (adversarial review
+	// 2026-10-12): the animation recorder's (parent vtable 0x00AB6010),
+	// fill type 0, whose minimum comes from its font-sized buttons
+	// (0x009C7E26). A group with several buttons per column at 1x would
+	// re-flow into a wider row if its size were kept, and the one .UI group
+	// in the stock corpus (I-49d55c68) has not been looked at - those keep
+	// the normal sweep.
+	const uintptr_t kGZWinOptGrpVtbl = 0x00AE1300;
+	const uintptr_t kAnimRecorderVtbl = 0x00AB6010;
+	const int kOptGrpFillTypeOff = 0xE4;
+	const int32_t kOptGrpFillFromButtons = 0;
+
+	bool IsRecorderSelfFlowOptGrp(cIGZWin* win)
+	{
+		__try
+		{
+			if (*reinterpret_cast<uintptr_t*>(win) != kGZWinOptGrpVtbl)
+			{
+				return false;
+			}
+			const int32_t fill = *reinterpret_cast<int32_t*>(
+				reinterpret_cast<uint8_t*>(win) + kOptGrpFillTypeOff);
+			if (fill != kOptGrpFillFromButtons)
+			{
+				return false;
+			}
+			cIGZWin* parent = win->GetParentWin();
+			return parent
+				&& *reinterpret_cast<uintptr_t*>(parent) == kAnimRecorderVtbl;
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER) {}
+		return false;
+	}
+
+	// Where the group's own flow put its buttons. Called from the one Fresh
+	// visit per group object, so each recorder open logs once; capped per city.
+	void LogOptGrpButtons(cIGZWin* grp)
+	{
+		static int epoch = -1;
+		static int logged = 0;
+		if (epoch != gGaugeEpoch) { epoch = gGaugeEpoch; logged = 0; }
+		if (logged >= 4) { return; }
+		logged++;
+		ChildSnapshot snap = {};
+		grp->EnumChildren(GZIID_cIGZWin, ChildSnapshot::Callback, &snap);
+		Logger::Get().WriteLine(LogLevel::Info,
+			"UiSpike: OPTGRP id=0x%08X (%d,%d %dx%d) lays out its own %d "
+			"button(s) from its own size - moved, size kept, buttons left to it:",
+			grp->GetID(), grp->GetL(), grp->GetT(), grp->GetW(), grp->GetH(),
+			snap.count);
+		for (int i = 0; i < snap.count && i < 8; i++)
+		{
+			cIGZWin* b = snap.wins[i];
+			Logger::Get().WriteLine(LogLevel::Info,
+				"UiSpike: OPTGRP   button id=0x%08X (%d,%d %dx%d)",
+				b->GetID(), b->GetL(), b->GetT(), b->GetW(), b->GetH());
+		}
+	}
+}
+
 void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 	bool centerLeaves, int32_t pAbsL, int32_t pAbsT)
 {
@@ -7239,7 +7307,13 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 		// with scaled==current so the next sweep classifies it AlreadyScaled;
 		// if its owner later re-sizes it from the font, that reads as
 		// Unrecognized and we still never fight it.
-		if (IsFontSizedId(win->GetID()))
+		// The recorder's option group is font-sized too: its min size comes
+		// from its buttons (0x009C7E26), which already carry the scaled font.
+		// Multiplying that size by f again made it 942x156 - tall enough to
+		// stack bmp/png/jpg in one column, and lying over Start, Close and
+		// Snap (log 2026-10-12 07:54). Move it, keep its size.
+		const bool recorderOptGrp = IsRecorderSelfFlowOptGrp(win);
+		if (IsFontSizedId(win->GetID()) || recorderOptGrp)
 		{
 			if (depth > 0)
 			{
@@ -7252,6 +7326,10 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 				LogLevel::Debug,
 				"UiSpike: font-sized 0x%08X pos (%d,%d)->(%d,%d), size %dx%d kept.",
 				win->GetID(), l, t, newL, newT, w, h);
+			if (recorderOptGrp)
+			{
+				LogOptGrpButtons(win);
+			}
 			return;
 		}
 
@@ -7329,6 +7407,20 @@ void UiSpike::ScaleSubtree(cIGZWin* win, float f, int depth, int* count,
 	// scaled container size. Recursing double-scales them (v2.18.6 news
 	// reader item at 1648x708). See kAdviceListScaleSelfIds.
 	if (IsAdviceListScaleSelfId(win->GetID()))
+	{
+		return;
+	}
+
+	// THE RECORDER'S OPTION GROUP LAYS ITSELF OUT (2026-10-12, its bmp/png/
+	// jpg group). cGZWinOptGrp overrides SetArea (0x009C81F7): every resize
+	// clamps to its min/max and then re-flows its buttons into columns
+	// (0x009C8002) from their own sizes. Its buttons carry the scaled font
+	// already, so the group is handled as font-sized above (moved, size
+	// kept), and its buttons are the group's to place: scaling them as well
+	// moved each one f times further out (at 3x png and jpg left the panel
+	// and a button lay over Start, taking its clicks). Every other option
+	// group keeps the normal recursion (see IsRecorderSelfFlowOptGrp).
+	if (IsRecorderSelfFlowOptGrp(win))
 	{
 		return;
 	}

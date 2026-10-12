@@ -1,5 +1,18 @@
 # Changelog
 
+## 4.11.1 (2026-10-12) - the animation recorder and the cheat box
+
+**Two cheat windows were broken at the scaled tiers. Both are fixed and
+checked in the game on Windows at 3x.**
+
+- **The animation recorder works.** Its labels (Name, Rate, Time, Output and
+  the status line) now enlarge with everything else instead of staying at
+  10 px. Its bmp / png / jpg buttons sit side by side again, so Start, Close
+  and Snap respond to clicks; one of those buttons used to lie over Start.
+- **The cheat box has all four edges.** At 1.5x, 2x and 3x the Ctrl+X box was
+  drawn open at the bottom and right. Every game dialog built the same way
+  gets the same fix. Frame art from another mod keeps the game's own drawing.
+
 ## 4.11.0 (2026-10-07) - other DLLs can ask for the UI scale
 
 **A plugin DLL can now ask SC4UIScale, through the game's COM, how much the

@@ -1,3 +1,37 @@
+SC4UIScale 4.11.1 (2026-10-12) - the animation recorder and the cheat box
+================================================================================
+
+The animation recorder (Ctrl+X "Recorder") builds its panel in code. Two
+defects at the scaled tiers: (1) its labels use a font it acquires itself,
+FontAcquire("Arial MT", 0, 10, ...) in cSC4WinAnimationRecorder::Init, which
+the FontStyle table never reaches - the size byte at 0x00796658 is now
+round(10*f) (verify-before-write on 17 bytes); (2) its output-format radio
+group (cGZWinOptGrp) sizes and lays out its own buttons on every SetArea
+(min/max from its font-sized buttons, then a column flow), so the sweep's
+scaling of the group and its buttons compounded - the group grew to 942x156,
+stacked the buttons and lay over Start/Close/Snap. That group (fill type 0,
+parent the recorder) is now moved, its size kept, and its buttons left to it
+(the font-sized rule). Every other option group keeps the normal sweep.
+
+The Ctrl+X cheat box (v4.5.6 sized it) lost its bottom and right edges:
+cGZWinGenDlg::GZPaint nine-slices its frame image with a STATIC 24 px cell
+(.data 0x00B17C24, sized for the 72x72 stock frame), and our frame art is
+72*f. The call at 0x009C2C1F now goes through a thunk that passes a 24*f cell
+only when the loaded frame is exactly round(72*f) square (108/144/216 in the
+shipped art); any other frame keeps the stock cell.
+
+Checked in the game at 3x (3840x2160, AutoScale): the recorder's labels, its
+buttons side by side in a 314x52 group and Start working; the cheat box with
+all four edges. Located with a temporary probe that read the live dialog
+(936x84, field 912x60, frame image 216x216, cell 24); the probe is not in the
+release. 1.5x and 2x were not run in the game; their frame sizes are read
+from the art build reports. An adversarial review found nothing blocking; its
+findings narrowed the radio-group rule to the recorder and tidied the log
+lines. One review suggestion, a "box at least two cells" gate, switched the
+cheat-box fix off in the game (84 px against 144) and was taken out again:
+the stock box already overlaps its corners. Test-PatchSiteBytes pins both new
+sites.
+
 SC4UIScale 4.11.0 (2026-10-07) - cIUIScaleInfo: other DLLs can ask for the scale
 ================================================================================
 
