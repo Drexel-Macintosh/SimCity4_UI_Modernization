@@ -23358,3 +23358,27 @@ with SC4UIScale.dll loaded at the 4.11.0 image size, none faulting in it):**
   cSC4LotBaseTextureOccupant::UpdateExistingModels: heap damage found in lot
   models. Unattributed; not a UI path.
 None of the three touches the code 4.11.1 changes.
+
+### 13:48 UTC - RELEASED: v4.11.1 (https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/tag/v4.11.1)
+
+- **Build.** Commit `35213e1` (tag `v4.11.1`). The bundle's DLL is the build
+  the owner checked in the game last (sha256 d5cc6902...25cbac); DEPLOYED ==
+  BUILT == BUNDLED.
+- **Bundle.** `SC4UIScale-v4.11.1.zip`: 96,181,190 B, sha256 CF0D4FF8...29FFB7,
+  published 2026-10-12T13:48:44Z, marked Latest, not a pre-release. The
+  uploaded digest equals the local one.
+- **Gates.** Build-Dist PASS on hard patterns (the same 6 soft lines as
+  4.11.0). Test-BinaryPii CLEAN. Test-FolderDiscovery -Bundle PASS.
+  Test-DatIntegrity ALL PASS (128 SHA256SUMS rows). Test-UIScaleInfoApi PASS
+  (version 0x040B01; mutation and freeze controls fired). ProbeDerefGuards
+  GREEN. ShippingIniKeys, StockTierContract, PatchSiteBytes (10 sites) PASS.
+  NoDeadLinks: the 3 pre-existing ledger links only.
+- **Crash gate.** The three reports newer than the 10-07 entry are triaged
+  above; none faults in SC4UIScale.dll. The 10-07 15:38 region-screen fault
+  stays OPEN.
+- **Previous release.** v4.11.0 deleted per the standing order, its tag kept;
+  before the delete its local zip was hash-matched to the hosted asset
+  (4579259e...).
+- **sc4pac.** Not touched, by the owner's instruction: the draft yaml in
+  `_packaging/sc4pac/` was NOT regenerated for this release and still names
+  4.11.0. Nothing of ours is on sc4pac.
