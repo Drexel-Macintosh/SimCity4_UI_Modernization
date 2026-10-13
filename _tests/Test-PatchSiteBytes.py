@@ -155,6 +155,62 @@ SITES = [
         "(2026-10-12). The patch reroutes the call through a thunk that "
         "passes a 24*f cell for our 72*f frame; cdecl, 5 args, caller pops.",
     ),
+    (
+        "kPlopSites lotplop dialog size",
+        0x004BEF9F,
+        bytes([0x68, 0x2C, 0x01, 0x00, 0x00, 0x68, 0x58, 0x02, 0x00, 0x00]),
+        bytes([0xFF] * 10),
+        "push 300 / push 600 - Lot Plop dialog SetSize (2026-10-12).",
+    ),
+    (
+        "kPlopSites lotplop grid pos",
+        0x004BF059,
+        bytes([0x6A, 0x26, 0x6A, 0x04]),
+        bytes([0xFF] * 4),
+        "push 38 / push 4 - Lot Plop grid SetPos (imm8; 38*f must fit 127).",
+    ),
+    (
+        "kPlopSites lotplop grid size",
+        0x004BF068,
+        bytes([0x68, 0x02, 0x01, 0x00, 0x00, 0x68, 0x50, 0x02, 0x00, 0x00]),
+        bytes([0xFF] * 10),
+        "push 258 / push 592 - Lot Plop grid SetSize.",
+    ),
+    (
+        "kPlopSites buildingplop dialog size",
+        0x004BF39F,
+        bytes([0x68, 0x2C, 0x01, 0x00, 0x00, 0x68, 0x5E, 0x01, 0x00, 0x00]),
+        bytes([0xFF] * 10),
+        "push 300 / push 350 - Building Selection dialog SetSize.",
+    ),
+    (
+        "kPlopSites buildingplop grid pos",
+        0x004BF459,
+        bytes([0x6A, 0x26, 0x6A, 0x04]),
+        bytes([0xFF] * 4),
+        "push 38 / push 4 - Building Selection grid SetPos (imm8).",
+    ),
+    (
+        "kPlopSites buildingplop grid size",
+        0x004BF468,
+        bytes([0x68, 0x02, 0x01, 0x00, 0x00, 0x68, 0x56, 0x01, 0x00, 0x00]),
+        bytes([0xFF] * 10),
+        "push 258 / push 342 - Building Selection grid SetSize.",
+    ),
+    (
+        "gPlopColumns call sites",
+        0x004BF0A9,
+        bytes([0x6A, 0x64, 0x6A, 0x01, 0x6A, 0x00, 0x8B, 0xCE, 0xFF, 0x92, 0x04, 0x01, 0x00, 0x00]),
+        bytes([0xFF] * 14),
+        "push 100 / push 1 / push 0 / call [edx+0x104] - Lot Plop column 0; the SetColumnWidth detour keys on the return address 0x004BF0B7.",
+    ),
+    (
+        "gPlopColumns call sites (building)",
+        0x004BF4A9,
+        bytes([0x6A, 0x64, 0x6A, 0x01, 0x6A, 0x00, 0x8B, 0xCE, 0xFF, 0x92, 0x04, 0x01, 0x00, 0x00]),
+        bytes([0xFF] * 14),
+        "push 100 / push 1 / push 0 / call [edx+0x104] - Building Selection column 0; return address 0x004BF4B7.",
+    ),
 ]
 
 

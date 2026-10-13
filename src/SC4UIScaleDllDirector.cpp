@@ -1059,6 +1059,12 @@ public:
 		{
 			CodePatches::InstallGenDlgFrameScale(settings.spikeScaleFactor);
 		}
+		// 2026-10-12: the lotplop / buildingplop cheat lists, also built in
+		// code; like the cheat box, what outgrows them is the scaled font.
+		if (settings.spikeScaleAll)
+		{
+			CodePatches::InstallPlopDialogScale(settings.spikeScaleFactor);
+		}
 		// v2.55.0 task #57: the GRAPHS legend budget is NOT armed here. It is
 		// one half of a coupled pair with EARLYCHART's plot right margin, and
 		// its disarm flag ([Flyout] ChartScale) is read by UiSpike's own ini

@@ -2749,10 +2749,56 @@ namespace CodePatches
 			}
 		}
 
+		// 2026-10-12: the lotplop / buildingplop cheat lists pin both their
+		// columns in code too (see PLOP CHEAT DIALOGS below). Same rule as the
+		// Custom Tunes column: stock width x (loaded grid width / stock grid
+		// width), so the columns follow the grid the game actually built.
+		// retVa = the instruction after each `call [reg+0x104]`; ret is the
+		// rebased copy, 0 until InstallPlopDialogScale arms it.
+		struct PlopColumn
+		{
+			uintptr_t retVa;
+			int32_t first;
+			int32_t width;
+			int32_t gridW;
+			uintptr_t ret;
+		};
+		PlopColumn gPlopColumns[] = {
+			{ 0x004BF0B7, 0, 100, 592, 0 },   // Lot Plop: id column
+			{ 0x004BF0CA, 1, 480, 592, 0 },   // Lot Plop: name column
+			{ 0x004BF4B7, 0, 100, 342, 0 },   // Building Selection: id column
+			{ 0x004BF4CA, 1, 230, 342, 0 },   // Building Selection: name column
+		};
+		volatile LONG gPlopColumnLogged = 0;
+
 		uint32_t __fastcall SetColumnWidthDetour(void* self, void* edx,
 			int32_t first, int32_t count, int32_t width)
 		{
-			if (reinterpret_cast<uintptr_t>(_ReturnAddress()) == gCustomTunesRet
+			const uintptr_t ra = reinterpret_cast<uintptr_t>(_ReturnAddress());
+			for (PlopColumn& c : gPlopColumns)
+			{
+				if (c.ret == 0 || ra != c.ret || self == nullptr || first != c.first
+					|| count != 1 || width != c.width)
+				{
+					continue;
+				}
+				const int32_t gridW = CustomTunesGridWidth(self);
+				if (gridW > 0)
+				{
+					const int32_t scaled = static_cast<int32_t>(std::lround(
+						static_cast<double>(c.width) * gridW / c.gridW));
+					if (InterlockedIncrement(&gPlopColumnLogged) <= 4)
+					{
+						Logger::Get().WriteLine(LogLevel::Info,
+							"CodePatches: PLOP column %d %d -> %d (the loaded list is "
+							"%d px wide; stock is %d of %d).", first, width, scaled,
+							gridW, c.width, c.gridW);
+					}
+					width = scaled;
+				}
+				break;
+			}
+			if (ra == gCustomTunesRet
 				&& self != nullptr && first == 0 && count == 1
 				&& width == kStockCustomTunesCol)
 			{
@@ -2776,16 +2822,36 @@ namespace CodePatches
 		}
 	}
 
+	// ONE detour on SetColumnWidth serves two independent users (Custom Tunes,
+	// the plop cheat lists). Each arms its own return addresses BEFORE calling
+	// this; an unarmed address is 0 and never matches a real return address.
+	namespace
+	{
+		bool gColumnHookInstalled = false;
+
+		bool EnsureColumnHook()
+		{
+			if (gColumnHookInstalled) { return true; }
+			if (!HookVerified("SetColumnWidth", kSetColumnWidthVa,
+					kSetColumnWidthStock, sizeof(kSetColumnWidthStock),
+					reinterpret_cast<void*>(&SetColumnWidthDetour),
+					reinterpret_cast<void**>(&gSetColumnWidthOrig)))
+			{
+				return false;
+			}
+			gColumnHookInstalled = true;
+			return true;
+		}
+	}
+
 	void InstallCustomTunesColumnScale()
 	{
 		if (gCustomTunesInstalled) { return; }
 		const uintptr_t base = ExeBase();
 		gCustomTunesRet = kCustomTunesRetVa + (base - kImageBase);   // read by the detour
-		if (!HookVerified("Custom Tunes SetColumnWidth", kSetColumnWidthVa,
-				kSetColumnWidthStock, sizeof(kSetColumnWidthStock),
-				reinterpret_cast<void*>(&SetColumnWidthDetour),
-				reinterpret_cast<void**>(&gSetColumnWidthOrig)))
+		if (!EnsureColumnHook())
 		{
+			gCustomTunesRet = 0;
 			return;   // the column stays stock
 		}
 		gCustomTunesInstalled = true;
@@ -2794,6 +2860,141 @@ namespace CodePatches
 			"0x%08X (acts only for the call returning to 0x%08X; the width follows "
 			"the loaded grid, 255 of 289).", static_cast<uint32_t>(kSetColumnWidthVa),
 			static_cast<uint32_t>(kCustomTunesRetVa));
+	}
+
+	// ============ PLOP CHEAT DIALOGS (2026-10-12) =========================
+	// The `lotplop` and `buildingplop` cheats (Ctrl+X) open a list dialog built
+	// ENTIRELY IN CODE - no .UI, GetID 0x4A974BF3 / 0x4A974B9B, sdk lookup:
+	// no script declares either. Their builders (Lot Plop 0x004BEEF0,
+	// Building Selection 0x004BF2F0) set every rect from immediates:
+	//
+	//                      dialog SetSize   grid SetPos  grid SetSize   columns
+	//   Lot Plop           600 x 300        (4, 38)      592 x 258      100, 480
+	//   Building Selection 350 x 300        (4, 38)      342 x 258      100, 230
+	//
+	// while the caption, the rows and the scrollbars draw at the scaled font
+	// and art. At 3x the 77 px caption covered the grid's top 43 px and four
+	// rows filled the list (owner screenshots 2026-10-12; the log read the
+	// live dialog at exactly the stock 600x300 / 592x258).
+	//
+	// THE CURE, same shape as the cheat box: the immediates become stock x f,
+	// so the game's own builder emits the scaled layout; the two columns follow
+	// the grid the game built (the SetColumnWidth detour above). The dialog's
+	// position (100,100) stays stock: it is a top-left offset, not a size.
+	// The grid position is two imm8 pushes (38 * f must fit 127); a factor
+	// that does not fit leaves BOTH dialogs stock - refuse, never clamp.
+	//
+	// NOT ADDRESSED HERE: the scrollbar tracks draw magenta. The grid's
+	// scrollbars use the 12-cell strip {856DDBAC,46A006B0,46A006A6}; ours is
+	// a pixel-exact 3x of stock with the same magenta per cell (stock 240/256
+	// in the track cell), so whether the stock 1x list keys it is the open
+	// question, not our art.
+	namespace
+	{
+		struct PlopSite
+		{
+			const char* what;
+			uintptr_t va;
+			uint8_t stock[10];
+			size_t n;
+		};
+		// imm32 pairs: push H (68 xx xx xx xx) / push W; imm8 pair: push top / push left.
+		const PlopSite kPlopSites[] = {
+			{ "lotplop dialog size",       0x004BEF9F, { 0x68,0x2C,0x01,0x00,0x00, 0x68,0x58,0x02,0x00,0x00 }, 10 },
+			{ "lotplop grid pos",          0x004BF059, { 0x6A,0x26, 0x6A,0x04 }, 4 },
+			{ "lotplop grid size",         0x004BF068, { 0x68,0x02,0x01,0x00,0x00, 0x68,0x50,0x02,0x00,0x00 }, 10 },
+			{ "buildingplop dialog size",  0x004BF39F, { 0x68,0x2C,0x01,0x00,0x00, 0x68,0x5E,0x01,0x00,0x00 }, 10 },
+			{ "buildingplop grid pos",     0x004BF459, { 0x6A,0x26, 0x6A,0x04 }, 4 },
+			{ "buildingplop grid size",    0x004BF468, { 0x68,0x02,0x01,0x00,0x00, 0x68,0x56,0x01,0x00,0x00 }, 10 },
+		};
+
+		// Each operand scaled in place: imm32 at +1 of a 5-byte push, imm8 at
+		// +1 of a 2-byte push. False when an imm8 would not fit.
+		bool ScalePlopSite(const PlopSite& s, float factor, uint8_t* out)
+		{
+			memcpy(out, s.stock, s.n);
+			for (size_t i = 0; i < s.n;)
+			{
+				if (s.stock[i] == 0x68)
+				{
+					int32_t v = 0;
+					memcpy(&v, s.stock + i + 1, 4);
+					const int32_t sv = static_cast<int32_t>(std::lround(v * factor));
+					memcpy(out + i + 1, &sv, 4);
+					i += 5;
+				}
+				else
+				{
+					const long sv = std::lround(static_cast<int8_t>(s.stock[i + 1]) * factor);
+					if (sv < 0 || sv > 127) { return false; }
+					out[i + 1] = static_cast<uint8_t>(sv);
+					i += 2;
+				}
+			}
+			return true;
+		}
+	}
+
+	int InstallPlopDialogScale(float factor)
+	{
+		if (std::lround(600 * factor) == 600) { return 0; }   // stock factor
+		const uintptr_t base = ExeBase();
+		const uintptr_t delta = base - kImageBase;
+		const size_t kN = sizeof(kPlopSites) / sizeof(kPlopSites[0]);
+		uint8_t repl[kN][10] = {};
+		// VERIFY EVERYTHING BEFORE WRITING ANYTHING: a dialog grown without
+		// its grid (or the reverse) is a state nobody chose.
+		for (size_t i = 0; i < kN; ++i)
+		{
+			const PlopSite& s = kPlopSites[i];
+			if (memcmp(reinterpret_cast<const void*>(s.va + delta), s.stock, s.n) != 0)
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: PLOP %s site 0x%08X does not hold the stock bytes - "
+					"both plop dialogs left stock.", s.what, static_cast<uint32_t>(s.va));
+				return 0;
+			}
+			if (!ScalePlopSite(s, factor, repl[i]))
+			{
+				Logger::Get().WriteLine(LogLevel::Info,
+					"CodePatches: PLOP x%.2f - %s will not fit imm8 - both plop "
+					"dialogs left stock.", static_cast<double>(factor), s.what);
+				return 0;
+			}
+		}
+		// The columns first: without the detour a scaled grid would keep 1x
+		// columns, so no detour = no patch at all.
+		for (PlopColumn& c : gPlopColumns) { c.ret = c.retVa + delta; }
+		if (!EnsureColumnHook())
+		{
+			for (PlopColumn& c : gPlopColumns) { c.ret = 0; }
+			return 0;
+		}
+		size_t done = 0;
+		for (; done < kN; ++done)
+		{
+			const PlopSite& s = kPlopSites[done];
+			if (!VerifiedWrite(s.what, s.va, delta, s.stock, repl[done], s.n)) { break; }
+		}
+		if (done != kN)
+		{
+			// Roll back what was written; the columns disarm with it.
+			for (size_t i = 0; i < done; ++i)
+			{
+				const PlopSite& s = kPlopSites[i];
+				VerifiedWrite(s.what, s.va, delta, repl[i], s.stock, s.n);
+			}
+			for (PlopColumn& c : gPlopColumns) { c.ret = 0; }
+			return 0;
+		}
+		Logger::Get().WriteLine(LogLevel::Info,
+			"CodePatches: PLOP DIALOGS x%.2f - Lot Plop 600x300 -> %ldx%ld, Building "
+			"Selection 350x300 -> %ldx%ld, grid at (4,38) -> (%ld,%ld); the columns "
+			"follow the loaded grid.", static_cast<double>(factor),
+			std::lround(600 * factor), std::lround(300 * factor),
+			std::lround(350 * factor), std::lround(300 * factor),
+			std::lround(4 * factor), std::lround(38 * factor));
+		return 1;
 	}
 
 	// ============ CHEAT ENTRY DIALOG (v4.5.6) =============================

@@ -23382,3 +23382,37 @@ None of the three touches the code 4.11.1 changes.
 - **sc4pac.** Not touched, by the owner's instruction: the draft yaml in
   `_packaging/sc4pac/` was NOT regenerated for this release and still names
   4.11.0. Nothing of ours is on sc4pac.
+
+## 2026-10-12: the lotplop / buildingplop cheat dialogs (after v4.11.1, unreleased)
+
+**Report (owner, screenshots at 3x).** Ctrl+X `lotplop` and `buildingplop`
+open list dialogs whose caption covers the top of the list, with four or five
+rows visible, cramped columns and magenta scrollbar tracks.
+
+**Mechanism (static + log).** Both are built in code, no .UI (sdk lookup: no
+script declares 0x4A974BF3 / 0x4A974B9B). Builders: Lot Plop 0x004BEEF0,
+Building Selection 0x004BF2F0. Every rect is an immediate: dialog SetSize
+600x300 / 350x300, grid (cGZWinGrid, vtable 0x00ADD7B0) SetPos (4,38),
+SetSize 592x258 / 342x258, SetColumnWidth (0,1,100) and (1,1,480) / (1,1,230).
+The log read the live Lot Plop at exactly the stock 600x300 / 592x258 while
+its caption was 77 px tall (the scaled font): 4+77 > 38.
+
+**Fix.** `InstallPlopDialogScale` (CodePatches.cpp, gated on ScaleAll): the
+six push sites become stock x f, verified all before any write, imm8 grid
+position refused (both dialogs stock) if 38*f > 127. The four columns go
+through the existing SetColumnWidth detour (now shared with Custom Tunes via
+`EnsureColumnHook`), keyed on return address + stock args, width = stock x
+loaded grid width / stock grid width. The dialog position (100,100) stays
+stock. Test-PatchSiteBytes: 18 sites, ALL PASS.
+
+**In the game at 2x (owner: "better"):** `PLOP DIALOGS x2.00 - Lot Plop
+600x300 -> 1200x600, Building Selection 350x300 -> 700x600, grid at (4,38) ->
+(8,76)`; columns 100 -> 200, 480 -> 960 (grid 1184) and 100 -> 200, 230 -> 460
+(grid 684). Caption clear of the list, ids and names fit.
+
+**Magenta: STOCK, not ours.** The grid's scrollbars draw the 12-cell strip
+{856DDBAC,46A006B0,46A006A6}; stock is 192x16 with magenta in every cell
+(track cell 240/256), ours a pixel-exact 3x (2160/2304). Owner checked at 1x:
+magenta there too. These code-built grids blit
+the strip without the colour key; scripted scrollbars elsewhere key it. Left
+as the game draws it.

@@ -28,6 +28,10 @@ namespace CodePatches
 	// one `push 10` (0x00796658). Verify-before-write.
 	void ApplyRecorderFontScale(float factor);
 	void InstallCustomTunesColumnScale();
+	// 2026-10-12: the lotplop / buildingplop cheat dialogs (built in code):
+	// their size immediates x factor, their columns through the
+	// SetColumnWidth detour. Returns 1 when applied.
+	int InstallPlopDialogScale(float factor);
 
 	// #159: the placement cost readout is rasterised into a 128x32 runtime
 	// buffer sized for the 1x font, so scaled glyphs are clipped before any
