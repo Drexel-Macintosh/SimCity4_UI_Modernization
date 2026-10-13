@@ -46,7 +46,7 @@
 // This string is the only version the log header knows. A log that names a
 // build that is not running poisons every diagnosis that trusts it, so bump
 // it in the same commit as the change it describes, never after.
-#define UISCALE_VERSION_STR "4.11.1"
+#define UISCALE_VERSION_STR "4.11.2"
 
 // cIUIScaleInfo::GetModVersion, derived FROM the string above so the two can
 // never disagree: (major << 16) | (minor << 8) | patch.

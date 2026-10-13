@@ -1,3 +1,21 @@
+SC4UIScale 4.11.2 (2026-10-12) - the lot and building plop lists
+================================================================================
+
+The Ctrl+X `lotplop` and `buildingplop` cheats open list dialogs built in
+code (no .UI; ids 0x4A974BF3 / 0x4A974B9B). Their builders (0x004BEEF0,
+0x004BF2F0) size everything from immediates - dialog 600x300 / 350x300, grid
+at (4,38) sized 592x258 / 342x258, columns 100+480 / 100+230 - while the
+caption and rows draw at the scaled font: at 3x the 77 px caption covered the
+grid's top. InstallPlopDialogScale rewrites the six push sites to stock x f
+(all verified before any write; the imm8 grid position refuses rather than
+clamps), and the four columns go through the SetColumnWidth detour, now
+shared with the Custom Tunes column (EnsureColumnHook), sized from the grid
+the game built. Checked in the game at 2x: 1200x600 / 700x600, columns
+200+960 / 200+460. The magenta scrollbar tracks are stock: the owner checked
+1x and they are magenta there too (the 12-cell strip 46A006A6 is mostly
+colour key, and these code-built grids blit it unkeyed). Test-PatchSiteBytes
+pins the new sites (18 total).
+
 SC4UIScale 4.11.1 (2026-10-12) - the animation recorder and the cheat box
 ================================================================================
 

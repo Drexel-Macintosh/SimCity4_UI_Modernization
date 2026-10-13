@@ -1,5 +1,15 @@
 # Changelog
 
+## 4.11.2 (2026-10-12) - the lot and building plop lists
+
+- **The `lotplop` and `buildingplop` cheat windows fit their text.** At the
+  scaled tiers both windows kept their 1x size while their text grew, so the
+  title bar covered the top of the list, only four or five rows showed and the
+  names were cut off. The windows, their lists and the list columns now scale
+  with the interface. Checked in the game on Windows at 2x.
+- The magenta scrollbars in those two lists are how the game itself draws
+  them; they look the same without this mod.
+
 ## 4.11.1 (2026-10-12) - the animation recorder and the cheat box
 
 **Two cheat windows were broken at the scaled tiers. Both are fixed and
