@@ -23416,3 +23416,22 @@ stock. Test-PatchSiteBytes: 18 sites, ALL PASS.
 magenta there too. These code-built grids blit
 the strip without the colour key; scripted scrollbars elsewhere key it. Left
 as the game draws it.
+
+### 00:37 UTC 2026-10-13 - RELEASED: v4.11.2 (https://github.com/Drexel-Macintosh/SimCity4_UI_Modernization/releases/tag/v4.11.2)
+
+- **Build.** Commit `480ba94` (tag `v4.11.2`): the plop-dialog fix the owner
+  checked at 2x (`a198601`) plus the version string. DLL sha256 5EF228BB...
+  53CC39; DEPLOYED == BUILT == BUNDLED.
+- **Bundle.** `SC4UIScale-v4.11.2.zip`: 96,182,262 B, sha256 4906F654...
+  E3B8CA, published 2026-10-13T00:37:21Z, Latest, not a pre-release. The
+  uploaded digest equals the local one.
+- **Gates.** Build-Dist PASS on hard patterns (the same 6 soft lines).
+  Test-BinaryPii CLEAN (132 files). Test-FolderDiscovery -Bundle ALL PASS.
+  Test-DatIntegrity ALL PASS (128 SHA256SUMS rows). Test-UIScaleInfoApi PASS
+  (version 0x040B02; mutation control failed as it must). PatchSiteBytes (18
+  sites), ProbeDerefGuards, ShippingIniKeys, StockTierContract PASS.
+  NoDeadLinks: the 3 pre-existing ledger links only.
+- **Crash gate.** No exception report newer than 2026-10-11 19:32.
+- **Previous release.** v4.11.1 deleted per the standing order, its tag kept;
+  its hosted asset digest (cf0d4ff8...) matched the local zip first.
+- **sc4pac.** Not touched; nothing of ours is on sc4pac.
